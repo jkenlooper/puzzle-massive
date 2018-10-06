@@ -1,0 +1,173 @@
+@import '../site/60settings.css';
+
+.pm-Preview {
+}
+
+.pm-Preview-statusNote {
+  margin-left: calc(1px + 13px);
+  padding-left: 13px;
+  padding-right: 13px;
+}
+
+.pm-Preview-source {
+  display: block;
+  margin-bottom: calc(-13px + 0.15em);
+  margin-left: calc(13px + 1px + 13px);
+  max-width: calc(100vmin - 50px);
+}
+
+.pm-Preview-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+  margin: 13px;
+  border: 2px solid var(--color-primary-light);
+  border-radius: 13px;
+  background-color: var(--color-light-light);
+  padding: 13px;
+  overflow: hidden;
+}
+
+a.pm-Preview-grid {
+  color: inherit;
+  text-decoration: none;
+}
+
+.pm-Preview-grid > * + * {
+  margin-top: 13px;
+}
+
+.pm-Preview-gridA {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex-direction: column;
+}
+@media (--lg-viewport) {
+.pm-Preview-gridA {
+  flex-direction: row;
+}
+}
+
+.pm-Preview-img {
+    display: inline-block;
+  transition: transform 300ms;
+  box-shadow: 0 0 9px rgba(0, 0, 0, 0.5);
+  border: 1px solid white;
+  border-radius: 7px;
+  max-width: 100%;
+  height: auto;
+}
+
+a.pm-Preview-grid:hover img.pm-Preview-img,
+a.pm-Preview-grid:active img.pm-Preview-img {
+  transform: scale(1.06);
+}
+
+.pm-Preview-latest {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  justify-content: space-between;
+  padding: 0 13px;
+}
+
+.pm-Preview-latest > h2 {
+  flex: none;
+  font-size: 1.7rem;
+}
+
+.pm-Preview-latestList {
+  flex: 1 0;
+  justify-content: space-around;
+}
+
+.pm-Preview-latestItem {
+  display: flex;
+  align-items: center;
+  padding: 5px 0;
+}
+
+.pm-Preview-latestItem > * + * {
+  padding-left: 10px;
+}
+
+.pm-Preview-score {
+  width: 2.4em;
+}
+
+.pm-Preview-description {
+  align-self: flex-end;
+  margin: 13px 0 0 0;
+  width: 100%;
+  max-width: calc(100vmin - 40px);
+}
+
+.pm-Preview-gridB {
+  align-self: stretch;
+}
+
+.pm-Preview-pieceInfo {
+  display: flex;
+  flex: none;
+  justify-content: space-between;
+  padding: 13px;
+  overflow: hidden;
+}
+
+.pm-Preview-pieceOutline {
+  flex: none;
+  background-image: url(./piece-silo-black.png);
+  background-position: 50% 100%;
+  background-repeat: no-repeat;
+  background-size: contain;
+  width: 65px;
+  height: 128px;
+}
+
+.pm-Preview-pieceCount {
+  display: block;
+  font-size: 1.3em;
+}
+
+.pm-Preview-pieceJoins {
+  flex: 1 0;
+  margin-left: 13px;
+  overflow: hidden;
+}
+
+.pm-Preview-pieceJoins > * + * {
+  margin-top: 13px;
+}
+
+.pm-Preview-pieceJoins > h2 {
+  border-bottom: 1px solid black;
+  padding-left: 13px;
+  font-size: 1.7rem;
+}
+
+.pm-Preview-pieceJoinsList {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.pm-Preview-pieceJoinsListItem {
+  flex: none;
+  margin-bottom: 5px;
+  margin-left: auto;
+  padding-left: 13px;
+  width: calc(64px + 10px + 2em);
+  line-height: 1.6em;
+}
+
+.pm-Preview-pieceJoinsListItem > * {
+  display: inline-block;
+  vertical-align: middle;
+}
+

@@ -1,0 +1,48 @@
+<div class="pm-Footer">
+  <div class="pm-Footer-grid">
+    <div class="pm-Footer-gridA">
+      {% include './logo.html' %}
+    </div>
+
+    <div class="pm-Footer-gridB">
+      {#
+      #}
+      <div class="pm-Footer-socialLinks">
+        <a title="Discord chat server" href="https://discord.gg/uVhE2Kd">
+          <img src="{{ url_for('send_media_file', filename='discordblack.svg') }}" width="147" height="50" alt="Discord">
+        </a>
+        <a title="Fork the project on GitHub" href="{{ config.PACKAGEJSON.homepage }}">
+          <img src="{{ url_for('send_media_file', filename='GitHub-Mark-64px.png') }}" alt="GitHub Mark" width="64" height="64">
+        </a>
+      </div>
+
+      <nav class="pm-Footer-nav">
+        <a href="/chill{{ url_for('.page_uri', uri='about') }}">
+          About
+        </a>
+        <a href="/chill{{ url_for('.page_uri', uri='help') }}">
+          Help
+        </a>
+        <a href="/chill{{ url_for('.page_uri', uri='credits') }}">
+          Credits
+        </a>
+      </nav>
+
+      <p class="pm-Footer-summary">
+        Massively Multiplayer Online Jigsaw Puzzles
+      </p>
+      <p class="pm-Footer-copyright">
+        Copyright 2011 - 2018,
+        <span class="u-textNoWrap">{{ config.PACKAGEJSON.author }}</span> and the <span class="u-textNoWrap">Puzzle Massive</span> contributors.
+      </p>
+    </div>
+    <div class="pm-Footer-gridC">
+      <p class="u-textRight">
+        <a title="Puzzle Massive is an open source project" href="{{ config.PACKAGEJSON.homepage }}">
+          {{ config.PACKAGEJSON.name }}
+          {{ config.VERSION }}
+        </a>
+      </p>
+    </div>
+  </div>
+</div>

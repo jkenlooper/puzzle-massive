@@ -1,0 +1,54 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Puzzle Massive {%- if page and page.title %} | {{ page.title }}
+      {%- elif title %} | {{ title }}
+      {%- else %}{% block title %}{% endblock %}{% endif %}</title>
+
+    <meta name="description" content="{% block description %}{{ page.description }}{% endblock %}">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta property="og:type" content="website" />
+
+    {% block ogimage %}
+    <meta property="og:image" content="http://puzzle.massive.xyz/puzzle-massive-logo-600.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="600" />
+    <meta property="og:image:height" content="158" />
+    {% endblock %}
+
+    <meta name="msapplication-tap-highlight" content="no" />
+
+    {% block stylesheet %}
+    {% endblock %}
+
+    {% block headscript %}
+    <script src="{{ url_for('send_theme_file', filename='custom-elements.min.js') }}"></script>
+    <script src="{{ url_for('send_theme_file', filename='shadydom.min.js') }}"></script>
+    <script src="{{ url_for('send_theme_file', filename='modernizr.build.min.js') }}"></script>
+    {% endblock %}
+
+  </head>
+  <body ng-app="{{ ngModule }}">
+
+    {% block body %}
+    {% endblock %}
+
+    {% block script %}
+    <script>
+      var MEDIA_PATH = "{{ url_for('send_media_file', filename='') }}"
+      var PLAYER_RANKS_URL = "/chill{{ url_for('.page_uri', uri='api/player-ranks') }}"
+      var PLAYER_PROFILE_URL = "/chill{{ url_for('.page_uri', uri='player') }}"
+    </script>
+    <script src="{{ url_for('send_theme_file', filename='angular.min.js') }}"></script>
+    <script src="{{ url_for('send_theme_file', filename='hammer.min.js') }}"></script>
+    <script src="{{ url_for('send_theme_file', filename='minpubsub.js') }}"></script>
+    <script src="{{ url_for('send_theme_file', filename='lazysizes.min.js') }}"></script>
+    <script src="{{ url_for('send_theme_file', filename='reqwest.min.js') }}"></script>
+    {% endblock %}
+
+  </body>
+</html>

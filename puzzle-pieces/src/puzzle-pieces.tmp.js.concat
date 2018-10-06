@@ -1,0 +1,14 @@
+.minifycss
+.minifyhtml
+src/_style-head.js
+src/puzzle-pieces.tmp.css
+src/_style-foot.js
+src/piece-html.js
+src/_template-head.js
+src/puzzle-pieces.tmp.html
+src/_template-foot.js
+src/puzzle.service.js
+src/send-movement.js
+src/updater.js
+src/puzzle-pieces.controller.js
+src/puzzle-pieces.js

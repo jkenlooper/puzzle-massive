@@ -1,0 +1,14 @@
+.pm-Logo {
+  max-width: 100%;
+  height: auto;
+  font-size: 2.6em;
+  line-height: 0.6em;
+}
+
+.pm-Header-logo .pm-Logo {
+  transform: scale(1.6);
+  transform-origin: left center;
+  width: 240px;
+  max-width: 20vw;
+  min-width: 130px;
+}

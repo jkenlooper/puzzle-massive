@@ -1,0 +1,18 @@
+<div class="pm-PuzzleBits" role="list">
+  <div ng-repeat="id in PuzzleBitsController.collection"
+       class="pm-PuzzleBits-bit"
+       role="listitem"
+       ng-class="{
+        'is-active': PuzzleBitsController.bits[id].active,
+        'pm-PuzzleBits-bit--ownBit': PuzzleBitsController.bits[id].ownBit,
+        }"
+       ng-style="{
+       'transform': 'translate(' + PuzzleBitsController.bits[id].x + 'px, ' + PuzzleBitsController.bits[id].y + 'px)'
+       }"
+       >
+       <img ng-if="PuzzleBitsController.bits[id].icon"
+         ng-src="{{SiteController.MEDIA_PATH + 'bit-icons/64-' + PuzzleBitsController.bits[id].icon + '.png'}}"
+         width="64" height="64" alt="{{PuzzleBitsController.bits[id].icon}}">
+       <span class="pm-PuzzleBits-playerId" ng-if="!PuzzleBitsController.bits[id].icon">{{id}}</span>
+  </div>
+</div>

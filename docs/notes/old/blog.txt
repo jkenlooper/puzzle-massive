@@ -1,0 +1,59 @@
+Initial Status
+--------------
+
+Version: 0.0.1
+
+I started this project on Feb. 18 2011 and today is the 26th.  The total hours
+spent developing it has been 15 hours creating the renderer and 16 hours on
+just developing all the code.  Granted, I was able to make use of the wot
+package to handle some of the web framework stuff.  Also I was able to modify
+some of my code I wrote for the 404 countdown script which handles moving
+pieces around.  Ends up that bit of code was probably the hardest to fix some
+of the issues on.  Originally I took it from the example friendfeed chat code
+that tornado provides.  Heavily modified of course so instead of sending text
+messages to listeners I'm sending instructions to the polling javascript that
+tells the pieces to move around.  
+
+Some major accomplishments:
++++++++++++++++++++++++++++
+  
+  * Creating the svg for a puzzle piece.
+  * Randomizing the svg path for each side of the piece.
+  * Using imagemagick commands to 'cut' the piece out of a picture.
+  * Figuring out how to handle the dimensions of pieces, versus size of image.
+  * Creating the initial website that just has an upload form and lists all the
+    puzzles that have been rendered.
+  * Writing the page request handlers to allow piece movement and sending that
+    to other 'listeners'.
+  * Stress testing with a 'test order' and 'test random' buttons that move pieces around.
+
+The max size so far that I've tested is at 30000 pieces (2,961 adjusted) which
+was set to make each piece div about 30x30 pixels square. My slow computer took
+a while to manually move a piece when there are that many on screen. A slight
+delay after mouse clicks and drags. The test scripts handle moving pieces just
+fine, tho. As I haven't taken the time to really try to put a puzzle together
+with that many pieces, but it seems that it could be possible.
+
+Currently working on now
+++++++++++++++++++++++++
+
+I've started to create the joining piece logic.  This will rely on the idea
+that pieces can be parents.  Then their x,y will be relative to the parent.
+All pieces initially don't have a parent so their x,y is relative the
+puzzle-container.
+
+On the website this structure will be shown as a 'group' div containing all the
+pieces that are a child of a parent piece. the group div will move around with
+any containing piece movements. Hmm... on thinking this through, the 'group'
+div should probably be renamed to 'family'.
+
+Budget
+++++++
+
+Since it seems I've been obsessed with puzzle this past week; I figured it was
+time to initiate a budget.  Not that it is ever easy or accurate to estimate
+development time, but I think having a goal in mind will keep me focused.  I've
+allotted 200 development hours for this initial release.  This initial release
+should be something that is entertaining that I can put on a website.  By then
+it will be version 1.0.0.  Hopefully I can get it tested well enough that there
+aren't any major security holes...

@@ -1,0 +1,13 @@
+.pm-KarmaStatus {
+  display: flex;
+  align-items: flex-end;
+  border: 1px solid currentColor;
+  width: 20px;
+  height: 50px;
+}
+
+.pm-KarmaStatus-bar {
+  display: block;
+  background-color: currentColor;
+  width: 100%;
+}

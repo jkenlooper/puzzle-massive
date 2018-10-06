@@ -1,0 +1,10 @@
+sudo cp puzzle.conf /etc/nginx/sites-available/puzzle.conf
+sudo mkdir /etc/nginx/ssl
+
+# If making a self-signed ssl certificate (Only for staging and local development)
+# https://www.digitalocean.com/community/tutorials/how-to-create-an-ssl-certificate-on-nginx-for-ubuntu-14-04
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt
+
+
+# For the live site follow: https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-14-04
+# TODO

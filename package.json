@@ -1,0 +1,72 @@
+{
+  "name": "puzzle-massive",
+  "version": "2.0.0",
+  "description": "Puzzle Massive is a Massively Multiplayer Online Jigsaw Puzzle web application. Jigsaw puzzles are made from randomly generated classic interlocking pieces and can be 5000+ pieces.  Players can collaborate on the same jigsaw puzzle in real time.  Other player's piece movements are moderated automatically in order to prevent abusive behavior.",
+  "author": "Jake Hickenlooper",
+  "contributors": [
+    "Jake Hickenlooper <jake@weboftomorrow.com> (http://weboftomorrow.com/)"
+  ],
+  "private": true,
+  "homepage": "https://github.com/jkenlooper/puzzle-massive/",
+  "bugs": {
+    "url": "https://github.com/jkenlooper/puzzle-massive/issues",
+    "email": "puzzle-bug@massive.xyz"
+  },
+  "license": "AGPL-3.0-only",
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.0.0",
+    "babel-preset-env": "^1.7.0",
+    "css-loader": "^1.0.0",
+    "css-to-string-loader": "^0.1.1",
+    "file-loader": "^2.0.0",
+    "mini-css-extract-plugin": "^0.4.3",
+    "optimize-css-assets-webpack-plugin": "^5.0.1",
+    "postcss": "^7.0.4",
+    "postcss-import": "^12.0.0",
+    "postcss-loader": "^3.0.0",
+    "postcss-preset-env": "^6.0.7",
+    "raw-loader": "^0.5.1",
+    "standard": "^8.4.0",
+    "style-loader": "^0.23.0",
+    "svg-sprite-loader": "4.1.1",
+    "svgo": "^1.1.1",
+    "svgo-loader": "^2.2.0",
+    "uglifyjs-webpack-plugin": "^2.0.1",
+    "webpack": "^4.20.2",
+    "webpack-cli": "^3.1.1"
+  },
+  "scripts": {
+    "pretest": "standard",
+    "prebuild": "rm -rf dist",
+    "build": "webpack --mode production",
+    "debug": "webpack --debug --devtool source-map --output-pathinfo",
+    "watch": "npm run debug -- --watch",
+    "preversion": "npm test && npm run build"
+  },
+  "standard": {
+    "ignore": [
+      "node_modules/*",
+      "dist",
+      "webpack.config.js"
+    ]
+  },
+  "dependencies": {
+    "@webcomponents/custom-elements": "file:ui-lib/webcomponents-custom-elements-v1.0.0-alpha.3-9-ga0f55ec.tar.gz",
+    "@webcomponents/shadydom": "file:ui-lib/webcomponents-shadydom-e4a8be7.tar.gz",
+    "angular": "1.5.8",
+    "angular-bind-polymer": "file:ui-lib/angular-bind-polymer-0.1.2-jkenlooper.tgz",
+    "hammerjs": "file:ui-lib/hammer.js-2.0.8.tar.gz",
+    "jscolor": "file:ui-lib/jscolor-2.0.4.tgz",
+    "lazysizes": "file:ui-lib/lazysizes-2.0.0.tar.gz",
+    "minpubsub": "file:ui-lib/MinPubSub-0.0.2.tar.gz",
+    "normalize.css": "file:ui-lib/normalize.css-4.2.0.tar.gz",
+    "puzzle-pieces": "file:ui-lib/puzzle-pieces-0.7.4.tgz",
+    "reqwest": "file:ui-lib/reqwest-2.0.5.tar.gz",
+    "slab-massive": "file:ui-lib/slab-massive-0.3.1.tgz",
+    "suitcss-utils-display": "file:ui-lib/utils-display-1.0.2.tar.gz",
+    "suitcss-utils-image": "file:ui-lib/suitcss-utils-image-0.1.0.tar.gz",
+    "suitcss-utils-text": "file:ui-lib/utils-text-1.0.0.tar.gz",
+    "whatwg-fetch": "file:ui-lib/fetch-0.11.1.tar.gz"
+  }
+}

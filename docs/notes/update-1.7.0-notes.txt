@@ -1,0 +1,140 @@
+# Update the local machines /etc/hosts for puzzle-1 domain name and ip
+vim /etc/hosts
+
+## On new 1.7 version of puzzle-1 server
+
+# connect with ssh agent forwarding
+ssh root@puzzle-1
+
+# Secure root ssh by disabling root login using pw (PermitRootLogin without-password)
+# Only allow login with keys
+# PasswordAuthentication no
+# PermitRootLogin without-password
+# AllowUsers root
+vi /etc/ssh/sshd_config
+
+/etc/init.d/ssh restart
+# with another terminal login to verify after restarting
+
+# Add old puzzle.massive.xyz pub key (pm) to allow scp from old server to new (ex ex 12)
+vi .ssh/authorized_keys
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDIIRfuM9JWdEgilaD2e0HT/2LVHipfonOa6aSpnYGhgQ8kVC8lpVfFwgOg+xjCAJAbEj1BDVrUzI5Gpfchq8nNE/j0CQixYHwmx+VbMNNeYKsKkwLteOWNmG+HlALjahn680jGGg9PzGa5o5WdKgxzmCmCDHOT02+RFAOql3akyNBQ+XiljVnITPNLa0RZwva65aFD6OMuROlv8QHiegXqM1k7tIvJNAfRYGBBEsRt6wpAUA8Cr5L5NK0THGcaKYce3illX9TBwZK5Q//W+pts7Mh1bjVXdrRbMXU7MUAjW0iT2xgnXJh9gvonXp7cox4EVenbaNY2L/IGNjyhxCqCZAUycI9w5BQ6FpOakr+9aYxdspSfmvAhHBbo1IDn9Z75y/cmqqEec2XvaCFSlCxHMY28H4e9z2eGccA2YHY0rH9xAFE0RpV2A3ciIsaVaGY2utFC7dctYw/UAZl0XQRCLD9ozyocxoNtzCmIS1EuD7YZ1QvS+FlYBOoE+1ASfiyFHlXBo812DnwxNupVSECb4sFjeYzABv7eWyTaaHr47hvndSH/RT8Ky6dDIWtlo/nbn/o8fh9VGiQHouHKpeweHRQ/xGbhGRKO0Bpj/lgxfFPvUV1dnTWgEHlK1Lu8TipLuDPKFEjO8VTnLTX4U16ZVN81CDupsdVevCQo13StVQ== pm
+
+# initialize the volume if needed
+# mkfs.ext4 -F /dev/disk/by-id/scsi-0DO_Volume_volume-nyc1-01
+
+# Attach the volume (copy from digital ocean volume setup)
+
+mkdir -p /mnt/volume-nyc1-01;
+mount -o discard,defaults /dev/disk/by-id/scsi-0DO_Volume_volume-nyc1-01 /mnt/volume-nyc1-01;
+echo /dev/disk/by-id/scsi-0DO_Volume_volume-nyc1-01 /mnt/volume-nyc1-01 ext4 defaults,nofail,discard 0 0 | tee -a /etc/fstab
+
+
+# Create and login as puzzle user
+adduser puzzle
+
+# Allow puzzle user access to volume
+chown -R puzzle /mnt/volume-nyc1-01/
+
+mkdir -p /mnt/volume-nyc1-01/resources
+mkdir -p /mnt/volume-nyc1-01/archive
+
+# reboot and ssh in
+ssh root@puzzle-1
+
+# As puzzle user:
+su puzzle
+
+# create key for deployments
+ssh-keygen -t rsa -C "puzzle-1" -b 4096
+
+# copy the key to gitlab deploy keys: https://gitlab.com/jkenlooper/old-puzzle/settings/repository
+cat ~/.ssh/id_rsa.pub
+
+# checkout the repo and switch to 1.7 release branch
+git clone git@gitlab.com:jkenlooper/old-puzzle.git
+
+# Set resources to volume path in puzzle.conf
+# Set allow droplet ip to admin page routes
+vi puzzle.conf
+
+# Update the chill.cfg with correct secure_cookie.
+# Set archive, and resources to volume path
+vi chill.cfg
+
+
+# As root user:
+
+# in the old-puzzle dir run:
+./scripts/init.sh
+./scripts/redis.sh
+./scripts/firewall.sh
+
+cp puzzle.conf /etc/nginx/sites-available/puzzle.conf
+ln -fs /etc/nginx/sites-available/puzzle.conf /etc/nginx/sites-enabled/puzzle.conf
+rm -f /etc/nginx/sites-enabled/default
+nginx -t && \
+nginx -s reload;
+
+
+# As puzzle user:
+
+# Follow general instructions on installing
+virtualenv --system-site-packages .
+./bin/pip install -e .
+htpasswd -c .htpasswd jake
+cat chill-data.sql | sqlite3 db
+./bin/python src/api/create_database.py chill.cfg
+
+# Start the app and verify things work on puzzle-1
+./start.sh chill.cfg
+
+# Clean up and remove db and empty resources, archive
+./stop.sh chill.cfg
+
+redis-cli
+#flushall
+
+rm db
+rm -rf /mnt/volume-nyc1-01/resources
+rm -rf /mnt/volume-nyc1-01/archive
+
+
+## On old 1.6 version of puzzle
+# stop
+./stop.sh chill.cfg
+
+# Run the long backup script
+./scripts/backup-db.sh
+
+# While running backup script switch the dns for puzzle.massive.xyz to the floating ip.
+
+# scp the backup files from old site
+#use droplet ip of puzzle-1
+scp /home/puzzle/old-puzzle/db-2017-06-06.dump.gz root@67.207.90.241:/home/puzzle/old-puzzle/
+scp /home/puzzle/old-puzzle/archive.tar.gz root@67.207.90.241:/mnt/volume-nyc1-01/
+scp /home/puzzle/old-puzzle/resources.tar.gz root@67.207.90.241:/mnt/volume-nyc1-01/
+
+
+## On new 1.7 version puzzle-1 after resources.tar.gz is made
+
+ssh root@puzzle-1
+
+# As puzzle user:
+su puzzle
+
+# expand and install
+zcat db-2017-06-06.dump.gz | sqlite3 db
+
+cd /mnt/volume-nyc1-01/
+tar -xf archive.tar.gz
+tar -xf resources.tar.gz
+
+# Verify that owner is puzzle for archive and resources
+
+# migrate the data
+./bin/py src/api/jobs/migrate_from_1_6_to_1_7.py chill.cfg
+
+# verify users have bit expiration and then start
+
+./start.sh chill.cfg

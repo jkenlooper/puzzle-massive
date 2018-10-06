@@ -1,0 +1,21 @@
+insert into Puzzle (
+    puzzle_id,
+    pieces,
+    name,
+    link,
+    description,
+    bg_color,
+    owner,
+    queue,
+    status,
+    permission) values
+    (:puzzle_id,
+    :pieces,
+    :name,
+    :link,
+    :description,
+    :bg_color,
+    :owner,
+    :queue,
+    :status,
+    :permission);

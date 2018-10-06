@@ -1,0 +1,33 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Puzzle Massive Admin {%- if page and page.title %} | {{ page.title }}
+      {%- elif title %} | {{ title }}
+      {%- else %}{% block title %}{% endblock %}{% endif %}</title>
+
+    <meta name="description" content="{% block description %}{{ page.description }}{% endblock %}">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% block stylesheet %}
+    {% endblock %}
+
+    {% block headscript %}
+    {% endblock %}
+
+  </head>
+  <body>
+
+    {% block body %}
+    {% endblock %}
+
+    {% block script %}
+    <script src="{{ url_for('send_theme_file', filename='lazysizes.min.js') }}"></script>
+
+    {% endblock %}
+
+  </body>
+</html>
+

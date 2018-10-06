@@ -1,0 +1,16 @@
+@import 'site/60settings.css';
+
+.pm-PreviewFullImg {
+  transition: transform 100ms 300ms;
+  box-shadow: 0 0 9px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--color-light-light);
+  border-radius: 7px;
+  background-color: var(--color-dark-dark);
+  object-fit: contain;
+  color: var(--color-light);
+}
+
+.pm-PreviewFullImg:hover {
+  transform: scale(2);
+  transition: transform 500ms 300ms;
+}

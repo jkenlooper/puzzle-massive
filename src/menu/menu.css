@@ -1,0 +1,34 @@
+@import '../site/60settings.css';
+
+.pm-Menu {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: calc(100vw - (20px * 2));
+}
+
+.pm-Menu > a {
+  flex: none;
+  margin: 10px 5px;
+  border: 2px solid var(--color-primary-light);
+  border-radius: 33% 69%;
+  background-color: var(--color-light-light);
+  padding: 12px;
+  font-size: 1.7rem;
+  text-decoration: none;
+}
+
+@media (--lg-viewport) {
+  .pm-Menu > a {
+    margin: 20px 10px;
+    padding: 24px;
+    font-size: 2.1rem;
+  }
+}
+
+.pm-Menu > a > strong {
+  display: inline-block;
+  transform: rotate(3deg);
+  color: var(--color-primary-dark);
+}
+

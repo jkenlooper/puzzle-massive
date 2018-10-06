@@ -1,0 +1,39 @@
+{% macro queue(puzzles) -%}
+<div class="pm-Queue">
+  <div class="pm-Queue-list" role="list">
+    {% for item in puzzles %}
+      {% set width = item.long if item.table_width > item.table_height else item.short %}
+      {% set height = item.short if item.table_width > item.table_height else item.long %}
+      {% set src = item.url %}
+
+      <a href="/chill{{ url_for('.page_uri', uri='front/{0}'.format(item.puzzle_id)) }}">
+          {% if item.status == 3 -%}
+        <div class="pm-DotRequire pm-DotRequire--blur is-dotted" pm-dot-require="{{item.pieces}}">
+         {%- endif %}
+      <div class="pm-Queue-listitem" role="listitem">
+        {% include 'previewFullImg.html' %}
+      </div>
+      <span class="pm-Queue-pieceCount"><strong>{{item.pieces}}</strong> pieces
+        {% if item.status == 3 %}
+        <small class="u-block">Completed</small>
+        {% endif %}
+      </span>
+        {% if item.status == 3 -%}
+        </div>
+       {%- endif %}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{%- endmacro %}
+
+{% if value %}
+  {% if value is mapping -%}
+    {% set value = [value] %}
+  {%- endif %}
+  {# Cache this for a day under the puzzle_id #}
+  {% cache 60*60*24, 'queue', value[0].cache_key %}
+    {{ queue(value) }}
+  {% endcache %}
+{% endif %}
+

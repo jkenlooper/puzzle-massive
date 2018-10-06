@@ -1,0 +1,25 @@
+.pm-Base {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100vh;
+}
+.pm-Base--mainFocus > * {
+  display: none;
+}
+
+/* Sets it at the top and center */
+.pm-Base-main {
+  flex: 1 0 0;
+  align-self: center;
+}
+.pm-Base--mainFocus .pm-Base-main {
+  display: block;
+}
+
+.pm-Base > * + * {
+  margin-top: 26px;
+}
+.pm-Base--mainFocus > * + *  {
+  margin-top: 0;
+}

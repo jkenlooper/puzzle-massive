@@ -1,0 +1,65 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 0.625em;
+}
+
+body {
+  background-color: var(--color-light-accent);
+  color: var(--color-dark);
+  font-family: 'Trebuchet MS', sans-serif;
+  font-size: 1.6rem;
+  line-height: 1.4em;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0 0 0.4em;
+  font-size: 2.6rem;
+}
+
+a {
+  color: var(--color-accent);
+}
+
+dl {
+  margin: 1em 0;
+}
+
+dt {
+  display: block;
+  margin-top: 13px;
+  font-weight: bold;
+}
+
+dd {
+  display: block;
+  margin-left: 40px;
+}
+
+article {
+  margin: 20px 0;
+}
+
+/* Style the targeted article with a hashed or postage stamp border. */
+article:target {
+  outline: 10px dashed hsl(0, 0%, 98%);
+  box-shadow: 0 0 25px 10px var(--color-dark-light);
+  padding: 10px;
+}
+
+article > h1 {
+  border-bottom: 2px solid var(--color-accent);
+}
+
+input[type='color'] {
+  padding: 0;
+  width: 4em;
+  font-size: small;
+}

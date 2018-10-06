@@ -1,0 +1,10 @@
+<div id="header" class="pm-Header">
+  <div class="pm-Header-logo">
+    {% include './logo.html' %}
+  </div>
+
+  <div class="pm-Header-main" ng-if="SiteController.detailsReady">
+      <pm-profile-bit ng-if="!SiteController.noCookieSupport "></pm-profile-bit>
+  </div>
+
+</div>

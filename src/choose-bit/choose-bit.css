@@ -1,0 +1,58 @@
+@import '../site/60settings.css';
+
+.pm-ChooseBit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  min-width: 300px;
+}
+
+.pm-ChooseBit-message {
+  width: 100%;
+  font-size: 1.7rem;
+}
+
+@media (--lg-viewport) {
+  .pm-ChooseBit-message {
+    width: auto;
+    font-size: calc(100vw * 0.02);
+  }
+}
+
+.pm-ChooseBit-items {
+  display: flex;
+  flex: 1;
+  flex-wrap: nowrap;
+  justify-content: center;
+}
+
+.pm-ChooseBit-items > button {
+  flex: none;
+  transition: border-color 300ms;
+  margin: 5px;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 10%;
+  background-color: var(--color-light-light);
+  padding: 5px;
+  width: 64px;
+  min-width: 32px;
+  max-width: 5vw;
+  height: 64px;
+  min-height: 32px;
+  max-height: 5vw;
+  text-align: center;
+}
+
+.pm-ChooseBit-items > button:hover,
+.pm-ChooseBit-items > button:active {
+  border-color: var(--color-primary);
+}
+
+.pm-ChooseBit-items img {
+  display: inline-block;
+  min-width: 24px;
+  max-width: 100%;
+  height: auto;
+  min-height: 24px;
+}

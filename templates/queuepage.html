@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% from 'queue.html' import queue %}
+{% set ngModule = 'queuepage' %}
+
+{% if puzzles is mapping -%}
+  {% set puzzles = [puzzles] %}
+{%- endif %}
+{% if recent_puzzles is mapping -%}
+  {% set recent_puzzles = [recent_puzzles] %}
+{%- endif %}
+
+{% block stylesheet %}
+{{ super() }}
+<link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='queuepage.css') }}">
+{% endblock %}
+
+{% block script %}
+{{ super() }}
+<script src="{{ url_for('send_theme_file', filename='queuepage.bundle.js') }}"></script>
+{% endblock %}
+
+{% block title %}
+| {{ route.status|capitalize }} Queue
+{%- endblock %}
+
+{% block description %}
+More jigsaw puzzles available to play. These are sorted by number of pieces.
+{% endblock %}
+
+{% block main %}
+<div class="pm-Queuepage">
+
+  {% if route.status == 'complete' %}
+  <p>Puzzles that have been marked with "<strong>+ ...</strong>" require more dots to redo them.  Earn dots by putting together puzzles.
+  </p>
+  {% endif %}
+
+{% if recent_puzzles %}
+<h2>Recently {{ route.status }} puzzles</h2>
+{{ queue(recent_puzzles) }}
+{% endif %}
+
+{% if puzzles %}
+<h2>Puzzles ordered by piece count</h2>
+<nav class="pm-Queuepage-pagerNav">
+  <a class="pm-Queuepage-pagerLink" href="#queue-puzzles-200-800"><strong>Medium (200 - 800)</strong></a>
+  <a class="pm-Queuepage-pagerLink" href="#queue-puzzles-800-1500"><strong>Large (800 - 1500)</strong></a>
+  <a class="pm-Queuepage-pagerLink" href="#queue-puzzles-1500+"><strong>Huge (1500+)</strong></a>
+  {% if route.status == 'active' %}
+  <span class="pm-DotRequire pm-DotRequire--hidden is-dotted" pm-dot-require="1">
+  |
+  <a class="pm-Queuepage-pagerLink"
+    href="/chill{{ url_for('.page_uri', uri='queue/complete/0') }}"><strong>Complete</strong></a>
+  </span>
+  {% elif route.status == 'complete' %}
+  |
+  <a class="pm-Queuepage-pagerLink" href="/chill{{ url_for('.page_uri', uri='queue/active/0') }}"><strong>Active</strong></a>
+  {% endif %}
+</nav>
+
+{{ queue(puzzles|selectattr('pieces', "lessthan", 200)) }}
+<h3 id="queue-puzzles-200-800">Puzzles with 200 to 800 pieces</h3>
+{{ queue(puzzles|selectattr('pieces', "greaterthan", 199)|selectattr('pieces', "lessthan", 800)) }}
+<h3 id="queue-puzzles-800-1500">Puzzles with 800 to 1500 pieces</h3>
+{{ queue(puzzles|selectattr('pieces', "greaterthan", 799)|selectattr('pieces', "lessthan", 1500)) }}
+<h3 id="queue-puzzles-1500+">Puzzles with more than 1500 pieces</h3>
+{{ queue(puzzles|selectattr('pieces', "greaterthan", 1499)) }}
+{% endif %}
+
+</div>
+{% endblock %}

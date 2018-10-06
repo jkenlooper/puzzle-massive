@@ -1,0 +1,29 @@
+@import '../site/60settings.css';
+
+.pm-Scorespage {
+  margin-right: 10px;
+  margin-left: 10px;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.pm-Scorespage-grid {
+}
+
+@media (--lg-viewport) {
+  .pm-Scorespage-grid {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+.pm-Scorespage-grid > * {
+  margin-top: 26px;
+}
+
+.pm-Scorespage-gridA {
+}
+
+.pm-Scorespage-gridB {
+  min-width: 300px;
+}

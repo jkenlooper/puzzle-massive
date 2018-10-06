@@ -1,0 +1,1 @@
+select :iconname as iconname;

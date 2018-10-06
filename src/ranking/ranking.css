@@ -1,0 +1,56 @@
+@import '../site/60settings.css';
+
+.pm-Ranking {
+}
+
+.pm-Ranking-pager {
+  font-size: 1.4em;
+}
+
+.pm-Ranking-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+  height: calc((32px * 16) + 128px);
+}
+
+.pm-Ranking-listitem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(64px + 5em);
+  height: 32px;
+  font-size: 2rem;
+}
+
+.pm-Ranking-listitem--current {
+  height: 64px;
+}
+
+.pm-Ranking-listitem--topPlayer {
+}
+
+.pm-Ranking-img {
+  width: 32px;
+  height: 32px;
+}
+
+.pm-Ranking-listitem--current .pm-Ranking-img {
+  transform: scale(2.6);
+  transform-origin: 50%;
+}
+
+.pm-Ranking-rank {
+  width: 4em;
+  text-align: right;
+}
+
+.pm-Ranking-listitem--current .pm-Ranking-rank {
+  transform: scale(1.5);
+  transform-origin: 100% 50%;
+}
+
+.pm-Ranking-listitem--topPlayer .pm-Ranking-rank {
+  color: var(--color-accent);
+}

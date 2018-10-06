@@ -1,0 +1,143 @@
+:host {
+  display: block;
+  position: relative;
+}
+
+.pm-PuzzlePieces {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  color: white;
+}
+
+.p {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  transition: transform 0.8s linear;
+  background-repeat: no-repeat;
+}
+
+.p--dark.is-active {
+}
+
+.p--light.is-active {
+}
+
+.p.is-active,
+.p.is-dragging {
+  transition-duration: 0s;
+}
+
+.p.is-active {
+  z-index: 13;
+  box-shadow: 0px 0px 100px 0px currentColor;
+}
+
+.p.is-up,
+.p.is-down {
+  z-index: 13;
+}
+
+.p.is-up::before,
+.p.is-down::before {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  transform: translate(-1em, -1em);
+  border: 3px solid currentColor;
+  background-color: black;
+  width: 0.8em;
+  height: 0.8em;
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.p.is-up::before {
+  border-radius: 50%;
+  color: green;
+  content: '+';
+}
+
+.p.is-down::before {
+  border-radius: 5%;
+  color: red;
+  content: '-';
+}
+
+.p.is-immovable {
+  z-index: 9;
+  pointer-events: none;
+}
+
+.pm-PuzzlePieces-collection {
+}
+
+.pm-PuzzlePieces-dropZone {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+}
+
+.pm-PuzzlePieces-outline {
+  position: absolute;
+  z-index: 1;
+  outline: 1px solid black;
+  border: 1px solid white;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.pm-PuzzlePieces-selected {
+  display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+  flex-wrap: wrap;
+  border: 4px solid blue;
+}
+
+.pm-PuzzlePieces-selected > * {
+  position: static;
+}
+
+.pm-PuzzlePieces-alert {
+  display: none;
+  position: absolute;
+  top: calc(50% - ((200px + (10px * 2) / 2)));
+  left: calc(50% - ((300px + (10px * 2) / 2)));
+  flex-direction: column;
+  justify-content: center;
+  z-index: 20;
+  outline: 2px solid red;
+  box-shadow: 0px 0px 0px 999em rgba(0, 0, 0, 0.5);
+  border: 2px solid black;
+  background-color: white;
+  padding: 10px;
+  width: 300px;
+  min-height: 200px;
+  color: black;
+}
+
+.pm-PuzzlePieces-alert.is-active {
+  display: flex;
+}
+
+/* Must overide the inline display style to avoid FOUC. It may be redundant
+ * here; I can't reproduce everytime. */
+section[style*="display"].pm-PuzzlePieces-alert.is-active {
+  display: flex !important;
+}
+
+.pm-PuzzlePieces-alertMessage {
+  display: none;
+}
+
+.pm-PuzzlePieces-alertMessage.is-active {
+  display: block;
+}

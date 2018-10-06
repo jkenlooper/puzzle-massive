@@ -1,0 +1,22 @@
+CREATE TABLE Piece (
+    id integer NOT NULL,
+    puzzle integer REFERENCES Puzzle (id) ON DELETE CASCADE,
+    x integer NOT NULL,
+    y integer NOT NULL,
+    r integer NOT NULL,
+    w integer,
+    h integer,
+    b integer,
+    rotate integer NOT NULL,
+    "row" integer NOT NULL,
+    col integer NOT NULL,
+    parent integer DEFAULT NULL,
+    adjacent,
+    top_path DEFAULT NULL,
+    right_path DEFAULT NULL,
+    bottom_path DEFAULT NULL,
+    left_path DEFAULT NULL,
+    status integer DEFAULT NULL,
+    bg,
+    PRIMARY KEY (id, puzzle)
+);

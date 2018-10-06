@@ -1,0 +1,16 @@
+.pm-Queuepage {
+  max-width: 800px;
+}
+
+.pm-Queuepage-sectionHeader {
+  margin-left: 13px;
+}
+
+.pm-Queuepage-pagerNav {
+  margin: 13px;
+}
+
+.pm-Queuepage-pagerLink {
+  margin-right: 13px;
+  margin-left: 13px;
+}

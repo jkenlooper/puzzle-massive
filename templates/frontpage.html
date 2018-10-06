@@ -1,0 +1,21 @@
+<div class="pm-Frontpage">
+  <div class="pm-Frontpage-grid">
+    {% if puzzle_id.puzzle_id %}
+    {# Only if there is a puzzle to show #}
+    <div class="pm-Frontpage-gridA">
+      <div>
+        {{ preview|safe }}
+      </div>
+    </div>
+    {% endif %}
+    <section class="pm-Frontpage-gridB">
+      <h2 class="pm-Frontpage-sectionHeader u-textRight">Recently active jigsaw puzzles</h2>
+      {{ gallery|safe }}
+    </section>
+    <div class="pm-Frontpage-gridC">
+      {# Should there be content here?
+      {{ content|readfile|safe }}
+      #}
+    </div>
+  </div>
+</div>

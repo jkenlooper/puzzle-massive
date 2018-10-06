@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% set ngModule = 'docspage' %}
+
+{% block stylesheet %}
+{{ super() }}
+<link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='docspage.css') }}">
+{% endblock %}
+
+{% block script %}
+{{ super() }}
+<script src="{{ url_for('send_theme_file', filename='docspage.bundle.js') }}"></script>
+{% endblock %}
+
+{% block description %}
+{{ description }}
+{% endblock %}
+
+{% block main %}
+
+{% import 'sprites.html' as sprites %}
+{% for sprite in ['image', 'paint-can', 'full-screen', 'minimize', 'arrow-left-circle', 'info-circle'] %}
+{{ sprites.add([sprite]) }}
+{% endfor %}
+
+  <div class="pm-Doc">
+  {{ content|readfile|safe|shortcodes }}
+  </div>
+{% endblock %}
+

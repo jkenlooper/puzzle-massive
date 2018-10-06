@@ -1,0 +1,31 @@
+{% extends 'site.html' %}
+
+{% set baseModifierClass = '' %}
+
+{% block body %}
+{% if baseModifier == 'mainFocus' %}
+  {% set baseModifierClass = 'pm-Base--mainFocus' %}
+{% endif %}
+<div class="pm-Base {{ baseModifierClass }}" ng-controller="SiteController as SiteController">
+  <header>
+    {{ baseModifierClass }}
+    {% block header %}
+      {% include 'header.html' %}
+    {% endblock %}
+  </header>
+
+  <main class="pm-Base-main" role="main">
+    {% block main %}
+    {% endblock %}
+  </main>
+
+  <footer>
+    {% block kneeer %}
+      {% include 'menu.html' %}
+    {% endblock %}
+    {% block footer %}
+      {% include 'footer.html' %}
+    {% endblock %}
+  </footer>
+</div>
+{% endblock %}

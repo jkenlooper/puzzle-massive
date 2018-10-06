@@ -1,0 +1,14 @@
+.pm-JumpPointMarker {
+  position: absolute;
+  opacity: 0.5;
+  background-color: black;
+  width: 3vmin;
+  min-width: 15px;
+  height: 3vmin;
+  min-height: 15px;
+  pointer-events: none;
+  color: white;
+  font-size: 3vmin;
+  line-height: 3vmin;
+  text-align: center;
+}

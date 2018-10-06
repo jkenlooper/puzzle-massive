@@ -1,0 +1,36 @@
+@import '../site/60settings.css';
+
+.pm-DotRequire {
+}
+
+.pm-DotRequire--hidden {
+}
+
+.pm-DotRequire--hidden.is-dotted {
+  display: none;
+}
+
+.pm-DotRequire--blur {
+}
+
+.pm-DotRequire--blur.is-dotted {
+  position: relative;
+  z-index: -1;
+  box-shadow: 0 0 9px 10px var(--color-light-accent);
+}
+
+.pm-DotRequire--blur.is-dotted::after {
+  display: flex;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: hsla(0, 0%, 100%, 0.5);
+  font-size: 300%;
+  line-height: 1.5em;
+  text-align: center;
+  text-indent: 0.1em;
+  text-shadow: 0 0 5px white, 0 0 2px white;
+  content: '+ ...';
+}

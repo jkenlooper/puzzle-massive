@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% from 'queue.html' import queue %}
+{% set ngModule = 'profilepage' %}
+
+{% block stylesheet %}
+{{ super() }}
+<link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='profilepage.css') }}">
+{% endblock %}
+
+{% block script %}
+{{ super() }}
+<script src="{{ url_for('send_theme_file', filename='profilepage.bundle.js') }}"></script>
+{% endblock %}
+
+{% block title %}
+ | Player Profile
+{%- endblock %}
+
+{% block description %}
+  Settings for the logged in player on the Puzzle Massive site.
+{% endblock %}
+
+{% block main %}
+<section  class="pm-Profilepage" ng-controller="ProfilepageController as ProfilepageController">
+  <h1>Player Profile</h1>
+  <div class="pm-Profilepage-grid">
+    <div class="pm-Profilepage-gridA">
+      <h2>Your Current Bit Icon</h2>
+      <pm-profile-bit ng-if="SiteController.hasBit"></pm-profile-bit>
+      <div>Score <b ng-bind="SiteController.userDetails.score"></b></div>
+      <div>Dots <b ng-bind="SiteController.userDetails.dots"></b></div>
+    </div>
+    <div class="pm-Profilepage-gridB">
+      <div ng-if="SiteController.detailsReady && SiteController.hasBit && SiteController.userDetails.dots >= 1400">
+        <pm-choose-bit message="Change bit icon"></pm-choose-bit>
+      </div>
+    </div>
+    {% if puzzles %}
+      <div class="pm-Profilepage-gridC">
+      {% if puzzles is mapping -%}
+        {% set puzzles = [puzzles] %}
+      {%- endif %}
+      {% for group in puzzles|groupby('permission') %}
+
+        {% if group.grouper == 0 %}
+        <h2>Public puzzles</h2>
+        <p>You have created {{ group.list | length }} puzzles that anyone has access to.</p>
+        {% endif %}
+        {% if group.grouper == -1 %}
+        <h2>Private puzzles</h2>
+        <p>You have created {{ group.list | length }} puzzles that only you have a link to.</p>
+        {% endif %}
+
+        {{ queue(group.list) }}
+      {% endfor %}
+
+      </div>
+    {% endif %}
+    <div class="pm-Profilepage-gridD" ng-if="!SiteController.noCookieSupport && SiteController.hasUserCookie">
+      <pm-account>
+        {#
+        <form action="register-email">
+          <div>
+            <label>
+              E-Mail
+              <input type="text" name="email">
+            </label>
+          </div>
+          <button>Register email</button>
+        </form>
+        #}
+
+        {#
+        <!-- only should show if email is registered -->
+        <form action="subscribe">
+          newsletter
+          upcoming competitions
+          etc.
+        </form>
+        #}
+      </pm-account>
+    </div>
+  </div>
+
+
+
+</section>
+
+{% endblock %}

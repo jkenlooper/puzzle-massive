@@ -1,0 +1,58 @@
+@import '../site/60settings.css';
+
+.pm-Frontpage {
+}
+
+.pm-Frontpage > * + * {
+  margin-top: 13px;
+}
+
+.pm-Frontpage-grid {
+}
+@media (--lg-viewport) {
+.pm-Frontpage-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  flex-direction: row;
+  min-width: 1024px;
+}
+}
+
+.pm-Frontpage-grid > * + * {
+  margin-top: 13px;
+}
+
+/* preview and gallery */
+.pm-Frontpage-gridA {
+  display: flex;
+  flex-direction: column;
+  order: 1;
+}
+
+@media (--lg-viewport) {
+  .pm-Frontpage-gridA {
+    width: 62%;
+    max-width: 900px;
+  }
+}
+
+/* aux gallery */
+.pm-Frontpage-gridB {
+  order: 2;
+}
+
+@media (--lg-viewport) {
+  .pm-Frontpage-gridB {
+    width: 38%;
+  }
+}
+.pm-Frontpage-sectionHeader {
+    margin-right: 13px;
+}
+
+/* other content */
+.pm-Frontpage-gridC {
+  order: 3;
+  width: 100%;
+}

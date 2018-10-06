@@ -1,0 +1,10 @@
+<div class="pm-profileBit"
+   ng-class="{'isExpired': SiteController.userDetails.bit_expired}">
+  <a class="pm-profileBit-link"
+    ng-href="{{SiteController.PLAYER_PROFILE_URL}}{{SiteController.userDetails.login}}/">
+    <img ng-src="{{SiteController.MEDIA_PATH + 'bit-icons/64-' + SiteController.userDetails.icon + '.png'}}"
+         width="64" height="64" alt="{{SiteController.userDetails.icon}}" ng-if="SiteController.userDetails.icon">
+    <span ng-if="!SiteController.userDetails.icon">{{SiteController.userDetails.id}}</span>
+  </a>
+  <em class="pm-profileBit-expired" ng-if="SiteController.userDetails.bit_expired">Expired</em>
+</div>

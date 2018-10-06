@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+{% set ngModule = 'puzzlepage' %}
+
+{% set scale = 0 if not args.scale else args.scale|int %}
+
+{# Puzzle status constants #}
+{# puzzle is shown on front page if public (points distributed) #}
+{% set ACTIVE           = 1   %}
+
+{# in the queue of puzzles ready to be assembled (no points) only applies to public #}
+{% set IN_QUEUE         = 2   %}
+
+{# puzzle has been assembled #}
+{% set COMPLETED        = 3   %}
+
+{# all piece movements are frozen. This can be set by the owner if private. options for a schedule or manaul triggering. #}
+{% set FROZEN           = 4   %}
+
+{# Has issues with data. Not listed anymore, but allow movement. #}
+{% set BUGGY_UNLISTED   = 5   %}
+
+{# puzzle image has just been uploaded and has yet to be seen #}
+{% set NEEDS_MODERATION = 0   %}
+
+{# image fails to show copyright information #}
+{% set FAILED_LICENSE   = -1  %}
+
+{# image doesn't show original author #}
+{% set NO_ATTRIBUTION   = -2  %}
+
+{# puzzle image has been accepted and is now in render queue #}
+{% set IN_RENDER_QUEUE  = -5  %}
+
+{# puzzle is currently being rendered #}
+{% set RENDERING        = -6  %}
+
+{# permission to use image does not comply #}
+{% set DELETED_LICENSE  = -10 %}
+
+{# inappropiate image for puzzle due to content of image #}
+{% set DELETED_INAPT    = -11 %}
+
+{# out with the old #}
+{% set DELETED_OLD      = -12 %}
+
+{# deleted on request from the owner. Can be deleted automatically after completion or date or? #}
+{% set DELETED_REQUEST  = -13 %}
+
+
+{# Puzzle is visible if the puzzle is active or if the puzzle has recently been complete. #}
+{% set isPuzzleVisible = puzzle.status in (ACTIVE, IN_QUEUE, COMPLETED, FROZEN, BUGGY_UNLISTED) and not (puzzle.status == COMPLETED and puzzle.is_recent != 1) %}
+
+
+{% if scale != 0 and isPuzzleVisible %}
+  {% set baseModifier = 'mainFocus' %}
+{% endif %}
+
+{% block stylesheet %}
+{{ super() }}
+<link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='puzzlepage.css') }}">
+{#
+<link rel="stylesheet" media="all" href="{{ puzzle_files.url }}">
+#}
+{% endblock %}
+
+{% block headscript %}
+{{ super() }}
+{# TODO: Still need this for safari 10?
+<script src="{{ url_for('send_theme_file', filename='webcomponents-patch.min.js') }}"></script>
+#}
+{% endblock %}
+
+{% block script %}
+{{ super() }}
+<script src="{{ url_for('send_theme_file', filename='angular_bind_polymer.js') }}"></script>
+{% if isPuzzleVisible -%}
+<script src="{{ url_for('send_theme_file', filename='slab-massive.min.js') }}"></script>
+<script src="{{ url_for('send_theme_file', filename='puzzle-pieces.min.js') }}"></script>
+{%- endif %}
+<script src="{{ url_for('send_theme_file', filename='puzzlepage.bundle.js') }}"></script>
+{% endblock %}
+
+{# if the puzzle has been deleted the page.info may not be available. #}
+{% block ogimage %}
+{% if puzzle.puzzle_id and preview_full and preview_full.url is string and preview_full.url %}
+{% if preview_full.url.startswith('/') %}
+<meta property="og:image" content="http://puzzle.massive.xyz{{ preview_full.url }}" />
+{% else %}
+<meta property="og:image" content="{{ preview_full.url }}" />
+{% endif %}
+<meta property="og:image:type" content="image/jpeg" />
+{% else %}
+{{ super() }}
+{% endif %}
+{% endblock %}
+
+
+
+{% set msg = "" %}
+{% set title = "" %}
+
+{% if puzzle.status not in (ACTIVE, IN_QUEUE, COMPLETED, FROZEN, BUGGY_UNLISTED) %}
+  {% set msg = "This puzzle has some problems." %}
+  {% set title = "Problem with puzzle" %}
+
+  {% if puzzle.status == NEEDS_MODERATION %}
+    {% set msg = "This puzzle has yet to be moderated.  Check back later." %}
+    {% set title = "Needs Moderation" %}
+  {% elif puzzle.status == FAILED_LICENSE %}
+    {% set msg = "The image for this puzzle failed to show any license information.   like a copyright that would allow usage on this web site." %}
+    {% set title = "Failed License" %}
+  {% elif puzzle.status == NO_ATTRIBUTION %}
+    {% set msg = "The image for this puzzle doesn't show the name of the author. This is required by the license." %}
+    {% set title = "No Attribution" %}
+  {% elif puzzle.status == IN_RENDER_QUEUE %}
+    {% set msg = "The Puzzle is currently in the render queue.  This may take up to 24 hours as it only renders puzzles once a day." %}
+    {% set title = "In Render Queue" %}
+  {% elif puzzle.status == RENDERING %}
+    {% set msg = "The Puzzle is rendering." %}
+    {% set title = "Rendering" %}
+  {% elif puzzle.status == DELETED_LICENSE %}
+    {% set msg = "The image for this puzzle has a copyright that doesn't allow usage on this website." %}
+    {% set title = "Deleted" %}
+  {% elif puzzle.status == DELETED_INAPT %}
+    {% set msg = "The image for this puzzle is inappropiate for this website." %}
+    {% set title = "Deleted" %}
+  {% elif puzzle.status == DELETED_OLD %}
+    {% set msg = "This puzzle has been deleted because of inactivity." %}
+    {% set title = "Deleted" %}
+  {% elif puzzle.status == DELETED_REQUEST %}
+    {% set msg = "This puzzle has been removed." %}
+    {% set title = "Deleted" %}
+  {% endif %}
+
+{% elif puzzle.status == COMPLETED %}
+  {% set msg = "This Puzzle has been completed." %}
+  {% set title = "Jigsaw Puzzle Completed" %}
+{% elif puzzle.status == FROZEN %}
+  {% set msg = "This Puzzle is frozen." %}
+  {% set title = "Jigsaw Puzzle Frozen" %}
+{% elif puzzle.status == BUGGY_UNLISTED %}
+  {% set msg = "Sorry, this puzzle may have some issues when moving pieces because of an error.  It is no longer listed on the site, but you may still try to complete it." %}
+  {% set title = "Error with Puzzle" %}
+{% endif %}
+
+{% block title %} {% if puzzle.puzzle_id %} | {% if puzzle.pieces %}
+{{ puzzle.pieces }} Piece{% endif %} Jigsaw Puzzle {% if puzzle.status in (ACTIVE, IN_QUEUE) -%}
+  {% elif puzzle.status == COMPLETED -%}
+    Completed on {{ puzzle.m_date }}
+  {% elif puzzle.status == BUGGY_UNLISTED -%}
+    With Some Errors
+  {% else -%}
+    Not Available
+  {%- endif %}
+  {%- endif %}
+{%- endblock %}
+
+{% block main %}
+
+{% import 'sprites.html' as sprites %}
+{% for sprite in ['image', 'paint-can', 'full-screen', 'minimize', 'arrow-left-circle', 'info-circle'] %}
+{{ sprites.add([sprite]) }}
+{% endfor %}
+
+<div class="pm-Puzzlepage">
+  <div class="pm-Puzzlepage-grid">
+    {% if (isPuzzleVisible and scale == 0) or (title or msg) %}
+    <div class="pm-Puzzlepage-gridA">
+      {% if title or msg %}
+        <h1>{{ title }}</h1>
+        {% if puzzle.status == COMPLETED and puzzle.is_recent == 1 %}
+        <p>This jigsaw puzzle has been recently completed, it can be redone after {{ puzzle.redo_date }}.</p>
+        {% else %}
+        <p>{{ msg }}</p>
+        {% if puzzle.status == COMPLETED %}
+        <div class="u-hidden" ng-class="{'u-hidden': !(SiteController.detailsReady && SiteController.userDetails.dots >= {{puzzle.pieces}})}">
+
+            <form method="post" action="/newapi/puzzle-reset/">
+              <input type="hidden" name="puzzle_id" value="{{puzzle.puzzle_id}}">
+              <input type="submit" value="Redo the puzzle">
+            </form>
+        </div>
+        {% endif %}
+        {% endif %}
+      {% endif %}
+      {% if isPuzzleVisible and scale == 0 %}
+        <p>
+            Puzzle shown at full size. It might not fit within your screen.
+        </p>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if isPuzzleVisible %}
+
+    <div class="pm-Puzzlepage-gridB">
+      {% if scale == 0 %}
+      {% set Puzzlepage_gridB1_modifier = 'pm-Puzzlepage-gridB1--top' %}
+      {% set Puzzlepage_gridB2_modifier = 'pm-Puzzlepage-gridB2--full' %}
+      {% endif %}
+      <div class="pm-Puzzlepage-gridB1 {{Puzzlepage_gridB1_modifier}}">
+
+        <a href="/chill{{ url_for('.page_uri', uri='front/{}'.format(puzzle.puzzle_id)) }}" title="View puzzle front page.">
+          <svg class="pm-Puzzlepage-icon"><use xlink:href="#arrow-left-circle-sprite"/></svg>
+        </a>
+
+        <label>
+          <input class="u-hidden" type="checkbox" id="puzzle-preview-button">
+          <svg class="pm-Puzzlepage-icon"><use xlink:href="#image-sprite"/></svg>
+        </label>
+
+        {% if scale != 0 %}
+        <a href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(puzzle.puzzle_id), scale=null) }}" title="View puzzle as actual size.">
+          <svg class="pm-Puzzlepage-icon"><use xlink:href="#minimize-sprite"/></svg>
+        </a>
+          <label for="puzzlepage-description-toggle" title="Toggle puzzle information and credit at bottom of page.">
+          <svg class="pm-Puzzlepage-icon"><use xlink:href="#info-circle-sprite"/></svg>
+          </label>
+          {#
+        <a href="#puzzlepage-description" pm-toggle-target title="View puzzle information and credit.">
+          down arrow? that only shows if description is checked
+        </a>
+        #}
+        {% else %}
+        <a href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(puzzle.puzzle_id), scale=1) }}" title="View the whole puzzle scaled to fit your screen.">
+          <svg class="pm-Puzzlepage-icon"><use xlink:href="#full-screen-sprite"/></svg>
+        </a>
+        {% endif %}
+
+        <pm-karma-status></pm-karma-status>
+
+      </div>
+      <div class="pm-Puzzlepage-gridB2 {{Puzzlepage_gridB2_modifier}}">
+        <div id="puzzlepage-main" class="pm-Puzzlepage-main" style="background-color: {{ puzzle.bg_color }};">
+            <div id="puzzle-container" style="display: none;" puzzle_id="{{ puzzle.puzzle_id }}">{# <!-- Used by puzzle-pieces js --> #}</div>
+            <div id="puzzle-preview-box"
+                 class="pm-Puzzlepage-previewBox"
+                 unselectable="on"
+                 onselectstart="return false;"
+                 onmousedown="return false;">
+              <img class="pm-Puzzlepage-previewImg" src="{{ preview_full.url }}">
+            </div>
+
+            {% macro puzzlepieces() -%}
+              <pm-puzzle-pieces
+                style="width:{{ puzzle.table_width + 100 }}px; height:{{ puzzle.table_height + 100 }}px;"
+                resources="{{ puzzle_files.url }}"
+                puzzlepiecesurl="{{ '/newapi/puzzle-pieces/{}/'.format(puzzle.puzzle_id) }}"
+                status="{{ puzzle.status }}"
+                puzzleid="{{ puzzle.puzzle_id }}"></pm-puzzle-pieces>
+              <pm-puzzle-bits></pm-puzzle-bits>
+            {%- endmacro %}
+
+            {% if scale != 0 %}
+            <slab-massive width="{{ puzzle.table_width + 100 }}"
+                          height="{{ puzzle.table_height + 100 }}"
+                          scale="0"
+                          zoom="1"
+                          fill="cover"
+                          offset-x="0"
+                          offset-y="0">
+              {{ puzzlepieces() }}
+            </slab-massive>
+            {% else %}
+              <div scroll-jump scale="1" zoom="1" offset-x="0" offset-y="0" style="position: relative; width:{{ puzzle.table_width + 100 }}px;height:{{ puzzle.table_height + 100 }}px;">
+                {{ puzzlepieces() }}
+              </div>
+            {% endif %}
+
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+    {% if puzzle.status in (ACTIVE, IN_QUEUE, COMPLETED, FROZEN, BUGGY_UNLISTED) %}
+    {% if scale != 0 and isPuzzleVisible %}
+    <input class="u-hiddenVisually pm-Puzzlepage-descriptionToggle" type="checkbox" id="puzzlepage-description-toggle">
+    {% endif %}
+    <div class="pm-Puzzlepage-description" id="puzzlepage-description">
+      <div class="pm-Puzzlepage-descriptionHeader">
+      <h2>{{ puzzle.pieces }} pieces</h2>
+        <pm-hash-color background-color="{{ puzzle.bg_color }}">
+            <svg class="pm-Puzzlepage-icon"><use xlink:href="#paint-can-sprite"/></svg>
+        </pm-hash-color>
+        <label class="pm-Puzzlepage-descriptionClose" for="puzzlepage-description-toggle">
+          &times;
+        </label>
+      </div>
+      <p>
+        {% if puzzle.link %}
+        <span class="u-textTruncate">
+          Picture source: <a href="{{ puzzle.link }}" rel="nofollow" target="_blank">{{ puzzle.link }}</a>
+        </span>
+        {% endif %}
+      </p>
+        {% if puzzle.description %}
+          <p>{{ puzzle.description }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+{% endblock %}

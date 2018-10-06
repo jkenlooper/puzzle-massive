@@ -1,0 +1,6 @@
+<span offng-style="{'background-color': $ctrl.backgroundColor}">
+  <label for="hash-color-background-color" ng-transclude>
+  </label>
+  <input ng-if="$ctrl.hasInputtypesColor" type="color" id="hash-color-background-color" ng-change="$ctrl.handleChange()" ng-model="$ctrl.backgroundColor">
+  <input ng-if="!$ctrl.hasInputtypesColor" type="text" class="jscolor {hash:true}" id="hash-color-background-color" ng-change="$ctrl.handleChange()" ng-model="$ctrl.backgroundColor">
+</span>

@@ -1,0 +1,10 @@
+.pm-SelectedPieces {
+  position: absolute;
+  top: 50%;
+  left: 45px;
+  z-index: 10;
+  background: blue;
+  width: 200px;
+  height: 40px;
+  color: white;
+}

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% set ngModule = 'puzzleuploadpage' %}
+
+{% block stylesheet %}
+{{ super() }}
+<link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='puzzleuploadpage.css') }}">
+{% endblock %}
+
+{% block script %}
+{{ super() }}
+<script src="{{ url_for('send_theme_file', filename='puzzleuploadpage.bundle.js') }}"></script>
+{% endblock %}
+
+{% block title %}
+ | Suggest Image for a Puzzle
+{%- endblock %}
+
+{% block main %}
+
+<div class="pm-Puzzleuploadpage">
+  <section class="pm-Puzzleuploadpage-form">
+    <h1>Custom Puzzle Form</h1>
+    <p>
+    Fill out this form to submit a picture that you would like to be created
+    into a jigsaw puzzle.  Only appropriate pictures will be used for puzzles.
+    </p>
+    {% if route.contributor == config.NEW_PUZZLE_CONTRIB %}
+      {% include 'uploadform.html' %}
+    {% else %}
+      <script type="text/javascript" src="https://form.jotform.com/jsform/62518292957164"></script>
+    {% endif %}
+  </section>
+
+  <section class="pm-Puzzleuploadpage-content">
+  <h1>Creating Puzzles</h1>
+  <p>
+  This is a short guide on how to choose the right images to use for a puzzle.  There are some restrictions on images that can be used.  Most images found online are copyrighted and may or may not allow being used on another web site like this one.  Also, images that have questionable content will not be permitted.
+  </p>
+
+  <p>
+  If using an image that you found on a different website, then make sure to copy the link to a page that has the copyright information. &#160;This is usually required,  in fact it's the only way I'll know that the image can be used.  If it's an image that you made and don't have a link to it, then just make sure you state that in the description.  There is no need to put your name in, if you don't want to.
+  </p>
+
+  <h2>
+  Creative Commons
+  </h2>
+  <p>
+  Learn more about some of the creative common licenses at their website: <a href="http://creativecommons.org">Creative Commons</a>
+  </p>
+  <h2>Good websites that host images</h2>
+
+  <p>The following are some websites that usually have some good images with copyrights that allow using the image elsewhere.
+  </p>
+  <ul>
+    <li>
+      <a href="https://unsplash.com/">Unsplash</a> - Free (do whatever you want) high-resolution photos.
+    </li>
+  <li>
+  <a href="http://www.flickr.com/search/?q=&amp;l=commderiv&amp;ss=0&amp;ct=5&amp;mt=photos&amp;w=all&amp;adv=1">flickr.com</a> - look for their creative commons.  Or search for images in the public domain.
+  </li>
+  <li>
+  google image search?
+  </li>
+  <li>
+  others?  send me some feedback if you know of others and I'll add it here.
+  </li>
+  </ul>
+  </section>
+
+  <section class="pm-Puzzleuploadpage-content">
+  <h1>Become a Jigsaw Puzzle Contributor</h1>
+  <p>If you would like to create custom jigsaw puzzles that will be shown on
+  this site then fill out <a href="/chill/{{ url_for('.page_uri', uri='contributor-application') }}">this application form.</a>
+  </p>
+</div>
+
+{% endblock %}

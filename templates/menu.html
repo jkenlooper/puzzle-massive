@@ -1,0 +1,24 @@
+<nav class="pm-Menu">
+  <a href="/chill{{ url_for('.page_uri', uri='queue/active/0') }}">
+      <strong>
+          More Puzzles
+      </strong>
+  </a>
+  <a href="/chill{{ url_for('.page_uri', uri='high-scores') }}">
+    <strong>
+    High Scores
+    </strong>
+  </a>
+  {#
+  <a href="">
+    <strong>
+    Competitions
+    </strong>
+  </a>
+  #}
+  <a href="/chill{{ url_for('.page_uri', uri='new-puzzle/submit') }}">
+    <strong>
+    Suggest Puzzle
+    </strong>
+  </a>
+</nav>

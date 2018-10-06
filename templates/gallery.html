@@ -1,0 +1,9 @@
+{% from 'queue.html' import queue %}
+{% if recent %}
+{% if recent is mapping -%}
+  {% set recent = [recent] %}
+{%- endif %}
+
+{{ queue(recent) }}
+
+{% endif %}

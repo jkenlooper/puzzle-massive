@@ -1,0 +1,39 @@
+.pm-PuzzleBits {
+}
+
+.pm-PuzzleBits-bit {
+  display: flex;
+  position: absolute;
+  top: 0;
+  left: -64px;
+  align-items: start;
+  justify-content: space-around;
+  transform: translate(0, 0);
+  opacity: 0;
+  z-index: 13;
+  transition: opacity 0.5s linear;
+  width: 64px;
+  height: 64px;
+  pointer-events: none;
+}
+
+.pm-PuzzleBits-bit.is-active {
+  opacity: 1;
+}
+
+.pm-PuzzleBits-bit--ownBit.is-active {
+  opacity: 0.1;
+  transition: opacity 0.1s linear;
+}
+
+.pm-PuzzleBits-bit:hover {
+}
+
+/* Shows for players without a bit icon */
+.pm-PuzzleBits-playerId {
+  border: 1px solid white;
+  border-radius: 50%;
+  background-color: black;
+  padding: 0.5em;
+}
+

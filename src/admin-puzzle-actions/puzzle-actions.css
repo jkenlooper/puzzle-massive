@@ -1,0 +1,12 @@
+.pma-PuzzleActions {
+}
+
+.pma-PuzzleActions-nav {
+}
+
+.pma-PuzzleActions-nav > a {
+  display: inline-block;
+  margin: 10px;
+  border: 1px solid gray;
+  padding: 10px;
+}

@@ -1,0 +1,3 @@
+-r ../requirements.txt
+gevent-websocket
+-e divulger/

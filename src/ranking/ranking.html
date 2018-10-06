@@ -1,0 +1,35 @@
+<section ng-show="RankingController.isReady" class="pm-Ranking">
+  <h2 class="u-textCenter">Player Rankings</h2>
+  <p>
+  <strong>
+    Your Rank is {{ RankingController.playerRank }}
+    out of {{ RankingController.totalActivePlayers }} active players.
+  </strong>
+  </p>
+  <p class="u-textRight">
+  <button ng-if="RankingController.hasUp"
+          class="pm-Ranking-pager pm-Ranking-pager--up"
+    ng-click="RankingController.selectPlayerRanksUp()">&uarr;</button>
+  </p>
+  <div class="pm-Ranking-list" role="list">
+    <div class="pm-Ranking-listitem"
+         role="listitem"
+         ng-repeat="item in RankingController.playerRanks"
+         ng-class="{
+          'pm-Ranking-listitem--current': item.id === SiteController.userDetails.id,
+          'pm-Ranking-listitem--topPlayer': item.topPlayer
+         }"
+      >
+      <img class="pm-Ranking-img"
+         ng-src="{{SiteController.MEDIA_PATH + 'bit-icons/64-' + (item.icon || 'unknown-bit') + '.png'}}" width="64" height="64" alt="{{(item.icon || 'unknown-bit')}}"
+          >
+
+        <strong class="pm-Ranking-rank">{{ item.score }}</strong>
+    </div>
+  </div>
+  <p class="u-textRight">
+  <button ng-if="RankingController.hasDown"
+          class="pm-Ranking-pager pm-Ranking-pager--down"
+    ng-click="RankingController.selectPlayerRanksDown()">&darr;</button>
+  </p>
+</section>

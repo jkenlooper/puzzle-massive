@@ -1,0 +1,48 @@
+@import '../site/60settings.css';
+
+.pm-Header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  outline: 2px solid var(--color-light);
+  border-bottom: 2px solid var(--color-light-light);
+  background-color: var(--color-light);
+  padding: 10px 20px;
+  color: var(--color-primary-dark);
+}
+
+.pm-Header-logo {
+  display: flex;
+  margin-top: 13px;
+  margin-bottom: 13px;
+  width: 200px;
+  height: 64px;
+}
+
+@media (--lg-viewport) {
+  .pm-Header-logo {
+    padding-left: 74px;
+    width: 500px;
+  }
+}
+
+.pm-Header-main {
+  display: flex;
+  flex: 1 auto;
+  justify-content: flex-end;
+  max-width: calc(100vw - 240px);
+}
+
+@media (--sm-viewport) {
+  .pm-Header-main {
+    display: block;
+    text-align: right;
+  }
+}
+
+@media (--lg-viewport) {
+  .pm-Header-main {
+    width: calc(100% - 574px);
+    max-width: calc(100vw - 574px);
+  }
+}

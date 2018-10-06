@@ -1,0 +1,1 @@
+select :contributor as contributor;

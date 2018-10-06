@@ -1,0 +1,3 @@
+# m h	dom mon dow user	command
+0 3	13 * * root certbot renew
+# An empty line is required at the end of this file for a valid cron file.

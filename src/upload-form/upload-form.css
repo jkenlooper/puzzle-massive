@@ -1,0 +1,36 @@
+@import '../site/60settings.css';
+
+.pm-UploadForm {
+  margin-bottom: 40px;
+}
+
+.pm-UploadForm > * + * {
+  margin-top: 20px;
+  border-top: 1px solid var(--color-dark);
+  padding-top: 20px;
+}
+
+.pm-UploadForm-row {
+  display: flex;
+}
+
+.pm-UploadForm-row > *:first-child {
+  flex: none;
+  width: 11em;
+}
+
+.pm-UploadForm-row > :first-child:last-child {
+  flex: 1 0 auto;
+}
+
+.pm-UploadForm-colorPicker {
+  width: 10em;
+  height: 10em;
+}
+
+.pm-UploadForm-icon {
+  padding: 10px;
+  width: 98px;
+  height: 87px;
+  fill: var(--color-dark);
+}

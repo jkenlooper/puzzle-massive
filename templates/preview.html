@@ -1,0 +1,175 @@
+{% if recent %}
+{% macro timePassed(seconds_from_now) -%}
+{# for testing
+{{ seconds_from_now }} =
+#}
+    {% if seconds_from_now < 60 %}
+     less than a minute
+    {% elif seconds_from_now < 2 * 60 %}
+      1 minute
+    {% elif seconds_from_now < 60 * 60 %}
+      {{ seconds_from_now // 60 }} minutes
+    {% elif seconds_from_now < 60 * 60 * 2 %}
+      1 hour
+    {% elif seconds_from_now < 60 * 60 * 24 %}
+      {{ seconds_from_now // 60 // 60 }} hours
+    {% elif seconds_from_now < 60 * 60 * 24 * 2 %}
+      1 day
+    {% elif seconds_from_now < 60 * 60 * 24 * 14 %}
+      {{ seconds_from_now // 60 // 60 // 24 }} days
+    {% else %}
+      a long time
+    {% endif %}
+    ago
+{%- endmacro %}
+
+{# puzzle has been assembled #}
+{% set COMPLETED        = 3   %}
+
+{% set width = recent.long if recent.table_width > recent.table_height else recent.short %}
+{% set height = recent.short if recent.table_width > recent.table_height else recent.long %}
+
+{# testing the time passed
+{{ timePassed(0) }}<br>
+{{ timePassed(1) }}<br>
+{{ timePassed(10) }}<br>
+{{ timePassed(59) }}<br>
+{{ timePassed(60) }}<br>
+{{ timePassed(61) }}<br>
+{{ timePassed(120) }}<br>
+{{ timePassed(121) }}<br>
+{{ timePassed(240) }}<br>
+less than an hour:{{ timePassed(60*59) }}<br>
+one hour:{{ timePassed(60*60) }}<br>
+one minute over an hour:{{ timePassed(60*61) }}<br>
+two minute over an hour:{{ timePassed(60*62) }}<br>
+2 hour:{{ timePassed(60*60*2) }}<br>
+23 hour:{{ timePassed(60*60*23) }}<br>
+24 hour:{{ timePassed(60*60*24) }}<br>
+24 hour and one minute:{{ timePassed((60*60*24)+60) }}<br>
+1 day 23 hour and 59 minute:{{ timePassed((60*60*24)+(60*60*23)+(60*59)) }}<br>
+2 days:{{ timePassed((60*60*24*2)) }}<br>
+12 days:{{ timePassed((60*60*24*12)) }}<br>
+14 days:{{ timePassed((60*60*24*14)) }}<br>
+22 days:{{ timePassed(60*60*24*22) }}<br>
+222 days:{{ timePassed(60*60*24*222) }}<br>
+#}
+
+{# chill will make the players variable into a mapping if only one result #}
+{% if players is mapping -%}
+  {% set players = [players] %}
+{%- endif %}
+
+<div class="pm-Preview">
+  {% if recent.link -%}
+  <small class="pm-Preview-source u-textTruncate">
+    Picture source:
+  <a href="{{recent.link}}" rel="nofollow">
+    {{recent.link|replace('http://', '')|replace('https://', '')}}
+  </a>
+  </small>
+  {%- endif %}
+
+      {% if recent.status == COMPLETED and not recent.is_recent -%}
+      <div class="pm-DotRequire pm-DotRequire--blur is-dotted" pm-dot-require="{{recent.pieces}}">
+      {% endif %}
+
+  <a class="pm-Preview-grid" href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(recent.puzzle_id), scale=null) }}" title="Join this jigsaw puzzle">
+    <div class="pm-Preview-gridA">
+      <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{recent.url}}" alt="">
+
+
+      <div class="pm-Preview-latest">
+        {% if players | length > 0 %}
+        <h2>Active Players</h2>
+        <div class="pm-Preview-latestList" role="list">
+            <div class="pm-Preview-latestItem">
+              <small>Player</small>
+              <small>
+                Pieces
+              </small>
+              <small>
+                Time since
+              </small>
+            </div>
+        {% for item in players[0:9]%}
+            <div class="pm-Preview-latestItem" role="listitem">
+              {% if item.icon -%}
+              <img width="32" height="32" src="{{ url_for('send_media_file', filename='bit-icons/64-{}.png'.format(item.icon)) }}" alt="{{item.icon}}">
+              {% else %}
+              <img width="32" height="32" src="{{ url_for('send_media_file', filename='64-unknown-bit-icon.png') }}" alt="Unknown bit">
+              {%- endif %}
+              <small class="pm-Preview-score">
+                {{ item.points }}
+              </small>
+              <small>
+                {{ timePassed(item.seconds_from_now) }}
+              </small>
+            </div>
+        {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      <p class="pm-Preview-description u-textTruncate">
+        <small>
+          {{recent.description}}
+        </small>
+      </p>
+    </div>
+
+    <div class="pm-Preview-gridB">
+    <div class="pm-Preview-pieceInfo">
+
+      <div class="pm-Preview-pieceOutline">
+        <strong class="pm-Preview-pieceCount">{{recent.pieces}}</strong>
+        <span>pieces</span>
+      </div>
+
+
+      <div class="pm-Preview-pieceJoins">
+
+        {% if players | length == 0 %}
+        <p><small>No active players<br> have joined pieces<br> in the last 2 weeks.</small></p>
+        {% endif %}
+
+        {% if players | length > 9 %}
+        <h2 class="u-textRight">Active Players (continued)</h2>
+        <div class="pm-Preview-pieceJoinsList" role="list">
+        {% for item in  players[9:] -%}
+          {# Only 25 will fit in this container #}
+          {%- if loop.index <= 25 %}
+          <span class="pm-Preview-pieceJoinsListItem" role="listitem">
+            {% if item.icon -%}
+            <img width="32" height="32" src="{{ url_for('send_media_file', filename='bit-icons/64-{}.png'.format(item.icon)) }}" alt="{{item.icon}}">
+            {% else %}
+            <img width="32" height="32" src="{{ url_for('send_media_file', filename='64-unknown-bit-icon.png') }}" alt="Unknown bit">
+            {%- endif %}
+            {{ item.points }}
+          </span>
+          {%- endif %}
+        {%- endfor %}
+        </div>
+        {% endif %}
+
+      </div>
+
+    </div>
+    </div>
+  </a>
+      {% if recent.status == COMPLETED and not recent.is_recent -%}
+      </div>
+      {% endif %}
+
+  {% if recent.status == COMPLETED and recent.is_recent -%}
+  <p class="pm-Preview-statusNote">
+  This jigsaw puzzle has been recently completed, it can be redone after {{ recent.redo_date }}.
+  </p>
+  {% endif %}
+  {% if recent.status == COMPLETED and not recent.is_recent -%}
+  <p class="pm-Preview-statusNote">
+  This jigsaw puzzle has been completed and requires using dots to redo it.  Dots are earned by putting together puzzles.
+  </p>
+  {% endif %}
+
+</div>
+{% endif %}

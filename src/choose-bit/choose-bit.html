@@ -1,0 +1,15 @@
+<section class="pm-ChooseBit"
+  ng-if="ChooseBitController.bits.length">
+  <h1 class="pm-ChooseBit-message">
+    {{ChooseBitController.message}}
+  </h1>
+  <div class="pm-ChooseBit-items">
+    <button role="list-item"
+            ng-repeat="item in ChooseBitController.bits"
+            ng-click="ChooseBitController.claimBit(item)"
+      >
+      <img ng-src="{{ChooseBitController.MEDIA_PATH + 'bit-icons/64-' + item + '.png'}}" width="64" height="64" alt="{{item}}">
+    </button>
+  </div>
+  <button ng-click="ChooseBitController.getBits()">More</button>
+</section>

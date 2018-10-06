@@ -1,0 +1,21 @@
+/* color naming convention:
+ * http://codepen.io/nicetransition/pen/QjwbRg
+ */
+:root {
+  --color-dark: rgb(78, 81, 84);
+  --color-dark-dark: rgb(0, 0, 0);
+  --color-dark-light: rgba(78, 81, 84, 0.13);
+  --color-primary: rgb(73, 111, 129);
+  --color-primary-dark: rgb(46, 80, 97);
+  --color-light: rgb(224, 244, 255);
+  --color-light-light: white;
+  --color-light-accent: rgb(249, 249, 249);
+  --color-primary-light: rgb(181, 229, 255);
+  --color-accent: rgb(202, 109, 16);
+}
+
+
+/* Default breakpoints from suitcss */
+@custom-media --sm-viewport (min-width: 320px) and (max-width: 640px);
+@custom-media --md-viewport (min-width: 640px) and (max-width: 960px);
+@custom-media --lg-viewport (min-width: 960px);

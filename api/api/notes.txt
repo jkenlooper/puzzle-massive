@@ -1,0 +1,62 @@
+workers with rq
+http://python-rq.org/docs/
+https://realpython.com/blog/python/flask-by-example-implementing-a-redis-task-queue/
+
+
+./bin/py src/api/test_publish.py
+./bin/api run
+
+PUZZLE = id of puzzle
+PIECE = id of piece
+GROUP = id of group (parent)
+
+Piece properties
+----------------
+hash
+pc:PUZZLE:PIECE = x y r w h PIECE PIECE ...
+HMSET pc:33:2 x 23 y 33 r 0 w 400 h 400 32 59,78 35 23,22 45 92,32 46 91,32
+
+HMSET pc:264:10 x 882 y 295 r 0 rotate 0 w 102 h 102 0 0,-64
+
+INSERT INTO Piece (id, puzzle, x, y, r, rotate, "row", col, parent, top_path, right_path, bottom_path, left_path, status, bg) VALUES (10, 264, 882, 295, 0, 0, 2, 4, 12, '0.3', '10.2', '10.3', '7.2', NULL, 'light');
+INSERT INTO Piece (id, puzzle, x, y, r, rotate, "row", col, parent, top_path, right_path, bottom_path, left_path, status, bg) VALUES (0, 264, 882, 231, 90, 270, 1, 4, 12, '17.3', '0.2', '0.3', '11.2', NULL, 'light');
+
+
+Piece Group
+-----------
+set
+pcg:PUZZLE:GROUP = (PIECE,)
+
+Piece Stacked (piece status of 2)
+-----------
+set
+pcstacked:PUZZLE = (PIECE,)
+
+Piece Fixed (piece status of 1)
+-----------
+set
+pcfixed:PUZZLE = (PIECE,)
+
+Piece x
+-------
+sorted set
+pcx:PUZZLE = (x PIECE,)
+
+Piece y
+-------
+sorted set
+pcy:PUZZLE = (y PIECE,)
+
+
+move piece 10
+adjust piece position to be within table bounds
+check proximity to other pieces with unique groups
+set piece 10 properties
+get piece 10 properties
+get all piece adjacent properties
+filter out adjacent pieces that have same group as piece 10
+filter out adjacent pieces that are not in proximity
+with the first adjacent piece left update x,y of piece 10
+with the first adjacent piece that has the biggest group update piece 10 group to it
+update piece 10 group pieces to new x,y positions 
+

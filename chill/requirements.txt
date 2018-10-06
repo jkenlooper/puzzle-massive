@@ -1,0 +1,2 @@
+-r ../requirements.txt
+chill==0.4.0

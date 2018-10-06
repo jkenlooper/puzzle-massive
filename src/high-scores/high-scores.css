@@ -1,0 +1,63 @@
+@import '../site/60settings.css';
+
+.pm-HighScores {
+}
+
+.pm-HighScores-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: space-around;
+  justify-content: space-around;
+  width: 90%;
+  max-width: 400px;
+}
+
+@media (--lg-viewport) {
+  .pm-HighScores-list {
+    width: auto;
+    max-width: none;
+  }
+}
+
+.pm-HighScores-listitem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--color-primary-light);
+  padding: 30px 0px;
+}
+
+.pm-HighScores-listitem:nth-child(1) {
+  width: 100%;
+}
+
+.pm-HighScores-listitem:nth-child(1n+2) {
+  width: 50%;
+}
+
+.pm-HighScores-listitem:nth-child(1n+4) {
+  width: 25%;
+}
+
+.pm-HighScores-listitem:nth-child(1n+8) {
+  width: 12.5%;
+}
+
+.pm-HighScores-img {
+  max-width: 100%;
+  height: auto;
+}
+
+.pm-HighScores-score {
+  display: block;
+  color: var(--color-accent);
+  font-size: 1.3rem;
+}
+
+@media (--lg-viewport) {
+  .pm-HighScores-score {
+    font-size: 2.2rem;
+  }
+}
