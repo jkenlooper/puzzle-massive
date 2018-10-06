@@ -5,6 +5,7 @@ api/puzzle-massive-artist.service.sh
 api/puzzle-massive-janitor.service.sh
 api/requirements.txt
 api/setup.py
+bin/backup-db.sh
 bin/dist.sh
 bin/freeze.sh
 bin/init.sh
@@ -12,6 +13,7 @@ bin/install.sh
 bin/provision-build.sh
 bin/provision-certbot.sh
 bin/provision-local.sh
+bin/puzzlectl.sh*
 bin/setup.sh
 bin/uninstall.sh
 bin/log.sh
@@ -39,7 +41,6 @@ README.md
 requirements.txt
 resources/bit-icons.tar.gz
 root
-scripts
 site.cfg.sh
 stats/awstats-puzzle-massive-crontab.sh
 stats/awstats.puzzle.massive.xyz.conf.sh
