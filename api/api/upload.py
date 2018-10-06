@@ -286,6 +286,9 @@ class UnsplashPuzzleThread(threading.Thread):
         db = sqlite3.connect(self.db_file)
         cur = db.cursor()
         link = url_fix(data.get('links').get('html'))
+        # TODO:
+        # Photo by Annie Spratt / Unsplash
+        # [description]
         description = escape("Photo by: %s" % (data.get('user').get('name')))
 
         puzzle_dir = os.path.join(self.puzzle_resources, self.puzzle_id)

@@ -76,8 +76,8 @@ def render(*args):
     Each puzzle should exist in the Puzzle db with the IN_RENDER_QUEUE status
     and have an original.jpg file.
     """
-    # TODO: delete old piece properties if existing
-    # TODO: delete old PuzzleFile for name if existing
+    # Delete old piece properties if existing
+    # Delete old PuzzleFile for name if existing
     # TODO: update preview image in PuzzleFile?
     cur = db.cursor()
 
@@ -308,6 +308,16 @@ def render(*args):
                 offsets[adj_pc] = '{x},{y}'.format(x=x, y=y)
             adjacent_str = ' '.join(map(lambda k, v: '{0}:{1}'.format(k, v), offsets.keys(), offsets.values()))
             pc['adjacent'] = adjacent_str
+
+        # TODO: original.jpg is assumed to be available locally because of migratePuzzleFile.py
+        # Clear out any older pieces and their puzzle files, (raster.png,
+        # raster.css) but keep preview full.
+        cur.execute("delete from Piece where puzzle = :puzzle", {
+            'puzzle': puzzle['id']
+            })
+        cur.execute("delete from PuzzleFile where puzzle = :puzzle and name in ('pieces', 'pzz')", {
+            'puzzle': puzzle['id']
+            })
 
         # Commit the piece properties and puzzle resources
         # row and col are really only useful for determining the top left piece when resetting puzzle
