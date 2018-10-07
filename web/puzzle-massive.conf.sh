@@ -338,7 +338,7 @@ fi
 
 cat <<HEREBEPRODUCTION
 
-  server_name puzzle-1 puzzle.massive.xyz;
+  server_name puzzle-blue puzzle-green puzzle.massive.xyz;
 
   location /.well-known/ {
     try_files \$uri =404;
