@@ -101,7 +101,7 @@ http://puzzle-green/ .  You can edit your `/etc/hosts` to point to the old
 At this point two servers should be running Puzzle Massive with only the older
 one having traffic.  The new one should be verified that everything is working
 correctly by doing some integration testing.  The next step is to stop the apps
-on the old server and copy all the data over to the new one puzzle-green server.
+on the old server and copy all the data over to the new puzzle-green server.
 
 On the old server; stop the apps and migrate the data out of redis.
 
@@ -110,11 +110,45 @@ sudo ./bin/puzzlectl.sh stop;
 ./bin/backup-db.sh;
 ```
 
+On the new server; copy over the files from the old server using rsync.
+
 Copy the backup db (db-YYYY-MM-DD.dump.gz) to the new server.
 
-Copy the nginx logs found at: `/var/log/nginx/puzzle-massive/`
+```
+DBDUMPFILE="db-$(date +%F).dump.gz";
+rsync --archive --progress --itemize-changes \
+  dev@puzzle-blue:/usr/local/src/puzzle-massive/$DBDUMPFILE \
+  /usr/local/src/puzzle-massive/
+```
 
-Copy the archive dir: `/var/lib/puzzle-massive/archive/`
+Copy the nginx logs (NGINXLOGDIR) found at: `/var/log/nginx/puzzle-massive/`
 
-Copy the resources dir that contains the generated puzzles:
+```
+rsync --archive --progress --itemize-changes \
+  dev@puzzle-blue:/var/log/nginx/puzzle-massive \
+  /var/log/nginx/puzzle-massive
+```
+
+Copy the archive directory (ARCHIVEDIR): `/var/lib/puzzle-massive/archive/`
+
+```
+rsync --archive --progress --itemize-changes \
+  dev@puzzle-blue:/var/lib/puzzle-massive/archive \
+  /var/lib/puzzle-massive/archive
+```
+
+Copy the resources directory (SRVDIR/resources) that contains the generated puzzles:
 `/srv/puzzle-massive/resources`
+TODO: only copy over files needed to recreate the puzzle and the publicly
+available files. 
+original.jpg resized-original.jpg
+resources/*/scale-100/{raster.png,raster.css} resources/*/preview_full.jpg
+
+tar -caf resources.tar.gz /srv/puzzle-massive/resources
+tar --create --auto-compress --file resources.tar.gz /srv/puzzle-massive/resources
+
+```
+rsync --archive --progress --itemize-changes \
+  dev@puzzle-blue:/var/log/nginx/puzzle-massive \
+  /var/log/nginx/puzzle-massive
+```
