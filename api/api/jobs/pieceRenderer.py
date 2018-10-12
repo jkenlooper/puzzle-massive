@@ -315,6 +315,26 @@ def render(*args):
             })
         db.commit()
 
+        cleanup(puzzle['puzzle_id'])
+
+def cleanup(puzzle_id):
+    whitelist = [
+        'original.jpg',
+        'preview_full.jpg',
+        'resized-original.jpg',
+        'scale-100',
+        'raster.css',
+        'raster.png'
+    ]
+    puzzle_dir = os.path.join(config['PUZZLE_RESOURCES'], puzzle_id)
+    for (dirpath, dirnames, filenames) in os.walk(puzzle_dir, False):
+        for filename in filenames:
+            if filename not in whitelist:
+                os.unlink(os.path.join(dirpath, filename))
+        for dirname in dirnames:
+            if dirname not in whitelist:
+                os.rmdir(os.path.join(dirpath, dirname))
+
 
 if __name__ == '__main__':
     render()

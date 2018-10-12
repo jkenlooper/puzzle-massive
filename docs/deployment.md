@@ -138,17 +138,10 @@ rsync --archive --progress --itemize-changes \
 ```
 
 Copy the resources directory (SRVDIR/resources) that contains the generated puzzles:
-`/srv/puzzle-massive/resources`
-TODO: only copy over files needed to recreate the puzzle and the publicly
-available files. 
-original.jpg resized-original.jpg
-resources/*/scale-100/{raster.png,raster.css} resources/*/preview_full.jpg
-
-tar -caf resources.tar.gz /srv/puzzle-massive/resources
-tar --create --auto-compress --file resources.tar.gz /srv/puzzle-massive/resources
 
 ```
 rsync --archive --progress --itemize-changes \
-  dev@puzzle-blue:/var/log/nginx/puzzle-massive \
-  /var/log/nginx/puzzle-massive
+  dev@puzzle-blue:/srv/puzzle-massive/resources \
+  /srv/puzzle-massive/resources
 ```
+
