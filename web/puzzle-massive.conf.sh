@@ -23,6 +23,13 @@ server {
   return       301 http://puzzle.massive.xyz\$request_uri;
 }
 
+map \$request_uri \$loggable {
+    # Don't log requests to the anonymous login link.
+    ~/puzzle-api/bit/.* 0;
+
+    default 1;
+}
+
 server {
   listen      80;
   #listen 443 ssl http2;
@@ -59,7 +66,7 @@ cat <<HERE
 
   root ${SRVDIR}root;
 
-  access_log  ${NGINXLOGDIR}access.log;
+  access_log  ${NGINXLOGDIR}access.log combined if=\$loggable;
   error_log   ${NGINXLOGDIR}error.log;
 
   location = /humans.txt {}
@@ -91,8 +98,8 @@ cat <<HERE
   location /stats/ {
     root   ${SRVDIR}stats;
     index  awstats.puzzle.massive.xyz.html;
-    #auth_basic            "Restricted";
-    #auth_basic_user_file  ${SRVDIR}.htpasswd;
+    auth_basic            "Restricted";
+    auth_basic_user_file  ${SRVDIR}.htpasswd;
     access_log ${NGINXLOGDIR}access.awstats.log;
     error_log ${NGINXLOGDIR}error.awstats.log;
     rewrite ^/stats/(.*)\$  /\$1 break;
