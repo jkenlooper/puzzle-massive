@@ -103,22 +103,32 @@ one having traffic.  The new one should be verified that everything is working
 correctly by doing some integration testing.  The next step is to stop the apps
 on the old server and copy all the data over to the new puzzle-green server.
 
-On the old server; stop the apps and migrate the data out of redis.
+On the old server; stop the apps and migrate the data out of redis. Otherwise,
+leave the old server untouched in case something fails on the new server.
 
 ```
 sudo ./bin/puzzlectl.sh stop;
 ./bin/backup-db.sh;
 ```
 
-On the new server; copy over the files from the old server using rsync.
+On the new server the files from the old server will be copied over with rsync.
+First step here is to stop the apps on the new server and remove the initial db
+and any generated test puzzles.
 
-Copy the backup db (db-YYYY-MM-DD.dump.gz) to the new server.
+```
+sudo ./bin/puzzlectl.sh stop;
+```
+
+Copy the backup db (db-YYYY-MM-DD.dump.gz) to the new server and replace the
+other one (SQLITE_DATABASE_URI).
 
 ```
 DBDUMPFILE="db-$(date +%F).dump.gz";
 rsync --archive --progress --itemize-changes \
   dev@puzzle-blue:/usr/local/src/puzzle-massive/$DBDUMPFILE \
-  /usr/local/src/puzzle-massive/
+  /usr/local/src/puzzle-massive/;
+mv /var/lib/puzzle-massive/sqlite3/db db.backup;
+zcat $DBDUMPFILE | sqlite3 /var/lib/puzzle-massive/sqlite3/db
 ```
 
 Copy the nginx logs (NGINXLOGDIR) found at: `/var/log/nginx/puzzle-massive/`
@@ -145,3 +155,17 @@ rsync --archive --progress --itemize-changes \
   /srv/puzzle-massive/resources
 ```
 
+### Start the new server
+
+After the old server data has been copied over, then start up the new server
+apps with the 'puzzlectl.sh' script.  It is also good to monitor the logs to see
+if anything is throwing errors.
+
+```
+sudo ./bin/puzzlectl.sh start;
+./bin/log.sh;
+```
+
+Verify that the new version of Puzzle Massive is running correctly on
+puzzle-green/. If everything checks out, then switch the traffic over to
+puzzle.massive.xyz/. 
