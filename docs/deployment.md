@@ -29,67 +29,131 @@ is being created.
 
 ## In-place Deployments
 
-The client-side resources should first be made for production and not
-development.  Then use the yet to be created bin/sync.sh script to upload those
-changed files to the running server.
+Normally the choice to do an in-place deployment instead of a blue-green
+deployment is that the change is very minimal and it would just be faster.
+These changes are usually simple updates to the client-side resources or minor
+patches to the running apps.
+
+SSH into the server as the 'dev' user after the versioned distribution file has
+been uploaded to the home directory.
 
 ### Steps
 
-TODO: Steps when doing in-place deployments.
+1)  Stop the running apps and backup the db.  The deactivate command is done to
+    deactivate the python virtualenv.  A backup of the database is made just as
+    a cautionary measure and is left in the folder.  The backup-db.sh script
+    also moves data out of redis and into the database.
+
+    ```bash
+    cd /usr/local/src/puzzle-massive;
+    source bin/activate;
+    sudo ./bin/puzzlectl.sh stop;
+    ./bin/backup-db.sh;
+    deactivate;
+    ```
+
+2)  Replace the current source code with the new version.  Example shows the
+    puzzle-massive-2.0.0.tar.gz which should be in the dev home directory.  The
+    current source code is moved to the home directory under a date label in
+    case it needs to revert back. The `.env` and `.htpasswd` files are copied
+    over since they are not included in the distribution.
+
+    ```bash
+    cd /home/dev/;
+    mv /usr/local/src/puzzle-massive puzzle-massive-$(date +%F);
+    tar --directory=/usr/local/src/ --extract --gunzip -f puzzle-massive-2.0.0.tar.gz
+    cp puzzle-massive-$(date +%F)/.env /usr/local/src/puzzle-massive/;
+    cp puzzle-massive-$(date +%F)/.htpasswd /usr/local/src/puzzle-massive/;
+    ```
+
+3)  Make the new apps and install the source code.  The install will also start
+    everything back up.  The last command to test and reload nginx is optional
+    and is only needed if the nginx conf changed.
+
+    ```bash
+    cd /usr/local/src/puzzle-massive;
+    virtualenv .;
+    source bin/activate;
+    make ENVIRONMENT=production && \
+    sudo make ENVIRONMENT=production install;
+    sudo nginx -t && \
+    sudo nginx -s reload;
+    ```
+
+4)  Verify that stuff is working by monitoring the logs.
+
+    ```bash
+    ./bin/log.sh;
+    ```
+
 
 ## Blue-Green Deployments
 
-Create a new server and transfer data over from the old one.
+Create a new server and transfer data over from the old one.  This is a good
+choice of deployment when the changes are more significant and would benefit
+from being able to test things a bit more thoroughly before having it accessible
+by the public.
 
 ### Steps
 
-After the tar file has been uploaded to the server; SSH in and expand it to the
-`/usr/local/src/` directory.
+1)  After the tar file has been uploaded to the server; SSH in and expand it to
+    the `/usr/local/src/` directory.  This is assuming that only root can SSH in
+    to the server and the distribution was uploaded to the /root/ directory.
 
-```
-tar --directory=/usr/local/src/ --extract --gunzip -f puzzle-massive-2.0.0.tar.gz
-```
+    ```bash
+    cd /root;
+    tar --directory=/usr/local/src/ --extract --gunzip -f puzzle-massive-2.0.0.tar.gz
+    ```
 
-Now setup the new server by running the init and setup scripts.  These should be
-run with root privileges (prepend these commands with 'sudo' if not root user).
+2)  Now setup the new server by running the `init.sh` and `setup.sh` scripts.
+    These should be run with root privileges (prepend these commands with 'sudo'
+    if not root user).  The init.sh script will ask for the id_rsa.pub key which
+    can just be pasted in. The ownership of the source code files are switched
+    to dev since it was initially added via root user.
 
-```
-cd /usr/local/src/puzzle-massive/;
-./bin/init.sh;
-./bin/setup.sh;
-```
+    ```bash
+    cd /usr/local/src/puzzle-massive/;
+    ./bin/init.sh;
+    ./bin/setup.sh;
+    chown -R dev:dev /usr/local/src/puzzle-massive
+    ```
 
-Log in as the dev user and upload or create the `.env` and `.htpasswd` files in
-the `/usr/local/src/puzzle-massive/` directory (See README).
+3)  SSH in as the dev user and upload or create the `.env` and `.htpasswd` files
+    in the `/usr/local/src/puzzle-massive/` directory.  See the README on how to
+    create these.  At this point there is no need to SSH in to the server as the
+    root user.
 
-Now create the initial bare-bones version without any data as the dev user.
+4)  Now create the initial bare-bones version without any data as the dev user.
 
-```
-virtualenv .;
-source bin/activate;
-make ENVIRONMENT=production;
-cp chill-data.sql db.dump.sql;
-sudo make ENVIRONMENT=production install;
+    ```bash
+    cd /usr/local/src/puzzle-massive/;
+    virtualenv .;
+    source bin/activate;
+    make ENVIRONMENT=production;
+    cp chill-data.sql db.dump.sql;
+    sudo make ENVIRONMENT=production install;
 
-# should be run as 'dev' user
-python api/api/create_database.py site.cfg;
-```
+    # should be run as 'dev' user
+    python api/api/create_database.py site.cfg;
+    ```
 
-The logs for all the apps for Puzzle Massive can be followed with the
-`./bin/log.sh` command.  It is just a shortcut to doing the same with
-`journalctrl`.
 
-Check the status of the apps with this convenience command to `systemctl`.
-```
-sudo ./bin/puzzlectl.sh status;
-```
+5)  The logs for all the apps for Puzzle Massive can be followed with the
+    `./bin/log.sh` command.  It is just a shortcut to doing the same with
+    `journalctrl`.
 
-Test and reload the nginx config.
+    Check the status of the apps with this convenience command to `systemctl`.
 
-```
-sudo nginx -t &&
-sudo nginx -s reload
-```
+    ```bash
+    sudo ./bin/puzzlectl.sh status;
+    ```
+
+6)  Test and reload the nginx config.
+
+    ```bash
+    sudo nginx -t &&
+    sudo nginx -s reload
+    ```
 
 Note that by default the production version of the nginx conf for Puzzle Massive
 is hosted at http://puzzle.massive.xyz/ as well as http://puzzle-blue/ and
@@ -103,69 +167,79 @@ one having traffic.  The new one should be verified that everything is working
 correctly by doing some integration testing.  The next step is to stop the apps
 on the old server and copy all the data over to the new puzzle-green server.
 
-On the old server; stop the apps and migrate the data out of redis. Otherwise,
-leave the old server untouched in case something fails on the new server.
+1)  On the **old server** stop the apps and migrate the data out of redis.  The old
+    server is left untouched in case something fails on the new server.
 
-```
-sudo ./bin/puzzlectl.sh stop;
-./bin/backup-db.sh;
-```
+    ```bash
+    cd /usr/local/src/puzzle-massive/;
+    source bin/activate;
+    sudo ./bin/puzzlectl.sh stop;
+    ./bin/backup-db.sh;
+    ```
 
-On the new server the files from the old server will be copied over with rsync.
-First step here is to stop the apps on the new server and remove the initial db
-and any generated test puzzles.
+2)  On the **new server** the files from the old server will be copied over with
+    rsync.  First step here is to stop the apps on the new server and remove the
+    initial db and any generated test puzzles.
 
-```
-sudo ./bin/puzzlectl.sh stop;
-```
+    ```bash
+    cd /usr/local/src/puzzle-massive/;
+    source bin/activate;
+    sudo ./bin/puzzlectl.sh stop;
+    rm /var/lib/puzzle-massive/sqlite3/db;
+    rm -rf /srv/puzzle-massive/resources/*;
+    ```
 
-Copy the backup db (db-YYYY-MM-DD.dump.gz) to the new server and replace the
-other one (SQLITE_DATABASE_URI).
+3)  Copy the backup db (db-YYYY-MM-DD.dump.gz) to the new server and replace the
+    other one (SQLITE_DATABASE_URI).  This is assuming that ssh agent forwarding
+    is enabled for the puzzle-blue host.
 
-```
-DBDUMPFILE="db-$(date +%F).dump.gz";
-rsync --archive --progress --itemize-changes \
-  dev@puzzle-blue:/usr/local/src/puzzle-massive/$DBDUMPFILE \
-  /usr/local/src/puzzle-massive/;
-mv /var/lib/puzzle-massive/sqlite3/db db.backup;
-zcat $DBDUMPFILE | sqlite3 /var/lib/puzzle-massive/sqlite3/db
-```
+    ```bash
+    cd /usr/local/src/puzzle-massive/;
+    DBDUMPFILE="db-$(date +%F).dump.gz";
+    rsync --archive --progress --itemize-changes \
+      dev@puzzle-blue:/usr/local/src/puzzle-massive/$DBDUMPFILE \
+      /usr/local/src/puzzle-massive/;
+    zcat $DBDUMPFILE | sqlite3 /var/lib/puzzle-massive/sqlite3/db
+    ```
 
-Copy the nginx logs (NGINXLOGDIR) found at: `/var/log/nginx/puzzle-massive/`
+4)  Copy the nginx logs (NGINXLOGDIR) found at: `/var/log/nginx/puzzle-massive/`
 
-```
-rsync --archive --progress --itemize-changes \
-  dev@puzzle-blue:/var/log/nginx/puzzle-massive \
-  /var/log/nginx/puzzle-massive
-```
+    ```bash
+    rsync --archive --progress --itemize-changes \
+      dev@puzzle-blue:/var/log/nginx/puzzle-massive \
+      /var/log/nginx/puzzle-massive
+    ```
 
-Copy the archive directory (ARCHIVEDIR): `/var/lib/puzzle-massive/archive/`
+5)  Copy the archive directory (ARCHIVEDIR): `/var/lib/puzzle-massive/archive/`
 
-```
-rsync --archive --progress --itemize-changes \
-  dev@puzzle-blue:/var/lib/puzzle-massive/archive \
-  /var/lib/puzzle-massive/archive
-```
+    ```bash
+    rsync --archive --progress --itemize-changes \
+      dev@puzzle-blue:/var/lib/puzzle-massive/archive \
+      /var/lib/puzzle-massive/archive
+    ```
 
-Copy the resources directory (SRVDIR/resources) that contains the generated puzzles:
+6)  Copy the resources directory (SRVDIR/resources) that contains the generated
+    puzzles:
 
-```
-rsync --archive --progress --itemize-changes \
-  dev@puzzle-blue:/srv/puzzle-massive/resources \
-  /srv/puzzle-massive/resources
-```
+    ```bash
+    rsync --archive --progress --itemize-changes \
+      dev@puzzle-blue:/srv/puzzle-massive/resources \
+      /srv/puzzle-massive/resources
+    ```
 
-### Start the new server
+7)  Start the new server and switch traffic over to it.
 
-After the old server data has been copied over, then start up the new server
-apps with the 'puzzlectl.sh' script.  It is also good to monitor the logs to see
-if anything is throwing errors.
+    After the old server data has been copied over, then start up the new server
+    apps with the 'puzzlectl.sh' script.  It is also good to monitor the logs to see
+    if anything is throwing errors.
 
-```
-sudo ./bin/puzzlectl.sh start;
-./bin/log.sh;
-```
+    ```
+    cd /usr/local/src/puzzle-massive/;
+    source bin/activate;
+    sudo ./bin/puzzlectl.sh start;
+    ./bin/log.sh;
+    ```
 
-Verify that the new version of Puzzle Massive is running correctly on
-puzzle-green/. If everything checks out, then switch the traffic over to
-puzzle.massive.xyz/. 
+    Verify that the new version of Puzzle Massive is running correctly on
+    puzzle-green/. If everything checks out, then switch the traffic over to
+    puzzle.massive.xyz/. 
