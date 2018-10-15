@@ -47,6 +47,8 @@
   "standard": {
     "ignore": [
       "node_modules/*",
+      "puzzle-pieces/src/*-head.js",
+      "puzzle-pieces/src/*-foot.js",
       "dist",
       "webpack.config.js"
     ]
