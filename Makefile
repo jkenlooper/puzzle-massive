@@ -28,6 +28,9 @@ AWSTATSLOGDIR := $(PREFIXDIR)/var/log/awstats/puzzle-massive/
 ARCHIVEDIR := $(PREFIXDIR)/var/lib/puzzle-massive/archive/
 CACHEDIR := $(PREFIXDIR)/var/lib/puzzle-massive/cache/
 
+# Set the internal ip which is used to secure access to admin/ pages.
+INTERNALIP := $(shell hostname -I | cut -d' ' -f1)
+
 # Get the version from the package.json
 TAG := $(shell cat package.json | python -c 'import sys, json; print json.load(sys.stdin)["version"]')
 
@@ -101,7 +104,7 @@ site.cfg: site.cfg.sh $(PORTREGISTRY)
 	./$< $(ENVIRONMENT) $(SRVDIR) $(DATABASEDIR) $(PORTREGISTRY) $(ARCHIVEDIR) $(CACHEDIR) > $@
 
 web/puzzle-massive.conf: web/puzzle-massive.conf.sh $(PORTREGISTRY)
-	./$< $(ENVIRONMENT) $(SRVDIR) $(NGINXLOGDIR) $(PORTREGISTRY) > $@
+	./$< $(ENVIRONMENT) $(SRVDIR) $(NGINXLOGDIR) $(PORTREGISTRY) $(INTERNALIP) > $@
 
 ifeq ($(ENVIRONMENT),production)
 # Only create the dhparam.pem if needed.

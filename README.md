@@ -108,32 +108,6 @@ http://local-puzzle-massive/chill/site/admin/puzzle/ . This admin UI is super
 clunky and has a lot of room for improvement.  You'll need to batch edit the
 submitted puzzles to be approved and then click on render.
 
-## Deploying on a production server
-
-It is recommended to create a versioned distribution with `make dist`.  That tar
-file can then be uploaded to the server and expanded into `/usr/local/src/` directory 
-(`tar --directory=/usr/local/src/ --extract --gunzip -f 0.3.1.tar.gz`).
-
-A similar workflow from development except the ENVIRONMENT should be passed to
-the Makefile.  For example, use 
-`make ENVIRONMENT=production;` and 
-`sudo make ENVIRONMENT=production install;`
-
-Run the `bin/provision-certbot.sh /srv/puzzle-massive/`
-script to set up a production server with TLS certs.
-[certbot](https://certbot.eff.org/) is used to
-deploy [Let's Encrypt](https://letsencrypt.org/) certificates.
-*This step is not necessary.  The site isn't using https yet.*
-
-
-<!-- TODO: Not enabled for development
-## Admin Access WIP
-
-Access to the admin pages is only allowed to the ip address of the server.  Set
-up a SOCKS proxy with ssh tunnel in order to get access.  
-For example: `ssh -D 7979 dev@puzzle.massive.xyz`
--->
-
 ## Getting Help
 
 I try to monitor the chat channels on the [Discord server for Puzzle

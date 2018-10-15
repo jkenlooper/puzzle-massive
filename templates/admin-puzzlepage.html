@@ -29,7 +29,6 @@
   </h1>
 
   {# info on all admin/puzzle/* pages #}
-  {{admin_puzzle_menu}}
   <div class="pma-PuzzleActions">
     {% set count_all = admin_puzzle_menu.puzzle_status_count | selectattr('status', 'equalto', 1) | sum(attribute='total') + admin_puzzle_menu.puzzle_status_count | selectattr('status', 'equalto', 2) | sum(attribute='total') %}
 

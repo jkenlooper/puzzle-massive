@@ -6,6 +6,7 @@ ENVIRONMENT=$1
 SRVDIR=$2
 NGINXLOGDIR=$3
 PORTREGISTRY=$4
+INTERNALIP=$5
 
 # shellcheck source=/dev/null
 source "$PORTREGISTRY"
@@ -26,6 +27,7 @@ server {
 map \$request_uri \$loggable {
     # Don't log requests to the anonymous login link.
     ~/puzzle-api/bit/.* 0;
+    ~/newapi/user-login/.* 0;
 
     default 1;
 }
@@ -58,11 +60,10 @@ server {
 HERE
 if (test -f web/dhparam.pem); then
 cat <<HERE
-  ssl_dhparam /etc/nginx/ssl/dhparam.pem;
+  #ssl_dhparam /etc/nginx/ssl/dhparam.pem;
 HERE
 fi
 cat <<HERE
-
 
   root ${SRVDIR}root;
 
@@ -179,8 +180,9 @@ cat <<HERE
 
     # Set to droplet ip not floating ip.
     # Requires using SOCKS proxy (ssh -D 8080 user@host)
-    #allow 67.207.90.241;
-    #deny all;
+    allow $INTERNALIP;
+    allow 127.0.0.1;
+    deny all;
 
     proxy_pass_header Server;
     proxy_set_header Host \$http_host;
@@ -244,8 +246,9 @@ cat <<HERE
 
     # Set to droplet ip not floating ip.
     # Requires using SOCKS proxy (ssh -D 8080 user@host)
-    #allow 67.207.90.241;
-    #deny all;
+    allow $INTERNALIP;
+    allow 127.0.0.1;
+    deny all;
 
     proxy_pass_header Server;
     proxy_set_header Host \$http_host;
@@ -277,7 +280,6 @@ cat <<HERE
   }
 
   location /media/bit-icons/ {
-    #rewrite ^/media/(.*)\$
     root ${SRVDIR};
   }
 
@@ -288,13 +290,11 @@ cat <<HERE
     if (\$invalid_referer) {
       return 444;
     }
-    #root /mnt/volume-nyc1-01;
     root ${SRVDIR};
 
   }
   location ~* ^/resources/.*/(preview_full.jpg)\$ {
     # Allow hotlinking
-    #root /mnt/volume-nyc1-01;
     root ${SRVDIR};
   }
 
