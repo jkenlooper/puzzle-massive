@@ -55,9 +55,15 @@ The service config files are created by running `make` and installed with
 and activating each time for a new shell with `source bin/activate` before
 running `make`.
 
-TODO: the db file is owned by dev with group dev.  If developing with
+The db file is owned by dev with group dev.  If developing with
 a different user then run `adduser nameofuser dev` to include the 'nameofuser'
 to the dev group.
+
+If using Vagrant then change the password for dev user and login as that user.
+```
+sudo passwd dev;
+su dev;
+```
 
 Create the `.env` and `.htpasswd` files first. 
 ```

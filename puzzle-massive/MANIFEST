@@ -31,7 +31,7 @@ divulger/puzzle-massive-divulger.service.sh
 divulger/requirements.txt
 divulger/setup.py
 documents
-LICENSE.txt
+LICENSE
 Makefile
 media
 package.json

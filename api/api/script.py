@@ -14,17 +14,14 @@ Subcommands:
     serve   - Starts a daemon web server with Gevent.
 """
 from docopt import docopt
-from setuptools_scm import get_version
 #from ConfigParser import RawConfigParser
 
 from app import make_app
 from api.tools import loadConfig
 
-api_version = get_version()
-
 def main():
     ""
-    args = docopt(__doc__, version=api_version)
+    args = docopt(__doc__, version='0.0')
     config_file = args['--config']
     # parse args and pass to run, server, etc.
     #site_config = RawConfigParser()
@@ -60,7 +57,7 @@ def serve(config, cookie_secret):
     app = make_app(config=config, cookie_secret=cookie_secret)
 
     host = app.config.get('HOSTAPI')
-    port = app.config.get('PORTAPI'),
+    port = app.config.get('PORTAPI')
 
     print(u'serving on {host}:{port}'.format(**locals()))
     server = pywsgi.WSGIServer((host, port), app)
