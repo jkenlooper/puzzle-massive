@@ -17,8 +17,11 @@ SYSTEMDDIR=$3
 # /var/lib/puzzle-massive/sqlite3/
 DATABASEDIR=$4
 
+# /var/lib/puzzle-massive/archive/
+ARCHIVEDIR=$5
+
 # /var/lib/puzzle-massive/cache/
-CACHEDIR=$5
+CACHEDIR=$6
 
 rm -rf ${SRVDIR}root/!(.well-known|.|..)
 
@@ -54,6 +57,8 @@ rm -f "${SYSTEMDDIR}puzzle-massive-janitor.service";
 # TODO: Should it remove the database file in an uninstall?
 echo "Skipping removal of sqlite database file ${DATABASEDIR}db"
 #rm -f "${DATABASEDIR}db"
+
+rm -rf "${ARCHIVEDIR}"
 
 rm -rf "${CACHEDIR}"
 

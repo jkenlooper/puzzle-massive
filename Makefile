@@ -129,7 +129,7 @@ all: bin/chill bin/puzzle-massive-api bin/puzzle-massive-divulger $(objects)
 
 .PHONY: install
 install:
-	./bin/install.sh $(SRVDIR) $(NGINXDIR) $(NGINXLOGDIR) $(AWSTATSLOGDIR) $(SYSTEMDDIR) $(DATABASEDIR) $(CACHEDIR)
+	./bin/install.sh $(SRVDIR) $(NGINXDIR) $(NGINXLOGDIR) $(AWSTATSLOGDIR) $(SYSTEMDDIR) $(DATABASEDIR) $(ARCHIVEDIR) $(CACHEDIR)
 
 # Remove any created files in the src directory which were created by the
 # `make all` recipe.
@@ -144,7 +144,7 @@ clean:
 # Will also remove the sqlite database file.
 .PHONY: uninstall
 uninstall:
-	./bin/uninstall.sh $(SRVDIR) $(NGINXDIR) $(SYSTEMDDIR) $(DATABASEDIR) $(CACHEDIR)
+	./bin/uninstall.sh $(SRVDIR) $(NGINXDIR) $(SYSTEMDDIR) $(DATABASEDIR) $(ARCHIVEDIR) $(CACHEDIR)
 
 .PHONY: dist
 dist: puzzle-massive-$(TAG).tar.gz

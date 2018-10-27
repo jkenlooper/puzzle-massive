@@ -22,8 +22,11 @@ SYSTEMDDIR=$5
 # /var/lib/puzzle-massive/sqlite3/
 DATABASEDIR=$6
 
+# /var/lib/puzzle-massive/archive/
+ARCHIVEDIR=$7
+
 # /var/lib/puzzle-massive/cache/
-CACHEDIR=$7
+CACHEDIR=$8
 
 mkdir -p "${SRVDIR}root/";
 chown -R dev:dev "${SRVDIR}root/";
@@ -116,6 +119,10 @@ if (test ! -f "${DATABASEDIR}db"); then
     su dev -c "echo \"pragma journal_mode=wal\" | sqlite3 ${DATABASEDIR}db"
     chmod -R 770 "${DATABASEDIR}"
 fi
+
+mkdir -p "${ARCHIVEDIR}"
+chown -R dev:dev "${ARCHIVEDIR}"
+chmod -R 770 "${ARCHIVEDIR}"
 
 mkdir -p "${CACHEDIR}"
 chown -R dev:dev "${CACHEDIR}"
