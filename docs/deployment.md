@@ -60,8 +60,9 @@ been uploaded to the home directory.
 
     ```bash
     cd /home/dev/;
-    mv /usr/local/src/puzzle-massive puzzle-massive-$(date +%F);
-    tar --directory=/usr/local/src/ --extract --gunzip -f puzzle-massive-2.0.0.tar.gz
+    sudo mv /usr/local/src/puzzle-massive puzzle-massive-$(date +%F);
+    sudo tar --directory=/usr/local/src/ --extract --gunzip -f puzzle-massive-2.0.0.tar.gz
+    sudo chown -R dev:dev /usr/local/src/puzzle-massive
     cp puzzle-massive-$(date +%F)/.env /usr/local/src/puzzle-massive/;
     cp puzzle-massive-$(date +%F)/.htpasswd /usr/local/src/puzzle-massive/;
     ```
