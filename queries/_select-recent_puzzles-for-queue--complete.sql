@@ -7,7 +7,6 @@ round((min(CAST(p.table_width AS float), CAST(p.table_height AS float)) / max(CA
 FROM Puzzle AS p
 JOIN PuzzleFile AS pf ON (pf.puzzle = p.id)
 WHERE pf.name == 'preview_full' -- PUBLIC
-and :status == 'complete'
 AND p.permission = 0
 AND p.status == 3
 AND strftime('%s', p.m_date) <= strftime('%s', 'now', '-7 days')

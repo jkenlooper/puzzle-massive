@@ -8,7 +8,6 @@ round((min(CAST(p.table_width AS float), CAST(p.table_height AS float)) / max(CA
 FROM Puzzle AS p
 JOIN PuzzleFile AS pf ON (pf.puzzle = p.id)
 WHERE pf.name == 'preview_full' -- PUBLIC
-and :status == 'active'
 AND p.permission = 0
 -- ACTIVE, IN_QUEUE
 AND p.status IN (1, 2)
@@ -17,5 +16,4 @@ AND not (p.id in (select id from Puzzle where permission = 0 and status in (1, 2
 GROUP BY p.id
 ORDER BY p.pieces asc
 -- Can't limit or offset since it varies what is actually visible to each player depending on dots
--- LIMIT 10 OFFSET (:offset * 10)
 ;

@@ -8,7 +8,6 @@ strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 days') as is_recent
 FROM Puzzle AS p
 JOIN PuzzleFile AS pf ON (pf.puzzle = p.id)
 WHERE pf.name == 'preview_full' -- PUBLIC
-and :status == 'complete'
 AND p.permission = 0
 AND p.status == 3 -- COMPLETE
 AND not is_recent -- not recently complete
@@ -17,5 +16,4 @@ AND not (p.id in (select id from Puzzle where permission = 0 and status in (1, 2
 GROUP BY p.id
 ORDER BY p.pieces asc
 -- Can't limit or offset since it varies what is actually visible to each player depending on dots
--- LIMIT 10 OFFSET (:offset * 10)
 ;
