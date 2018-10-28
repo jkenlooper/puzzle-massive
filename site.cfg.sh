@@ -56,7 +56,7 @@ SQLITE_DATABASE_URI = "${DATABASEDIR}db"
 
 # Archive directory for storing puzzle timeline. Not directly accessible by the
 # public.
-PUZZLE_ARCHIVE = "${ARCHIVEDIR}archive"
+PUZZLE_ARCHIVE = "${ARCHIVEDIR}"
 
 # Resource directory for storing puzzle resources. Only some paths are
 # accessible via web.  Used for storing uploaded puzzles.

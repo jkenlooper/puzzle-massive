@@ -207,7 +207,7 @@ on the old server and copy all the data over to the new puzzle-green server.
     ```bash
     rsync --archive --progress --itemize-changes \
       dev@puzzle-blue:/var/log/nginx/puzzle-massive \
-      /var/log/nginx/puzzle-massive
+      /var/log/nginx/
     ```
 
 5)  Copy the archive directory (ARCHIVEDIR): `/var/lib/puzzle-massive/archive/`
@@ -215,7 +215,7 @@ on the old server and copy all the data over to the new puzzle-green server.
     ```bash
     rsync --archive --progress --itemize-changes \
       dev@puzzle-blue:/var/lib/puzzle-massive/archive \
-      /var/lib/puzzle-massive/archive
+      /var/lib/puzzle-massive/
     ```
 
 6)  Copy the resources directory (SRVDIR/resources) that contains the generated
@@ -224,7 +224,7 @@ on the old server and copy all the data over to the new puzzle-green server.
     ```bash
     rsync --archive --progress --itemize-changes \
       dev@puzzle-blue:/srv/puzzle-massive/resources \
-      /srv/puzzle-massive/resources
+      /srv/puzzle-massive/
     ```
 
 7)  Start the new server and switch traffic over to it.
