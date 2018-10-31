@@ -19,9 +19,18 @@ from api.constants import (
         IN_QUEUE,
         )
 
+# Need to update the limits in /etc/ImageMagick-6/policy.xml to something like:
+#
+#  <policy domain="resource" name="memory" value="2GiB"/>
+#  <policy domain="resource" name="map" value="1GiB"/>
+#  <policy domain="resource" name="width" value="64KP"/>
+#  <policy domain="resource" name="height" value="64KP"/>
+#  <policy domain="resource" name="area" value="512MB"/>
+#  <policy domain="resource" name="disk" value="4GiB"/>
 MIN_PIECE_SIZE = 64
 MAX_PIECE_SIZE = 64
-MAX_PIXELS = (MIN_PIECE_SIZE * MIN_PIECE_SIZE) * 5000
+MAX_PIECES = 10000
+MAX_PIXELS = (MIN_PIECE_SIZE * MIN_PIECE_SIZE) * MAX_PIECES
 
 insert_puzzle_file = """
 insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);
@@ -104,7 +113,7 @@ def render(*args):
             resizedimagefile = os.path.join(puzzle_dir, 'resized-original.jpg')
             # The image is too big which would create piece sizes larger then the MAX_PIECE_SIZE
             # resize the image using image magick @
-            subprocess.call(['convert', imagefile, '-resize', '{0}@'.format(max_pixels), '-strip', resizedimagefile])
+            subprocess.call(['convert', imagefile, '-resize', '{0}@'.format(max_pixels), '-strip', '-quality', '85%', resizedimagefile])
             im = Image.open(resizedimagefile)
             (width, height) = im.size
             im_pixels = width * height
