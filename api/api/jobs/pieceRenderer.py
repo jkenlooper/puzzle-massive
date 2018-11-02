@@ -26,7 +26,14 @@ from api.constants import (
 #  <policy domain="resource" name="width" value="64KP"/>
 #  <policy domain="resource" name="height" value="64KP"/>
 #  <policy domain="resource" name="area" value="512MB"/>
-#  <policy domain="resource" name="disk" value="4GiB"/>
+
+#  <policy domain="resource" name="disk" value="1GiB"/>
+
+# Limit to safe web images
+#  <policy domain="delegate" rights="none" pattern="*" />
+#  <policy domain="filter" rights="none" pattern="*" />
+#  <policy domain="coder" rights="none" pattern="*" />
+#  <policy domain="coder" rights="read|write" pattern="{GIF,JPEG,PNG,WEBP}" />
 MIN_PIECE_SIZE = 64
 MAX_PIECE_SIZE = 64
 MAX_PIECES = 10000
@@ -99,6 +106,13 @@ def render(*args):
         scaled_sizes = [100,]
 
         puzzle_dir = os.path.join(config['PUZZLE_RESOURCES'], puzzle['puzzle_id'])
+
+        # Create the preview full
+        im = Image.open(os.path.join(puzzle_dir, 'original.jpg')).copy()
+        im.thumbnail(size=(384, 384))
+        im.save(os.path.join(puzzle_dir, 'preview_full.jpg'))
+        im.close()
+
         imagefile = os.path.join(puzzle_dir, 'original.jpg')
 
         im = Image.open(imagefile)

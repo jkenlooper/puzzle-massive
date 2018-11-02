@@ -297,6 +297,16 @@ cat <<HERE
     # Allow hotlinking
     root ${SRVDIR};
   }
+  location ~* ^/resources/.*/(original.jpg)\$ {
+    # Not available for hotlinking
+    valid_referers server_names;
+    if (\$invalid_referer) {
+      return 444;
+    }
+    auth_basic "Restricted Content";
+    auth_basic_user_file ${SRVDIR}.htpasswd;
+    root ${SRVDIR};
+  }
 
 
 error_page 500 501 502 503 504 505 506 507 /error_page.html;

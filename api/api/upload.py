@@ -4,6 +4,7 @@ import time
 import hashlib
 import threading
 import requests
+import subprocess
 
 import sqlite3
 from PIL import Image
@@ -20,7 +21,8 @@ from api.user import user_id_from_ip
 #permissions
 PUBLIC   = 0  # obvious...
 
-
+# Should match policy in /etc/ImageMagick-6/policy.xml
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'webp'])
 
 class PuzzleUploadView(MethodView):
     """
@@ -90,6 +92,11 @@ class PuzzleUploadView(MethodView):
                 abort(400)
             filename = secure_filename(upload_file.filename)
             filename = filename.lower()
+
+            # Check the filename to see if the extension is allowed
+            if os.path.splitext(filename)[1][1:] not in ALLOWED_EXTENSIONS:
+                abort(400)
+
             d = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
             puzzle_id = "%i%s" % (max_id, hashlib.sha224("%s%s" % (filename, d)).hexdigest()[0:9])
 
@@ -97,12 +104,19 @@ class PuzzleUploadView(MethodView):
             puzzle_dir = os.path.join(current_app.config.get('PUZZLE_RESOURCES'), puzzle_id)
             os.mkdir(puzzle_dir)
 
-            upload_file.save(os.path.join(puzzle_dir, 'original.jpg'))
+            # Convert the uploaded file to jpg
+            upload_file_path = os.path.join(puzzle_dir, filename)
+            upload_file.save(upload_file_path)
+            # Abort if imagemagick is converting an image that is not websafe
+            try:
+                subprocess.check_call(['convert', upload_file_path, '-quality', '85%', '-format', 'jpg', os.path.join(puzzle_dir, 'original.jpg')])
+            except subprocess.CalledProcessError:
+                os.unlink(upload_file_path)
+                os.rmdir(puzzle_dir)
+                abort(400)
+            os.unlink(upload_file_path)
 
-            # Create the preview full
-            im = Image.open(os.path.join(puzzle_dir, 'original.jpg')).copy()
-            im.thumbnail(size=(384, 384))
-            im.save(os.path.join(puzzle_dir, 'preview_full.jpg'))
+            # The preview_full image is only created in the pieceRender process.
 
         query = """select max(queue)+1 from Puzzle where permission = 0;"""
         count = cur.execute(query).fetchone()[0]
