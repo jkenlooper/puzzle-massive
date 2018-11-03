@@ -4,9 +4,8 @@
     {% for item in puzzles %}
       {% set width = item.long if item.table_width > item.table_height else item.short %}
       {% set height = item.short if item.table_width > item.table_height else item.long %}
-      {% set src = item.url %}
+      {% set src = item.original if item.original else item.url %}
 
-      {# TODO: fallback on the original.jpg if preview_full fails to load? #}
       <div class="pma-Montage-listitem" role="listitem">
         <label for="puzzle_id_{{item.puzzle_id}}">
           <img class="lazyload" width="{{width|int}}" height="{{height|int}}" data-src="{{src}}" alt="">

@@ -174,7 +174,7 @@ class PuzzleUploadView(MethodView):
         cur.execute(insert_file, {
             'puzzle': puzzle,
             'name': 'original',
-            'url': '' # Not a public file
+            'url': '/resources/{0}/original.jpg'.format(puzzle_id) # Not a public file (only on admin page)
             })
 
         insert_file = "insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);"
