@@ -16,6 +16,8 @@ cat <<HERE
 limit_conn_zone \$binary_remote_addr zone=addr:1m;
 limit_req_zone \$binary_remote_addr zone=req_limit_per_ip:1m rate=8r/s;
 limit_req_zone \$binary_remote_addr zone=piece_move_limit_per_ip:1m rate=60r/m;
+limit_req_zone \$binary_remote_addr zone=puzzle_upload_limit_per_ip:1m rate=3r/m;
+limit_req_zone \$server_name zone=puzzle_upload_limit_per_server:1m rate=20r/m;
 
 server {
   # Redirect for old hosts
@@ -171,6 +173,27 @@ cat <<HERE
     rewrite ^/newapi/(.*)\$  /\$1 break;
   }
 
+  location /newapi/puzzle-upload/ {
+    # Not available for hotlinking
+    valid_referers server_names;
+    if (\$invalid_referer) {
+      return 444;
+    }
+
+    # Prevent too many uploads at once
+    limit_req zone=puzzle_upload_limit_per_ip burst=5 nodelay;
+    limit_req zone=puzzle_upload_limit_per_server burst=20 nodelay;
+
+    proxy_pass_header Server;
+    proxy_set_header Host \$http_host;
+    proxy_set_header  X-Real-IP  \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_redirect off;
+    proxy_pass http://localhost:${PORTAPI};
+
+    rewrite ^/newapi/(.*)\$  /\$1 break;
+  }
+
   location /newapi/admin/ {
     # Not available for hotlinking
     valid_referers server_names;
@@ -309,8 +332,13 @@ cat <<HERE
   }
 
 
-error_page 500 501 502 503 504 505 506 507 /error_page.html;
+error_page 500 501 502 504 505 506 507 /error_page.html;
 location  /error_page.html {
+  internal;
+}
+
+error_page 503 /overload_page.html;
+location /overload_page.html {
   internal;
 }
 
