@@ -110,7 +110,8 @@ class PuzzleUploadView(MethodView):
 
             # verify the image file format
             identify_format = subprocess.check_output(['identify', '-format', '%m', upload_file_path])
-            if identify_format.lower() not in ALLOWED_EXTENSIONS:
+            identify_format = identify_format.lower()
+            if identify_format not in ALLOWED_EXTENSIONS:
                 os.unlink(upload_file_path)
                 os.rmdir(puzzle_dir)
                 abort(400)
