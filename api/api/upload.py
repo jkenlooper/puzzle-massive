@@ -94,7 +94,7 @@ class PuzzleUploadView(MethodView):
             filename = filename.lower()
 
             # Check the filename to see if the extension is allowed
-            if os.path.splitext(filename)[1][1:] not in ALLOWED_EXTENSIONS:
+            if os.path.splitext(filename)[1][1:].lower() not in ALLOWED_EXTENSIONS:
                 abort(400)
 
             d = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
@@ -107,7 +107,16 @@ class PuzzleUploadView(MethodView):
             # Convert the uploaded file to jpg
             upload_file_path = os.path.join(puzzle_dir, filename)
             upload_file.save(upload_file_path)
-            # Abort if imagemagick is converting an image that is not websafe
+
+            # verify the image file format
+            identify_format = subprocess.check_output(['identify', '-format', '%m', upload_file_path])
+            if identify_format.lower() not in ALLOWED_EXTENSIONS:
+                os.unlink(upload_file_path)
+                os.rmdir(puzzle_dir)
+                abort(400)
+
+
+            # Abort if imagemagick fails converting the image to jpg
             try:
                 subprocess.check_call(['convert', upload_file_path, '-quality', '85%', '-format', 'jpg', os.path.join(puzzle_dir, 'original.jpg')])
             except subprocess.CalledProcessError:

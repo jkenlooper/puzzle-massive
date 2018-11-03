@@ -29,11 +29,6 @@ from api.constants import (
 
 #  <policy domain="resource" name="disk" value="1GiB"/>
 
-# Limit to safe web images
-#  <policy domain="delegate" rights="none" pattern="*" />
-#  <policy domain="filter" rights="none" pattern="*" />
-#  <policy domain="coder" rights="none" pattern="*" />
-#  <policy domain="coder" rights="read|write" pattern="{GIF,JPEG,PNG,WEBP}" />
 MIN_PIECE_SIZE = 64
 MAX_PIECE_SIZE = 64
 MAX_PIECES = 10000
