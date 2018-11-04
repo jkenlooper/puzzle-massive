@@ -1,4 +1,5 @@
 "Admin Puzzle Edit"
+import os
 
 from flask import current_app, redirect, request, make_response, abort
 from flask.views import MethodView
@@ -27,6 +28,19 @@ ACTIONS = (
     'delete',
     'tag'
     )
+
+def delete_puzzle_resources(puzzle_id):
+    puzzle_dir = os.path.join(current_app.config['PUZZLE_RESOURCES'], puzzle_id)
+    if not os.path.exists(puzzle_dir):
+        return
+    for (dirpath, dirnames, filenames) in os.walk(puzzle_dir, False):
+        for filename in filenames:
+            os.unlink(os.path.join(dirpath, filename))
+        for dirname in dirnames:
+            os.rmdir(os.path.join(dirpath, dirname))
+    os.rmdir(puzzle_dir)
+
+
 
 class AdminPuzzleBatchEditView(MethodView):
     """
@@ -62,7 +76,7 @@ class AdminPuzzleBatchEditView(MethodView):
             abort(400)
 
         puzzle_ids = request.form.getlist('montage_puzzle_id')
-        if len(puzzle_ids) == 0:
+        if len(puzzle_ids) == 0 or len(puzzle_ids) > 20:
             abort(400)
         if not isinstance(puzzle_ids, list):
             puzzle_ids = [puzzle_ids]
@@ -104,18 +118,23 @@ class AdminPuzzleBatchEditView(MethodView):
             update Puzzle set status = {status}
             where puzzle_id = :puzzle_id;
             """.format(status=status)
-            # TODO: delete puzzle resources
+
+            c = db.cursor()
+            for puzzle_id in puzzle_ids:
+                delete_puzzle_resources(puzzle_id)
+                id = c.execute("select id from Puzzle where puzzle_id = :puzzle_id", {'puzzle_id': puzzle_id}).fetchone()[0]
+                #current_app.logger.info('deleting puzzle resources for id {}'.format(id))
+                c.execute("""delete from PuzzleFile where puzzle = :id""", {'id': id})
+                c.execute("""delete from Piece where puzzle = :id""", {'id': id})
+                c.execute("""delete from Timeline where puzzle = :id""", {'id': id})
+            db.commit()
 
         cur = db.cursor()
 
         def each(puzzle_ids):
             for puzzle_id in puzzle_ids:
-                print 'yield'
-                print puzzle_id
                 yield {'puzzle_id': puzzle_id}
 
-        print query_update_status_for_puzzle_id
-        print puzzle_ids
         cur.executemany(query_update_status_for_puzzle_id, each(puzzle_ids))
         db.commit()
 

@@ -172,6 +172,7 @@
 
       <input type="reset">
       <input type="submit" value="Batch Edit">
+      <em>Max count of puzzles to edit at a time is 20.</em>
       {% if puzzles is mapping -%}
         {% set puzzles = [puzzles] %}
       {%- endif %}
