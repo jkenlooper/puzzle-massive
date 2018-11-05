@@ -21,8 +21,8 @@ from api.user import user_id_from_ip
 #permissions
 PUBLIC   = 0  # obvious...
 
-# Should match policy in /etc/ImageMagick-6/policy.xml
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'webp'])
+# Not allowing anything other then jpg to protect against potential picture bombs.
+ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
 
 class PuzzleUploadView(MethodView):
     """

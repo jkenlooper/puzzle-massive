@@ -19,6 +19,7 @@ from api.constants import (
         IN_QUEUE,
         )
 
+# https://www.imagemagick.org/script/architecture.php#cache
 # Need to update the limits in /etc/ImageMagick-6/policy.xml to something like:
 #
 #  <policy domain="resource" name="memory" value="2GiB"/>
