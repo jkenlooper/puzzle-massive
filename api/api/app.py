@@ -112,6 +112,7 @@ def make_app(config=None, **kw):
     #from subscribe import puzzle_updates
     from api.reset import PuzzlePiecesResetView
     from api.upload import PuzzleUploadView
+    from api.suggest_image import SuggestImageView
     from api.render import RenderPuzzlesView
     from api.user import (
         CurrentUserIDView,
@@ -139,6 +140,8 @@ def make_app(config=None, **kw):
     app.add_url_rule('/puzzle-reset/',
                      view_func=PuzzlePiecesResetView.as_view('puzzle-reset'))
     app.add_url_rule('/puzzle-upload/', view_func=PuzzleUploadView.as_view('puzzle-upload'))
+    app.add_url_rule('/suggest-image/', view_func=SuggestImageView.as_view('suggest-image'))
+
     app.add_url_rule('/current-user-id/', view_func=CurrentUserIDView.as_view('current-user-id'))
     app.add_url_rule('/user-details/', view_func=UserDetailsView.as_view('user-details'))
     app.add_url_rule('/generate-anonymous-login/',

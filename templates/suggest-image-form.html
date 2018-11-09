@@ -1,0 +1,41 @@
+<form enctype="multipart/form-data" id="suggest-image-form" method="post" action="/newapi/suggest-image/">
+  <div class="pm-UploadForm">
+    <div class="pm-UploadForm-row">
+      <label for="pieces">
+        Piece Count
+      </label>
+      <div>
+        <input type="number"
+               min="9"
+               max="50000"
+               id="pieces" name="pieces" value="200">
+        <p>
+        When the puzzle is being rendered try to create this many pieces from the image.
+        </p>
+      </div>
+    </div>
+    <div class="pm-UploadForm-row">
+      <label for="bg_color">
+        Background Color
+        <svg class="pm-UploadForm-icon"><use xlink:href="#paint-can-sprite"/></svg>
+      </label>
+      <input id="bg_color" class="jscolor pm-UploadForm-colorPicker u-textCenter" type="text" name="bg_color" value="#484662">
+    </div>
+    <div class="pm-UploadForm-row">
+      <label for="link">The website that the image is found on.</label>
+      <div>
+        <input id="link-field" style="width:100%" type="url" required name="link" value="" placeholder="https://unsplash.com/photos/oTQVwECws8o">
+        <p>
+        <em>If the picture is from <a href="https://unsplash.com/">Unsplash</a> add the url like this: <b>https://unsplash.com/photos/oTQVwECws8o</b></em>
+        </p>
+      </div>
+    </div>
+    <div class="pm-UploadForm-row">
+      <label for="description">Description</label>
+      <textarea id="description" name="description"></textarea>
+    </div>
+    <div class="u-textRight">
+      <input class="button" type="submit" name="save" value="Suggest Image" />
+    </div>
+  </div>
+</form>

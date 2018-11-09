@@ -27,7 +27,10 @@
     {% if route.contributor == config.NEW_PUZZLE_CONTRIB %}
       {% include 'uploadform.html' %}
     {% else %}
+      {% include 'suggest-image-form.html' %}
+      {#
       <script type="text/javascript" src="https://form.jotform.com/jsform/62518292957164"></script>
+      #}
     {% endif %}
   </section>
 
@@ -72,6 +75,7 @@
   <p>If you would like to create custom jigsaw puzzles that will be shown on
   this site then fill out <a href="/chill/{{ url_for('.page_uri', uri='contributor-application') }}">this application form.</a>
   </p>
+  </section>
 </div>
 
 {% endblock %}
