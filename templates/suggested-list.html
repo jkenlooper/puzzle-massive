@@ -1,0 +1,24 @@
+{% macro suggested_list(puzzles) -%}
+<div class="pma-SuggestedList">
+  <ul>
+    {% for item in puzzles %}
+    <li>
+        <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle/suggested/{0}'.format(item.puzzle_id)) }}">
+          Add
+        </a>
+        <label for="puzzle_id_{{item.puzzle_id}}">
+          <input id="puzzle_id_{{item.puzzle_id}}" name="montage_puzzle_id" type="checkbox" value="{{item.puzzle_id}}">
+          <span class="u-inlineBlock" style="background-color:{{item.bg_color}}; height:1em;width:1em;"></span>
+          {{item.bg_color}}
+          {{item.owner}}
+          <strong>{{item.pieces}}</strong>
+        </label>
+        <a rel="noreferrer nofollow" href="{{item.link}}">{{item.link}}</a>
+        {% if item.description %}
+          <p>{{ item.description }}</p>
+        {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endmacro %}

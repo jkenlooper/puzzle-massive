@@ -1,0 +1,33 @@
+{% extends 'docs.html' %}
+
+{% set SUGGESTED  = -20 %}
+
+{% block main %}
+
+{# Allow doc content if any exists. #}
+{{ super() }}
+
+{% if not page.info.status == SUGGESTED %}
+<p>
+  This jigsaw puzzle is not in the suggested queue.
+  {#
+  It could have been deleted and not made into a puzzle.
+  Or it could have been accepted for a puzzle, but this puzzle_id is not known.
+  #}
+</p>
+{% else %}
+{#
+{{ '[chill route /api/suggested/{}/ ]'.format(page.info.puzzle_id)|shortcodes }}
+#}
+
+date
+pieces
+owner
+link
+description
+bg_color
+
+{{page.info.link}}
+
+{% endif %}
+{% endblock %}

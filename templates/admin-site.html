@@ -7,7 +7,7 @@
       {%- elif title %} | {{ title }}
       {%- else %}{% block title %}{% endblock %}{% endif %}</title>
 
-    <meta name="description" content="{% block description %}{{ page.description }}{% endblock %}">
+    <meta name="description" content="{% block description %}{% if page and page.description %}{{ page.description }}{% endif %}{% endblock %}">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 

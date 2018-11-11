@@ -1,5 +1,6 @@
 {% extends 'admin-base.html' %}
 {% from 'montage.html' import montage %}
+{% from 'suggested-list.html' import suggested_list %}
 
 {% block title %}
  | Puzzle Management
@@ -177,7 +178,11 @@
         {% set puzzles = [puzzles] %}
       {%- endif %}
 
+      {% if puzzles[0].status == -20 %}
+        {{ suggested_list(puzzles) }}
+      {% else %}
         {{ montage(puzzles) }}
+      {% endif %}
 
     </form>
     {% endif %}

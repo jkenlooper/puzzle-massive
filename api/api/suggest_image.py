@@ -1,4 +1,5 @@
 import re
+import uuid
 
 import sqlite3
 from flask import current_app, redirect, request, abort
@@ -8,7 +9,7 @@ from werkzeug.urls import url_fix
 
 from api.app import db
 from api.database import rowify
-from api.constants import NEEDS_MODERATION
+from api.constants import SUGGESTED
 from api.user import user_id_from_ip
 
 #permissions
@@ -56,39 +57,38 @@ class SuggestImageView(MethodView):
         # Check link and validate
         link = url_fix(args.get('link', ''))
 
+        puzzle_id = uuid.uuid1().hex
+
+        cur = db.cursor()
         d = {'puzzle_id':puzzle_id,
             'pieces':pieces,
-            'name':filename,
             'link':link,
             'description':description,
             'bg_color':bg_color,
             'owner':user,
-            'queue':count,
-            'status': NEEDS_MODERATION,
+            'status': SUGGESTED,
             'permission':permission}
         cur.execute("""insert into Puzzle (
         puzzle_id,
         pieces,
-        name,
         link,
         description,
         bg_color,
         owner,
-        queue,
         status,
         permission) values
         (:puzzle_id,
         :pieces,
-        :name,
         :link,
         :description,
         :bg_color,
         :owner,
-        :queue,
         :status,
         :permission);
         """, d)
         db.commit()
+
+        # TODO: send a notification email
 
         return redirect('/', code=303)
 

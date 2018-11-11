@@ -24,6 +24,136 @@ PUBLIC   = 0  # obvious...
 # Not allowing anything other then jpg to protect against potential picture bombs.
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
 
+def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_file):
+    """
+    Submit a puzzle to be reviewed.  Generates the puzzle_id and original.jpg.
+    """
+    unsplash_image_thread = None
+
+    puzzle_id = None
+    cur = db.cursor()
+    query = """select max(id)*13 from Puzzle;"""
+    max_id = cur.execute(query).fetchone()[0] or 1 # in case there are no puzzles found.
+
+    unsplash_match = re.search(r"unsplash.com/photos/([^/]+)", link)
+    if link and unsplash_match:
+        d = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
+        filename = unsplash_match.group(1)
+        u_id = "%s" % (hashlib.sha224("%s%s" % (filename, d)).hexdigest()[0:9])
+        puzzle_id = "unsplash{filename}-mxyz-{u_id}".format(filename=filename, u_id=u_id)
+
+        # Create puzzle dir
+        puzzle_dir = os.path.join(current_app.config.get('PUZZLE_RESOURCES'), puzzle_id)
+        os.mkdir(puzzle_dir)
+
+        # Download the unsplash image
+        unsplash_image_thread = UnsplashPuzzleThread(puzzle_id, filename, current_app.config.get('UNSPLASH_APPLICATION_ID'), current_app.config.get('SQLITE_DATABASE_URI'))
+    else:
+        if not upload_file:
+            abort(400)
+        filename = secure_filename(upload_file.filename)
+        filename = filename.lower()
+
+        # Check the filename to see if the extension is allowed
+        if os.path.splitext(filename)[1][1:].lower() not in ALLOWED_EXTENSIONS:
+            abort(400)
+
+        d = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
+        puzzle_id = "%i%s" % (max_id, hashlib.sha224("%s%s" % (filename, d)).hexdigest()[0:9])
+
+        # Create puzzle dir
+        puzzle_dir = os.path.join(current_app.config.get('PUZZLE_RESOURCES'), puzzle_id)
+        os.mkdir(puzzle_dir)
+
+        # Convert the uploaded file to jpg
+        upload_file_path = os.path.join(puzzle_dir, filename)
+        upload_file.save(upload_file_path)
+
+        # verify the image file format
+        identify_format = subprocess.check_output(['identify', '-format', '%m', upload_file_path])
+        identify_format = identify_format.lower()
+        if identify_format not in ALLOWED_EXTENSIONS:
+            os.unlink(upload_file_path)
+            os.rmdir(puzzle_dir)
+            abort(400)
+
+
+        # Abort if imagemagick fails converting the image to jpg
+        try:
+            subprocess.check_call(['convert', upload_file_path, '-quality', '85%', '-format', 'jpg', os.path.join(puzzle_dir, 'original.jpg')])
+        except subprocess.CalledProcessError:
+            os.unlink(upload_file_path)
+            os.rmdir(puzzle_dir)
+            abort(400)
+        os.unlink(upload_file_path)
+
+        # The preview_full image is only created in the pieceRender process.
+
+    query = """select max(queue)+1 from Puzzle where permission = 0;"""
+    count = cur.execute(query).fetchone()[0]
+    if (not count):
+      count = 1
+
+    d = {'puzzle_id':puzzle_id,
+        'pieces':pieces,
+        'name':filename,
+        'link':link,
+        'description':description,
+        'bg_color':bg_color,
+        'owner':user,
+        'queue':count,
+        'status': NEEDS_MODERATION,
+        'permission':permission}
+    cur.execute("""insert into Puzzle (
+    puzzle_id,
+    pieces,
+    name,
+    link,
+    description,
+    bg_color,
+    owner,
+    queue,
+    status,
+    permission) values
+    (:puzzle_id,
+    :pieces,
+    :name,
+    :link,
+    :description,
+    :bg_color,
+    :owner,
+    :queue,
+    :status,
+    :permission);
+    """, d)
+    db.commit()
+
+    puzzle = rowify(cur.execute("select id from Puzzle where puzzle_id = :puzzle_id;", {'puzzle_id':puzzle_id}).fetchall(), cur.description)[0][0]
+    print puzzle
+    puzzle = puzzle['id']
+
+    insert_file = "insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);"
+    cur.execute(insert_file, {
+        'puzzle': puzzle,
+        'name': 'original',
+        'url': '/resources/{0}/original.jpg'.format(puzzle_id) # Not a public file (only on admin page)
+        })
+
+    insert_file = "insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);"
+    cur.execute(insert_file, {
+        'puzzle': puzzle,
+        'name': 'preview_full',
+        'url': '/resources/{0}/preview_full.jpg'.format(puzzle_id)
+        })
+
+    db.commit()
+
+    if unsplash_image_thread:
+        # Go download the unsplash image and update the db
+        unsplash_image_thread.start()
+
+    return puzzle_id
+
 class PuzzleUploadView(MethodView):
     """
     Handle uploaded puzzle images
@@ -65,131 +195,11 @@ class PuzzleUploadView(MethodView):
         description = escape(args.get('description', ''))
 
         # Check link and validate
-        unsplash_image_thread = None
         link = url_fix(args.get('link', ''))
 
-        puzzle_id = None
-        cur = db.cursor()
-        query = """select max(id)*13 from Puzzle;"""
-        max_id = cur.execute(query).fetchone()[0] or 1 # in case there are no puzzles found.
+        upload_file = request.files.get('upload_file', None)
 
-        unsplash_match = re.search(r"unsplash.com/photos/([^/]+)", link)
-        if link and unsplash_match:
-            d = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
-            filename = unsplash_match.group(1)
-            u_id = "%s" % (hashlib.sha224("%s%s" % (filename, d)).hexdigest()[0:9])
-            puzzle_id = "unsplash{filename}-mxyz-{u_id}".format(filename=filename, u_id=u_id)
-
-            # Create puzzle dir
-            puzzle_dir = os.path.join(current_app.config.get('PUZZLE_RESOURCES'), puzzle_id)
-            os.mkdir(puzzle_dir)
-
-            # Download the unsplash image
-            unsplash_image_thread = UnsplashPuzzleThread(puzzle_id, filename, current_app.config.get('UNSPLASH_APPLICATION_ID'), current_app.config.get('SQLITE_DATABASE_URI'))
-        else:
-            upload_file = request.files.get('upload_file', None)
-            if not upload_file:
-                abort(400)
-            filename = secure_filename(upload_file.filename)
-            filename = filename.lower()
-
-            # Check the filename to see if the extension is allowed
-            if os.path.splitext(filename)[1][1:].lower() not in ALLOWED_EXTENSIONS:
-                abort(400)
-
-            d = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
-            puzzle_id = "%i%s" % (max_id, hashlib.sha224("%s%s" % (filename, d)).hexdigest()[0:9])
-
-            # Create puzzle dir
-            puzzle_dir = os.path.join(current_app.config.get('PUZZLE_RESOURCES'), puzzle_id)
-            os.mkdir(puzzle_dir)
-
-            # Convert the uploaded file to jpg
-            upload_file_path = os.path.join(puzzle_dir, filename)
-            upload_file.save(upload_file_path)
-
-            # verify the image file format
-            identify_format = subprocess.check_output(['identify', '-format', '%m', upload_file_path])
-            identify_format = identify_format.lower()
-            if identify_format not in ALLOWED_EXTENSIONS:
-                os.unlink(upload_file_path)
-                os.rmdir(puzzle_dir)
-                abort(400)
-
-
-            # Abort if imagemagick fails converting the image to jpg
-            try:
-                subprocess.check_call(['convert', upload_file_path, '-quality', '85%', '-format', 'jpg', os.path.join(puzzle_dir, 'original.jpg')])
-            except subprocess.CalledProcessError:
-                os.unlink(upload_file_path)
-                os.rmdir(puzzle_dir)
-                abort(400)
-            os.unlink(upload_file_path)
-
-            # The preview_full image is only created in the pieceRender process.
-
-        query = """select max(queue)+1 from Puzzle where permission = 0;"""
-        count = cur.execute(query).fetchone()[0]
-        if (not count):
-          count = 1
-
-        d = {'puzzle_id':puzzle_id,
-            'pieces':pieces,
-            'name':filename,
-            'link':link,
-            'description':description,
-            'bg_color':bg_color,
-            'owner':user,
-            'queue':count,
-            'status': NEEDS_MODERATION,
-            'permission':permission}
-        cur.execute("""insert into Puzzle (
-        puzzle_id,
-        pieces,
-        name,
-        link,
-        description,
-        bg_color,
-        owner,
-        queue,
-        status,
-        permission) values
-        (:puzzle_id,
-        :pieces,
-        :name,
-        :link,
-        :description,
-        :bg_color,
-        :owner,
-        :queue,
-        :status,
-        :permission);
-        """, d)
-        db.commit()
-
-        puzzle = rowify(cur.execute("select id from Puzzle where puzzle_id = :puzzle_id;", {'puzzle_id':puzzle_id}).fetchall(), cur.description)[0][0]
-        print puzzle
-        puzzle = puzzle['id']
-
-        insert_file = "insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);"
-        cur.execute(insert_file, {
-            'puzzle': puzzle,
-            'name': 'original',
-            'url': '/resources/{0}/original.jpg'.format(puzzle_id) # Not a public file (only on admin page)
-            })
-
-        insert_file = "insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);"
-        cur.execute(insert_file, {
-            'puzzle': puzzle,
-            'name': 'preview_full',
-            'url': '/resources/{0}/preview_full.jpg'.format(puzzle_id)
-            })
-
-        db.commit()
-
-        if unsplash_image_thread:
-            # Go download the unsplash image and update the db
-            unsplash_image_thread.start()
+        puzzle_id = submit_puzzle(pieces, bg_color, user, permission, description, link, upload_file)
 
         return redirect('/chill/site/puzzle/{0}/'.format(puzzle_id), code=303)
 
