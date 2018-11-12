@@ -87,6 +87,6 @@ class SuggestImageView(MethodView):
 
         # TODO: send a notification email
 
-        # TODO: redirect to a thank you page (not revealing the puzzle_id)
-        return redirect('/', code=303)
+        # Redirect to a thank you page (not revealing the puzzle_id)
+        return redirect('/chill/site/suggested-puzzle-thank-you/', code=303)
 
