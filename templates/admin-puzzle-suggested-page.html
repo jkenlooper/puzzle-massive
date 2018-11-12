@@ -1,7 +1,57 @@
 {% extends 'admin-base.html' %}
 
 {% block main %}
-suggested puzzle {{puzzle_id.puzzle_id}}
-{{ page.title }}
-TODO: show the same upload puzzle form that is populated with the suggested data.
+suggested puzzle {{puzzle.puzzle_id}}
+
+<p>
+  Player ({{ puzzle.owner }}) has suggested this puzzle.
+</p>
+<p>
+  <a rel="noreferrer nofollow" href="{{ puzzle.link }}">{{ puzzle.link }}</a>
+</p>
+
+<form enctype="multipart/form-data" id="upload_puzzle" method="post" action="/newapi/admin/puzzle/promote-suggested/">
+  <input type="hidden" name="puzzle_id" value="{{ puzzle.puzzle_id }}">
+  <div class="pm-UploadForm">
+    <div class="pm-UploadForm-row">
+      <label for="pieces">
+        Piece Count
+      </label>
+      <div>
+        <input type="number"
+               min="9"
+               max="50000"
+               id="pieces" name="pieces" value="{{ puzzle.pieces }}">
+      </div>
+    </div>
+    <div class="pm-UploadForm-row">
+      <label for="bg_color">
+        Background Color
+      </label>
+      <input id="bg_color" class="jscolor pm-UploadForm-colorPicker u-textCenter" type="text" name="bg_color" value="{{ puzzle.bg_color }}">
+    </div>
+    <div class="pm-UploadForm-row">
+      <label for="link">The website that the image is found on.</label>
+      <div>
+        <input id="link-field" style="width:100%" type="text" name="link" value="{{ puzzle.link }}" placeholder="https://unsplash.com/photos/oTQVwECws8o">
+      </div>
+    </div>
+    <div class="pm-UploadForm-row">
+      <label class="u-block" for="description">Description</label>
+      <textarea id="description" name="description">{{ puzzle.description }}</textarea>
+    </div>
+    <div class="pm-UploadForm-row">
+      <label for="upload_file">Select an image for the puzzle</label>
+      <div>
+        <input type="file" name="upload_file" accept=".jpg,.jpeg">
+        <p>
+        <em>Only if not a picture from Unsplash</em>
+        </p>
+      </div>
+    </div>
+    <div class="u-textRight">
+      <input class="button" type="submit" name="save" value="Create Puzzle" />
+    </div>
+  </div>
+</form>
 {% endblock %}

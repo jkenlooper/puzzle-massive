@@ -14,7 +14,7 @@ from werkzeug.utils import secure_filename, escape
 from werkzeug.urls import url_fix
 
 from api.app import db
-from api.database import rowify
+from api.database import rowify, fetch_query_string
 from api.constants import COMPLETED, NEEDS_MODERATION
 from api.user import user_id_from_ip
 
@@ -202,6 +202,69 @@ class PuzzleUploadView(MethodView):
         puzzle_id = submit_puzzle(pieces, bg_color, user, permission, description, link, upload_file)
 
         return redirect('/chill/site/puzzle/{0}/'.format(puzzle_id), code=303)
+
+
+class AdminPuzzlePromoteSuggestedView(MethodView):
+    """
+    Handle promoting a suggested puzzle to be in needs moderation status.
+    """
+    def post(self):
+        "Route is protected by basic auth in nginx"
+        args = {}
+        if request.form:
+            args.update(request.form.to_dict(flat=True))
+
+        puzzle_id = args.get('puzzle_id')
+        if not puzzle_id:
+            abort(400)
+
+        # Check pieces arg
+        pieces = args.get('pieces', 100)
+        if pieces < 2:
+            abort(400)
+
+        # Check bg_color
+        color_regex = re.compile('.*?#?([a-f0-9]{6}|[a-f0-9]{3}).*?', re.IGNORECASE)
+        bg_color = args.get('bg_color', '#808080')[:50]
+        color_match = color_regex.match(bg_color)
+        if (color_match):
+            bg_color = "#{0}".format(color_match.group(1))
+        else:
+            bg_color = "#808080"
+
+        # All puzzles are public
+        permission = PUBLIC
+        #permission = int(args.get('permission', PUBLIC))
+        #if permission != PUBLIC:
+        #    permission = PUBLIC
+
+        description = escape(args.get('description', ''))
+
+        # Check link and validate
+        link = url_fix(args.get('link', ''))
+
+        upload_file = request.files.get('upload_file', None)
+
+        # TODO: get the owner of the suggested puzzle
+        cur = db.cursor()
+        result = cur.execute(fetch_query_string('_select-owner-for-suggested-puzzle.sql'), {
+            'puzzle_id': puzzle_id
+            }).fetchone()
+        if not result:
+            abort(400)
+        owner = result[0]
+
+        new_puzzle_id = submit_puzzle(pieces, bg_color, owner, permission, description, link, upload_file)
+
+        # Update the status of this suggested puzzle to be the suggested done
+        # status
+        cur.execute(fetch_query_string('_update-suggested-puzzle-to-done-status.sql'), {
+            'puzzle_id': puzzle_id
+        })
+        db.commit()
+
+        return redirect('/chill/site/puzzle/{0}/'.format(new_puzzle_id), code=303)
+
 
 class UnsplashPuzzleThread(threading.Thread):
     def __init__(self, puzzle_id, photo, application_id, db_file):

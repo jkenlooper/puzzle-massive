@@ -16,3 +16,4 @@ DELETED_INAPT    = -11 # inappropiate image for puzzle due to content of image
 DELETED_OLD      = -12 # out with the old
 DELETED_REQUEST  = -13 # deleted on request from the owner. Can be deleted automatically after completion or date or?
 SUGGESTED        = -20 # No image has been set; only a link to source image
+SUGGESTED_DONE   = -21 # Suggested image has been processed

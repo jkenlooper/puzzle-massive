@@ -111,7 +111,7 @@ def make_app(config=None, **kw):
     from api.pieces import PuzzlePiecesView
     #from subscribe import puzzle_updates
     from api.reset import PuzzlePiecesResetView
-    from api.upload import PuzzleUploadView
+    from api.upload import PuzzleUploadView, AdminPuzzlePromoteSuggestedView
     from api.suggest_image import SuggestImageView
     from api.render import RenderPuzzlesView
     from api.user import (
@@ -164,6 +164,8 @@ def make_app(config=None, **kw):
                      view_func=RenderPuzzlesView.as_view('admin-puzzle-render'))
     app.add_url_rule('/admin/puzzle/batch-edit/',
                      view_func=AdminPuzzleBatchEditView.as_view('admin-puzzle-edit'))
+    app.add_url_rule('/admin/puzzle/promote-suggested/',
+                     view_func=AdminPuzzlePromoteSuggestedView.as_view('admin-puzzle-promote-suggested'))
     app.add_url_rule('/admin/player/blocked/',
                      view_func=AdminBlockedPlayersList.as_view('admin-player-blocked'))
 

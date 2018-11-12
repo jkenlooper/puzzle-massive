@@ -15,9 +15,6 @@ from api.user import user_id_from_ip
 #permissions
 PUBLIC   = 0  # obvious...
 
-# Not allowing anything other then jpg to protect against potential picture bombs.
-ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
-
 class SuggestImageView(MethodView):
     """
     Handle suggest image form uploads
@@ -90,5 +87,6 @@ class SuggestImageView(MethodView):
 
         # TODO: send a notification email
 
+        # TODO: redirect to a thank you page (not revealing the puzzle_id)
         return redirect('/', code=303)
 
