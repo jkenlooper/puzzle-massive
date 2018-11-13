@@ -71,6 +71,12 @@ echo "UNSPLASH_APPLICATION_ID=fill-this-in" > .env;
 echo "UNSPLASH_SECRET=secret-key-goes-here" >> .env;
 echo "NEW_PUZZLE_CONTRIB=temporary-contributor-id-goes-here" >> .env;
 echo "SECURE_COOKIE_SECRET=make-up-some-random-text" >> .env;
+echo "SMTP_HOST='localhost'"
+echo "SMTP_PORT='587'"
+echo "SMTP_USER='user@localhost'"
+echo "SMTP_PASSWORD='somepassword'"
+echo "EMAIL_SENDER='sender@localhost'"
+echo "EMAIL_MODERATOR='moderator@localhost'"
 htpasswd -c .htpasswd admin;
 ```
 

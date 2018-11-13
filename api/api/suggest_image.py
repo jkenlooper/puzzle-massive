@@ -11,6 +11,7 @@ from api.app import db
 from api.database import rowify
 from api.constants import SUGGESTED
 from api.user import user_id_from_ip
+from api.notify import send_message
 
 #permissions
 PUBLIC   = 0  # obvious...
@@ -85,7 +86,14 @@ class SuggestImageView(MethodView):
         """, d)
         db.commit()
 
-        # TODO: send a notification email
+        # Send a notification email (silent fail if not configured)
+        try:
+            send_message(current_app.config.get('EMAIL_MODERATOR'),
+                         'Suggested Image',
+                         "http://puzzle.massive.xyz/chill/site/admin/puzzle/suggested/{}/".format(puzzle_id))
+        except Exception as err:
+            current_app.logger.warning("Failed to send notification message. {}".format(err))
+            pass
 
         # Redirect to a thank you page (not revealing the puzzle_id)
         return redirect('/chill/site/suggested-puzzle-thank-you/', code=303)
