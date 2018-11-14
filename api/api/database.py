@@ -54,3 +54,15 @@ def fetch_query_string(file_name):
     else:
         # fallback on one that's in app resources
         return _fetch_sql_string(file_name)
+
+def read_query_file(file_name):
+    """
+    Read the sql file content without requiring app context.  Useful for simple
+    scripts to load the same query files from the root.
+    """
+    file_path = os.path.join('queries', file_name)
+    if os.path.isfile(file_path):
+        with open(file_path, 'r') as f:
+            return f.read()
+    else:
+        raise Exception("File not found: {}".format(file_path))
