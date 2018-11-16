@@ -23,6 +23,9 @@ config = loadConfig(config_file)
 db_file = config['SQLITE_DATABASE_URI']
 db = sqlite3.connect(db_file)
 
+# set to not autocommit
+db.isolation_level = None
+
 # The unsplash API only allows for 50 requests an hour for demo apps.
 HOUR_IN_SECONDS = 60 * 60
 UNSPLASH_MAX_REQUESTS_PER_HOUR = 50
@@ -35,6 +38,9 @@ query_select_puzzle_file_to_migrate_from_s3 = read_query_file('_select-puzzle-fi
 
 query_select_puzzle_file_to_migrate_from_unsplash = read_query_file('_select-puzzle-file-to-migrate-from-unsplash.sql')
 
+query_update_puzzle_file_original_null_url = read_query_file('_update-puzzle-file-original-null-url.sql')
+query_update_puzzle_file_original_s3_url = read_query_file('_update-puzzle-file-original-s3-url.sql')
+
 def migrate_s3_puzzle(puzzle):
     """
     Download the file from S3 and update the url in the puzzle file.
@@ -45,7 +51,7 @@ def migrate_s3_puzzle(puzzle):
     # pieces.png
     # pzz.css
     print("{puzzle} migrating s3 puzzle file {name}: {url}".format(**puzzle))
-    if puzzle.url == '0': # or just test if the name is 'original'?
+    if puzzle['url'] == '0': # or just test if the name is 'original'?
         # TODO: the original.jpg url is '0' since it wasn't ever public
         pass
 
@@ -62,6 +68,16 @@ def migrate_unsplash_puzzle(puzzle):
 
 def migrate_next_puzzle(puzzle):
     cur = db.cursor()
+
+    # Update any original that have an empty url
+    cur.execute(query_update_puzzle_file_original_null_url, {
+        'puzzle': puzzle
+    })
+
+    # Update any original that have a '0' for url
+    cur.execute(query_update_puzzle_file_original_s3_url, {
+        'puzzle': puzzle
+    })
 
     result = cur.execute(query_select_puzzle_file_to_migrate_from_s3, {
         'puzzle': puzzle
@@ -80,17 +96,28 @@ def migrate_next_puzzle(puzzle):
             migrate_unsplash_puzzle(item)
             delay = MIGRATE_INTERVAL + random.randint(0, MAX_RANDOM_DELAY_SECONDS)
             print("sleeping for {} seconds".format(delay))
-            time.sleep(delay)
+            #time.sleep(delay)
 
 def migrate_all():
     """
     Update all puzzle files that need to migrate their resources.
     """
+    confirm = raw_input("Commit the transaction? y/n\n")
     cur = db.cursor()
+    cur.execute("begin");
+    print("begin transaction")
     result = cur.execute(query_select_all_puzzles_to_migrate).fetchall()
     if result:
         for item in result:
             migrate_next_puzzle(item[0])
+
+    # while developing
+    if confirm == 'y':
+        cur.execute("commit");
+        print("transaction has been committed")
+    else:
+        cur.execute("rollback");
+        print("transaction has been rollbacked")
 
 if __name__ == '__main__':
     migrate_all()
