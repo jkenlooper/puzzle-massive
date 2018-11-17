@@ -51,9 +51,6 @@ def migrate_s3_puzzle(puzzle):
     # pieces.png
     # pzz.css
     print("{puzzle} migrating s3 puzzle file {name}: {url}".format(**puzzle))
-    if puzzle['url'] == '0': # or just test if the name is 'original'?
-        # TODO: the original.jpg url is '0' since it wasn't ever public
-        pass
 
 def migrate_unsplash_puzzle(puzzle):
     """
