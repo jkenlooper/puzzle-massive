@@ -21,4 +21,5 @@ flask-secure-cookie == 0.1.2
 cairosvg==1.0.22
 pycairo
 setuptools_scm
+boto3==1.9.47
 -e api/

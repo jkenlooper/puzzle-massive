@@ -80,6 +80,7 @@ echo "EMAIL_MODERATOR='moderator@localhost'" >> .env;
 htpasswd -c .htpasswd admin;
 ```
 
+
 When first installing on the dev machine run:
 
 ```
@@ -98,6 +99,14 @@ python api/api/create_database.py site.cfg;
 exit
 
 sudo nginx -s reload
+```
+
+Set the credentials to use a compatible s3 setup with either the awscli or
+manually adding the credentials.
+```
+# As the dev user:
+pip install awscli
+aws configure
 ```
 
 Update `/etc/hosts` to have local-puzzle-massive map to your machine.  Access your

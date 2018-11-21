@@ -7,10 +7,15 @@ Meant to run periodically to migrate existing puzzles.  Will not handle rerender
 
 import sqlite3
 import os
+import os.path
 import sys
 import time
 import math
 import random
+from urlparse import urlparse
+
+import boto3
+import botocore
 
 from api.app import db
 from api.database import rowify, read_query_file
@@ -25,6 +30,22 @@ db = sqlite3.connect(db_file)
 
 # set to not autocommit
 db.isolation_level = None
+
+# Check if bucket exists
+s3_resource = boto3.resource('s3')
+BUCKET_NAME = 'puzzle.massive.xyz'
+bucket = s3_resource.Bucket(BUCKET_NAME)
+exists = True
+try:
+    s3_resource.meta.client.head_bucket(Bucket=BUCKET_NAME)
+except botocore.exceptions.ClientError as e:
+    # If a client error is thrown, then check that it was a 404 error.
+    # If it was a 404 error, then the bucket does not exist.
+    error_code = e.response['Error']['Code']
+    if error_code == '404':
+        exists = False
+
+s3 = boto3.client('s3')
 
 # The unsplash API only allows for 50 requests an hour for demo apps.
 HOUR_IN_SECONDS = 60 * 60
@@ -41,16 +62,47 @@ query_select_puzzle_file_to_migrate_from_unsplash = read_query_file('_select-puz
 query_update_puzzle_file_original_null_url = read_query_file('_update-puzzle-file-original-null-url.sql')
 query_update_puzzle_file_original_s3_url = read_query_file('_update-puzzle-file-original-s3-url.sql')
 
+query_update_puzzle_file_url = read_query_file('_update-puzzle-file-url.sql')
+
+def create_puzzle_dir(puzzle_id):
+    puzzle_dir = os.path.join(config.get('PUZZLE_RESOURCES'), puzzle_id)
+    try:
+        os.mkdir(puzzle_dir)
+    except OSError as err:
+        if err.errno == 17:
+            # The previous call most likely has created the puzzle_dir.
+            pass
+        else:
+            raise err
+    return puzzle_dir
+
 def migrate_s3_puzzle(puzzle):
     """
     Download the file from S3 and update the url in the puzzle file.
     """
-    # TODO: migrate off of S3
-    # original.jpg
-    # preview_full
-    # pieces.png
-    # pzz.css
-    print("{puzzle} migrating s3 puzzle file {name}: {url}".format(**puzzle))
+    if not exists:
+        print("Bucket doesn't exist")
+        return
+
+    cur = db.cursor()
+
+    puzzle_id = puzzle.get('puzzle_id')
+    puzzle_dir = create_puzzle_dir(puzzle_id)
+    url_components = urlparse(puzzle.get('url'))
+    key = url_components.path[1:]
+    file_name = os.path.basename(key)
+    file_path = os.path.join(puzzle_dir, file_name)
+    local_url = "/resources/{puzzle_id}/{file_name}".format(puzzle_id=puzzle_id, file_name=file_name)
+    print("Downloading {}".format(os.path.join(puzzle_dir, os.path.basename(key))))
+    s3.download_file(BUCKET_NAME, key, file_path)
+
+    cur.execute(query_update_puzzle_file_url, {
+        'puzzle': puzzle.get('puzzle'),
+        'name': puzzle.get('name'),
+        'url': local_url
+        })
+
+    print("{puzzle} migrating s3 puzzle file {name} ({puzzle_id}): {url}".format(**puzzle))
 
 def migrate_unsplash_puzzle(puzzle):
     """
