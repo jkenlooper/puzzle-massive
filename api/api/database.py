@@ -37,23 +37,25 @@ def rowify(l, description):
             d.append(dict(zip(col_names, row)))
     return (d, col_names)
 
+# TODO: deprecate
 def _fetch_sql_string(file_name):
     with current_app.open_resource(os.path.join('queries', file_name), mode='r') as f:
         return f.read()
 
 def fetch_query_string(file_name):
     content = current_app.queries.get(file_name, None)
-    if content != None:
-        return content
-    current_app.logger.info( "queries file: '%s' not available. Checking file system..." % file_name )
 
-    file_path = os.path.join('queries', file_name)
-    if os.path.isfile(file_path):
-        with open(file_path, 'r') as f:
-            return f.read()
-    else:
-        # fallback on one that's in app resources
-        return _fetch_sql_string(file_name)
+    if content == None:
+        current_app.logger.info( "queries file: '%s' not available. Checking file system..." % file_name )
+        file_path = os.path.join('queries', file_name)
+        if os.path.isfile(file_path):
+            with open(file_path, 'r') as f:
+                content = r.read()
+                current_app.queries[file_name] = content
+        else:
+            raise Exception("File not found: {}".format(file_name))
+
+    return content
 
 def read_query_file(file_name):
     """

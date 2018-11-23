@@ -36,7 +36,7 @@ def get_db():
 db = LocalProxy(get_db)
 
 
-def multiple_directory_files_loader(*args):
+def files_loader(*args):
     """
     Loads all the files in each directory as values in a dict with the key
     being the relative file path of the directory.  Updates the value if
@@ -51,8 +51,6 @@ def multiple_directory_files_loader(*args):
                 with open( filepath, 'r' ) as f:
                     key = filepath[len(os.path.commonprefix([root, filepath]))+1:]
                     d[ key ] = f.read()
-            for foldername in dirnames:
-                load_files(os.path.join(dirpath, foldername))
 
     for root in args:
         load_files(root)
@@ -79,7 +77,7 @@ def make_app(config=None, **kw):
 
     redisConnection = redis.from_url(app.config.get('REDIS_URI', 'redis://localhost:6379/0/'))
 
-    app.queries = multiple_directory_files_loader(os.path.join('api', 'api', 'queries'))
+    app.queries = files_loader('queries')
 
     app.queue = Queue('puzzle_updates', connection=redisConnection)
     app.cleanupqueue = Queue('puzzle_cleanup', connection=redisConnection)
