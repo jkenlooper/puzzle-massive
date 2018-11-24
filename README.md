@@ -68,6 +68,7 @@ su dev;
 Create the `.env` and `.htpasswd` files first. 
 ```
 echo "UNSPLASH_APPLICATION_ID=fill-this-in" > .env;
+echo "UNSPLASH_APPLICATION_NAME=fill-this-in" >> .env;
 echo "UNSPLASH_SECRET=secret-key-goes-here" >> .env;
 echo "NEW_PUZZLE_CONTRIB=temporary-contributor-id-goes-here" >> .env;
 echo "SECURE_COOKIE_SECRET=make-up-some-random-text" >> .env;

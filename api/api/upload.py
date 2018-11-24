@@ -14,7 +14,7 @@ from werkzeug.utils import secure_filename, escape
 from werkzeug.urls import url_fix
 
 from api.app import db
-from api.database import rowify, fetch_query_string
+from api.database import rowify, fetch_query_string, read_query_file
 from api.constants import COMPLETED, NEEDS_MODERATION
 from api.user import user_id_from_ip
 
@@ -274,9 +274,13 @@ class UnsplashPuzzleThread(threading.Thread):
         self.application_id = application_id
         self.db_file = db_file
         self.puzzle_resources = current_app.config.get('PUZZLE_RESOURCES')
+        self.application_name = current_app.config.get('UNSPLASH_APPLICATION_NAME')
     def run(self):
         r = requests.get('https://api.unsplash.com/photos/%s' % self.photo, params={
-            'client_id': self.application_id
+            'client_id': self.application_id,
+            'w': 384,
+            'h': 384,
+            'fit': 'max'
             }, headers={'Accept-Version': 'v1'})
         data = r.json()
 
@@ -285,11 +289,7 @@ class UnsplashPuzzleThread(threading.Thread):
     def add_puzzle(self, data):
         db = sqlite3.connect(self.db_file)
         cur = db.cursor()
-        link = url_fix(data.get('links').get('html'))
-        # TODO:
-        # Photo by Annie Spratt / Unsplash
-        # [description]
-        description = escape("Photo by: %s" % (data.get('user').get('name')))
+        description = escape(data.get('description', None))
 
         puzzle_dir = os.path.join(self.puzzle_resources, self.puzzle_id)
         filename = os.path.join(puzzle_dir, 'original.jpg')
@@ -300,7 +300,7 @@ class UnsplashPuzzleThread(threading.Thread):
         f.close()
 
         d = {'puzzle_id':self.puzzle_id,
-            'link':link,
+            'link':None,
             'description':description}
         cur.execute("""update Puzzle set
         link = :link,
@@ -311,29 +311,31 @@ class UnsplashPuzzleThread(threading.Thread):
 
         puzzle = rowify(cur.execute("select id from Puzzle where puzzle_id = :puzzle_id;", {'puzzle_id':self.puzzle_id}).fetchall(), cur.description)[0][0]['id']
 
-        # Request a custom size now that the photo dimensions are known
-        img_short = int((float(min(data['width'], data['height'])) / float(max(data['width'], data['height']))) * 384)
-        img_long = 384
-        preview_width = img_long if data['width'] > data['height'] else img_short
-        preview_height = img_short if data['width'] > data['height'] else img_long
-        r = requests.get('https://api.unsplash.com/photos/%s' % self.photo, params={
-            'client_id': self.application_id,
-            'w': preview_width,
-            'h': preview_height
-            }, headers={'Accept-Version': 'v1'})
-        custom_data = r.json()
+        # Set preview full url and fallback to small
+        preview_full_url = data.get('urls', {}).get('custom', data.get('urls', {}).get('small'))
+        # Use the max version to keep the image ratio and not crop it.
+        preview_full_url = re.sub('fit=crop', 'fit=max', preview_full_url)
+        preview_full_url = url_fix(preview_full_url)
 
-        # Create source.unsplash.com url as a fallback in case custom is not there
-        m = re.match(r"unsplash(.+?)(-mxyz-.*)*$", self.puzzle_id)
-        source_unsplash = '/'.join(["https://source.unsplash.com", m.group(1), '384x384'])
-        source_unsplash = re.sub('{}$'.format('384x384'), 'x'.join([str(preview_width), str(preview_height)]), source_unsplash)
+        insert_attribution_unsplash_photo = read_query_file('insert_attribution_unsplash_photo.sql')
 
-        # Set preview full url and fallback to source.unsplash.com
-        preview_full_url = custom_data.get('urls', {}).get('custom', source_unsplash)
+        result = cur.execute(insert_attribution_unsplash_photo, {
+            'title': 'Photo',
+            'author_link': url_fix("{user_link}?utm_source={application_name}&utm_medium=referral".format(
+                user_link=data.get('user').get('links').get('html'),
+                application_name=self.application_name)),
+            'author_name': data.get('user').get('name'),
+            'source': url_fix("{photo_link}?utm_source={application_name}&utm_medium=referral".format(
+                photo_link=data.get('links').get('html'),
+                application_name=self.application_name))
+        })
 
-        insert_file = "update PuzzleFile set url = :url where puzzle = :puzzle and name = :name;"
+        attribution_id = result.lastrowid
+
+        insert_file = "update PuzzleFile set url = :url, attribution = :attribution where puzzle = :puzzle and name = :name;"
         cur.execute(insert_file, {
             'puzzle': puzzle,
+            'attribution': attribution_id,
             'name': 'preview_full',
             'url': preview_full_url
             })
