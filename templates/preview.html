@@ -76,7 +76,7 @@ two minute over an hour:{{ timePassed(60*62) }}<br>
 
   <a class="pm-Preview-grid" href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(recent.puzzle_id), scale=null) }}" title="Join this jigsaw puzzle">
     <div class="pm-Preview-gridA">
-      <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{recent.url}}" alt="">
+      <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{recent.url|safe}}" alt="">
 
 
       <div class="pm-Preview-latest">
@@ -156,6 +156,9 @@ two minute over an hour:{{ timePassed(60*62) }}<br>
     </div>
     </div>
   </a>
+  {% if recent.attribution %}
+  <p>{{ '[chill route /internal/attribution/{}/ ]'.format(recent.attribution) }}</p>
+  {% endif %}
       {% if recent.status == COMPLETED and not recent.is_recent -%}
       </div>
       {% endif %}

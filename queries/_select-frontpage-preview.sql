@@ -1,4 +1,4 @@
-SELECT p.id, pf.name, pf.url, p.puzzle_id, p.pieces, p.table_width, p.table_height, p.link, p.description, p.bg_color, p.m_date, p.status,
+SELECT p.id, pf.name, pf.url, p.puzzle_id, p.pieces, p.table_width, p.table_height, p.link, p.description, p.bg_color, p.m_date, p.status, pf.attribution,
 
 -- Find the short and long dimensions of the preview img by checking the table_width
 -- and table_height since the img width and height is not currently stored.

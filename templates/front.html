@@ -79,7 +79,7 @@ Jigsaw puzzle not available.
 {% if page.info.url.startswith('/') %}
 <meta property="og:image" content="http://puzzle.massive.xyz{{ page.info.url }}" />
 {% else %}
-<meta property="og:image" content="{{ page.info.url }}" />
+<meta property="og:image" content="{{ page.info.url|safe }}" />
 {% endif %}
 {% set width = page.info.long if page.info.table_width > page.info.table_height else page.info.short %}
 {% set height = page.info.short if page.info.table_width > page.info.table_height else page.info.long %}

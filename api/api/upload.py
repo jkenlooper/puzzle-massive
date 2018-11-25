@@ -315,19 +315,19 @@ class UnsplashPuzzleThread(threading.Thread):
         preview_full_url = data.get('urls', {}).get('custom', data.get('urls', {}).get('small'))
         # Use the max version to keep the image ratio and not crop it.
         preview_full_url = re.sub('fit=crop', 'fit=max', preview_full_url)
-        preview_full_url = url_fix(preview_full_url)
 
         insert_attribution_unsplash_photo = read_query_file('insert_attribution_unsplash_photo.sql')
 
+        # Not using url_fix on the user.links.html since it garbles the '@'.
         result = cur.execute(insert_attribution_unsplash_photo, {
             'title': 'Photo',
-            'author_link': url_fix("{user_link}?utm_source={application_name}&utm_medium=referral".format(
+            'author_link': "{user_link}?utm_source={application_name}&utm_medium=referral".format(
                 user_link=data.get('user').get('links').get('html'),
-                application_name=self.application_name)),
+                application_name=self.application_name),
             'author_name': data.get('user').get('name'),
-            'source': url_fix("{photo_link}?utm_source={application_name}&utm_medium=referral".format(
+            'source': "{photo_link}?utm_source={application_name}&utm_medium=referral".format(
                 photo_link=data.get('links').get('html'),
-                application_name=self.application_name))
+                application_name=self.application_name)
         })
 
         attribution_id = result.lastrowid
