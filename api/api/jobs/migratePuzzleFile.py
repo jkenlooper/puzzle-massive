@@ -5,6 +5,7 @@ Meant to run periodically to migrate existing puzzles.  Will not handle rerender
 - If source.unsplash; update description with links to photographer and unsplash.  Include photo description on next line.
 """
 
+import re
 import sqlite3
 import os
 import os.path
@@ -13,9 +14,11 @@ import time
 import math
 import random
 from urlparse import urlparse
+import requests
 
 import boto3
 import botocore
+from werkzeug.utils import escape
 
 from api.app import db
 from api.database import rowify, read_query_file
@@ -30,6 +33,10 @@ db = sqlite3.connect(db_file)
 
 # set to not autocommit
 db.isolation_level = None
+
+unsplash_application_name = config['UNSPLASH_APPLICATION_NAME']
+unsplash_application_id = config['UNSPLASH_APPLICATION_ID']
+
 
 # Check if bucket exists
 s3_resource = boto3.resource('s3')
@@ -109,11 +116,61 @@ def migrate_unsplash_puzzle(puzzle):
     Update description to match the requirments of using the unsplash photo.
     Update the hotlinked preview_full url with the utm params.
     """
-    # TODO: Update description for unsplash photos.  May need to have description able to handle some HTML like anchor links? maybe strip tags?
-    # Photo by Annie Spratt / Unsplash
-    # [description]
-    # TODO: fix preview_full url
     print("{puzzle} migrating unsplash puzzle file {name}: {url}".format(**puzzle))
+
+    r = requests.get('https://api.unsplash.com/photos/{}'.format(puzzle['unsplash_id']), params={
+        'client_id': unsplash_application_id,
+        'w': 384,
+        'h': 384,
+        'fit': 'max'
+        }, headers={'Accept-Version': 'v1'})
+    data = r.json()
+    # TODO: handle error if the photo no longer exists.
+
+    cur = db.cursor()
+    description = escape(data.get('description', None))
+
+    cur.execute("""update Puzzle set
+    link = :link,
+    description = :description
+    where puzzle_id = :puzzle_id;
+    """, {
+        'puzzle_id': puzzle['puzzle_id'],
+        'link': None,
+        'description': description
+    })
+
+    # Set preview full url and fallback to small
+    preview_full_url = data.get('urls', {}).get('custom', data.get('urls', {}).get('small'))
+    # Use the max version to keep the image ratio and not crop it.
+    preview_full_url = re.sub('fit=crop', 'fit=max', preview_full_url)
+
+    insert_attribution_unsplash_photo = read_query_file('insert_attribution_unsplash_photo.sql')
+
+    # Not using url_fix on the user.links.html since it garbles the '@'.
+    result = cur.execute(insert_attribution_unsplash_photo, {
+        'title': 'Photo',
+        'author_link': "{user_link}?utm_source={application_name}&utm_medium=referral".format(
+            user_link=data.get('user').get('links').get('html'),
+            application_name=unsplash_application_name),
+        'author_name': data.get('user').get('name'),
+        'source': "{photo_link}?utm_source={application_name}&utm_medium=referral".format(
+            photo_link=data.get('links').get('html'),
+            application_name=unsplash_application_name)
+    })
+
+    attribution_id = result.lastrowid
+
+    insert_file = "update PuzzleFile set url = :url, attribution = :attribution where puzzle = :puzzle and name = :name;"
+    cur.execute(insert_file, {
+        'puzzle': puzzle['puzzle'],
+        'attribution': attribution_id,
+        'name': 'preview_full',
+        'url': preview_full_url
+        })
+
+
+    db.commit()
 
 def migrate_next_puzzle(puzzle):
     cur = db.cursor()

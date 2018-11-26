@@ -1,3 +1,5 @@
-select distinct puzzle, name, url from PuzzleFile
-where puzzle = :puzzle and
-name = 'preview_full' and url like 'https://source.unsplash.com/%';
+select distinct pf.puzzle, pf.name, pf.url, p.puzzle_id, p.name as unsplash_id
+from PuzzleFile as pf
+join Puzzle as p on (pf.puzzle = p.id)
+where pf.puzzle = :puzzle and
+pf.name = 'preview_full' and pf.url like 'https://source.unsplash.com/%';
