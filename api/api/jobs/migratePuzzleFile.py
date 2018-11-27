@@ -125,7 +125,14 @@ def migrate_unsplash_puzzle(puzzle):
         'fit': 'max'
         }, headers={'Accept-Version': 'v1'})
     data = r.json()
-    # TODO: handle error if the photo no longer exists.
+
+    # handle error if the photo no longer exists.
+    if data.get('errors'):
+        for error in data['errors']:
+            print("ERROR: {}".format(error))
+            if error == "Couldn't find Photo":
+                set_lost_unsplash_photo(puzzle)
+        return
 
     cur = db.cursor()
     description = escape(data.get('description', None))
@@ -169,8 +176,35 @@ def migrate_unsplash_puzzle(puzzle):
         'url': preview_full_url
         })
 
+def set_lost_unsplash_photo(puzzle):
+    """
+    remove the link
+    the unsplash license is irrevocable: https://unsplash.com/license
+    create a new preview photo from the original?
+    """
+    print("{puzzle} unsplash puzzle file {name} not found: {url}".format(**puzzle))
 
-    db.commit()
+    cur = db.cursor()
+    description = "{} / originally found on Unsplash".format(puzzle['description'])
+
+    cur.execute("""update Puzzle set
+    link = :link,
+    description = :description,
+    permission = -1 -- NOT PUBLIC
+    where puzzle_id = :puzzle_id;
+    """, {
+        'puzzle_id': puzzle['puzzle_id'],
+        'link': None,
+        'description': description
+    })
+
+    insert_file = "update PuzzleFile set url = :url where puzzle = :puzzle and name = :name;"
+    cur.execute(insert_file, {
+        'puzzle': puzzle['puzzle'],
+        'name': 'preview_full',
+        'url': ''
+        })
+
 
 def migrate_next_puzzle(puzzle):
     cur = db.cursor()
@@ -210,20 +244,19 @@ def migrate_all():
     """
     confirm = raw_input("Commit the transaction? y/n\n")
     cur = db.cursor()
-    cur.execute("begin");
-    print("begin transaction")
     result = cur.execute(query_select_all_puzzles_to_migrate).fetchall()
     if result:
+        print("migrating puzzles: {}".format(result))
         for item in result:
+            cur.execute("begin");
             migrate_next_puzzle(item[0])
-
-    # while developing
-    if confirm == 'y':
-        cur.execute("commit");
-        print("transaction has been committed")
-    else:
-        cur.execute("rollback");
-        print("transaction has been rollbacked")
+            # while developing
+            if confirm == 'y':
+                cur.execute("commit");
+                print("transaction has been committed")
+            else:
+                cur.execute("rollback");
+                print("transaction has been rollbacked")
 
 if __name__ == '__main__':
     migrate_all()
