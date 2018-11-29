@@ -306,7 +306,7 @@ cat <<HERE
     root ${SRVDIR};
   }
 
-  location ~* ^/resources/.*/(scale-100/raster.png|scale-100/raster.css)\$ {
+  location ~* ^/resources/.*/(scale-100/raster.png|scale-100/raster.css|pzz.css|pieces.png)\$ {
     # Public resources except preview_full.jpg
     # Not available for hotlinking
     valid_referers server_names;
