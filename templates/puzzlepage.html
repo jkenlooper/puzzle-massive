@@ -204,10 +204,12 @@
           <svg class="pm-Puzzlepage-icon"><use xlink:href="#arrow-left-circle-sprite"/></svg>
         </a>
 
-        <label>
-          <input class="u-hidden" type="checkbox" id="puzzle-preview-button">
-          <svg class="pm-Puzzlepage-icon"><use xlink:href="#image-sprite"/></svg>
-        </label>
+        {% if preview_full.url != '' %}
+          <label>
+            <input class="u-hidden" type="checkbox" id="puzzle-preview-button">
+            <svg class="pm-Puzzlepage-icon"><use xlink:href="#image-sprite"/></svg>
+          </label>
+        {% endif %}
 
         {% if scale != 0 %}
         <a href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(puzzle.puzzle_id), scale=null) }}" title="View puzzle as actual size.">
@@ -233,6 +235,7 @@
       <div class="pm-Puzzlepage-gridB2 {{Puzzlepage_gridB2_modifier}}">
         <div id="puzzlepage-main" class="pm-Puzzlepage-main" style="background-color: {{ puzzle.bg_color }};">
             <div id="puzzle-container" style="display: none;" puzzle_id="{{ puzzle.puzzle_id }}">{# <!-- Used by puzzle-pieces js --> #}</div>
+            {% if preview_full.url != '' %}
             <div id="puzzle-preview-box"
                  class="pm-Puzzlepage-previewBox"
                  unselectable="on"
@@ -240,6 +243,7 @@
                  onmousedown="return false;">
               <img class="pm-Puzzlepage-previewImg" src="{{ preview_full.url }}">
             </div>
+            {% endif %}
 
             {% macro puzzlepieces() -%}
               <pm-puzzle-pieces
