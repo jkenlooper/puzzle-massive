@@ -124,7 +124,11 @@ def migrate_unsplash_puzzle(puzzle):
         'h': 384,
         'fit': 'max'
         }, headers={'Accept-Version': 'v1'})
-    data = r.json()
+    try:
+        data = r.json()
+    except ValueError as err:
+        print("ERROR reading json: {}".format(err))
+        return
 
     # handle error if the photo no longer exists.
     if data.get('errors'):
@@ -132,6 +136,10 @@ def migrate_unsplash_puzzle(puzzle):
             print("ERROR: {}".format(error))
             if error == "Couldn't find Photo":
                 set_lost_unsplash_photo(puzzle)
+            # This will also print out the error if the max requests have been reached.
+        return
+    if r.status_code >= 400:
+        print("ERROR: {status_code} {url}".format(status_code=r.status_code, url=r.url))
         return
 
     cur = db.cursor()
@@ -208,6 +216,7 @@ def set_lost_unsplash_photo(puzzle):
 
 def migrate_next_puzzle(puzzle):
     cur = db.cursor()
+    print("migrating puzzle {}".format(puzzle))
 
     # Update any original that have an empty url
     cur.execute(query_update_puzzle_file_original_null_url, {
