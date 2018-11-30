@@ -168,6 +168,11 @@ two minute over an hour:{{ timePassed(60*62) }}<br>
       </div>
       {% endif %}
 
+  {% if recent.permission == -1 -%}
+  <p class="pm-Preview-statusNote">
+  This jigsaw puzzle is not publicly listed on the site.
+  </p>
+  {% endif %}
   {% if recent.status == COMPLETED and recent.is_recent -%}
   <p class="pm-Preview-statusNote">
   This jigsaw puzzle has been recently completed, it can be redone after {{ recent.redo_date }}.

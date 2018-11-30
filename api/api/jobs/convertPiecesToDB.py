@@ -30,6 +30,12 @@ def transfer(puzzle):
 
     query = """select * from Puzzle where (id = :puzzle)"""
     (result, col_names) = rowify(cur.execute(query, {'puzzle': puzzle}).fetchall(), cur.description)
+    if not result:
+        # Most likely because of a database switch and forgot to run this script
+        # between those actions.
+        print("Puzzle {} not in database. Skipping.".format(puzzle))
+        return
+
     puzzle_data = result[0]
 
     query = """select * from Piece where (puzzle = :puzzle)"""

@@ -1,6 +1,12 @@
 "Migrates ..."
 
-# python api/api/jobs/migrate_from_2_0.py
+# make
+# sudo make install
+# cat chill-data.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
+# python api/api/jobs/migrate_from_2_0.py site.cfg
+# sudo ./bin/puzzlectl.sh start
+# sudo nginx -t && sudo nginx -s reload
+# python api/api/jobs/migratePuzzleFile.py site.cfg
 
 import sqlite3
 import glob
