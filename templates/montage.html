@@ -1,3 +1,4 @@
+{% from 'preview-unknown.html' import preview_unknown %}
 {% macro montage(puzzles) -%}
 <div class="pma-Montage">
   <div class="pma-Montage-list" role="list">
@@ -8,7 +9,13 @@
 
       <div class="pma-Montage-listitem" role="listitem">
         <label for="puzzle_id_{{item.puzzle_id}}">
+
+          {% if src == '' %}
+          {{ preview_unknown(width=width, height=height) }}
+          {% else %}
           <img class="lazyload" width="{{width|int}}" height="{{height|int}}" data-src="{{src}}" alt="">
+          {% endif %}
+
           <input id="puzzle_id_{{item.puzzle_id}}" name="montage_puzzle_id" type="checkbox" value="{{item.puzzle_id}}">
           {{item.pieces}}
         </label>
