@@ -309,7 +309,7 @@ def render(*args):
             adjacent_str = ' '.join(map(lambda k, v: '{0}:{1}'.format(k, v), offsets.keys(), offsets.values()))
             pc['adjacent'] = adjacent_str
 
-        # TODO: original.jpg is assumed to be available locally because of migratePuzzleFile.py
+        # The original.jpg is assumed to be available locally because of migratePuzzleFile.py
         # Clear out any older pieces and their puzzle files, (raster.png,
         # raster.css) but keep preview full.
         cur.execute("delete from Piece where puzzle = :puzzle", {

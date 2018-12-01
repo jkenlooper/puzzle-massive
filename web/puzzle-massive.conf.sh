@@ -19,6 +19,8 @@ limit_req_zone \$binary_remote_addr zone=piece_move_limit_per_ip:1m rate=60r/m;
 limit_req_zone \$binary_remote_addr zone=puzzle_upload_limit_per_ip:1m rate=3r/m;
 limit_req_zone \$server_name zone=puzzle_upload_limit_per_server:1m rate=20r/m;
 
+proxy_cache_path /var/cache/puzzle-massive/ keys_zone=puzcach:1m;
+
 server {
   # Redirect for old hosts
   listen       80;
@@ -238,6 +240,10 @@ cat <<HERE
   }
 
   location ~* ^/chill/site/puzzle/.*\$ {
+    # At this time all routes on chill/* are GETs
+    limit_except GET {
+      deny all;
+    }
     proxy_pass_header Server;
     proxy_set_header Host \$http_host;
     proxy_set_header  X-Real-IP  \$remote_addr;
@@ -251,7 +257,37 @@ cat <<HERE
     rewrite ^/chill/(.*)\$  /\$1 break;
   }
 
+  location /chill/site/api/player-ranks/ {
+    # At this time all routes on chill/* are GETs
+    limit_except GET {
+      deny all;
+    }
+
+    # Allow showing a stale cached version since the request is not optimized
+    proxy_cache_background_update on;
+    proxy_cache_use_stale updating;
+    proxy_cache_valid 1m;
+    proxy_cache puzcach;
+
+    proxy_pass_header Server;
+    proxy_set_header Host \$http_host;
+    proxy_set_header  X-Real-IP  \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+
+    ## Prevent others from skipping cache
+    proxy_set_header Chill-Skip-Cache "";
+
+    proxy_redirect off;
+    proxy_pass http://localhost:${PORTCHILL};
+    rewrite ^/chill/(.*)\$  /\$1 break;
+  }
+
   location /chill/ {
+    # At this time all routes on chill/* are GETs
+    limit_except GET {
+      deny all;
+    }
+
     proxy_pass_header Server;
     proxy_set_header Host \$http_host;
     proxy_set_header  X-Real-IP  \$remote_addr;
