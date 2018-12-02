@@ -58,8 +58,9 @@ server {
   ## the "preload" directive if you understand the implications.
   ##add_header Strict-Transport-Security "max-age=63072000; includeSubdomains; preload";
   #add_header Strict-Transport-Security "max-age=63072000; includeSubdomains";
-  #add_header X-Frame-Options DENY;
-  #add_header X-Content-Type-Options nosniff;
+
+  add_header X-Frame-Options DENY;
+  add_header X-Content-Type-Options nosniff;
 
 HERE
 if (test -f web/dhparam.pem); then
@@ -251,31 +252,6 @@ cat <<HERE
 
     ## Don't use cache for puzzle page
     proxy_set_header Chill-Skip-Cache 1;
-
-    proxy_redirect off;
-    proxy_pass http://localhost:${PORTCHILL};
-    rewrite ^/chill/(.*)\$  /\$1 break;
-  }
-
-  location /chill/site/api/player-ranks/ {
-    # At this time all routes on chill/* are GETs
-    limit_except GET {
-      deny all;
-    }
-
-    # Allow showing a stale cached version since the request is not optimized
-    proxy_cache_background_update on;
-    proxy_cache_use_stale updating;
-    proxy_cache_valid 1m;
-    proxy_cache puzcach;
-
-    proxy_pass_header Server;
-    proxy_set_header Host \$http_host;
-    proxy_set_header  X-Real-IP  \$remote_addr;
-    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-
-    ## Prevent others from skipping cache
-    proxy_set_header Chill-Skip-Cache "";
 
     proxy_redirect off;
     proxy_pass http://localhost:${PORTCHILL};
