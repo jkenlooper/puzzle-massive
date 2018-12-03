@@ -3,7 +3,7 @@
   <p>
   <strong>
     Your Rank is {{ RankingController.playerRank }}
-    out of {{ RankingController.totalActivePlayers }} active players.
+    out of {{ RankingController.totalActivePlayers }} players.
   </strong>
   </p>
   <p class="u-textRight">
@@ -25,6 +25,9 @@
           >
 
         <strong class="pm-Ranking-rank">{{ item.score }}</strong>
+        <span class="pm-Ranking-status">
+          <small title="bit icon has expired" ng-if="item.active === 0">Inactive</small>
+        </span>
     </div>
   </div>
   <p class="u-textRight">

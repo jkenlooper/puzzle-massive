@@ -19,7 +19,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: calc(64px + 5em);
+  width: calc(64px + 5em + 5em);
   height: 32px;
   font-size: 2rem;
 }
@@ -53,4 +53,10 @@
 
 .pm-Ranking-listitem--topPlayer .pm-Ranking-rank {
   color: var(--color-accent);
+}
+
+.pm-Ranking-status {
+  width: 4em;
+  padding-left: 1em;
+  text-align: left;
 }

@@ -12,16 +12,23 @@ ORDER BY u1.score DESC, u1.id
 /*
 TODO: how to do a limit and use grouping?
 */
-SELECT u1.id, u1.score, b.name as icon, count(u2.score) AS rank
+SELECT u1.id, u1.score, b.name as icon, count(u2.score) AS rank,
+b.expiration > datetime('now') as active
 FROM User AS u1
 JOIN User AS u2
 JOIN BitIcon as b on u1.id = b.user
 WHERE (u1.score <= u2.score OR (u1.score = u2.score AND u1.id = u2.id))
-AND (b.expiration > datetime('now') OR (u1.score >= (
-      select score from User
-      where id != 2 -- ANONYMOUS_USER_ID
-      order by score desc limit 1 offset 15
-)))
+
+-- This limits to just the players that have unexpired bit icons with the
+-- exception of the top 15.
+-- AND (
+-- -- b.expiration > datetime('now') OR
+--   (u1.score >= (
+--       select score from User
+--       where id != 2 -- ANONYMOUS_USER_ID
+--       order by score desc limit 1 offset 15
+-- )))
+
 AND u1.id != 2 -- ANONYMOUS_USER_ID
 GROUP BY u1.id, u1.score
 ORDER BY u1.score DESC, u1.id
