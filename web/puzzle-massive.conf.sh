@@ -14,10 +14,13 @@ source "$PORTREGISTRY"
 cat <<HERE
 
 limit_conn_zone \$binary_remote_addr zone=addr:1m;
-limit_req_zone \$binary_remote_addr zone=req_limit_per_ip:1m rate=8r/s;
 limit_req_zone \$binary_remote_addr zone=piece_move_limit_per_ip:1m rate=60r/m;
 limit_req_zone \$binary_remote_addr zone=puzzle_upload_limit_per_ip:1m rate=3r/m;
 limit_req_zone \$server_name zone=puzzle_upload_limit_per_server:1m rate=20r/m;
+
+limit_req_zone \$binary_remote_addr zone=chill_puzzle_limit_per_ip:1m rate=30r/m;
+limit_req_zone \$binary_remote_addr zone=chill_limit_per_ip:1m rate=12r/m;
+
 
 proxy_cache_path /var/cache/puzzle-massive/ keys_zone=puzcach:1m;
 
@@ -81,7 +84,6 @@ cat <<HERE
 
   # Limit the max simultaneous connections per ip address (10 per browser * 4 if within LAN)
   limit_conn   addr 40;
-  limit_req zone=req_limit_per_ip burst=10;
 
   client_max_body_size  20m;
   keepalive_disable  none;
@@ -245,6 +247,11 @@ cat <<HERE
     limit_except GET {
       deny all;
     }
+
+    # Allow loading up to 15 puzzles with each request being delayed by
+    # 2 seconds.
+    limit_req zone=chill_puzzle_limit_per_ip burst=15;
+
     proxy_pass_header Server;
     proxy_set_header Host \$http_host;
     proxy_set_header  X-Real-IP  \$remote_addr;
@@ -263,6 +270,31 @@ cat <<HERE
     limit_except GET {
       deny all;
     }
+
+    proxy_pass_header Server;
+    proxy_set_header Host \$http_host;
+    proxy_set_header  X-Real-IP  \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+
+    ## Prevent others from skipping cache
+    proxy_set_header Chill-Skip-Cache "";
+
+    proxy_redirect off;
+    proxy_pass http://localhost:${PORTCHILL};
+    rewrite ^/chill/(.*)\$  /\$1 break;
+  }
+
+  location /chill/site/ {
+    # At this time all routes on chill/* are GETs
+    limit_except GET {
+      deny all;
+    }
+
+    # Allow robots to index the site as long as they are following the
+    # robots.txt disallow bit.  The burst includes the count of pages and a bit
+    # more. This prevents robots from indexing the whole site which isn't
+    # wanted.
+    limit_req zone=chill_limit_per_ip burst=15 nodelay;
 
     proxy_pass_header Server;
     proxy_set_header Host \$http_host;

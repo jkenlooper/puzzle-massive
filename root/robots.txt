@@ -1,3 +1,10 @@
 User-agent: *
 Disallow: /newapi/
 Disallow: /divulge/
+Disallow: /chill/site/api/
+Disallow: /chill/site/player/
+Disallow: /chill/site/queue/
+Disallow: /chill/site/bit-icons/
+Disallow: /chill/site/artist/
+Disallow: /chill/site/puzzle/
+Disallow: /chill/site/internal/
