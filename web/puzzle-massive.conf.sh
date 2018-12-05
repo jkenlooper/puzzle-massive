@@ -19,10 +19,11 @@ limit_req_zone \$binary_remote_addr zone=puzzle_upload_limit_per_ip:1m rate=3r/m
 limit_req_zone \$server_name zone=puzzle_upload_limit_per_server:1m rate=20r/m;
 
 limit_req_zone \$binary_remote_addr zone=chill_puzzle_limit_per_ip:1m rate=30r/m;
-limit_req_zone \$binary_remote_addr zone=chill_limit_per_ip:1m rate=12r/m;
+limit_req_zone \$binary_remote_addr zone=chill_limit_per_ip:1m rate=24r/m;
 
 
-proxy_cache_path /var/cache/puzzle-massive/ keys_zone=puzcach:1m;
+# Using the built-in cache on chill for now
+#proxy_cache_path /var/cache/puzzle-massive/ keys_zone=puzcach:1m;
 
 server {
   # Redirect for old hosts
