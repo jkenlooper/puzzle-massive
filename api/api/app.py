@@ -119,7 +119,9 @@ def make_app(config=None, **kw):
         UserLogoutView,
         UserLoginView,
         ClaimRandomBit,
-        AdminBlockedPlayersList
+        AdminBlockedPlayersList,
+        AdminBannedUserList,
+        BanishSelf
         )
     from api.bit import BitIconView, ChooseBitView, ClaimBitView
 
@@ -157,6 +159,10 @@ def make_app(config=None, **kw):
     app.add_url_rule('/claim-bit/',
                      view_func=ClaimBitView.as_view('claim-bit'))
 
+    # Requires user to press any key to continue
+    app.add_url_rule('/post-comment/',
+                     view_func=BanishSelf.as_view('banish-self'))
+
     # admin views
     app.add_url_rule('/admin/puzzle/render/',
                      view_func=RenderPuzzlesView.as_view('admin-puzzle-render'))
@@ -166,6 +172,9 @@ def make_app(config=None, **kw):
                      view_func=AdminPuzzlePromoteSuggestedView.as_view('admin-puzzle-promote-suggested'))
     app.add_url_rule('/admin/player/blocked/',
                      view_func=AdminBlockedPlayersList.as_view('admin-player-blocked'))
+    app.add_url_rule('/admin/user/banned/',
+                     view_func=AdminBannedUserList.as_view('admin-user-banned'))
+
 
 
     # register the websockets

@@ -61,7 +61,7 @@ def generate_user_login():
 
     return login
 
-def user_id_from_ip(ip):
+def user_id_from_ip(ip, skip_generate=False):
     QUERY_USER_ID_BY_IP = """
     select id from User where ip = :ip and cookie_expires isnull limit 1;
     """
@@ -73,8 +73,10 @@ def user_id_from_ip(ip):
     result = cur.execute(QUERY_USER_ID_BY_IP, {'ip':ip}).fetchall()
     user_id = ANONYMOUS_USER_ID
 
-    # No ip in db so create it
+    # No ip in db so create it except if the skip_generate flag is set
     if not result:
+        if skip_generate:
+            return None
         login = generate_user_login()
         query = """insert into User (points, score, login, m_date, ip) values
                 (:points, 0, :login, datetime('now'), :ip)"""
@@ -93,6 +95,22 @@ def user_id_from_ip(ip):
         user_id = result[0]['id']
 
     return str(user_id)
+
+def user_not_banned(f):
+    """Check if the user is not banned and respond with 403 if so"""
+    def decorator(*args, **kwargs):
+        ip = request.headers.get('X-Real-IP')
+        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip, skip_generate=True)
+        if not user == None:
+            banneduser_score = redisConnection.zscore('bannedusers', '{}-{}'.format(ip, user))
+            if banneduser_score:
+                if banneduser_score > time.time():
+                    # The user must first press the any key to continue. Until
+                    # then the resource requested is in conflict.
+                    abort(make_response(". . . please wait . . .", 409))
+
+        return f(*args, **kwargs)
+    return decorator
 
 class CurrentUserIDView(MethodView):
     """
@@ -290,3 +308,57 @@ class AdminBlockedPlayersList(MethodView):
             blocked[ip][user]['recent_points'] = recent_points
 
         return encoder.encode(blocked)
+
+
+class AdminBannedUserList(MethodView):
+    """
+    ip:
+        user:
+            timestamp:
+    """
+    def get(self):
+        banned = {}
+
+        bannedusers = redisConnection.zrevrangebyscore('bannedusers', '+inf', int(time.time()), withscores=True)
+
+        # Add ip -> user -> timestamp
+        for (ip_user, timestamp) in bannedusers:
+            (ip, user) = ip_user.split('-')
+            if not banned.get(ip):
+                banned[ip] = {}
+            banned[ip][user] = {
+                'timestamp': timestamp
+            }
+
+        return encoder.encode(banned)
+
+class BanishSelf(MethodView):
+    """
+    Adds the ip and user id for the user calling it to the bannedusers list with
+    the timestamp of when the ban will be lifted.
+    """
+    decorators = [user_not_banned]
+    response_text = "Press any key to continue . . ."
+
+    def increase_ban_time(self, ip, user, seconds):
+        now = int(time.time())
+        current = int(redisConnection.zscore('bannedusers', '{ip}-{user}'.format(ip=ip, user=user)) or now)
+        current = max(current, now)
+        redisConnection.zadd('bannedusers', '{ip}-{user}'.format(ip=ip, user=user), current + seconds)
+
+    def get(self):
+        ip = request.headers.get('X-Real-IP')
+        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
+        self.increase_ban_time(ip, user, 60)
+
+        return make_response(self.response_text, 201)
+
+    def post(self):
+        ip = request.headers.get('X-Real-IP')
+        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
+
+        self.increase_ban_time(ip, user, 60)
+        return make_response(self.response_text, 201)
+
+    #redisConnection.zadd('bannedusers', '{ip}-{user}'.format(ip=ip, user=user), int(time.time()+TWO_HOURS))
+    #redisConnection.zincrby('bannedusers', '{ip}-{user}'.format(ip=ip, user=user), int(time.time()+TWO_HOURS))

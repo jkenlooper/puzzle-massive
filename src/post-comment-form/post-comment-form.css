@@ -1,0 +1,9 @@
+@import '../site/60settings.css';
+
+.pm-PostCommentForm {
+  max-height: 0;
+  overflow: hidden;
+}
+
+.pm-PostCommentForm-row {
+}

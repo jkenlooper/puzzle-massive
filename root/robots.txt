@@ -1,5 +1,6 @@
 User-agent: *
 Disallow: /newapi/
+Disallow: /newapi/post-comment/
 Disallow: /divulge/
 Disallow: /chill/site/api/
 Disallow: /chill/site/player/

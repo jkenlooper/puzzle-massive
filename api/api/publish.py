@@ -13,7 +13,7 @@ from tools import formatPieceMovementString, formatBitMovementString
 from constants import ACTIVE, IN_QUEUE, BUGGY_UNLISTED
 #from jobs import pieceMove
 from jobs import pieceTranslate
-from user import user_id_from_ip
+from user import user_id_from_ip, user_not_banned
 
 redisConnection = redis.from_url('redis://localhost:6379/0/')
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
@@ -55,6 +55,7 @@ class PuzzlePiecesMovePublishView(MethodView):
 
     Return karma amount
     """
+    decorators = [user_not_banned]
     ACCEPTABLE_ARGS = set(['x', 'y', 'r'])
 
     def patch(self, puzzle, piece):

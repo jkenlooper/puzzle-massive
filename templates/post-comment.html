@@ -1,0 +1,29 @@
+<div class="pm-PostCommentForm">
+  <form action="/newapi/post-comment/" method="post">
+
+    <div class="pm-PostCommentForm-row">
+      <label>Full Name:
+        <input type="text" name="fullname">
+      </label>
+    </div>
+
+    <div class="pm-PostCommentForm-row">
+      <label>Email:
+        <input type="email" name="email" required>
+      </label>
+    </div>
+
+    <div class="pm-PostCommentForm-row">
+      <label>Comment:
+        <textarea name="comment"></textarea>
+      </label>
+    </div>
+
+    <div class="u-textRight">
+      <input class="button" type="submit" name="send" value="Submit" />
+    </div>
+
+    <p>Press any key to continue after submitting. Failure to press the any key will temporarily block access and your comment will not be submitted.</p>
+
+  </form>
+</div>

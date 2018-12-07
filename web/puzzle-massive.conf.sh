@@ -387,7 +387,7 @@ location /overload_page.html {
   internal;
 }
 
-error_page 401 /unauthorized_page.html;
+error_page 401 403 /unauthorized_page.html;
 location /unauthorized_page.html {
   internal;
 }
