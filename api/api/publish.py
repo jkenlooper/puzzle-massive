@@ -8,7 +8,7 @@ import redis
 
 from app import db
 from database import fetch_query_string, rowify
-from tools import formatPieceMovementString, formatBitMovementString
+from tools import formatPieceMovementString, formatBitMovementString, init_karma_key
 
 from constants import ACTIVE, IN_QUEUE, BUGGY_UNLISTED
 #from jobs import pieceMove
@@ -18,7 +18,6 @@ from user import user_id_from_ip, user_not_banned
 redisConnection = redis.from_url('redis://localhost:6379/0/')
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
-INITIAL_KARMA = 10
 MAX_KARMA = 25
 MIN_KARMA = (int(MAX_KARMA/2) * -1) # -12
 MOVES_BEFORE_PENALTY = 12
@@ -139,11 +138,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         rounded_timestamp = timestamp_now - (timestamp_now % PIECE_MOVEMENT_RATE_TIMEOUT)
 
         # Update karma
-        # Reset karma for puzzle/ip if has been more then an hour since.
-        karma_key = 'karma:{puzzle}:{ip}'.format(puzzle=puzzle, ip=ip)
-        redisConnection.setnx(karma_key, INITIAL_KARMA)
-        redisConnection.expire(karma_key, HOUR)
-
+        karma_key = init_karma_key(redisConnection, puzzle, ip)
         # Set a limit to minimum karma so other players on the network can still play
         karma = max(MIN_KARMA, int(redisConnection.get(karma_key)))
         initial_karma = max(0, min(100/2, karma))

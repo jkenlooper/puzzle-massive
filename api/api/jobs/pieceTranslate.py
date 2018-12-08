@@ -7,9 +7,10 @@ import sqlite3
 import redis
 from api.app import db
 from api.database import rowify, fetch_query_string
-from api.tools import formatPieceMovementString, loadConfig
+from api.tools import formatPieceMovementString, loadConfig, init_karma_key
 from api.constants import COMPLETED
 
+HOUR = 3600 # hour in seconds
 TWO_HOURS = 7200
 PIECE_GROUP_MOVE_MAX_BEFORE_PENALTY = 5
 MAX_RECENT_POINTS = 25
@@ -128,6 +129,8 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
             redisConnection.expire(points_key, TWO_HOURS)
 
             karma_change += 1
+            # Extend the karma points expiration since it has increased
+            redisConnection.expire(karma_key, HOUR)
             # Max out karma
             if karma < MAX_KARMA:
                 redisConnection.incr(karma_key)
@@ -209,7 +212,8 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     p = ""
     points = 0
     puzzle = puzzleData['puzzle']
-    karma_key = 'karma:{puzzle}:{ip}'.format(puzzle=puzzle, ip=ip)
+
+    karma_key = init_karma_key(redisConnection, puzzle, ip)
     karma = int(redisConnection.get(karma_key))
 
     # Restrict piece to within table boundaries
