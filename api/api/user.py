@@ -97,7 +97,7 @@ def user_id_from_ip(ip, skip_generate=False):
     return str(user_id)
 
 def user_not_banned(f):
-    """Check if the user is not banned and respond with 403 if so"""
+    """Check if the user is not banned and respond with 429 if so"""
     def decorator(*args, **kwargs):
         ip = request.headers.get('X-Real-IP')
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip, skip_generate=True)
@@ -107,7 +107,7 @@ def user_not_banned(f):
                 if banneduser_score > time.time():
                     # The user must first press the any key to continue. Until
                     # then the resource requested is in conflict.
-                    abort(make_response(". . . please wait . . .", 409))
+                    abort(make_response(". . . please wait . . .", 429))
 
         return f(*args, **kwargs)
     return decorator
@@ -116,6 +116,8 @@ class CurrentUserIDView(MethodView):
     """
     Current user based on secure user cookie.
     """
+    decorators = [user_not_banned]
+
     def get(self):
         "return the user id by secure cookie or by ip."
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP'))
@@ -127,6 +129,8 @@ class GenerateAnonymousLogin(MethodView):
     login link which the player will need to copy in order to login after the
     cookie expires.
     """
+    decorators = [user_not_banned]
+
     def get(self):
         "Return an object to be used by the generateBitLink js call"
 
@@ -161,6 +165,7 @@ class UserLoginView(MethodView):
     """
     To maintain backwards compatibility this is rewritten in nginx from /puzzle-api/bit/<bitLink>
     """
+
     def get(self, anonymous_login):
         "Set the user cookie if correct anon bit link."
         user = anonymous_login[:13]
@@ -195,6 +200,8 @@ class UserLogoutView(MethodView):
     """
     Deleting the user cookie will logout the user
     """
+    decorators = [user_not_banned]
+
     def get(self):
         "Delete the cookie by setting the expires to the past."
         response = make_response(redirect('/'))
@@ -207,6 +214,8 @@ class UserLogoutView(MethodView):
 class UserDetailsView(MethodView):
     """
     """
+    decorators = [user_not_banned]
+
     def get(self):
         response = make_response(redirect('/'))
 
@@ -243,6 +252,8 @@ class ClaimRandomBit(MethodView):
     """
     Claim a random bit icon only when a user doesn't have an icon.
     """
+    decorators = [user_not_banned]
+
     def post(self):
         # Verify user is logged in
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP'))
@@ -359,6 +370,3 @@ class BanishSelf(MethodView):
 
         self.increase_ban_time(ip, user, 60)
         return make_response(self.response_text, 201)
-
-    #redisConnection.zadd('bannedusers', '{ip}-{user}'.format(ip=ip, user=user), int(time.time()+TWO_HOURS))
-    #redisConnection.zincrby('bannedusers', '{ip}-{user}'.format(ip=ip, user=user), int(time.time()+TWO_HOURS))

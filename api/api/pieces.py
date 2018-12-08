@@ -48,7 +48,7 @@ class PuzzlePiecesView(MethodView):
         #if not redisConnection.exists('pc:{puzzle}:0'.format(puzzle=puzzle)):
             # TODO: publish the job to the worker queue
             # Respond with 202
-            
+
             # TODO: check redis memory usage and create cleanup job if it's past a threshold
             memory = redisConnection.info(section='memory')
             print('used_memory: {used_memory_human}'.format(**memory))

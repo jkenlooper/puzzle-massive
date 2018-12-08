@@ -5,6 +5,7 @@ import redis
 from app import db
 from database import fetch_query_string, rowify
 from constants import ACTIVE, IN_QUEUE
+from user import user_not_banned
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
@@ -14,6 +15,7 @@ class PuzzlePieceView(MethodView):
     """
     Get info about a single puzzle piece.
     """
+    decorators = [user_not_banned]
 
     def get(self, puzzle_id, piece):
 

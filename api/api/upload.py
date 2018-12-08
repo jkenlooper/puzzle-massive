@@ -16,7 +16,7 @@ from werkzeug.urls import url_fix
 from api.app import db
 from api.database import rowify, fetch_query_string, read_query_file
 from api.constants import COMPLETED, NEEDS_MODERATION
-from api.user import user_id_from_ip
+from api.user import user_id_from_ip, user_not_banned
 
 #permissions
 PUBLIC   = 0  # obvious...
@@ -158,6 +158,8 @@ class PuzzleUploadView(MethodView):
     """
     Handle uploaded puzzle images
     """
+    decorators = [user_not_banned]
+
     def post(self):
         args = {}
         if request.form:

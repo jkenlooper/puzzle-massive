@@ -12,6 +12,7 @@ from api.database import rowify
 from api.constants import SUGGESTED
 from api.user import user_id_from_ip
 from api.notify import send_message
+from user import user_not_banned
 
 #permissions
 PUBLIC   = 0  # obvious...
@@ -20,6 +21,8 @@ class SuggestImageView(MethodView):
     """
     Handle suggest image form uploads
     """
+    decorators = [user_not_banned]
+
     def post(self):
         args = {}
         if request.form:

@@ -5,7 +5,7 @@ from flask.views import MethodView
 
 from api.app import db
 from api.database import rowify, fetch_query_string
-from api.user import generate_password, generate_user_login, user_id_from_ip, NEW_USER_STARTING_POINTS
+from api.user import generate_password, generate_user_login, user_id_from_ip, NEW_USER_STARTING_POINTS, user_not_banned
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
@@ -20,6 +20,8 @@ WHERE u.id = :user;
 
 class BitIconView(MethodView):
     """user id to bit icon name"""
+    decorators = [user_not_banned]
+
     def get(self, user_id):
         "JSON object with icon"
 
@@ -38,6 +40,8 @@ class BitIconView(MethodView):
 
 class ChooseBitView(MethodView):
     """Choose a bit"""
+    decorators = [user_not_banned]
+
     def get(self):
         "Show a batch of available bit icon names"
 
@@ -63,6 +67,7 @@ class ChooseBitView(MethodView):
 
 class ClaimBitView(MethodView):
     """Claim a bit and register new user"""
+    decorators = [user_not_banned]
 
     def register_new_user(self, user_id):
         """Update initial ip tracked user to now be cookie tracked with a password."""

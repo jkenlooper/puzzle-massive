@@ -8,7 +8,7 @@ from app import db
 from database import rowify
 from constants import ACTIVE, COMPLETED
 from timeline import archive_and_clear
-from user import user_id_from_ip
+from user import user_id_from_ip, user_not_banned
 from jobs.convertPiecesToRedis import convert
 
 redisConnection = redis.from_url('redis://localhost:6379/0/')
@@ -40,6 +40,8 @@ class PuzzlePiecesResetView(MethodView):
     """
     When a puzzle is complete allow redoing it.
     """
+    decorators = [user_not_banned]
+
     def post(self):
         args = {}
         if request.form:
