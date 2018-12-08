@@ -18,6 +18,11 @@ ANONYMOUS_USER_ID = 2
 
 NEW_USER_STARTING_POINTS = 1300
 
+LITTLE_LESS_THAN_A_WEEK = (60 * 60 * 24 * 7) - random.randint(3023, 3600 * 14)
+LITTLE_MORE_THAN_A_DAY = (60 * 60 * 24) + random.randint(3023, 3600 * 14)
+MAX_BAN_TIME = LITTLE_LESS_THAN_A_WEEK
+HONEY_POT_BAN_TIME = LITTLE_MORE_THAN_A_DAY
+
 # after 14 days reset the expiration date of the cookie by setting will_expire_cookie
 OLD_QUERY_USER_DETAILS = """select login, icon, score, points as dots, id, cookie_expires,
   strftime('%s', cookie_expires) <= strftime('%s', 'now', '+351 days') as will_expire_cookie
@@ -111,6 +116,13 @@ def user_not_banned(f):
 
         return f(*args, **kwargs)
     return decorator
+
+def increase_ban_time(ip, user, seconds):
+    now = int(time.time())
+    current = int(redisConnection.zscore('bannedusers', '{ip}-{user}'.format(ip=ip, user=user)) or now)
+    current = max(current, now)
+    ban_timestamp = min(current + seconds, now + MAX_BAN_TIME)
+    redisConnection.zadd('bannedusers', '{ip}-{user}'.format(ip=ip, user=user), ban_timestamp)
 
 class CurrentUserIDView(MethodView):
     """
@@ -351,22 +363,18 @@ class BanishSelf(MethodView):
     decorators = [user_not_banned]
     response_text = "Press any key to continue . . ."
 
-    def increase_ban_time(self, ip, user, seconds):
-        now = int(time.time())
-        current = int(redisConnection.zscore('bannedusers', '{ip}-{user}'.format(ip=ip, user=user)) or now)
-        current = max(current, now)
-        redisConnection.zadd('bannedusers', '{ip}-{user}'.format(ip=ip, user=user), current + seconds)
-
     def get(self):
+        "The url for this is listed in robots.txt under a Disallow"
         ip = request.headers.get('X-Real-IP')
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
-        self.increase_ban_time(ip, user, 60)
+        increase_ban_time(ip, user, HONEY_POT_BAN_TIME)
 
         return make_response(self.response_text, 201)
 
     def post(self):
+        "User filled out and submitted the hidden form.  Most likely a spam bot."
         ip = request.headers.get('X-Real-IP')
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
 
-        self.increase_ban_time(ip, user, 60)
+        increase_ban_time(ip, user, HONEY_POT_BAN_TIME)
         return make_response(self.response_text, 201)

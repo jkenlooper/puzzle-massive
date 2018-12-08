@@ -10,6 +10,7 @@ from app import db
 from database import fetch_query_string, rowify
 from tools import formatPieceMovementString
 from jobs.convertPiecesToRedis import convert
+from user import increase_ban_time
 
 from constants import ACTIVE, IN_QUEUE
 #from jobs import pieceMove
@@ -21,13 +22,41 @@ redisConnection = redis.from_url('redis://localhost:6379/0/')
 # TODO: create a puzzle status web socket that will update when the status of
 # the puzzle changes from converting, done, active, etc.
 
+# How many puzzles a user can open within this many seconds before being banned.
+# Allow 10 puzzles to be open within 100 seconds.
+PUZZLE_VIEW_RATE_TIMEOUT = 100
+PUZZLE_VIEW_MAX_COUNT = 10
+BAN_TIME_INCR_FOR_EACH = 60 * 5
+
 class PuzzlePiecesView(MethodView):
     """
-    Gets piece data for a puzzle
+    Gets piece data for a puzzle.  The user is never banned from getting pieces,
+    but loading pieces too often can get the user on the banned list.
     """
+
+    def bump_count(self, ip, user):
+        """
+        Bump the count for puzzle loaded for this user.
+        Note that this is different when a player moves a piece on a puzzle
+        that they just opened. The recent points in karma just prevents abuse
+        from humans.
+        """
+        timestamp_now = int(time.time())
+        rounded_timestamp = timestamp_now - (timestamp_now % PUZZLE_VIEW_RATE_TIMEOUT)
+
+        puzzle_view_rate_key = 'pvrate:{ip}:{user}:{timestamp}'.format(ip=ip, user=user, timestamp=rounded_timestamp)
+        if redisConnection.setnx(puzzle_view_rate_key, 1):
+            redisConnection.expire(puzzle_view_rate_key, PUZZLE_VIEW_RATE_TIMEOUT)
+        else:
+            count = redisConnection.incr(puzzle_view_rate_key)
+            if count > PUZZLE_VIEW_MAX_COUNT:
+                increase_ban_time(ip, user, BAN_TIME_INCR_FOR_EACH)
 
     def get(self, puzzle_id):
         ""
+        ip = request.headers.get('X-Real-IP')
+        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
+        self.bump_count(ip, user)
 
         cur = db.cursor()
         result = cur.execute(fetch_query_string('select_puzzle_id_by_puzzle_id.sql'), {
