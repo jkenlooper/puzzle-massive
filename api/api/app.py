@@ -105,7 +105,7 @@ def make_app(config=None, **kw):
 
     # import the views and sockets
     from api.piece import PuzzlePieceView
-    from api.publish import PuzzlePiecesMovePublishView
+    from api.publish import PuzzlePiecesMovePublishView, PuzzlePieceTokenView
     from api.pieces import PuzzlePiecesView
     #from subscribe import puzzle_updates
     from api.reset import PuzzlePiecesResetView
@@ -133,8 +133,11 @@ def make_app(config=None, **kw):
 
     app.add_url_rule('/puzzle/<puzzle_id>/piece/<int:piece>/',
                      view_func=PuzzlePieceView.as_view('puzzle-piece-info'))
-    app.add_url_rule('/puzzle/<puzzle>/piece/<int:piece>/move/',
+    app.add_url_rule('/puzzle/<puzzle_id>/piece/<int:piece>/move/',
                      view_func=PuzzlePiecesMovePublishView.as_view('puzzle-pieces-move'))
+    app.add_url_rule('/puzzle/<puzzle_id>/piece/<int:piece>/token/<int:player>/',
+                     view_func=PuzzlePieceTokenView.as_view('puzzle-piece-token'))
+
     app.add_url_rule('/puzzle-pieces/<puzzle_id>/',
                      view_func=PuzzlePiecesView.as_view('puzzle-pieces'))
     app.add_url_rule('/puzzle-reset/',

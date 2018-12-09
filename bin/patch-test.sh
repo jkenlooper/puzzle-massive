@@ -18,6 +18,9 @@ echo $WIDTH
 echo $HEIGHT
 echo $PIECECOUNT
 
+player=$(curl 'http://local-puzzle-massive/newapi/current-user-id/' -H 'Referer: http://local-puzzle-massive/')
+echo $player
+
 while true; do
 
 COUNT=$3;
@@ -25,9 +28,14 @@ COUNT=$3;
 
 while test "$COUNT" -gt -1; do
 
+piece=$(shuf -i 1-${PIECECOUNT} -n 1)
+
+token=$(curl "http://local-puzzle-massive/newapi/puzzle/${PUZZLEID}/piece/${piece}/token/${player}/" -H 'Referer: http://local-puzzle-massive/' | jq '.token' | sed --silent -E 's/"(.*)"/\1/p')
+echo $token
+
 curl --request PATCH \
-  --url "http://local-puzzle-massive/newapi/puzzle/${PUZZLEID}/piece/$(shuf -i 1-${PIECECOUNT} -n 1)/move/" \
-  --header 'token: 1234abcd' \
+  --url "http://local-puzzle-massive/newapi/puzzle/${PUZZLEID}/piece/${piece}/move/" \
+  --header "token: ${token}" \
   --header 'Referer: http://local-puzzle-massive/' \
   --form x=$(shuf -i 101-${WIDTH} -n 1) \
   --form y=$(shuf -i 101-${HEIGHT} -n 1) \

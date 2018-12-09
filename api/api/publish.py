@@ -1,5 +1,6 @@
 import datetime
 import time
+import uuid
 
 from flask import current_app, make_response, request, abort, json
 from flask.views import MethodView
@@ -53,9 +54,80 @@ def bump_count(ip, user):
     if count > PIECE_TRANSLATE_MAX_COUNT:
         increase_ban_time(ip, user, PIECE_TRANSLATE_BAN_TIME_INCR)
 
+
+
+def get_puzzle_piece_token_key(puzzle, piece):
+    return "pctoken:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
+
 class PaymentRequired(HTTPException):
     code = 402
     description = '<p>Payment required.</p>'
+
+class PuzzlePieceTokenView(MethodView):
+    """
+    player gets token after mousedown.  /puzzle/<puzzle_id>/piece/<int:piece>/token/<int:player>/
+    """
+    decorators = [user_not_banned]
+
+    def get(self, puzzle_id, piece, player):
+        ip = request.headers.get('X-Real-IP')
+        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
+
+        # Validate the user
+        if user != player:
+            abort(403)
+
+        # Start db operations
+        c = db.cursor()
+        # validate the puzzle_id
+        result = c.execute(fetch_query_string('select_puzzle_id_by_puzzle_id.sql'), {
+            'puzzle_id': puzzle_id
+            }).fetchall()
+        if not result:
+            # 404 if puzzle does not exist
+            abort(404)
+        (result, col_names) = rowify(result, c.description)
+        puzzle = result[0]['puzzle']
+
+        puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
+
+        # Check if token on piece is still owned by another player
+        existing_token_and_player = redisConnection.get(puzzle_piece_token_key)
+        if existing_token_and_player:
+            (other_token, other_player) = existing_token_and_player.split(':')
+            puzzle_and_piece = redisConnection.get('token:{}'.format(other_player))
+            if puzzle_and_piece:
+                (other_puzzle, other_piece) = puzzle_and_piece.split(':')
+                if other_puzzle == puzzle and other_piece == piece and other_player != player:
+                    # Player needs to wait before moving this piece
+                    print("Player needs to wait before moving this piece {}, {}, {}".format(other_puzzle, other_piece, other_player))
+                    abort(409)
+
+        # This piece is up for grabs since it has been more then 5 seconds since
+        # another player has grabbed it.
+        token = uuid.uuid4().hex
+        redisConnection.set(puzzle_piece_token_key, '{token}:{player}'.format(token=token, player=player), ex=60) # TODO: set to 5 minutes timeout
+        redisConnection.set('token:{}'.format(player), '{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ex=5)
+
+        response = {
+            'token': token,
+            'lock': int(time.time() + 5),
+            'expires': int(time.time() + 60) # TODO: set to 5 minutes
+        }
+        return encoder.encode(response)
+
+        #/token/ GET returns a generated token and also stores it temporarily in redis. It also updates the value in token:{player}.
+        #The piece is owned for a limited time by the player.  Other players will get a response status code to wait.
+        #key: pctoken:{puzzle}:{piece}
+        #value: asdf1234:{player}
+        #expires: 5 minutes
+
+        #Only allow 1 piece to be locked per player.  This shows that the player has a token for the given puzzle and piece and has control over it (locked).
+        #key: token:{player}
+        #value: {puzzle}:{piece}
+        #expires: 5seconds
+
+        #Remove any other pctoken:... that the player has acquired
 
 class PuzzlePiecesMovePublishView(MethodView):
     """
@@ -80,7 +152,7 @@ class PuzzlePiecesMovePublishView(MethodView):
     decorators = [user_not_banned]
     ACCEPTABLE_ARGS = set(['x', 'y', 'r'])
 
-    def patch(self, puzzle, piece):
+    def patch(self, puzzle_id, piece):
         """
         args:
         x
@@ -90,7 +162,6 @@ class PuzzlePiecesMovePublishView(MethodView):
         ip = request.headers.get('X-Real-IP')
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
 
-        puzzle_id = puzzle
         # validate the args and headers
         args = {}
         xhr_data = request.get_json()
@@ -112,19 +183,42 @@ class PuzzlePiecesMovePublishView(MethodView):
                 except ValueError:
                     abort(400)
 
-        # Token is to make sure puzzle is still in sync.  TODO:
+        # Start db operations
+        c = db.cursor()
+        # validate the puzzle_id
+        result = c.execute(fetch_query_string('select_puzzle_id_by_puzzle_id.sql'), {
+            'puzzle_id': puzzle_id
+            }).fetchall()
+        if not result:
+            # 404 if puzzle does not exist
+            abort(404)
+        (result, col_names) = rowify(result, c.description)
+        puzzle = result[0]['puzzle']
+
+        # Token is to make sure puzzle is still in sync.
         # validate the token
         token = request.headers.get('Token')
         if not token:
             abort(403)
-        # TODO: validate the piece token?
-        if token != '1234abcd':
+        puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
+        print("token key: {}".format(puzzle_piece_token_key))
+        token_and_player = redisConnection.get(puzzle_piece_token_key)
+        if token_and_player:
+            player = int(user)
+            (valid_token, other_player) = token_and_player.split(':')
+            if token != valid_token:
+                print("token invalid {} != {}".format(token, valid_token))
+                abort(409)
+            if player != int(other_player):
+                print("player invalid {} != {}".format(player, other_player))
+                abort(409)
+        else:
+            # Token has expired
+            print("token expired")
             abort(409)
 
         bump_count(ip, user)
 
-        # Start db operations
-        c = db.cursor()
         result = c.execute(fetch_query_string('select_puzzle_and_piece.sql'), {
             'puzzle_id': puzzle_id,
             'piece': piece
