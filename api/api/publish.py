@@ -13,7 +13,7 @@ from tools import formatPieceMovementString, formatBitMovementString, init_karma
 from constants import ACTIVE, IN_QUEUE, BUGGY_UNLISTED
 #from jobs import pieceMove
 from jobs import pieceTranslate
-from user import user_id_from_ip, user_not_banned
+from user import user_id_from_ip, user_not_banned, increase_ban_time
 
 redisConnection = redis.from_url('redis://localhost:6379/0/')
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
@@ -29,6 +29,29 @@ PIECE_MOVEMENT_RATE_LIMIT = 100
 HOUR = 3600 # hour in seconds
 MINUTE = 60 # minute in seconds
 TWO_HOURS = 7200
+
+# How many pieces a user can move within this many seconds before being banned.
+# Allow 30 pieces to be moved within 13 seconds. Exceeding that rate would
+# probably imply that it is being scripted.
+PIECE_TRANSLATE_RATE_TIMEOUT = 13
+PIECE_TRANSLATE_MAX_COUNT = 30
+PIECE_TRANSLATE_BAN_TIME_INCR = 60 * 5
+
+def bump_count(ip, user):
+    """
+    Bump the count for pieces moved for the user.
+    The nginx conf has a 60r/m with a burst of 60 on this route. The goal here
+    is to ban user if the piece movement rate continues to max out at this rate.
+    """
+    timestamp_now = int(time.time())
+    rounded_timestamp = timestamp_now - (timestamp_now % PIECE_TRANSLATE_RATE_TIMEOUT)
+
+    piece_translate_rate_key = 'ptrate:{ip}:{user}:{timestamp}'.format(ip=ip, user=user, timestamp=rounded_timestamp)
+    if redisConnection.setnx(piece_translate_rate_key, 1):
+        redisConnection.expire(piece_translate_rate_key, PIECE_TRANSLATE_RATE_TIMEOUT)
+    count = redisConnection.incr(piece_translate_rate_key)
+    if count > PIECE_TRANSLATE_MAX_COUNT:
+        increase_ban_time(ip, user, PIECE_TRANSLATE_BAN_TIME_INCR)
 
 class PaymentRequired(HTTPException):
     code = 402
@@ -94,8 +117,11 @@ class PuzzlePiecesMovePublishView(MethodView):
         token = request.headers.get('Token')
         if not token:
             abort(403)
+        # TODO: validate the piece token?
         if token != '1234abcd':
-            abort(403)
+            abort(409)
+
+        bump_count(ip, user)
 
         # Start db operations
         c = db.cursor()

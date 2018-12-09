@@ -148,8 +148,7 @@ cat <<HERE
 
     keepalive_timeout 0;
     limit_req zone=piece_move_limit_per_ip burst=60 nodelay;
-    # Drop connection instead of showing 503
-    limit_req_status 444;
+    limit_req_status 429;
 
     # Not available for hotlinking
     valid_referers server_names;
