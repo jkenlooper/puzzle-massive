@@ -41,7 +41,7 @@ window.customElements.define('pm-puzzle-pieces', class extends HTMLElement {
     let offsetTop = $slabMassive.offsetTop
     let offsetLeft = $slabMassive.offsetLeft
 
-    let puzzleService = new PuzzleService(this.getAttribute('puzzlepiecesurl'))
+    let puzzleService = new PuzzleService(this.getAttribute('puzzleid'))
     let alerts = {
       container: shadowRoot.querySelector('#puzzle-pieces-alert'),
       max: shadowRoot.querySelector('#puzzle-pieces-alert-max'),
@@ -54,6 +54,7 @@ window.customElements.define('pm-puzzle-pieces', class extends HTMLElement {
     ctrl.status = this.getAttribute('status')
     ctrl.parentoftopleft = Number(this.getAttribute('parentoftopleft'))
     ctrl.puzzleid = this.getAttribute('puzzleid')
+    ctrl.player = this.getAttribute('player')
 
     let draggedPiece = null
     let draggedPieceID = null
@@ -298,10 +299,19 @@ window.customElements.define('pm-puzzle-pieces', class extends HTMLElement {
 
   static get observedAttributes () {
     return [
+      'player'
     ]
   }
   // Fires when an attribute was added, removed, or updated.
   attributeChangedCallback (attrName, oldVal, newVal) {
+    if (oldVal !== newVal) {
+      this[attrName] = newVal
+      switch (attrName) {
+        case 'player':
+          this.ctrl.player = this.getAttribute('player')
+          break
+      }
+    }
   }
 
   render () {

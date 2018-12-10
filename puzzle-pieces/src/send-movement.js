@@ -7,7 +7,7 @@
   const puzzleId = document.getElementById('puzzle-container').getAttribute('puzzle_id')
 
   /* TODO: convert to a factory */
-  function sendMovement (id, x, y, r, origin) {
+  function sendMovement (id, x, y, r, origin, token) {
     x = Math.round(Number(x))
     y = Math.round(Number(y))
 
@@ -30,7 +30,7 @@
       method: 'PATCH',
       type: 'json',
       data: data,
-      headers: {'Token': '1234abcd'},
+      headers: {'Token': token},
       error: function handlePatchError (patchError) {
         if (patchError.status === 429) {
           window.publish('piece/move/blocked', [patchError.response])
@@ -42,7 +42,7 @@
             method: 'GET',
             type: 'json',
             data: data,
-            headers: {'Token': '1234abcd'},
+            headers: {'Token': '1234abcd'}, // Not used
             error: function handleGetError (data) {
               if (origin) {
                 // console.log('rejected. revert to origin', data, {id: id, x: origin.x, y: origin.y, r: origin.r})

@@ -1,4 +1,4 @@
-/* global sendMovement, updater */
+/* global sendMovement, updater, reqwest */
 
 class PuzzlePiecesController { // eslint-disable-line no-unused-vars
   constructor (puzzleService, $container, alerts) {
@@ -79,6 +79,11 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
           'y': self.pieces[pieceID].y,
           'r': self.pieces[pieceID].r
         }
+
+        puzzleService.token(pieceID, self.player)
+          .then((data) => {
+            self.pieces[pieceID].token = data.token
+          })
       } else {
         // remove the pieceID from the array
         self.selectedPieces.splice(index, 1)
@@ -110,7 +115,7 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
       // Send the updates
       self.selectedPieces.forEach(function (pieceID) {
         let piece = self.pieces[pieceID]
-        sendMovement(pieceID, piece.x, piece.y, '-', piece.origin)
+        sendMovement(pieceID, piece.x, piece.y, '-', piece.origin, piece.token)
       })
 
       // Reset the selectedPieces
@@ -128,7 +133,7 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
       piece.x = (x / scale) - (piece.w / 2)
       piece.y = (y / scale) - (piece.h / 2)
       self.renderPieces(self.pieces, [pieceID])
-      sendMovement(pieceID, piece.x, piece.y, '-')
+      sendMovement(pieceID, piece.x, piece.y, '-', undefined, piece.token)
     }
 
     function onPieceMoveRejected (data) {

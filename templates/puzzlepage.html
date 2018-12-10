@@ -249,9 +249,10 @@
               <pm-puzzle-pieces
                 style="width:{{ puzzle.table_width + 100 }}px; height:{{ puzzle.table_height + 100 }}px;"
                 resources="{{ puzzle_files.url }}"
-                puzzlepiecesurl="{{ '/newapi/puzzle-pieces/{}/'.format(puzzle.puzzle_id) }}"
+                puzzleid="{{ puzzle.puzzle_id }}"
                 status="{{ puzzle.status }}"
-                puzzleid="{{ puzzle.puzzle_id }}"></pm-puzzle-pieces>
+                player="{{ '{{SiteController.userDetails.id}}' }}"
+                ></pm-puzzle-pieces>
               <pm-puzzle-bits></pm-puzzle-bits>
             {%- endmacro %}
 

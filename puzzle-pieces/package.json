@@ -1,6 +1,6 @@
 {
   "name": "puzzle-pieces",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "puzzle massive puzzle pieces web component",
   "main": "dist/puzzle-pieces.min.js",
   "scripts": {
