@@ -38,6 +38,9 @@ PIECE_TRANSLATE_RATE_TIMEOUT = 13
 PIECE_TRANSLATE_MAX_COUNT = 30
 PIECE_TRANSLATE_BAN_TIME_INCR = 60 * 5
 
+TOKEN_EXPIRE_TIMEOUT = 60 * 5
+TOKEN_LOCK_TIMEOUT = 5
+
 def bump_count(ip, user):
     """
     Bump the count for pieces moved for the user.
@@ -106,28 +109,15 @@ class PuzzlePieceTokenView(MethodView):
         # This piece is up for grabs since it has been more then 5 seconds since
         # another player has grabbed it.
         token = uuid.uuid4().hex
-        redisConnection.set(puzzle_piece_token_key, '{token}:{player}'.format(token=token, player=player), ex=60) # TODO: set to 5 minutes timeout
-        redisConnection.set('token:{}'.format(player), '{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ex=5)
+        redisConnection.set(puzzle_piece_token_key, '{token}:{player}'.format(token=token, player=player), ex=TOKEN_EXPIRE_TIMEOUT)
+        redisConnection.set('token:{}'.format(player), '{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ex=TOKEN_LOCK_TIMEOUT)
 
         response = {
             'token': token,
-            'lock': int(time.time() + 5),
-            'expires': int(time.time() + 60) # TODO: set to 5 minutes
+            'lock': int(time.time() + TOKEN_LOCK_TIMEOUT),
+            'expires': int(time.time() + TOKEN_EXPIRE_TIMEOUT)
         }
         return encoder.encode(response)
-
-        #/token/ GET returns a generated token and also stores it temporarily in redis. It also updates the value in token:{player}.
-        #The piece is owned for a limited time by the player.  Other players will get a response status code to wait.
-        #key: pctoken:{puzzle}:{piece}
-        #value: asdf1234:{player}
-        #expires: 5 minutes
-
-        #Only allow 1 piece to be locked per player.  This shows that the player has a token for the given puzzle and piece and has control over it (locked).
-        #key: token:{player}
-        #value: {puzzle}:{piece}
-        #expires: 5seconds
-
-        #Remove any other pctoken:... that the player has acquired
 
 class PuzzlePiecesMovePublishView(MethodView):
     """
