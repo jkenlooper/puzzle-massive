@@ -68,17 +68,13 @@ class PaymentRequired(HTTPException):
 
 class PuzzlePieceTokenView(MethodView):
     """
-    player gets token after mousedown.  /puzzle/<puzzle_id>/piece/<int:piece>/token/<int:player>/
+    player gets token after mousedown.  /puzzle/<puzzle_id>/piece/<int:piece>/token/
     """
     decorators = [user_not_banned]
 
-    def get(self, puzzle_id, piece, player):
+    def get(self, puzzle_id, piece):
         ip = request.headers.get('X-Real-IP')
         user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
-
-        # Validate the user
-        if user != player:
-            abort(403)
 
         # Start db operations
         c = db.cursor()
@@ -101,16 +97,16 @@ class PuzzlePieceTokenView(MethodView):
             puzzle_and_piece = redisConnection.get('token:{}'.format(other_player))
             if puzzle_and_piece:
                 (other_puzzle, other_piece) = puzzle_and_piece.split(':')
-                if other_puzzle == puzzle and other_piece == piece and other_player != player:
+                if other_puzzle == puzzle and other_piece == piece and other_player != user:
                     # Player needs to wait before moving this piece
-                    print("Player needs to wait before moving this piece {}, {}, {}".format(other_puzzle, other_piece, other_player))
+                    # print("Player needs to wait before moving this piece {}, {}, {}".format(other_puzzle, other_piece, other_player))
                     abort(409)
 
         # This piece is up for grabs since it has been more then 5 seconds since
         # another player has grabbed it.
         token = uuid.uuid4().hex
-        redisConnection.set(puzzle_piece_token_key, '{token}:{player}'.format(token=token, player=player), ex=TOKEN_EXPIRE_TIMEOUT)
-        redisConnection.set('token:{}'.format(player), '{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ex=TOKEN_LOCK_TIMEOUT)
+        redisConnection.set(puzzle_piece_token_key, '{token}:{user}'.format(token=token, user=user), ex=TOKEN_EXPIRE_TIMEOUT)
+        redisConnection.set('token:{}'.format(user), '{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ex=TOKEN_LOCK_TIMEOUT)
 
         response = {
             'token': token,
@@ -191,20 +187,20 @@ class PuzzlePiecesMovePublishView(MethodView):
         if not token:
             abort(403)
         puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
-        print("token key: {}".format(puzzle_piece_token_key))
+        # print("token key: {}".format(puzzle_piece_token_key))
         token_and_player = redisConnection.get(puzzle_piece_token_key)
         if token_and_player:
             player = int(user)
             (valid_token, other_player) = token_and_player.split(':')
             if token != valid_token:
-                print("token invalid {} != {}".format(token, valid_token))
+                # print("token invalid {} != {}".format(token, valid_token))
                 abort(409)
             if player != int(other_player):
-                print("player invalid {} != {}".format(player, other_player))
+                # print("player invalid {} != {}".format(player, other_player))
                 abort(409)
         else:
             # Token has expired
-            print("token expired")
+            # print("token expired")
             abort(409)
 
         bump_count(ip, user)

@@ -3,7 +3,7 @@
 
 class PuzzleService { // eslint-disable-line no-unused-vars
   // Pass in the url to the puzzle pieces
-  constructor (puzzleid, player) {
+  constructor (puzzleid) {
     this.puzzleid = puzzleid
   }
 
@@ -15,10 +15,10 @@ class PuzzleService { // eslint-disable-line no-unused-vars
     })
   }
 
-  token (piece, player) {
+  token (piece) {
     const puzzleid = this.puzzleid
     return reqwest({
-      url: `/newapi/puzzle/${puzzleid}/piece/${piece}/token/${player}/`,
+      url: `/newapi/puzzle/${puzzleid}/piece/${piece}/token/`,
       method: 'get',
       type: 'json'
     })

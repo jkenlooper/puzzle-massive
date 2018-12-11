@@ -250,9 +250,7 @@
                 style="width:{{ puzzle.table_width + 100 }}px; height:{{ puzzle.table_height + 100 }}px;"
                 resources="{{ puzzle_files.url }}"
                 puzzleid="{{ puzzle.puzzle_id }}"
-                status="{{ puzzle.status }}"
-                player="{{ '{{SiteController.userDetails.id}}' }}"
-                ></pm-puzzle-pieces>
+                status="{{ puzzle.status }}"></pm-puzzle-pieces>
               <pm-puzzle-bits></pm-puzzle-bits>
             {%- endmacro %}
 

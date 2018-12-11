@@ -79,11 +79,6 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
           'y': self.pieces[pieceID].y,
           'r': self.pieces[pieceID].r
         }
-
-        puzzleService.token(pieceID, self.player)
-          .then((data) => {
-            self.pieces[pieceID].token = data.token
-          })
       } else {
         // remove the pieceID from the array
         self.selectedPieces.splice(index, 1)
@@ -98,7 +93,23 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
             self.pieces[pieceID].active = false
           })
       }
-      self.renderPieces(self.pieces, [pieceID])
+      if (index === -1) {
+        puzzleService.token(pieceID)
+          .then((data) => {
+            self.pieces[pieceID].token = data.token
+          })
+          .fail((data, msg) => {
+            console.log('token error', data, msg)
+            // TODO: send off a message stating that this piece is locked
+            // self.unSelectPiece(pieceID)
+            // window.publish('piece/move/rejected', [{id: pieceID, x: self.pieces[pieceID].origin.x, y: self.pieces[pieceID].origin.y, r: self.pieces[pieceID].origin.r}])
+          })
+          .always(() => {
+            self.renderPieces(self.pieces, [pieceID])
+          })
+      } else {
+        self.renderPieces(self.pieces, [pieceID])
+      }
     }
 
     self.dropSelectedPieces = function (x, y, scale) {
