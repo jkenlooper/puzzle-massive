@@ -102,7 +102,7 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
             console.log('token error', data, msg)
             // TODO: send off a message stating that this piece is locked
             // self.unSelectPiece(pieceID)
-            // window.publish('piece/move/rejected', [{id: pieceID, x: self.pieces[pieceID].origin.x, y: self.pieces[pieceID].origin.y, r: self.pieces[pieceID].origin.r}])
+            window.publish('piece/move/rejected', [{id: pieceID, x: self.pieces[pieceID].origin.x, y: self.pieces[pieceID].origin.y, r: self.pieces[pieceID].origin.r}])
           })
           .always(() => {
             self.renderPieces(self.pieces, [pieceID])

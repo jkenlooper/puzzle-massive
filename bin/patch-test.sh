@@ -30,8 +30,14 @@ while test "$COUNT" -gt -1; do
 
 piece=$(shuf -i 1-${PIECECOUNT} -n 1)
 
-token=$(curl "http://local-puzzle-massive/newapi/puzzle/${PUZZLEID}/piece/${piece}/token/${player}/" -H 'Referer: http://local-puzzle-massive/' | jq '.token' | sed --silent -E 's/"(.*)"/\1/p')
-echo $token
+#curl --url "http://local-puzzle-massive/newapi/puzzle/${PUZZLEID}/piece/${piece}/token/" \
+#  -H 'Referer: http://local-puzzle-massive/' \
+#  -s -S --write-out "%{http_code} %{time_total}\n" \
+#  -o /dev/null &
+
+token=$(curl --url "http://local-puzzle-massive/newapi/puzzle/${PUZZLEID}/piece/${piece}/token/" \
+  -H 'Referer: http://local-puzzle-massive/' \
+  -s -S | jq '.token' | sed --silent -E 's/"(.*)"/\1/p')
 
 curl --request PATCH \
   --url "http://local-puzzle-massive/newapi/puzzle/${PUZZLEID}/piece/${piece}/move/" \

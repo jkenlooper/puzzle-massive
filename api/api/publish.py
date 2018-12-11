@@ -90,14 +90,29 @@ class PuzzlePieceTokenView(MethodView):
 
         puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
 
+        # Check if player already has a token for this puzzle. This would mean
+        # that the player tried moving another piece before the locked piece
+        # finished moving.
+        existing_token = redisConnection.get('token:{}'.format(user))
+        if existing_token:
+            (player_puzzle, player_piece) = map(int, existing_token.split(':'))
+            if player_puzzle == puzzle:
+                # Ban the user for a few seconds
+                increase_ban_time(ip, user, TOKEN_LOCK_TIMEOUT)
+                abort(429)
+
         # Check if token on piece is still owned by another player
         existing_token_and_player = redisConnection.get(puzzle_piece_token_key)
         if existing_token_and_player:
             (other_token, other_player) = existing_token_and_player.split(':')
             puzzle_and_piece = redisConnection.get('token:{}'.format(other_player))
+            # Check if there is a lock on this piece by other player
             if puzzle_and_piece:
                 (other_puzzle, other_piece) = puzzle_and_piece.split(':')
+                other_puzzle = int(other_puzzle)
+                other_piece = int(other_piece)
                 if other_puzzle == puzzle and other_piece == piece and other_player != user:
+                    # Other player has a lock on this piece
                     # Player needs to wait before moving this piece
                     # print("Player needs to wait before moving this piece {}, {}, {}".format(other_puzzle, other_piece, other_player))
                     abort(409)
@@ -106,7 +121,14 @@ class PuzzlePieceTokenView(MethodView):
         # another player has grabbed it.
         token = uuid.uuid4().hex
         redisConnection.set(puzzle_piece_token_key, '{token}:{user}'.format(token=token, user=user), ex=TOKEN_EXPIRE_TIMEOUT)
-        redisConnection.set('token:{}'.format(user), '{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ex=TOKEN_LOCK_TIMEOUT)
+        if not redisConnection.zscore('blockedplayers:puzzle', '{ip}-{user}-{puzzle}'.format(ip=ip, user=user, puzzle=puzzle)):
+            # Only allow players that are not blocked to lock pieces
+            redisConnection.set('token:{}'.format(user), '{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ex=TOKEN_LOCK_TIMEOUT)
+
+        # Claim the piece by showing the bit icon next to it.
+        (x, y) = map(int, redisConnection.hmget('pc:{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ['x', 'y']))
+        msg = formatBitMovementString(user, x, y)
+        redisConnection.publish(u'move:{0}'.format(puzzle_id), msg)
 
         response = {
             'token': token,
@@ -202,6 +224,10 @@ class PuzzlePiecesMovePublishView(MethodView):
             # Token has expired
             # print("token expired")
             abort(409)
+
+        # Expire the token at the lock timeout since it shouldn't be used again
+        redisConnection.delete(puzzle_piece_token_key)
+        redisConnection.delete('token:{}'.format(user))
 
         bump_count(ip, user)
 

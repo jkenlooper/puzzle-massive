@@ -10,7 +10,7 @@ from app import db
 from database import fetch_query_string, rowify
 from tools import formatPieceMovementString
 from jobs.convertPiecesToRedis import convert
-from user import increase_ban_time
+from user import user_id_from_ip, increase_ban_time
 
 from constants import ACTIVE, IN_QUEUE
 #from jobs import pieceMove

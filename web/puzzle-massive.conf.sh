@@ -15,6 +15,7 @@ cat <<HERE
 
 limit_conn_zone \$binary_remote_addr zone=addr:1m;
 limit_req_zone \$binary_remote_addr zone=piece_move_limit_per_ip:1m rate=60r/m;
+limit_req_zone \$binary_remote_addr zone=piece_token_limit_per_ip:1m rate=60r/m;
 limit_req_zone \$binary_remote_addr zone=puzzle_upload_limit_per_ip:1m rate=3r/m;
 limit_req_zone \$server_name zone=puzzle_upload_limit_per_server:1m rate=20r/m;
 
@@ -135,6 +136,27 @@ cat <<HERE
 
     # Default timeout is 60s
     # proxy_read_timeout 60s;
+
+    rewrite ^/newapi/(.*)\$  /\$1 break;
+  }
+
+  location ~* ^/newapi/puzzle/.*/piece/.*/token/ {
+    keepalive_timeout 0;
+    limit_req zone=piece_token_limit_per_ip burst=60 nodelay;
+    limit_req_status 429;
+
+    # Not available for hotlinking
+    valid_referers server_names;
+    if (\$invalid_referer) {
+      return 444;
+    }
+
+    proxy_pass_header Server;
+    proxy_set_header Host \$http_host;
+    proxy_set_header  X-Real-IP  \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_redirect off;
+    proxy_pass http://localhost:${PORTAPI};
 
     rewrite ^/newapi/(.*)\$  /\$1 break;
   }
