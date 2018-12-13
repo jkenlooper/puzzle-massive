@@ -1,5 +1,13 @@
 /* global HTMLElement, Hammer, style, pieceHTML, template, PuzzleService, PuzzlePiecesController */
 
+// TODO: Exercise for the developer; refactor this mess of old javascript into
+// a more manageable state.  Should start with unit test coverage.  There is
+// also a lot of poorly implemented state management going on here that could be
+// refactored with using redux and/or a state machine.
+//
+// I've added on with more terrible code (a 'small' tweak here and there) to
+// make things more challenging. ;)
+
 let pieceTemplate = document.createElement('div')
 pieceTemplate.innerHTML = pieceHTML
 

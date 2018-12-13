@@ -109,20 +109,36 @@ def user_not_banned(f):
         if not user == None:
             banneduser_score = redisConnection.zscore('bannedusers', '{}-{}'.format(ip, user))
             if banneduser_score:
-                if banneduser_score > time.time():
+                now = int(time.time())
+                if banneduser_score > now:
                     # The user must first press the any key to continue. Until
                     # then the resource requested is in conflict.
-                    abort(make_response(". . . please wait . . .", 429))
+                    response = ". . . please wait . . ."
+                    if 'application/json' in request.headers.get('Accept'):
+                        response = encoder.encode({
+                            'msg': response,
+                            'expires': banneduser_score,
+                            'timeout': banneduser_score - now
+                        })
+                    abort(make_response(response, 429))
 
         return f(*args, **kwargs)
     return decorator
 
 def increase_ban_time(ip, user, seconds):
+    # TODO: Why limit the ban with ip-user and not just the user?
     now = int(time.time())
     current = int(redisConnection.zscore('bannedusers', '{ip}-{user}'.format(ip=ip, user=user)) or now)
     current = max(current, now)
     ban_timestamp = min(current + seconds, now + MAX_BAN_TIME)
     redisConnection.zadd('bannedusers', '{ip}-{user}'.format(ip=ip, user=user), ban_timestamp)
+    return {
+        'msg': "Temporarily banned. Ban time has increased by {} seconds".format(seconds),
+        'type': "bannedusers",
+        'user': user,
+        'expires': ban_timestamp,
+        'timeout': ban_timestamp - now
+    }
 
 class CurrentUserIDView(MethodView):
     """

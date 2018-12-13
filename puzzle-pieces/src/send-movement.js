@@ -33,7 +33,15 @@
       headers: {'Token': token},
       error: function handlePatchError (patchError) {
         if (patchError.status === 429) {
-          window.publish('piece/move/blocked', [patchError.response])
+          var responseObj
+          try {
+            responseObj = JSON.parse(patchError.response)
+          } catch (err) {
+            responseObj = {
+              reason: patchError.response
+            }
+          }
+          window.publish('piece/move/blocked', [responseObj])
           window.publish('piece/move/rejected', [{id: id, x: origin.x, y: origin.y, r: origin.r}])
         } else {
           // Reject with piece info from server and fallback to origin if that also fails

@@ -37,6 +37,7 @@ TWO_HOURS = 7200
 PIECE_TRANSLATE_RATE_TIMEOUT = 13
 PIECE_TRANSLATE_MAX_COUNT = 30
 PIECE_TRANSLATE_BAN_TIME_INCR = 60 * 5
+PIECE_TRANSLATE_EXCEEDED_REASON = "Piece moves exceeded {PIECE_TRANSLATE_MAX_COUNT} in {PIECE_TRANSLATE_RATE_TIMEOUT} seconds".format(**locals())
 
 TOKEN_EXPIRE_TIMEOUT = 60 * 5
 TOKEN_LOCK_TIMEOUT = 5
@@ -49,13 +50,17 @@ def bump_count(ip, user):
     """
     timestamp_now = int(time.time())
     rounded_timestamp = timestamp_now - (timestamp_now % PIECE_TRANSLATE_RATE_TIMEOUT)
+    err_msg = {}
 
     piece_translate_rate_key = 'ptrate:{ip}:{user}:{timestamp}'.format(ip=ip, user=user, timestamp=rounded_timestamp)
     if redisConnection.setnx(piece_translate_rate_key, 1):
         redisConnection.expire(piece_translate_rate_key, PIECE_TRANSLATE_RATE_TIMEOUT)
     count = redisConnection.incr(piece_translate_rate_key)
     if count > PIECE_TRANSLATE_MAX_COUNT:
-        increase_ban_time(ip, user, PIECE_TRANSLATE_BAN_TIME_INCR)
+        err_msg = increase_ban_time(ip, user, PIECE_TRANSLATE_BAN_TIME_INCR)
+        err_msg['reason'] = PIECE_TRANSLATE_EXCEEDED_REASON
+
+    return err_msg
 
 
 
@@ -98,8 +103,8 @@ class PuzzlePieceTokenView(MethodView):
             (player_puzzle, player_piece) = map(int, existing_token.split(':'))
             if player_puzzle == puzzle:
                 # Ban the user for a few seconds
-                increase_ban_time(ip, user, TOKEN_LOCK_TIMEOUT)
-                abort(429)
+                err_msg = increase_ban_time(ip, user, TOKEN_LOCK_TIMEOUT)
+                return make_response(encoder.encode(err_msg), 429)
 
         # Check if token on piece is still owned by another player
         existing_token_and_player = redisConnection.get(puzzle_piece_token_key)
@@ -115,7 +120,12 @@ class PuzzlePieceTokenView(MethodView):
                     # Other player has a lock on this piece
                     # Player needs to wait before moving this piece
                     # print("Player needs to wait before moving this piece {}, {}, {}".format(other_puzzle, other_piece, other_player))
-                    abort(409)
+                    err_msg = {
+                        'msg': "Another player is moving this piece",
+                        'type': "piecelock",
+                        'reason': 'Piece locked'
+                    }
+                    return make_response(encoder.encode(err_msg), 409)
 
         # This piece is up for grabs since it has been more then 5 seconds since
         # another player has grabbed it.
@@ -229,7 +239,10 @@ class PuzzlePiecesMovePublishView(MethodView):
         redisConnection.delete(puzzle_piece_token_key)
         redisConnection.delete('token:{}'.format(user))
 
-        bump_count(ip, user)
+        err_msg = bump_count(ip, user)
+        if err_msg.get('type') == "bannedusers":
+            return make_response(encoder.encode(err_msg), 429)
+
 
         result = c.execute(fetch_query_string('select_puzzle_and_piece.sql'), {
             'puzzle_id': puzzle_id,
