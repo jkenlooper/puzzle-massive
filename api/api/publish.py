@@ -19,6 +19,10 @@ from user import user_id_from_ip, user_not_banned, increase_ban_time
 redisConnection = redis.from_url('redis://localhost:6379/0/')
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
+HOUR = 3600 # hour in seconds
+MINUTE = 60 # minute in seconds
+
+BLOCKEDPLAYER_EXPIRE_TIMEOUT = HOUR
 MAX_KARMA = 25
 MIN_KARMA = (int(MAX_KARMA/2) * -1) # -12
 MOVES_BEFORE_PENALTY = 12
@@ -27,9 +31,6 @@ HOTSPOT_EXPIRE = 30
 HOTSPOT_LIMIT = 10
 PIECE_MOVEMENT_RATE_TIMEOUT = 100
 PIECE_MOVEMENT_RATE_LIMIT = 100
-HOUR = 3600 # hour in seconds
-MINUTE = 60 # minute in seconds
-TWO_HOURS = 7200
 
 # How many pieces a user can move within this many seconds before being banned.
 # Allow 30 pieces to be moved within 13 seconds. Exceeding that rate would
@@ -62,7 +63,25 @@ def bump_count(ip, user):
 
     return err_msg
 
+def get_blockedplayers_err_msg(expires, timeout):
+    err_msg = {
+        'msg': "Please wait.",
+        'type': "blockedplayer",
+        'reason': "Too many recent pieces moves from you were not helpful on this puzzle.",
+        'expires': expires,
+        'timeout': timeout
+    }
+    return err_msg
 
+def get_too_many_pieces_in_proximity_err_msg(piece, piecesInProximity):
+    err_msg = {
+        'msg': "Piece move denied.",
+        'type': "proximity",
+        'reason': "Too many pieces within proximity of each other.",
+        'piece': piece,
+        'piecesInProximity': piecesInProximity
+    }
+    return err_msg
 
 def get_puzzle_piece_token_key(puzzle, piece):
     return "pctoken:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
@@ -92,6 +111,15 @@ class PuzzlePieceTokenView(MethodView):
             abort(404)
         (result, col_names) = rowify(result, c.description)
         puzzle = result[0]['puzzle']
+
+        #redisConnection.zadd('blockedplayers', '{ip}-{user}'.format(ip=ip, user=user), int(time.time()))
+        #redisConnection.zadd('blockedplayers:puzzle', '{ip}-{user}-{puzzle}'.format(ip=ip, user=user, puzzle=puzzle), int(recent_points))
+        now = int(time.time())
+        blockedplayers_for_puzzle_key = 'blockedplayers:{puzzle}'.format(puzzle=puzzle)
+        blockedplayers_expires = redisConnection.zscore(blockedplayers_for_puzzle_key, user)
+        if blockedplayers_expires and blockedplayers_expires > now:
+            err_msg = get_blockedplayers_err_msg(blockedplayers_expires, blockedplayers_expires - now)
+            return make_response(encoder.encode(err_msg), 429)
 
         puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
 
@@ -131,9 +159,7 @@ class PuzzlePieceTokenView(MethodView):
         # another player has grabbed it.
         token = uuid.uuid4().hex
         redisConnection.set(puzzle_piece_token_key, '{token}:{user}'.format(token=token, user=user), ex=TOKEN_EXPIRE_TIMEOUT)
-        if not redisConnection.zscore('blockedplayers:puzzle', '{ip}-{user}-{puzzle}'.format(ip=ip, user=user, puzzle=puzzle)):
-            # Only allow players that are not blocked to lock pieces
-            redisConnection.set('token:{}'.format(user), '{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ex=TOKEN_LOCK_TIMEOUT)
+        redisConnection.set('token:{}'.format(user), '{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ex=TOKEN_LOCK_TIMEOUT)
 
         # Claim the piece by showing the bit icon next to it.
         (x, y) = map(int, redisConnection.hmget('pc:{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ['x', 'y']))
@@ -286,7 +312,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         karma_key = init_karma_key(redisConnection, puzzle, ip)
         # Set a limit to minimum karma so other players on the network can still play
         karma = max(MIN_KARMA, int(redisConnection.get(karma_key)))
-        initial_karma = max(0, min(100/2, karma))
+        #initial_karma = max(0, min(100/2, karma))
         karma_change = 0
 
         points_key = 'points:{user}'.format(user=user)
@@ -296,7 +322,9 @@ class PuzzlePiecesMovePublishView(MethodView):
         if redisConnection.sadd(pzrate_key, puzzle) == 1:
             # New puzzle that player hasn't moved a piece on in the last hour.
             redisConnection.expire(pzrate_key, HOUR)
-            redisConnection.decr(points_key)
+            recent_points = redisConnection.get(points_key) or 0
+            if recent_points > 0:
+                redisConnection.decr(points_key)
 
         # Decrease karma if piece movement rate has passed threshold
         pcrate_key = 'pcrate:{puzzle}:{ip}:{timestamp}'.format(puzzle=puzzle, ip=ip, timestamp=rounded_timestamp)
@@ -325,17 +353,25 @@ class PuzzlePiecesMovePublishView(MethodView):
         if int(karma) <= 0:
             # Decrease recent points for a piece move that decreased karma
             recent_points = redisConnection.decr(points_key, amount=abs(karma_change)) if karma_change < 0 else int(redisConnection.get(points_key) or 0)
+            redisConnection.set(points_key, max(0, recent_points))
             if int(karma) + recent_points <= 0:
+                now = int(time.time())
+                expires = now + BLOCKEDPLAYER_EXPIRE_TIMEOUT
+                blockedplayers_for_puzzle_key = 'blockedplayers:{puzzle}'.format(puzzle=puzzle)
+                # Add the player to the blocked players list for the puzzle and
+                # extend the expiration of the key.
+                redisConnection.zadd(blockedplayers_for_puzzle_key, user, expires)
+                redisConnection.expire(blockedplayers_for_puzzle_key, BLOCKEDPLAYER_EXPIRE_TIMEOUT)
+
+                # Reset the karma for the player
+                redisConnection.delete(karma_key)
+
+                # TODO: drop these keys
                 redisConnection.zadd('blockedplayers', '{ip}-{user}'.format(ip=ip, user=user), int(time.time()))
                 redisConnection.zadd('blockedplayers:puzzle', '{ip}-{user}-{puzzle}'.format(ip=ip, user=user, puzzle=puzzle), int(recent_points))
-                # print '{}, {}'.format(karma, recent_points)
-                return make_response(
-                    '{}'.format(karma + recent_points)
-                    , 429)
 
-
-                #abort(429)
-
+                err_msg = get_blockedplayers_err_msg(expires, expires - now)
+                return make_response(encoder.encode(err_msg), 429)
 
         # Check if there are too many pieces stacked. Slightly less exact from
         # what pieceTranslate does.  This includes immovable pieces, and the
@@ -351,7 +387,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         if len(piecesInProximity) >= 13:
             if karma > MIN_KARMA:
                 karma = redisConnection.decr(karma_key, amount=STACK_PENALTY)
-            abort(400)
+            return make_response(encoder.encode(get_too_many_pieces_in_proximity_err_msg(piece, list(piecesInProximity))), 400)
 
         # Record hot spot (not exact)
         rounded_timestamp_hotspot = timestamp_now - (timestamp_now % HOTSPOT_EXPIRE)

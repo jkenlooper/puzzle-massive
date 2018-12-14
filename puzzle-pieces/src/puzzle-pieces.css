@@ -108,9 +108,9 @@
 
 .pm-PuzzlePieces-alert {
   display: none;
-  position: absolute;
-  top: calc(50% - ((200px + (10px * 2) / 2)));
-  left: calc(50% - ((300px + (10px * 2) / 2)));
+  position: sticky;
+  bottom: 0;
+  right: 0;
   flex-direction: column;
   justify-content: center;
   z-index: 20;
@@ -121,6 +121,8 @@
   padding: 10px;
   width: 300px;
   min-height: 200px;
+  max-height: 90vh;
+  overflow: auto;
   color: black;
 }
 
