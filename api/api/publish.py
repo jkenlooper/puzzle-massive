@@ -9,7 +9,7 @@ import redis
 
 from app import db
 from database import fetch_query_string, rowify
-from tools import formatPieceMovementString, formatBitMovementString, init_karma_key
+from tools import formatPieceMovementString, formatBitMovementString, init_karma_key, get_public_karma_points
 
 from constants import ACTIVE, IN_QUEUE, BUGGY_UNLISTED
 #from jobs import pieceMove
@@ -26,7 +26,7 @@ BLOCKEDPLAYER_EXPIRE_TIMEOUT = HOUR
 MAX_KARMA = 25
 MIN_KARMA = (int(MAX_KARMA/2) * -1) # -12
 MOVES_BEFORE_PENALTY = 12
-STACK_PENALTY = 5
+STACK_PENALTY = 1
 HOTSPOT_EXPIRE = 30
 HOTSPOT_LIMIT = 10
 PIECE_MOVEMENT_RATE_TIMEOUT = 100
@@ -387,7 +387,10 @@ class PuzzlePiecesMovePublishView(MethodView):
         if len(piecesInProximity) >= 13:
             if karma > MIN_KARMA:
                 karma = redisConnection.decr(karma_key, amount=STACK_PENALTY)
-            return make_response(encoder.encode(get_too_many_pieces_in_proximity_err_msg(piece, list(piecesInProximity))), 400)
+            err_msg = get_too_many_pieces_in_proximity_err_msg(piece, list(piecesInProximity))
+            err_msg['karma'] = get_public_karma_points(redisConnection, ip, user, puzzle)
+
+            return make_response(encoder.encode(err_msg), 400)
 
         # Record hot spot (not exact)
         rounded_timestamp_hotspot = timestamp_now - (timestamp_now % HOTSPOT_EXPIRE)
@@ -419,13 +422,11 @@ class PuzzlePiecesMovePublishView(MethodView):
 
         karma_change = False if karma_change == 0 else karma_change
 
-        recent_points = min(100/2, int(redisConnection.get(points_key) or 0))
-        karma = min(100/2, int(redisConnection.get(karma_key)))
-        karma = max(0, min(100/2, karma + recent_points))
-        # print '{}, {}'.format(karma, karma_change)
+        karma = get_public_karma_points(redisConnection, ip, user, puzzle)
         response = {
-            'karma': karma * 2,
+            'karma': karma,
             'karmaChange': karma_change,
             'id': piece
         }
         return encoder.encode(response)
+

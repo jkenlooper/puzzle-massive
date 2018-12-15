@@ -32,18 +32,19 @@
       data: data,
       headers: {'Token': token},
       error: function handlePatchError (patchError) {
-        if (patchError.status === 429) {
-          var responseObj
-          try {
-            responseObj = JSON.parse(patchError.response)
-          } catch (err) {
-            responseObj = {
-              reason: patchError.response
-            }
+        var responseObj
+        try {
+          responseObj = JSON.parse(patchError.response)
+        } catch (err) {
+          responseObj = {
+            reason: patchError.response
           }
+        }
+        if (patchError.status === 429) {
           window.publish('piece/move/blocked', [responseObj])
           window.publish('piece/move/rejected', [{id: id, x: origin.x, y: origin.y, r: origin.r}])
         } else {
+          window.publish('piece/move/rejected', [{id: id, x: origin.x, y: origin.y, r: origin.r, karma: responseObj.karma}])
           // Reject with piece info from server and fallback to origin if that also fails
           reqwest({
             url: `/newapi/puzzle/${puzzleId}/piece/${id}/`,

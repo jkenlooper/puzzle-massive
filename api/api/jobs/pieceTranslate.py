@@ -10,8 +10,8 @@ from api.database import rowify, fetch_query_string
 from api.tools import formatPieceMovementString, loadConfig, init_karma_key
 from api.constants import COMPLETED
 
-HOUR = 3600 # hour in seconds
-TWO_HOURS = 7200
+KARMA_POINTS_EXPIRE = 3600 # hour in seconds
+RECENT_POINTS_EXPIRE = 7200
 PIECE_GROUP_MOVE_MAX_BEFORE_PENALTY = 5
 MAX_RECENT_POINTS = 25
 MAX_KARMA = 25
@@ -126,11 +126,11 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
             #    if karma + 1 + recent_points + earns < MAX_KARMA:
             #        redisConnection.incr(points_key, amount=earns)
             # Doing small puzzles doesn't increase recent points, just extends points expiration.
-            redisConnection.expire(points_key, TWO_HOURS)
+            redisConnection.expire(points_key, RECENT_POINTS_EXPIRE)
 
             karma_change += 1
             # Extend the karma points expiration since it has increased
-            redisConnection.expire(karma_key, HOUR)
+            redisConnection.expire(karma_key, KARMA_POINTS_EXPIRE)
             # Max out karma
             if karma < MAX_KARMA:
                 redisConnection.incr(karma_key)

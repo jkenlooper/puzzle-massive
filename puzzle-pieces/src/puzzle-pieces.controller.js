@@ -1,7 +1,7 @@
 /* global sendMovement, updater, reqwest */
 
 class PuzzlePiecesController { // eslint-disable-line no-unused-vars
-  constructor (puzzleService, $container, alerts) {
+  constructor (puzzleService, $container, alerts, $karmaStatus) {
     let self = this
     // For now this is set to one to prevent feature creep
     const maxSelectedPieces = 1
@@ -11,6 +11,7 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
 
     self.$container = $container
     self.alerts = alerts
+    self.$karmaStatus = $karmaStatus
 
     self.pieces = {}
     self.collection = []
@@ -162,6 +163,7 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
       piece.y = data.y
       piece.active = false
       self.renderPieces(self.pieces, [data.id])
+      updateKarmaValue(data.karma)
     }
 
     function onPieceUpdate (data) {
@@ -171,11 +173,23 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
       self.renderPieces(self.pieces, [data.id])
     }
 
+    function updateKarmaValue (karma) {
+      // update karma
+      // Set class depending on karma value
+      // Set hide timeout if above 4
+      if (karma && typeof karma === 'number') {
+        self.$karmaStatus.setAttribute('data-karma-value', karma)
+        self.$karmaStatus.innerHTML = karma
+      }
+    }
+
     function onKarmaUpdate (data) {
       let piece = self.pieces[data.id]
       Object.assign(piece, data)
       self.karma = data.karma
       self.renderPieces(self.pieces, [data.id])
+
+      updateKarmaValue(data.karma)
 
       // Remove blocked alert if present when going from 0 to 2
       if (self.karma > 0 && self.blocked) {
@@ -242,5 +256,6 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
       self.alerts.reconnecting.classList.remove('is-active')
       self.alerts.disconnected.classList.remove('is-active')
     }
+
   }
 }

@@ -23,6 +23,7 @@ window.customElements.define('pm-puzzle-pieces', class extends HTMLElement {
     shadowRoot.innerHTML = `<style>@import '${this.getAttribute('resources')}';></style>'${html}`
     this.$collection = shadowRoot.querySelector('.pm-PuzzlePieces-collection')
     this.$dropZone = shadowRoot.querySelector('.pm-PuzzlePieces-dropZone')
+    this.$karmaStatus = shadowRoot.querySelector('#pm-puzzle-pieces-karma-status')
     const $container = shadowRoot.querySelector('.pm-PuzzlePieces')
     let $slabMassive = this.parentElement
 
@@ -57,7 +58,7 @@ window.customElements.define('pm-puzzle-pieces', class extends HTMLElement {
       disconnected: shadowRoot.querySelector('#puzzle-pieces-alert-disconnected'),
       blocked: shadowRoot.querySelector('#puzzle-pieces-alert-blocked')
     }
-    let ctrl = this.ctrl = new PuzzlePiecesController(puzzleService, this.$collection, alerts)
+    let ctrl = this.ctrl = new PuzzlePiecesController(puzzleService, this.$collection, alerts, this.$karmaStatus)
     ctrl.renderPieces = renderPieces.bind(this)
     ctrl.status = this.getAttribute('status')
     ctrl.parentoftopleft = Number(this.getAttribute('parentoftopleft'))
@@ -216,7 +217,7 @@ window.customElements.define('pm-puzzle-pieces', class extends HTMLElement {
           }
           window.setTimeout(function cleanupKarma () {
             $piece.classList.remove('is-up', 'is-down')
-          }, 2000)
+          }, 5000)
           piece.karmaChange = false
         }
       })

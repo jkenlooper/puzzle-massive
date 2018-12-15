@@ -93,6 +93,35 @@
   background-color: rgba(0, 0, 0, 0.1);
 }
 
+.pm-PuzzlePieces-karmaStatus {
+  color: black;
+  pointer-events: none;
+  opacity: 0.7;
+  position: sticky;
+  top: 100vh;
+  left: 100vw;
+  /* 40px is estimate width of scrollbars */
+  transform: translate(calc((1em + 40px) * -1), calc((1em + 40px) * -1));
+  width: 1em;
+  height: 1em;
+  text-align: center;
+  z-index: 20;
+  font-weight: bold;
+  font-size: 1.7em;
+  text-shadow: 0 0 3px black, 0 0 6px white;
+}
+.pm-PuzzlePieces-karmaStatus[data-karma-value="2"],
+.pm-PuzzlePieces-karmaStatus[data-karma-value="1"],
+.pm-PuzzlePieces-karmaStatus[data-karma-value="0"] {
+  color: red;
+}
+.pm-PuzzlePieces-karmaStatus[data-karma-value="3"],
+.pm-PuzzlePieces-karmaStatus[data-karma-value="4"],
+.pm-PuzzlePieces-karmaStatus[data-karma-value="5"],
+.pm-PuzzlePieces-karmaStatus[data-karma-value="6"] {
+  color: orange;
+}
+
 .pm-PuzzlePieces-selected {
   display: flex;
   position: absolute;
@@ -109,8 +138,8 @@
 .pm-PuzzlePieces-alert {
   display: none;
   position: sticky;
-  bottom: 0;
-  right: 0;
+  top: 50px;
+  left: 2px;
   flex-direction: column;
   justify-content: center;
   z-index: 20;

@@ -32,3 +32,10 @@ def init_karma_key(redisConnection, puzzle, ip):
         redisConnection.expire(karma_key, HOUR)
     return karma_key
 
+def get_public_karma_points(redisConnection, ip, user, puzzle):
+    karma_key = init_karma_key(redisConnection, puzzle, ip)
+    points_key = 'points:{user}'.format(user=user)
+    recent_points = min(100/2, int(redisConnection.get(points_key) or 0))
+    karma = min(100/2, int(redisConnection.get(karma_key)))
+    karma = max(0, min(100/2, karma + recent_points))
+    return karma * 2
