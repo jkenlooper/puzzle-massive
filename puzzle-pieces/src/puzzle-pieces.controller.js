@@ -12,6 +12,7 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
     self.$container = $container
     self.alerts = alerts
     self.$karmaStatus = $karmaStatus
+    self.karmaStatusIsActiveTimeout
 
     self.pieces = {}
     self.collection = []
@@ -174,12 +175,19 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
     }
 
     function updateKarmaValue (karma) {
-      // update karma
-      // Set class depending on karma value
-      // Set hide timeout if above 4
-      if (karma && typeof karma === 'number') {
-        self.$karmaStatus.setAttribute('data-karma-value', karma)
+      if (self.$karmaStatus && karma && typeof karma === 'number') {
+        window.clearTimeout(self.karmaStatusIsActiveTimeout)
         self.$karmaStatus.innerHTML = karma
+        const karmaLevel = Math.floor(karma / 6)
+        self.$karmaStatus.setAttribute('data-karma-level', karmaLevel)
+        self.$karmaStatus.classList.add('is-active')
+
+        // Hide the karma status after a timeout when it is normal
+        if (karmaLevel > 2) {
+          self.karmaStatusIsActiveTimeout = window.setTimeout(() => {
+            self.$karmaStatus.classList.remove('is-active')
+          }, 5000)
+        }
       }
     }
 

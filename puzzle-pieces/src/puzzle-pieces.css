@@ -94,33 +94,44 @@
 }
 
 .pm-PuzzlePieces-karmaStatus {
+  display: none;
   color: black;
   pointer-events: none;
-  opacity: 0.7;
+  opacity: 0.5;
   position: sticky;
   top: 100vh;
   left: 100vw;
   /* 40px is estimate width of scrollbars */
-  transform: translate(calc((1em + 40px) * -1), calc((1em + 40px) * -1));
-  width: 1em;
-  height: 1em;
+  transform: translate(calc((2em + 40px) * -1), calc((2em + 40px) * -1));
+  width: 2em;
+  height: 2em;
   text-align: center;
   z-index: 20;
   font-weight: bold;
   font-size: 1.7em;
   text-shadow: 0 0 3px black, 0 0 6px white;
+  line-height: 2em;
+  transition: box-shadow 1s linear, background-color 1s linear;
 }
-.pm-PuzzlePieces-karmaStatus[data-karma-value="2"],
-.pm-PuzzlePieces-karmaStatus[data-karma-value="1"],
-.pm-PuzzlePieces-karmaStatus[data-karma-value="0"] {
-  color: red;
+.pm-PuzzlePieces-karmaStatus.is-active {
+  display: block;
 }
-.pm-PuzzlePieces-karmaStatus[data-karma-value="3"],
-.pm-PuzzlePieces-karmaStatus[data-karma-value="4"],
-.pm-PuzzlePieces-karmaStatus[data-karma-value="5"],
-.pm-PuzzlePieces-karmaStatus[data-karma-value="6"] {
+.pm-PuzzlePieces-karmaStatus[data-karma-level="0"] {
+  color: black;
+  opacity: 1.0;
+  background-color: red;
+  box-shadow: 0 0 10px 25px red;
+}
+.pm-PuzzlePieces-karmaStatus[data-karma-level="1"] {
   color: orange;
+  opacity: 0.7;
+  box-shadow: 0 0 0px 0px black;
+  background-color: black;
 }
+.pm-PuzzlePieces--withinSlabMassive .pm-PuzzlePieces-karmaStatus {
+  display: none;
+}
+
 
 .pm-PuzzlePieces-selected {
   display: flex;
@@ -163,6 +174,11 @@
  * here; I can't reproduce everytime. */
 section[style*="display"].pm-PuzzlePieces-alert.is-active {
   display: flex !important;
+}
+.pm-PuzzlePieces--withinSlabMassive .pm-PuzzlePieces-alert {
+  position: absolute;
+  top: calc(50% - ((200px + (10px * 2) / 2)));
+  left: calc(50% - ((300px + (10px * 2) / 2)));
 }
 
 .pm-PuzzlePieces-alertMessage {

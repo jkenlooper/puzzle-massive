@@ -26,8 +26,9 @@ window.customElements.define('pm-puzzle-pieces', class extends HTMLElement {
     this.$karmaStatus = shadowRoot.querySelector('#pm-puzzle-pieces-karma-status')
     const $container = shadowRoot.querySelector('.pm-PuzzlePieces')
     let $slabMassive = this.parentElement
+    const withinSlabMassive = $slabMassive.tagName === 'SLAB-MASSIVE'
 
-    if ($slabMassive.tagName !== 'SLAB-MASSIVE') {
+    if (!withinSlabMassive) {
       // Not using slab-massive so we need to set the width of all parent
       // elements so the browser can properly zoom out.
       setParentWidth($slabMassive.parentNode)
@@ -45,6 +46,8 @@ window.customElements.define('pm-puzzle-pieces', class extends HTMLElement {
       Object.defineProperty($slabMassive, 'offsetY', {
         get: function () { return Number(this.getAttribute('offset-y')) }
       })
+    } else {
+      $container.classList.add('pm-PuzzlePieces--withinSlabMassive')
     }
 
     let offsetTop = $slabMassive.offsetTop
