@@ -86,6 +86,9 @@ def get_too_many_pieces_in_proximity_err_msg(piece, piecesInProximity):
 def get_puzzle_piece_token_key(puzzle, piece):
     return "pctoken:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
 
+def get_puzzle_piece_token_queue_key(puzzle, piece):
+    return "pqtoken:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
+
 class PaymentRequired(HTTPException):
     code = 402
     description = '<p>Payment required.</p>'
@@ -112,9 +115,8 @@ class PuzzlePieceTokenView(MethodView):
         (result, col_names) = rowify(result, c.description)
         puzzle = result[0]['puzzle']
 
-        #redisConnection.zadd('blockedplayers', '{ip}-{user}'.format(ip=ip, user=user), int(time.time()))
-        #redisConnection.zadd('blockedplayers:puzzle', '{ip}-{user}-{puzzle}'.format(ip=ip, user=user, puzzle=puzzle), int(recent_points))
         now = int(time.time())
+
         blockedplayers_for_puzzle_key = 'blockedplayers:{puzzle}'.format(puzzle=puzzle)
         blockedplayers_expires = redisConnection.zscore(blockedplayers_for_puzzle_key, user)
         if blockedplayers_expires and blockedplayers_expires > now:
@@ -131,8 +133,34 @@ class PuzzlePieceTokenView(MethodView):
             (player_puzzle, player_piece) = map(int, existing_token.split(':'))
             if player_puzzle == puzzle:
                 # Ban the user for a few seconds
+                # TODO: how to not ban other new players that happen to all be
+                # on the same network?
                 err_msg = increase_ban_time(ip, user, TOKEN_LOCK_TIMEOUT)
                 return make_response(encoder.encode(err_msg), 429)
+
+
+        piece_token_queue_key = get_puzzle_piece_token_queue_key(puzzle, piece)
+        queue_rank = redisConnection.zrank(piece_token_queue_key, user)
+
+        if queue_rank == None:
+            # Append this player to a queue for getting the next token. This
+            # will prevent the player with the lock from continually locking the
+            # same piece.
+            redisConnection.zadd(piece_token_queue_key, user, now)
+            queue_rank = redisConnection.zrank(piece_token_queue_key, user)
+        redisConnection.expire(piece_token_queue_key, TOKEN_LOCK_TIMEOUT + 5)
+
+        # Check if token on piece is in a queue and if the player requesting it
+        # is the player that is next. Show an error message if not.
+        if queue_rank > 0:
+            err_msg = {
+                'msg': "Another player is waiting to move this piece",
+                'type': "piecequeue",
+                'reason': 'Piece queue {}'.format(queue_rank),
+                'expires': now + TOKEN_LOCK_TIMEOUT,
+                'timeout': TOKEN_LOCK_TIMEOUT
+            }
+            return make_response(encoder.encode(err_msg), 409)
 
         # Check if token on piece is still owned by another player
         existing_token_and_player = redisConnection.get(puzzle_piece_token_key)
@@ -146,14 +174,17 @@ class PuzzlePieceTokenView(MethodView):
                 other_piece = int(other_piece)
                 if other_puzzle == puzzle and other_piece == piece and other_player != user:
                     # Other player has a lock on this piece
-                    # Player needs to wait before moving this piece
-                    # print("Player needs to wait before moving this piece {}, {}, {}".format(other_puzzle, other_piece, other_player))
                     err_msg = {
                         'msg': "Another player is moving this piece",
                         'type': "piecelock",
-                        'reason': 'Piece locked'
+                        'reason': 'Piece locked',
+                        'expires': now + TOKEN_LOCK_TIMEOUT,
+                        'timeout': TOKEN_LOCK_TIMEOUT
                     }
                     return make_response(encoder.encode(err_msg), 409)
+
+        # Remove player from the piece token queue
+        redisConnection.zrem(piece_token_queue_key, user)
 
         # This piece is up for grabs since it has been more then 5 seconds since
         # another player has grabbed it.
@@ -168,8 +199,8 @@ class PuzzlePieceTokenView(MethodView):
 
         response = {
             'token': token,
-            'lock': int(time.time() + TOKEN_LOCK_TIMEOUT),
-            'expires': int(time.time() + TOKEN_EXPIRE_TIMEOUT)
+            'lock': now + TOKEN_LOCK_TIMEOUT,
+            'expires': now + TOKEN_EXPIRE_TIMEOUT
         }
         return encoder.encode(response)
 
