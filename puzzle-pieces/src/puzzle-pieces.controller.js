@@ -112,12 +112,17 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
                 reason: data.response
               }
             }
-            if (responseObj.type === 'piecelock' || responseObj.type === 'piecequeue') {
-              // TODO: If piece is locked then publish a 'piece/move/delayed' instead of blocked.
-              // TODO: Set a timeout and clear if piece is moved.  Maybe
-              // auto-scroll to the moved piece?
-            } else {
-              window.publish('piece/move/blocked', [responseObj])
+            switch (responseObj.type) {
+              case 'piecelock':
+              case 'piecequeue':
+                // TODO: If piece is locked then publish a 'piece/move/delayed' instead of blocked.
+                // TODO: Set a timeout and clear if piece is moved.  Maybe
+                // auto-scroll to the moved piece?
+                break
+              case 'sameplayerconcurrent':
+                break
+              default:
+                window.publish('piece/move/blocked', [responseObj])
             }
             window.publish('piece/move/rejected', [{id: pieceID, x: self.pieces[pieceID].origin.x, y: self.pieces[pieceID].origin.y, r: self.pieces[pieceID].origin.r}])
           })

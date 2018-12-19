@@ -135,8 +135,29 @@ class PuzzlePieceTokenView(MethodView):
                 # Ban the user for a few seconds
                 # TODO: how to not ban other new players that happen to all be
                 # on the same network?
-                err_msg = increase_ban_time(ip, user, TOKEN_LOCK_TIMEOUT)
-                return make_response(encoder.encode(err_msg), 429)
+                # Maybe send back a 409 to delay the other players from
+                # selecting a piece.
+                #err_msg = increase_ban_time(ip, user, TOKEN_LOCK_TIMEOUT)
+                #err_msg['reason'] = "Concurrent piece movements on this puzzle from the same player are not allowed."
+                #return make_response(encoder.encode(err_msg), 429)
+
+                # TODO: maybe automatically register a new player if able?
+                # Verify user is logged in via cookie
+                user = current_app.secure_cookie.get(u'user')
+                if user:
+                    # TODO: Check if player has enough dots to generate a new player
+                    # Or add to err_msg to signal client to request a new player
+                    pass
+
+                # Block the player from selecting pieces on this puzzle
+                err_msg = {
+                    'msg': "Please wait or do a different puzzle. New players on the same network will be sharing the same bit icon.  Please register as a separate player once enough dots are earned to select a new bit icon.",
+                    'type': "sameplayerconcurrent",
+                    'reason': "Concurrent piece movements on this puzzle from the same player are not allowed.",
+                    'expires': now + TOKEN_LOCK_TIMEOUT,
+                    'timeout': TOKEN_LOCK_TIMEOUT
+                }
+                return make_response(encoder.encode(err_msg), 409)
 
 
         piece_token_queue_key = get_puzzle_piece_token_queue_key(puzzle, piece)
