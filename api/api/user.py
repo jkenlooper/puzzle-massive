@@ -11,12 +11,11 @@ import redis
 
 from api.app import db
 from api.database import rowify, fetch_query_string
+from api.constants import POINT_COST_FOR_CHANGING_BIT, NEW_USER_STARTING_POINTS
 
 LETTERS = '%s%s' % (string.ascii_letters, string.digits)
 
 ANONYMOUS_USER_ID = 2
-
-NEW_USER_STARTING_POINTS = 1300
 
 LITTLE_LESS_THAN_A_WEEK = (60 * 60 * 24 * 7) - random.randint(3023, 3600 * 14)
 LITTLE_MORE_THAN_A_DAY = (60 * 60 * 24) + random.randint(3023, 3600 * 14)
@@ -45,6 +44,13 @@ update User set cookie_expires = strftime('%Y-%m-%d', 'now', '+365 days') where 
 QUERY_SET_PASSWORD = """update User set password = :password where id = :id"""
 QUERY_USER_LOGIN = """select login from User where id = :id"""
 
+QUERY_USER_ID_BY_IP = """
+select id from User where ip = :ip and cookie_expires isnull limit 1;
+"""
+QUERY_USER_ID_BY_LOGIN = """
+select id from User where ip = :ip and login = :login;
+"""
+
 redisConnection = redis.from_url('redis://localhost:6379/0/')
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
@@ -67,12 +73,6 @@ def generate_user_login():
     return login
 
 def user_id_from_ip(ip, skip_generate=False):
-    QUERY_USER_ID_BY_IP = """
-    select id from User where ip = :ip and cookie_expires isnull limit 1;
-    """
-    QUERY_USER_ID_BY_LOGIN = """
-    select id from User where ip = :ip and login = :login;
-    """
     cur = db.cursor()
 
     result = cur.execute(QUERY_USER_ID_BY_IP, {'ip':ip}).fetchall()
@@ -312,6 +312,64 @@ class ClaimRandomBit(MethodView):
 
         return ''
 
+class SplitPlayer(MethodView):
+    """
+    Called when multiple users on the same network happen to all have the same
+    player.  This will split that player login into another new one which the
+    user calling it will then own.
+    """
+    decorators = [user_not_banned]
+
+    def post(self):
+        # Prevent creating a new user if no support for cookies. Player should
+        # have 'ot' already set by viewing the page.
+        uses_cookies = current_app.secure_cookie.get(u'ot')
+        if not uses_cookies:
+            abort(400)
+
+        ip = request.headers.get('X-Real-IP')
+        # Verify user is logged in
+        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip, skip_generate=True)
+        if user is None:
+            abort(400)
+
+        response = make_response('', 200)
+
+        cur = db.cursor()
+
+        # Update user points for changing bit icon
+        # TODO: what prevents a player from creating a lot of splits?
+        result = cur.execute("select points from User where id = :id and points >= :cost + :startpoints;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT, 'startpoints': NEW_USER_STARTING_POINTS}).fetchone()
+        if not result:
+            abort(400)
+        cur.execute("update User set points = points - :cost where id = :id;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT})
+
+        ##
+
+        # Create new user
+
+        login = generate_user_login()
+        (p_string, password) = generate_password()
+
+        query = """
+        insert into User
+        (password, m_date, cookie_expires, points, score, login, ip) values
+        (:password, datetime('now'), strftime('%Y-%m-%d', 'now', '+365 days'), :points, 0, :login, :ip);
+        """
+        cur.execute(query, {'password': password, 'ip': ip, 'points': NEW_USER_STARTING_POINTS, 'login': login})
+
+        result = cur.execute(QUERY_USER_ID_BY_LOGIN, {'ip':ip, 'login':login}).fetchall()
+        (result, col_names) = rowify(result, cur.description)
+        newuser = result[0]['id']
+
+        current_app.secure_cookie.set(u'user', str(newuser), response, expires_days=365)
+
+        # Claim a random bit icon
+        cur.execute(fetch_query_string('claim_random_bit_icon.sql'), {'user': newuser})
+
+        db.commit()
+
+        return response
 
 class AdminBlockedPlayersList(MethodView):
     """

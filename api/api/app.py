@@ -119,6 +119,7 @@ def make_app(config=None, **kw):
         UserLogoutView,
         UserLoginView,
         ClaimRandomBit,
+        SplitPlayer,
         AdminBlockedPlayersList,
         AdminBannedUserList,
         BanishSelf
@@ -149,6 +150,8 @@ def make_app(config=None, **kw):
     app.add_url_rule('/user-details/', view_func=UserDetailsView.as_view('user-details'))
     app.add_url_rule('/generate-anonymous-login/',
                      view_func=GenerateAnonymousLogin.as_view('generate-anonymous-login'))
+    app.add_url_rule('/split-player/',
+                     view_func=SplitPlayer.as_view('split-player'))
     app.add_url_rule('/user-logout/', view_func=UserLogoutView.as_view('user-logout'))
     # NGINX rewritten from /puzzle-api/bit/<bitLink>/
     app.add_url_rule('/user-login/<anonymous_login>/',

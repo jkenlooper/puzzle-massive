@@ -6,10 +6,9 @@ from flask.views import MethodView
 from api.app import db
 from api.database import rowify, fetch_query_string
 from api.user import generate_password, generate_user_login, user_id_from_ip, NEW_USER_STARTING_POINTS, user_not_banned
+from api.constants import POINT_COST_FOR_CHANGING_BIT
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
-
-POINT_COST_FOR_CHANGING_BIT = 100
 
 QUERY_BITICON_BY_USER = """
 SELECT u.id, b.name AS icon

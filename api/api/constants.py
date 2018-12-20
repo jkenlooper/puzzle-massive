@@ -1,3 +1,5 @@
+POINT_COST_FOR_CHANGING_BIT = 100
+NEW_USER_STARTING_POINTS = 1300
 
 #status
 ACTIVE           = 1   # puzzle is shown on front page if public (points distributed)

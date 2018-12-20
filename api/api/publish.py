@@ -2,7 +2,7 @@ import datetime
 import time
 import uuid
 
-from flask import current_app, make_response, request, abort, json
+from flask import current_app, make_response, request, abort, json, url_for
 from flask.views import MethodView
 from werkzeug.exceptions import HTTPException
 import redis
@@ -11,7 +11,7 @@ from app import db
 from database import fetch_query_string, rowify
 from tools import formatPieceMovementString, formatBitMovementString, init_karma_key, get_public_karma_points
 
-from constants import ACTIVE, IN_QUEUE, BUGGY_UNLISTED
+from constants import ACTIVE, IN_QUEUE, BUGGY_UNLISTED, POINT_COST_FOR_CHANGING_BIT, NEW_USER_STARTING_POINTS
 #from jobs import pieceMove
 from jobs import pieceTranslate
 from user import user_id_from_ip, user_not_banned, increase_ban_time
@@ -104,15 +104,15 @@ class PuzzlePieceTokenView(MethodView):
         user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
 
         # Start db operations
-        c = db.cursor()
+        cur = db.cursor()
         # validate the puzzle_id
-        result = c.execute(fetch_query_string('select_puzzle_id_by_puzzle_id.sql'), {
+        result = cur.execute(fetch_query_string('select_puzzle_id_by_puzzle_id.sql'), {
             'puzzle_id': puzzle_id
             }).fetchall()
         if not result:
             # 404 if puzzle does not exist
             abort(404)
-        (result, col_names) = rowify(result, c.description)
+        (result, col_names) = rowify(result, cur.description)
         puzzle = result[0]['puzzle']
 
         now = int(time.time())
@@ -132,22 +132,7 @@ class PuzzlePieceTokenView(MethodView):
         if existing_token:
             (player_puzzle, player_piece) = map(int, existing_token.split(':'))
             if player_puzzle == puzzle:
-                # Ban the user for a few seconds
-                # TODO: how to not ban other new players that happen to all be
-                # on the same network?
-                # Maybe send back a 409 to delay the other players from
-                # selecting a piece.
-                #err_msg = increase_ban_time(ip, user, TOKEN_LOCK_TIMEOUT)
-                #err_msg['reason'] = "Concurrent piece movements on this puzzle from the same player are not allowed."
-                #return make_response(encoder.encode(err_msg), 429)
 
-                # TODO: maybe automatically register a new player if able?
-                # Verify user is logged in via cookie
-                user = current_app.secure_cookie.get(u'user')
-                if user:
-                    # TODO: Check if player has enough dots to generate a new player
-                    # Or add to err_msg to signal client to request a new player
-                    pass
 
                 # Block the player from selecting pieces on this puzzle
                 err_msg = {
@@ -157,8 +142,19 @@ class PuzzlePieceTokenView(MethodView):
                     'expires': now + TOKEN_LOCK_TIMEOUT,
                     'timeout': TOKEN_LOCK_TIMEOUT
                 }
+                # TODO: maybe automatically register a new player if able?
+                # Verify user is logged in via cookie
+                uses_cookies = current_app.secure_cookie.get(u'ot')
+                if uses_cookies:
+                    # TODO: Check if player has enough dots to generate a new player
+                    # Or add to err_msg to signal client to request a new player
+                    dots = cur.execute("select points from User where id = :id and points >= :cost + :startpoints;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT, 'startpoints': NEW_USER_STARTING_POINTS}).fetchone()
+                    if result:
+                        err_msg['action'] = {
+                            'msg': "Create a new player?",
+                            'url': "/newapi/{}".format(url_for('split-player'))
+                        }
                 return make_response(encoder.encode(err_msg), 409)
-
 
         piece_token_queue_key = get_puzzle_piece_token_queue_key(puzzle, piece)
         queue_rank = redisConnection.zrank(piece_token_queue_key, user)
