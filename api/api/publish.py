@@ -102,6 +102,7 @@ class PuzzlePieceTokenView(MethodView):
     def get(self, puzzle_id, piece):
         ip = request.headers.get('X-Real-IP')
         user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
+        mark = request.args.get('mark', '000')[:3]
 
         # Start db operations
         cur = db.cursor()
@@ -130,31 +131,40 @@ class PuzzlePieceTokenView(MethodView):
         # finished moving.
         existing_token = redisConnection.get('token:{}'.format(user))
         if existing_token:
-            (player_puzzle, player_piece) = map(int, existing_token.split(':'))
+            (player_puzzle, player_piece, player_mark) = existing_token.split(':')
+            player_puzzle = int(player_puzzle)
+            player_piece = int(player_piece)
             if player_puzzle == puzzle:
+                # Temporary ban the player when clicking a piece and not
+                # dropping it before clicking another piece.
+                if player_mark == mark:
+                    # Ban the user for a few seconds
+                    err_msg = increase_ban_time(ip, user, TOKEN_LOCK_TIMEOUT)
+                    err_msg['reason'] = "Concurrent piece movements on this puzzle from the same player are not allowed."
+                    return make_response(encoder.encode(err_msg), 429)
 
+                else:
+                    # Block the player from selecting pieces on this puzzle
+                    err_msg = {
+                        'msg': "Please wait or do a different puzzle. New players on the same network will be sharing the same bit icon.  Please register as a separate player once enough dots are earned to select a new bit icon.",
+                        'type': "sameplayerconcurrent",
+                        'reason': "Concurrent piece movements on this puzzle from the same player are not allowed.",
+                        'expires': now + TOKEN_LOCK_TIMEOUT,
+                        'timeout': TOKEN_LOCK_TIMEOUT
+                    }
 
-                # Block the player from selecting pieces on this puzzle
-                err_msg = {
-                    'msg': "Please wait or do a different puzzle. New players on the same network will be sharing the same bit icon.  Please register as a separate player once enough dots are earned to select a new bit icon.",
-                    'type': "sameplayerconcurrent",
-                    'reason': "Concurrent piece movements on this puzzle from the same player are not allowed.",
-                    'expires': now + TOKEN_LOCK_TIMEOUT,
-                    'timeout': TOKEN_LOCK_TIMEOUT
-                }
-                # TODO: maybe automatically register a new player if able?
-                # Verify user is logged in via cookie
-                uses_cookies = current_app.secure_cookie.get(u'ot')
-                if uses_cookies:
-                    # TODO: Check if player has enough dots to generate a new player
-                    # Or add to err_msg to signal client to request a new player
-                    dots = cur.execute("select points from User where id = :id and points >= :cost + :startpoints;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT, 'startpoints': NEW_USER_STARTING_POINTS}).fetchone()
-                    if result:
-                        err_msg['action'] = {
-                            'msg': "Create a new player?",
-                            'url': "/newapi/{}".format(url_for('split-player'))
-                        }
-                return make_response(encoder.encode(err_msg), 409)
+                    uses_cookies = current_app.secure_cookie.get(u'ot')
+                    if uses_cookies:
+                        # Check if player has enough dots to generate a new
+                        # player and if so add to err_msg to signal client to
+                        # request a new player
+                        dots = cur.execute("select points from User where id = :id and points >= :cost + :startpoints;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT, 'startpoints': NEW_USER_STARTING_POINTS}).fetchone()
+                        if result:
+                            err_msg['action'] = {
+                                'msg': "Create a new player?",
+                                'url': "/newapi{}".format(url_for('split-player'))
+                            }
+                    return make_response(encoder.encode(err_msg), 409)
 
         piece_token_queue_key = get_puzzle_piece_token_queue_key(puzzle, piece)
         queue_rank = redisConnection.zrank(piece_token_queue_key, user)
@@ -186,7 +196,7 @@ class PuzzlePieceTokenView(MethodView):
             puzzle_and_piece = redisConnection.get('token:{}'.format(other_player))
             # Check if there is a lock on this piece by other player
             if puzzle_and_piece:
-                (other_puzzle, other_piece) = puzzle_and_piece.split(':')
+                (other_puzzle, other_piece, other_mark) = puzzle_and_piece.split(':')
                 other_puzzle = int(other_puzzle)
                 other_piece = int(other_piece)
                 if other_puzzle == puzzle and other_piece == piece and other_player != user:
@@ -207,7 +217,7 @@ class PuzzlePieceTokenView(MethodView):
         # another player has grabbed it.
         token = uuid.uuid4().hex
         redisConnection.set(puzzle_piece_token_key, '{token}:{user}'.format(token=token, user=user), ex=TOKEN_EXPIRE_TIMEOUT)
-        redisConnection.set('token:{}'.format(user), '{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ex=TOKEN_LOCK_TIMEOUT)
+        redisConnection.set('token:{}'.format(user), '{puzzle}:{piece}:{mark}'.format(puzzle=puzzle, piece=piece, mark=mark), ex=TOKEN_LOCK_TIMEOUT)
 
         # Claim the piece by showing the bit icon next to it.
         (x, y) = map(int, redisConnection.hmget('pc:{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ['x', 'y']))

@@ -15,10 +15,11 @@ class PuzzleService { // eslint-disable-line no-unused-vars
     })
   }
 
-  token (piece) {
+  token (piece, mark) {
     const puzzleid = this.puzzleid
     return reqwest({
       url: `/newapi/puzzle/${puzzleid}/piece/${piece}/token/`,
+      data: {'mark': mark},
       method: 'get',
       type: 'json'
     })

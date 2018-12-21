@@ -1,4 +1,5 @@
 import time
+import uuid
 
 from flask import current_app, make_response, request, abort, json
 
@@ -121,5 +122,6 @@ class PuzzlePiecesView(MethodView):
         pieceData = {
                 'positions': pieces,
                 'timestamp': '',
+                'mark': uuid.uuid4().hex[:3] # Used to differentiate any requests for a user session (handle double-clicking pieces)
                 }
         return encoder.encode(pieceData)

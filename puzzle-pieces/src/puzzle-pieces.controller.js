@@ -39,6 +39,7 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
 
     function handlePieces (data) {
       let pieceData = JSON.parse(data)
+      self.mark = pieceData.mark
       pieceData.positions.forEach((piece) => {
         // set status
         self.pieces[piece.id] = piece
@@ -97,7 +98,7 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
           })
       }
       if (index === -1) {
-        puzzleService.token(pieceID)
+        puzzleService.token(pieceID, self.mark)
           .then((data) => {
             self.pieces[pieceID].token = data.token
           })
@@ -120,6 +121,9 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
                 // auto-scroll to the moved piece?
                 break
               case 'sameplayerconcurrent':
+                if (responseObj.action) {
+                  reqwest({url: responseObj.action.url, method: 'POST'})
+                }
                 break
               default:
                 window.publish('piece/move/blocked', [responseObj])
