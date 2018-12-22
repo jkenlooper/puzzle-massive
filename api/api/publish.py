@@ -42,6 +42,7 @@ PIECE_TRANSLATE_EXCEEDED_REASON = "Piece moves exceeded {PIECE_TRANSLATE_MAX_COU
 
 TOKEN_EXPIRE_TIMEOUT = 60 * 5
 TOKEN_LOCK_TIMEOUT = 5
+TOKEN_INVALID_BAN_TIME_INCR = 60
 
 def bump_count(ip, user):
     """
@@ -310,14 +311,23 @@ class PuzzlePiecesMovePublishView(MethodView):
             (valid_token, other_player) = token_and_player.split(':')
             if token != valid_token:
                 # print("token invalid {} != {}".format(token, valid_token))
-                abort(409)
+                err_msg = increase_ban_time(ip, user, TOKEN_INVALID_BAN_TIME_INCR)
+                err_msg['reason'] = "Token is invalid"
+                return make_response(encoder.encode(err_msg), 409)
             if player != int(other_player):
                 # print("player invalid {} != {}".format(player, other_player))
-                abort(409)
+                err_msg = increase_ban_time(ip, user, TOKEN_INVALID_BAN_TIME_INCR)
+                err_msg['reason'] = "Player is invalid"
+                return make_response(encoder.encode(err_msg), 409)
         else:
             # Token has expired
             # print("token expired")
-            abort(409)
+            err_msg = {
+                'msg': "Token has expired",
+                'type': "expiredtoken",
+                'reason': ""
+            }
+            return make_response(encoder.encode(err_msg), 409)
 
         # Expire the token at the lock timeout since it shouldn't be used again
         redisConnection.delete(puzzle_piece_token_key)

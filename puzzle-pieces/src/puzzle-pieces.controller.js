@@ -103,8 +103,6 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
             self.pieces[pieceID].token = data.token
           })
           .fail((data) => {
-            // TODO: send off a message stating that this piece is locked
-            // self.unSelectPiece(pieceID)
             let responseObj
             try {
               responseObj = JSON.parse(data.response)
@@ -125,6 +123,8 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
                   reqwest({url: responseObj.action.url, method: 'POST'})
                 }
                 break
+              case 'bannedusers':
+              case 'expiredtoken':
               default:
                 window.publish('piece/move/blocked', [responseObj])
             }

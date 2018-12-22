@@ -344,8 +344,6 @@ class SplitPlayer(MethodView):
             abort(400)
         cur.execute("update User set points = points - :cost where id = :id;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT})
 
-        ##
-
         # Create new user
 
         login = generate_user_login()
@@ -428,6 +426,13 @@ class AdminBannedUserList(MethodView):
             }
 
         return encoder.encode(banned)
+
+    def post(self):
+        "Cleanup banned users"
+
+        # clean up old banned users if any
+        old_bannedusers_count = redisConnection.zremrangebyscore('bannedusers', 0, now)
+        return old_bannedusers_count
 
 class BanishSelf(MethodView):
     """

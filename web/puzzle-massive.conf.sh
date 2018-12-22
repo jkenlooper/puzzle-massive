@@ -418,6 +418,16 @@ location /notfound_page.html {
     internal;
 }
 
+error_page 429 /too_many_requests_page.html;
+location /too_many_requests_page.html {
+    internal;
+}
+
+error_page 409 /conflict_page.html;
+location /conflict_page.html {
+    internal;
+}
+
 HERE
 
 if test "${ENVIRONMENT}" == 'development'; then
