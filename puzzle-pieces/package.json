@@ -1,6 +1,6 @@
 {
   "name": "puzzle-pieces",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "puzzle massive puzzle pieces web component",
   "main": "dist/puzzle-pieces.min.js",
   "scripts": {
@@ -21,7 +21,7 @@
     "autoprefixer": "^6.5.1",
     "cssnano": "^3.7.7",
     "csssources": "0.0.1",
-    "html-minifier": "^3.1.0",
+    "html-minifier": "~3.1.0",
     "postcss-calc": "^5.3.1",
     "postcss-cli": "^2.6.0",
     "postcss-custom-media": "^5.0.1",
@@ -29,7 +29,7 @@
     "postcss-import": "^8.1.2",
     "postcss-url": "^5.1.2",
     "standard": "^8.4.0",
-    "uglify-es": "^3.3.9"
+    "uglify-es": "~3.3.9"
   },
   "standard": {
     "ignore": [

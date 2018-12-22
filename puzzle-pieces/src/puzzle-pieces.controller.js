@@ -279,6 +279,5 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
       self.alerts.reconnecting.classList.remove('is-active')
       self.alerts.disconnected.classList.remove('is-active')
     }
-
   }
 }

@@ -62,7 +62,7 @@
     "lazysizes": "file:ui-lib/lazysizes-2.0.0.tar.gz",
     "minpubsub": "file:ui-lib/MinPubSub-0.0.2.tar.gz",
     "normalize.css": "file:ui-lib/normalize.css-4.2.0.tar.gz",
-    "puzzle-pieces": "file:ui-lib/puzzle-pieces-0.8.0.tgz",
+    "puzzle-pieces": "file:ui-lib/puzzle-pieces-0.9.0.tgz",
     "reqwest": "file:ui-lib/reqwest-2.0.5.tar.gz",
     "slab-massive": "file:ui-lib/slab-massive-0.3.1.tgz",
     "suitcss-utils-display": "file:ui-lib/utils-display-1.0.2.tar.gz",
