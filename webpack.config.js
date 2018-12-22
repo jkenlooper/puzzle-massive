@@ -1,14 +1,15 @@
 const webpack = require('webpack')
-const path = require('path');
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
-const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
+const path = require('path')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 const postcssImport = require('postcss-import')
-const postcssPresetEnv = require('postcss-preset-env');
+const postcssPresetEnv = require('postcss-preset-env')
+const postcssCustomMedia = require('postcss-custom-media')
 
-const src_entry = require('./src/index.js')
+const srcEntry = require('./src/index.js')
 
-process.traceDeprecation = true;
+process.traceDeprecation = true
 
 module.exports = function makeWebpackConfig () {
 
@@ -27,7 +28,7 @@ module.exports = function makeWebpackConfig () {
    * Entry
    * Reference: http://webpack.github.io/docs/configuration.html#entry
    */
-  config.entry = src_entry
+  config.entry = srcEntry
 
   /**
    * Output
@@ -57,10 +58,10 @@ module.exports = function makeWebpackConfig () {
         test: /\.js$/,
         exclude: /node_modules|\.min\.js/,
         use: {
-          loader: "babel-loader",
+          loader: 'babel-loader',
           options: {
             presets: [
-              "env"
+              'env'
             ]
           }
         }
@@ -94,13 +95,14 @@ module.exports = function makeWebpackConfig () {
         exclude: /node_modules|puzzle-pieces.css/,
         use: [
           MiniCssExtractPlugin.loader,
-          "css-loader",
+          'css-loader',
           {
-            "loader": "postcss-loader",
-            "options": {
-              "ident": "postcss",
-              "plugins": (loader) => [
+            'loader': 'postcss-loader',
+            'options': {
+              'ident': 'postcss',
+              'plugins': (loader) => [
                 postcssImport(),
+                postcssCustomMedia(),
                 postcssPresetEnv()
               ]
             }
@@ -123,12 +125,12 @@ module.exports = function makeWebpackConfig () {
       {
         test: /\.html$/,
         use: 'raw-loader'
-      },
+      }
     ]
   }
 
   config.plugins = [
-    new MiniCssExtractPlugin({filename: "[name].css"})
+    new MiniCssExtractPlugin({filename: '[name].css'})
   ]
 
   config.optimization = {
