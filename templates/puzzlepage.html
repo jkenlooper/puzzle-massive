@@ -72,7 +72,6 @@
 
 {% block script %}
 {{ super() }}
-<script src="{{ url_for('send_theme_file', filename='angular_bind_polymer.js') }}"></script>
 {% if isPuzzleVisible -%}
 <script src="{{ url_for('send_theme_file', filename='slab-massive.min.js') }}"></script>
 <script src="{{ url_for('send_theme_file', filename='puzzle-pieces.min.js') }}"></script>

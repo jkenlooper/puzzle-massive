@@ -2,7 +2,6 @@
 // require('file-loader?name=[name].[ext]!./webcomponents-patch.min.js') // TODO: used patched fix until #615 resolved
 require('file-loader?name=[name].[ext]!../../node_modules/slab-massive/dist/slab-massive.min.js')
 require('file-loader?name=[name].[ext]!../../node_modules/puzzle-pieces/dist/puzzle-pieces.min.js')
-require('file-loader?name=[name].[ext]!../../node_modules/angular-bind-polymer/angular_bind_polymer.js')
 
 import angular from 'angular'
 import base from '../base'
@@ -27,5 +26,5 @@ if (scrollJumpElement) {
   ScrollJump(scrollJumpElement)
 }
 
-angular.module('puzzlepage', [base, puzzleBits, hashColor, karmaStatus, 'eee-c.angularBindPolymer'])
+angular.module('puzzlepage', [base, puzzleBits, hashColor, karmaStatus])
     .name

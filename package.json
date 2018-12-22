@@ -57,7 +57,6 @@
     "@webcomponents/custom-elements": "file:ui-lib/webcomponents-custom-elements-v1.0.0-alpha.3-9-ga0f55ec.tar.gz",
     "@webcomponents/shadydom": "file:ui-lib/webcomponents-shadydom-e4a8be7.tar.gz",
     "angular": "1.5.8",
-    "angular-bind-polymer": "file:ui-lib/angular-bind-polymer-0.1.2-jkenlooper.tgz",
     "hammerjs": "file:ui-lib/hammer.js-2.0.8.tar.gz",
     "jscolor": "file:ui-lib/jscolor-2.0.4.tgz",
     "lazysizes": "file:ui-lib/lazysizes-2.0.0.tar.gz",
