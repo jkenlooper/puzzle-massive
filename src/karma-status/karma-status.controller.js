@@ -1,6 +1,7 @@
 export default class KarmaStatusController {
   constructor ($scope, $timeout) {
     let self = this
+    const max = 25
     self.amount = 0
     init()
 
@@ -10,7 +11,7 @@ export default class KarmaStatusController {
     }
 
     function onKarmaUpdate (data) {
-      self.amount = data.karma
+      self.amount = (Math.min(data.karma, max) / max) * 100
       $timeout(function () {
         $scope.$apply()
       })

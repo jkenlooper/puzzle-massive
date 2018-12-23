@@ -38,4 +38,4 @@ def get_public_karma_points(redisConnection, ip, user, puzzle):
     recent_points = min(100/2, int(redisConnection.get(points_key) or 0))
     karma = min(100/2, int(redisConnection.get(karma_key)))
     karma = max(0, min(100/2, karma + recent_points))
-    return karma * 2
+    return karma

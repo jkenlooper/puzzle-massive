@@ -439,6 +439,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                 redisConnection.zadd('blockedplayers:puzzle', '{ip}-{user}-{puzzle}'.format(ip=ip, user=user, puzzle=puzzle), int(recent_points))
 
                 err_msg = get_blockedplayers_err_msg(expires, expires - now)
+                err_msg['karma'] = get_public_karma_points(redisConnection, ip, user, puzzle)
                 return make_response(encoder.encode(err_msg), 429)
 
         # Check if there are too many pieces stacked. Slightly less exact from
