@@ -8,7 +8,6 @@ src/_template-head.js
 src/puzzle-pieces.tmp.html
 src/_template-foot.js
 src/puzzle.service.js
-src/send-movement.js
 src/updater.js
 src/puzzle-pieces.controller.js
 src/puzzle-pieces.js

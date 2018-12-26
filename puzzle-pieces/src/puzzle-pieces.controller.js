@@ -1,4 +1,4 @@
-/* global sendMovement, updater, reqwest */
+/* global updater, reqwest */
 
 class PuzzlePiecesController { // eslint-disable-line no-unused-vars
   constructor (puzzleService, $container, alerts, $karmaStatus) {
@@ -152,7 +152,7 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
       // Send the updates
       self.selectedPieces.forEach(function (pieceID) {
         let piece = self.pieces[pieceID]
-        sendMovement(pieceID, piece.x, piece.y, '-', piece.origin, piece.token)
+        puzzleService.move(pieceID, piece.x, piece.y, '-', piece.origin, piece.token)
       })
 
       // Reset the selectedPieces
@@ -164,13 +164,6 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
       piece.x = (x / scale) - (piece.w / 2)
       piece.y = (y / scale) - (piece.h / 2)
       self.renderPieces(self.pieces, [pieceID])
-    }
-    self.moveTo = function (pieceID, x, y, scale) {
-      let piece = self.pieces[pieceID]
-      piece.x = (x / scale) - (piece.w / 2)
-      piece.y = (y / scale) - (piece.h / 2)
-      self.renderPieces(self.pieces, [pieceID])
-      sendMovement(pieceID, piece.x, piece.y, '-', undefined, piece.token)
     }
 
     function onPieceMoveRejected (data) {
