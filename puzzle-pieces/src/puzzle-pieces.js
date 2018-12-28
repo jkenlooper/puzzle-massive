@@ -66,6 +66,8 @@ window.customElements.define('pm-puzzle-pieces', class extends HTMLElement {
     ctrl.status = this.getAttribute('status')
     ctrl.parentoftopleft = Number(this.getAttribute('parentoftopleft'))
     ctrl.puzzleid = this.getAttribute('puzzleid')
+    ctrl.pieceUpdateHandles = {}
+    ctrl.pieceRejectedHandles = {}
 
     let draggedPiece = null
     let draggedPieceID = null
@@ -88,6 +90,14 @@ window.customElements.define('pm-puzzle-pieces', class extends HTMLElement {
     function dropTap (ev) {
       ev.preventDefault()
       if (draggedPieceID !== null) {
+        if (ctrl.pieceUpdateHandles[draggedPieceID]) {
+          window.unsubscribe(ctrl.pieceUpdateHandles[draggedPieceID])
+          delete ctrl.pieceUpdateHandles[draggedPieceID]
+        }
+        if (ctrl.pieceRejectedHandles[draggedPieceID]) {
+          window.unsubscribe(ctrl.pieceRejectedHandles[draggedPieceID])
+          delete ctrl.pieceRejectedHandles[draggedPieceID]
+        }
         ctrl.dropSelectedPieces((Number($slabMassive.offsetX) + ev.pageX) - offsetLeft, (Number($slabMassive.offsetY) + ev.pageY) - offsetTop, $slabMassive.scale * $slabMassive.zoom)
         draggedPieceID = null
       }
@@ -95,7 +105,7 @@ window.customElements.define('pm-puzzle-pieces', class extends HTMLElement {
     function onTap (ev) {
       if (ev.target.classList.contains('p')) {
         draggedPiece = ev.target
-        draggedPieceID = draggedPiece.id.substr(2)
+        draggedPieceID = parseInt(draggedPiece.id.substr(2))
         // ignore taps on the viewfinder of slab-massive
         if (ev.target.tagName === 'SLAB-MASSIVE') {
           return
@@ -106,18 +116,25 @@ window.customElements.define('pm-puzzle-pieces', class extends HTMLElement {
         let id = Number(ev.target.id.substr('p-'.length))
         if (ev.target.classList.contains('p') &&
           !ctrl.isImmovable(id) &&
-          ctrl.selectedPieces.length === 0) {
+          ctrl.selectedPieces.length === 0 &&
+          !ctrl.blocked) {
           // listen for piece updates to just this piece while it's being moved.
-          pieceUpdateHandle = window.subscribe('piece/update/' + draggedPieceID, onPieceUpdateWhileSelected)
+          ctrl.pieceUpdateHandles[draggedPieceID] = window.subscribe('piece/update/' + draggedPieceID, onPieceUpdateWhileSelected)
           // TODO: listen to reject as well?
-          pieceRejectedHandle = window.subscribe('piece/move/rejected', onPieceUpdateWhileSelected)
+          ctrl.pieceRejectedHandles[draggedPieceID] = window.subscribe('piece/move/rejected', onPieceUpdateWhileSelected)
 
           // tap on piece
           ctrl.selectPiece(id)
           $slabMassive.addEventListener('mousemove', pieceFollow, false)
         } else {
-          window.unsubscribe(pieceUpdateHandle)
-          window.unsubscribe(pieceRejectedHandle)
+          if (ctrl.pieceUpdateHandles[draggedPieceID]) {
+            window.unsubscribe(ctrl.pieceUpdateHandles[draggedPieceID])
+            delete ctrl.pieceUpdateHandles[draggedPieceID]
+          }
+          if (ctrl.pieceRejectedHandles[draggedPieceID]) {
+            window.unsubscribe(ctrl.pieceRejectedHandles[draggedPieceID])
+            delete ctrl.pieceRejectedHandles[draggedPieceID]
+          }
           ctrl.dropSelectedPieces((Number($slabMassive.offsetX) + ev.pageX) - offsetLeft, (Number($slabMassive.offsetY) + ev.pageY) - offsetTop, $slabMassive.scale * $slabMassive.zoom)
           draggedPieceID = null
         }
@@ -131,8 +148,15 @@ window.customElements.define('pm-puzzle-pieces', class extends HTMLElement {
       $slabMassive.removeEventListener('mousemove', pieceFollow, false)
 
       // Stop listening for any updates to this piece
-      window.unsubscribe(pieceUpdateHandle)
-      window.unsubscribe(pieceRejectedHandle)
+      // console.log('onPieceUpdateWhileSelected', data.id)
+      if (ctrl.pieceUpdateHandles[data.id]) {
+        window.unsubscribe(ctrl.pieceUpdateHandles[data.id])
+        delete ctrl.pieceUpdateHandles[data.id]
+      }
+      if (ctrl.pieceRejectedHandles[data.id]) {
+        window.unsubscribe(ctrl.pieceRejectedHandles[data.id])
+        delete ctrl.pieceRejectedHandles[data.id]
+      }
 
       // Just unselect the piece so the next on tap doesn't move it
       ctrl.unSelectPiece(data.id)
@@ -166,8 +190,8 @@ window.customElements.define('pm-puzzle-pieces', class extends HTMLElement {
     })
 
     // the pieceUpdateHandle is used to subscribe/unsubscribe from specific piece movements
-    let pieceUpdateHandle
-    let pieceRejectedHandle
+    // let pieceUpdateHandle
+    // let pieceRejectedHandle
     this.$collection.addEventListener('mousedown', onTap, false)
 
     // update DOM for array of piece id's

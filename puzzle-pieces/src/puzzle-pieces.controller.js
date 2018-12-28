@@ -1,4 +1,4 @@
-/* global updater, reqwest */
+/* global updater */
 
 class PuzzlePiecesController { // eslint-disable-line no-unused-vars
   constructor (puzzleService, $container, alerts, $karmaStatus) {
@@ -68,12 +68,13 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
         // remove the pieceID from the array
         self.selectedPieces.splice(index, 1)
         self.pieces[pieceID].active = false
+        puzzleService.cancelMove(pieceID, self.pieces[pieceID].origin, self.pieces[pieceID].pieceMovementId)
       }
     }
 
     self.selectPiece = function (pieceID) {
       let index = self.selectedPieces.indexOf(pieceID)
-      if (index === -1) {
+      if (index === -1 && !self.blocked) {
         // add the pieceID to the end of the array
         self.selectedPieces.push(pieceID)
         self.pieces[pieceID].karma = false
@@ -87,6 +88,7 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
         // remove the pieceID from the array
         self.selectedPieces.splice(index, 1)
         self.pieces[pieceID].active = false
+        puzzleService.cancelMove(pieceID, self.pieces[pieceID].origin, self.pieces[pieceID].pieceMovementId)
       }
 
       // Only allow a max amount of selected pieces
@@ -95,47 +97,13 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
           .forEach((pieceID) => {
             // all the pieces that were unselected also set to inactive
             self.pieces[pieceID].active = false
+            puzzleService.cancelMove(pieceID, self.pieces[pieceID].origin, self.pieces[pieceID].pieceMovementId)
           })
       }
-      if (index === -1) {
-        puzzleService.token(pieceID, self.mark)
-          .then((data) => {
-            self.pieces[pieceID].token = data.token
-          })
-          .fail((data) => {
-            let responseObj
-            try {
-              responseObj = JSON.parse(data.response)
-            } catch (err) {
-              responseObj = {
-                reason: data.response
-              }
-            }
-            switch (responseObj.type) {
-              case 'piecelock':
-              case 'piecequeue':
-                // TODO: If piece is locked then publish a 'piece/move/delayed' instead of blocked.
-                // TODO: Set a timeout and clear if piece is moved.  Maybe
-                // auto-scroll to the moved piece?
-                break
-              case 'sameplayerconcurrent':
-                if (responseObj.action) {
-                  reqwest({url: responseObj.action.url, method: 'POST'})
-                }
-                break
-              case 'bannedusers':
-              case 'expiredtoken':
-              default:
-                window.publish('piece/move/blocked', [responseObj])
-            }
-            window.publish('piece/move/rejected', [{id: pieceID, x: self.pieces[pieceID].origin.x, y: self.pieces[pieceID].origin.y, r: self.pieces[pieceID].origin.r}])
-          })
-          .always(() => {
-            self.renderPieces(self.pieces, [pieceID])
-          })
-      } else {
-        self.renderPieces(self.pieces, [pieceID])
+      if (index === -1 && !self.blocked) {
+        self.pieces[pieceID].pieceMovementId = puzzleService.token(pieceID, self.mark)
       }
+      self.renderPieces(self.pieces, [pieceID])
     }
 
     self.dropSelectedPieces = function (x, y, scale) {
@@ -152,7 +120,7 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
       // Send the updates
       self.selectedPieces.forEach(function (pieceID) {
         let piece = self.pieces[pieceID]
-        puzzleService.move(pieceID, piece.x, piece.y, '-', piece.origin, piece.token)
+        puzzleService.move(pieceID, piece.x, piece.y, '-', piece.origin, piece.pieceMovementId)
       })
 
       // Reset the selectedPieces
@@ -161,6 +129,9 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
 
     self.moveBy = function (pieceID, x, y, scale) {
       let piece = self.pieces[pieceID]
+      if (!piece) {
+        return
+      }
       piece.x = (x / scale) - (piece.w / 2)
       piece.y = (y / scale) - (piece.h / 2)
       self.renderPieces(self.pieces, [pieceID])
@@ -168,8 +139,8 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
 
     function onPieceMoveRejected (data) {
       let piece = self.pieces[data.id]
-      piece.x = data.x
-      piece.y = data.y
+      piece.x = data.x || piece.origin.x
+      piece.y = data.y || piece.origin.y
       piece.active = false
       self.renderPieces(self.pieces, [data.id])
       updateKarmaValue(data.karma)
@@ -238,7 +209,7 @@ class PuzzlePiecesController { // eslint-disable-line no-unused-vars
         window.setTimeout(() => {
           self.alerts.container.classList.remove('is-active')
           self.alerts.blocked.classList.remove('is-active')
-          // self.blocked = false // TODO: Only for karma updates?
+          self.blocked = false // TODO: Only for karma updates?
         }, data.timeout * 1000)
       }
       self.blocked = true
