@@ -44,7 +44,7 @@ TOKEN_EXPIRE_TIMEOUT = 60 * 5
 TOKEN_LOCK_TIMEOUT = 5
 TOKEN_INVALID_BAN_TIME_INCR = 60
 
-def bump_count(ip, user):
+def bump_count(user):
     """
     Bump the count for pieces moved for the user.
     The nginx conf has a 60r/m with a burst of 60 on this route. The goal here
@@ -54,7 +54,9 @@ def bump_count(ip, user):
     rounded_timestamp = timestamp_now - (timestamp_now % PIECE_TRANSLATE_RATE_TIMEOUT)
     err_msg = {}
 
-    piece_translate_rate_key = 'ptrate:{ip}:{user}:{timestamp}'.format(ip=ip, user=user, timestamp=rounded_timestamp)
+    # TODO: optimize the timestamp used here by truncating to last digits based
+    # on the expiration of the key.
+    piece_translate_rate_key = 'ptrate:{user}:{timestamp}'.format(user=user, timestamp=rounded_timestamp)
     if redisConnection.setnx(piece_translate_rate_key, 1):
         redisConnection.expire(piece_translate_rate_key, PIECE_TRANSLATE_RATE_TIMEOUT)
     count = redisConnection.incr(piece_translate_rate_key)
@@ -333,7 +335,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         redisConnection.delete(puzzle_piece_token_key)
         redisConnection.delete('token:{}'.format(user))
 
-        err_msg = bump_count(ip, user)
+        err_msg = bump_count(user)
         if err_msg.get('type') == "bannedusers":
             return make_response(encoder.encode(err_msg), 429)
 
@@ -385,8 +387,8 @@ class PuzzlePiecesMovePublishView(MethodView):
 
         points_key = 'points:{user}'.format(user=user)
 
-        # Decrease recent points if this is a new puzzle that ip hasn't moved pieces on yet in the last hour
-        pzrate_key = 'pzrate:{ip}:{today}'.format(ip=ip, today=datetime.date.today().isoformat())
+        # Decrease recent points if this is a new puzzle that user hasn't moved pieces on yet in the last hour
+        pzrate_key = 'pzrate:{user}:{today}'.format(user=user, today=datetime.date.today().isoformat())
         if redisConnection.sadd(pzrate_key, puzzle) == 1:
             # New puzzle that player hasn't moved a piece on in the last hour.
             redisConnection.expire(pzrate_key, HOUR)
@@ -395,7 +397,8 @@ class PuzzlePiecesMovePublishView(MethodView):
                 redisConnection.decr(points_key)
 
         # Decrease karma if piece movement rate has passed threshold
-        pcrate_key = 'pcrate:{puzzle}:{ip}:{timestamp}'.format(puzzle=puzzle, ip=ip, timestamp=rounded_timestamp)
+        # TODO: remove timestamp from key and depend on expire setting
+        pcrate_key = 'pcrate:{puzzle}:{user}:{timestamp}'.format(puzzle=puzzle, user=user, timestamp=rounded_timestamp)
         if redisConnection.setnx(pcrate_key, 1):
             redisConnection.expire(pcrate_key, PIECE_MOVEMENT_RATE_TIMEOUT)
         else:
@@ -407,7 +410,8 @@ class PuzzlePiecesMovePublishView(MethodView):
                 karma_change -= 1
 
         # Decrease karma when moving the same piece again within a minute
-        hotpc_key = 'hotpc:{puzzle}:{ip}:{piece}:{timestamp}'.format(puzzle=puzzle, ip=ip, piece=piece, timestamp=rounded_timestamp)
+        # TODO: remove timestamp from key and depend on expire setting
+        hotpc_key = 'hotpc:{puzzle}:{user}:{piece}:{timestamp}'.format(puzzle=puzzle, user=user, piece=piece, timestamp=rounded_timestamp)
         recent_move_count = redisConnection.incr(hotpc_key)
         if recent_move_count == 1:
             redisConnection.expire(hotpc_key, PIECE_MOVEMENT_RATE_TIMEOUT)
@@ -462,14 +466,14 @@ class PuzzlePiecesMovePublishView(MethodView):
             return make_response(encoder.encode(err_msg), 400)
 
         # Record hot spot (not exact)
+        # TODO: remove timestamp from key and rely on expire setting
         rounded_timestamp_hotspot = timestamp_now - (timestamp_now % HOTSPOT_EXPIRE)
-        hotspot_area_key = 'hotspot:{puzzle}:{ip}:{timestamp}:{x}:{y}'.format(
-            puzzle=puzzle, ip=ip, timestamp=rounded_timestamp_hotspot,
+        hotspot_area_key = 'hotspot:{puzzle}:{user}:{timestamp}:{x}:{y}'.format(
+            puzzle=puzzle, user=user, timestamp=rounded_timestamp_hotspot,
             x=int(x) - (int(x) % 200), y=int(y) - (int(y) % 200)
             )
         hotspot_count = redisConnection.incr(hotspot_area_key)
         if hotspot_count == 1:
-            # print 'set hotspot count expire'
             redisConnection.expire(hotspot_area_key, HOTSPOT_EXPIRE)
         if hotspot_count > HOTSPOT_LIMIT:
             if karma > MIN_KARMA:

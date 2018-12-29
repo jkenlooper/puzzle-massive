@@ -35,7 +35,7 @@ class PuzzlePiecesView(MethodView):
     but loading pieces too often can get the user on the banned list.
     """
 
-    def bump_count(self, ip, user):
+    def bump_count(self, user):
         """
         Bump the count for puzzle loaded for this user.
         Note that this is different when a player moves a piece on a puzzle
@@ -45,7 +45,9 @@ class PuzzlePiecesView(MethodView):
         timestamp_now = int(time.time())
         rounded_timestamp = timestamp_now - (timestamp_now % PUZZLE_VIEW_RATE_TIMEOUT)
 
-        puzzle_view_rate_key = 'pvrate:{ip}:{user}:{timestamp}'.format(ip=ip, user=user, timestamp=rounded_timestamp)
+        # TODO: optimize the timestamp used here by truncating to last digits based
+        # on the expiration of the key.
+        puzzle_view_rate_key = 'pvrate:{user}:{timestamp}'.format(user=user, timestamp=rounded_timestamp)
         if redisConnection.setnx(puzzle_view_rate_key, 1):
             redisConnection.expire(puzzle_view_rate_key, PUZZLE_VIEW_RATE_TIMEOUT)
         else:
@@ -57,7 +59,7 @@ class PuzzlePiecesView(MethodView):
         ""
         ip = request.headers.get('X-Real-IP')
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
-        self.bump_count(ip, user)
+        self.bump_count(user)
 
         cur = db.cursor()
         result = cur.execute(fetch_query_string('select_puzzle_id_by_puzzle_id.sql'), {
