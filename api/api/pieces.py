@@ -51,7 +51,7 @@ class PuzzlePiecesView(MethodView):
         else:
             count = redisConnection.incr(puzzle_view_rate_key)
             if count > PUZZLE_VIEW_MAX_COUNT:
-                increase_ban_time(ip, user, BAN_TIME_INCR_FOR_EACH)
+                increase_ban_time(user, BAN_TIME_INCR_FOR_EACH)
 
     def get(self, puzzle_id):
         ""

@@ -59,7 +59,7 @@ def bump_count(ip, user):
         redisConnection.expire(piece_translate_rate_key, PIECE_TRANSLATE_RATE_TIMEOUT)
     count = redisConnection.incr(piece_translate_rate_key)
     if count > PIECE_TRANSLATE_MAX_COUNT:
-        err_msg = increase_ban_time(ip, user, PIECE_TRANSLATE_BAN_TIME_INCR)
+        err_msg = increase_ban_time(user, PIECE_TRANSLATE_BAN_TIME_INCR)
         err_msg['reason'] = PIECE_TRANSLATE_EXCEEDED_REASON
 
     return err_msg
@@ -140,7 +140,7 @@ class PuzzlePieceTokenView(MethodView):
                 # dropping it before clicking another piece.
                 if player_mark == mark:
                     # Ban the user for a few seconds
-                    err_msg = increase_ban_time(ip, user, TOKEN_LOCK_TIMEOUT)
+                    err_msg = increase_ban_time(user, TOKEN_LOCK_TIMEOUT)
                     err_msg['reason'] = "Concurrent piece movements on this puzzle from the same player are not allowed."
                     return make_response(encoder.encode(err_msg), 429)
 
@@ -311,12 +311,12 @@ class PuzzlePiecesMovePublishView(MethodView):
             (valid_token, other_player) = token_and_player.split(':')
             if token != valid_token:
                 # print("token invalid {} != {}".format(token, valid_token))
-                err_msg = increase_ban_time(ip, user, TOKEN_INVALID_BAN_TIME_INCR)
+                err_msg = increase_ban_time(user, TOKEN_INVALID_BAN_TIME_INCR)
                 err_msg['reason'] = "Token is invalid"
                 return make_response(encoder.encode(err_msg), 409)
             if player != int(other_player):
                 # print("player invalid {} != {}".format(player, other_player))
-                err_msg = increase_ban_time(ip, user, TOKEN_INVALID_BAN_TIME_INCR)
+                err_msg = increase_ban_time(user, TOKEN_INVALID_BAN_TIME_INCR)
                 err_msg['reason'] = "Player is invalid"
                 return make_response(encoder.encode(err_msg), 409)
         else:

@@ -107,12 +107,13 @@ def user_not_banned(f):
         ip = request.headers.get('X-Real-IP')
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip, skip_generate=True)
         if not user == None:
-            banneduser_score = redisConnection.zscore('bannedusers', '{}-{}'.format(ip, user))
+            banneduser_score = redisConnection.zscore('bannedusers', user)
             if banneduser_score:
                 now = int(time.time())
                 if banneduser_score > now:
-                    # The user must first press the any key to continue. Until
-                    # then the resource requested is in conflict.
+                    # The user could be banned for many different reasons.  Most
+                    # bans only last for a few seconds because of recent piece
+                    # movements.
                     response = ". . . please wait . . ."
                     if 'application/json' in request.headers.get('Accept'):
                         response = encoder.encode({
@@ -125,13 +126,12 @@ def user_not_banned(f):
         return f(*args, **kwargs)
     return decorator
 
-def increase_ban_time(ip, user, seconds):
-    # TODO: Why limit the ban with ip-user and not just the user?
+def increase_ban_time(user, seconds):
     now = int(time.time())
-    current = int(redisConnection.zscore('bannedusers', '{ip}-{user}'.format(ip=ip, user=user)) or now)
+    current = int(redisConnection.zscore('bannedusers', user) or now)
     current = max(current, now)
     ban_timestamp = min(current + seconds, now + MAX_BAN_TIME)
-    redisConnection.zadd('bannedusers', '{ip}-{user}'.format(ip=ip, user=user), ban_timestamp)
+    redisConnection.zadd('bannedusers', user, ban_timestamp)
     return {
         'msg': "Temporarily banned. Ban time has increased by {} seconds".format(seconds),
         'type': "bannedusers",
@@ -407,21 +407,17 @@ class AdminBlockedPlayersList(MethodView):
 
 class AdminBannedUserList(MethodView):
     """
-    ip:
-        user:
-            timestamp:
+    user:
+        timestamp:
     """
     def get(self):
         banned = {}
 
         bannedusers = redisConnection.zrevrangebyscore('bannedusers', '+inf', int(time.time()), withscores=True)
 
-        # Add ip -> user -> timestamp
-        for (ip_user, timestamp) in bannedusers:
-            (ip, user) = ip_user.split('-')
-            if not banned.get(ip):
-                banned[ip] = {}
-            banned[ip][user] = {
+        # Add user -> timestamp
+        for (user, timestamp) in bannedusers:
+            banned[user] = {
                 'timestamp': timestamp
             }
 
@@ -446,7 +442,7 @@ class BanishSelf(MethodView):
         "The url for this is listed in robots.txt under a Disallow"
         ip = request.headers.get('X-Real-IP')
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
-        increase_ban_time(ip, user, HONEY_POT_BAN_TIME)
+        increase_ban_time(user, HONEY_POT_BAN_TIME)
 
         return make_response(self.response_text, 201)
 
@@ -455,5 +451,5 @@ class BanishSelf(MethodView):
         ip = request.headers.get('X-Real-IP')
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
 
-        increase_ban_time(ip, user, HONEY_POT_BAN_TIME)
+        increase_ban_time(user, HONEY_POT_BAN_TIME)
         return make_response(self.response_text, 201)
