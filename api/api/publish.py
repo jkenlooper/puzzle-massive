@@ -106,25 +106,47 @@ class PuzzlePieceTokenView(MethodView):
         ip = request.headers.get('X-Real-IP')
         user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
         mark = request.args.get('mark', '000')[:3]
+        now = int(time.time())
 
         # Start db operations
         cur = db.cursor()
         # validate the puzzle_id
-        result = cur.execute(fetch_query_string('select_puzzle_id_by_puzzle_id.sql'), {
-            'puzzle_id': puzzle_id
+        result = cur.execute(fetch_query_string('select_puzzle_and_piece_status_for_token.sql'), {
+            'puzzle_id': puzzle_id,
+            'piece': piece
             }).fetchall()
         if not result:
-            # 404 if puzzle does not exist
-            abort(404)
+            # 400 if puzzle does not exist or piece is not movable
+            err_msg = {
+                'msg': "piece can't be moved",
+                'type': "immovable",
+                'expires': now + 5,
+                'timeout': 5
+            }
+            cur.close()
+            return make_response(encoder.encode(err_msg), 400)
         (result, col_names) = rowify(result, cur.description)
         puzzle = result[0]['puzzle']
 
-        now = int(time.time())
+        piece_status = redisConnection.hget('pc:{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), 's')
+        #print("ps {}".format(piece_status))
+        if piece_status == '1':
+            # immovable
+            cur.close()
+            err_msg = {
+                'msg': "piece can't be moved",
+                'type': "immovable",
+                'expires': now + 5,
+                'timeout': 5
+            }
+            return make_response(encoder.encode(err_msg), 400)
+
 
         blockedplayers_for_puzzle_key = 'blockedplayers:{puzzle}'.format(puzzle=puzzle)
         blockedplayers_expires = redisConnection.zscore(blockedplayers_for_puzzle_key, user)
         if blockedplayers_expires and blockedplayers_expires > now:
             err_msg = get_blockedplayers_err_msg(blockedplayers_expires, blockedplayers_expires - now)
+            cur.close()
             return make_response(encoder.encode(err_msg), 429)
 
         puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
@@ -167,6 +189,7 @@ class PuzzlePieceTokenView(MethodView):
                                 'msg': "Create a new player?",
                                 'url': "/newapi{}".format(url_for('split-player'))
                             }
+                        cur.close()
                     return make_response(encoder.encode(err_msg), 409)
 
         piece_token_queue_key = get_puzzle_piece_token_queue_key(puzzle, piece)
@@ -190,6 +213,7 @@ class PuzzlePieceTokenView(MethodView):
                 'expires': now + TOKEN_LOCK_TIMEOUT,
                 'timeout': TOKEN_LOCK_TIMEOUT
             }
+            cur.close()
             return make_response(encoder.encode(err_msg), 409)
 
         # Check if token on piece is still owned by another player
@@ -211,6 +235,7 @@ class PuzzlePieceTokenView(MethodView):
                         'expires': now + TOKEN_LOCK_TIMEOUT,
                         'timeout': TOKEN_LOCK_TIMEOUT
                     }
+                    cur.close()
                     return make_response(encoder.encode(err_msg), 409)
 
         # Remove player from the piece token queue
@@ -232,6 +257,7 @@ class PuzzlePieceTokenView(MethodView):
             'lock': now + TOKEN_LOCK_TIMEOUT,
             'expires': now + TOKEN_EXPIRE_TIMEOUT
         }
+        cur.close()
         return encoder.encode(response)
 
 class PuzzlePiecesMovePublishView(MethodView):
@@ -266,6 +292,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         """
         ip = request.headers.get('X-Real-IP')
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
+        now = int(time.time())
 
         # validate the args and headers
         args = {}
@@ -276,35 +303,67 @@ class PuzzlePiecesMovePublishView(MethodView):
             args.update(request.form.to_dict(flat=True))
 
         if len(args.keys()) == 0:
-            abort(400)
+            err_msg = {
+                'msg': "invalid args",
+                'type': "invalid",
+                'expires': now + 5,
+                'timeout': 5
+            }
+            return make_response(encoder.encode(err_msg), 400)
         # check if args are only in acceptable set
         if len(self.ACCEPTABLE_ARGS.intersection(set(args.keys()))) != len(args.keys()):
-            abort(400)
+            err_msg = {
+                'msg': "invalid args",
+                'type': "invalid",
+                'expires': now + 5,
+                'timeout': 5
+            }
+            return make_response(encoder.encode(err_msg), 400)
         # validate that all values are int
         for key, value in args.items():
             if not isinstance(value, int):
                 try:
                     args[key] = int(value)
                 except ValueError:
-                    abort(400)
+                    err_msg = {
+                        'msg': "invalid args",
+                        'type': "invalid",
+                        'expires': now + 5,
+                        'timeout': 5
+                    }
+                    return make_response(encoder.encode(err_msg), 400)
 
         # Start db operations
-        c = db.cursor()
+        cur = db.cursor()
         # validate the puzzle_id
-        result = c.execute(fetch_query_string('select_puzzle_id_by_puzzle_id.sql'), {
+        result = cur.execute(fetch_query_string('select_puzzle_id_by_puzzle_id.sql'), {
             'puzzle_id': puzzle_id
             }).fetchall()
         if not result:
             # 404 if puzzle does not exist
-            abort(404)
-        (result, col_names) = rowify(result, c.description)
+            cur.close()
+            err_msg = {
+                'msg': "Puzzle does not exist",
+                'type': "missing",
+                'expires': now + 5,
+                'timeout': 5
+            }
+            return make_response(encoder.encode(err_msg), 404)
+        (result, col_names) = rowify(result, cur.description)
         puzzle = result[0]['puzzle']
 
         # Token is to make sure puzzle is still in sync.
         # validate the token
         token = request.headers.get('Token')
         if not token:
-            abort(403)
+            cur.close()
+            err_msg = {
+                'msg': "Missing token",
+                'type': "missing",
+                'expires': now + 5,
+                'timeout': 5
+            }
+            return make_response(encoder.encode(err_msg), 400)
         puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
         # print("token key: {}".format(puzzle_piece_token_key))
         token_and_player = redisConnection.get(puzzle_piece_token_key)
@@ -315,11 +374,13 @@ class PuzzlePiecesMovePublishView(MethodView):
                 # print("token invalid {} != {}".format(token, valid_token))
                 err_msg = increase_ban_time(user, TOKEN_INVALID_BAN_TIME_INCR)
                 err_msg['reason'] = "Token is invalid"
+                cur.close()
                 return make_response(encoder.encode(err_msg), 409)
             if player != int(other_player):
                 # print("player invalid {} != {}".format(player, other_player))
                 err_msg = increase_ban_time(user, TOKEN_INVALID_BAN_TIME_INCR)
                 err_msg['reason'] = "Player is invalid"
+                cur.close()
                 return make_response(encoder.encode(err_msg), 409)
         else:
             # Token has expired
@@ -329,6 +390,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                 'type': "expiredtoken",
                 'reason': ""
             }
+            cur.close()
             return make_response(encoder.encode(err_msg), 409)
 
         # Expire the token at the lock timeout since it shouldn't be used again
@@ -337,37 +399,68 @@ class PuzzlePiecesMovePublishView(MethodView):
 
         err_msg = bump_count(user)
         if err_msg.get('type') == "bannedusers":
+            cur.close()
             return make_response(encoder.encode(err_msg), 429)
 
 
-        result = c.execute(fetch_query_string('select_puzzle_and_piece.sql'), {
+        result = cur.execute(fetch_query_string('select_puzzle_and_piece.sql'), {
             'puzzle_id': puzzle_id,
             'piece': piece
             }).fetchall()
         if not result:
             # 404 if puzzle or piece does not exist
-            abort(404)
+            cur.close()
+            err_msg = {
+                'msg': "puzzle or piece not available",
+                'type': "missing"
+            }
+            return make_response(encoder.encode(err_msg), 404)
 
-        (result, col_names) = rowify(result, c.description)
+        (result, col_names) = rowify(result, cur.description)
         puzzle_piece = result[0]
 
         # check if puzzle is in mutable state (not frozen)
         if not puzzle_piece['status'] in (ACTIVE, IN_QUEUE, BUGGY_UNLISTED):
-            abort(400)
+            cur.close()
+            err_msg = {
+                'msg': "puzzle not in mutable state"
+            }
+            return make_response(encoder.encode(err_msg), 400)
 
         # check if piece can be moved
         pieceStatus = redisConnection.hget('pc:{puzzle}:{id}'.format(**puzzle_piece), 's')
         if pieceStatus == '1':
             # immovable
-            abort(400)
+            cur.close()
+            err_msg = {
+                'msg': "piece can't be moved",
+                'type': "immovable",
+                'expires': now + 5,
+                'timeout': 5
+            }
+            return make_response(encoder.encode(err_msg), 400)
 
         # check if piece will be moved to within boundaries
         if args.get('x') and (args['x'] < 0 or args['x'] > puzzle_piece['table_width']):
             #print("invalid move x: {0}".format(puzzle_piece.get('id')))
-            abort(400)
+            cur.close()
+            err_msg = {
+                'msg': "Piece movement out of bounds",
+                'type': "invalidpiecemove",
+                'expires': now + 5,
+                'timeout': 5
+            }
+            return make_response(encoder.encode(err_msg), 400)
         if args.get('y') and (args['y'] < 0 or args['y'] > puzzle_piece['table_height']):
             #print("invalid move y: {0}".format(puzzle_piece.get('id')))
-            abort(400)
+            cur.close()
+            err_msg = {
+                'msg': "Piece movement out of bounds",
+                'type': "invalidpiecemove",
+                'expires': now + 5,
+                'timeout': 5
+            }
+            return make_response(encoder.encode(err_msg), 400)
 
         x = str(args.get('x', ''))
         y = str(args.get('y', ''))
@@ -427,7 +520,6 @@ class PuzzlePiecesMovePublishView(MethodView):
             recent_points = redisConnection.decr(points_key, amount=abs(karma_change)) if karma_change < 0 else int(redisConnection.get(points_key) or 0)
             redisConnection.set(points_key, max(0, recent_points))
             if int(karma) + recent_points <= 0:
-                now = int(time.time())
                 expires = now + BLOCKEDPLAYER_EXPIRE_TIMEOUT
                 blockedplayers_for_puzzle_key = 'blockedplayers:{puzzle}'.format(puzzle=puzzle)
                 # Add the player to the blocked players list for the puzzle and
@@ -444,6 +536,7 @@ class PuzzlePiecesMovePublishView(MethodView):
 
                 err_msg = get_blockedplayers_err_msg(expires, expires - now)
                 err_msg['karma'] = get_public_karma_points(redisConnection, ip, user, puzzle)
+                cur.close()
                 return make_response(encoder.encode(err_msg), 429)
 
         # Check if there are too many pieces stacked. Slightly less exact from
@@ -463,6 +556,7 @@ class PuzzlePiecesMovePublishView(MethodView):
             err_msg = get_too_many_pieces_in_proximity_err_msg(piece, list(piecesInProximity))
             err_msg['karma'] = get_public_karma_points(redisConnection, ip, user, puzzle)
 
+            cur.close()
             return make_response(encoder.encode(err_msg), 400)
 
         # Record hot spot (not exact)
@@ -501,5 +595,6 @@ class PuzzlePiecesMovePublishView(MethodView):
             'karmaChange': karma_change,
             'id': piece
         }
+        cur.close()
         return encoder.encode(response)
 

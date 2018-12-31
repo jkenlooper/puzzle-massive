@@ -68,6 +68,7 @@ def handle_render_fail(job, exception, exception_func, traceback):
             'id': puzzle['id']
             })
     db.commit()
+    cur.close()
 
 
 def render(*args):
@@ -343,6 +344,7 @@ def render(*args):
             'url': '/resources/{puzzle_id}/scale-100/raster.css'.format(**puzzle)
             })
         db.commit()
+        cur.close()
 
         cleanup(puzzle['puzzle_id'])
 

@@ -99,6 +99,7 @@ def user_id_from_ip(ip, skip_generate=False):
         (result, col_names) = rowify(result, cur.description)
         user_id = result[0]['id']
 
+    cur.close()
     return str(user_id)
 
 def user_not_banned(f):
@@ -121,7 +122,8 @@ def user_not_banned(f):
                             'expires': banneduser_score,
                             'timeout': banneduser_score - now
                         })
-                    abort(make_response(response, 429))
+                    #abort(make_response(response, 429))
+                    return make_response(response, 429)
 
         return f(*args, **kwargs)
     return decorator
@@ -164,7 +166,8 @@ class GenerateAnonymousLogin(MethodView):
 
         user = current_app.secure_cookie.get(u'user')
         if user is None:
-            abort(403)
+            return make_response('no user', 403)
+            #abort(403)
 
         (p_string, password) = generate_password()
 
@@ -174,10 +177,12 @@ class GenerateAnonymousLogin(MethodView):
             result = cur.execute(QUERY_USER_LOGIN, {'id':int(user)}).fetchall()
         except IndexError:
             # user may have been added after a db rollback
-            abort(404)
+            return make_response('no user', 404)
+            #abort(404)
 
         if not result:
-            abort(404)
+            return make_response('no user', 404)
+            #abort(404)
 
         (result, col_names) = rowify(result, cur.description)
         user_data = result[0]
@@ -206,7 +211,8 @@ class UserLoginView(MethodView):
         result = cur.execute(query, {'user':user}).fetchall()
 
         if not result:
-            abort(404)
+            return make_response('no user', 404)
+            #abort(404)
 
         (result, col_names) = rowify(result, cur.description)
         user_data = result[0]
@@ -250,7 +256,8 @@ class UserDetailsView(MethodView):
         # Verify user is logged in
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP'))
         if user is None:
-            abort(403)
+            return make_response('not logged in', 403)
+            #abort(403)
 
         cur = db.cursor()
 
@@ -258,10 +265,12 @@ class UserDetailsView(MethodView):
             result = cur.execute(QUERY_USER_DETAILS, {'id':int(user)}).fetchall()
         except IndexError:
             # user may have been added after a db rollback
-            abort(404)
+            return make_response('no user', 404)
+            #abort(404)
 
         if not result:
-            abort(404)
+            return make_response('no user', 404)
+            #abort(404)
 
         (result, col_names) = rowify(result, cur.description)
         user_details = result[0]
@@ -286,7 +295,8 @@ class ClaimRandomBit(MethodView):
         # Verify user is logged in
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP'))
         if user is None:
-            abort(400)
+            return make_response('not logged in', 400)
+            #abort(400)
 
         cur = db.cursor()
 
@@ -294,16 +304,19 @@ class ClaimRandomBit(MethodView):
             result = cur.execute(QUERY_USER_DETAILS, {'id':int(user)}).fetchall()
         except IndexError:
             # user may have been added after a db rollback
-            abort(404)
+            return make_response('no user', 404)
+            #abort(404)
 
         if not result:
-            abort(404)
+            return make_response('no user', 404)
+            #abort(404)
 
         (result, col_names) = rowify(result, cur.description)
         user_details = result[0]
 
         if user_details['icon']:
-            abort(400)
+            return make_response('icon', 400)
+            #abort(400)
 
         cur.execute(fetch_query_string('claim_random_bit_icon.sql'), {'user': int(user)})
         db.commit()
@@ -325,13 +338,15 @@ class SplitPlayer(MethodView):
         # have 'ot' already set by viewing the page.
         uses_cookies = current_app.secure_cookie.get(u'ot')
         if not uses_cookies:
-            abort(400)
+            return make_response('no cookies', 400)
+            #abort(400)
 
         ip = request.headers.get('X-Real-IP')
         # Verify user is logged in
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip, skip_generate=True)
         if user is None:
-            abort(400)
+            return make_response('not logged in', 400)
+            #abort(400)
 
         response = make_response('', 200)
 
@@ -341,7 +356,8 @@ class SplitPlayer(MethodView):
         # TODO: what prevents a player from creating a lot of splits?
         result = cur.execute("select points from User where id = :id and points >= :cost + :startpoints;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT, 'startpoints': NEW_USER_STARTING_POINTS}).fetchone()
         if not result:
-            abort(400)
+            return make_response('not enough dots', 400)
+            #abort(400)
         cur.execute("update User set points = points - :cost where id = :id;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT})
 
         # Create new user
@@ -367,6 +383,7 @@ class SplitPlayer(MethodView):
 
         db.commit()
 
+        cur.close()
         return response
 
 class AdminBlockedPlayersList(MethodView):

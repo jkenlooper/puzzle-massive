@@ -35,6 +35,7 @@ class BitIconView(MethodView):
             (result, col_names) = rowify(result, cur.description)
             user_data = result[0]
 
+        cur.close()
         return encoder.encode(user_data)
 
 class ChooseBitView(MethodView):
@@ -62,6 +63,7 @@ class ChooseBitView(MethodView):
         if save_cookie:
             current_app.secure_cookie.set(u'ot', str(offset_seconds), response, expires_days=1)
 
+        cur.close()
         return response
 
 class ClaimBitView(MethodView):
@@ -84,6 +86,7 @@ class ClaimBitView(MethodView):
         """
         cur.execute(query, {'id': user_id, 'password': password, 'ip': request.headers.get('X-Real-IP')})
         db.commit()
+        cur.close()
 
     def post(self):
         """If the bit icon is available; claim it for the user."""
@@ -102,6 +105,7 @@ class ClaimBitView(MethodView):
         # Check if bit icon is available
         result = cur.execute(fetch_query_string('select_available_bit_icon.sql'), {'icon': icon}).fetchone()
         if not result:
+            cur.close()
             abort(400)
 
         response = make_response('', 200)

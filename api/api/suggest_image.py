@@ -88,6 +88,7 @@ class SuggestImageView(MethodView):
         :permission);
         """, d)
         db.commit()
+        cur.close()
 
         # Send a notification email (silent fail if not configured)
         try:

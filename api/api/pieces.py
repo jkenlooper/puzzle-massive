@@ -126,4 +126,6 @@ class PuzzlePiecesView(MethodView):
                 'timestamp': '',
                 'mark': uuid.uuid4().hex[:3] # Used to differentiate any requests for a user session (handle double-clicking pieces)
                 }
+
+        cur.close()
         return encoder.encode(pieceData)

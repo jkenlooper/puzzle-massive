@@ -50,12 +50,14 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
         unsplash_image_thread = UnsplashPuzzleThread(puzzle_id, filename, current_app.config.get('UNSPLASH_APPLICATION_ID'), current_app.config.get('SQLITE_DATABASE_URI'))
     else:
         if not upload_file:
+            cur.close()
             abort(400)
         filename = secure_filename(upload_file.filename)
         filename = filename.lower()
 
         # Check the filename to see if the extension is allowed
         if os.path.splitext(filename)[1][1:].lower() not in ALLOWED_EXTENSIONS:
+            cur.close()
             abort(400)
 
         d = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
@@ -75,6 +77,7 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
         if identify_format not in ALLOWED_EXTENSIONS:
             os.unlink(upload_file_path)
             os.rmdir(puzzle_dir)
+            cur.close()
             abort(400)
 
 
@@ -147,6 +150,7 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
         })
 
     db.commit()
+    cur.close()
 
     if unsplash_image_thread:
         # Go download the unsplash image and update the db
@@ -264,6 +268,7 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
             'puzzle_id': puzzle_id
         })
         db.commit()
+        cur.close()
 
         return redirect('/chill/site/puzzle/{0}/'.format(new_puzzle_id), code=303)
 
@@ -343,3 +348,4 @@ class UnsplashPuzzleThread(threading.Thread):
             })
 
         db.commit()
+        cur.close()

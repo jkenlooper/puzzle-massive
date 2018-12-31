@@ -12,6 +12,7 @@ WIDTH=$(($WIDTH - 100))
 HEIGHT=$(cat test.html | sed --silent -E  's/style="width:([[:digit:]]+)px; height:([[:digit:]]+)px;"/\2/p')
 HEIGHT=$(($HEIGHT - 100))
 PIECECOUNT=$(cat test.html | sed --silent -E  's/([[:digit:]]+) Piece Jigsaw Puzzle.*/\1/p')
+PIECECOUNT=$(($PIECECOUNT-1));
 
 echo $PUZZLEID
 echo $WIDTH

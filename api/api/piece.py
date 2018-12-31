@@ -29,6 +29,7 @@ class PuzzlePieceView(MethodView):
 
         (result, col_names) = rowify(result, cur.description)
         puzzle = result[0].get('puzzle')
+        cur.close()
 
         # Only allow if there is data in redis
         if not redisConnection.zscore('pcupdates', puzzle):
