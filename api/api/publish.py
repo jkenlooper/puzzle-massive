@@ -2,7 +2,7 @@ import datetime
 import time
 import uuid
 
-from flask import current_app, make_response, request, abort, json, url_for
+from flask import current_app, make_response, request, json, url_for
 from flask.views import MethodView
 from werkzeug.exceptions import HTTPException
 import redis

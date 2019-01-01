@@ -5,7 +5,7 @@ import time
 import datetime
 import hashlib
 
-from flask import current_app, abort, json, redirect, make_response, request
+from flask import current_app, json, redirect, make_response, request
 from flask.views import MethodView
 import redis
 
@@ -122,7 +122,6 @@ def user_not_banned(f):
                             'expires': banneduser_score,
                             'timeout': banneduser_score - now
                         })
-                    #abort(make_response(response, 429))
                     return make_response(response, 429)
 
         return f(*args, **kwargs)
@@ -167,7 +166,6 @@ class GenerateAnonymousLogin(MethodView):
         user = current_app.secure_cookie.get(u'user')
         if user is None:
             return make_response('no user', 403)
-            #abort(403)
 
         (p_string, password) = generate_password()
 
@@ -178,11 +176,9 @@ class GenerateAnonymousLogin(MethodView):
         except IndexError:
             # user may have been added after a db rollback
             return make_response('no user', 404)
-            #abort(404)
 
         if not result:
             return make_response('no user', 404)
-            #abort(404)
 
         (result, col_names) = rowify(result, cur.description)
         user_data = result[0]
@@ -212,7 +208,6 @@ class UserLoginView(MethodView):
 
         if not result:
             return make_response('no user', 404)
-            #abort(404)
 
         (result, col_names) = rowify(result, cur.description)
         user_data = result[0]
@@ -257,7 +252,6 @@ class UserDetailsView(MethodView):
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP'))
         if user is None:
             return make_response('not logged in', 403)
-            #abort(403)
 
         cur = db.cursor()
 
@@ -266,11 +260,9 @@ class UserDetailsView(MethodView):
         except IndexError:
             # user may have been added after a db rollback
             return make_response('no user', 404)
-            #abort(404)
 
         if not result:
             return make_response('no user', 404)
-            #abort(404)
 
         (result, col_names) = rowify(result, cur.description)
         user_details = result[0]
@@ -296,7 +288,6 @@ class ClaimRandomBit(MethodView):
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP'))
         if user is None:
             return make_response('not logged in', 400)
-            #abort(400)
 
         cur = db.cursor()
 
@@ -305,18 +296,15 @@ class ClaimRandomBit(MethodView):
         except IndexError:
             # user may have been added after a db rollback
             return make_response('no user', 404)
-            #abort(404)
 
         if not result:
             return make_response('no user', 404)
-            #abort(404)
 
         (result, col_names) = rowify(result, cur.description)
         user_details = result[0]
 
         if user_details['icon']:
             return make_response('icon', 400)
-            #abort(400)
 
         cur.execute(fetch_query_string('claim_random_bit_icon.sql'), {'user': int(user)})
         db.commit()
@@ -339,14 +327,12 @@ class SplitPlayer(MethodView):
         uses_cookies = current_app.secure_cookie.get(u'ot')
         if not uses_cookies:
             return make_response('no cookies', 400)
-            #abort(400)
 
         ip = request.headers.get('X-Real-IP')
         # Verify user is logged in
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip, skip_generate=True)
         if user is None:
             return make_response('not logged in', 400)
-            #abort(400)
 
         response = make_response('', 200)
 
@@ -357,7 +343,6 @@ class SplitPlayer(MethodView):
         result = cur.execute("select points from User where id = :id and points >= :cost + :startpoints;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT, 'startpoints': NEW_USER_STARTING_POINTS}).fetchone()
         if not result:
             return make_response('not enough dots', 400)
-            #abort(400)
         cur.execute("update User set points = points - :cost where id = :id;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT})
 
         # Create new user
