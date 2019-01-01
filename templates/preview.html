@@ -86,28 +86,30 @@ two minute over an hour:{{ timePassed(60*62) }}<br>
 
       <div class="pm-Preview-latest">
         {% if players | length > 0 %}
-        <h2>Active Players</h2>
+        <h2>Players</h2>
         <div class="pm-Preview-latestList" role="list">
             <div class="pm-Preview-latestItem">
-              <small>Player</small>
-              <small>
+              <small class="pm-Preview-latestItemCell"></small>
+              <small class="pm-Preview-latestItemCell pm-Preview-latestItemCell--pieces">
                 Pieces
               </small>
-              <small>
+              <small class="pm-Preview-latestItemCell">
                 Time since
               </small>
             </div>
         {% for item in players[0:9]%}
             <div class="pm-Preview-latestItem" role="listitem">
+              <small class="pm-Preview-latestItemCell">
               {% if item.icon -%}
               <img width="32" height="32" src="{{ url_for('send_media_file', filename='bit-icons/64-{}.png'.format(item.icon)) }}" alt="{{item.icon}}">
               {% else %}
               <img width="32" height="32" src="{{ url_for('send_media_file', filename='64-unknown-bit-icon.png') }}" alt="Unknown bit">
               {%- endif %}
-              <small class="pm-Preview-score">
+              </small>
+              <small class="pm-Preview-latestItemCell pm-Preview-latestItemCell--pieces">
                 {{ item.points }}
               </small>
-              <small>
+              <small class="pm-Preview-latestItemCell">
                 {{ timePassed(item.seconds_from_now) }}
               </small>
             </div>
@@ -138,7 +140,7 @@ two minute over an hour:{{ timePassed(60*62) }}<br>
         {% endif %}
 
         {% if players | length > 9 %}
-        <h2 class="u-textRight">Active Players (continued)</h2>
+        <h2 class="u-textRight">Players (continued)</h2>
         <div class="pm-Preview-pieceJoinsList" role="list">
         {% for item in  players[9:] -%}
           {# Only 25 will fit in this container #}
@@ -162,7 +164,7 @@ two minute over an hour:{{ timePassed(60*62) }}<br>
     </div>
   </a>
   {% if recent.attribution %}
-  <p>{{ '[chill route /internal/attribution/{}/ ]'.format(recent.attribution) }}</p>
+  <p class="pm-Preview-attribution">{{ '[chill route /internal/attribution/{}/ ]'.format(recent.attribution) }}</p>
   {% endif %}
       {% if recent.status == COMPLETED and not recent.is_recent -%}
       </div>

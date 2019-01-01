@@ -9,8 +9,6 @@ JOIN Puzzle AS p ON (t.puzzle = p.id)
 JOIN User AS u ON (t.player = u.id)
 JOIN BitIcon AS b ON (u.id = b.user)
 WHERE p.puzzle_id = :puzzle_id
-and b.expiration > datetime('now')
-and t.timestamp > datetime('now', '-14 days')
 GROUP BY player
 ORDER BY timestamp DESC
 ;

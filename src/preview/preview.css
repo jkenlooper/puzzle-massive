@@ -3,6 +3,12 @@
 .pm-Preview {
 }
 
+.pm-Preview-attribution {
+  margin-left: calc(1px + 13px);
+  padding-left: 13px;
+  padding-right: 13px;
+}
+
 .pm-Preview-statusNote {
   margin-left: calc(1px + 13px);
   padding-left: 13px;
@@ -92,11 +98,16 @@ a.pm-Preview-grid:active img.pm-Preview-img {
 }
 
 .pm-Preview-latestItem > * + * {
-  padding-left: 10px;
+  padding-left: 20px;
 }
 
-.pm-Preview-score {
-  width: 2.4em;
+.pm-Preview-latestItemCell {
+  min-width: 32px;
+}
+.pm-Preview-latestItemCell--pieces {
+  /* 6em is width for 'pieces' label */
+  min-width: 6em;
+  text-align: right;
 }
 
 .pm-Preview-description {
