@@ -1,12 +1,22 @@
-"Migrates ..."
+"Migrates 2.0.1 to 2.1.0"
 
+##Follow blue-green deployment (adjust for production)
 # make
 # sudo make install
 # cat chill-data.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
+# python api/api/create_database.py site.cfg;
+
+##Transfer old server data
+# ...
+
+##Migrate database
 # python api/api/jobs/migrate_from_2_0.py site.cfg
 # sudo ./bin/puzzlectl.sh start
 # sudo nginx -t && sudo nginx -s reload
-# python api/api/jobs/migratePuzzleFile.py site.cfg
+
+##Run the migrate puzzle file script which will take a long time because it is
+##limited by unsplash API request limits.
+# nohup python api/api/jobs/migratePuzzleFile.py site.cfg &
 
 import sqlite3
 import glob
