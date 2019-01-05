@@ -174,7 +174,10 @@ class PuzzleUploadView(MethodView):
             abort(403)
 
         # Check pieces arg
-        pieces = args.get('pieces', 100)
+        try:
+            pieces = int(args.get('pieces', 100))
+        except ValueError as err:
+            abort(400)
         if pieces < 2:
             abort(400)
 
@@ -198,10 +201,10 @@ class PuzzleUploadView(MethodView):
         #if permission != PUBLIC:
         #    permission = PUBLIC
 
-        description = escape(args.get('description', ''))
+        description = escape(args.get('description', ''))[:1000]
 
         # Check link and validate
-        link = url_fix(args.get('link', ''))
+        link = url_fix(args.get('link', ''))[:1000]
 
         upload_file = request.files.get('upload_file', None)
 
@@ -225,7 +228,10 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
             abort(400)
 
         # Check pieces arg
-        pieces = args.get('pieces', 100)
+        try:
+            pieces = int(args.get('pieces', 100))
+        except ValueError as err:
+            abort(400)
         if pieces < 2:
             abort(400)
 
@@ -244,10 +250,10 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
         #if permission != PUBLIC:
         #    permission = PUBLIC
 
-        description = escape(args.get('description', ''))
+        description = escape(args.get('description', ''))[:1000]
 
         # Check link and validate
-        link = url_fix(args.get('link', ''))
+        link = url_fix(args.get('link', ''))[:1000]
 
         upload_file = request.files.get('upload_file', None)
 

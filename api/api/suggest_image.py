@@ -29,7 +29,10 @@ class SuggestImageView(MethodView):
             args.update(request.form.to_dict(flat=True))
 
         # Check pieces arg
-        pieces = args.get('pieces', 100)
+        try:
+            pieces = int(args.get('pieces', 100))
+        except ValueError as err:
+            abort(400)
         if pieces < 2:
             abort(400)
 
@@ -53,10 +56,10 @@ class SuggestImageView(MethodView):
         #if permission != PUBLIC:
         #    permission = PUBLIC
 
-        description = escape(args.get('description', ''))
+        description = escape(args.get('description', ''))[:1000]
 
         # Check link and validate
-        link = url_fix(args.get('link', ''))
+        link = url_fix(args.get('link', ''))[:1000]
 
         puzzle_id = uuid.uuid1().hex
 

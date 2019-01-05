@@ -33,12 +33,12 @@ suggested puzzle {{puzzle.puzzle_id}}
     <div class="pm-UploadForm-row">
       <label for="link">The website that the image is found on.</label>
       <div>
-        <input id="link-field" style="width:100%" type="text" name="link" value="{{ puzzle.link }}" placeholder="https://unsplash.com/photos/oTQVwECws8o">
+        <input id="link-field" style="width:100%" type="text" name="link" value="{{ puzzle.link }}" placeholder="https://unsplash.com/photos/oTQVwECws8o" maxlength="1000">
       </div>
     </div>
     <div class="pm-UploadForm-row">
       <label class="u-block" for="description">Description</label>
-      <textarea id="description" name="description">{{ puzzle.description }}</textarea>
+      <textarea id="description" name="description" maxlength="1000">{{ puzzle.description }}</textarea>
     </div>
     <div class="pm-UploadForm-row">
       <label for="upload_file">Select an image for the puzzle</label>

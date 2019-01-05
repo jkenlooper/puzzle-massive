@@ -24,7 +24,7 @@
     <div class="pm-UploadForm-row">
       <label for="link">The website that the image is found on.</label>
       <div>
-        <input id="link-field" style="width:100%" type="url" name="link" value="" placeholder="https://unsplash.com/photos/oTQVwECws8o">
+        <input id="link-field" style="width:100%" type="url" name="link" value="" placeholder="https://unsplash.com/photos/oTQVwECws8o" maxlength="1000">
         <p>
         <em>If the picture is from <a href="https://unsplash.com/">Unsplash</a> add the url like this: <b>https://unsplash.com/photos/oTQVwECws8o</b></em>
         </p>
@@ -41,7 +41,7 @@
     {% endif %}
     <div class="pm-UploadForm-row">
       <label for="description">Description</label>
-      <textarea id="description" name="description"></textarea>
+      <textarea id="description" name="description" maxlength="1000"></textarea>
     </div>
 
 
