@@ -437,7 +437,10 @@ cat <<HEREBEDEVELOPMENT
   #ssl_certificate /etc/nginx/ssl/server.crt;
   #ssl_certificate_key /etc/nginx/ssl/server.key;
 
-  server_name local-puzzle-massive;
+  # Only when in development should the site be accessible via internal ip.
+  # This makes it easier to test with other devices that may not be able to
+  # update a /etc/hosts file.
+  server_name local-puzzle-massive $INTERNALIP;
 HEREBEDEVELOPMENT
 
 else
