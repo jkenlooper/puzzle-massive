@@ -157,6 +157,16 @@ UNSPLASH_APPLICATION_ID = "${UNSPLASH_APPLICATION_ID}"
 UNSPLASH_APPLICATION_NAME = "${UNSPLASH_APPLICATION_NAME}"
 UNSPLASH_SECRET = "${UNSPLASH_SECRET}"
 
+# Link to send images for suggested puzzles.  This could even be a
+# "mailto:your-email@example.com", but I use a Dropbox file request link.
+# Why bother?  The actual puzzle 'submit' form does handle image uploads, but
+# I find it better to limit access to that form for new visitors.  This way
+# there is less spam and I don't have to delete so many submitted puzzles that
+# don't meet the criteria.  The suggest puzzle form doesn't create a puzzle like
+# the submit puzzle form does.
+# Leave this blank if the feature should be hidden.
+SUGGEST_IMAGE_LINK = "${SUGGEST_IMAGE_LINK}"
+
 SECURE_COOKIE_SECRET = "${SECURE_COOKIE_SECRET}"
 
 # Temporary until the puzzle contributor role exists
