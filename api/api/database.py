@@ -12,6 +12,8 @@ PUZZLE_CREATE_TABLE_LIST = (
         'create_table_bit_author.sql',
         'create_table_bit_expiration.sql',
         'create_table_bit_icon.sql',
+        'create_table_attribution.sql',
+        'create_table_license.sql',
         )
 
 

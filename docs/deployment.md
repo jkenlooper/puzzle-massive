@@ -153,7 +153,7 @@ by the public.
 
     ```bash
     sudo nginx -t &&
-    sudo nginx -s reload
+    sudo systemctl reload nginx
     ```
 
 Note that by default the production version of the nginx conf for Puzzle Massive

@@ -14,6 +14,8 @@
 # sudo ./bin/puzzlectl.sh start
 # sudo nginx -t && sudo nginx -s reload
 
+##Add s3 credentials
+
 ##Run the migrate puzzle file script which will take a long time because it is
 ##limited by unsplash API request limits.
 # nohup python api/api/jobs/migratePuzzleFile.py site.cfg &

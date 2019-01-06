@@ -5,11 +5,12 @@ import sys
 #from sqlalchemy import create_engine
 
 from api.tools import loadConfig
-from api.database import PUZZLE_CREATE_TABLE_LIST
+from api.database import PUZZLE_CREATE_TABLE_LIST, read_query_file
 
 SET_ANONYMOUS_PLAYER_BIT = """ -- ANONYMOUS_USER_ID
 UPDATE BitIcon SET user = 2 WHERE name = 'food-cookie';
 """
+
 
 if __name__ == "__main__":
 
@@ -19,6 +20,9 @@ if __name__ == "__main__":
 
     db_file = config['SQLITE_DATABASE_URI']
     db = sqlite3.connect(db_file)
+
+    application_name = config.get('UNSPLASH_APPLICATION_NAME')
+
     # TODO: Update to use sqlalchemy
     #db = create_engine(config['CHILL_DATABASE_URI'], echo=config['DEBUG'])
     cur = db.cursor()
@@ -29,12 +33,17 @@ if __name__ == "__main__":
     query_files.append('insert_initial_bit_author_and_anon_user.sql')
 
     for file_path in query_files:
-        print os.path.normpath(os.path.join(os.path.dirname(__file__), 'queries', file_path))
-        with open(os.path.normpath(os.path.join(os.path.dirname(__file__), 'queries', file_path)), 'r') as f:
-            for statement in f.read().split(';'):
-                cur.execute(statement)
-                db.commit()
+        query = read_query_file(file_path)
+        for statement in query.split(';'):
+            cur.execute(statement)
+            db.commit()
 
+    ## Set initial licenses
+    for statement in read_query_file('initial_licenses.sql').split(';'):
+        cur.execute(statement, {
+            'application_name': application_name
+        })
+        db.commit()
 
     ## Add each bit icon that is in the filesystem
     bits = []
