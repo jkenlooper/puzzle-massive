@@ -4,22 +4,21 @@ Beaker == 1.6.4
 Pillow == 3.3.0
 PyYAML == 3.10
 chill==0.4.0
-docopt
-gevent-websocket
+docopt==0.6.2
 html == 1.16
 piecemaker == 0.2.4
 progressbar == 2.3
-pycurl
-pysqlite
-redis
-rq
-websocket-client
-requests
-Flask-Sockets
+pycurl==7.43.0.2
+pysqlite==2.8.3
+redis == 2.10.6
+rq==0.12.0
+websocket-client==0.53.0
+requests==2.19.1
+Flask-Sockets==0.2.1
 simplejson == 3.1.3
 flask-secure-cookie == 0.1.2
 cairosvg==1.0.22
-pycairo
-setuptools_scm
+pycairo==1.17.1
+setuptools-scm==3.1.0
 boto3==1.9.47
 -e api/
