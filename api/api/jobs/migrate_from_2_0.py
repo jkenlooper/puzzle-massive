@@ -1,18 +1,24 @@
 "Migrates 2.0.1 to 2.1.0"
+# TODO: Improve by using docopt for documenting this script.
+# TODO: Create a Puzzle Massive database version so the migrate script can use
+# that when running.  It should update the version afterwards.
+# TODO: Create a migrate script runner?
 
-##Follow blue-green deployment (adjust for production)
-# make
-# sudo make install
-# cat chill-data.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
-# python api/api/create_database.py site.cfg;
+## Refer to docs/deployment.md
+
+##Follow blue-green deployment
+# ...
 
 ##Transfer old server data
 # ...
 
 ##Migrate database
 # python api/api/jobs/migrate_from_2_0.py site.cfg
-# sudo ./bin/puzzlectl.sh start
-# sudo nginx -t && sudo nginx -s reload
+
+##All done (mostly)
+# At this point the app can be started and accept traffic.  The rest of the
+# commands can be run in the background in order to slowly update data for
+# puzzle files.
 
 ##Add s3 credentials
 

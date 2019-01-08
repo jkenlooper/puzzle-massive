@@ -201,6 +201,7 @@ on the old server and copy all the data over to the new puzzle-green server.
       dev@puzzle-blue:/usr/local/src/puzzle-massive/$DBDUMPFILE \
       /usr/local/src/puzzle-massive/;
     zcat $DBDUMPFILE | sqlite3 /var/lib/puzzle-massive/sqlite3/db
+    cat chill-data.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
     ```
 
 4)  Copy the nginx logs (NGINXLOGDIR) found at: `/var/log/nginx/puzzle-massive/`
@@ -228,7 +229,14 @@ on the old server and copy all the data over to the new puzzle-green server.
       /srv/puzzle-massive/
     ```
 
-7)  Start the new server and switch traffic over to it.
+7)  Run any migrate scripts if required for this version bump.  Follow any other
+    instructions for the migrate script if needed.
+
+    ```bash
+    python api/api/jobs/migrate_from_2_x.py site.cfg
+    ```
+
+8)  Start the new server and switch traffic over to it.
 
     After the old server data has been copied over, then start up the new server
     apps with the 'puzzlectl.sh' script.  It is also good to monitor the logs to see
