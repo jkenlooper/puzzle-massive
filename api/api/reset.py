@@ -122,6 +122,7 @@ class PuzzlePiecesResetView(MethodView):
 
         # Remove all piece groups and status
         for piece in allPiecesExceptTopLeft:
+            # the piece status is removed here
             pipe.hdel('pc:{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), 'g', 's')
 
             # Remove these empty piece groups for each piece

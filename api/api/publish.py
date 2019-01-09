@@ -116,9 +116,9 @@ class PuzzlePieceTokenView(MethodView):
             'piece': piece
             }).fetchall()
         if not result:
-            # 400 if puzzle does not exist or piece is not movable
+            # 400 if puzzle does not exist or piece is not found
             err_msg = {
-                'msg': "piece can't be moved",
+                'msg': "piece can't be found",
                 'type': "immovable",
                 'expires': now + 5,
                 'timeout': 5

@@ -45,6 +45,7 @@ def convert(puzzle, db_file=None):
             'w': piece['w'],
             'h': piece['h'],
             'b': piece['b'],
+            # The 's' is not set from the database 'status'. That is handled later
             }
         pc.update(offsets)
         pipe.hmset('pc:{puzzle}:{id}'.format(**piece), pc)
@@ -59,7 +60,7 @@ def convert(puzzle, db_file=None):
         if pieceStatus != None:
             #print 'pieceStatus'
             #print pieceStatus
-            #print "immovable piece: {id}".format(**piece)
+            #print("immovable piece: {id}".format(**piece))
             pieceStatus = int(pieceStatus) # in case it's from the actual results of the query
             pipe.hset('pc:{puzzle}:{id}'.format(**piece), 's', pieceStatus)
             if pieceStatus == 1:

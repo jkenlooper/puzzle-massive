@@ -54,6 +54,7 @@ def transfer(puzzle):
         piece['y'] = pieceFromRedis.get('y')
         piece['r'] = pieceFromRedis.get('r')
         piece['parent'] = pieceFromRedis.get('g', None)
+        # status is reset here based on what was in redis
         piece['status'] = pieceFromRedis.get('s', None)
         cur.execute(query_update_piece, piece)
 
