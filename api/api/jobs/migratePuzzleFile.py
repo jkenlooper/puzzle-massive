@@ -245,7 +245,7 @@ def migrate_next_puzzle(puzzle):
             migrate_unsplash_puzzle(item)
             delay = MIGRATE_INTERVAL + random.randint(0, MAX_RANDOM_DELAY_SECONDS)
             print("sleeping for {} seconds".format(delay))
-            #time.sleep(delay)
+            time.sleep(delay)
 
 def migrate_all():
     """
