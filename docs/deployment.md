@@ -202,6 +202,7 @@ on the old server and copy all the data over to the new puzzle-green server.
       /usr/local/src/puzzle-massive/;
     zcat $DBDUMPFILE | sqlite3 /var/lib/puzzle-massive/sqlite3/db
     cat chill-data.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
+    # set the sqlite pragma journal_mode=wal
     ```
 
 4)  Copy the nginx logs (NGINXLOGDIR) found at: `/var/log/nginx/puzzle-massive/`
