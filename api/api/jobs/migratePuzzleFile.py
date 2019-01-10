@@ -15,6 +15,7 @@ import math
 import random
 from urlparse import urlparse
 import requests
+import logging
 
 import boto3
 import botocore
@@ -30,9 +31,6 @@ config = loadConfig(config_file)
 
 db_file = config['SQLITE_DATABASE_URI']
 db = sqlite3.connect(db_file)
-
-# set to not autocommit
-db.isolation_level = None
 
 unsplash_application_name = config['UNSPLASH_APPLICATION_NAME']
 unsplash_application_id = config['UNSPLASH_APPLICATION_ID']
@@ -58,7 +56,7 @@ s3 = boto3.client('s3')
 HOUR_IN_SECONDS = 60 * 60
 UNSPLASH_MAX_REQUESTS_PER_HOUR = 50
 MAX_RANDOM_DELAY_SECONDS = 60 * 13
-MIGRATE_INTERVAL = int(math.ceil(float(HOUR_IN_SECONDS) / float(UNSPLASH_MAX_REQUESTS_PER_HOUR)))
+MIGRATE_INTERVAL = HOUR_IN_SECONDS
 
 query_select_all_puzzles_to_migrate = read_query_file('_select-all-puzzles-to-migrate.sql')
 
@@ -88,7 +86,7 @@ def migrate_s3_puzzle(puzzle):
     Download the file from S3 and update the url in the puzzle file.
     """
     if not exists:
-        print("Bucket doesn't exist")
+        logging.info("Bucket doesn't exist")
         return
 
     cur = db.cursor()
@@ -100,7 +98,7 @@ def migrate_s3_puzzle(puzzle):
     file_name = os.path.basename(key)
     file_path = os.path.join(puzzle_dir, file_name)
     local_url = "/resources/{puzzle_id}/{file_name}".format(puzzle_id=puzzle_id, file_name=file_name)
-    print("Downloading {}".format(os.path.join(puzzle_dir, os.path.basename(key))))
+    logging.info("Downloading {}".format(os.path.join(puzzle_dir, os.path.basename(key))))
     s3.download_file(BUCKET_NAME, key, file_path)
 
     cur.execute(query_update_puzzle_file_url, {
@@ -108,15 +106,17 @@ def migrate_s3_puzzle(puzzle):
         'name': puzzle.get('name'),
         'url': local_url
         })
+    db.commit()
+    cur.close()
 
-    print("{puzzle} migrating s3 puzzle file {name} ({puzzle_id}): {url}".format(**puzzle))
+    logging.info("{puzzle} migrating s3 puzzle file {name} ({puzzle_id}): {url}".format(**puzzle))
 
 def migrate_unsplash_puzzle(puzzle):
     """
     Update description to match the requirments of using the unsplash photo.
     Update the hotlinked preview_full url with the utm params.
     """
-    print("{puzzle} migrating unsplash puzzle file {name}: {url}".format(**puzzle))
+    logging.info("{puzzle} migrating unsplash puzzle file {name}: {url}".format(**puzzle))
 
     r = requests.get('https://api.unsplash.com/photos/{}'.format(puzzle['unsplash_id']), params={
         'client_id': unsplash_application_id,
@@ -127,19 +127,19 @@ def migrate_unsplash_puzzle(puzzle):
     try:
         data = r.json()
     except ValueError as err:
-        print("ERROR reading json: {}".format(err))
+        logging.info("ERROR reading json: {}".format(err))
         return
 
     # handle error if the photo no longer exists.
     if data.get('errors'):
         for error in data['errors']:
-            print("ERROR: {}".format(error))
+            logging.info("ERROR: {}".format(error))
             if error == "Couldn't find Photo":
                 set_lost_unsplash_photo(puzzle)
             # This will also print out the error if the max requests have been reached.
         return
     if r.status_code >= 400:
-        print("ERROR: {status_code} {url}".format(status_code=r.status_code, url=r.url))
+        logging.info("ERROR: {status_code} {url}".format(status_code=r.status_code, url=r.url))
         return
 
     cur = db.cursor()
@@ -184,13 +184,16 @@ def migrate_unsplash_puzzle(puzzle):
         'url': preview_full_url
         })
 
+    db.commit()
+    cur.close()
+
 def set_lost_unsplash_photo(puzzle):
     """
     remove the link
     the unsplash license is irrevocable: https://unsplash.com/license
     create a new preview photo from the original?
     """
-    print("{puzzle} unsplash puzzle file {name} not found: {url}".format(**puzzle))
+    logging.info("{puzzle} unsplash puzzle file {name} not found: {url}".format(**puzzle))
 
     cur = db.cursor()
     description = "{} / originally found on Unsplash".format(puzzle['description'])
@@ -213,10 +216,12 @@ def set_lost_unsplash_photo(puzzle):
         'url': ''
         })
 
+    db.commit()
+    cur.close()
 
 def migrate_next_puzzle(puzzle):
     cur = db.cursor()
-    print("migrating puzzle {}".format(puzzle))
+    logging.info("migrating puzzle {}".format(puzzle))
 
     # Update any original that have an empty url
     cur.execute(query_update_puzzle_file_original_null_url, {
@@ -227,6 +232,8 @@ def migrate_next_puzzle(puzzle):
     cur.execute(query_update_puzzle_file_original_s3_url, {
         'puzzle': puzzle
     })
+
+    db.commit()
 
     result = cur.execute(query_select_puzzle_file_to_migrate_from_s3, {
         'puzzle': puzzle
@@ -243,29 +250,33 @@ def migrate_next_puzzle(puzzle):
         (result, col_names) = rowify(result, cur.description)
         for item in result:
             migrate_unsplash_puzzle(item)
-            delay = MIGRATE_INTERVAL + random.randint(0, MAX_RANDOM_DELAY_SECONDS)
-            print("sleeping for {} seconds".format(delay))
-            time.sleep(delay)
+
+    cur.close()
 
 def migrate_all():
     """
     Update all puzzle files that need to migrate their resources.
     """
-    confirm = raw_input("Commit the transaction? y/n\n")
     cur = db.cursor()
     result = cur.execute(query_select_all_puzzles_to_migrate).fetchall()
     if result:
-        print("migrating puzzles: {}".format(result))
+        logging.info("migrating puzzles: {}".format(result))
         for item in result:
-            cur.execute("begin");
             migrate_next_puzzle(item[0])
-            # while developing
-            if confirm == 'y':
-                cur.execute("commit");
-                print("transaction has been committed")
-            else:
-                cur.execute("rollback");
-                print("transaction has been rollbacked")
+        return False
+    else:
+        return True
 
 if __name__ == '__main__':
-    migrate_all()
+    logging.basicConfig(
+        level=logging.DEBUG,
+        filename="/var/log/puzzle-massive/migrate-puzzle-file.log",
+        filemode="a+",
+        format="%(asctime)-15s %(levelname)-8s %(message)s"
+    )
+    finished = False
+    while not finished:
+        finished = migrate_all()
+        delay = MIGRATE_INTERVAL + random.randint(0, MAX_RANDOM_DELAY_SECONDS)
+        logging.info("sleeping for {} seconds".format(delay))
+        time.sleep(delay)
