@@ -78,7 +78,7 @@ been uploaded to the home directory.
     make ENVIRONMENT=production && \
     sudo make ENVIRONMENT=production install;
     sudo nginx -t && \
-    sudo nginx -s reload;
+    sudo systemctl reload nginx;
     ```
 
 4)  Verify that stuff is working by monitoring the logs.
@@ -152,7 +152,7 @@ by the public.
 6)  Test and reload the nginx config.
 
     ```bash
-    sudo nginx -t &&
+    sudo nginx -t && \
     sudo systemctl reload nginx
     ```
 
@@ -202,7 +202,7 @@ on the old server and copy all the data over to the new puzzle-green server.
       /usr/local/src/puzzle-massive/;
     zcat $DBDUMPFILE | sqlite3 /var/lib/puzzle-massive/sqlite3/db
     cat chill-data.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
-    # set the sqlite pragma journal_mode=wal
+    echo 'pragma journal_mode=wal' | sqlite3 /var/lib/puzzle-massive/sqlite3/db
     ```
 
 4)  Copy the nginx logs (NGINXLOGDIR) found at: `/var/log/nginx/puzzle-massive/`

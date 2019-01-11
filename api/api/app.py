@@ -27,10 +27,16 @@ def get_db():
         db = g._database = connect_to_database()
         # Enable foreign key support so 'on update' and 'on delete' actions
         # will apply. This needs to be set for each db connection.
-        c = db.cursor()
-        c.execute('pragma foreign_keys = ON;')
+        cur = db.cursor()
+        cur.execute('pragma foreign_keys = ON;')
         db.commit()
-        c.close()
+
+        # Check that journal_mode is set to wal
+        result = cur.execute('pragma journal_mode;').fetchone()
+        if result[0] != 'wal':
+            raise sqlite3.IntegrityError('The pragma journal_mode is not set to wal.')
+
+        cur.close()
     return db
 
 db = LocalProxy(get_db)
