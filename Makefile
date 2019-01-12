@@ -120,7 +120,7 @@ stats/awstats-puzzle-massive-crontab: stats/awstats-puzzle-massive-crontab.sh
 
 .PHONY: puzzle-massive-$(TAG).tar.gz
 puzzle-massive-$(TAG).tar.gz: bin/dist.sh
-	./$< $@
+	./$< $(abspath $@)
 
 ######
 

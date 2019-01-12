@@ -90,8 +90,17 @@ virtualenv .;
 source bin/activate;
 make;
 cp chill-data.sql db.dump.sql;
+
+# Build the dist files for local development
+(
+cd puzzle-pieces;
+npm install;
+npm link;
+)
+npm link puzzle-pieces;
 npm install;
 npm run build;
+
 sudo make install;
 
 # As the dev user:
@@ -104,7 +113,9 @@ sudo nginx -s reload
 ```
 
 Set the credentials to use a compatible s3 setup with either the awscli or
-manually adding the credentials.
+manually adding the credentials.  At this time it is only for migrating old puzzle
+files.  New development isn't using any AWS services anymore as it isn't needed
+for the project at this time.
 ```
 # As the dev user:
 pip install awscli

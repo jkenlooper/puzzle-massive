@@ -6,7 +6,6 @@ api/puzzle-massive-janitor.service.sh
 api/requirements.txt
 api/setup.py
 bin/backup-db.sh
-bin/dist.sh
 bin/freeze.sh
 bin/init.sh
 bin/install.sh
