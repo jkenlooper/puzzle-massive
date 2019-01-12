@@ -11,7 +11,7 @@
     "pretest": "standard",
     "prebuild": "rm -rf dist; mkdir -p dist",
     "build": "make",
-    "prepublish": "npm run build",
+    "prepare": "npm run build",
     "debug": "npm run build",
     "preversion": "npm test && npm run build",
     "postversion": "npm pack && echo 'TODO: mv tar.gz file to ../ui-lib/'"
