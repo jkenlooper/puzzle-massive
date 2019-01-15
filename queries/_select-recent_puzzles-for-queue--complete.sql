@@ -9,6 +9,7 @@ JOIN PuzzleFile AS pf ON (pf.puzzle = p.id)
 WHERE pf.name == 'preview_full' -- PUBLIC
 AND p.permission = 0
 AND p.status == 3
+AND p.id > 413 -- old piece render cutoff. Any puzzles created before this should be put in rebuild queue
 AND strftime('%s', p.m_date) <= strftime('%s', 'now', '-7 days')
 GROUP BY p.id
 ORDER BY p.m_date desc

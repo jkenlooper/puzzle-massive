@@ -173,11 +173,14 @@
         <p>{{ msg }}</p>
         {% if puzzle.status == COMPLETED %}
         <div class="u-hidden" ng-class="{'u-hidden': !(SiteController.detailsReady && SiteController.userDetails.dots >= {{puzzle.pieces}})}">
-
+          {% if puzzle.id > 413 %} {# old piece render cutoff. Any puzzles created before this should be put in rebuild queue #}
             <form method="post" action="/newapi/puzzle-reset/">
               <input type="hidden" name="puzzle_id" value="{{puzzle.puzzle_id}}">
               <input type="submit" value="Redo the puzzle">
             </form>
+          {% else %}
+            <p>This jigsaw used an older render process and is blocked from being redone for now.</p>
+          {% endif %}
         </div>
         {% endif %}
         {% endif %}
