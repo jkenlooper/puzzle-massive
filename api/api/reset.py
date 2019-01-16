@@ -76,6 +76,11 @@ class PuzzlePiecesResetView(MethodView):
 
         cur.execute(query_update_user_points_for_resetting_puzzle, {'user': user, 'points': puzzleData['pieces']})
 
+        # TODO: push to the puzzle_rebuild queue
+        # job = current_app.rebuildqueue.enqueue_call(
+        #     func='api.jobs.rebuild.TODO', args=(puzzle,), result_ttl=0
+        # )
+
         # Load the piece data from sqlite on demand
         if not redisConnection.zscore('pcupdates', puzzle):
             # TODO: check redis memory usage and create cleanup job if it's past a threshold
