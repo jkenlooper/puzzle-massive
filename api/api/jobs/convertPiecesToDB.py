@@ -46,7 +46,6 @@ def transfer(puzzle):
     """
 
     # Save the redis data to the db
-    groups = set()
     for piece in all_pieces:
         pieceFromRedis = redisConnection.hgetall('pc:{puzzle}:{id}'.format(**piece))
 
@@ -58,10 +57,17 @@ def transfer(puzzle):
         piece['status'] = pieceFromRedis.get('s', None)
         cur.execute(query_update_piece, piece)
 
+    db.commit()
+
+    deletePieceDataFromRedis(puzzle, all_pieces)
+
+    cur.close()
+
+def deletePieceDataFromRedis(puzzle, all_pieces):
+    groups = set()
+    for piece in all_pieces:
         # Find all the groups for each piece
         groups.add(pieceFromRedis.get('g'))
-
-    db.commit()
 
     # Create a pipe for buffering commands and disable atomic transactions
     pipe = redisConnection.pipeline(transaction=False)
@@ -90,7 +96,6 @@ def transfer(puzzle):
     pipe.zrem('pcupdates', puzzle)
 
     pipe.execute()
-    cur.close()
 
 def transferOldest(target_memory):
 

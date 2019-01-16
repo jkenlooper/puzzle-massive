@@ -1,0 +1,105 @@
+from random import randint
+
+from flask import current_app, redirect, request, make_response, abort, request
+from flask.views import MethodView
+import redis
+
+from app import db
+from database import rowify
+from constants import REBUILD, COMPLETED
+from timeline import archive_and_clear
+from user import user_id_from_ip, user_not_banned
+from jobs.convertPiecesToRedis import convert
+from jobs.convertPiecesToDB import deletePieceDataFromRedis
+
+redisConnection = redis.from_url('redis://localhost:6379/0/')
+
+query_select_puzzle_for_puzzle_id_and_status = """
+select * from Puzzle where puzzle_id = :puzzle_id and status = :status
+and strftime('%s', m_date) <= strftime('%s', 'now', '-7 days');
+"""
+
+query_update_status_puzzle_for_puzzle_id = """
+update Puzzle set status = :status, m_date = '' where puzzle_id = :puzzle_id;
+"""
+
+query_select_top_left_piece = """
+select * from Piece where puzzle = :puzzle and row = 0 and col = 0;
+"""
+
+query_user_points_prereq = """
+select u.points from User as u
+join Puzzle as pz on (u.points >= :pieces)
+where u.id = :user and pz.id = :puzzle;
+"""
+
+query_update_user_points_for_resetting_puzzle = """
+update User set points = points - :points where id = :user;
+"""
+
+class PuzzlePiecesRebuildView(MethodView):
+    """
+    When a puzzle is complete allow rebuilding it.
+    """
+    decorators = [user_not_banned]
+
+    def post(self):
+        args = {}
+        if request.form:
+            args.update(request.form.to_dict(flat=True))
+
+        puzzle_id = args.get('puzzle_id')
+        if not puzzle_id:
+            abort(400)
+
+        # Check pieces arg
+        try:
+            pieces = int(args.get('pieces', 100))
+        except ValueError as err:
+            abort(400)
+        if pieces < 50:
+            abort(400)
+
+        # Verify user is logged in
+        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP'))
+        if user == None:
+            abort(403)
+
+        cur = db.cursor()
+        result = cur.execute(query_select_puzzle_for_puzzle_id_and_status, {'puzzle_id': puzzle_id, 'status': COMPLETED}).fetchall()
+        if not result:
+            # Puzzle does not exist or is not completed status.
+            # Reload the page as the status may have been changed.
+            return redirect('/chill/site/puzzle/{puzzle_id}/'.format(puzzle_id=puzzle_id))
+
+        (result, col_names) = rowify(result, cur.description)
+        puzzleData = result[0]
+        puzzle = puzzleData['id']
+
+        userHasEnoughPoints = cur.execute(query_user_points_prereq, {'user': user, 'puzzle': puzzle, 'pieces': pieces}).fetchall()
+        if not userHasEnoughPoints:
+            abort(400)
+
+        cur.execute(query_update_user_points_for_resetting_puzzle, {'user': user, 'points': pieces})
+
+        # Update puzzle status to be REBUILD
+        cur.execute(query_update_status_puzzle_for_puzzle_id, {'puzzle_id': puzzle_id, 'status': REBUILD})
+
+        # Delete any piece data from redis since it is no longer needed.
+        query_select_all_pieces_for_puzzle = """select * from Piece where (puzzle = :puzzle)"""
+        (all_pieces, col_names) = rowify(cur.execute(query_select_all_pieces_for_puzzle, {'puzzle': puzzle}).fetchall(), cur.description)
+        deletePieceDataFromRedis(puzzle, all_pieces)
+
+        # TODO: push to the puzzle_rebuild queue
+        # job = current_app.rebuildqueue.enqueue_call(
+        #     func='api.jobs.rebuild.TODO', args=(puzzle, pieces), result_ttl=0
+        # )
+
+        # TODO: archive the timeline
+        # timeline ui should only show when the puzzle is in 'complete' status.
+        archive_and_clear(puzzle)
+
+        cur.close()
+        db.commit()
+
+        return redirect('/chill/site/puzzle/{puzzle_id}/'.format(puzzle_id=puzzle_id))

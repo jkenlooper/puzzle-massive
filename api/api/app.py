@@ -116,7 +116,8 @@ def make_app(config=None, **kw):
     from api.publish import PuzzlePiecesMovePublishView, PuzzlePieceTokenView
     from api.pieces import PuzzlePiecesView
     #from subscribe import puzzle_updates
-    from api.reset import PuzzlePiecesResetView
+    #from api.reset import PuzzlePiecesResetView
+    from api.rebuild import PuzzlePiecesRebuildView
     from api.upload import PuzzleUploadView, AdminPuzzlePromoteSuggestedView
     from api.suggest_image import SuggestImageView
     from api.render import RenderPuzzlesView
@@ -149,8 +150,13 @@ def make_app(config=None, **kw):
 
     app.add_url_rule('/puzzle-pieces/<puzzle_id>/',
                      view_func=PuzzlePiecesView.as_view('puzzle-pieces'))
-    app.add_url_rule('/puzzle-reset/',
-                     view_func=PuzzlePiecesResetView.as_view('puzzle-reset'))
+    # The puzzle-reset route is removed for now in favor of using
+    # puzzle-rebuild. Keeping this here in case future updates need to implement
+    # a way of resetting a puzzle.
+    #app.add_url_rule('/puzzle-reset/',
+    #                 view_func=PuzzlePiecesResetView.as_view('puzzle-reset'))
+    app.add_url_rule('/puzzle-rebuild/',
+                     view_func=PuzzlePiecesRebuildView.as_view('puzzle-rebuild'))
     app.add_url_rule('/puzzle-upload/', view_func=PuzzleUploadView.as_view('puzzle-upload'))
     app.add_url_rule('/suggest-image/', view_func=SuggestImageView.as_view('suggest-image'))
 

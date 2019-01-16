@@ -10,6 +10,7 @@ BUGGY_UNLISTED   = 5   # Has issues with piece data
 NEEDS_MODERATION = 0   # puzzle image has just been uploaded and has yet to be seen
 FAILED_LICENSE   = -1  # image fails to show copyright information
 NO_ATTRIBUTION   = -2  # image doesn't show original author
+REBUILD          = -3  # puzzle has been placed in rebuild queue
 IN_RENDER_QUEUE  = -5  # puzzle image has been accepted and is now in render queue
 RENDERING        = -6  # puzzle is currently being rendered
 RENDERING_FAILED = -7  # puzzle had error with being rendered

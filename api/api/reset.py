@@ -39,7 +39,7 @@ update User set points = points - :points where id = :user;
 
 class PuzzlePiecesResetView(MethodView):
     """
-    When a puzzle is complete allow redoing it.
+    When a puzzle is complete allow resetting it.
     """
     decorators = [user_not_banned]
 
@@ -75,11 +75,6 @@ class PuzzlePiecesResetView(MethodView):
             abort(403)
 
         cur.execute(query_update_user_points_for_resetting_puzzle, {'user': user, 'points': puzzleData['pieces']})
-
-        # TODO: push to the puzzle_rebuild queue
-        # job = current_app.rebuildqueue.enqueue_call(
-        #     func='api.jobs.rebuild.TODO', args=(puzzle,), result_ttl=0
-        # )
 
         # Load the piece data from sqlite on demand
         if not redisConnection.zscore('pcupdates', puzzle):
