@@ -15,7 +15,7 @@ redisConnection = redis.from_url('redis://localhost:6379/0/')
 
 query_select_puzzle_for_puzzle_id_and_status = """
 select * from Puzzle where puzzle_id = :puzzle_id and status = :status
-AND p.id > 413 -- old piece render cutoff. Any puzzles created before this should be put in rebuild queue
+AND id > 413 -- old piece render cutoff. Any puzzles created before this should be put in rebuild queue
 and strftime('%s', m_date) <= strftime('%s', 'now', '-7 days');
 """
 
