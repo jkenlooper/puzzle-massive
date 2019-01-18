@@ -178,13 +178,13 @@
         {% else %}
         <p>{{ msg }}</p>
         {% if puzzle.status == COMPLETED %}
-        <div class="u-hidden" ng-class="{'u-hidden': !(SiteController.detailsReady && SiteController.userDetails.dots >= 50)}">
+        <div class="u-hidden" ng-class="{'u-hidden': !(SiteController.detailsReady && SiteController.userDetails.dots >= {{ config.MINIMUM_PIECE_COUNT }})}">
           <form method="post" action="/newapi/puzzle-rebuild/">
             <input type="hidden" name="puzzle_id" value="{{puzzle.puzzle_id}}">
             <label for="pieces">
               Piece Count
             </label>
-            <input type="number" min="50" max="{% raw %}{{SiteController.userDetails.dots < 50000 ? SiteController.userDetails.dots : 50000}}{% endraw %}" name="pieces" id="pieces" value="{{puzzle.pieces}}">
+            <input type="number" min="{{ config.MINIMUM_PIECE_COUNT }}" max="{% raw %}{{SiteController.userDetails.dots < 50000 ? SiteController.userDetails.dots : 50000}}{% endraw %}" name="pieces" id="pieces" value="{{puzzle.pieces}}">
             <input type="submit" value="Rebuild the puzzle">
           </form>
         </div>

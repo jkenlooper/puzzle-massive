@@ -6,9 +6,9 @@
       </label>
       <div>
         <input type="number"
-               min="9"
+               min="{{ config.MINIMUM_PIECE_COUNT }}"
                max="50000"
-               id="pieces" name="pieces" value="200">
+               id="pieces" name="pieces" value="{{ config.MINIMUM_PIECE_COUNT }}">
         <p>
         When the puzzle is being rendered try to create this many pieces from the image.
         </p>

@@ -30,10 +30,10 @@ class SuggestImageView(MethodView):
 
         # Check pieces arg
         try:
-            pieces = int(args.get('pieces', 100))
+            pieces = int(args.get('pieces', current_app.config['MINIMUM_PIECE_COUNT']))
         except ValueError as err:
             abort(400)
-        if pieces < 2:
+        if pieces < current_app.config['MINIMUM_PIECE_COUNT']:
             abort(400)
 
         # Check bg_color
