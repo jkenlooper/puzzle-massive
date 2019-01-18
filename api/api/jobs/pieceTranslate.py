@@ -17,6 +17,8 @@ MAX_RECENT_POINTS = 25
 MAX_KARMA = 25
 MIN_KARMA = (int(MAX_KARMA/2) * -1) # -12
 
+POINTS_CAP = 15000
+
 query_update_puzzle_m_date = """
 update Puzzle set m_date = datetime('now') where id = :puzzle and (m_date < datetime('now', '-58 seconds') or m_date isnull);
 """
@@ -27,7 +29,7 @@ insert into Timeline (puzzle, player, message, points, timestamp) values
 """
 
 query_update_user_points = """
-update User set points = points + :points, score = score + :score, m_date = datetime('now') where id = :id
+update User set points = min(points + :points, :POINTS_CAP), score = score + :score, m_date = datetime('now') where id = :id
 """
 
 
@@ -68,6 +70,24 @@ query_update_puzzle_status = """update Puzzle set status = :status where id = :p
 
 redisConnection = redis.from_url('redis://localhost:6379/0/')
 
+def get_earned_points(pieces):
+    earns = 7
+    if pieces < 200:
+        earns = 0
+    elif pieces < 400:
+        earns = 1
+    elif pieces < 800:
+        earns = 2
+    elif pieces < 1000:
+        earns = 3
+    elif pieces < 2000:
+        earns = 4
+    elif pieces < 3000:
+        earns = 5
+    elif pieces < 6000:
+        earns = 6
+    return earns
+
 def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     #if db_file:
     #    db = sqlite3.connect(db_file)
@@ -103,21 +123,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         if points != 0 and user != None:
             points_key = 'points:{user}'.format(user=user)
             pieces = int(puzzleData['pieces'])
-            earns = 7
-            if pieces < 200:
-                earns = 0
-            elif pieces < 400:
-                earns = 1
-            elif pieces < 800:
-                earns = 2
-            elif pieces < 1000:
-                earns = 3
-            elif pieces < 2000:
-                earns = 4
-            elif pieces < 3000:
-                earns = 5
-            elif pieces < 6000:
-                earns = 6
+            earns = get_earned_points(pieces)
 
             karma = int(redisConnection.get(karma_key))
             ## Max out recent points
@@ -142,7 +148,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
                         redisConnection.incr(points_key, amount=earns)
 
             # TODO: Optimize by using redis here for user points
-            db.execute(query_update_user_points, {'id':user, 'points':points, 'score':1})
+            db.execute(query_update_user_points, {'id':user, 'points':earns, 'score':1, 'POINTS_CAP':POINTS_CAP})
             db.execute(UPDATE_BIT_ICON_EXPIRATION, {'user':user})
 
         # TODO: Optimize by using redis for puzzle status
