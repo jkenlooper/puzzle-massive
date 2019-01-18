@@ -39,3 +39,39 @@ def get_public_karma_points(redisConnection, ip, user, puzzle):
     karma = min(100/2, int(redisConnection.get(karma_key)))
     karma = max(0, min(100/2, karma + recent_points))
     return karma
+
+def deletePieceDataFromRedis(redisConnection, puzzle, all_pieces):
+    groups = set()
+    for piece in all_pieces:
+        pieceFromRedis = redisConnection.hgetall('pc:{puzzle}:{id}'.format(**piece))
+        # Find all the groups for each piece
+        groups.add(pieceFromRedis.get('g'))
+
+    # Create a pipe for buffering commands and disable atomic transactions
+    pipe = redisConnection.pipeline(transaction=False)
+
+    # Delete all piece data
+    for piece in all_pieces:
+        pipe.delete('pc:{puzzle}:{id}'.format(**piece))
+
+    # Delete all groups
+    for g in groups:
+        pipe.delete('pcg:{puzzle}:{g}'.format(puzzle=puzzle, g=g))
+
+    # Delete Piece Fixed
+    pipe.delete('pcfixed:{puzzle}'.format(puzzle=puzzle))
+
+    # Delete Piece Stacked
+    pipe.delete('pcstacked:{puzzle}'.format(puzzle=puzzle))
+
+    # Delete Piece X
+    pipe.delete('pcx:{puzzle}'.format(puzzle=puzzle))
+
+    # Delete Piece Y
+    pipe.delete('pcy:{puzzle}'.format(puzzle=puzzle))
+
+    # Remove from the pcupdates sorted set
+    pipe.zrem('pcupdates', puzzle)
+
+    pipe.execute()
+

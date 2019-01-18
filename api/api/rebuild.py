@@ -5,12 +5,13 @@ from flask.views import MethodView
 import redis
 
 from app import db
+
 from database import rowify
 from constants import REBUILD, COMPLETED
 from timeline import archive_and_clear
 from user import user_id_from_ip, user_not_banned
 from jobs.convertPiecesToRedis import convert
-from jobs.convertPiecesToDB import deletePieceDataFromRedis
+from tools import deletePieceDataFromRedis
 
 redisConnection = redis.from_url('redis://localhost:6379/0/')
 
@@ -20,7 +21,7 @@ and strftime('%s', m_date) <= strftime('%s', 'now', '-7 days');
 """
 
 query_update_status_puzzle_for_puzzle_id = """
-update Puzzle set status = :status, m_date = '' where puzzle_id = :puzzle_id;
+update Puzzle set status = :status, m_date = '', pieces = :pieces where puzzle_id = :puzzle_id;
 """
 
 query_select_top_left_piece = """
@@ -82,21 +83,23 @@ class PuzzlePiecesRebuildView(MethodView):
 
         cur.execute(query_update_user_points_for_resetting_puzzle, {'user': user, 'points': pieces})
 
-        # Update puzzle status to be REBUILD
-        cur.execute(query_update_status_puzzle_for_puzzle_id, {'puzzle_id': puzzle_id, 'status': REBUILD})
+        # Update puzzle status to be REBUILD and change the piece count
+        cur.execute(query_update_status_puzzle_for_puzzle_id, {'puzzle_id': puzzle_id, 'status': REBUILD, 'pieces': pieces})
+        puzzleData['status'] = REBUILD
+        puzzleData['pieces'] = pieces
+
+        db.commit()
 
         # Delete any piece data from redis since it is no longer needed.
         query_select_all_pieces_for_puzzle = """select * from Piece where (puzzle = :puzzle)"""
         (all_pieces, col_names) = rowify(cur.execute(query_select_all_pieces_for_puzzle, {'puzzle': puzzle}).fetchall(), cur.description)
-        deletePieceDataFromRedis(puzzle, all_pieces)
+        deletePieceDataFromRedis(redisConnection, puzzle, all_pieces)
 
-        # TODO: push to the puzzle_rebuild queue
-        # job = current_app.rebuildqueue.enqueue_call(
-        #     func='api.jobs.rebuild.TODO', args=(puzzle, pieces), result_ttl=0
-        # )
+        job = current_app.createqueue.enqueue_call(
+            func='api.jobs.pieceRenderer.render', args=([puzzleData]), result_ttl=0,
+            timeout='24h'
+        )
 
-        # TODO: archive the timeline
-        # timeline ui should only show when the puzzle is in 'complete' status.
         archive_and_clear(puzzle)
 
         cur.close()

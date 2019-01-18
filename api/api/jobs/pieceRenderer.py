@@ -14,6 +14,7 @@ from api.database import rowify
 from api.tools import loadConfig
 from api.constants import (
         IN_RENDER_QUEUE,
+        REBUILD,
         RENDERING,
         RENDERING_FAILED,
         IN_QUEUE,
@@ -74,7 +75,7 @@ def handle_render_fail(job, exception, exception_func, traceback):
 def render(*args):
     """
     Render any puzzles that are in the render queue.
-    Each puzzle should exist in the Puzzle db with the IN_RENDER_QUEUE status
+    Each puzzle should exist in the Puzzle db with the IN_RENDER_QUEUE or REBUILD status
     and have an original.jpg file.
     """
     # Delete old piece properties if existing
@@ -85,9 +86,10 @@ def render(*args):
     for puzzle in args:
         print("Rendering puzzle: {puzzle_id}".format(**puzzle))
         # Set the status of the puzzle to rendering
-        cur.execute("update Puzzle set status = :RENDERING where status = :IN_RENDER_QUEUE and id = :id", {
+        cur.execute("update Puzzle set status = :RENDERING where status in (:IN_RENDER_QUEUE, :REBUILD) and id = :id", {
             'RENDERING': RENDERING,
             'IN_RENDER_QUEUE': IN_RENDER_QUEUE,
+            'REBUILD': REBUILD,
             'id': puzzle['id']
             })
         db.commit()
@@ -99,6 +101,9 @@ def render(*args):
         if not result:
             print("Puzzle {puzzle_id} no longer in rendering status; skipping.".format(**puzzle))
             continue
+
+        # If it is being rebuilt then delete all the other resources.
+        cleanup(puzzle['puzzle_id'], ['original.jpg'])
 
         scaled_sizes = [100,]
 
@@ -346,17 +351,18 @@ def render(*args):
         db.commit()
         cur.close()
 
-        cleanup(puzzle['puzzle_id'])
 
-def cleanup(puzzle_id):
-    whitelist = [
-        'original.jpg',
-        'preview_full.jpg',
-        'resized-original.jpg',
-        'scale-100',
-        'raster.css',
-        'raster.png'
-    ]
+        whitelist = [
+            'original.jpg',
+            'preview_full.jpg',
+            'resized-original.jpg',
+            'scale-100',
+            'raster.css',
+            'raster.png'
+        ]
+        cleanup(puzzle['puzzle_id'], whitelist)
+
+def cleanup(puzzle_id, whitelist):
     puzzle_dir = os.path.join(config['PUZZLE_RESOURCES'], puzzle_id)
     for (dirpath, dirnames, filenames) in os.walk(puzzle_dir, False):
         for filename in filenames:

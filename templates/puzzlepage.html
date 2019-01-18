@@ -28,6 +28,9 @@
 {# image doesn't show original author #}
 {% set NO_ATTRIBUTION   = -2  %}
 
+{# puzzle has been placed in rebuild queue #}
+{% set REBUILD          = -3 %}
+
 {# puzzle image has been accepted and is now in render queue #}
 {% set IN_RENDER_QUEUE  = -5  %}
 
@@ -111,6 +114,9 @@
   {% elif puzzle.status == NO_ATTRIBUTION %}
     {% set msg = "The image for this puzzle doesn't show the name of the author. This is required by the license." %}
     {% set title = "No Attribution" %}
+  {% elif puzzle.status == REBUILD %}
+    {% set msg = "The Puzzle is currently in the rebuild queue and will be rendered soon." %}
+    {% set title = "In Rebuild Queue" %}
   {% elif puzzle.status == IN_RENDER_QUEUE %}
     {% set msg = "The Puzzle is currently in the render queue.  This may take up to 24 hours as it only renders puzzles once a day." %}
     {% set title = "In Render Queue" %}

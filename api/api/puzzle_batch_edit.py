@@ -85,8 +85,8 @@ class AdminPuzzleBatchEditView(MethodView):
             query_update_status_for_puzzle_id = """
             -- IN_RENDER_QUEUE
             update Puzzle set status = -5
-            -- NEEDS_MODERATION
-            where status = 0
+            -- NEEDS_MODERATION, RENDERING, RENDERING_FAILED
+            where status in (0, -6, -7)
             and puzzle_id = :puzzle_id;
             """ #.format(IN_RENDER_QUEUE=IN_RENDER_QUEUE, NEEDS_MODERATION=NEEDS_MODERATION)
 

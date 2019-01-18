@@ -10,7 +10,6 @@ JOIN PuzzleFile AS pf ON (pf.puzzle = p.id)
 WHERE pf.name == 'preview_full' -- PUBLIC
 AND p.permission = 0
 AND p.status == 3 -- COMPLETE
-AND p.id > 413 -- old piece render cutoff. Any puzzles created before this should be put in rebuild queue
 AND not is_recent -- not recently complete
 -- Filter out the 10 most recent puzzles
 AND not (p.id in (select id from Puzzle where permission = 0 and status in (1, 2) and strftime('%s', m_date) >= strftime('%s', 'now', '-7 days') order by m_date desc limit 10))

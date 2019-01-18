@@ -14,7 +14,8 @@ import redis
 
 from api.app import db
 from api.database import rowify
-from api.tools import loadConfig
+from api.tools import loadConfig, deletePieceDataFromRedis
+
 
 # Get the args from the janitor and connect to the database
 config_file = sys.argv[1]
@@ -59,43 +60,9 @@ def transfer(puzzle):
 
     db.commit()
 
-    deletePieceDataFromRedis(puzzle, all_pieces)
+    deletePieceDataFromRedis(redisConnection, puzzle, all_pieces)
 
     cur.close()
-
-def deletePieceDataFromRedis(puzzle, all_pieces):
-    groups = set()
-    for piece in all_pieces:
-        # Find all the groups for each piece
-        groups.add(pieceFromRedis.get('g'))
-
-    # Create a pipe for buffering commands and disable atomic transactions
-    pipe = redisConnection.pipeline(transaction=False)
-
-    # Delete all piece data
-    for piece in all_pieces:
-        pipe.delete('pc:{puzzle}:{id}'.format(**piece))
-
-    # Delete all groups
-    for g in groups:
-        pipe.delete('pcg:{puzzle}:{g}'.format(puzzle=puzzle, g=g))
-
-    # Delete Piece Fixed
-    pipe.delete('pcfixed:{puzzle}'.format(puzzle=puzzle))
-
-    # Delete Piece Stacked
-    pipe.delete('pcstacked:{puzzle}'.format(puzzle=puzzle))
-
-    # Delete Piece X
-    pipe.delete('pcx:{puzzle}'.format(puzzle=puzzle))
-
-    # Delete Piece Y
-    pipe.delete('pcy:{puzzle}'.format(puzzle=puzzle))
-
-    # Remove from the pcupdates sorted set
-    pipe.zrem('pcupdates', puzzle)
-
-    pipe.execute()
 
 def transferOldest(target_memory):
 

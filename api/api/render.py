@@ -5,10 +5,11 @@ from api.app import db
 from database import fetch_query_string, rowify
 from api.constants import (
         IN_RENDER_QUEUE,
+        REBUILD
         )
 
 query_select_puzzles_in_render_queue = """
-select * from Puzzle where status = :status order by queue;
+select * from Puzzle where status in (:IN_RENDER_QUEUE, :REBUILD) order by queue;
 """
 
 
@@ -24,7 +25,8 @@ class RenderPuzzlesView(MethodView):
 
         cur = db.cursor()
         puzzles = rowify(cur.execute(query_select_puzzles_in_render_queue,
-            {'status': IN_RENDER_QUEUE})
+            {'IN_RENDER_QUEUE': IN_RENDER_QUEUE,
+             'REBUILD': REBUILD})
             .fetchall(), cur.description)[0]
         print("found {0} puzzles to render".format(len(puzzles)))
 
