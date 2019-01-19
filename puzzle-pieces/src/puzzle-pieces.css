@@ -44,6 +44,7 @@
 
 .p.is-up::before,
 .p.is-down::before {
+  pointer-events: none;
   display: flex;
   align-items: center;
   justify-content: space-around;
