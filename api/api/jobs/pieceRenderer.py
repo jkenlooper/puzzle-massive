@@ -3,6 +3,7 @@ import json
 import sys
 from random import randint
 import subprocess
+import time
 
 import sqlite3
 import redis
@@ -346,7 +347,7 @@ def render(*args):
         cur.execute(insert_puzzle_file, {
             'puzzle': puzzle['id'],
             'name': 'pzz',
-            'url': '/resources/{puzzle_id}/scale-100/raster.css'.format(**puzzle)
+            'url': '/resources/{puzzle_id}/scale-100/raster.css?ts={timestamp}'.format(puzzle_id=puzzle['puzzle_id'], timestamp=int(time.time()))
             })
         db.commit()
         cur.close()
