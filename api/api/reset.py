@@ -15,7 +15,7 @@ redisConnection = redis.from_url('redis://localhost:6379/0/')
 
 query_select_puzzle_for_puzzle_id_and_status = """
 select * from Puzzle where puzzle_id = :puzzle_id and status = :status
-and strftime('%s', m_date) <= strftime('%s', 'now', '-7 days');
+and strftime('%s', m_date) <= strftime('%s', 'now', '-7 hours');
 """
 
 query_update_status_puzzle_for_puzzle_id = """

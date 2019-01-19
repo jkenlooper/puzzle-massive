@@ -11,7 +11,7 @@ WHERE pf.name == 'preview_full' -- PUBLIC
 AND p.permission = 0
 -- ACTIVE, IN_QUEUE
 AND p.status IN (1, 2)
--- AND strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 days')
+AND strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 hours')
 GROUP BY p.id
 ORDER BY p.m_date desc
 LIMIT 10

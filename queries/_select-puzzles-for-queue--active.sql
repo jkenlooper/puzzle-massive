@@ -12,7 +12,7 @@ AND p.permission = 0
 -- ACTIVE, IN_QUEUE
 AND p.status IN (1, 2)
 -- Filter out the 10 most recent puzzles
-AND not (p.id in (select id from Puzzle where permission = 0 and status in (1, 2) and strftime('%s', m_date) >= strftime('%s', 'now', '-7 days') order by m_date desc limit 10))
+AND not (p.id in (select id from Puzzle where permission = 0 and status in (1, 2) and strftime('%s', m_date) >= strftime('%s', 'now', '-7 hours') order by m_date desc ))
 GROUP BY p.id
 ORDER BY p.pieces asc
 -- Can't limit or offset since it varies what is actually visible to each player depending on dots

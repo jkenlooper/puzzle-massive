@@ -9,7 +9,7 @@ JOIN PuzzleFile AS pf ON (pf.puzzle = p.id)
 WHERE pf.name == 'preview_full' -- PUBLIC
 AND p.permission = 0
 AND p.status == 3
-AND strftime('%s', p.m_date) <= strftime('%s', 'now', '-7 days')
+AND strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 hours')
 GROUP BY p.id
 ORDER BY p.m_date desc
 LIMIT 10

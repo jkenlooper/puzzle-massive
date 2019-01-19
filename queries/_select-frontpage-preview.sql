@@ -5,8 +5,8 @@ SELECT p.id, pf.name, pf.url, p.puzzle_id, p.pieces, p.table_width, p.table_heig
 round((min(CAST(p.table_width AS float), CAST(p.table_height AS float)) / max(CAST(p.table_width AS float), CAST(p.table_height AS float))) * 384) AS short,
 384.0 AS long,
 
-strftime('%Y-%m-%d %H:%M', p.m_date, '+7 days') as redo_date,
-strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 days') as is_recent,
+strftime('%Y-%m-%d %H:%M', p.m_date, '+7 hours') as redo_date,
+strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 hours') as is_recent,
 
 strftime('%s','now') - strftime('%s', p.m_date) as seconds_from_now
  FROM Puzzle AS p
