@@ -88,8 +88,6 @@ def make_app(config=None, **kw):
     app.queue = Queue('puzzle_updates', connection=redisConnection)
     app.cleanupqueue = Queue('puzzle_cleanup', connection=redisConnection)
     app.createqueue = Queue('puzzle_create', connection=redisConnection)
-    # TODO: add puzzle_rebuild
-    #app.rebuildqueue = Queue('puzzle_rebuild', connection=redisConnection)
 
     @app.teardown_appcontext
     def teardown_db(exception):

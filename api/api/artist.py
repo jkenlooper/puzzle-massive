@@ -7,7 +7,6 @@ from rq import Worker, Queue, Connection
 from api.jobs import pieceRenderer
 
 listen = ['puzzle_create']
-# TODO: append 'puzzle_rebuild' to the listen list
 
 # TODO: use app config REDIS_URI
 redisConnection = redis.from_url('redis://localhost:6379/0/')
