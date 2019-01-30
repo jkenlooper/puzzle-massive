@@ -40,7 +40,7 @@
     "pretest": "standard",
     "prebuild": "rm -rf dist",
     "build": "webpack --mode production",
-    "debug": "webpack --debug --devtool source-map --output-pathinfo",
+    "debug": "webpack --mode=development --debug --devtool source-map --output-pathinfo",
     "watch": "npm run debug -- --watch",
     "preversion": "npm test && npm run build"
   },
