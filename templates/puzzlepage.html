@@ -178,13 +178,26 @@
         {% else %}
         <p>{{ msg }}</p>
         {% if puzzle.status == COMPLETED %}
+          {% if config.MINIMUM_PIECE_COUNT > puzzle.pieces %}
+            {% set piece_count = config.MINIMUM_PIECE_COUNT %}
+          {% else %}
+            {% set piece_count = puzzle.pieces %}
+          {% endif %}
         <div class="u-hidden" ng-class="{'u-hidden': !(SiteController.detailsReady && SiteController.userDetails.dots >= {{ config.MINIMUM_PIECE_COUNT }})}">
+          <p>
+            You have earned
+            <strong ng-bind="SiteController.userDetails.dots"></strong>
+            dots by putting together puzzles.  Rebuilding puzzles will decrease
+            the number of dots depending on the piece count selected up to
+            {{ config.MAX_POINT_COST_FOR_REBUILDING }}
+            dots.
+          </p>
           <form method="post" action="/newapi/puzzle-rebuild/">
             <input type="hidden" name="puzzle_id" value="{{puzzle.puzzle_id}}">
             <label for="pieces">
               Piece Count
-            </label>
-            <input type="number" min="{{ config.MINIMUM_PIECE_COUNT }}" max="{% raw %}{{SiteController.userDetails.dots < 50000 ? SiteController.userDetails.dots : 50000}}{% endraw %}" name="pieces" id="pieces" value="{{puzzle.pieces}}">
+            </label>{% raw %}{{pieces}}{% endraw %}
+            <input type="number" min="{{ config.MINIMUM_PIECE_COUNT }}" max="{% raw %}{{SiteController.userDetails.dots < 50000 ? SiteController.userDetails.dots : 50000}}{% endraw %}" name="pieces" id="pieces" value="{{ piece_count }}">
             <input type="submit" value="Rebuild the puzzle">
           </form>
         </div>

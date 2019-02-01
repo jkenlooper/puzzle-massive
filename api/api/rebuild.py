@@ -1,8 +1,10 @@
+import os
 from random import randint
 
 from flask import current_app, redirect, request, make_response, abort, request
 from flask.views import MethodView
 import redis
+from PIL import Image
 
 from app import db
 
@@ -37,6 +39,9 @@ where u.id = :user and pz.id = :puzzle;
 query_update_user_points_for_resetting_puzzle = """
 update User set points = points - :points where id = :user;
 """
+
+# From pieceRenderer
+MIN_PIECE_SIZE = 64
 
 class PuzzlePiecesRebuildView(MethodView):
     """
@@ -81,7 +86,21 @@ class PuzzlePiecesRebuildView(MethodView):
         if not userHasEnoughPoints:
             abort(400)
 
-        cur.execute(query_update_user_points_for_resetting_puzzle, {'user': user, 'points': pieces})
+        # Get the adjusted piece count depending on the size of the original and
+        # the minimum piece size.
+        # TODO: Store the width and height of the original in the Puzzle
+        # database table.
+        puzzle_dir = os.path.join(current_app.config['PUZZLE_RESOURCES'], puzzle_id)
+        imagefile = os.path.join(puzzle_dir, 'original.jpg')
+        im = Image.open(imagefile)
+        (width, height) = im.size
+        im.close()
+        max_pieces_that_will_fit = int((width/MIN_PIECE_SIZE)*(height/MIN_PIECE_SIZE))
+
+        # The user points for rebuilding the puzzle is decreased by the piece
+        # count for the puzzle. Use at least 200 points for smaller puzzles.
+        point_cost = max(current_app.config['MINIMUM_PIECE_COUNT'], min(max_pieces_that_will_fit, pieces, current_app.config['MAX_POINT_COST_FOR_REBUILDING']))
+        cur.execute(query_update_user_points_for_resetting_puzzle, {'user': user, 'points': point_cost})
 
         # Update puzzle status to be REBUILD and change the piece count
         cur.execute(query_update_status_puzzle_for_puzzle_id, {'puzzle_id': puzzle_id, 'status': REBUILD, 'pieces': pieces})
