@@ -252,6 +252,10 @@
 
         <pm-karma-status></pm-karma-status>
 
+        <pm-hash-color background-color="{{ puzzle.bg_color }}" vertical="{% if scale != 0 %}true{% else %}false{% endif %}">
+            <svg class="pm-Puzzlepage-icon"><use xlink:href="#paint-can-sprite"/></svg>
+        </pm-hash-color>
+
       </div>
       <div class="pm-Puzzlepage-gridB2 {{Puzzlepage_gridB2_modifier}}">
         <div id="puzzlepage-main" class="pm-Puzzlepage-main" style="background-color: {{ puzzle.bg_color }};">
@@ -304,9 +308,6 @@
     <div class="pm-Puzzlepage-description" id="puzzlepage-description">
       <div class="pm-Puzzlepage-descriptionHeader">
       <h2>{{ puzzle.pieces }} pieces</h2>
-        <pm-hash-color background-color="{{ puzzle.bg_color }}">
-            <svg class="pm-Puzzlepage-icon"><use xlink:href="#paint-can-sprite"/></svg>
-        </pm-hash-color>
         <label class="pm-Puzzlepage-descriptionClose" for="puzzlepage-description-toggle">
           &times;
         </label>

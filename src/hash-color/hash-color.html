@@ -1,6 +1,12 @@
-<span offng-style="{'background-color': $ctrl.backgroundColor}">
+<span class="pm-HashColor"
+      ng-class="{
+        'pm-HashColor--vertical': $ctrl.vertical
+      }"
+    ng-style="{'background-color': $ctrl.backgroundColor}">
   <label for="hash-color-background-color" ng-transclude>
   </label>
-  <input ng-if="$ctrl.hasInputtypesColor" type="color" id="hash-color-background-color" ng-change="$ctrl.handleChange()" ng-model="$ctrl.backgroundColor">
-  <input ng-if="!$ctrl.hasInputtypesColor" type="text" class="jscolor {hash:true}" id="hash-color-background-color" ng-change="$ctrl.handleChange()" ng-model="$ctrl.backgroundColor">
+  <span class="pm-HashColor-field">
+  <input ng-if="$ctrl.hasInputtypesColor" type="color" class="pm-HashColor-inputColor" id="hash-color-background-color" ng-change="$ctrl.handleChange()" ng-model="$ctrl.backgroundColor">
+  <input ng-if="!$ctrl.hasInputtypesColor" type="text" class="pm-HashColor-inputText jscolor {hash:true}" id="hash-color-background-color" ng-change="$ctrl.handleChange()" ng-model="$ctrl.backgroundColor">
+  </span>
 </span>

@@ -1,4 +1,5 @@
 import template from './hash-color.html'
+import './hash-color.css'
 import HashColorController from './hash-color.controller.js'
 
 export default hashColorDirective
@@ -8,7 +9,8 @@ function hashColorDirective () {
     restrict: 'E',
     template: template,
     scope: {
-      'backgroundColor': '@'
+      'backgroundColor': '@',
+      'vertical': '<'
     },
     controller: HashColorController,
     controllerAs: '$ctrl',

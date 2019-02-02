@@ -1,0 +1,37 @@
+.pm-HashColor {
+  display: block;
+}
+
+.pm-HashColor--vertical {
+  overflow: hidden;
+  position: relative;
+}
+
+.pm-HashColor-field {
+}
+.pm-HashColor--vertical .pm-HashColor-field {
+  transform: translateX(100%) rotate(90deg);
+  transform-origin: top left;
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  opacity: 0;
+}
+.pm-HashColor--vertical .pm-HashColor-field:focus {
+  overflow: visible;
+  opacity: 1;
+}
+
+.pm-HashColor-inputColor {
+}
+
+.pm-HashColor-inputText {
+  width: 6em;
+}
+
+/* hacky way of targeting the jscolor wrap element that is appended to body */
+.on-module-puzzlepage > div[style*="z-index: 1000"][style*="clear: both"] {
+  /* Prevent the overflow off the page when opened on the scaled puzzle page */
+  transform: translateX(-100%);
+}

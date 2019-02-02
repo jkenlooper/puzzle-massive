@@ -61,6 +61,8 @@
 
 .pm-Puzzlepage-icon {
   fill: currentColor;
+  stroke: black;
+  stroke-width: 1px;
   opacity: 1;
   z-index: 2;
   cursor: pointer;
