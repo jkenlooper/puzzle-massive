@@ -2,8 +2,8 @@ SELECT p.id, pf.name, pf.url, p.puzzle_id, p.pieces, p.table_width, p.table_heig
 -- Find the short and long dimensions of the preview img by checking the table_width
 -- and table_height since the img width and height is not currently stored.
 round((min(CAST(p.table_width AS float), CAST(p.table_height AS float)) / max(CAST(p.table_width AS float), CAST(p.table_height AS float))) * 124) AS short,
-124.0 AS long
---strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 days') as is_recent
+124.0 AS long,
+strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 hours') as is_recent
 
 FROM Puzzle AS p
 JOIN PuzzleFile AS pf ON (pf.puzzle = p.id)

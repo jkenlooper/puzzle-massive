@@ -5,9 +5,8 @@
       {% set width = item.long if item.table_width > item.table_height else item.short %}
       {% set height = item.short if item.table_width > item.table_height else item.long %}
       {% set src = item.url %}
-
       <a href="/chill{{ url_for('.page_uri', uri='front/{0}'.format(item.puzzle_id)) }}">
-          {% if item.status == 3 -%}
+          {% if item.status == 3 and not item.is_recent -%}
         <div class="pm-DotRequire pm-DotRequire--blur is-dotted" pm-dot-require="{{item.pieces}}">
          {%- endif %}
       <div class="pm-Queue-listitem" role="listitem">
@@ -18,7 +17,7 @@
         <small class="u-block">Completed</small>
         {% endif %}
       </span>
-        {% if item.status == 3 -%}
+       {% if item.status == 3 and not item.is_recent -%}
         </div>
        {%- endif %}
     </a>
