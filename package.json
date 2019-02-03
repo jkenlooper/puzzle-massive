@@ -49,6 +49,8 @@
       "node_modules/*",
       "puzzle-pieces/src/*-head.js",
       "puzzle-pieces/src/*-foot.js",
+      "puzzle-pieces/src/*.tmp.js",
+      "puzzle-pieces/node_modules/*",
       "dist",
       "webpack.config.js"
     ]
