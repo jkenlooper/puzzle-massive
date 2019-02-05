@@ -18,7 +18,12 @@
     "babel-loader": "^7.0.0",
     "babel-preset-env": "^1.7.0",
     "css-loader": "^1.0.1",
-    "css-to-string-loader": "^0.1.1",
+    "eslint": "^5.13.0",
+    "eslint-config-prettier": "^4.0.0",
+    "eslint-loader": "^2.1.2",
+    "eslint-plugin-import": "^2.16.0",
+    "eslint-plugin-node": "^8.0.1",
+    "eslint-plugin-promise": "^4.0.1",
     "file-loader": "^2.0.0",
     "mini-css-extract-plugin": "^0.4.5",
     "optimize-css-assets-webpack-plugin": "^5.0.1",
@@ -26,34 +31,22 @@
     "postcss-import": "^12.0.1",
     "postcss-loader": "^3.0.0",
     "postcss-preset-env": "^6.5.0",
+    "prettier": "1.16.4",
     "raw-loader": "^0.5.1",
-    "standard": "^8.4.0",
     "style-loader": "^0.23.1",
     "svg-sprite-loader": "4.1.1",
     "svgo": "^1.1.1",
     "svgo-loader": "^2.2.0",
     "uglifyjs-webpack-plugin": "^2.0.1",
-    "webpack": "^4.29.0",
-    "webpack-cli": "^3.1.1"
+    "webpack": "^4.29.1",
+    "webpack-cli": "^3.2.3"
   },
   "scripts": {
-    "pretest": "standard",
     "prebuild": "rm -rf dist",
     "build": "webpack --mode production",
     "debug": "webpack --mode=development --debug --devtool source-map --output-pathinfo",
     "watch": "npm run debug -- --watch",
     "preversion": "npm test && npm run build"
-  },
-  "standard": {
-    "ignore": [
-      "node_modules/*",
-      "puzzle-pieces/src/*-head.js",
-      "puzzle-pieces/src/*-foot.js",
-      "puzzle-pieces/src/*.tmp.js",
-      "puzzle-pieces/node_modules/*",
-      "dist",
-      "webpack.config.js"
-    ]
   },
   "dependencies": {
     "@webcomponents/custom-elements": "~1.0.9",

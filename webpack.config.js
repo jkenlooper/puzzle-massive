@@ -55,14 +55,18 @@ config.module = {
     {
       test: /\.js$/,
       exclude: /node_modules|\.min\.js/,
-      use: {
+      use: [{
         loader: 'babel-loader',
         options: {
           presets: [
             'env'
           ]
         }
-      }
+      },
+        {
+          loader: 'eslint-loader'
+        }
+      ]
     },
     {
       test: /fonts\/.*\.(eot|svg|ttf|woff)$/,
