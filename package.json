@@ -34,6 +34,9 @@
     "prettier": "1.16.4",
     "raw-loader": "^0.5.1",
     "style-loader": "^0.23.1",
+    "stylelint": "^9.10.1",
+    "stylelint-config-prettier": "^4.0.0",
+    "stylelint-config-recommended": "^2.1.0",
     "svg-sprite-loader": "4.1.1",
     "svgo": "^1.1.1",
     "svgo-loader": "^2.2.0",
@@ -42,6 +45,7 @@
     "webpack-cli": "^3.2.3"
   },
   "scripts": {
+    "pretest": "stylelint \"src/**/*.css\"",
     "prebuild": "rm -rf dist",
     "build": "webpack --mode production",
     "debug": "webpack --mode=development --debug --devtool source-map --output-pathinfo",
