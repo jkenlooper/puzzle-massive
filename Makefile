@@ -57,8 +57,8 @@ objects := site.cfg web/puzzle-massive.conf stats/awstats.puzzle.massive.xyz.con
 
 #####
 
-web/dhparam.pem:
-	openssl dhparam -out $@ 2048
+#web/dhparam.pem:
+	#openssl dhparam -out $@ 2048
 
 bin/chill: chill/requirements.txt requirements.txt
 	pip install -r $<
@@ -106,11 +106,11 @@ site.cfg: site.cfg.sh $(PORTREGISTRY)
 web/puzzle-massive.conf: web/puzzle-massive.conf.sh $(PORTREGISTRY)
 	./$< $(ENVIRONMENT) $(SRVDIR) $(NGINXLOGDIR) $(PORTREGISTRY) $(INTERNALIP) > $@
 
-ifeq ($(ENVIRONMENT),production)
-# Only create the dhparam.pem if needed.
-objects += web/dhparam.pem
-web/puzzle-massive.conf: web/dhparam.pem
-endif
+#ifeq ($(ENVIRONMENT),production)
+## Only create the dhparam.pem if needed.
+#objects += web/dhparam.pem
+#web/puzzle-massive.conf: web/dhparam.pem
+#endif
 
 stats/awstats.puzzle.massive.xyz.conf: stats/awstats.puzzle.massive.xyz.conf.sh
 	./$< $(NGINXLOGDIR) > $@
