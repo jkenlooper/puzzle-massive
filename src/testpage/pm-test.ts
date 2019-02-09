@@ -1,4 +1,5 @@
 import { LitElement, html, css, customElement, property } from "lit-element";
+import "./pm-test.css";
 
 // This decorator defines the element.
 @customElement("pm-test")
@@ -10,14 +11,14 @@ export class PmTest extends LitElement {
 
   static styles = css`
     span {
-      color: green;
+      color: var(--pm-test-color);
     }
   `;
 
   // Render element DOM by returning a `lit-html` template.
   render() {
     return html`
-      Web Components are <span>${this.mood}</span>!
+      <div class="pm-test">Web Components are <span>${this.mood}</span>!</div>
     `;
   }
 }

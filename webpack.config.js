@@ -34,20 +34,21 @@ config.entry = srcEntry
  */
 config.output = {
   path: path.resolve(__dirname, 'dist'),
-  filename: '[name].bundle.js'
+  filename: '[name].bundle.js',
 }
 
 config.resolve = {
-  modules: ['src', 'node_modules']
+  extensions: ['.ts', '.js'],
+  modules: ['src', 'node_modules'],
 }
 
 config.externals = {
   'webcomponents.js': 'WebComponents',
-  'angular': 'angular',
-  'lazysizes': 'lazysizes',
+  angular: 'angular',
+  lazysizes: 'lazysizes',
   'slab-massive.js': 'slabMassive',
-  'hammerjs': 'Hammer',
-  'reqwest': 'reqwest'
+  hammerjs: 'Hammer',
+  reqwest: 'reqwest',
 }
 
 config.module = {
@@ -56,48 +57,47 @@ config.module = {
       test: /\.ts$/,
       exclude: /node_modules/,
       use: {
-        loader: 'ts-loader'
-      }
+        loader: 'ts-loader',
+      },
     },
     {
       test: /\.js$/,
       exclude: /node_modules|\.min\.js/,
-      use: [{
-        loader: 'babel-loader',
-        options: {
-          presets: [
-            'env'
-          ]
-        }
-      },
+      use: [
         {
-          loader: 'eslint-loader'
-        }
-      ]
+          loader: 'babel-loader',
+          options: {
+            presets: ['env'],
+          },
+        },
+        {
+          loader: 'eslint-loader',
+        },
+      ],
     },
     {
       test: /fonts\/.*\.(eot|svg|ttf|woff)$/,
       use: [
         {
           loader: 'file-loader',
-          options: { name: '[name].[ext]' }
-        }
+          options: { name: '[name].[ext]' },
+        },
       ],
-      exclude: /node_modules/
+      exclude: /node_modules/,
     },
     {
       test: /\.(png|gif|jpg)$/,
       use: [
         {
           loader: 'file-loader',
-          options: { name: '[name].[ext]' }
-        }
+          options: { name: '[name].[ext]' },
+        },
       ],
-      exclude: /node_modules/
+      exclude: /node_modules/,
     },
     {
       test: /.*sprite\.svg$/,
-      loader: 'svg-sprite-loader'
+      loader: 'svg-sprite-loader',
     },
     {
       test: /\.css$/,
@@ -106,17 +106,17 @@ config.module = {
         MiniCssExtractPlugin.loader,
         'css-loader',
         {
-          'loader': 'postcss-loader',
-          'options': {
-            'ident': 'postcss',
-            'plugins': (loader) => [
+          loader: 'postcss-loader',
+          options: {
+            ident: 'postcss',
+            plugins: (loader) => [
               postcssImport(),
               postcssCustomMedia(),
-              postcssPresetEnv()
-            ]
-          }
-        }
-      ]
+              postcssPresetEnv(),
+            ],
+          },
+        },
+      ],
     },
     {
       test: /\.svg$/,
@@ -124,23 +124,21 @@ config.module = {
         {
           loader: 'file-loader',
           options: {
-            name: '[name].[ext]'
-          }
+            name: '[name].[ext]',
+          },
         },
-        'svgo-loader'
+        'svgo-loader',
       ],
-      exclude: /(node_modules|fonts|.*sprite\.svg)/
+      exclude: /(node_modules|fonts|.*sprite\.svg)/,
     },
     {
       test: /\.html$/,
-      use: 'raw-loader'
-    }
-  ]
+      use: 'raw-loader',
+    },
+  ],
 }
 
-config.plugins = [
-  new MiniCssExtractPlugin({filename: '[name].css'})
-]
+config.plugins = [new MiniCssExtractPlugin({ filename: '[name].css' })]
 
 config.stats = 'minimal'
 
@@ -149,10 +147,10 @@ config.optimization = {
     new UglifyJsPlugin({
       cache: true,
       parallel: true,
-      sourceMap: true // set to true if you want JS source maps
+      sourceMap: true, // set to true if you want JS source maps
     }),
-    new OptimizeCSSAssetsPlugin({})
-  ]
+    new OptimizeCSSAssetsPlugin({}),
+  ],
 }
 
 module.exports = (env, argv) => {
@@ -161,7 +159,7 @@ module.exports = (env, argv) => {
     config.watch = true
     config.watchOptions = {
       aggregateTimeout: 300,
-      poll: 1000
+      poll: 1000,
     }
   }
 

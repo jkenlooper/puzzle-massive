@@ -12,7 +12,7 @@ module.exports = {
   profilepage: './src/profilepage/index.js',
   queuepage: './src/queuepage/index.js',
   adminpuzzlepage: './src/adminpuzzlepage/index.js',
-  testpage: './src/testpage/index.js'
+  testpage: './src/testpage/index.js',
   // Other pages would go here
   // other: './src/other.js',
 }

@@ -32,7 +32,7 @@
     </div>
     <div class="pm-Profilepage-gridB">
       <div ng-if="SiteController.detailsReady && SiteController.hasBit && SiteController.userDetails.dots >= 1400">
-        <pm-choose-bit message="Change bit icon"></pm-choose-bit>
+        <pm-choose-bit message="Change bit icon" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
       </div>
     </div>
     {% if puzzles %}

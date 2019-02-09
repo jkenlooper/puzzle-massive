@@ -1,8 +1,12 @@
+import '../choose-bit/pm-choose-bit.ts'
+import './choose-bit.css'
+/*
 import angular from 'angular'
 // import ChooseBitController from './choose-bit.controller.js'
 import chooseBitDirective from './choose-bit.directive.js'
 
-export default angular.module('choose-bit', [])
+export default angular
+  .module('choose-bit', [])
   // .controller('ChooseBitController', ChooseBitController)
-  .directive('pmChooseBit', chooseBitDirective)
-  .name
+  .directive('pmChooseBit', chooseBitDirective).name
+  */
