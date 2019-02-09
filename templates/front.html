@@ -77,7 +77,7 @@ Jigsaw puzzle not available.
 {% block ogimage %}
 {% if page.info and page.info.url is string and page.info.url %}
 {% if page.info.url.startswith('/') %}
-<meta property="og:image" content="http://puzzle.massive.xyz{{ page.info.url }}" />
+<meta property="og:image" content="http://{{ config.DOMAIN_NAME }}{{ page.info.url }}" />
 {% else %}
 <meta property="og:image" content="{{ page.info.url|safe }}" />
 {% endif %}

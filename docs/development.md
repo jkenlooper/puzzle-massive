@@ -56,6 +56,7 @@ echo "SMTP_USER='user@localhost'" >> .env;
 echo "SMTP_PASSWORD='somepassword'" >> .env;
 echo "EMAIL_SENDER='sender@localhost'" >> .env;
 echo "EMAIL_MODERATOR='moderator@localhost'" >> .env;
+echo "DOMAIN_NAME='puzzle.massive.xyz'" >> .env;
 htpasswd -c .htpasswd admin;
 ```
 

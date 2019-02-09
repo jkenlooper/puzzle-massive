@@ -150,7 +150,7 @@ CACHE_DIR = "${CACHEDIR}"
 # requiring an app to run it. This will use Frozen-Flask.
 # The path to the static/frozen website will be put.
 FREEZER_DESTINATION = "frozen"
-FREEZER_BASE_URL = "http://puzzle.massive.xyz/"
+FREEZER_BASE_URL = "http://${DOMAIN_NAME}/"
 
 # Unsplash
 UNSPLASH_APPLICATION_ID = "${UNSPLASH_APPLICATION_ID}"
@@ -183,5 +183,7 @@ EMAIL_MODERATOR="${EMAIL_MODERATOR}"
 # Puzzle settings
 MINIMUM_PIECE_COUNT = 200
 MAX_POINT_COST_FOR_REBUILDING = 1000
+
+DOMAIN_NAME = "${DOMAIN_NAME}"
 
 HERE

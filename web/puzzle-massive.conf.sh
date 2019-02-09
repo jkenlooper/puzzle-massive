@@ -11,6 +11,9 @@ INTERNALIP=$5
 # shellcheck source=/dev/null
 source "$PORTREGISTRY"
 
+# shellcheck source=/dev/null
+source .env
+
 cat <<HERE
 
 limit_conn_zone \$binary_remote_addr zone=addr:1m;
@@ -462,7 +465,7 @@ fi
 
 cat <<HEREBEPRODUCTION
 
-  server_name puzzle-blue puzzle-green puzzle.massive.xyz;
+  server_name puzzle-blue puzzle-green ${DOMAIN_NAME};
 
   location /.well-known/ {
     try_files \$uri =404;

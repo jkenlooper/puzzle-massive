@@ -86,7 +86,7 @@
 {% block ogimage %}
 {% if puzzle.puzzle_id and preview_full and preview_full.url is string and preview_full.url %}
 {% if preview_full.url.startswith('/') %}
-<meta property="og:image" content="http://puzzle.massive.xyz{{ preview_full.url }}" />
+<meta property="og:image" content="http://{{ config.DOMAIN_NAME }}{{ preview_full.url }}" />
 {% else %}
 <meta property="og:image" content="{{ preview_full.url }}" />
 {% endif %}
