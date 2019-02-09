@@ -60,9 +60,15 @@ echo "DOMAIN_NAME='puzzle.massive.xyz'" >> .env;
 htpasswd -c .htpasswd admin;
 ```
 
+It is recommended to set up an account on [Unsplash](https://unsplash.com/) to get the Unsplash values.
+
 When first installing on the dev machine run:
 
 ```bash
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
+source ~/.bashrc
+nvm install v10.15.0
+nvm use
 virtualenv .;
 source bin/activate;
 make;
