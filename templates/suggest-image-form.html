@@ -28,6 +28,11 @@
         <p>
         <em>If the picture is from <a href="https://unsplash.com/">Unsplash</a> add the url like this: <b>https://unsplash.com/photos/oTQVwECws8o</b></em>
         </p>
+        {% if not config.UNSPLASH_APPLICATION_ID %}
+        <p>
+          <strong>This site is not set up to use the Unsplash API.</strong>
+        </p>
+        {% endif %}
       </div>
     </div>
     {% if config.SUGGEST_IMAGE_LINK %}
