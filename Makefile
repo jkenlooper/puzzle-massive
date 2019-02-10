@@ -18,6 +18,7 @@ PREFIXDIR :=
 # Set to development or production
 ENVIRONMENT := development
 
+ENV_FILE := ${PWD}/.env
 PORTREGISTRY := ${PWD}/port-registry.cfg
 SRVDIR := $(PREFIXDIR)/srv/puzzle-massive/
 NGINXDIR := $(PREFIXDIR)/etc/nginx/
@@ -100,7 +101,7 @@ objects += divulger/puzzle-massive-divulger.service
 divulger/puzzle-massive-divulger.service: divulger/puzzle-massive-divulger.service.sh
 	./$< $(project_dir) > $@
 
-site.cfg: site.cfg.sh $(PORTREGISTRY)
+site.cfg: site.cfg.sh $(PORTREGISTRY) $(ENV_FILE)
 	./$< $(ENVIRONMENT) $(SRVDIR) $(DATABASEDIR) $(PORTREGISTRY) $(ARCHIVEDIR) $(CACHEDIR) > $@
 
 web/puzzle-massive.conf: web/puzzle-massive.conf.sh $(PORTREGISTRY)

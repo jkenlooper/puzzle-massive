@@ -12,9 +12,11 @@ server.
 
 Deployments should use a versioned distribution file that is uploaded to the
 server.  This file can be made after a new version has been created with `npm
-version`.  On the development machine build the versioned distribution file.
+version`.  On the **development machine** build the versioned distribution file.
+Please follow these _super awesome instructions_ in the [Local development
+guide](development.md) in order to build a dist file.
 
-```
+```bash
 make dist;
 ```
 

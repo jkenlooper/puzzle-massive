@@ -1,7 +1,8 @@
 # Local Development Guide
 
 Get a local development version of Puzzle Massive to run on your machine by
-following these instructions.
+following these (super awesome) instructions. This is necessary in order to
+create a dist file (`make dist`) for deploying to a production server.
 
 Written for a Linux machine that is Debian based.  Only tested on Ubuntu.  Use
  [VirtualBox](https://www.virtualbox.org/) and
@@ -40,16 +41,44 @@ sudo passwd dev;
 su dev;
 ```
 
-Create the `.env` and `.htpasswd` files.  These should not be added to the
+## Configuration with `.env`
+
+Create the `.env` and `.htpasswd` files.  These should **not** be added to the
 distribution or to source control (git).
 
 ```bash
-echo "UNSPLASH_APPLICATION_ID=fill-this-in" > .env;
-echo "UNSPLASH_APPLICATION_NAME=fill-this-in" >> .env;
-echo "UNSPLASH_SECRET=secret-key-goes-here" >> .env;
-echo "NEW_PUZZLE_CONTRIB=temporary-contributor-id-goes-here" >> .env;
-echo "SUGGEST_IMAGE_LINK='https://any-website-for-uploading/'" >> .env;
+touch .env;
+touch .htpasswd;
+```
+
+It is recommended to set up an account on [Unsplash](https://unsplash.com/).  An
+app will need to be created in order to get the application id and such.  See
+[Unsplash Image API](https://unsplash.com/developers).  Leave blank if not using
+images from Unsplash.
+
+```bash
+echo "UNSPLASH_APPLICATION_ID=" >> .env;
+echo "UNSPLASH_APPLICATION_NAME=" >> .env;
+echo "UNSPLASH_SECRET=" >> .env;
+```
+
+Set these to something unique for the app.  The NEW_PUZZLE_CONTRIB sets the URL
+used for directly submitting photos for puzzles.  Eventually the puzzle
+contributor stuff will be done, but for now set it to your favorite [Muppet character](https://en.wikipedia.org/wiki/List_of_Muppets).
+
+```bash
+echo "NEW_PUZZLE_CONTRIB=beaker" >> .env;
 echo "SECURE_COOKIE_SECRET=make-up-some-random-text" >> .env;
+```
+
+These are mostly optional and self explanatory.  Email settings are for
+transactional emails and currently only used when a photo for a puzzle is
+suggested.  If hosting a production version of the site is planned, then set the
+domain name to something other then puzzle.massive.xyz.  Leave it with the
+default if only doing local development on your own machine.
+
+```bash
+echo "SUGGEST_IMAGE_LINK='https://any-website-for-uploading/'" >> .env;
 echo "SMTP_HOST='localhost'" >> .env;
 echo "SMTP_PORT='587'" >> .env;
 echo "SMTP_USER='user@localhost'" >> .env;
@@ -57,20 +86,42 @@ echo "SMTP_PASSWORD='somepassword'" >> .env;
 echo "EMAIL_SENDER='sender@localhost'" >> .env;
 echo "EMAIL_MODERATOR='moderator@localhost'" >> .env;
 echo "DOMAIN_NAME='puzzle.massive.xyz'" >> .env;
+```
+
+The admin page uses basic auth.  Note that this site is not configured to use
+a secure protocol (https) and so anyone on your network _could_ see the password
+used here.  Not really a big deal, but for production deployments the nginx
+config is also set to deny any requests to the admin page if not originating
+from the internal IP.  Admin page access for production requires using a proxy
+or changing the nginx config.
+
+Set the initial admin user and password.  This file is copied to the
+/srv/puzzle-massive/ when installing with `make install`.
+
+```bash
 htpasswd -c .htpasswd admin;
 ```
 
-It is recommended to set up an account on [Unsplash](https://unsplash.com/) to get the Unsplash values.
+## Setup For Building
 
-When first installing on the dev machine run:
+If `nvm` isn't available on the dev machine then install it.  See [github.com/creationix/nvm](https://github.com/creationix/nvm) for more information.
 
 ```bash
+# Install Node Version Manager
 curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
 source ~/.bashrc
 nvm install v10.15.0
 nvm use
+```
+
+When first installing on the dev machine run:
+
+```bash
+# Setup to use a virtual python environment
 virtualenv .;
 source bin/activate;
+
+# Makes the initial development version
 make;
 cp chill-data.sql db.dump.sql;
 
