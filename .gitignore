@@ -40,3 +40,5 @@
 
 *.pyc
 *.egg-info/
+
+/tests/

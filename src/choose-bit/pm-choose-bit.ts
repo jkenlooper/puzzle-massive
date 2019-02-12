@@ -26,21 +26,22 @@ customElements.define(
 
     constructor() {
       super();
-      this.init();
-      this.render();
+      this.init().then(() => {
+        this.render();
+      });
     }
 
     init() {
       // TODO: Need to only render if the player has enough dots:
       // <div ng-if="SiteController.detailsReady && SiteController.hasBit && SiteController.userDetails.dots >= 1400">
 
-      chooseBitService
+      return chooseBitService
         .getBits(10)
         .then((bits) => {
           this.bits = bits;
         })
         .catch((err) => {
-          console.log(err);
+          console.log("error", err);
         });
     }
 
@@ -64,7 +65,7 @@ customElements.define(
                     ng-click="ChooseBitController.claimBit(item)"
                   >
                     <img
-                      ng-src="${MEDIA_PATH}bit-icons/64-${item}.png"
+                      src="${MEDIA_PATH}bit-icons/64-${item}.png"
                       width="64"
                       height="64"
                       alt="${item}"

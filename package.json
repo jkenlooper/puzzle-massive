@@ -14,6 +14,8 @@
   },
   "license": "AGPL-3.0-only",
   "devDependencies": {
+    "@types/jsdom": "^12.2.1",
+    "@types/tape": "^4.2.33",
     "@typescript-eslint/parser": "^1.2.0",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.0.0",
@@ -25,8 +27,11 @@
     "eslint-plugin-import": "^2.16.0",
     "eslint-plugin-node": "^8.0.1",
     "eslint-plugin-promise": "^4.0.1",
+    "fetch-mock": "^7.3.0",
     "file-loader": "^2.0.0",
+    "jsdom": "^13.2.0",
     "mini-css-extract-plugin": "^0.4.5",
+    "node-fetch": "^2.3.0",
     "optimize-css-assets-webpack-plugin": "^5.0.1",
     "postcss": "^7.0.14",
     "postcss-import": "^12.0.1",
@@ -41,6 +46,7 @@
     "svg-sprite-loader": "4.1.1",
     "svgo": "^1.1.1",
     "svgo-loader": "^2.2.0",
+    "tape": "^4.10.0",
     "ts-loader": "^5.3.3",
     "typescript": "^3.3.1",
     "uglifyjs-webpack-plugin": "^2.0.1",
@@ -48,7 +54,8 @@
     "webpack-cli": "^3.2.3"
   },
   "scripts": {
-    "pretest": "stylelint \"src/**/*.css\"",
+    "offpretest": "stylelint \"src/**/*.css\"",
+    "test": "tsc --project . --outDir tests --module commonjs && tape \"tests/**/*.spec.js\"",
     "prebuild": "rm -rf dist",
     "build": "webpack --mode production",
     "debug": "webpack --mode=development --debug --devtool source-map --output-pathinfo",
@@ -56,6 +63,7 @@
     "preversion": "npm test && npm run build"
   },
   "dependencies": {
+    "@types/fetch-mock": "^7.2.2",
     "@webcomponents/custom-elements": "~1.0.9",
     "@webcomponents/shadydom": "~1.0.14",
     "angular": "~1.5.11",
