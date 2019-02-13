@@ -1,14 +1,5 @@
-interface Response {
-  statusText: string;
-  ok: boolean;
-  json: Function;
-}
-
 export class ChooseBitService {
-  //private fetch: any;
-  constructor() {
-    //this.fetch = _fetch.bind(window);
-  }
+  constructor() {}
 
   getBits(limit: number): Promise<string[]> {
     return fetch("/newapi/choose-bit/").then(function(response: Response) {
@@ -16,7 +7,6 @@ export class ChooseBitService {
         throw new Error(response.statusText);
       }
       return response.json().then((response: any) => {
-        console.log("bits", response);
         return response.data.slice(0, limit);
       });
     });
