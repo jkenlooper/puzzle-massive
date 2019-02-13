@@ -8,11 +8,16 @@ import { chooseBitService } from "./choose-bit.service";
 
 interface TemplateData {
   isLoading: boolean;
+  isReloading: boolean;
   hasError: boolean;
   message: string;
   limit: number;
   bits: string[];
+  dots: null | string;
 }
+
+const minimumDotsRequired = 1400;
+const limitBits = 10;
 
 const tag = "pm-choose-bit";
 
@@ -20,16 +25,15 @@ customElements.define(
   tag,
   class PmChooseBit extends HTMLElement {
     static get observedAttributes() {
-      // TODO: Should the player dots be an attribute?  If the dots value changes
-      // then it may need to render if it hasn't already.
-      // Or it could listen to a websocket that has the dot value for the
-      // player.
-      return [
-        /*"dots"*/
-      ];
+      // If the dots value changes then it may need to render if it hasn't
+      // already.
+      return ["dots"];
     }
 
-    static getBits(self: PmChooseBit, limit: number = 10): Promise<void> {
+    static getBits(
+      self: PmChooseBit,
+      limit: number = limitBits
+    ): Promise<void> {
       return chooseBitService
         .getBits(limit)
         .then((bits) => {
@@ -40,14 +44,16 @@ customElements.define(
         })
         .finally(() => {
           self.isLoading = false;
+          self.isReloading = false;
           self.render();
         });
     }
 
-    private bits: string[] = [];
+    private bits: string[] = Array(limitBits);
     private message: string = "";
     private limit: number;
     private isLoading: boolean = true;
+    private isReloading: boolean = false;
     private hasError: boolean = false;
 
     constructor() {
@@ -59,13 +65,11 @@ customElements.define(
 
       // Set the limit from the limit attribute
       const limit = this.attributes.getNamedItem("limit");
-      this.limit = limit ? parseInt(limit.value) : 10;
-
-      this.init();
+      this.limit = limit ? parseInt(limit.value) : limitBits;
     }
 
     handleClickMore() {
-      this.isLoading = true;
+      this.isReloading = true;
       this.render();
       PmChooseBit.getBits(this, this.limit);
     }
@@ -73,7 +77,7 @@ customElements.define(
     init() {
       // TODO: Need to only render if the player has enough dots:
       // <div ng-if="SiteController.detailsReady && SiteController.hasBit && SiteController.userDetails.dots >= 1400">
-      return PmChooseBit.getBits(this, this.limit);
+      //return PmChooseBit.getBits(this, this.limit);
     }
 
     template(data: TemplateData) {
@@ -87,7 +91,12 @@ customElements.define(
           <div class="pm-ChooseBit-items">
             ${items()}
           </div>
-          <button @click=${self.handleClickMore.bind(self)}>More</button>
+          <button
+            ?disabled=${self.isReloading}
+            @click=${self.handleClickMore.bind(self)}
+          >
+            More
+          </button>
         </section>
       `;
 
@@ -125,7 +134,7 @@ customElements.define(
                 (item) => {
                   return html`
                     <span class="pm-ChooseBit-item" role="list-item">
-                      <button ng-click="ChooseBitController.claimBit(item)">
+                      <button @click=${claimBit.bind(self)}>
                         <img
                           src="${MEDIA_PATH}bit-icons/64-${item}.png"
                           width="64"
@@ -135,6 +144,13 @@ customElements.define(
                       </button>
                     </span>
                   `;
+
+                  function claimBit() {
+                    chooseBitService.claimBit(item).then(() => {
+                      console.log("userDetailsChange");
+                      // TODO: $scope.$emit('userDetailsChange')
+                    });
+                  }
                 }
               )}
             `;
@@ -152,6 +168,7 @@ customElements.define(
         },
         {
           isLoading: this.isLoading,
+          isReloading: this.isReloading,
           hasError: this.hasError,
           message: this.message,
           limit: this.limit,
@@ -165,17 +182,29 @@ customElements.define(
     }
 
     connectedCallback() {
-      console.log("connectedCallback");
+      //console.log("connectedCallback");
     }
     disconnectedCallback() {
-      console.log("disconnectedCallback");
+      //console.log("disconnectedCallback");
     }
     adoptedCallback() {
-      console.log("adoptedCallback");
+      //console.log("adoptedCallback");
     }
-    attributeChangedCallback(name: String, oldValue: String, newValue: String) {
-      console.log("attributeChangedCallback", name, oldValue, newValue);
-      this.render();
+    attributeChangedCallback(
+      name: string,
+      _oldValue: string | null,
+      _newValue: string | null
+    ) {
+      // Need to only render initially if the player has enough dots.
+      if (name === "dots") {
+        if (
+          this.isLoading &&
+          _newValue &&
+          parseInt(_newValue) > minimumDotsRequired
+        ) {
+          PmChooseBit.getBits(this, this.limit);
+        }
+      }
     }
   }
 );

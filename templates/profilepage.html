@@ -31,9 +31,7 @@
       <div>Dots <b ng-bind="SiteController.userDetails.dots"></b></div>
     </div>
     <div class="pm-Profilepage-gridB">
-      <div ng-if="SiteController.detailsReady && SiteController.hasBit && SiteController.userDetails.dots >= 1400">
-        <pm-choose-bit message="Change bit icon" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
-      </div>
+      <pm-choose-bit dots="{% raw %}{{SiteController.detailsReady && SiteController.hasBit && SiteController.userDetails.dots}}{% endraw %}" message="Change bit icon" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
     </div>
     {% if puzzles %}
       <div class="pm-Profilepage-gridC">

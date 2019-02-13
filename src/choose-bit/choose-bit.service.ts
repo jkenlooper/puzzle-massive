@@ -11,6 +11,21 @@ export class ChooseBitService {
       });
     });
   }
+
+  claimBit(bit: string): Promise<string | null> {
+    const params = new URLSearchParams();
+    params.append("icon", bit);
+    const request = new Request(`/newapi/claim-bit/?${params}`, {
+      method: "POST",
+    });
+
+    return fetch(request).then((response: Response) => {
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+      return response.text();
+    });
+  }
 }
 
 export const chooseBitService = new ChooseBitService();
