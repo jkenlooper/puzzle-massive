@@ -1,19 +1,17 @@
-import './choose-bit.css'
-import ChooseBitController from './choose-bit.controller.js'
-import template from './choose-bit.html'
+export default chooseBitAdapterDirective
 
-export default chooseBitDirective
-
-function chooseBitDirective() {
+function chooseBitAdapterDirective() {
+  console.log('chooseBitAdapterDirective')
   return {
-    restrict: 'E',
-    scope: {
-      message: '@',
-      limit: '@',
+    restrict: 'A',
+    scope: {},
+    link: function(scope, element) {
+      element[0].addEventListener('userDetailsChange', () => {
+        scope.$emit('userDetailsChange')
+      })
+      scope.$on('$destroy', function() {
+        element[0].removeEventListener('userDetailsChange')
+      })
     },
-    controller: ChooseBitController,
-    controllerAs: 'ChooseBitController',
-    bindToController: true,
-    template: template,
   }
 }

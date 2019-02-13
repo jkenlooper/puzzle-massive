@@ -148,6 +148,13 @@ customElements.define(
                   function claimBit() {
                     chooseBitService.claimBit(item).then(() => {
                       console.log("userDetailsChange");
+                      const userDetailsChangeEvent = new Event(
+                        "userDetailsChange",
+                        {
+                          bubbles: true,
+                        }
+                      );
+                      self.dispatchEvent(userDetailsChangeEvent);
                       // TODO: $scope.$emit('userDetailsChange')
                     });
                   }
