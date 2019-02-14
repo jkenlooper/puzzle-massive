@@ -1,16 +1,14 @@
 export default chooseBitAdapterDirective
 
 function chooseBitAdapterDirective() {
-  console.log('chooseBitAdapterDirective')
   return {
     restrict: 'A',
-    scope: {},
-    link: function(scope, element) {
-      element[0].addEventListener('userDetailsChange', () => {
-        scope.$emit('userDetailsChange')
+    link: function(scope, element, attr) {
+      element[0].addEventListener(attr.pmChooseBitAdapter, () => {
+        scope.$emit(attr.pmChooseBitAdapter)
       })
       scope.$on('$destroy', function() {
-        element[0].removeEventListener('userDetailsChange')
+        element[0].removeEventListener(attr.pmChooseBitAdapter)
       })
     },
   }

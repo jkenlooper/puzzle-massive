@@ -4,6 +4,7 @@ declare const MEDIA_PATH: string;
 import { html, render } from "lit-html";
 import { repeat } from "lit-html/directives/repeat";
 
+import "./choose-bit.css";
 import { chooseBitService } from "./choose-bit.service";
 
 interface TemplateData {
@@ -74,12 +75,6 @@ customElements.define(
       PmChooseBit.getBits(this, this.limit);
     }
 
-    init() {
-      // TODO: Need to only render if the player has enough dots:
-      // <div ng-if="SiteController.detailsReady && SiteController.hasBit && SiteController.userDetails.dots >= 1400">
-      //return PmChooseBit.getBits(this, this.limit);
-    }
-
     template(data: TemplateData) {
       const self = this;
 
@@ -147,7 +142,6 @@ customElements.define(
 
                   function claimBit() {
                     chooseBitService.claimBit(item).then(() => {
-                      console.log("userDetailsChange");
                       const userDetailsChangeEvent = new Event(
                         "userDetailsChange",
                         {
@@ -155,7 +149,6 @@ customElements.define(
                         }
                       );
                       self.dispatchEvent(userDetailsChangeEvent);
-                      // TODO: $scope.$emit('userDetailsChange')
                     });
                   }
                 }

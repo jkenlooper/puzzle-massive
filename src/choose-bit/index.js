@@ -1,5 +1,4 @@
-import '../choose-bit/pm-choose-bit.ts'
-import './choose-bit.css'
+import './pm-choose-bit'
 
 import angular from 'angular'
 import chooseBitAdapterDirective from './choose-bit-adapter.directive.js'
