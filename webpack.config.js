@@ -1,7 +1,7 @@
 const webpack = require('webpack')
 const path = require('path')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+const TerserPlugin = require('terser-webpack-plugin')
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 const postcssImport = require('postcss-import')
 const postcssPresetEnv = require('postcss-preset-env')
@@ -144,10 +144,15 @@ config.stats = 'minimal'
 
 config.optimization = {
   minimizer: [
-    new UglifyJsPlugin({
+    new TerserPlugin({
       cache: true,
       parallel: true,
       sourceMap: true, // set to true if you want JS source maps
+      terserOptions: {
+        compress: {
+          drop_console: true,
+        },
+      },
     }),
     new OptimizeCSSAssetsPlugin({}),
   ],
