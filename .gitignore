@@ -42,3 +42,5 @@
 *.egg-info/
 
 /tests/
+
+/ui-lib/puzzle-pieces*

@@ -158,14 +158,20 @@ config.optimization = {
   ],
 }
 
+config.performance = {
+  hints: 'warning',
+  maxAssetSize: 500000,
+  maxEntrypointSize: 400000,
+}
+
 module.exports = (env, argv) => {
   if (argv.mode !== 'production') {
     config.devtool = 'source-map'
-    config.watch = true
+    config.watch = argv.watch
     config.watchOptions = {
       aggregateTimeout: 300,
-      poll: 1000,
     }
+    config.optimization = {}
   }
 
   return config
