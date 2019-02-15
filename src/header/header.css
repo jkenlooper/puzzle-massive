@@ -1,4 +1,4 @@
-@import '../site/60settings.css';
+@import "../site/viewport-breakpoints.css";
 
 .pm-Header {
   display: flex;

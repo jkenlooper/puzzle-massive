@@ -1,4 +1,4 @@
-@import '../site/60settings.css';
+@import "../site/viewport-breakpoints.css";
 
 .pm-ChooseBit {
   display: flex;
@@ -26,7 +26,7 @@
   justify-content: center;
 }
 
-.pm-ChooseBit-items > button {
+.pm-ChooseBit-item {
   flex: none;
   transition: border-color 300ms;
   margin: 5px;
@@ -44,15 +44,24 @@
   text-align: center;
 }
 
-.pm-ChooseBit-items > button:hover,
-.pm-ChooseBit-items > button:active {
+.pm-ChooseBit-item > button {
+  border: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.pm-ChooseBit-item > button:hover,
+.pm-ChooseBit-item > button:active {
   border-color: var(--color-primary);
 }
 
-.pm-ChooseBit-items img {
+.pm-ChooseBit-item img {
   display: inline-block;
   min-width: 24px;
   max-width: 100%;
   height: auto;
   min-height: 24px;
+  font-size: 0;
 }

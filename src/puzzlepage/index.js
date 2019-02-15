@@ -4,7 +4,6 @@ require('file-loader?name=[name].[ext]!../../node_modules/slab-massive/dist/slab
 require('file-loader?name=[name].[ext]!../../node_modules/puzzle-pieces/dist/puzzle-pieces.min.js')
 
 import angular from 'angular'
-import base from '../base'
 import PuzzlePreviewBox from './puzzle-preview-box.js'
 import ScrollJump from './scroll-jump.js'
 
@@ -26,5 +25,8 @@ if (scrollJumpElement) {
   ScrollJump(scrollJumpElement)
 }
 
-angular.module('puzzlepage', [base, puzzleBits, hashColor, karmaStatus])
-    .name
+export default angular.module('puzzlepage', [
+  puzzleBits,
+  hashColor,
+  karmaStatus,
+]).name

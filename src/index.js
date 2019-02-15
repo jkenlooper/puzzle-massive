@@ -4,14 +4,7 @@ These are the entry bundles for specific layouts of the site.
 */
 
 module.exports = {
-  frontpage: './src/frontpage/index.js',
-  docspage: './src/docspage/index.js',
-  scorespage: './src/scorespage/index.js',
-  puzzlepage: './src/puzzlepage/index.js',
-  puzzleuploadpage: './src/puzzleuploadpage/index.js',
-  profilepage: './src/profilepage/index.js',
-  queuepage: './src/queuepage/index.js',
-  adminpuzzlepage: './src/adminpuzzlepage/index.js'
-  // Other pages would go here
-  // other: './src/other.js',
+  site: './src/site/index.js',
+  admin: './src/admin/index.js',
+  testpage: './src/testpage/index.js',
 }

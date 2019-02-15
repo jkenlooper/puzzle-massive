@@ -23,6 +23,7 @@
     <meta name="msapplication-tap-highlight" content="no" />
 
     {% block stylesheet %}
+    <link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='site.css') }}">
     {% endblock %}
 
     {% block headscript %}
@@ -32,7 +33,7 @@
     {% endblock %}
 
   </head>
-  <body ng-app="{{ ngModule }}" class="on-module-{{ ngModule }}">
+  <body ng-app="site" class="on-module-{{ ngModule }}">
 
     {% block body %}
     {% endblock %}
@@ -48,6 +49,8 @@
     <script src="{{ url_for('send_theme_file', filename='minpubsub.js') }}"></script>
     <script src="{{ url_for('send_theme_file', filename='lazysizes.min.js') }}"></script>
     <script src="{{ url_for('send_theme_file', filename='reqwest.min.js') }}"></script>
+
+    <script src="{{ url_for('send_theme_file', filename='site.bundle.js') }}"></script>
     {% endblock %}
 
   </body>

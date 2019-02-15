@@ -12,6 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     {% block stylesheet %}
+    <link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='admin.css') }}">
     {% endblock %}
 
     {% block headscript %}
@@ -25,6 +26,7 @@
 
     {% block script %}
     <script src="{{ url_for('send_theme_file', filename='lazysizes.min.js') }}"></script>
+    <script src="{{ url_for('send_theme_file', filename='admin.bundle.js') }}"></script>
 
     {% endblock %}
 

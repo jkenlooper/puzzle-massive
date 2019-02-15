@@ -1,4 +1,4 @@
-@import '../site/60settings.css';
+@import "../site/viewport-breakpoints.css";
 
 .pm-Footer {
   outline: 2px solid var(--color-primary-light);

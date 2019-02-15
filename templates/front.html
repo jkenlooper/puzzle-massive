@@ -42,17 +42,6 @@
 {# deleted on request from the owner. Can be deleted automatically after completion or date or? #}
 {% set DELETED_REQUEST  = -13 %}
 
-
-{% block stylesheet %}
-{{ super() }}
-<link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='frontpage.css') }}">
-{% endblock %}
-
-{% block script %}
-{{ super() }}
-<script src="{{ url_for('send_theme_file', filename='frontpage.bundle.js') }}"></script>
-{% endblock %}
-
 {% block description %}
 {% if page.info.pieces %}
 Preview of jigsaw puzzle with {{ page.info.pieces }} unique interlocking puzzle pieces.  This puzzle can be assembled by anyone and piece movements are shown in real time. The most recent players to move pieces on this puzzle are displayed.

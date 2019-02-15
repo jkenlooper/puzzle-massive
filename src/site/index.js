@@ -11,11 +11,27 @@ require('file-loader?name=[name].[ext]!./modernizr.build.min.js')
 
 import angular from 'angular'
 import './site.css'
+
+import base from '../base'
 import userService from './user.service.js'
-import chooseBitService from './choose-bit.service.js'
 import SiteController from './site.controller.js'
 import dotRequire from '../dot-require'
 
-export default angular.module('site', [userService, chooseBitService, dotRequire])
-  .controller('SiteController', SiteController)
-  .name
+import '../frontpage'
+import profilepage from '../profilepage'
+import '../queuepage'
+import '../puzzleuploadpage'
+import scorespage from '../scorespage'
+import '../docspage'
+import puzzlepage from '../puzzlepage'
+
+angular
+  .module('site', [
+    base,
+    userService,
+    dotRequire,
+    profilepage,
+    scorespage,
+    puzzlepage,
+  ])
+  .controller('SiteController', SiteController).name
