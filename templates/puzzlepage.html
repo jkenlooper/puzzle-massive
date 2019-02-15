@@ -60,7 +60,6 @@
 
 {% block stylesheet %}
 {{ super() }}
-<link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='puzzlepage.css') }}">
 {#
 <link rel="stylesheet" media="all" href="{{ puzzle_files.url }}">
 #}
@@ -79,7 +78,6 @@
 <script src="{{ url_for('send_theme_file', filename='slab-massive.min.js') }}"></script>
 <script src="{{ url_for('send_theme_file', filename='puzzle-pieces.min.js') }}"></script>
 {%- endif %}
-<script src="{{ url_for('send_theme_file', filename='puzzlepage.bundle.js') }}"></script>
 {% endblock %}
 
 {# if the puzzle has been deleted the page.info may not be available. #}

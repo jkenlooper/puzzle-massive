@@ -2,16 +2,6 @@
 {% from 'queue.html' import queue %}
 {% set ngModule = 'profilepage' %}
 
-{% block stylesheet %}
-{{ super() }}
-<link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='profilepage.css') }}">
-{% endblock %}
-
-{% block script %}
-{{ super() }}
-<script src="{{ url_for('send_theme_file', filename='profilepage.bundle.js') }}"></script>
-{% endblock %}
-
 {% block title %}
  | Player Profile
 {%- endblock %}

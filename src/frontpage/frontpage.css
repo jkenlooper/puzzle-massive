@@ -1,4 +1,4 @@
-@import '../site/60settings.css';
+@import "../site/viewport-breakpoints.css";
 
 .pm-Frontpage {
 }
@@ -10,13 +10,13 @@
 .pm-Frontpage-grid {
 }
 @media (--lg-viewport) {
-.pm-Frontpage-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  flex-direction: row;
-  min-width: 1024px;
-}
+  .pm-Frontpage-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    flex-direction: row;
+    min-width: 1024px;
+  }
 }
 
 .pm-Frontpage-grid > * + * {
@@ -48,7 +48,7 @@
   }
 }
 .pm-Frontpage-sectionHeader {
-    margin-right: 13px;
+  margin-right: 13px;
 }
 
 /* other content */

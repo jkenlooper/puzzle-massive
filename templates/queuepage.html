@@ -9,16 +9,6 @@
   {% set recent_puzzles = [recent_puzzles] %}
 {%- endif %}
 
-{% block stylesheet %}
-{{ super() }}
-<link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='queuepage.css') }}">
-{% endblock %}
-
-{% block script %}
-{{ super() }}
-<script src="{{ url_for('send_theme_file', filename='queuepage.bundle.js') }}"></script>
-{% endblock %}
-
 {% block title %}
 | {{ route.status|capitalize }} Queue
 {%- endblock %}

@@ -1,16 +1,6 @@
 {% extends 'base.html' %}
 {% set ngModule = 'puzzleuploadpage' %}
 
-{% block stylesheet %}
-{{ super() }}
-<link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='puzzleuploadpage.css') }}">
-{% endblock %}
-
-{% block script %}
-{{ super() }}
-<script src="{{ url_for('send_theme_file', filename='puzzleuploadpage.bundle.js') }}"></script>
-{% endblock %}
-
 {% block title %}
  | Suggest Image for a Puzzle
 {%- endblock %}

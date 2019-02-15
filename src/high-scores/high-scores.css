@@ -1,4 +1,4 @@
-@import '../site/60settings.css';
+@import "../site/viewport-breakpoints.css";
 
 .pm-HighScores {
 }
@@ -33,15 +33,15 @@
   width: 100%;
 }
 
-.pm-HighScores-listitem:nth-child(1n+2) {
+.pm-HighScores-listitem:nth-child(1n + 2) {
   width: 50%;
 }
 
-.pm-HighScores-listitem:nth-child(1n+4) {
+.pm-HighScores-listitem:nth-child(1n + 4) {
   width: 25%;
 }
 
-.pm-HighScores-listitem:nth-child(1n+8) {
+.pm-HighScores-listitem:nth-child(1n + 8) {
   width: 12.5%;
 }
 

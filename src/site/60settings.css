@@ -13,9 +13,3 @@
   --color-primary-light: rgb(181, 229, 255);
   --color-accent: rgb(202, 109, 16);
 }
-
-
-/* Default breakpoints from suitcss */
-@custom-media --sm-viewport (min-width: 320px) and (max-width: 640px);
-@custom-media --md-viewport (min-width: 640px) and (max-width: 960px);
-@custom-media --lg-viewport (min-width: 960px);

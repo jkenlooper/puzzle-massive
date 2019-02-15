@@ -10,16 +10,6 @@
   Puzzle management
 {% endblock %}
 
-{% block stylesheet %}
-{{ super() }}
-<link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='adminpuzzlepage.css') }}">
-{% endblock %}
-
-{% block script %}
-{{ super() }}
-<script src="{{ url_for('send_theme_file', filename='adminpuzzlepage.bundle.js') }}"></script>
-{% endblock %}
-
 {% block main %}
 
 <section>

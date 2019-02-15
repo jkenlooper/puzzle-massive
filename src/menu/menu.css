@@ -1,4 +1,4 @@
-@import '../site/60settings.css';
+@import "../site/viewport-breakpoints.css";
 
 .pm-Menu {
   display: flex;
@@ -31,4 +31,3 @@
   transform: rotate(3deg);
   color: var(--color-primary-dark);
 }
-

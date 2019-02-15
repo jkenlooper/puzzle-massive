@@ -1,4 +1,4 @@
-@import '../site/60settings.css';
+@import "../site/viewport-breakpoints.css";
 
 .pm-Preview {
 }
@@ -53,13 +53,13 @@ a.pm-Preview-grid {
   flex-direction: column;
 }
 @media (--lg-viewport) {
-.pm-Preview-gridA {
-  flex-direction: row;
-}
+  .pm-Preview-gridA {
+    flex-direction: row;
+  }
 }
 
 .pm-Preview-img {
-    display: inline-block;
+  display: inline-block;
   transition: transform 300ms;
   box-shadow: 0 0 9px rgba(0, 0, 0, 0.5);
   border: 1px solid white;
@@ -181,4 +181,3 @@ a.pm-Preview-grid:active img.pm-Preview-img {
   display: inline-block;
   vertical-align: middle;
 }
-
