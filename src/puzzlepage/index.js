@@ -7,7 +7,7 @@ import angular from 'angular'
 import PuzzlePreviewBox from './puzzle-preview-box.js'
 import ScrollJump from './scroll-jump.js'
 
-// import '../puzzle-pieces' // TODO:
+import '../puzzle-pieces'
 import puzzleBits from '../puzzle-bits'
 import hashColor from '../hash-color'
 import karmaStatus from '../karma-status'
