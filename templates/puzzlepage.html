@@ -65,13 +65,6 @@
 #}
 {% endblock %}
 
-{% block headscript %}
-{{ super() }}
-{# TODO: Still need this for safari 10?
-<script src="{{ url_for('send_theme_file', filename='webcomponents-patch.min.js') }}"></script>
-#}
-{% endblock %}
-
 {% block script %}
 {{ super() }}
 {% if isPuzzleVisible -%}

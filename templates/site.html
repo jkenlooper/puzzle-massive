@@ -27,8 +27,10 @@
     {% endblock %}
 
     {% block headscript %}
+    {#
     <script src="{{ url_for('send_theme_file', filename='custom-elements.min.js') }}"></script>
     <script src="{{ url_for('send_theme_file', filename='shadydom.min.js') }}"></script>
+    #}
     <script src="{{ url_for('send_theme_file', filename='modernizr.build.min.js') }}"></script>
     {% endblock %}
 
@@ -39,6 +41,7 @@
     {% endblock %}
 
     {% block script %}
+    <script src="{{ url_for('send_theme_file', filename='webcomponents-loader.js') }}"></script>
     <script>
       var MEDIA_PATH = "{{ url_for('send_media_file', filename='') }}"
       var PLAYER_RANKS_URL = "/chill{{ url_for('.page_uri', uri='api/player-ranks') }}"

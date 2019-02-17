@@ -1,7 +1,10 @@
-// require('file-loader?name=[name].[ext]!../../node_modules/webcomponents.js/webcomponents.min.js')
-// require('file-loader?name=[name].[ext]!../puzzlepage/webcomponents-patch.min.js')
-require('file-loader?name=[name].[ext]!../../node_modules/@webcomponents/shadydom/shadydom.min.js')
-require('file-loader?name=[name].[ext]!../../node_modules/@webcomponents/custom-elements/custom-elements.min.js')
+require('file-loader?name=[name].[ext]!../../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js')
+// require('file-loader?name=[name].[ext]!../../node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js') // Not used
+require('file-loader?name=bundles/[name].[ext]!../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-ce.js')
+require('file-loader?name=bundles/[name].[ext]!../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-sd-ce-pf.js')
+require('file-loader?name=bundles/[name].[ext]!../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-sd-ce.js')
+require('file-loader?name=bundles/[name].[ext]!../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-sd.js')
+
 require('file-loader?name=[name].[ext]!../../node_modules/angular/angular.min.js')
 require('file-loader?name=[name].[ext]!../../node_modules/minpubsub/minpubsub.js')
 require('file-loader?name=[name].[ext]!../../node_modules/hammerjs/hammer.min.js')

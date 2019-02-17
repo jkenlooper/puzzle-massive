@@ -64,8 +64,7 @@
   },
   "dependencies": {
     "@types/fetch-mock": "^7.2.2",
-    "@webcomponents/custom-elements": "~1.0.9",
-    "@webcomponents/shadydom": "~1.0.14",
+    "@webcomponents/webcomponentsjs": "^2.2.7",
     "angular": "~1.5.11",
     "hammerjs": "~2.0.8",
     "jscolor-picker": "~2.0.4",
