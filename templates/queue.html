@@ -7,7 +7,7 @@
       {% set src = item.url %}
       <a href="/chill{{ url_for('.page_uri', uri='front/{0}'.format(item.puzzle_id)) }}">
           {% if item.status == 3 and not item.is_recent -%}
-        <div class="pm-DotRequire pm-DotRequire--blur is-dotted" pm-dot-require="{{item.pieces}}">
+        <pm-dot-require min="{{item.pieces}}" type="blur" dots="{% raw %}{{detailsReady && hasBit && userDetails.dots}}{% endraw %}">
          {%- endif %}
       <div class="pm-Queue-listitem" role="listitem">
         {% include 'previewFullImg.html' %}
@@ -18,7 +18,7 @@
         {% endif %}
       </span>
        {% if item.status == 3 and not item.is_recent -%}
-        </div>
+        </pm-dot-require>
        {%- endif %}
     </a>
     {% endfor %}

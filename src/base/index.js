@@ -5,5 +5,4 @@ import '../post-comment-form'
 import '../footer'
 import './base.css'
 
-export default angular.module('base', [header])
-  .name
+export default angular.module('base', [header]).name

@@ -1,13 +1,26 @@
+pm-dot-require {
+  visibility: hidden;
+}
+
 .pm-DotRequire {
+  visibility: visible;
 }
 
-.pm-DotRequire--hidden {
+/* Don't display is dotted content. */
+.pm-DotRequire--none {
 }
-
-.pm-DotRequire--hidden.is-dotted {
+.pm-DotRequire--none.is-dotted {
   display: none;
 }
 
+/* Hide content if is dotted. */
+.pm-DotRequire--hidden {
+}
+.pm-DotRequire--hidden.is-dotted {
+  visibility: hidden;
+}
+
+/* Blur the content if is dotted. */
 .pm-DotRequire--blur {
 }
 
@@ -31,4 +44,12 @@
   text-indent: 0.1em;
   text-shadow: 0 0 5px white, 0 0 2px white;
   content: "+ ...";
+}
+
+/* Show info message if is-dotted. */
+.pm-DotRequire--info {
+  visibility: hidden;
+}
+.pm-DotRequire--info.is-dotted {
+  visibility: visible;
 }

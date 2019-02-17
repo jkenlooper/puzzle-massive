@@ -19,13 +19,14 @@ More jigsaw puzzles available to play. These are sorted by number of pieces.
 
 {% block main %}
 <div class="pm-Queuepage">
-
   {% if route.status == 'active' %}
-  <p class="pm-DotRequire pm-DotRequire--hidden is-dotted u-textRight" pm-dot-require="1">
+  <pm-dot-require min="1" type="hidden" dots="{% raw %}{{detailsReady && hasBit && userDetails.dots}}{% endraw %}">
+  <p class="u-textRight">
     View the
     <a href="/chill{{ url_for('.page_uri', uri='queue/complete/0') }}"><strong>completed puzzles</strong></a>
     and redo them.
   </p>
+  </pm-dot-require>
   {% elif route.status == 'complete' %}
   <p class="u-textRight">
     View the

@@ -16,12 +16,12 @@
          role="listitem"
          ng-repeat="item in RankingController.playerRanks"
          ng-class="{
-          'pm-Ranking-listitem--current': item.id === SiteController.userDetails.id,
+          'pm-Ranking-listitem--current': item.id === userDetails.id,
           'pm-Ranking-listitem--topPlayer': item.topPlayer
          }"
       >
       <img class="pm-Ranking-img"
-         ng-src="{{SiteController.MEDIA_PATH + 'bit-icons/64-' + (item.icon || 'unknown-bit') + '.png'}}" width="64" height="64" alt="{{(item.icon || 'unknown-bit')}}"
+         ng-src="{{MEDIA_PATH + 'bit-icons/64-' + (item.icon || 'unknown-bit') + '.png'}}" width="64" height="64" alt="{{(item.icon || 'unknown-bit')}}"
           >
 
         <strong class="pm-Ranking-rank">{{ item.score }}</strong>

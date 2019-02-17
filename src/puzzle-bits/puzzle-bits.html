@@ -11,7 +11,7 @@
        }"
        >
        <img ng-if="PuzzleBitsController.bits[id].icon"
-         ng-src="{{SiteController.MEDIA_PATH + 'bit-icons/64-' + PuzzleBitsController.bits[id].icon + '.png'}}"
+         ng-src="{{MEDIA_PATH + 'bit-icons/64-' + PuzzleBitsController.bits[id].icon + '.png'}}"
          width="64" height="64" alt="{{PuzzleBitsController.bits[id].icon}}">
        <span class="pm-PuzzleBits-playerId" ng-if="!PuzzleBitsController.bits[id].icon">{{id}}</span>
   </div>

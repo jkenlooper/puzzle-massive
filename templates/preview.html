@@ -72,7 +72,9 @@ two minute over an hour:{{ timePassed(60*62) }}<br>
   {%- endif %}
 
       {% if recent.status == COMPLETED and not recent.is_recent -%}
-      <div class="pm-DotRequire pm-DotRequire--blur is-dotted" pm-dot-require="{{recent.pieces}}">
+      <pm-dot-require min="{{recent.pieces}}" type="info" dots="{% raw %}{{detailsReady && hasBit && userDetails.dots}}{% endraw %}">
+        This puzzle requires more dots in order to rebuild.
+      </pm-dot-require>
       {% endif %}
 
   <a class="pm-Preview-grid" href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(recent.puzzle_id), scale=null) }}" title="Join this jigsaw puzzle">
@@ -166,9 +168,6 @@ two minute over an hour:{{ timePassed(60*62) }}<br>
   {% if recent.attribution %}
   <p class="pm-Preview-attribution">{{ '[chill route /internal/attribution/{}/ ]'.format(recent.attribution) }}</p>
   {% endif %}
-      {% if recent.status == COMPLETED and not recent.is_recent -%}
-      </div>
-      {% endif %}
 
   {% if recent.permission == -1 -%}
   <p class="pm-Preview-statusNote">

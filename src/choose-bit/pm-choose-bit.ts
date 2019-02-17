@@ -14,7 +14,7 @@ interface TemplateData {
   message: string;
   limit: number;
   bits: string[];
-  dots: null | string;
+  dots: string;
 }
 
 const minimumDotsRequired = 1400;
@@ -77,6 +77,11 @@ customElements.define(
 
     template(data: TemplateData) {
       const self = this;
+      if (!(parseInt(data.dots) > minimumDotsRequired)) {
+        return html`
+          Insufficient dots to pick a different bit.
+        `;
+      }
 
       return html`
         <section class="pm-ChooseBit">
@@ -197,12 +202,12 @@ customElements.define(
     ) {
       // Need to only render initially if the player has enough dots.
       if (name === "dots") {
-        if (
-          this.isLoading &&
-          _newValue &&
-          parseInt(_newValue) > minimumDotsRequired
-        ) {
+        if (_newValue && parseInt(_newValue) > minimumDotsRequired) {
           PmChooseBit.getBits(this, this.limit);
+        } else if (!this.isLoading) {
+          // Render the message for not enough dots since the list of bits were
+          // available previously.
+          this.render();
         }
       }
     }

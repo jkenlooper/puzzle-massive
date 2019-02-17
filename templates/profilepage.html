@@ -16,12 +16,12 @@
   <div class="pm-Profilepage-grid">
     <div class="pm-Profilepage-gridA">
       <h2>Your Current Bit Icon</h2>
-      <pm-profile-bit ng-if="SiteController.hasBit"></pm-profile-bit>
-      <div>Score <b ng-bind="SiteController.userDetails.score"></b></div>
-      <div>Dots <b ng-bind="SiteController.userDetails.dots"></b></div>
+      <pm-profile-bit ng-if="hasBit"></pm-profile-bit>
+      <div>Score <b ng-bind="userDetails.score"></b></div>
+      <div>Dots <b ng-bind="userDetails.dots"></b></div>
     </div>
     <div class="pm-Profilepage-gridB">
-      <pm-choose-bit pm-choose-bit-adapter="userDetailsChange" dots="{% raw %}{{SiteController.detailsReady && SiteController.hasBit && SiteController.userDetails.dots}}{% endraw %}" message="Change bit icon" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
+      <pm-choose-bit pm-choose-bit-adapter="userDetailsChange" dots="{% raw %}{{detailsReady && hasBit && userDetails.dots}}{% endraw %}" message="Change bit icon" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
     </div>
     {% if puzzles %}
       <div class="pm-Profilepage-gridC">
@@ -44,7 +44,7 @@
 
       </div>
     {% endif %}
-    <div class="pm-Profilepage-gridD" ng-if="!SiteController.noCookieSupport && SiteController.hasUserCookie">
+    <div class="pm-Profilepage-gridD" ng-if="!noCookieSupport && hasUserCookie">
       <pm-account>
         {#
         <form action="register-email">

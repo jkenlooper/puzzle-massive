@@ -6,7 +6,7 @@
 {% if baseModifier == 'mainFocus' %}
   {% set baseModifierClass = 'pm-Base--mainFocus' %}
 {% endif %}
-<div class="pm-Base {{ baseModifierClass }}" ng-controller="SiteController as SiteController">
+<pm-site class="pm-Base {{ baseModifierClass }}">
   <header>
     {% block header %}
       {% include 'header.html' %}
@@ -27,5 +27,5 @@
       {% include 'footer.html' %}
     {% endblock %}
   </footer>
-</div>
+</pm-site>
 {% endblock %}

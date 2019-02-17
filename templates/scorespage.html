@@ -11,7 +11,7 @@
       <div class="pm-Scorespage-gridA">
         {{ page.highScores|safe }}
       </div>
-      <div class="pm-Scorespage-gridB" ng-if="SiteController.hasBit">
+      <div class="pm-Scorespage-gridB" ng-if="hasBit">
         <pm-ranking ng-controller="RankingController as RankingController"></pm-ranking>
       </div>
     </div>

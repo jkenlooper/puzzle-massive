@@ -1,11 +1,12 @@
 export default chooseBitAdapterDirective
 
-function chooseBitAdapterDirective() {
+chooseBitAdapterDirective.$inject = ['$rootScope']
+function chooseBitAdapterDirective($rootScope) {
   return {
     restrict: 'A',
     link: function(scope, element, attr) {
       element[0].addEventListener(attr.pmChooseBitAdapter, () => {
-        scope.$emit(attr.pmChooseBitAdapter)
+        $rootScope.$emit(attr.pmChooseBitAdapter)
       })
       scope.$on('$destroy', function() {
         element[0].removeEventListener(attr.pmChooseBitAdapter)

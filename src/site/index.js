@@ -14,8 +14,8 @@ import './site.css'
 
 import base from '../base'
 import userService from './user.service.js'
-import SiteController from './site.controller.js'
-import dotRequire from '../dot-require'
+import '../dot-require'
+import siteDirective from './site.directive.js'
 
 import '../frontpage'
 import profilepage from '../profilepage'
@@ -26,12 +26,5 @@ import '../docspage'
 import puzzlepage from '../puzzlepage'
 
 angular
-  .module('site', [
-    base,
-    userService,
-    dotRequire,
-    profilepage,
-    scorespage,
-    puzzlepage,
-  ])
-  .controller('SiteController', SiteController).name
+  .module('site', [base, userService, profilepage, scorespage, puzzlepage])
+  .directive('pmSite', siteDirective).name
