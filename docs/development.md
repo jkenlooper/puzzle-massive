@@ -126,12 +126,6 @@ make;
 cp chill-data.sql db.dump.sql;
 
 # Build the dist files for local development
-(
-cd puzzle-pieces;
-npm install;
-npm link;
-)
-npm link puzzle-pieces;
 npm install;
 npm run build;
 

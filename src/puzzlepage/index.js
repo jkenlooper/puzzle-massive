@@ -1,7 +1,4 @@
-// Depends on webcomponents.js polyfill to be in head
-// require('file-loader?name=[name].[ext]!./webcomponents-patch.min.js') // TODO: used patched fix until #615 resolved
 require('file-loader?name=[name].[ext]!../../node_modules/slab-massive/dist/slab-massive.min.js')
-require('file-loader?name=[name].[ext]!../../node_modules/puzzle-pieces/dist/puzzle-pieces.min.js')
 
 import angular from 'angular'
 import PuzzlePreviewBox from './puzzle-preview-box.js'

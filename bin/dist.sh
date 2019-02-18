@@ -18,12 +18,6 @@ cd "$TMPDIR";
 nvm use;
 
 # Build
-(
-cd puzzle-pieces;
-npm ci; # clean install
-npm pack; # also does npm run build
-mv puzzle-pieces-*.tgz ../ui-lib/;
-)
 npm ci; # clean install
 npm run build;
 

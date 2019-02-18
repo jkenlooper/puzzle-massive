@@ -1,4 +1,4 @@
-/* global HTMLElement, Hammer, style, pieceHTML, template, PuzzleService, PuzzlePiecesController */
+/* global HTMLElement, Hammer */
 
 // TODO: Exercise for the developer; refactor this mess of old javascript into
 // a more manageable state.  Should start with unit test coverage.  There is
@@ -8,6 +8,14 @@
 // I've added on with more terrible code (a 'small' tweak here and there) to
 // make things more challenging. ;)
 
+import PuzzleService from './puzzle.service.js'
+import PuzzlePiecesController from './puzzle-pieces.controller.js'
+
+import template from './puzzle-pieces.html'
+import style from './puzzle-pieces.css'
+
+const pieceHTML = `<div class="p"></div>`
+
 let pieceTemplate = document.createElement('div')
 pieceTemplate.innerHTML = pieceHTML
 
@@ -15,118 +23,110 @@ const html = `
   <style>${style}</style>
   ${template}
   `
+const tag = 'pm-puzzle-pieces'
 
-window.customElements.define('pm-puzzle-pieces', class extends HTMLElement {
-  constructor () {
-    super()
-    const shadowRoot = this.attachShadow({mode: 'open'})
-    shadowRoot.innerHTML = `<style>@import '${this.getAttribute('resources')}';></style>'${html}`
-    this.$collection = shadowRoot.querySelector('.pm-PuzzlePieces-collection')
-    this.$dropZone = shadowRoot.querySelector('.pm-PuzzlePieces-dropZone')
-    this.$karmaStatus = shadowRoot.querySelector('#pm-puzzle-pieces-karma-status')
-    const $container = shadowRoot.querySelector('.pm-PuzzlePieces')
-    let $slabMassive = this.parentElement
-    const withinSlabMassive = $slabMassive.tagName === 'SLAB-MASSIVE'
+customElements.define(
+  tag,
+  class PuzzlePieces extends HTMLElement {
+    constructor() {
+      super()
+      const shadowRoot = this.attachShadow({ mode: 'open' })
+      shadowRoot.innerHTML = `<style>@import '${this.getAttribute(
+        'resources'
+      )}';></style>'${html}`
+      this.$collection = shadowRoot.querySelector('.pm-PuzzlePieces-collection')
+      this.$dropZone = shadowRoot.querySelector('.pm-PuzzlePieces-dropZone')
+      this.$karmaStatus = shadowRoot.querySelector(
+        '#pm-puzzle-pieces-karma-status'
+      )
+      const $container = shadowRoot.querySelector('.pm-PuzzlePieces')
+      let $slabMassive = this.parentElement
+      const withinSlabMassive = $slabMassive.tagName === 'SLAB-MASSIVE'
 
-    if (!withinSlabMassive) {
-      // Not using slab-massive so we need to set the width of all parent
-      // elements so the browser can properly zoom out.
-      setParentWidth($slabMassive.parentNode)
+      if (!withinSlabMassive) {
+        // Not using slab-massive so we need to set the width of all parent
+        // elements so the browser can properly zoom out.
+        setParentWidth($slabMassive.parentNode)
 
-      // Patch in these properties from the attrs
-      Object.defineProperty($slabMassive, 'scale', {
-        get: function () { return Number(this.getAttribute('scale')) }
-      })
-      Object.defineProperty($slabMassive, 'zoom', {
-        get: function () { return Number(this.getAttribute('zoom')) }
-      })
-      Object.defineProperty($slabMassive, 'offsetX', {
-        get: function () { return Number(this.getAttribute('offset-x')) }
-      })
-      Object.defineProperty($slabMassive, 'offsetY', {
-        get: function () { return Number(this.getAttribute('offset-y')) }
-      })
-    } else {
-      $container.classList.add('pm-PuzzlePieces--withinSlabMassive')
-    }
-
-    let offsetTop = $slabMassive.offsetTop
-    let offsetLeft = $slabMassive.offsetLeft
-
-    let puzzleService = new PuzzleService(this.getAttribute('puzzleid'))
-    let alerts = {
-      container: shadowRoot.querySelector('#puzzle-pieces-alert'),
-      max: shadowRoot.querySelector('#puzzle-pieces-alert-max'),
-      reconnecting: shadowRoot.querySelector('#puzzle-pieces-alert-reconnecting'),
-      disconnected: shadowRoot.querySelector('#puzzle-pieces-alert-disconnected'),
-      blocked: shadowRoot.querySelector('#puzzle-pieces-alert-blocked')
-    }
-    let ctrl = this.ctrl = new PuzzlePiecesController(puzzleService, this.$collection, alerts, this.$karmaStatus)
-    ctrl.renderPieces = renderPieces.bind(this)
-    ctrl.status = this.getAttribute('status')
-    ctrl.parentoftopleft = Number(this.getAttribute('parentoftopleft'))
-    ctrl.puzzleid = this.getAttribute('puzzleid')
-    ctrl.pieceUpdateHandles = {}
-    ctrl.pieceRejectedHandles = {}
-
-    let draggedPiece = null
-    let draggedPieceID = null
-
-    // For all parent elements set the width
-    function setParentWidth (node) {
-      if (node.style) {
-        node.style.width = $slabMassive.offsetWidth + 'px'
+        // Patch in these properties from the attrs
+        Object.defineProperty($slabMassive, 'scale', {
+          get: function() {
+            return Number(this.getAttribute('scale'))
+          },
+        })
+        Object.defineProperty($slabMassive, 'zoom', {
+          get: function() {
+            return Number(this.getAttribute('zoom'))
+          },
+        })
+        Object.defineProperty($slabMassive, 'offsetX', {
+          get: function() {
+            return Number(this.getAttribute('offset-x'))
+          },
+        })
+        Object.defineProperty($slabMassive, 'offsetY', {
+          get: function() {
+            return Number(this.getAttribute('offset-y'))
+          },
+        })
+      } else {
+        $container.classList.add('pm-PuzzlePieces--withinSlabMassive')
       }
-      if (node.parentNode) {
-        setParentWidth(node.parentNode)
+
+      let offsetTop = $slabMassive.offsetTop
+      let offsetLeft = $slabMassive.offsetLeft
+
+      let puzzleService = new PuzzleService(this.getAttribute('puzzleid'))
+      let alerts = {
+        container: shadowRoot.querySelector('#puzzle-pieces-alert'),
+        max: shadowRoot.querySelector('#puzzle-pieces-alert-max'),
+        reconnecting: shadowRoot.querySelector(
+          '#puzzle-pieces-alert-reconnecting'
+        ),
+        disconnected: shadowRoot.querySelector(
+          '#puzzle-pieces-alert-disconnected'
+        ),
+        blocked: shadowRoot.querySelector('#puzzle-pieces-alert-blocked'),
       }
-    }
+      let ctrl = (this.ctrl = new PuzzlePiecesController(
+        puzzleService,
+        this.$collection,
+        alerts,
+        this.$karmaStatus
+      ))
+      ctrl.renderPieces = renderPieces.bind(this)
+      ctrl.status = this.getAttribute('status')
+      ctrl.parentoftopleft = Number(this.getAttribute('parentoftopleft'))
+      ctrl.puzzleid = this.getAttribute('puzzleid')
+      ctrl.pieceUpdateHandles = {}
+      ctrl.pieceRejectedHandles = {}
 
-    function pieceFollow (ev) {
-      ctrl.moveBy(draggedPieceID, (Number($slabMassive.offsetX) + ev.pageX) - offsetLeft, (Number($slabMassive.offsetY) + ev.pageY) - offsetTop, $slabMassive.scale * $slabMassive.zoom)
-    }
+      let draggedPiece = null
+      let draggedPieceID = null
 
-    this.$dropZone.addEventListener('mousedown', dropTap, false)
-    function dropTap (ev) {
-      ev.preventDefault()
-      if (draggedPieceID !== null) {
-        if (ctrl.pieceUpdateHandles[draggedPieceID]) {
-          window.unsubscribe(ctrl.pieceUpdateHandles[draggedPieceID])
-          delete ctrl.pieceUpdateHandles[draggedPieceID]
+      // For all parent elements set the width
+      function setParentWidth(node) {
+        if (node.style) {
+          node.style.width = $slabMassive.offsetWidth + 'px'
         }
-        if (ctrl.pieceRejectedHandles[draggedPieceID]) {
-          window.unsubscribe(ctrl.pieceRejectedHandles[draggedPieceID])
-          delete ctrl.pieceRejectedHandles[draggedPieceID]
+        if (node.parentNode) {
+          setParentWidth(node.parentNode)
         }
-        ctrl.dropSelectedPieces((Number($slabMassive.offsetX) + ev.pageX) - offsetLeft, (Number($slabMassive.offsetY) + ev.pageY) - offsetTop, $slabMassive.scale * $slabMassive.zoom)
-        draggedPieceID = null
       }
-    }
-    function onTap (ev) {
-      if (ev.target.classList.contains('p')) {
-        draggedPiece = ev.target
-        draggedPieceID = parseInt(draggedPiece.id.substr(2))
-        // ignore taps on the viewfinder of slab-massive
-        if (ev.target.tagName === 'SLAB-MASSIVE') {
-          return
-        }
-        $slabMassive.removeEventListener('mousemove', pieceFollow, false)
 
-        // Only select a tapped on piece if there are no other selected pieces.
-        let id = Number(ev.target.id.substr('p-'.length))
-        if (ev.target.classList.contains('p') &&
-          !ctrl.isImmovable(id) &&
-          ctrl.selectedPieces.length === 0 &&
-          !ctrl.blocked) {
-          // listen for piece updates to just this piece while it's being moved.
-          ctrl.pieceUpdateHandles[draggedPieceID] = window.subscribe('piece/update/' + draggedPieceID, onPieceUpdateWhileSelected)
-          // TODO: listen to reject as well?
-          ctrl.pieceRejectedHandles[draggedPieceID] = window.subscribe('piece/move/rejected', onPieceUpdateWhileSelected)
+      function pieceFollow(ev) {
+        ctrl.moveBy(
+          draggedPieceID,
+          Number($slabMassive.offsetX) + ev.pageX - offsetLeft,
+          Number($slabMassive.offsetY) + ev.pageY - offsetTop,
+          $slabMassive.scale * $slabMassive.zoom
+        )
+      }
 
-          // tap on piece
-          ctrl.selectPiece(id)
-          $slabMassive.addEventListener('mousemove', pieceFollow, false)
-        } else {
+      this.$dropZone.addEventListener('mousedown', dropTap, false)
+      function dropTap(ev) {
+        ev.preventDefault()
+        if (draggedPieceID !== null) {
           if (ctrl.pieceUpdateHandles[draggedPieceID]) {
             window.unsubscribe(ctrl.pieceUpdateHandles[draggedPieceID])
             delete ctrl.pieceUpdateHandles[draggedPieceID]
@@ -135,218 +135,276 @@ window.customElements.define('pm-puzzle-pieces', class extends HTMLElement {
             window.unsubscribe(ctrl.pieceRejectedHandles[draggedPieceID])
             delete ctrl.pieceRejectedHandles[draggedPieceID]
           }
-          ctrl.dropSelectedPieces((Number($slabMassive.offsetX) + ev.pageX) - offsetLeft, (Number($slabMassive.offsetY) + ev.pageY) - offsetTop, $slabMassive.scale * $slabMassive.zoom)
+          ctrl.dropSelectedPieces(
+            Number($slabMassive.offsetX) + ev.pageX - offsetLeft,
+            Number($slabMassive.offsetY) + ev.pageY - offsetTop,
+            $slabMassive.scale * $slabMassive.zoom
+          )
           draggedPieceID = null
         }
       }
-    }
+      function onTap(ev) {
+        if (ev.target.classList.contains('p')) {
+          draggedPiece = ev.target
+          draggedPieceID = parseInt(draggedPiece.id.substr(2))
+          // ignore taps on the viewfinder of slab-massive
+          if (ev.target.tagName === 'SLAB-MASSIVE') {
+            return
+          }
+          $slabMassive.removeEventListener('mousemove', pieceFollow, false)
 
-    function onPieceUpdateWhileSelected (data) {
-      // The selected piece has been updated while the player has it selected.
-      // If it's immovable then drop it -- edit: if some other player has moved it, then drop it.
-      // Stop following the mouse
-      $slabMassive.removeEventListener('mousemove', pieceFollow, false)
-
-      // Stop listening for any updates to this piece
-      // console.log('onPieceUpdateWhileSelected', data.id)
-      if (ctrl.pieceUpdateHandles[data.id]) {
-        window.unsubscribe(ctrl.pieceUpdateHandles[data.id])
-        delete ctrl.pieceUpdateHandles[data.id]
-      }
-      if (ctrl.pieceRejectedHandles[data.id]) {
-        window.unsubscribe(ctrl.pieceRejectedHandles[data.id])
-        delete ctrl.pieceRejectedHandles[data.id]
-      }
-
-      // Just unselect the piece so the next on tap doesn't move it
-      ctrl.unSelectPiece(data.id)
-    }
-
-    // Enable panning of the puzzle
-    let panStartX = 0
-    let panStartY = 0
-
-    let mc = new Hammer.Manager(this.$dropZone, {})
-    // touch device can use native panning
-    mc.add(new Hammer.Pan({ direction: Hammer.DIRECTION_ALL,
-      enable: () => $slabMassive.zoom !== 1
-    }))
-    mc.on('panstart panmove', function (ev) {
-      if (ev.target.tagName === 'SLAB-MASSIVE') {
-        return
-      }
-      switch (ev.type) {
-        case 'panstart':
-          panStartX = Number($slabMassive.offsetX)
-          panStartY = Number($slabMassive.offsetY)
-          break
-        case 'panmove':
-          $slabMassive.scrollTo(
-            panStartX + (ev.deltaX * -1),
-            panStartY + (ev.deltaY * -1)
+          // Only select a tapped on piece if there are no other selected pieces.
+          let id = Number(ev.target.id.substr('p-'.length))
+          if (
+            ev.target.classList.contains('p') &&
+            !ctrl.isImmovable(id) &&
+            ctrl.selectedPieces.length === 0 &&
+            !ctrl.blocked
+          ) {
+            // listen for piece updates to just this piece while it's being moved.
+            ctrl.pieceUpdateHandles[draggedPieceID] = window.subscribe(
+              'piece/update/' + draggedPieceID,
+              onPieceUpdateWhileSelected
             )
-          break
+            // TODO: listen to reject as well?
+            ctrl.pieceRejectedHandles[draggedPieceID] = window.subscribe(
+              'piece/move/rejected',
+              onPieceUpdateWhileSelected
+            )
+
+            // tap on piece
+            ctrl.selectPiece(id)
+            $slabMassive.addEventListener('mousemove', pieceFollow, false)
+          } else {
+            if (ctrl.pieceUpdateHandles[draggedPieceID]) {
+              window.unsubscribe(ctrl.pieceUpdateHandles[draggedPieceID])
+              delete ctrl.pieceUpdateHandles[draggedPieceID]
+            }
+            if (ctrl.pieceRejectedHandles[draggedPieceID]) {
+              window.unsubscribe(ctrl.pieceRejectedHandles[draggedPieceID])
+              delete ctrl.pieceRejectedHandles[draggedPieceID]
+            }
+            ctrl.dropSelectedPieces(
+              Number($slabMassive.offsetX) + ev.pageX - offsetLeft,
+              Number($slabMassive.offsetY) + ev.pageY - offsetTop,
+              $slabMassive.scale * $slabMassive.zoom
+            )
+            draggedPieceID = null
+          }
+        }
       }
-    })
 
-    // the pieceUpdateHandle is used to subscribe/unsubscribe from specific piece movements
-    // let pieceUpdateHandle
-    // let pieceRejectedHandle
-    this.$collection.addEventListener('mousedown', onTap, false)
+      function onPieceUpdateWhileSelected(data) {
+        // The selected piece has been updated while the player has it selected.
+        // If it's immovable then drop it -- edit: if some other player has moved it, then drop it.
+        // Stop following the mouse
+        $slabMassive.removeEventListener('mousemove', pieceFollow, false)
 
-    // update DOM for array of piece id's
-    function renderPieces (pieces, pieceIDs) {
-      let tmp = document.createDocumentFragment()
-      pieceIDs.forEach((pieceID) => {
-        let piece = pieces[pieceID]
-        let $piece = this.$collection.querySelector('#p-' + pieceID)
-        if (!$piece) {
-          $piece = pieceTemplate.firstChild.cloneNode(true)
-          $piece.setAttribute('id', 'p-' + pieceID)
-          $piece.classList.add('pc-' + pieceID)
-          $piece.classList.add('p--' + ((piece.b === 0) ? 'dark' : 'light'))
-          tmp.appendChild($piece)
+        // Stop listening for any updates to this piece
+        // console.log('onPieceUpdateWhileSelected', data.id)
+        if (ctrl.pieceUpdateHandles[data.id]) {
+          window.unsubscribe(ctrl.pieceUpdateHandles[data.id])
+          delete ctrl.pieceUpdateHandles[data.id]
+        }
+        if (ctrl.pieceRejectedHandles[data.id]) {
+          window.unsubscribe(ctrl.pieceRejectedHandles[data.id])
+          delete ctrl.pieceRejectedHandles[data.id]
         }
 
-        // Move the piece
-        if (piece.x !== undefined) {
-          $piece.style.transform = `translate3d(${piece.x}px, ${piece.y}px, 0)
+        // Just unselect the piece so the next on tap doesn't move it
+        ctrl.unSelectPiece(data.id)
+      }
+
+      // Enable panning of the puzzle
+      let panStartX = 0
+      let panStartY = 0
+
+      let mc = new Hammer.Manager(this.$dropZone, {})
+      // touch device can use native panning
+      mc.add(
+        new Hammer.Pan({
+          direction: Hammer.DIRECTION_ALL,
+          enable: () => $slabMassive.zoom !== 1,
+        })
+      )
+      mc.on('panstart panmove', function(ev) {
+        if (ev.target.tagName === 'SLAB-MASSIVE') {
+          return
+        }
+        switch (ev.type) {
+          case 'panstart':
+            panStartX = Number($slabMassive.offsetX)
+            panStartY = Number($slabMassive.offsetY)
+            break
+          case 'panmove':
+            $slabMassive.scrollTo(
+              panStartX + ev.deltaX * -1,
+              panStartY + ev.deltaY * -1
+            )
+            break
+        }
+      })
+
+      // the pieceUpdateHandle is used to subscribe/unsubscribe from specific piece movements
+      // let pieceUpdateHandle
+      // let pieceRejectedHandle
+      this.$collection.addEventListener('mousedown', onTap, false)
+
+      // update DOM for array of piece id's
+      function renderPieces(pieces, pieceIDs) {
+        let tmp = document.createDocumentFragment()
+        pieceIDs.forEach((pieceID) => {
+          let piece = pieces[pieceID]
+          let $piece = this.$collection.querySelector('#p-' + pieceID)
+          if (!$piece) {
+            $piece = pieceTemplate.firstChild.cloneNode(true)
+            $piece.setAttribute('id', 'p-' + pieceID)
+            $piece.classList.add('pc-' + pieceID)
+            $piece.classList.add('p--' + (piece.b === 0 ? 'dark' : 'light'))
+            tmp.appendChild($piece)
+          }
+
+          // Move the piece
+          if (piece.x !== undefined) {
+            $piece.style.transform = `translate3d(${piece.x}px, ${piece.y}px, 0)
             rotate(${360 - piece.rotate === 360 ? 0 : 360 - piece.rotate}deg)`
-        }
+          }
 
-        // Piece status can be undefined which would mean the status should be
-        // reset. This is the case when a piece is no longer stacked.
-        if (piece.s === undefined) {
+          // Piece status can be undefined which would mean the status should be
+          // reset. This is the case when a piece is no longer stacked.
+          if (piece.s === undefined) {
             // Not showing any indication of stacked pieces on the front end,
             // so no class to remove.
             //
             // Once a piece is immovable it shouldn't need to become movable
             // again. (it's part of the border pieces group)
-        }
-        // Set immovable
-        if (piece.s === 1) {
-          $piece.classList.add('is-immovable')
-        }
-
-        // Toggle the is-active class
-        if (piece.active) {
-          $piece.classList.add('is-active')
-        } else {
-          $piece.classList.remove('is-active')
-        }
-
-        // Toggle the is-up, is-down class when karma has changed
-        if (piece.karmaChange) {
-          if (piece.karmaChange > 0) {
-            $piece.classList.add('is-up')
-          } else {
-            $piece.classList.add('is-down')
           }
-          window.setTimeout(function cleanupKarma () {
-            $piece.classList.remove('is-up', 'is-down')
-          }, 5000)
-          piece.karmaChange = false
-        }
-      })
-      if (tmp.children.length) {
-        this.$collection.appendChild(tmp)
-      }
-    }
+          // Set immovable
+          if (piece.s === 1) {
+            $piece.classList.add('is-immovable')
+          }
 
-    const hashRGBColorRe = /background=([a-f0-9]{2})([a-f0-9]{2})([a-f0-9]{2})/i
-    window.addEventListener('hashchange', function handleHashChange () {
-      let hash = window.location.hash
-      updateForegroundAndBackgroundColors(hash)
-    }, false)
+          // Toggle the is-active class
+          if (piece.active) {
+            $piece.classList.add('is-active')
+          } else {
+            $piece.classList.remove('is-active')
+          }
 
-    /**
-     * Converts an RGB color value to HSL. Conversion formula
-     * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
-     * Assumes r, g, and b are contained in the set [0, 255] and
-     * returns h, s, and l in the set [0, 1].
-     *
-     * @param   {number}  r       The red color value
-     * @param   {number}  g       The green color value
-     * @param   {number}  b       The blue color value
-     * @return  {Array}           The HSL representation
-     */
-    function rgbToHsl (r16, g16, b16) {
-      let r = parseInt(r16, 16) / 255.0
-      let g = parseInt(g16, 16) / 255.0
-      let b = parseInt(b16, 16) / 255.0
-      let max = Math.max(r, g, b)
-      let min = Math.min(r, g, b)
-      let h = 0
-      let s = 0
-      let l = (max + min) / 2.0
-
-      if (max === min) {
-        h = s = 0 // achromatic
-      } else {
-        let d = max - min
-        s = l > 0.5 ? d / (2.0 - max - min) : d / (max + min)
-        switch (max) {
-          case r:
-            h = (g - b) / d + (g < b ? 6 : 0)
-            break
-          case g:
-            h = (b - r) / d + 2
-            break
-          case b:
-            h = (r - g) / d + 4
-            break
+          // Toggle the is-up, is-down class when karma has changed
+          if (piece.karmaChange) {
+            if (piece.karmaChange > 0) {
+              $piece.classList.add('is-up')
+            } else {
+              $piece.classList.add('is-down')
+            }
+            window.setTimeout(function cleanupKarma() {
+              $piece.classList.remove('is-up', 'is-down')
+            }, 5000)
+            piece.karmaChange = false
+          }
+        })
+        if (tmp.children.length) {
+          this.$collection.appendChild(tmp)
         }
       }
 
-      // Convert to degrees
-      h = h * 60.0
-      if (h < 0) {
-        h = h + 360
+      const hashRGBColorRe = /background=([a-f0-9]{2})([a-f0-9]{2})([a-f0-9]{2})/i
+      window.addEventListener(
+        'hashchange',
+        function handleHashChange() {
+          let hash = window.location.hash
+          updateForegroundAndBackgroundColors(hash)
+        },
+        false
+      )
+
+      /**
+       * Converts an RGB color value to HSL. Conversion formula
+       * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+       * Assumes r, g, and b are contained in the set [0, 255] and
+       * returns h, s, and l in the set [0, 1].
+       *
+       * @param   {number}  r       The red color value
+       * @param   {number}  g       The green color value
+       * @param   {number}  b       The blue color value
+       * @return  {Array}           The HSL representation
+       */
+      function rgbToHsl(r16, g16, b16) {
+        let r = parseInt(r16, 16) / 255.0
+        let g = parseInt(g16, 16) / 255.0
+        let b = parseInt(b16, 16) / 255.0
+        let max = Math.max(r, g, b)
+        let min = Math.min(r, g, b)
+        let h = 0
+        let s = 0
+        let l = (max + min) / 2.0
+
+        if (max === min) {
+          h = s = 0 // achromatic
+        } else {
+          let d = max - min
+          s = l > 0.5 ? d / (2.0 - max - min) : d / (max + min)
+          switch (max) {
+            case r:
+              h = (g - b) / d + (g < b ? 6 : 0)
+              break
+            case g:
+              h = (b - r) / d + 2
+              break
+            case b:
+              h = (r - g) / d + 4
+              break
+          }
+        }
+
+        // Convert to degrees
+        h = h * 60.0
+        if (h < 0) {
+          h = h + 360
+        }
+        // Convert to percentage
+        s = s * 100
+        l = l * 100
+
+        return [h, s, l]
       }
-      // Convert to percentage
-      s = s * 100
-      l = l * 100
 
-      return [h, s, l]
-    }
+      updateForegroundAndBackgroundColors(window.location.hash)
+      function updateForegroundAndBackgroundColors(hash) {
+        let RGBmatch = hash.match(hashRGBColorRe)
 
-    updateForegroundAndBackgroundColors(window.location.hash)
-    function updateForegroundAndBackgroundColors (hash) {
-      let RGBmatch = hash.match(hashRGBColorRe)
+        if (RGBmatch) {
+          let hsl = rgbToHsl(RGBmatch[1], RGBmatch[2], RGBmatch[3])
+          $container.style.backgroundColor = `hsla(${hsl[0]},${hsl[1]}%,${
+            hsl[2]
+          }%,1)`
 
-      if (RGBmatch) {
-        let hsl = rgbToHsl(RGBmatch[1], RGBmatch[2], RGBmatch[3])
-        $container.style.backgroundColor = `hsla(${hsl[0]},${hsl[1]}%,${hsl[2]}%,1)`
-
-        // let hue = hsl[0]
-        // let sat = hsl[1]
-        let light = hsl[2]
-        /*
+          // let hue = hsl[0]
+          // let sat = hsl[1]
+          let light = hsl[2]
+          /*
         let opposingHSL = [
           hue > 180 ? hue - 180 : hue + 180,
           100 - sat,
           100 - light
         ]
         */
-        let contrast = light > 50 ? 0 : 100
-        $container.style.color = `hsla(0,0%,${contrast}%,1)`
+          let contrast = light > 50 ? 0 : 100
+          $container.style.color = `hsla(0,0%,${contrast}%,1)`
+        }
       }
     }
-  }
 
-  // Fires when an instance was inserted into the document.
-  connectedCallback () {}
+    // Fires when an instance was inserted into the document.
+    connectedCallback() {}
 
-  static get observedAttributes () {
-    return [
-    ]
-  }
-  // Fires when an attribute was added, removed, or updated.
-  attributeChangedCallback (attrName, oldVal, newVal) {
-  }
+    static get observedAttributes() {
+      return []
+    }
+    // Fires when an attribute was added, removed, or updated.
+    attributeChangedCallback(attrName, oldVal, newVal) {}
 
-  render () {
+    render() {}
   }
-})
-
-// export default PuzzlePieces
+)

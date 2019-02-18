@@ -1,9 +1,0 @@
-.DS_Store
-/node_modules/
-/dist/
-/src/*.tmp.js
-/src/*.tmp.css
-/src/*.tmp.html
-.minifycss
-.minifycss-prerequisites
-.minifyhtml

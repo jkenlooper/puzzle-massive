@@ -1,8 +1,8 @@
 /* global WebSocket */
 
-;(function () {
+;(function() {
   let updater = {
-    connect: connect
+    connect: connect,
   }
 
   window.updater = updater
@@ -17,28 +17,34 @@
   let pingServerIntervalID = 0
   let pingCount = 0
 
-  const puzzleId = document.getElementById('puzzle-container').getAttribute('puzzle_id')
+  const puzzleContainer = document.getElementById('puzzle-container')
+  if (!puzzleContainer) {
+    return
+  }
+  const puzzleId = puzzleContainer.getAttribute('puzzle_id')
 
-  function connect () {
+  function connect() {
     if (pingCount >= MAX_PINGS) {
-        // console.log('disconnected')
+      // console.log('disconnected')
       window.clearInterval(pingServerIntervalID)
       window.publish('socket/disconnected')
-        // Reset the pingCount so it can be connected again
+      // Reset the pingCount so it can be connected again
       pingCount = 0
-        // TODO: show a disconnected message
+      // TODO: show a disconnected message
       return
     }
 
     // console.log('connect new ws')
     // updater.ws = new WebSocket(`ws://${window.location.host}/newapi/puzzle/${puzzleId}/updates/`)
-    updater.ws = new WebSocket(`ws://${window.location.host}/divulge/${puzzleId}/`)
+    updater.ws = new WebSocket(
+      `ws://${window.location.host}/divulge/${puzzleId}/`
+    )
     updater.ws.onopen = onOpenSocket
     updater.ws.onclose = onCloseSocket
     updater.ws.onmessage = onMessageSocket
   }
 
-  function onOpenSocket () {
+  function onOpenSocket() {
     // console.log('connected')
     window.publish('socket/connected')
     updater.ws.send(puzzleId)
@@ -46,25 +52,25 @@
     pingServerIntervalID = pingServer()
   }
 
-  function onCloseSocket () {
+  function onCloseSocket() {
     window.clearInterval(pingServerIntervalID)
     if (pingCount < MAX_PINGS) {
-        // console.log('onCloseSocket... reconnecting in 15')
-        // Try to reconnect in 15 seconds
+      // console.log('onCloseSocket... reconnecting in 15')
+      // Try to reconnect in 15 seconds
       setTimeout(connect, 1000 * 15)
       window.publish('socket/reconnecting')
-        // Update the pingCount so it doesn't just try to continually connect forever
+      // Update the pingCount so it doesn't just try to continually connect forever
       pingCount = pingCount + 1
     } else {
-        // console.log('onCloseSocket... disconnected')
+      // console.log('onCloseSocket... disconnected')
       window.publish('socket/disconnected')
     }
   }
 
-  function onMessageSocket (msg) {
+  function onMessageSocket(msg) {
     lastMessageSent = new Date().getTime()
     window.clearTimeout(stalePuzzleTimeout)
-    stalePuzzleTimeout = window.setTimeout(function () {
+    stalePuzzleTimeout = window.setTimeout(function() {
       // TODO: Puzzle piece data may have moved away from redis storage if the
       // puzzle has been stale for 30 minutes.
     }, 30 * 60 * 1000)
@@ -80,13 +86,13 @@
     handleMovementString(msg.data)
   }
 
-  function pingServer () {
+  function pingServer() {
     // send ping requests every 50 seconds to keep the connection to the proxied websocket open
     const checkInterval = 10
     // Set the poll interval to be 2 seconds less than the checkInterval
     const pollIntervalMs = (checkInterval - 2) * 1000
     const interval = (PROXY_READ_TIMEOUT - checkInterval) * 1000
-    return setInterval(function () {
+    return setInterval(function() {
       // Prevent keeping the connection open if nothing is happening
       const currentTime = new Date().getTime()
       if (!lastMessageSent || lastMessageSent < currentTime - interval) {
@@ -101,17 +107,18 @@
     }, pollIntervalMs)
   }
 
-  function handleMovementString (textline) {
+  function handleMovementString(textline) {
     let lines = textline.split('\n')
-    lines.forEach(function (line) {
+    lines.forEach(function(line) {
       // let line = String(line)
       let items = line.split(',')
-      items.forEach(function (item) {
+      items.forEach(function(item) {
         let values = item.split(':')
-        if (values.length === 7) { // puzzle_id, piece_id, x, y, r, parent, status
+        if (values.length === 7) {
+          // puzzle_id, piece_id, x, y, r, parent, status
           // if (values[2] !== '') {
           let pieceData = {
-            id: Number(values[1])
+            id: Number(values[1]),
           }
           if (values[5] !== '') {
             pieceData.parent = Number(values[5])
@@ -130,11 +137,13 @@
           window.publish('piece/update/' + pieceData.id, [pieceData])
           window.publish('piece/update', [pieceData])
         } else if (values.length === 4) {
-          window.publish('bit/update', [{
-            id: values[1],
-            x: values[2],
-            y: values[3]
-          }])
+          window.publish('bit/update', [
+            {
+              id: values[1],
+              x: values[2],
+              y: values[3],
+            },
+          ])
         }
       })
     })

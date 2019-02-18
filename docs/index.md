@@ -25,9 +25,6 @@ design of the site.
 `puzzle-massive/` When a `make dist` is run this directory holds symlinks of
 files and directories that will be included in a distribution.
 
-`puzzle-pieces/` Project that builds a web component (puzzle-pieces) separately
-from the other src files.
-
 `queries/` SQL files that are used by the chill app and api app.
 
 `resources/` 

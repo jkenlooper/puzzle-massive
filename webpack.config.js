@@ -61,21 +61,6 @@ config.module = {
       },
     },
     {
-      test: /\.js$/,
-      exclude: /node_modules|\.min\.js/,
-      use: [
-        {
-          loader: 'babel-loader',
-          options: {
-            presets: ['env'],
-          },
-        },
-        {
-          loader: 'eslint-loader',
-        },
-      ],
-    },
-    {
       test: /fonts\/.*\.(eot|svg|ttf|woff)$/,
       use: [
         {
@@ -104,6 +89,24 @@ config.module = {
       exclude: /node_modules|puzzle-pieces.css/,
       use: [
         MiniCssExtractPlugin.loader,
+        'css-loader',
+        {
+          loader: 'postcss-loader',
+          options: {
+            ident: 'postcss',
+            plugins: (loader) => [
+              postcssImport(),
+              postcssCustomMedia(),
+              postcssPresetEnv(),
+            ],
+          },
+        },
+      ],
+    },
+    {
+      test: /\puzzle-pieces.css$/,
+      exclude: /node_modules/,
+      use: [
         'css-loader',
         {
           loader: 'postcss-loader',
