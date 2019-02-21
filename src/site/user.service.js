@@ -1,13 +1,6 @@
 import angular from 'angular'
 
-function areCookiesEnabled() {
-  document.cookie = '__verify=1'
-  let supportsCookies =
-    document.cookie.length >= 1 && document.cookie.indexOf('__verify=1') !== -1
-  let thePast = new Date(2011, 9, 26)
-  document.cookie = '__verify=1;expires=' + thePast.toUTCString()
-  return supportsCookies
-}
+import { areCookiesEnabled } from './cookies.js'
 
 class userService {
   constructor($http) {
@@ -17,8 +10,7 @@ class userService {
       score: 0,
       dots: 0,
       detailsReady: false,
-      hasUserCookie: false,
-      hasBit: false,
+      //hasBit: false,
     }
   }
 

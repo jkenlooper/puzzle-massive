@@ -1,9 +1,0 @@
-<div class="pm-profileBit"
-   ng-class="{'isExpired': userDetails.bit_expired}">
-  <a class="pm-profileBit-link"
-    ng-href="{{PLAYER_PROFILE_URL}}{{userDetails.login}}/">
-    <img ng-src="{{MEDIA_PATH + 'bit-icons/64-' + userDetails.icon + '.png'}}"
-         width="64" height="64" alt="{{userDetails.icon}}" ng-if="userDetails.icon">
-    <span ng-if="!userDetails.icon">{{userDetails.id}}</span>
-  </a>
-</div>

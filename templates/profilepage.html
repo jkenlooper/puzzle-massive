@@ -16,7 +16,7 @@
   <div class="pm-Profilepage-grid">
     <div class="pm-Profilepage-gridA">
       <h2>Your Current Bit Icon</h2>
-      <pm-profile-bit ng-if="hasBit"></pm-profile-bit>
+      <pm-profile-bit player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}" offng-if="hasBit"></pm-profile-bit>
       <div>Score <b ng-bind="userDetails.score"></b></div>
       <div>Dots <b ng-bind="userDetails.dots"></b></div>
     </div>
