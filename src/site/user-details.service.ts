@@ -1,26 +1,21 @@
 type UserDetailsCallback = () => any;
 
 interface UserDetailsData {
-  login: string;
-  icon: string;
-  score: number;
+  bit_expired?: boolean;
+  cookie_expires?: string;
   dots: number;
-  id: string;
-  cookie_expires: string;
-  bit_expired: boolean;
+  icon?: string;
+  id?: number;
+  login?: string;
+  score: number;
 }
 
 class UserDetailsService {
   hasInitialized: boolean = false;
   listeners: Map<string, UserDetailsCallback> = new Map();
   userDetails: UserDetailsData = {
-    score: 0,
     dots: 0,
-    login: "something",
-    id: "2",
-    icon: "tree",
-    cookie_expires: "somethingasdf",
-    bit_expired: false,
+    score: 0,
   };
 
   constructor() {
@@ -56,6 +51,7 @@ class UserDetailsService {
             });
           })
           .then((userDetails) => {
+            console.log(userDetails);
             this.userDetails = userDetails;
           });
       });

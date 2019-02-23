@@ -24,10 +24,10 @@ import '../frontpage'
 import profilepage from '../profilepage'
 import '../queuepage'
 import '../puzzleuploadpage'
-import scorespage from '../scorespage'
+import '../scorespage'
 import '../docspage'
 import puzzlepage from '../puzzlepage'
 
 angular
-  .module('site', [base, userService, profilepage, scorespage, puzzlepage])
+  .module('site', [base, userService, profilepage, puzzlepage])
   .directive('pmSite', siteDirective).name

@@ -1,12 +1,9 @@
 /* global MEDIA_PATH */
 
-//import {hasUserCookie} from './cookies.js'
-
 export default class SiteController {
   constructor($rootScope, $scope, userService) {
     $rootScope.MEDIA_PATH = MEDIA_PATH
     $rootScope.hasBit = false
-    //$rootScope.hasUserCookie = false
     $rootScope.detailsReady = false
 
     setUser()
@@ -21,7 +18,6 @@ export default class SiteController {
     function setUser(notClaimRandomBit) {
       console.log('angular setUser userDetailsChange')
       userService.get().then(function(user) {
-        $rootScope.user = user
         // If cookies are disabled by user then don't show the bit icon in header
         $rootScope.noCookieSupport = !userService.hasCookieSupport()
         if (!$rootScope.noCookieSupport) {
@@ -36,11 +32,6 @@ export default class SiteController {
                 setUser(true)
               })
             }
-            /*
-            $rootScope.hasUserCookie =
-              document.cookie.length >= 1 &&
-              document.cookie.indexOf('user=') !== -1
-              */
             $rootScope.detailsReady = true
           })
         } else {
