@@ -6,7 +6,6 @@ import userDetailsService from "../site/user-details.service";
 
 import { html, render } from "lit-html";
 import { classMap } from "lit-html/directives/class-map.js";
-//import { repeat } from "lit-html/directives/repeat";
 
 import "./ranking.css";
 
@@ -20,6 +19,8 @@ interface RankData {
 
 interface PlayerRankDetail extends RankData {
   topPlayer: boolean;
+  iconSrc: string;
+  iconAlt: string;
 }
 
 interface TemplateData {
@@ -32,12 +33,16 @@ interface TemplateData {
   hasUp: boolean;
   hasDown: boolean;
   playerRanks: Array<PlayerRankDetail>;
+  selectPlayerRanksUp: Function;
+  selectPlayerRanksDown: Function;
 }
 
-function setTopPlayers(item: RankData, index: number): PlayerRankDetail {
+function setPlayerRankDetails(item: RankData, index: number): PlayerRankDetail {
   const playerRank = <PlayerRankDetail>Object.assign(
     {
       topPlayer: index < 15,
+      iconSrc: `${MEDIA_PATH}bit-icons/64-${item.icon || "unknown-bit"}.png`,
+      iconAlt: item.icon || "unknown bit",
     },
     item
   );
@@ -63,6 +68,7 @@ customElements.define(
     hasUp: boolean = false;
     hasDown: boolean = false;
     private instanceId: string;
+    private offset: number = 0;
 
     static get _instanceId(): string {
       return `${tag} ${lastInstanceId++}`;
@@ -112,7 +118,6 @@ customElements.define(
       rankingService
         .get<Array<RankData>>()
         .then((data) => {
-          console.log("rankings", data);
           const list = data.filter((item) => {
             return (
               item.id === playerId || !(item.score === 0 || item.icon === "")
@@ -120,9 +125,9 @@ customElements.define(
           });
           this.playerRank = list.findIndex((item) => item.id === playerId) + 1;
 
-          this.allPlayerRanks = list.map(setTopPlayers);
+          this.allPlayerRanks = list.map(setPlayerRankDetails);
           this.totalActivePlayers = this.allPlayerRanks.length;
-          this.selectPlayerRanks();
+          this.selectPlayerRanks(this.offset);
         })
         .finally(() => {
           this.isReady = true;
@@ -158,26 +163,36 @@ customElements.define(
             </strong>
           </p>
           <p class="u-textRight">
-            <button
-              offng-if="RankingController.hasUp"
-              class="pm-Ranking-pager pm-Ranking-pager--up"
-              offng-click="RankingController.selectPlayerRanksUp()"
-            >
-              &uarr;
-            </button>
+          ${
+            data.hasUp
+              ? html`
+                  <button
+                    class="pm-Ranking-pager pm-Ranking-pager--up"
+                    @click=${data.selectPlayerRanksUp}
+                  >
+                    &uarr;
+                  </button>
+                `
+              : html``
+          }
           </p>
           <div class="pm-Ranking-list" role="list">
           ${items()}
 
           </div>
           <p class="u-textRight">
-            <button
-              offng-if="RankingController.hasDown"
-              class="pm-Ranking-pager pm-Ranking-pager--down"
-              offng-click="RankingController.selectPlayerRanksDown()"
-            >
-              &darr;
-            </button>
+          ${
+            data.hasDown
+              ? html`
+                  <button
+                    class="pm-Ranking-pager pm-Ranking-pager--down"
+                    @click=${data.selectPlayerRanksDown}
+                  >
+                    &darr;
+                  </button>
+                `
+              : html``
+          }
           </p>
         </section>
       `;
@@ -187,29 +202,28 @@ customElements.define(
           ${data.playerRanks.map((item) => {
             return html`
               <div
-                class="pm-Ranking-listitem"
                 role="listitem"
                 class=${classMap({
+                  "pm-Ranking-listitem": true,
                   "pm-Ranking-listitem--current": item.id === data.playerId,
                   "pm-Ranking-listitem--topPlayer": item.topPlayer,
                 })}
               >
                 <img
                   class="pm-Ranking-img"
-                  src="${MEDIA_PATH}bit-icons/64-${item.icon ||
-                    "unknown-bit"}.png"
+                  src=${item.iconSrc}
                   width="64"
                   height="64"
-                  alt="${item.icon || "unknown-bit"}"
+                  alt=${item.iconAlt}
                 />
 
                 <strong class="pm-Ranking-rank">${item.score}</strong>
                 <span class="pm-Ranking-status">
-                  <small
-                    title="bit icon has expired"
-                    offng-if="item.active === 0"
-                    >Inactive</small
-                  >
+                  ${item.active === 0
+                    ? html`
+                        <small title="bit icon has expired">Inactive</small>
+                      `
+                    : html``}
                 </span>
               </div>
             `;
@@ -228,6 +242,8 @@ customElements.define(
         hasUp: this.hasUp,
         hasDown: this.hasDown,
         playerRanks: this.playerRanks,
+        selectPlayerRanksUp: this.selectPlayerRanksUp.bind(this),
+        selectPlayerRanksDown: this.selectPlayerRanksDown.bind(this),
       };
     }
 
@@ -235,7 +251,7 @@ customElements.define(
       render(this.template(this.data), this);
     }
 
-    selectPlayerRanks(offset = 0) {
+    selectPlayerRanks(offset: number) {
       let start = Math.max(this.playerRank - 1 - offset - this.range / 2, 0);
       let end = Math.max(
         this.playerRank - 1 - offset + this.range / 2,
@@ -244,6 +260,18 @@ customElements.define(
       this.playerRanks = this.allPlayerRanks.slice(start, end);
       this.hasUp = start > 1;
       this.hasDown = end < this.allPlayerRanks.length;
+    }
+
+    selectPlayerRanksUp() {
+      this.offset = this.offset + this.range;
+      this.selectPlayerRanks(this.offset);
+      this.render();
+    }
+
+    selectPlayerRanksDown() {
+      this.offset = this.offset - this.range;
+      this.selectPlayerRanks(this.offset);
+      this.render();
     }
   }
 );

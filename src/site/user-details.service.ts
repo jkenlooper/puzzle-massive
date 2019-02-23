@@ -51,7 +51,6 @@ class UserDetailsService {
             });
           })
           .then((userDetails) => {
-            console.log(userDetails);
             this.userDetails = userDetails;
           });
       });
