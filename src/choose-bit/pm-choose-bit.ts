@@ -4,6 +4,7 @@ declare const MEDIA_PATH: string;
 import { html, render } from "lit-html";
 import { repeat } from "lit-html/directives/repeat";
 
+import userDetailsService from "../site/user-details.service";
 import "./choose-bit.css";
 import { chooseBitService } from "./choose-bit.service";
 
@@ -14,22 +15,22 @@ interface TemplateData {
   message: string;
   limit: number;
   bits: string[];
-  dots: string;
+  dots: number;
 }
 
 const minimumDotsRequired = 1400;
 const limitBits = 10;
 
 const tag = "pm-choose-bit";
+let lastInstanceId = 0;
 
 customElements.define(
   tag,
   class PmChooseBit extends HTMLElement {
-    static get observedAttributes() {
-      // If the dots value changes then it may need to render if it hasn't
-      // already.
-      return ["dots"];
+    static get _instanceId(): string {
+      return `${tag} ${lastInstanceId++}`;
     }
+    private instanceId: string;
 
     static getBits(
       self: PmChooseBit,
@@ -59,6 +60,7 @@ customElements.define(
 
     constructor() {
       super();
+      this.instanceId = PmChooseBit._instanceId;
 
       // Set the message from the message attribute
       const message = this.attributes.getNamedItem("message");
@@ -67,6 +69,17 @@ customElements.define(
       // Set the limit from the limit attribute
       const limit = this.attributes.getNamedItem("limit");
       this.limit = limit ? parseInt(limit.value) : limitBits;
+
+      // need to get bits on the subscribe callback
+      userDetailsService.subscribe(() => {
+        if (userDetailsService.userDetails.dots > minimumDotsRequired) {
+          PmChooseBit.getBits(this, this.limit);
+        } else {
+          this.render();
+        }
+      }, this.instanceId);
+
+      //this.render();
     }
 
     handleClickMore() {
@@ -77,7 +90,8 @@ customElements.define(
 
     template(data: TemplateData) {
       const self = this;
-      if (!(parseInt(data.dots) > minimumDotsRequired)) {
+
+      if (!(data.dots > minimumDotsRequired)) {
         return html`
           Insufficient dots to pick a different bit.
         `;
@@ -165,51 +179,19 @@ customElements.define(
     }
 
     get data(): TemplateData {
-      return PmChooseBit.observedAttributes.reduce(
-        (data: any, item: string) => {
-          const attr = this.attributes.getNamedItem(item);
-          data[item] = attr ? attr.value : null;
-          return data;
-        },
-        {
-          isLoading: this.isLoading,
-          isReloading: this.isReloading,
-          hasError: this.hasError,
-          message: this.message,
-          limit: this.limit,
-          bits: this.bits,
-        }
-      );
+      return {
+        dots: userDetailsService.userDetails.dots,
+        isLoading: this.isLoading,
+        isReloading: this.isReloading,
+        hasError: this.hasError,
+        message: this.message,
+        limit: this.limit,
+        bits: this.bits,
+      };
     }
 
     render() {
       render(this.template(this.data), this);
-    }
-
-    connectedCallback() {
-      //console.log("connectedCallback");
-    }
-    disconnectedCallback() {
-      //console.log("disconnectedCallback");
-    }
-    adoptedCallback() {
-      //console.log("adoptedCallback");
-    }
-    attributeChangedCallback(
-      name: string,
-      _oldValue: string | null,
-      _newValue: string | null
-    ) {
-      // Need to only render initially if the player has enough dots.
-      if (name === "dots") {
-        if (_newValue && parseInt(_newValue) > minimumDotsRequired) {
-          PmChooseBit.getBits(this, this.limit);
-        } else if (!this.isLoading) {
-          // Render the message for not enough dots since the list of bits were
-          // available previously.
-          this.render();
-        }
-      }
     }
   }
 );

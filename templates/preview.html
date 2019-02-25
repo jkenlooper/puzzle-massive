@@ -72,7 +72,7 @@ two minute over an hour:{{ timePassed(60*62) }}<br>
   {%- endif %}
 
       {% if recent.status == COMPLETED and not recent.is_recent -%}
-      <pm-dot-require min="{{recent.pieces}}" type="info" dots="{% raw %}{{detailsReady && hasBit && userDetails.dots}}{% endraw %}">
+      <pm-dot-require min="{{recent.pieces}}" type="info">
         This puzzle requires more dots in order to rebuild.
       </pm-dot-require>
       {% endif %}

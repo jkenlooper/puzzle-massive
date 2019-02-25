@@ -1,9 +1,10 @@
 /* global HTMLElement, customElements */
 
+import userDetailsService from "../site/user-details.service";
 import "./dot-require.css";
 
 /*
- * <pm-dot-require min="10" dots="2" type="hidden">
+ * <pm-dot-require min="10" type="hidden">
  * ...contents...
  * </pm-dot-require>
  */
@@ -16,19 +17,22 @@ const INFO = "info";
 const NONE = "none";
 
 const dotRequireTypes = [HIDDEN, BLUR, INFO, NONE];
+let lastInstanceId = 0;
 
 customElements.define(
   tag,
   class PmDotRequire extends HTMLElement {
-    static get observedAttributes() {
-      return ["dots"];
+    static get _instanceId(): string {
+      return `${tag} ${lastInstanceId++}`;
     }
 
+    private instanceId: string;
     private dotsRequired: number; // Set from min attribute
     private wrapperEl: any;
 
     constructor() {
       super();
+      this.instanceId = PmDotRequire._instanceId;
       const dotsRequired = this.attributes.getNamedItem("min");
       this.dotsRequired = dotsRequired ? parseInt(dotsRequired.value) : -1;
 
@@ -47,22 +51,18 @@ customElements.define(
       this.appendChild(this.wrapperEl);
       this.wrapperEl.classList.add(`pm-DotRequire--${_type}`);
       this.wrapperEl.classList.add("pm-DotRequire");
+
+      userDetailsService.subscribe(
+        this.updateIsDottedClass.bind(this),
+        this.instanceId
+      );
     }
 
-    attributeChangedCallback(
-      name: string,
-      _oldValue: string | null,
-      _newValue: string | null
-    ) {
-      if (name === "dots") {
-        if (_newValue && !isNaN(parseInt(_newValue))) {
-          // Toggle the is-dotted class
-          this.wrapperEl.classList.toggle(
-            "is-dotted",
-            parseInt(_newValue) < this.dotsRequired
-          );
-        }
-      }
+    updateIsDottedClass() {
+      this.wrapperEl.classList.toggle(
+        "is-dotted",
+        userDetailsService.userDetails.dots < this.dotsRequired
+      );
     }
   }
 );

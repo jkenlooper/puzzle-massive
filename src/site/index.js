@@ -15,19 +15,16 @@ require('file-loader?name=[name].[ext]!./modernizr.build.min.js')
 import angular from 'angular'
 import './site.css'
 
-import base from '../base'
+import '../base'
 import userService from './user.service.js'
 import '../dot-require'
-import siteDirective from './site.directive.js'
 
 import '../frontpage'
-import profilepage from '../profilepage'
+import '../profilepage'
 import '../queuepage'
 import '../puzzleuploadpage'
 import '../scorespage'
 import '../docspage'
 import puzzlepage from '../puzzlepage'
 
-angular
-  .module('site', [base, userService, profilepage, puzzlepage])
-  .directive('pmSite', siteDirective).name
+angular.module('site', [userService, puzzlepage]).name

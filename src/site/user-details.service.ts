@@ -1,6 +1,8 @@
+import FetchService from "./fetch.service";
+
 type UserDetailsCallback = () => any;
 
-interface UserDetailsData {
+interface UserDetailsResponse {
   bit_expired?: boolean;
   cookie_expires?: string;
   dots: number;
@@ -9,6 +11,26 @@ interface UserDetailsData {
   login?: string;
   score: number;
 }
+interface UserDetailsData extends UserDetailsResponse {
+  hasBit: boolean;
+}
+
+function claimRandomBit(): Promise<void> {
+  return fetch("/newapi/claim-random-bit/", {
+    method: "POST",
+  }).then((response: Response) => {
+    if (!response.ok) {
+      throw new Error(response.statusText);
+    }
+  });
+}
+
+interface AnonymousLoginResponse {
+  bit: string;
+}
+const generateAnonymousLogin = new FetchService(
+  "/newapi/generate-anonymous-login/"
+);
 
 class UserDetailsService {
   hasInitialized: boolean = false;
@@ -16,6 +38,7 @@ class UserDetailsService {
   userDetails: UserDetailsData = {
     dots: 0,
     score: 0,
+    hasBit: false,
   };
 
   constructor() {
@@ -32,7 +55,11 @@ class UserDetailsService {
     );
   }
 
-  updateUserDetails(): Promise<void> {
+  generateAnonymousLogin() {
+    return generateAnonymousLogin.get<AnonymousLoginResponse>();
+  }
+
+  updateUserDetails(notClaimRandomBit: boolean = false): Promise<void> {
     return fetch("/newapi/current-user-id/")
       .then((response: Response) => {
         if (!response.ok) {
@@ -46,12 +73,27 @@ class UserDetailsService {
             if (!response.ok) {
               throw new Error(response.statusText);
             }
-            return response.json().then((response: UserDetailsData) => {
+            return response.json().then((response: UserDetailsResponse) => {
               return response;
             });
           })
           .then((userDetails) => {
-            this.userDetails = userDetails;
+            const hasBit = !!(userDetails.icon && userDetails.icon.trim());
+            this.userDetails = Object.assign(
+              {
+                hasBit: hasBit,
+              },
+              userDetails
+            );
+            if (!hasBit && !notClaimRandomBit) {
+              // Set a random bit icon.
+              return claimRandomBit().then(() => {
+                // Prevent endlessly trying to pick a random bit icon if none are available
+                return this.updateUserDetails(true);
+              });
+            } else {
+              return;
+            }
           });
       });
   }

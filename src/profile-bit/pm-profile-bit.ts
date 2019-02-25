@@ -14,7 +14,11 @@ interface TemplateData {
   iconSrc: string;
   icon: string;
   hasIcon: boolean;
-  userId: string;
+  userId: number;
+  showScore: boolean;
+  score: number;
+  showDots: boolean;
+  dots: number;
 }
 
 const tag = "pm-profile-bit";
@@ -26,14 +30,11 @@ customElements.define(
     static get _instanceId(): string {
       return `${tag} ${lastInstanceId++}`;
     }
-    static get observedAttributes() {
-      // If the dots value changes then it may need to render if it hasn't
-      // already.
-      return [];
-    }
 
     private player_profile_url: string;
     private instanceId: string;
+    private showScore: boolean;
+    private showDots: boolean;
 
     constructor() {
       super();
@@ -46,6 +47,9 @@ customElements.define(
       this.player_profile_url = player_profile_url
         ? player_profile_url.value
         : "";
+
+      this.showScore = this.hasAttribute("score");
+      this.showDots = this.hasAttribute("dots");
 
       userDetailsService.subscribe(this.render.bind(this), this.instanceId);
     }
@@ -73,29 +77,36 @@ customElements.define(
                 `}
           </a>
         </div>
+        ${data.showScore
+          ? html`
+              <div>Score <b>${data.score}</b></div>
+            `
+          : html``}
+        ${data.showDots
+          ? html`
+              <div>Dots <b>${data.dots}</b></div>
+            `
+          : html``}
       `;
     }
 
     get data(): TemplateData {
-      return PmProfileBit.observedAttributes.reduce(
-        (data: any, item: string) => {
-          const attr = this.attributes.getNamedItem(item);
-          data[item] = attr ? attr.value : null;
-          return data;
-        },
-        {
-          isExpired: userDetailsService.userDetails.bit_expired,
-          loginLink: `${this.player_profile_url}${
-            userDetailsService.userDetails.login
-          }/`,
-          icon: userDetailsService.userDetails.icon,
-          hasIcon: !!userDetailsService.userDetails.icon,
-          iconSrc: `${MEDIA_PATH}bit-icons/64-${
-            userDetailsService.userDetails.icon
-          }.png`,
-          userId: userDetailsService.userDetails.id,
-        }
-      );
+      return {
+        isExpired: !!userDetailsService.userDetails.bit_expired,
+        loginLink: `${this.player_profile_url}${
+          userDetailsService.userDetails.login
+        }/`,
+        icon: userDetailsService.userDetails.icon || "",
+        hasIcon: !!userDetailsService.userDetails.icon,
+        iconSrc: `${MEDIA_PATH}bit-icons/64-${
+          userDetailsService.userDetails.icon
+        }.png`,
+        userId: userDetailsService.userDetails.id || 0,
+        showScore: this.showScore,
+        score: userDetailsService.userDetails.score,
+        showDots: this.showDots,
+        dots: userDetailsService.userDetails.dots,
+      };
     }
 
     render() {

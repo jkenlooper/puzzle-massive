@@ -1,21 +1,9 @@
 import angular from 'angular'
 
-import { areCookiesEnabled } from './cookies.js'
-
 class userService {
   constructor($http) {
     this.$http = $http
     this.user = '2'
-    this._userDetails = {
-      score: 0,
-      dots: 0,
-      detailsReady: false,
-      //hasBit: false,
-    }
-  }
-
-  get userDetails() {
-    return this._userDetails
   }
 
   get() {
@@ -30,31 +18,6 @@ class userService {
         that.user = response.data
         return that.user
       })
-  }
-
-  hasCookieSupport() {
-    return areCookiesEnabled()
-  }
-
-  save() {
-    return this.$http
-      .get('/newapi/generate-anonymous-login/')
-      .then(function(response) {
-        return response.data
-      })
-  }
-
-  details() {
-    return this.$http.get('/newapi/user-details/').then(function(response) {
-      response.data.bit_expired = Boolean(Number(response.data.bit_expired))
-      return response.data
-    })
-  }
-
-  claimRandomBit() {
-    return this.$http
-      .post('/newapi/claim-random-bit/')
-      .then(function(response) {})
   }
 }
 userService.$inject = ['$http']

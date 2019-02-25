@@ -11,17 +11,15 @@
 {% endblock %}
 
 {% block main %}
-<section  class="pm-Profilepage" ng-controller="ProfilepageController as ProfilepageController">
+<section  class="pm-Profilepage">
   <h1>Player Profile</h1>
   <div class="pm-Profilepage-grid">
     <div class="pm-Profilepage-gridA">
       <h2>Your Current Bit Icon</h2>
-      <pm-profile-bit player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}" offng-if="hasBit"></pm-profile-bit>
-      <div>Score <b ng-bind="userDetails.score"></b></div>
-      <div>Dots <b ng-bind="userDetails.dots"></b></div>
+      <pm-profile-bit score dots player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
     </div>
     <div class="pm-Profilepage-gridB">
-      <pm-choose-bit pm-choose-bit-adapter="userDetailsChange" dots="{% raw %}{{detailsReady && hasBit && userDetails.dots}}{% endraw %}" message="Change bit icon" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
+      <pm-choose-bit message="Change bit icon" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
     </div>
     {% if puzzles %}
       <div class="pm-Profilepage-gridC">
@@ -44,7 +42,7 @@
 
       </div>
     {% endif %}
-    <div class="pm-Profilepage-gridD" ng-if="!noCookieSupport && hasUserCookie">
+    <div class="pm-Profilepage-gridD">
       <pm-account>
         {#
         <form action="register-email">

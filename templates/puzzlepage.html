@@ -173,24 +173,14 @@
           {% else %}
             {% set piece_count = puzzle.pieces %}
           {% endif %}
-        <div class="u-hidden" ng-class="{'u-hidden': !(detailsReady && userDetails.dots >= {{ config.MINIMUM_PIECE_COUNT }})}">
-          <p>
-            You have earned
-            <strong ng-bind="userDetails.dots"></strong>
-            dots by putting together puzzles.  Rebuilding puzzles will decrease
-            the number of dots depending on the piece count selected up to
-            {{ config.MAX_POINT_COST_FOR_REBUILDING }}
-            dots.
-          </p>
-          <form method="post" action="/newapi/puzzle-rebuild/">
-            <input type="hidden" name="puzzle_id" value="{{puzzle.puzzle_id}}">
-            <label for="pieces">
-              Piece Count
-            </label>{% raw %}{{pieces}}{% endraw %}
-            <input type="number" min="{{ config.MINIMUM_PIECE_COUNT }}" max="{% raw %}{{userDetails.dots < 50000 ? userDetails.dots : 50000}}{% endraw %}" name="pieces" id="pieces" value="{{ piece_count }}">
-            <input type="submit" value="Rebuild the puzzle">
-          </form>
-        </div>
+        <pm-dot-require min="{{ config.MINIMUM_PIECE_COUNT }}" type="none">
+          <pm-rebuild-form max-point-cost="{{ config.MAX_POINT_COST_FOR_REBUILDING }}"
+                           puzzle-id="{{puzzle.puzzle_id}}"
+                           min-piece-count="{{ config.MINIMUM_PIECE_COUNT }}"
+                           piece-count="{{ piece_count }}"
+                           >
+          </pm-rebuild-form>
+        </pm-dot-require>
         {% endif %}
         {% endif %}
       {% endif %}
