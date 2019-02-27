@@ -6,7 +6,7 @@ import ScrollJump from './scroll-jump.js'
 
 import '../puzzle-pieces'
 import '../rebuild-form'
-import puzzleBits from '../puzzle-bits'
+import '../puzzle-bits'
 import hashColor from '../hash-color'
 import karmaStatus from '../karma-status'
 import './puzzlepage.css'
@@ -24,7 +24,6 @@ if (scrollJumpElement) {
 }
 
 export default angular.module('puzzlepage', [
-  puzzleBits,
   hashColor,
   karmaStatus,
 ]).name
