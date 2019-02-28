@@ -49,6 +49,7 @@ config.externals = {
   'slab-massive.js': 'slabMassive',
   hammerjs: 'Hammer',
   reqwest: 'reqwest',
+  modernizr: 'Modernizr',
 }
 
 config.module = {

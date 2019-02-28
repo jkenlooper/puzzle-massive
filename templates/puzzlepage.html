@@ -232,8 +232,7 @@
 
         <pm-karma-status></pm-karma-status>
 
-        <pm-hash-color background-color="{{ puzzle.bg_color }}" vertical="{% if scale != 0 %}true{% else %}false{% endif %}">
-            <svg class="pm-Puzzlepage-icon"><use xlink:href="#paint-can-sprite"/></svg>
+        <pm-hash-color background-color="{{ puzzle.bg_color }}" {% if scale != 0 %}vertical{% endif %} name="{{ puzzle.puzzle_id }}">
         </pm-hash-color>
 
       </div>
