@@ -35,7 +35,7 @@
     {% endblock %}
 
   </head>
-  <body ng-app="site" class="on-module-{{ ngModule }}">
+  <body class="on-module-{{ ngModule }}">
 
     {% block body %}
     {% endblock %}
@@ -45,7 +45,6 @@
     <script>
       var MEDIA_PATH = "{{ url_for('send_media_file', filename='') }}"
     </script>
-    <script src="{{ url_for('send_theme_file', filename='angular.min.js') }}"></script>
     <script src="{{ url_for('send_theme_file', filename='hammer.min.js') }}"></script>
     <script src="{{ url_for('send_theme_file', filename='minpubsub.js') }}"></script>
     <script src="{{ url_for('send_theme_file', filename='lazysizes.min.js') }}"></script>

@@ -1,6 +1,5 @@
 require('file-loader?name=[name].[ext]!../../node_modules/slab-massive/dist/slab-massive.min.js')
 
-import angular from 'angular'
 import PuzzlePreviewBox from './puzzle-preview-box.js'
 import ScrollJump from './scroll-jump.js'
 
@@ -8,7 +7,7 @@ import '../puzzle-pieces'
 import '../rebuild-form'
 import '../puzzle-bits'
 import '../hash-color'
-import karmaStatus from '../karma-status'
+import '../karma-status'
 import './puzzlepage.css'
 
 // Patch in the old PuzzlePreviewBox
@@ -22,7 +21,3 @@ const scrollJumpElement = document.querySelector('[scroll-jump]')
 if (scrollJumpElement) {
   ScrollJump(scrollJumpElement)
 }
-
-export default angular.module('puzzlepage', [
-  karmaStatus,
-]).name
