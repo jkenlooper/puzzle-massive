@@ -26,9 +26,11 @@ class HashColorService {
       );
       if (storedBackgroundColor !== null) {
         this.backgroundColor = storedBackgroundColor;
+        /*
         window.location.hash = `${HashColorService.HashBackgroundPrefix.substr(
           1
         )}${storedBackgroundColor.substr(1)}`;
+         */
         this._broadcast();
       }
     }
