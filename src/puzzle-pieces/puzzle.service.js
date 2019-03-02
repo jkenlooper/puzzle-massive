@@ -1,5 +1,4 @@
-/* global reqwest */
-// import reqwest from 'reqwest'
+import reqwest from 'reqwest'
 
 export default class PuzzleService {
   // Pass in the url to the puzzle pieces
