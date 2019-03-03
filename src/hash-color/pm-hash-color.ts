@@ -25,22 +25,17 @@ customElements.define(
     private instanceId: string;
     private vertical: boolean = false;
     private defaultBackgroundColor: string;
-    //private name: string = "name"; // TODO: for storing the color in localStorage
 
     constructor() {
       super();
       this.instanceId = PmHashColor._instanceId;
 
-      const vertical = this.attributes.getNamedItem("vertical");
-      this.vertical = vertical ? !!vertical.value : false;
+      this.vertical = !!this.attributes.getNamedItem("vertical");
 
       const backgroundColor = this.attributes.getNamedItem("background-color");
       this.defaultBackgroundColor = backgroundColor
         ? backgroundColor.value
         : "#404";
-
-      //const name = this.attributes.getNamedItem("name");
-      //this.name = name ? name.value : "any";
 
       hashColorService.subscribe(this.render.bind(this), this.instanceId);
       this.render();
@@ -76,7 +71,7 @@ customElements.define(
                     type="text"
                     class="pm-HashColor-inputText jscolor {hash:true}"
                     id="hash-color-background-color"
-                    @input=${data.handleChange}
+                    @change=${data.handleChange}
                     value=${data.backgroundColor}
                   />
                 `}
@@ -98,8 +93,7 @@ customElements.define(
       return {
         hasInputtypesColor: Modernizr.inputtypes.color,
         backgroundColor:
-          hashColorService.backgroundColor /*(this.name)*/ ||
-          this.defaultBackgroundColor,
+          hashColorService.backgroundColor || this.defaultBackgroundColor,
         vertical: this.vertical,
         handleChange: this.handleChange.bind(this),
       };

@@ -1,5 +1,15 @@
 type Callback = () => any;
 
+function puzzleNameFromLocation() {
+  const re = /\/puzzle\/(.+)\/$/;
+  const match = window.location.pathname.match(re);
+  let puzzleName = "";
+  if (match != null) {
+    puzzleName = match[1] || puzzleName;
+  }
+  return puzzleName;
+}
+
 class HashColorService {
   static HashBackgroundPrefix = "#background=";
   static LocalStorageName = "hash-background-color";
@@ -20,17 +30,11 @@ class HashColorService {
 
     // Set hash if defined in localstorage and no hash is already set.
     if (this.backgroundColor === undefined) {
-      // TODO: store multiple colors instead of just a single color
       const storedBackgroundColor = window.localStorage.getItem(
-        HashColorService.LocalStorageName
+        HashColorService.LocalStorageName + ":" + puzzleNameFromLocation()
       );
       if (storedBackgroundColor !== null) {
         this.backgroundColor = storedBackgroundColor;
-        /*
-        window.location.hash = `${HashColorService.HashBackgroundPrefix.substr(
-          1
-        )}${storedBackgroundColor.substr(1)}`;
-         */
         this._broadcast();
       }
     }
@@ -47,7 +51,7 @@ class HashColorService {
         );
       if (this.backgroundColor !== hashBackgroundColor) {
         window.localStorage.setItem(
-          HashColorService.LocalStorageName,
+          HashColorService.LocalStorageName + ":" + puzzleNameFromLocation(),
           hashBackgroundColor
         );
         this.backgroundColor = hashBackgroundColor;
