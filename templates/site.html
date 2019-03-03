@@ -41,6 +41,17 @@
     {% endblock %}
 
     {% block script %}
+    {# Super simple message to display for browsers that are not supported.
+    TODO: Make this message pretty.
+    #}
+    <script nomodule>
+      var message="This web browser is not supported.";
+      var el = document.createElement('div');
+      var body = document.querySelector('body');
+      el.innerHTML = message;
+      body.insertBefore(el, body.childNodes[0]);
+    </script>
+
     <script type="module" src="{{ url_for('send_theme_file', filename='webcomponents-loader.js') }}"></script>
     <script type="module" src="{{ url_for('send_theme_file', filename='hammer.min.js') }}"></script>
     <script src="{{ url_for('send_theme_file', filename='minpubsub.js') }}"></script>
