@@ -1,6 +1,3 @@
-/* global HTMLElement, customElements, MEDIA_PATH */
-declare const MEDIA_PATH: string;
-
 import { html, render } from "lit-html";
 import { classMap } from "lit-html/directives/class-map.js";
 
@@ -35,10 +32,14 @@ customElements.define(
     private instanceId: string;
     private showScore: boolean;
     private showDots: boolean;
+    private mediaPath: string;
 
     constructor() {
       super();
       this.instanceId = PmProfileBit._instanceId;
+
+      const mediaPath = this.attributes.getNamedItem("media-path");
+      this.mediaPath = mediaPath ? mediaPath.value : "";
 
       // Set the attribute values
       const player_profile_url = this.attributes.getNamedItem(
@@ -98,7 +99,7 @@ customElements.define(
         }/`,
         icon: userDetailsService.userDetails.icon || "",
         hasIcon: !!userDetailsService.userDetails.icon,
-        iconSrc: `${MEDIA_PATH}bit-icons/64-${
+        iconSrc: `${this.mediaPath}bit-icons/64-${
           userDetailsService.userDetails.icon
         }.png`,
         userId: userDetailsService.userDetails.id || 0,

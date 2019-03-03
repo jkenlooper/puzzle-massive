@@ -4,7 +4,7 @@
   </div>
 
   <div class="pm-Header-main">
-      <pm-profile-bit player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
+      <pm-profile-bit media-path="{{ url_for('send_media_file', filename='') }}" player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
   </div>
 
 </div>

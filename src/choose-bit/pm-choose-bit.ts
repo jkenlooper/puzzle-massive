@@ -1,6 +1,3 @@
-/* global HTMLElement, customElements, MEDIA_PATH */
-declare const MEDIA_PATH: string;
-
 import { html, render } from "lit-html";
 import { repeat } from "lit-html/directives/repeat";
 
@@ -31,6 +28,7 @@ customElements.define(
       return `${tag} ${lastInstanceId++}`;
     }
     private instanceId: string;
+    private mediaPath: string;
 
     static getBits(
       self: PmChooseBit,
@@ -61,6 +59,9 @@ customElements.define(
     constructor() {
       super();
       this.instanceId = PmChooseBit._instanceId;
+
+      const mediaPath = this.attributes.getNamedItem("media-path");
+      this.mediaPath = mediaPath ? mediaPath.value : "";
 
       // Set the message from the message attribute
       const message = this.attributes.getNamedItem("message");
@@ -150,7 +151,7 @@ customElements.define(
                     <span class="pm-ChooseBit-item" role="list-item">
                       <button @click=${claimBit.bind(self)}>
                         <img
-                          src="${MEDIA_PATH}bit-icons/64-${item}.png"
+                          src="${self.mediaPath}bit-icons/64-${item}.png"
                           width="64"
                           height="64"
                           alt="${item}"

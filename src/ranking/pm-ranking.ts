@@ -1,6 +1,3 @@
-/* global HTMLElement, customElements, MEDIA_PATH */
-declare const MEDIA_PATH: string;
-
 import FetchService from "../site/fetch.service";
 import userDetailsService from "../site/user-details.service";
 
@@ -37,18 +34,6 @@ interface TemplateData {
   selectPlayerRanksDown: Function;
 }
 
-function setPlayerRankDetails(item: RankData, index: number): PlayerRankDetail {
-  const playerRank = <PlayerRankDetail>Object.assign(
-    {
-      topPlayer: index < 15,
-      iconSrc: `${MEDIA_PATH}bit-icons/64-${item.icon || "unknown-bit"}.png`,
-      iconAlt: item.icon || "unknown bit",
-    },
-    item
-  );
-  return playerRank;
-}
-
 const tag = "pm-ranking";
 let lastInstanceId = 0;
 
@@ -69,6 +54,7 @@ customElements.define(
     hasDown: boolean = false;
     private instanceId: string;
     private offset: number = 0;
+    private mediaPath: string;
 
     static get _instanceId(): string {
       return `${tag} ${lastInstanceId++}`;
@@ -78,6 +64,9 @@ customElements.define(
       super();
       const self = this;
       this.instanceId = PmRanking._instanceId;
+
+      const mediaPath = this.attributes.getNamedItem("media-path");
+      this.mediaPath = mediaPath ? mediaPath.value : "";
 
       // Set the attribute values
       const player_ranks_url = this.attributes.getNamedItem("player-ranks-url");
@@ -115,6 +104,7 @@ customElements.define(
 
     _setPlayerRanks(playerId: number) {
       const rankingService = new FetchService(this.player_ranks_url);
+      const self = this;
       rankingService
         .get<Array<RankData>>()
         .then((data) => {
@@ -133,6 +123,21 @@ customElements.define(
           this.isReady = true;
           this.render();
         });
+      function setPlayerRankDetails(
+        item: RankData,
+        index: number
+      ): PlayerRankDetail {
+        const playerRank = <PlayerRankDetail>Object.assign(
+          {
+            topPlayer: index < 15,
+            iconSrc: `${self.mediaPath}bit-icons/64-${item.icon ||
+              "unknown-bit"}.png`,
+            iconAlt: item.icon || "unknown bit",
+          },
+          item
+        );
+        return playerRank;
+      }
     }
 
     template(data: TemplateData) {

@@ -16,10 +16,10 @@
   <div class="pm-Profilepage-grid">
     <div class="pm-Profilepage-gridA">
       <h2>Your Current Bit Icon</h2>
-      <pm-profile-bit score dots player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
+      <pm-profile-bit media-path="{{ url_for('send_media_file', filename='') }}" score dots player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
     </div>
     <div class="pm-Profilepage-gridB">
-      <pm-choose-bit message="Change bit icon" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
+      <pm-choose-bit media-path="{{ url_for('send_media_file', filename='') }}" message="Change bit icon" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
     </div>
     {% if puzzles %}
       <div class="pm-Profilepage-gridC">

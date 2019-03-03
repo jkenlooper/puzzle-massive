@@ -12,7 +12,7 @@
         {{ page.highScores|safe }}
       </div>
       <div class="pm-Scorespage-gridB">
-        <pm-ranking player-ranks-url="/chill{{ url_for('.page_uri', uri='api/player-ranks') }}"></pm-ranking>
+        <pm-ranking media-path="{{ url_for('send_media_file', filename='') }}" player-ranks-url="/chill{{ url_for('.page_uri', uri='api/player-ranks') }}"></pm-ranking>
       </div>
     </div>
   </div>
