@@ -1,3 +1,5 @@
+require('file-loader?name=[name].[ext]!../not-supported-browser-message.js')
+
 require('file-loader?name=[name].[ext]!../../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js')
 // require('file-loader?name=[name].[ext]!../../node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js') // Not used
 require('file-loader?name=bundles/[name].[ext]!../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-ce.js')
