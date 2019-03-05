@@ -7,7 +7,7 @@ import "./profile-bit.css";
 
 interface TemplateData {
   isExpired: boolean;
-  loginLink: string;
+  profileLink: string;
   iconSrc: string;
   icon: string;
   hasIcon: boolean;
@@ -16,6 +16,7 @@ interface TemplateData {
   score: number;
   showDots: boolean;
   dots: number;
+  anonymousLoginLink: string | boolean;
 }
 
 const tag = "pm-profile-bit";
@@ -63,20 +64,29 @@ customElements.define(
             isExpired: data.isExpired,
           })}
         >
-          <a class="pm-profileBit-link" href=${data.loginLink}>
-            ${data.hasIcon
-              ? html`
-                  <img
-                    src=${data.iconSrc}
-                    width="64"
-                    height="64"
-                    alt=${data.icon}
-                  />
-                `
-              : html`
-                  <span>${data.userId}</span>
-                `}
-          </a>
+          ${data.anonymousLoginLink
+            ? html`
+                <a href=${data.anonymousLoginLink}>Login again</a>
+                <br />
+                <!-- TODO logout link needs to remove localStorage items -->
+                <a href="/newapi/user-logout/">Logout</a>
+              `
+            : html`
+                <a class="pm-profileBit-link" href=${data.profileLink}>
+                  ${data.hasIcon
+                    ? html`
+                        <img
+                          src=${data.iconSrc}
+                          width="64"
+                          height="64"
+                          alt=${data.icon}
+                        />
+                      `
+                    : html`
+                        <span>${data.userId}</span>
+                      `}
+                </a>
+              `}
         </div>
         ${data.showScore
           ? html`
@@ -94,7 +104,7 @@ customElements.define(
     get data(): TemplateData {
       return {
         isExpired: !!userDetailsService.userDetails.bit_expired,
-        loginLink: `${this.player_profile_url}${
+        profileLink: `${this.player_profile_url}${
           userDetailsService.userDetails.login
         }/`,
         icon: userDetailsService.userDetails.icon || "",
@@ -107,6 +117,9 @@ customElements.define(
         score: userDetailsService.userDetails.score,
         showDots: this.showDots,
         dots: userDetailsService.userDetails.dots,
+        anonymousLoginLink: userDetailsService.userDetails.loginAgain
+          ? userDetailsService.anonymousLoginLink
+          : false,
       };
     }
 

@@ -39,6 +39,7 @@ customElements.define(
         .generateAnonymousLogin()
         .then((data) => {
           this.bitLink = data.bit;
+          userDetailsService.storeAnonymousLogin(data.bit);
         })
         .catch(() => {
           // ignore errors
