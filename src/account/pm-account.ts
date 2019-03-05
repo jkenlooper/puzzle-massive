@@ -105,7 +105,7 @@ customElements.define(
                   >Only logout if you have saved your anonymous login link.</em
                 >
               </p>
-              <a href="/newapi/user-logout/">Logout</a>
+              <pm-logout-link></pm-logout-link>
             </div>
           </div>
         </div>

@@ -89,6 +89,11 @@ class UserDetailsService {
     );
   }
 
+  forgetAnonymousLogin() {
+    window.localStorage.removeItem(UserDetailsService.anonymousLoginName);
+    window.localStorage.removeItem(UserDetailsService.localUserId);
+  }
+
   get anonymousLoginLink(): string {
     return `${baseUrl}${window.localStorage.getItem(
       UserDetailsService.anonymousLoginName

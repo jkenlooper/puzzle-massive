@@ -2,11 +2,20 @@
 }
 
 .pm-profileBit.isExpired {
-  opacity: 0.7;
 }
 
 .pm-profileBit-link {
   display: block;
+}
+
+.pm-profileBit-img {
+  text-align: center;
+  width: 64px;
+  height: 64px;
+  display: inline-block;
+}
+.pm-profileBit.isExpired .pm-profileBit-img {
+  opacity: 0.7;
 }
 
 .pm-profileBit-score {

@@ -9,7 +9,7 @@ interface TemplateData {
   isExpired: boolean;
   profileLink: string;
   iconSrc: string;
-  icon: string;
+  iconAlt: string;
   hasIcon: boolean;
   userId: number;
   showScore: boolean;
@@ -68,18 +68,18 @@ customElements.define(
             ? html`
                 <a href=${data.anonymousLoginLink}>Login again</a>
                 <br />
-                <!-- TODO logout link needs to remove localStorage items -->
-                <a href="/newapi/user-logout/">Logout</a>
+                <pm-logout-link></pm-logout-link>
               `
             : html`
                 <a class="pm-profileBit-link" href=${data.profileLink}>
                   ${data.hasIcon
                     ? html`
                         <img
+                          class="pm-profileBit-img"
                           src=${data.iconSrc}
                           width="64"
                           height="64"
-                          alt=${data.icon}
+                          alt=${data.iconAlt}
                         />
                       `
                     : html`
@@ -107,7 +107,7 @@ customElements.define(
         profileLink: `${this.player_profile_url}${
           userDetailsService.userDetails.login
         }/`,
-        icon: userDetailsService.userDetails.icon || "",
+        iconAlt: "bit icon " + userDetailsService.userDetails.icon || "",
         hasIcon: !!userDetailsService.userDetails.icon,
         iconSrc: `${this.mediaPath}bit-icons/64-${
           userDetailsService.userDetails.icon
