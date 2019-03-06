@@ -29,6 +29,7 @@ declare class PuzzlePiecesController {
 
   constructor(
     puzzleService: any, //PuzzleService,
+    divulgerService: any, //DivulgerService,
     $container: HTMLElement,
     alerts: any,
     $karmaStatus: HTMLElement

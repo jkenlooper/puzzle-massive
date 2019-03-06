@@ -4,7 +4,7 @@ interface PieceOrigin {
   r: number;
 }
 declare class PuzzleService {
-  constructor(puzzleid: string | null);
+  constructor(puzzleid: string | null, divulgerService: any);
   nextPieceMovementId: number;
   pieces(): any; // reqwest
   token(piece: number, mark: string): number;

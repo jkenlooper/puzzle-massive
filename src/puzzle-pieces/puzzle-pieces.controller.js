@@ -1,9 +1,11 @@
-/* global updater */
-
-import './divulger.service'
-
 export default class PuzzlePiecesController {
-  constructor(puzzleService, $container, alerts, $karmaStatus) {
+  constructor(
+    puzzleService,
+    divulgerService,
+    $container,
+    alerts,
+    $karmaStatus
+  ) {
     let self = this
     // For now this is set to one to prevent feature creep
     const maxSelectedPieces = 1
@@ -35,7 +37,7 @@ export default class PuzzlePiecesController {
       window.subscribe('socket/disconnected', onDisconnected)
       window.subscribe('socket/connected', onConnected)
       window.subscribe('socket/reconnecting', onReconnecting)
-      updater.connect()
+      divulgerService.connect()
       puzzleService.pieces().then(handlePieces)
     }
 

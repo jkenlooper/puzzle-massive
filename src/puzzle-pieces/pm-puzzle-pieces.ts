@@ -11,6 +11,7 @@ import * as Hammer from "hammerjs";
 import { rgbToHsl } from "../site/utilities";
 import hashColorService from "../hash-color/hash-color.service";
 import PuzzleService from "./puzzle.service.js";
+import DivulgerService from "./divulger.service.js";
 import PuzzlePiecesController from "./puzzle-pieces.controller.js";
 
 import template from "./puzzle-pieces.html";
@@ -104,7 +105,8 @@ customElements.define(
       let offsetTop = $slabMassive.offsetTop;
       let offsetLeft = $slabMassive.offsetLeft;
 
-      let puzzleService = new PuzzleService(this.getAttribute("puzzleid"));
+      const divulgerService = new DivulgerService(this.getAttribute("puzzleid"));
+      const puzzleService = new PuzzleService(this.getAttribute("puzzleid"), divulgerService);
       let alerts: Alerts = {
         container: shadowRoot.querySelector("#puzzle-pieces-alert"),
         max: shadowRoot.querySelector("#puzzle-pieces-alert-max"),
@@ -118,6 +120,7 @@ customElements.define(
       };
       let ctrl = (this.ctrl = new PuzzlePiecesController(
         puzzleService,
+        divulgerService,
         this.$collection,
         alerts,
         this.$karmaStatus

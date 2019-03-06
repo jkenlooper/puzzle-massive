@@ -1,76 +1,65 @@
-/* global WebSocket */
+// proxy_read_timeout should match the config from nginx and should be greater than 10
+const PROXY_READ_TIMEOUT = 60
+const MAX_PINGS = 13
 
-;(function() {
-  let updater = {
-    connect: connect,
-  }
-
-  window.updater = updater
-  // export {updater}
-
-  // proxy_read_timeout should match the config from nginx and should be greater than 10
-  const PROXY_READ_TIMEOUT = 60
-  const MAX_PINGS = 13
+class DivulgerService {
   // Keep track of the last message sent for keeping the connection open with a ping
-  let lastMessageSent = 0
-  let stalePuzzleTimeout = 0
-  let pingServerIntervalID = 0
-  let pingCount = 0
-
-  const puzzleContainer = document.getElementById('puzzle-container')
-  if (!puzzleContainer) {
-    return
+  constructor(puzzleId) {
+    this.puzzleId = puzzleId
+    this.lastMessageSent = 0
+    this.stalePuzzleTimeout = 0
+    this.pingServerIntervalID = 0
+    this.pingCount = 0
+    this.ws = undefined
   }
-  const puzzleId = puzzleContainer.getAttribute('puzzle_id')
-
-  function connect() {
-    if (pingCount >= MAX_PINGS) {
+  connect() {
+    if (this.pingCount >= MAX_PINGS) {
       // console.log('disconnected')
-      window.clearInterval(pingServerIntervalID)
+      window.clearInterval(this.pingServerIntervalID)
       window.publish('socket/disconnected')
       // Reset the pingCount so it can be connected again
-      pingCount = 0
+      this.pingCount = 0
       // TODO: show a disconnected message
       return
     }
 
     // console.log('connect new ws')
-    // updater.ws = new WebSocket(`ws://${window.location.host}/newapi/puzzle/${puzzleId}/updates/`)
-    updater.ws = new WebSocket(
-      `ws://${window.location.host}/divulge/${puzzleId}/`
+    // this.ws = new WebSocket(`ws://${window.location.host}/newapi/puzzle/${puzzleId}/updates/`)
+    this.ws = new WebSocket(
+      `ws://${window.location.host}/divulge/${this.puzzleId}/`
     )
-    updater.ws.onopen = onOpenSocket
-    updater.ws.onclose = onCloseSocket
-    updater.ws.onmessage = onMessageSocket
+    this.ws.onopen = this.onOpenSocket.bind(this)
+    this.ws.onclose = this.onCloseSocket.bind(this)
+    this.ws.onmessage = this.onMessageSocket.bind(this)
   }
 
-  function onOpenSocket() {
+  onOpenSocket() {
     // console.log('connected')
     window.publish('socket/connected')
-    updater.ws.send(puzzleId)
-    window.clearInterval(pingServerIntervalID)
-    pingServerIntervalID = pingServer()
+    this.ws.send(this.puzzleId)
+    window.clearInterval(this.pingServerIntervalID)
+    this.pingServerIntervalID = this.pingServer()
   }
 
-  function onCloseSocket() {
-    window.clearInterval(pingServerIntervalID)
-    if (pingCount < MAX_PINGS) {
+  onCloseSocket() {
+    window.clearInterval(this.pingServerIntervalID)
+    if (this.pingCount < MAX_PINGS) {
       // console.log('onCloseSocket... reconnecting in 15')
       // Try to reconnect in 15 seconds
       setTimeout(connect, 1000 * 15)
       window.publish('socket/reconnecting')
       // Update the pingCount so it doesn't just try to continually connect forever
-      pingCount = pingCount + 1
+      this.pingCount = this.pingCount + 1
     } else {
       // console.log('onCloseSocket... disconnected')
       window.publish('socket/disconnected')
     }
   }
 
-  function onMessageSocket(msg) {
-    lastMessageSent = new Date().getTime()
-    window.clearTimeout(stalePuzzleTimeout)
-    stalePuzzleTimeout = window.setTimeout(function() {
+  onMessageSocket(msg) {
+    this.lastMessageSent = new Date().getTime()
+    window.clearTimeout(this.stalePuzzleTimeout)
+    this.stalePuzzleTimeout = window.setTimeout(function() {
       // TODO: Puzzle piece data may have moved away from redis storage if the
       // puzzle has been stale for 30 minutes.
     }, 30 * 60 * 1000)
@@ -81,12 +70,13 @@
       return
     }
 
-    pingCount = 0
-    // updater.ws.send('received')
-    handleMovementString(msg.data)
+    this.pingCount = 0
+    // this.ws.send('received')
+    this.handleMovementString(msg.data)
   }
 
-  function pingServer() {
+  pingServer() {
+    const self = this
     // send ping requests every 50 seconds to keep the connection to the proxied websocket open
     const checkInterval = 10
     // Set the poll interval to be 2 seconds less than the checkInterval
@@ -95,19 +85,22 @@
     return setInterval(function() {
       // Prevent keeping the connection open if nothing is happening
       const currentTime = new Date().getTime()
-      if (!lastMessageSent || lastMessageSent < currentTime - interval) {
-        pingCount = pingCount + 1
-        // console.log('ping', lastMessageSent, pingCount)
-        if (pingCount < MAX_PINGS) {
-          updater.ws.send('ping')
+      if (
+        !self.lastMessageSent ||
+        self.lastMessageSent < currentTime - interval
+      ) {
+        self.pingCount = self.pingCount + 1
+        // console.log('ping', lastMessageSent, self.pingCount)
+        if (self.pingCount < MAX_PINGS) {
+          self.ws.send('ping')
         }
-        lastMessageSent = new Date().getTime()
+        self.lastMessageSent = new Date().getTime()
       }
       // console.log('poll', lastMessageSent)
     }, pollIntervalMs)
   }
 
-  function handleMovementString(textline) {
+  handleMovementString(textline) {
     let lines = textline.split('\n')
     lines.forEach(function(line) {
       // let line = String(line)
@@ -148,4 +141,6 @@
       })
     })
   }
-})()
+}
+
+export default DivulgerService

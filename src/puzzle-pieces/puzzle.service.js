@@ -2,8 +2,9 @@ import reqwest from 'reqwest'
 
 export default class PuzzleService {
   // Pass in the url to the puzzle pieces
-  constructor(puzzleid) {
+  constructor(puzzleid, divulgerService) {
     this.puzzleid = puzzleid
+    this.divulgerService = divulgerService
     this.pieceMovementQueue = []
     this.pieceMovements = {}
     this._pieceMovementId = 0
@@ -120,6 +121,7 @@ export default class PuzzleService {
   move(id, x, y, r, origin, pieceMovementId) {
     const pieceMovement = this.pieceMovements[pieceMovementId]
     const puzzleid = this.puzzleid
+    const divulgerService = this.divulgerService
     if (!pieceMovement) {
       return
     }
@@ -134,11 +136,11 @@ export default class PuzzleService {
         data.r = r
       }
 
-      if (window.updater.ws.readyState > 1) {
+      if (divulgerService.ws.readyState > 1) {
         // Websocket is closed or closing, so reconnect
-        window.updater.connect()
+        divulgerService.connect()
       } else {
-        window.updater.ws.send(puzzleid)
+        divulgerService.ws.send(puzzleid)
       }
       return reqwest({
         url: `/newapi/puzzle/${puzzleid}/piece/${id}/move/`,
@@ -193,9 +195,9 @@ export default class PuzzleService {
         },
         success: function(d) {
           window.publish('karma/updated', [d])
-          if (window.updater.ws.readyState > 1) {
+          if (divulgerService.ws.readyState > 1) {
             // Websocket is closed or closing, so reconnect
-            window.updater.connect()
+            divulgerService.connect()
           }
         },
       })
