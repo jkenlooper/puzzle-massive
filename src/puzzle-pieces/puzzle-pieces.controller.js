@@ -1,6 +1,6 @@
 /* global updater */
 
-import './updater'
+import './divulger.service'
 
 export default class PuzzlePiecesController {
   constructor(puzzleService, $container, alerts, $karmaStatus) {
