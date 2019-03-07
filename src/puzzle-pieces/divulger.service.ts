@@ -16,6 +16,9 @@ interface BitMovementData {
   y: string;
 }
 
+type SocketStatusCallback = () => any;
+const socketMax = Symbol("socket/max");
+
 class DivulgerService {
   puzzleId: string;
   // Keep track of the last message sent for keeping the connection open with a ping
@@ -24,12 +27,28 @@ class DivulgerService {
   private pingServerIntervalID: number = 0;
   private pingCount: number = 0;
   ws: WebSocket;
+
+  // topics
+  [socketMax]: Map<string, SocketStatusCallback> = new Map();
+
+  /*
+      window.subscribe('piece/update', onPieceUpdate)
+      window.publish("piece/update/" + pieceData.id, [pieceData]);
+      window.subscribe("bit/update", this._onBitUpdate.bind(this));
+
+      window.subscribe('socket/max', onMax)
+      window.subscribe('socket/disconnected', onDisconnected)
+      window.subscribe('socket/connected', onConnected)
+      window.subscribe('socket/reconnecting', onReconnecting)
+   */
+
   constructor(puzzleId) {
     this.puzzleId = puzzleId;
     this.ws = new WebSocket(
       `ws://${window.location.host}/divulge/${this.puzzleId}/`
     );
   }
+
   connect() {
     if (this.pingCount >= MAX_PINGS) {
       // console.log('disconnected')
@@ -90,6 +109,7 @@ class DivulgerService {
     if (msg.data === "MAX") {
       // @ts-ignore: minpubsub
       window.publish("socket/max");
+      // TODO: this._broadcast([socketMax])
       return;
     }
 
@@ -132,7 +152,6 @@ class DivulgerService {
         let values = item.split(":");
         if (values.length === 7) {
           // puzzle_id, piece_id, x, y, r, parent, status
-          // if (values[2] !== '') {
           const pieceData: PieceMovementData = {
             id: Number(values[1]),
           };
@@ -162,10 +181,28 @@ class DivulgerService {
             y: values[3],
           };
           // @ts-ignore: minpubsub
-          window.publish("bit/update", [bitData]);
+          window.publish("bit/update", [bitData]); // used by PuzzleBitsService
         }
       });
     });
+  }
+
+  _broadcast(topic: symbol) {
+    this[topic].forEach((fn /*, id*/) => {
+      fn();
+    });
+  }
+
+  subscribe(topic: symbol, fn: SocketStatusCallback, id: string) {
+    //console.log("subscribe", fn, id);
+    // Add the fn to listeners
+    this[topic].set(id, fn);
+  }
+
+  unsubscribe(topic: symbol, id: string) {
+    //console.log("unsubscribe", id);
+    // remove fn from listeners
+    this[topic].delete(id);
   }
 }
 

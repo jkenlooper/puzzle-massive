@@ -29,9 +29,11 @@ export default class PuzzlePiecesController {
     init()
 
     function init() {
-      window.subscribe('karma/updated', onKarmaUpdate)
-      window.subscribe('piece/move/blocked', onMoveBlocked)
-      window.subscribe('piece/move/rejected', onPieceMoveRejected)
+      window.subscribe('karma/updated', onKarmaUpdate) // PuzzleService
+      window.subscribe('piece/move/blocked', onMoveBlocked) // PuzzleService
+      window.subscribe('piece/move/rejected', onPieceMoveRejected) // PuzzleService
+
+      // DivulgerService
       window.subscribe('piece/update', onPieceUpdate)
       window.subscribe('socket/max', onMax)
       window.subscribe('socket/disconnected', onDisconnected)
