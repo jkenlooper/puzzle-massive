@@ -11,7 +11,7 @@ import * as Hammer from "hammerjs";
 import { rgbToHsl } from "../site/utilities";
 import hashColorService from "../hash-color/hash-color.service";
 import PuzzleService from "./puzzle.service.js";
-import DivulgerService from "./divulger.service.js";
+import DivulgerService from "./divulger.service";
 import PuzzlePiecesController from "./puzzle-pieces.controller.js";
 
 import template from "./puzzle-pieces.html";
@@ -23,6 +23,22 @@ interface Alerts {
   reconnecting: HTMLElement | null;
   disconnected: HTMLElement | null;
   blocked: HTMLElement | null;
+}
+
+interface PieceData {
+  id: number;
+  b: number; // b for background
+  x: number;
+  y: number;
+  rotate: number;
+  s?: number; // s for stacked
+  active?: boolean;
+  karma?: number; // response from move request
+  karmaChange?: number | boolean; // response from move request
+}
+
+interface Pieces {
+  [index: number]: PieceData;
 }
 
 const pieceHTML = `<div class="p"></div>`;
@@ -105,8 +121,13 @@ customElements.define(
       let offsetTop = $slabMassive.offsetTop;
       let offsetLeft = $slabMassive.offsetLeft;
 
-      const divulgerService = new DivulgerService(this.getAttribute("puzzleid"));
-      const puzzleService = new PuzzleService(this.getAttribute("puzzleid"), divulgerService);
+      const divulgerService = new DivulgerService(
+        this.getAttribute("puzzleid")
+      );
+      const puzzleService = new PuzzleService(
+        this.getAttribute("puzzleid"),
+        divulgerService
+      );
       let alerts: Alerts = {
         container: shadowRoot.querySelector("#puzzle-pieces-alert"),
         max: shadowRoot.querySelector("#puzzle-pieces-alert-max"),
@@ -294,7 +315,7 @@ customElements.define(
       this.$collection.addEventListener("mousedown", onTap, false);
 
       // update DOM for array of piece id's
-      function renderPieces(pieces, pieceIDs) {
+      function renderPieces(pieces: Pieces, pieceIDs) {
         let tmp = document.createDocumentFragment();
         pieceIDs.forEach((pieceID) => {
           let piece = pieces[pieceID];
