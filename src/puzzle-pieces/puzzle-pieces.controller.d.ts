@@ -11,6 +11,7 @@ declare class PuzzlePiecesController {
   puzzleid: string;
   pieceUpdateHandles: object;
   pieceRejectedHandles: object;
+  instanceId: string;
 
   pieces: object;
   collection: Array<number>;
@@ -26,6 +27,8 @@ declare class PuzzlePiecesController {
   selectPiece(pieceID: number | null): void;
   dropSelectedPieces(x: number, y: number, scale: number): void;
   moveBy(pieceID: number | null, x: number, y: number, scale: number): void;
+
+  unsubscribe(): void;
 
   constructor(
     puzzleService: any, //PuzzleService,

@@ -1,3 +1,9 @@
+let lastInstanceId = 0
+
+function _instanceId() {
+  return `PuzzlePiecesController ${lastInstanceId++}`
+}
+
 export default class PuzzlePiecesController {
   constructor(
     puzzleService,
@@ -19,6 +25,8 @@ export default class PuzzlePiecesController {
     self.$karmaStatus = $karmaStatus
     self.karmaStatusIsActiveTimeout
 
+    this.instanceId = _instanceId()
+
     self.pieces = {}
     self.collection = []
     self.piecesTimestamp = ''
@@ -34,11 +42,23 @@ export default class PuzzlePiecesController {
       window.subscribe('piece/move/rejected', onPieceMoveRejected) // PuzzleService
 
       // DivulgerService
-      window.subscribe('piece/update', onPieceUpdate)
-      window.subscribe('socket/max', onMax)
-      window.subscribe('socket/disconnected', onDisconnected)
-      window.subscribe('socket/connected', onConnected)
-      window.subscribe('socket/reconnecting', onReconnecting)
+      divulgerService.subscribe('piece/update', onPieceUpdate, self.instanceId)
+      divulgerService.subscribe('socket/max', onMax, self.instanceId)
+      divulgerService.subscribe(
+        'socket/disconnected',
+        onDisconnected,
+        self.instanceId
+      )
+      divulgerService.subscribe(
+        'socket/connected',
+        onConnected,
+        self.instanceId
+      )
+      divulgerService.subscribe(
+        'socket/reconnecting',
+        onReconnecting,
+        self.instanceId
+      )
       divulgerService.connect()
       puzzleService.pieces().then(handlePieces)
     }
@@ -104,6 +124,9 @@ export default class PuzzlePiecesController {
           self.pieces[pieceID].pieceMovementId
         )
       }
+
+      // TODO: onPieceUpdate check if piece is already active
+      //self.pieces[pieceID].active = false
 
       // Only allow a max amount of selected pieces
       if (self.selectedPieces.length > maxSelectedPieces) {
@@ -177,6 +200,10 @@ export default class PuzzlePiecesController {
 
     function onPieceUpdate(data) {
       let piece = self.pieces[data.id]
+      if (piece.active) {
+        // TODO: stop following the piece and unselect if piece is active
+        self.unSelectPiece(data.id)
+      }
       piece = Object.assign(piece, data)
       piece.active = false
       self.renderPieces(self.pieces, [data.id])
@@ -251,31 +278,39 @@ export default class PuzzlePiecesController {
 
     function onMax() {
       self.isAtMax = true
-      // console.log('at max')
       self.alerts.container.classList.add('is-active')
       self.alerts.max.classList.add('is-active')
     }
 
     function onDisconnected() {
-      // console.log('on disconnected')
       self.alerts.container.classList.add('is-active')
       self.alerts.disconnected.classList.add('is-active')
       self.alerts.reconnecting.classList.remove('is-active')
     }
 
     function onReconnecting() {
-      // console.log('on reconnecting')
       self.alerts.container.classList.add('is-active')
       self.alerts.reconnecting.classList.add('is-active')
       self.alerts.disconnected.classList.remove('is-active')
     }
 
     function onConnected() {
-      // console.log('on connected')
       self.alerts.container.classList.remove('is-active')
       self.alerts.max.classList.remove('is-active')
       self.alerts.reconnecting.classList.remove('is-active')
       self.alerts.disconnected.classList.remove('is-active')
     }
+  }
+
+  unsubscribe() {
+    const topics = [
+      'socket/max',
+      'socket/disconnected',
+      'socket/connected',
+      'socket/reconnecting',
+    ]
+    topics.forEach((topic) => {
+      divulgerService.unsubscribe(topic, this.instanceId)
+    })
   }
 }

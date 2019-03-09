@@ -1,3 +1,5 @@
+import { puzzleBitsService } from "../puzzle-bits/puzzle-bits.service";
+
 // proxy_read_timeout should match the config from nginx and should be greater than 10
 const PROXY_READ_TIMEOUT = 60;
 const MAX_PINGS = 13;
@@ -10,16 +12,28 @@ interface PieceMovementData {
   y?: number;
 }
 
-interface BitMovementData {
-  id: string;
-  x: string;
-  y: string;
+export interface BitMovementData {
+  id: number;
+  x: number;
+  y: number;
 }
 
 type SocketStatusCallback = () => any;
+type PieceUpdateCallback = (data: PieceMovementData) => any;
 const socketMax = Symbol("socket/max");
+const socketDisconnected = Symbol("socket/disconnected");
+const socketConnected = Symbol("socket/connected");
+const socketReconnecting = Symbol("socket/reconnecting");
+const pieceUpdate = Symbol("piece/update");
+const topics = {
+  "socket/max": socketMax,
+  "socket/disconnected": socketDisconnected,
+  "socket/connected": socketConnected,
+  "socket/reconnecting": socketReconnecting,
+  "piece/update": pieceUpdate,
+};
 
-class DivulgerService {
+export class DivulgerService {
   puzzleId: string;
   // Keep track of the last message sent for keeping the connection open with a ping
   private lastMessageSent: number = 0;
@@ -30,17 +44,10 @@ class DivulgerService {
 
   // topics
   [socketMax]: Map<string, SocketStatusCallback> = new Map();
-
-  /*
-      window.subscribe('piece/update', onPieceUpdate)
-      window.publish("piece/update/" + pieceData.id, [pieceData]);
-      window.subscribe("bit/update", this._onBitUpdate.bind(this));
-
-      window.subscribe('socket/max', onMax)
-      window.subscribe('socket/disconnected', onDisconnected)
-      window.subscribe('socket/connected', onConnected)
-      window.subscribe('socket/reconnecting', onReconnecting)
-   */
+  [socketDisconnected]: Map<string, SocketStatusCallback> = new Map();
+  [socketConnected]: Map<string, SocketStatusCallback> = new Map();
+  [socketReconnecting]: Map<string, SocketStatusCallback> = new Map();
+  [pieceUpdate]: Map<string, PieceUpdateCallback> = new Map();
 
   constructor(puzzleId) {
     this.puzzleId = puzzleId;
@@ -51,30 +58,21 @@ class DivulgerService {
 
   connect() {
     if (this.pingCount >= MAX_PINGS) {
-      // console.log('disconnected')
       window.clearInterval(this.pingServerIntervalID);
-      // @ts-ignore: minpubsub
-      window.publish("socket/disconnected");
+      this._broadcast(socketDisconnected);
       // Reset the pingCount so it can be connected again
       this.pingCount = 0;
       // TODO: show a disconnected message
       return;
     }
 
-    // console.log('connect new ws')
-    // this.ws = new WebSocket(`ws://${window.location.host}/newapi/puzzle/${puzzleId}/updates/`)
-    this.ws = new WebSocket(
-      `ws://${window.location.host}/divulge/${this.puzzleId}/`
-    );
     this.ws.onopen = this.onOpenSocket.bind(this);
     this.ws.onclose = this.onCloseSocket.bind(this);
     this.ws.onmessage = this.onMessageSocket.bind(this);
   }
 
   onOpenSocket() {
-    // console.log('connected')
-    // @ts-ignore: minpubsub
-    window.publish("socket/connected");
+    this._broadcast(socketConnected);
     this.ws.send(this.puzzleId);
     window.clearInterval(this.pingServerIntervalID);
     this.pingServerIntervalID = this.pingServer();
@@ -83,17 +81,13 @@ class DivulgerService {
   onCloseSocket() {
     window.clearInterval(this.pingServerIntervalID);
     if (this.pingCount < MAX_PINGS) {
-      // console.log('onCloseSocket... reconnecting in 15')
       // Try to reconnect in 15 seconds
       setTimeout(this.connect, 1000 * 15);
-      // @ts-ignore: minpubsub
-      window.publish("socket/reconnecting");
+      this._broadcast(socketReconnecting);
       // Update the pingCount so it doesn't just try to continually connect forever
       this.pingCount = this.pingCount + 1;
     } else {
-      // console.log('onCloseSocket... disconnected')
-      // @ts-ignore: minpubsub
-      window.publish("socket/disconnected");
+      this._broadcast(socketDisconnected);
     }
   }
 
@@ -105,11 +99,8 @@ class DivulgerService {
       // puzzle has been stale for 30 minutes.
     }, 30 * 60 * 1000);
 
-    // console.log('msg', msg, msg.data)
     if (msg.data === "MAX") {
-      // @ts-ignore: minpubsub
-      window.publish("socket/max");
-      // TODO: this._broadcast([socketMax])
+      this._broadcast(socketMax);
       return;
     }
 
@@ -133,22 +124,20 @@ class DivulgerService {
         self.lastMessageSent < currentTime - interval
       ) {
         self.pingCount = self.pingCount + 1;
-        // console.log('ping', lastMessageSent, self.pingCount)
         if (self.pingCount < MAX_PINGS) {
           self.ws.send("ping");
         }
         self.lastMessageSent = new Date().getTime();
       }
-      // console.log('poll', lastMessageSent)
     }, pollIntervalMs);
   }
 
   handleMovementString(textline) {
     let lines = textline.split("\n");
-    lines.forEach(function(line) {
+    lines.forEach((line) => {
       // let line = String(line)
       let items = line.split(",");
-      items.forEach(function(item) {
+      items.forEach((item) => {
         let values = item.split(":");
         if (values.length === 7) {
           // puzzle_id, piece_id, x, y, r, parent, status
@@ -168,42 +157,44 @@ class DivulgerService {
           if (values[3] !== "") {
             pieceData.y = Number(values[3]);
           }
-          // Publish on two topics. Subscribers that are only interested in
-          // specific pieces, and any piece changes.
-          // @ts-ignore: minpubsub
-          window.publish("piece/update/" + pieceData.id, [pieceData]);
-          // @ts-ignore: minpubsub
-          window.publish("piece/update", [pieceData]);
+          this._broadcast(pieceUpdate, pieceData);
         } else if (values.length === 4) {
           const bitData: BitMovementData = {
-            id: values[1],
-            x: values[2],
-            y: values[3],
+            id: parseInt(values[1]),
+            x: parseInt(values[2]),
+            y: parseInt(values[3]),
           };
-          // @ts-ignore: minpubsub
-          window.publish("bit/update", [bitData]); // used by PuzzleBitsService
+          puzzleBitsService.bitUpdate(bitData);
         }
       });
     });
   }
 
-  _broadcast(topic: symbol) {
+  _broadcast(topic: symbol, data?: any) {
     this[topic].forEach((fn /*, id*/) => {
-      fn();
+      fn(data);
     });
   }
 
-  subscribe(topic: symbol, fn: SocketStatusCallback, id: string) {
-    //console.log("subscribe", fn, id);
+  subscribe(
+    topicString: string,
+    fn: SocketStatusCallback | PieceUpdateCallback,
+    id: string
+  ) {
+    const topic = topics[topicString];
+    if (topic === undefined) {
+      throw new Error(`Cannot subscribe to the '${topicString}'`);
+    }
     // Add the fn to listeners
     this[topic].set(id, fn);
   }
 
-  unsubscribe(topic: symbol, id: string) {
-    //console.log("unsubscribe", id);
+  unsubscribe(topicString: string, id: string) {
+    const topic = topics[topicString];
+    if (topic === undefined) {
+      throw new Error(`Cannot unsubscribe from the '${topicString}'`);
+    }
     // remove fn from listeners
     this[topic].delete(id);
   }
 }
-
-export default DivulgerService;

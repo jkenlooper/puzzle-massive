@@ -1,14 +1,9 @@
 import userDetailsService from "../site/user-details.service";
+import { BitMovementData } from "../puzzle-pieces/divulger.service";
 
 interface PlayerBitIconResponse {
   id: number;
   icon: boolean | string; // icon is false if none assigned to player
-}
-
-interface PlayerBitUpdate {
-  id: number;
-  x: number;
-  y: number;
 }
 
 export interface PlayerBit {
@@ -39,8 +34,6 @@ class PuzzleBitsService {
   listeners: Map<string, PlayerBitsCallback> = new Map();
 
   constructor() {
-    // @ts-ignore: TODO: replace or declare on minpubsub
-    window.subscribe("bit/update", this._onBitUpdate.bind(this));
     const self = this;
 
     let playerId = userDetailsService.userDetails.id;
@@ -93,7 +86,7 @@ class PuzzleBitsService {
     return bit.lastUpdate.getTime() > now.getTime() - BitRecentTimeout;
   }
 
-  _onBitUpdate(data: PlayerBitUpdate): void {
+  bitUpdate(data: BitMovementData): void {
     const self = this;
     const bit: PlayerBit = Object.assign(
       {
@@ -165,13 +158,11 @@ class PuzzleBitsService {
   }
 
   subscribe(fn: PlayerBitsCallback, id: string) {
-    //console.log("subscribe", fn, id);
     // Add the fn to listeners
     this.listeners.set(id, fn);
   }
 
   unsubscribe(id: string) {
-    //console.log("unsubscribe", id);
     // remove fn from listeners
     this.listeners.delete(id);
   }

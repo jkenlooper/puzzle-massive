@@ -11,7 +11,7 @@ import * as Hammer from "hammerjs";
 import { rgbToHsl } from "../site/utilities";
 import hashColorService from "../hash-color/hash-color.service";
 import PuzzleService from "./puzzle.service.js";
-import DivulgerService from "./divulger.service";
+import {DivulgerService} from "./divulger.service";
 import PuzzlePiecesController from "./puzzle-pieces.controller.js";
 
 import template from "./puzzle-pieces.html";
@@ -67,6 +67,7 @@ customElements.define(
     ctrl: PuzzlePiecesController;
     constructor() {
       super();
+      const self = this;
       this.instanceId = PmPuzzlePieces._instanceId;
       const shadowRoot = this.attachShadow({ mode: "open" });
       shadowRoot.innerHTML = `<style>@import '${this.getAttribute(
@@ -150,7 +151,6 @@ customElements.define(
       ctrl.status = this.getAttribute("status");
       ctrl.parentoftopleft = Number(this.getAttribute("parentoftopleft"));
       ctrl.puzzleid = <string>this.getAttribute("puzzleid");
-      ctrl.pieceUpdateHandles = {};
       ctrl.pieceRejectedHandles = {};
 
       let draggedPiece: HTMLElement | null = null;
@@ -175,17 +175,20 @@ customElements.define(
         );
       }
 
+      function stopFollowing(data) {
+        if (data.id === draggedPieceID) {
+          divulgerService.unsubscribe(
+            "piece/update",
+            `pieceFollow ${self.instanceId}`
+          );
+          $slabMassive.removeEventListener("mousemove", pieceFollow, false);
+        }
+      }
+
       this.$dropZone.addEventListener("mousedown", dropTap, false);
       function dropTap(ev) {
         ev.preventDefault();
         if (typeof draggedPieceID === "number") {
-          // @ts-ignore
-          if (ctrl.pieceUpdateHandles[draggedPieceID]) {
-            // @ts-ignore
-            window.unsubscribe(ctrl.pieceUpdateHandles[draggedPieceID]);
-            // @ts-ignore
-            delete ctrl.pieceUpdateHandles[draggedPieceID];
-          }
           // @ts-ignore
           if (ctrl.pieceRejectedHandles[draggedPieceID]) {
             // @ts-ignore
@@ -220,11 +223,6 @@ customElements.define(
             !ctrl.blocked
           ) {
             // listen for piece updates to just this piece while it's being moved.
-            // @ts-ignore
-            ctrl.pieceUpdateHandles[draggedPieceID] = window.subscribe(
-              "piece/update/" + draggedPieceID,
-              onPieceUpdateWhileSelected
-            );
             // TODO: listen to reject as well?
             // @ts-ignore
             ctrl.pieceRejectedHandles[draggedPieceID] = window.subscribe(
@@ -235,12 +233,13 @@ customElements.define(
             // tap on piece
             ctrl.selectPiece(id);
             $slabMassive.addEventListener("mousemove", pieceFollow, false);
+            // TODO: subscribe to piece/update to unfollow if active piece is updated
+            divulgerService.subscribe(
+              "piece/update",
+              stopFollowing,
+              `pieceFollow ${self.instanceId}`
+            );
           } else {
-            if (ctrl.pieceUpdateHandles[draggedPieceID]) {
-              // @ts-ignore
-              window.unsubscribe(ctrl.pieceUpdateHandles[draggedPieceID]);
-              delete ctrl.pieceUpdateHandles[draggedPieceID];
-            }
             if (ctrl.pieceRejectedHandles[draggedPieceID]) {
               // @ts-ignore
               window.unsubscribe(ctrl.pieceRejectedHandles[draggedPieceID]);
@@ -263,12 +262,6 @@ customElements.define(
         $slabMassive.removeEventListener("mousemove", pieceFollow, false);
 
         // Stop listening for any updates to this piece
-        // console.log('onPieceUpdateWhileSelected', data.id)
-        if (ctrl.pieceUpdateHandles[data.id]) {
-          // @ts-ignore
-          window.unsubscribe(ctrl.pieceUpdateHandles[data.id]);
-          delete ctrl.pieceUpdateHandles[data.id];
-        }
         if (ctrl.pieceRejectedHandles[data.id]) {
           // @ts-ignore
           window.unsubscribe(ctrl.pieceRejectedHandles[data.id]);
@@ -309,9 +302,6 @@ customElements.define(
         }
       });
 
-      // the pieceUpdateHandle is used to subscribe/unsubscribe from specific piece movements
-      // let pieceUpdateHandle
-      // let pieceRejectedHandle
       this.$collection.addEventListener("mousedown", onTap, false);
 
       // update DOM for array of piece id's
@@ -412,6 +402,10 @@ customElements.define(
     // Fires when an instance was inserted into the document.
     connectedCallback() {
       this.updateForegroundAndBackgroundColors();
+    }
+
+    disconnectedCallback() {
+      this.ctrl.unsubscribe();
     }
 
     static get observedAttributes() {
