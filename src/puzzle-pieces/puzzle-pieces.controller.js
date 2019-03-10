@@ -201,7 +201,6 @@ export default class PuzzlePiecesController {
     function onPieceUpdate(data) {
       let piece = self.pieces[data.id]
       if (piece.active) {
-        // TODO: stop following the piece and unselect if piece is active
         self.unSelectPiece(data.id)
       }
       piece = Object.assign(piece, data)
@@ -243,6 +242,7 @@ export default class PuzzlePiecesController {
     }
 
     function onMoveBlocked(data) {
+      // TODO: move to alerts, but set self.blocked elsewhere
       self.alerts.container.classList.add('is-active')
       self.alerts.blocked.classList.add('is-active')
       const msgEl = self.alerts.blocked.querySelector(
@@ -277,24 +277,28 @@ export default class PuzzlePiecesController {
     }
 
     function onMax() {
+      // TODO: move to alerts
       self.isAtMax = true
       self.alerts.container.classList.add('is-active')
       self.alerts.max.classList.add('is-active')
     }
 
     function onDisconnected() {
+      // TODO: move to alerts
       self.alerts.container.classList.add('is-active')
       self.alerts.disconnected.classList.add('is-active')
       self.alerts.reconnecting.classList.remove('is-active')
     }
 
     function onReconnecting() {
+      // TODO: move to alerts
       self.alerts.container.classList.add('is-active')
       self.alerts.reconnecting.classList.add('is-active')
       self.alerts.disconnected.classList.remove('is-active')
     }
 
     function onConnected() {
+      // TODO: move to alerts
       self.alerts.container.classList.remove('is-active')
       self.alerts.max.classList.remove('is-active')
       self.alerts.reconnecting.classList.remove('is-active')
