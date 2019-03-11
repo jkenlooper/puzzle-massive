@@ -45,7 +45,7 @@ experience helping others in web development stuff like this.
 ## License
 
 Puzzle Massive. An online multiplayer jigsaw puzzle.
-Copyright (C) 2018 Jake Hickenlooper
+Copyright (C) 2019 Jake Hickenlooper
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
