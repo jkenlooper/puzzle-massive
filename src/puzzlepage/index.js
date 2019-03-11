@@ -6,7 +6,7 @@ import ScrollJump from './scroll-jump.js'
 import '../puzzle-pieces'
 import '../rebuild-form'
 import '../puzzle-bits'
-import '../puzzle-alerts'
+// import '../puzzle-alert' // TODO:
 import '../hash-color'
 import '../karma-status'
 import './puzzlepage.css'

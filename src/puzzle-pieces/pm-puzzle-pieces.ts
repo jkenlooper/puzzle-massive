@@ -11,7 +11,7 @@ import * as Hammer from "hammerjs";
 import { rgbToHsl } from "../site/utilities";
 import hashColorService from "../hash-color/hash-color.service";
 import PuzzleService from "./puzzle.service.js";
-import {DivulgerService} from "./divulger.service";
+import { divulgerService } from "./divulger.service";
 import PuzzlePiecesController from "./puzzle-pieces.controller.js";
 
 import template from "./puzzle-pieces.html";
@@ -122,9 +122,6 @@ customElements.define(
       let offsetTop = $slabMassive.offsetTop;
       let offsetLeft = $slabMassive.offsetLeft;
 
-      const divulgerService = new DivulgerService(
-        this.getAttribute("puzzleid")
-      );
       const puzzleService = new PuzzleService(
         this.getAttribute("puzzleid"),
         divulgerService
@@ -141,8 +138,8 @@ customElements.define(
         blocked: shadowRoot.querySelector("#puzzle-pieces-alert-blocked"),
       };
       let ctrl = (this.ctrl = new PuzzlePiecesController(
+        this.getAttribute("puzzleid") || "",
         puzzleService,
-        divulgerService,
         this.$collection,
         alerts,
         this.$karmaStatus
@@ -150,7 +147,6 @@ customElements.define(
       ctrl.renderPieces = renderPieces.bind(this);
       ctrl.status = this.getAttribute("status");
       ctrl.parentoftopleft = Number(this.getAttribute("parentoftopleft"));
-      ctrl.puzzleid = <string>this.getAttribute("puzzleid");
       ctrl.pieceRejectedHandles = {};
 
       let draggedPiece: HTMLElement | null = null;

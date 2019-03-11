@@ -1,3 +1,4 @@
+import { divulgerService } from './divulger.service'
 let lastInstanceId = 0
 
 function _instanceId() {
@@ -5,13 +6,7 @@ function _instanceId() {
 }
 
 export default class PuzzlePiecesController {
-  constructor(
-    puzzleService,
-    divulgerService,
-    $container,
-    alerts,
-    $karmaStatus
-  ) {
+  constructor(puzzleId, puzzleService, $container, alerts, $karmaStatus) {
     let self = this
     // For now this is set to one to prevent feature creep
     const maxSelectedPieces = 1
@@ -26,6 +21,7 @@ export default class PuzzlePiecesController {
     self.karmaStatusIsActiveTimeout
 
     this.instanceId = _instanceId()
+    this.puzzleId = puzzleId
 
     self.pieces = {}
     self.collection = []
@@ -59,7 +55,7 @@ export default class PuzzlePiecesController {
         onReconnecting,
         self.instanceId
       )
-      divulgerService.connect()
+      divulgerService.ping(self.puzzleId)
       puzzleService.pieces().then(handlePieces)
     }
 

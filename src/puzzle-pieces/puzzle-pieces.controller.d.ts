@@ -8,7 +8,7 @@ declare class PuzzlePiecesController {
   renderPieces: Function;
   status: any;
   parentoftopleft: number;
-  puzzleid: string;
+  puzzleId: string;
   pieceUpdateHandles: object;
   pieceRejectedHandles: object;
   instanceId: string;
@@ -31,8 +31,8 @@ declare class PuzzlePiecesController {
   unsubscribe(): void;
 
   constructor(
+    puzzleId: string,
     puzzleService: any, //PuzzleService,
-    divulgerService: any, //DivulgerService,
     $container: HTMLElement,
     alerts: any,
     $karmaStatus: HTMLElement

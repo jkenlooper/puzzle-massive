@@ -136,12 +136,7 @@ export default class PuzzleService {
         data.r = r
       }
 
-      if (divulgerService.ws.readyState > 1) {
-        // Websocket is closed or closing, so reconnect
-        divulgerService.connect()
-      } else {
-        divulgerService.ws.send(puzzleid)
-      }
+      divulgerService.ping(puzzleid)
       return reqwest({
         url: `/newapi/puzzle/${puzzleid}/piece/${id}/move/`,
         method: 'PATCH',
@@ -195,10 +190,7 @@ export default class PuzzleService {
         },
         success: function(d) {
           window.publish('karma/updated', [d])
-          if (divulgerService.ws.readyState > 1) {
-            // Websocket is closed or closing, so reconnect
-            divulgerService.connect()
-          }
+          divulgerService.ping(puzzleid)
         },
       })
     }

@@ -33,14 +33,14 @@ const topics = {
   "piece/update": pieceUpdate,
 };
 
-export class DivulgerService {
-  puzzleId: string;
+class DivulgerService {
+  puzzleId: string | undefined;
   // Keep track of the last message sent for keeping the connection open with a ping
   private lastMessageSent: number = 0;
   private stalePuzzleTimeout: number = 0;
   private pingServerIntervalID: number = 0;
   private pingCount: number = 0;
-  ws: WebSocket;
+  ws: WebSocket | undefined;
 
   // topics
   [socketMax]: Map<string, SocketStatusCallback> = new Map();
@@ -49,14 +49,22 @@ export class DivulgerService {
   [socketReconnecting]: Map<string, SocketStatusCallback> = new Map();
   [pieceUpdate]: Map<string, PieceUpdateCallback> = new Map();
 
-  constructor(puzzleId) {
-    this.puzzleId = puzzleId;
-    this.ws = new WebSocket(
-      `ws://${window.location.host}/divulge/${this.puzzleId}/`
-    );
+  constructor() {}
+
+  _init(puzzleId) {
+    if (this.puzzleId === undefined) {
+      this.puzzleId = puzzleId;
+      this.ws = new WebSocket(
+        `ws://${window.location.host}/divulge/${this.puzzleId}/`
+      );
+      this._connect();
+    }
   }
 
-  connect() {
+  _connect() {
+    if (this.ws === undefined || this.puzzleId === undefined) {
+      return;
+    }
     if (this.pingCount >= MAX_PINGS) {
       window.clearInterval(this.pingServerIntervalID);
       this._broadcast(socketDisconnected);
@@ -71,18 +79,34 @@ export class DivulgerService {
     this.ws.onmessage = this.onMessageSocket.bind(this);
   }
 
+  ping(puzzleId) {
+    this._init(puzzleId);
+    if (this.ws === undefined || this.puzzleId === undefined) {
+      return;
+    }
+    if (this.ws.readyState > 1) {
+      // Websocket is closed or closing, so reconnect
+      this._connect();
+    } else {
+      this.ws.send(this.puzzleId);
+    }
+  }
+
   onOpenSocket() {
+    if (this.ws === undefined || this.puzzleId === undefined) {
+      return;
+    }
     this._broadcast(socketConnected);
     this.ws.send(this.puzzleId);
     window.clearInterval(this.pingServerIntervalID);
-    this.pingServerIntervalID = this.pingServer();
+    this.pingServerIntervalID = this._pingServer();
   }
 
   onCloseSocket() {
     window.clearInterval(this.pingServerIntervalID);
     if (this.pingCount < MAX_PINGS) {
       // Try to reconnect in 15 seconds
-      setTimeout(this.connect, 1000 * 15);
+      setTimeout(this._connect, 1000 * 15);
       this._broadcast(socketReconnecting);
       // Update the pingCount so it doesn't just try to continually connect forever
       this.pingCount = this.pingCount + 1;
@@ -109,7 +133,7 @@ export class DivulgerService {
     this.handleMovementString(msg.data);
   }
 
-  pingServer(): number {
+  _pingServer(): number {
     const self = this;
     // send ping requests every 50 seconds to keep the connection to the proxied websocket open
     const checkInterval = 10;
@@ -125,7 +149,9 @@ export class DivulgerService {
       ) {
         self.pingCount = self.pingCount + 1;
         if (self.pingCount < MAX_PINGS) {
-          self.ws.send("ping");
+          if (self.ws !== undefined && self.puzzleId !== undefined) {
+            self.ws.send("ping");
+          }
         }
         self.lastMessageSent = new Date().getTime();
       }
@@ -198,3 +224,4 @@ export class DivulgerService {
     this[topic].delete(id);
   }
 }
+export const divulgerService = new DivulgerService();
