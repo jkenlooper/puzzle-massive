@@ -273,7 +273,8 @@
                 {{ puzzlepieces() }}
               </div>
             {% endif %}
-            {# TODO: <pm-puzzle-alert puzzleid="{{ puzzle.puzzle_id }}"></pm-puzzle-alerts> #}
+
+            {% include 'puzzle-alert.html' %}
 
         </div>
       </div>

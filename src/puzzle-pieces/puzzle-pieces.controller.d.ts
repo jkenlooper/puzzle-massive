@@ -2,7 +2,6 @@
 
 declare class PuzzlePiecesController {
   $container: HTMLElement;
-  alerts: object;
   $karmaStatus: HTMLElement;
   karmaStatusIsActiveTimeout: number;
   renderPieces: Function;
@@ -34,7 +33,6 @@ declare class PuzzlePiecesController {
     puzzleId: string,
     puzzleService: any, //PuzzleService,
     $container: HTMLElement,
-    alerts: any,
     $karmaStatus: HTMLElement
   );
 }

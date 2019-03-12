@@ -17,14 +17,6 @@ import PuzzlePiecesController from "./puzzle-pieces.controller.js";
 import template from "./puzzle-pieces.html";
 import style from "./puzzle-pieces.css";
 
-interface Alerts {
-  container: HTMLElement | null;
-  max: HTMLElement | null;
-  reconnecting: HTMLElement | null;
-  disconnected: HTMLElement | null;
-  blocked: HTMLElement | null;
-}
-
 interface PieceData {
   id: number;
   b: number; // b for background
@@ -126,22 +118,10 @@ customElements.define(
         this.getAttribute("puzzleid"),
         divulgerService
       );
-      let alerts: Alerts = {
-        container: shadowRoot.querySelector("#puzzle-pieces-alert"),
-        max: shadowRoot.querySelector("#puzzle-pieces-alert-max"),
-        reconnecting: shadowRoot.querySelector(
-          "#puzzle-pieces-alert-reconnecting"
-        ),
-        disconnected: shadowRoot.querySelector(
-          "#puzzle-pieces-alert-disconnected"
-        ),
-        blocked: shadowRoot.querySelector("#puzzle-pieces-alert-blocked"),
-      };
       let ctrl = (this.ctrl = new PuzzlePiecesController(
         this.getAttribute("puzzleid") || "",
         puzzleService,
         this.$collection,
-        alerts,
         this.$karmaStatus
       ));
       ctrl.renderPieces = renderPieces.bind(this);

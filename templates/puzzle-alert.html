@@ -1,33 +1,37 @@
-  <section id="puzzle-pieces-alert" class="pm-PuzzlePieces-alert" style="display: none;">
+<pm-puzzle-alert puzzle-id="{{ puzzle.puzzle_id }}">
+  <template id="puzzle-pieces-alert-template">
+    <section id="puzzle-pieces-alert" class="pm-PuzzlePieces-alert" style="display: none;">
       <h1><small>Alerts</small></h1>
       <div id="puzzle-pieces-alert-max"  class="pm-PuzzlePieces-alertMessage pm-PuzzlePieces-alertMessage--max">
 
-          <h2>Max Connections</h2>
-          <p>
+        <h2>Max Connections</h2>
+        <p>
           Puzzle piece movement updates are disabled, because site has reached max
           connections.
-          </p>
+        </p>
       </div>
 
       <div id="puzzle-pieces-alert-reconnecting"  class="pm-PuzzlePieces-alertMessage pm-PuzzlePieces-alertMessage--reconnecting">
 
-          <h2>Reconnecting&hellip;</h2>
-          <p>
+        <h2>Reconnecting&hellip;</h2>
+        <p>
           Puzzle piece movement updates are disabled while reconnecting.
-          </p>
+        </p>
       </div>
 
       <div id="puzzle-pieces-alert-disconnected"  class="pm-PuzzlePieces-alertMessage pm-PuzzlePieces-alertMessage--disconnected">
 
-          <h2>Disconnected</h2>
-          <p>
+        <h2>Disconnected</h2>
+        <p>
           Puzzle piece movement updates are disabled. Try reloading the page.
-          </p>
+        </p>
       </div>
 
       <div id="puzzle-pieces-alert-blocked"  class="pm-PuzzlePieces-alertMessage pm-PuzzlePieces-alertMessage--blocked">
-          <h2>Your piece moves have been blocked</h2>
-          <p id="puzzle-pieces-alert-blocked-msg"></p>
-          <p id="puzzle-pieces-alert-blocked-reason"></p>
+        <h2>Your piece moves have been blocked</h2>
+        <p id="puzzle-pieces-alert-blocked-msg"></p>
+        <p id="puzzle-pieces-alert-blocked-reason"></p>
       </div>
-  </section>
+    </section>
+  </template>
+</pm-puzzle-alerts>
