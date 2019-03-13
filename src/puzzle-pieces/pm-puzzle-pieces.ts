@@ -52,6 +52,7 @@ customElements.define(
       return `${tag} ${lastInstanceId++}`;
     }
     private instanceId: string;
+    private puzzleId: string;
     $collection: HTMLElement;
     $dropZone: HTMLElement;
     $karmaStatus: HTMLElement;
@@ -80,6 +81,9 @@ customElements.define(
       // TODO: types for SlabMassive element
       let $slabMassive = <any>this.parentElement;
       const withinSlabMassive = $slabMassive.tagName === "SLAB-MASSIVE";
+
+      const puzzleId = this.attributes.getNamedItem("puzzle-id");
+      this.puzzleId = puzzleId ? puzzleId.value : "";
 
       if (!withinSlabMassive) {
         // Not using slab-massive so we need to set the width of all parent
@@ -114,12 +118,9 @@ customElements.define(
       let offsetTop = $slabMassive.offsetTop;
       let offsetLeft = $slabMassive.offsetLeft;
 
-      const puzzleService = new PuzzleService(
-        this.getAttribute("puzzleid"),
-        divulgerService
-      );
+      const puzzleService = new PuzzleService(this.puzzleId, divulgerService);
       let ctrl = (this.ctrl = new PuzzlePiecesController(
-        this.getAttribute("puzzleid") || "",
+        this.puzzleId,
         puzzleService,
         this.$collection,
         this.$karmaStatus

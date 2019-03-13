@@ -27,18 +27,15 @@ export default class PuzzlePiecesController {
     self.karmaChange = 0
     self.karma = 0
     self.blocked = false
-    init()
 
-    function init() {
-      window.subscribe('karma/updated', onKarmaUpdate) // PuzzleService
-      window.subscribe('piece/move/blocked', onMoveBlocked) // PuzzleService
-      window.subscribe('piece/move/rejected', onPieceMoveRejected) // PuzzleService
+    window.subscribe('karma/updated', onKarmaUpdate) // PuzzleService
+    window.subscribe('piece/move/blocked', onMoveBlocked) // PuzzleService
+    window.subscribe('piece/move/rejected', onPieceMoveRejected) // PuzzleService
 
-      // DivulgerService
-      divulgerService.subscribe('piece/update', onPieceUpdate, self.instanceId)
-      divulgerService.ping(self.puzzleId)
-      puzzleService.pieces().then(handlePieces)
-    }
+    // DivulgerService
+    divulgerService.ping(this.puzzleId)
+    divulgerService.subscribe('piece/update', onPieceUpdate, this.instanceId)
+    puzzleService.pieces().then(handlePieces)
 
     function handlePieces(data) {
       let pieceData = JSON.parse(data)

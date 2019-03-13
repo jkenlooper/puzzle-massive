@@ -253,7 +253,7 @@
               <pm-puzzle-pieces
                 style="width:{{ puzzle.table_width + 100 }}px; height:{{ puzzle.table_height + 100 }}px;"
                 resources="{{ puzzle_files.url }}"
-                puzzleid="{{ puzzle.puzzle_id }}"
+                puzzle-id="{{ puzzle.puzzle_id }}"
                 status="{{ puzzle.status }}"></pm-puzzle-pieces>
               <pm-puzzle-bits media-path="{{ url_for('send_media_file', filename='') }}"></pm-puzzle-bits>
             {%- endmacro %}

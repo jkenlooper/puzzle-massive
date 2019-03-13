@@ -87,7 +87,13 @@ class DivulgerService {
     if (this.ws.readyState > 1) {
       // Websocket is closed or closing, so reconnect
       this._connect();
+    }
+    if (this.ws.readyState === 0) {
+      window.setTimeout(() => {
+        this.ping(puzzleId);
+      }, 500);
     } else {
+      // websocket is connected (readyState === 1)
       this.ws.send(this.puzzleId);
     }
   }
