@@ -94,45 +94,6 @@
   background-color: rgba(0, 0, 0, 0.1);
 }
 
-.pm-PuzzlePieces-karmaStatus {
-  display: none;
-  color: black;
-  pointer-events: none;
-  opacity: 0.5;
-  position: sticky;
-  top: 100vh;
-  left: 100vw;
-  /* 40px is estimate width of scrollbars */
-  transform: translate(calc((2em + 40px) * -1), calc((2em + 40px) * -1));
-  width: 2em;
-  height: 2em;
-  text-align: center;
-  z-index: 20;
-  font-weight: bold;
-  font-size: 1.7em;
-  text-shadow: 0 0 3px black, 0 0 6px white;
-  line-height: 2em;
-  transition: box-shadow 1s linear, background-color 1s linear;
-}
-.pm-PuzzlePieces-karmaStatus.is-active {
-  display: block;
-}
-.pm-PuzzlePieces-karmaStatus[data-karma-level="0"] {
-  color: black;
-  opacity: 1;
-  background-color: red;
-  box-shadow: 0 0 10px 25px red;
-}
-.pm-PuzzlePieces-karmaStatus[data-karma-level="1"] {
-  color: orange;
-  opacity: 0.7;
-  box-shadow: 0 0 0px 0px black;
-  background-color: black;
-}
-.pm-PuzzlePieces--withinSlabMassive .pm-PuzzlePieces-karmaStatus {
-  display: none;
-}
-
 .pm-PuzzlePieces-selected {
   display: flex;
   position: absolute;

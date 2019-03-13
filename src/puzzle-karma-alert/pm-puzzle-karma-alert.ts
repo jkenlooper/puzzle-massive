@@ -1,0 +1,85 @@
+import { html, render } from "lit-html";
+import { classMap } from "lit-html/directives/class-map.js";
+
+import "./puzzle-karma-alert.css";
+
+interface TemplateData {
+  isActive: boolean;
+  karma: number;
+  karmaLevel: number;
+}
+
+const tag = "pm-puzzle-karma-alert";
+//let lastInstanceId = 0;
+
+customElements.define(
+  tag,
+  class PmPuzzleKarmaAlert extends HTMLElement {
+    //static get _instanceId(): string {
+    //  return `${tag} ${lastInstanceId++}`;
+    //}
+    //private instanceId: string;
+    private karmaStatusIsActiveTimeout: number | undefined;
+    private isActive: boolean = false;
+    private karma: number = 1;
+    private karmaLevel: number = 2;
+
+    constructor() {
+      super();
+      //this.instanceId = PmPuzzleKarmaAlert._instanceId;
+
+      // @ts-ignore: minpubsub
+      window.subscribe("karma/updated", this.updateKarmaValue.bind(this)); // PuzzleService
+      // @ts-ignore: minpubsub
+      window.subscribe("piece/move/rejected", this.updateKarmaValue.bind(this)); // PuzzleService
+
+      this.render();
+    }
+
+    template(data: TemplateData) {
+      return html`
+        <div
+          id="pm-puzzle-pieces-karma-status"
+          data-karma-level=${data.karmaLevel}
+          class=${classMap({
+            "pm-PuzzlePieces-karmaStatus": true,
+            "is-active": data.isActive,
+          })}
+        >
+          ${data.karma}
+        </div>
+      `;
+    }
+
+    get data(): TemplateData {
+      return {
+        isActive: this.isActive,
+        karma: this.karma,
+        karmaLevel: this.karmaLevel,
+      };
+    }
+
+    render() {
+      render(this.template(this.data), this);
+    }
+    updateKarmaValue(data) {
+      const karma = data.karma;
+      if (karma && typeof karma === "number") {
+        this.karma = karma;
+        window.clearTimeout(this.karmaStatusIsActiveTimeout);
+        const karmaLevel = Math.floor(karma / 6);
+        this.karmaLevel = karmaLevel;
+        this.isActive = true;
+
+        // Hide the karma status after a timeout when it is normal
+        if (karmaLevel > 2) {
+          this.karmaStatusIsActiveTimeout = window.setTimeout(() => {
+            this.isActive = false;
+            this.render();
+          }, 5000);
+        }
+        this.render();
+      }
+    }
+  }
+);

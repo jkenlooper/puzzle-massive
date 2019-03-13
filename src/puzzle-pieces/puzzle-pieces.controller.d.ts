@@ -2,8 +2,6 @@
 
 declare class PuzzlePiecesController {
   $container: HTMLElement;
-  $karmaStatus: HTMLElement;
-  karmaStatusIsActiveTimeout: number;
   renderPieces: Function;
   status: any;
   parentoftopleft: number;
@@ -32,8 +30,7 @@ declare class PuzzlePiecesController {
   constructor(
     puzzleId: string,
     puzzleService: any, //PuzzleService,
-    $container: HTMLElement,
-    $karmaStatus: HTMLElement
+    $container: HTMLElement
   );
 }
 

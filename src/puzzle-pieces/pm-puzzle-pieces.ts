@@ -55,7 +55,6 @@ customElements.define(
     private puzzleId: string;
     $collection: HTMLElement;
     $dropZone: HTMLElement;
-    $karmaStatus: HTMLElement;
     $container: HTMLElement;
     ctrl: PuzzlePiecesController;
     constructor() {
@@ -71,9 +70,6 @@ customElements.define(
       );
       this.$dropZone = <HTMLElement>(
         shadowRoot.querySelector(".pm-PuzzlePieces-dropZone")
-      );
-      this.$karmaStatus = <HTMLElement>(
-        shadowRoot.querySelector("#pm-puzzle-pieces-karma-status")
       );
       this.$container = <HTMLElement>(
         shadowRoot.querySelector(".pm-PuzzlePieces")
@@ -123,7 +119,6 @@ customElements.define(
         this.puzzleId,
         puzzleService,
         this.$collection,
-        this.$karmaStatus
       ));
       ctrl.renderPieces = renderPieces.bind(this);
       ctrl.status = this.getAttribute("status");
@@ -284,12 +279,13 @@ customElements.define(
       // update DOM for array of piece id's
       function renderPieces(pieces: Pieces, pieceIDs) {
         let tmp = document.createDocumentFragment();
+        const startTime = new Date();
         pieceIDs.forEach((pieceID) => {
           let piece = pieces[pieceID];
           let $piece = this.$collection.querySelector("#p-" + pieceID);
           if (!$piece) {
             // @ts-ignore: ??
-            $piece = pieceTemplate.firstChild.cloneNode(true);
+            $piece = <HTMLElement>pieceTemplate.firstChild.cloneNode(true);
             $piece.setAttribute("id", "p-" + pieceID);
             $piece.classList.add("pc-" + pieceID);
             $piece.classList.add("p--" + (piece.b === 0 ? "dark" : "light"));
@@ -330,7 +326,7 @@ customElements.define(
             } else {
               $piece.classList.add("is-down");
             }
-            window.setTimeout(function cleanupKarma() {
+            window.setTimeout(function cleanupKarma($piece) {
               $piece.classList.remove("is-up", "is-down");
             }, 5000);
             piece.karmaChange = false;
@@ -339,6 +335,8 @@ customElements.define(
         if (tmp.children.length) {
           this.$collection.appendChild(tmp);
         }
+        const endTime = new Date();
+        console.log("render pieces", endTime.getTime() - startTime.getTime());
       }
 
       hashColorService.subscribe(

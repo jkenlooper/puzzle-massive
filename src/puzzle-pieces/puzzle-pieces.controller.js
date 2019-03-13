@@ -6,7 +6,7 @@ function _instanceId() {
 }
 
 export default class PuzzlePiecesController {
-  constructor(puzzleId, puzzleService, $container, $karmaStatus) {
+  constructor(puzzleId, puzzleService, $container) {
     let self = this
     // For now this is set to one to prevent feature creep
     const maxSelectedPieces = 1
@@ -14,8 +14,6 @@ export default class PuzzlePiecesController {
     const pieceAttrsThatAreInt = ['g', 'x', 'y', 'r', 's', 'b', 'w', 'h']
 
     self.$container = $container
-    self.$karmaStatus = $karmaStatus
-    self.karmaStatusIsActiveTimeout
 
     this.instanceId = _instanceId()
     this.puzzleId = puzzleId
@@ -169,7 +167,7 @@ export default class PuzzlePiecesController {
       piece.y = data.y || piece.origin.y
       piece.active = false
       self.renderPieces(self.pieces, [data.id])
-      updateKarmaValue(data.karma)
+      //updateKarmaValue(data.karma)
     }
 
     function onPieceUpdate(data) {
@@ -182,30 +180,13 @@ export default class PuzzlePiecesController {
       self.renderPieces(self.pieces, [data.id])
     }
 
-    function updateKarmaValue(karma) {
-      if (self.$karmaStatus && karma && typeof karma === 'number') {
-        window.clearTimeout(self.karmaStatusIsActiveTimeout)
-        self.$karmaStatus.innerHTML = karma
-        const karmaLevel = Math.floor(karma / 6)
-        self.$karmaStatus.setAttribute('data-karma-level', karmaLevel)
-        self.$karmaStatus.classList.add('is-active')
-
-        // Hide the karma status after a timeout when it is normal
-        if (karmaLevel > 2) {
-          self.karmaStatusIsActiveTimeout = window.setTimeout(() => {
-            self.$karmaStatus.classList.remove('is-active')
-          }, 5000)
-        }
-      }
-    }
-
     function onKarmaUpdate(data) {
       let piece = self.pieces[data.id]
       Object.assign(piece, data)
       self.karma = data.karma
       self.renderPieces(self.pieces, [data.id])
 
-      updateKarmaValue(data.karma)
+      //updateKarmaValue(data.karma)
 
       // Remove blocked alert if present when going from 0 to 2
       if (self.karma > 0 && self.blocked) {
