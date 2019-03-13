@@ -12,7 +12,7 @@ interface Alerts {
 const BLOCKED_MSG_NOT_SPECIFIED =
   "It would seem that recent piece moves from you were flagged as unhelpful on this puzzle.";
 
-const tag = "pm-puzzle-alerts";
+const tag = "pm-puzzle-alert";
 let lastInstanceId = 0;
 
 customElements.define(
@@ -64,7 +64,7 @@ customElements.define(
             `Missing child element '${selector}' needed for ${tag}`
           );
         }
-        this.alerts[name] = el;
+        alerts[name] = el;
       });
 
       this.alerts = alerts;

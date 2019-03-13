@@ -1,8 +1,8 @@
-.pm-PuzzlePieces-alert {
+.pm-PuzzleAlert-section {
   display: none;
-  position: sticky;
-  top: 50px;
-  left: 2px;
+  position: fixed;
+  top: calc(50% - ((200px + (10px * 2) / 2)));
+  left: calc(50% - ((300px + (10px * 2) / 2)));
   flex-direction: column;
   justify-content: center;
   z-index: 20;
@@ -18,25 +18,14 @@
   color: black;
 }
 
-.pm-PuzzlePieces-alert.is-active {
+.pm-PuzzleAlert-section.is-active {
   display: flex;
 }
 
-/* Must overide the inline display style to avoid FOUC. It may be redundant
- * here; I can't reproduce everytime. */
-section[style*="display"].pm-PuzzlePieces-alert.is-active {
-  display: flex !important;
-}
-.pm-PuzzlePieces--withinSlabMassive .pm-PuzzlePieces-alert {
-  position: absolute;
-  top: calc(50% - ((200px + (10px * 2) / 2)));
-  left: calc(50% - ((300px + (10px * 2) / 2)));
-}
-
-.pm-PuzzlePieces-alertMessage {
+.pm-PuzzleAlert-message {
   display: none;
 }
 
-.pm-PuzzlePieces-alertMessage.is-active {
+.pm-PuzzleAlert-message.is-active {
   display: block;
 }
