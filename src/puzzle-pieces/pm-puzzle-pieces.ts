@@ -33,11 +33,6 @@ interface Pieces {
   [index: number]: PieceData;
 }
 
-const pieceHTML = `<div class="p"></div>`;
-
-const pieceTemplate: HTMLElement = document.createElement("div");
-pieceTemplate.innerHTML = pieceHTML;
-
 const html = `
   <style>${style}</style>
   ${template}
@@ -56,6 +51,15 @@ customElements.define(
     $collection: HTMLElement;
     $dropZone: HTMLElement;
     $container: HTMLElement;
+    // TODO: types for SlabMassive element
+    private $slabMassive: any;
+
+    private draggedPiece: HTMLElement | null = null;
+    private draggedPieceID: number | null = null;
+    private slabMassiveOffsetTop: number;
+    private slabMassiveOffsetLeft: number;
+    private pieceFollow: Function;
+    private pieceRejectedHandles: object;
     ctrl: PuzzlePiecesController;
     constructor() {
       super();
@@ -74,9 +78,8 @@ customElements.define(
       this.$container = <HTMLElement>(
         shadowRoot.querySelector(".pm-PuzzlePieces")
       );
-      // TODO: types for SlabMassive element
-      let $slabMassive = <any>this.parentElement;
-      const withinSlabMassive = $slabMassive.tagName === "SLAB-MASSIVE";
+      this.$slabMassive = this.parentElement;
+      const withinSlabMassive = this.$slabMassive.tagName === "SLAB-MASSIVE";
 
       const puzzleId = this.attributes.getNamedItem("puzzle-id");
       this.puzzleId = puzzleId ? puzzleId.value : "";
@@ -84,25 +87,25 @@ customElements.define(
       if (!withinSlabMassive) {
         // Not using slab-massive so we need to set the width of all parent
         // elements so the browser can properly zoom out.
-        setParentWidth($slabMassive.parentNode);
+        setParentWidth(this.$slabMassive.parentNode);
 
         // Patch in these properties from the attrs
-        Object.defineProperty($slabMassive, "scale", {
+        Object.defineProperty(this.$slabMassive, "scale", {
           get: function() {
             return Number(this.getAttribute("scale"));
           },
         });
-        Object.defineProperty($slabMassive, "zoom", {
+        Object.defineProperty(this.$slabMassive, "zoom", {
           get: function() {
             return Number(this.getAttribute("zoom"));
           },
         });
-        Object.defineProperty($slabMassive, "offsetX", {
+        Object.defineProperty(this.$slabMassive, "offsetX", {
           get: function() {
             return Number(this.getAttribute("offset-x"));
           },
         });
-        Object.defineProperty($slabMassive, "offsetY", {
+        Object.defineProperty(this.$slabMassive, "offsetY", {
           get: function() {
             return Number(this.getAttribute("offset-y"));
           },
@@ -111,138 +114,31 @@ customElements.define(
         this.$container.classList.add("pm-PuzzlePieces--withinSlabMassive");
       }
 
-      let offsetTop = $slabMassive.offsetTop;
-      let offsetLeft = $slabMassive.offsetLeft;
+      this.slabMassiveOffsetTop = this.$slabMassive.offsetTop;
+      this.slabMassiveOffsetLeft = this.$slabMassive.offsetLeft;
 
       const puzzleService = new PuzzleService(this.puzzleId, divulgerService);
-      let ctrl = (this.ctrl = new PuzzlePiecesController(
-        this.puzzleId,
-        puzzleService,
-        this.$collection
-      ));
-      ctrl.renderPieces = renderPieces.bind(this);
-      ctrl.status = this.getAttribute("status");
-      ctrl.parentoftopleft = Number(this.getAttribute("parentoftopleft"));
-      ctrl.pieceRejectedHandles = {};
+      this.ctrl = new PuzzlePiecesController(this.puzzleId, puzzleService);
+      this.ctrl.renderPieces = this.renderPieces.bind(this);
+      this.pieceRejectedHandles = {};
 
-      let draggedPiece: HTMLElement | null = null;
-      let draggedPieceID: number | null = null;
+      this.pieceFollow = this._pieceFollow.bind(this);
 
       // For all parent elements set the width
       function setParentWidth(node) {
         if (node.style) {
-          node.style.width = $slabMassive.offsetWidth + "px";
+          node.style.width = self.$slabMassive.offsetWidth + "px";
         }
         if (node.parentNode) {
           setParentWidth(node.parentNode);
         }
       }
 
-      function pieceFollow(ev) {
-        ctrl.moveBy(
-          draggedPieceID,
-          Number($slabMassive.offsetX) + ev.pageX - offsetLeft,
-          Number($slabMassive.offsetY) + ev.pageY - offsetTop,
-          $slabMassive.scale * $slabMassive.zoom
-        );
-      }
-
-      function stopFollowing(data) {
-        if (data.id === draggedPieceID) {
-          divulgerService.unsubscribe(
-            "piece/update",
-            `pieceFollow ${self.instanceId}`
-          );
-          $slabMassive.removeEventListener("mousemove", pieceFollow, false);
-        }
-      }
-
-      this.$dropZone.addEventListener("mousedown", dropTap, false);
-      function dropTap(ev) {
-        ev.preventDefault();
-        if (typeof draggedPieceID === "number") {
-          // @ts-ignore
-          if (ctrl.pieceRejectedHandles[draggedPieceID]) {
-            // @ts-ignore
-            window.unsubscribe(ctrl.pieceRejectedHandles[draggedPieceID]);
-            // @ts-ignore
-            delete ctrl.pieceRejectedHandles[draggedPieceID];
-          }
-          ctrl.dropSelectedPieces(
-            Number($slabMassive.offsetX) + ev.pageX - offsetLeft,
-            Number($slabMassive.offsetY) + ev.pageY - offsetTop,
-            $slabMassive.scale * $slabMassive.zoom
-          );
-          draggedPieceID = null;
-        }
-      }
-      function onTap(ev) {
-        if (ev.target.classList.contains("p")) {
-          draggedPiece = <HTMLElement>ev.target;
-          draggedPieceID = parseInt(draggedPiece.id.substr(2));
-          // ignore taps on the viewfinder of slab-massive
-          if (ev.target.tagName === "SLAB-MASSIVE") {
-            return;
-          }
-          $slabMassive.removeEventListener("mousemove", pieceFollow, false);
-
-          // Only select a tapped on piece if there are no other selected pieces.
-          let id = Number(ev.target.id.substr("p-".length));
-          if (
-            ev.target.classList.contains("p") &&
-            !ctrl.isImmovable(id) &&
-            ctrl.selectedPieces.length === 0 &&
-            !ctrl.blocked
-          ) {
-            // listen for piece updates to just this piece while it's being moved.
-            // TODO: listen to reject as well?
-            // @ts-ignore
-            ctrl.pieceRejectedHandles[draggedPieceID] = window.subscribe(
-              "piece/move/rejected",
-              onPieceUpdateWhileSelected
-            );
-
-            // tap on piece
-            ctrl.selectPiece(id);
-            $slabMassive.addEventListener("mousemove", pieceFollow, false);
-            // TODO: subscribe to piece/update to unfollow if active piece is updated
-            divulgerService.subscribe(
-              "piece/update",
-              stopFollowing,
-              `pieceFollow ${self.instanceId}`
-            );
-          } else {
-            if (ctrl.pieceRejectedHandles[draggedPieceID]) {
-              // @ts-ignore
-              window.unsubscribe(ctrl.pieceRejectedHandles[draggedPieceID]);
-              delete ctrl.pieceRejectedHandles[draggedPieceID];
-            }
-            ctrl.dropSelectedPieces(
-              Number($slabMassive.offsetX) + ev.pageX - offsetLeft,
-              Number($slabMassive.offsetY) + ev.pageY - offsetTop,
-              $slabMassive.scale * $slabMassive.zoom
-            );
-            draggedPieceID = null;
-          }
-        }
-      }
-
-      function onPieceUpdateWhileSelected(data) {
-        // The selected piece has been updated while the player has it selected.
-        // If it's immovable then drop it -- edit: if some other player has moved it, then drop it.
-        // Stop following the mouse
-        $slabMassive.removeEventListener("mousemove", pieceFollow, false);
-
-        // Stop listening for any updates to this piece
-        if (ctrl.pieceRejectedHandles[data.id]) {
-          // @ts-ignore
-          window.unsubscribe(ctrl.pieceRejectedHandles[data.id]);
-          delete ctrl.pieceRejectedHandles[data.id];
-        }
-
-        // Just unselect the piece so the next on tap doesn't move it
-        ctrl.unSelectPiece(data.id);
-      }
+      this.$dropZone.addEventListener(
+        "mousedown",
+        this.dropTap.bind(this),
+        false
+      );
 
       // Enable panning of the puzzle
       let panStartX = 0;
@@ -253,7 +149,7 @@ customElements.define(
       mc.add(
         new Hammer.Pan({
           direction: Hammer.DIRECTION_ALL,
-          enable: () => $slabMassive.zoom !== 1,
+          enable: () => this.$slabMassive.zoom !== 1,
         })
       );
       mc.on("panstart panmove", function(ev) {
@@ -262,11 +158,11 @@ customElements.define(
         }
         switch (ev.type) {
           case "panstart":
-            panStartX = Number($slabMassive.offsetX);
-            panStartY = Number($slabMassive.offsetY);
+            panStartX = Number(self.$slabMassive.offsetX);
+            panStartY = Number(self.$slabMassive.offsetY);
             break;
           case "panmove":
-            $slabMassive.scrollTo(
+            self.$slabMassive.scrollTo(
               panStartX + ev.deltaX * -1,
               panStartY + ev.deltaY * -1
             );
@@ -274,75 +170,218 @@ customElements.define(
         }
       });
 
-      this.$collection.addEventListener("mousedown", onTap, false);
-
-      // update DOM for array of piece id's
-      function renderPieces(pieces: Pieces, pieceIDs) {
-        let tmp = document.createDocumentFragment();
-        //const startTime = new Date();
-        pieceIDs.forEach((pieceID) => {
-          let piece = pieces[pieceID];
-          let $piece = this.$collection.querySelector("#p-" + pieceID);
-          if (!$piece) {
-            // @ts-ignore: ??
-            $piece = <HTMLElement>pieceTemplate.firstChild.cloneNode(true);
-            $piece.setAttribute("id", "p-" + pieceID);
-            $piece.classList.add("pc-" + pieceID);
-            $piece.classList.add("p--" + (piece.b === 0 ? "dark" : "light"));
-            tmp.appendChild($piece);
-          }
-
-          // Move the piece
-          if (piece.x !== undefined) {
-            $piece.style.transform = `translate3d(${piece.x}px, ${piece.y}px, 0)
-            rotate(${360 - piece.rotate === 360 ? 0 : 360 - piece.rotate}deg)`;
-          }
-
-          // Piece status can be undefined which would mean the status should be
-          // reset. This is the case when a piece is no longer stacked.
-          if (piece.s === undefined) {
-            // Not showing any indication of stacked pieces on the front end,
-            // so no class to remove.
-            //
-            // Once a piece is immovable it shouldn't need to become movable
-            // again. (it's part of the border pieces group)
-          }
-          // Set immovable
-          if (piece.s === 1) {
-            $piece.classList.add("is-immovable");
-          }
-
-          // Toggle the is-active class
-          if (piece.active) {
-            $piece.classList.add("is-active");
-          } else {
-            $piece.classList.remove("is-active");
-          }
-
-          // Toggle the is-up, is-down class when karma has changed
-          if (piece.karmaChange) {
-            if (piece.karmaChange > 0) {
-              $piece.classList.add("is-up");
-            } else {
-              $piece.classList.add("is-down");
-            }
-            window.setTimeout(function cleanupKarma() {
-              $piece.classList.remove("is-up", "is-down");
-            }, 5000);
-            piece.karmaChange = false;
-          }
-        });
-        if (tmp.children.length) {
-          this.$collection.appendChild(tmp);
-        }
-        //const endTime = new Date();
-        //console.log("render pieces", endTime.getTime() - startTime.getTime());
-      }
+      this.$collection.addEventListener(
+        "mousedown",
+        this.onTap.bind(this),
+        false
+      );
 
       hashColorService.subscribe(
         this.updateForegroundAndBackgroundColors.bind(this),
         this.instanceId
       );
+    }
+
+    _pieceFollow(ev) {
+      this.ctrl.moveBy(
+        this.draggedPieceID,
+        Number(this.$slabMassive.offsetX) +
+          ev.pageX -
+          this.slabMassiveOffsetLeft,
+        Number(this.$slabMassive.offsetY) +
+          ev.pageY -
+          this.slabMassiveOffsetTop,
+        this.$slabMassive.scale * this.$slabMassive.zoom
+      );
+    }
+
+    stopFollowing(data) {
+      if (data.id === this.draggedPieceID) {
+        divulgerService.unsubscribe(
+          "piece/update",
+          `pieceFollow ${this.instanceId}`
+        );
+        this.$slabMassive.removeEventListener(
+          "mousemove",
+          this.pieceFollow,
+          false
+        );
+      }
+    }
+
+    dropTap(ev) {
+      ev.preventDefault();
+      if (typeof this.draggedPieceID === "number") {
+        // @ts-ignore
+        if (this.pieceRejectedHandles[this.draggedPieceID]) {
+          // @ts-ignore
+          window.unsubscribe(this.pieceRejectedHandles[this.draggedPieceID]);
+          // @ts-ignore
+          delete this.pieceRejectedHandles[this.draggedPieceID];
+        }
+        this.ctrl.dropSelectedPieces(
+          Number(this.$slabMassive.offsetX) +
+            ev.pageX -
+            this.slabMassiveOffsetLeft,
+          Number(this.$slabMassive.offsetY) +
+            ev.pageY -
+            this.slabMassiveOffsetTop,
+          this.$slabMassive.scale * this.$slabMassive.zoom
+        );
+        this.draggedPieceID = null;
+      }
+    }
+
+    onTap(ev) {
+      if (ev.target.classList.contains("p")) {
+        this.draggedPiece = <HTMLElement>ev.target;
+        this.draggedPieceID = parseInt(this.draggedPiece.id.substr(2));
+        // ignore taps on the viewfinder of slab-massive
+        if (ev.target.tagName === "SLAB-MASSIVE") {
+          return;
+        }
+        this.$slabMassive.removeEventListener(
+          "mousemove",
+          this.pieceFollow,
+          false
+        );
+
+        // Only select a tapped on piece if there are no other selected pieces.
+        let id = Number(ev.target.id.substr("p-".length));
+        if (
+          ev.target.classList.contains("p") &&
+          !this.ctrl.isImmovable(id) &&
+          this.ctrl.selectedPieces.length === 0 &&
+          !this.ctrl.blocked
+        ) {
+          // listen for piece updates to just this piece while it's being moved.
+          // TODO: listen to reject as well?
+          // @ts-ignore
+          const rejectHandle = window.subscribe(
+            "piece/move/rejected",
+            this.onPieceUpdateWhileSelected.bind(this)
+          );
+          this.pieceRejectedHandles[this.draggedPieceID] = rejectHandle;
+
+          // tap on piece
+          this.ctrl.selectPiece(id);
+          this.$slabMassive.addEventListener(
+            "mousemove",
+            this.pieceFollow,
+            false
+          );
+          // TODO: subscribe to piece/update to unfollow if active piece is updated
+          divulgerService.subscribe(
+            "piece/update",
+            this.stopFollowing.bind(this),
+            `pieceFollow ${this.instanceId}`
+          );
+        } else {
+          if (this.pieceRejectedHandles[this.draggedPieceID]) {
+            // @ts-ignore
+            window.unsubscribe(this.pieceRejectedHandles[this.draggedPieceID]);
+            delete this.pieceRejectedHandles[this.draggedPieceID];
+          }
+          this.ctrl.dropSelectedPieces(
+            Number(this.$slabMassive.offsetX) +
+              ev.pageX -
+              this.slabMassiveOffsetLeft,
+            Number(this.$slabMassive.offsetY) +
+              ev.pageY -
+              this.slabMassiveOffsetTop,
+            this.$slabMassive.scale * this.$slabMassive.zoom
+          );
+          this.draggedPieceID = null;
+        }
+      }
+    }
+
+    onPieceUpdateWhileSelected(data) {
+      // The selected piece has been updated while the player has it selected.
+      // If it's immovable then drop it -- edit: if some other player has moved it, then drop it.
+      // Stop following the mouse
+      this.$slabMassive.removeEventListener(
+        "mousemove",
+        this.pieceFollow,
+        false
+      );
+
+      // Stop listening for any updates to this piece
+      if (this.pieceRejectedHandles[data.id]) {
+        // @ts-ignore
+        window.unsubscribe(this.pieceRejectedHandles[data.id]);
+        delete this.pieceRejectedHandles[data.id];
+      }
+
+      // Just unselect the piece so the next on tap doesn't move it
+      this.ctrl.unSelectPiece(data.id);
+    }
+
+    // update DOM for array of piece id's
+    renderPieces(pieces: Pieces, pieceIDs) {
+      let tmp = document.createDocumentFragment();
+      //const startTime = new Date();
+      pieceIDs.forEach((pieceID) => {
+        let piece = pieces[pieceID];
+        let $piece = <HTMLElement | null>(
+          this.$collection.querySelector("#p-" + pieceID)
+        );
+        if (!$piece) {
+          $piece = document.createElement("div");
+          $piece.classList.add("p");
+          $piece.setAttribute("id", "p-" + pieceID);
+          $piece.classList.add("pc-" + pieceID);
+          $piece.classList.add("p--" + (piece.b === 0 ? "dark" : "light"));
+          tmp.appendChild($piece);
+        }
+
+        // Move the piece
+        if (piece.x !== undefined) {
+          $piece.style.transform = `translate3d(${piece.x}px, ${piece.y}px, 0)
+            rotate(${360 - piece.rotate === 360 ? 0 : 360 - piece.rotate}deg)`;
+        }
+
+        // Piece status can be undefined which would mean the status should be
+        // reset. This is the case when a piece is no longer stacked.
+        if (piece.s === undefined) {
+          // Not showing any indication of stacked pieces on the front end,
+          // so no class to remove.
+          //
+          // Once a piece is immovable it shouldn't need to become movable
+          // again. (it's part of the border pieces group)
+        }
+        // Set immovable
+        if (piece.s === 1) {
+          $piece.classList.add("is-immovable");
+        }
+
+        // Toggle the is-active class
+        if (piece.active) {
+          $piece.classList.add("is-active");
+        } else {
+          $piece.classList.remove("is-active");
+        }
+
+        // Toggle the is-up, is-down class when karma has changed
+        if (piece.karmaChange) {
+          if (piece.karmaChange > 0) {
+            $piece.classList.add("is-up");
+          } else {
+            $piece.classList.add("is-down");
+          }
+          window.setTimeout(function cleanupKarma() {
+            if ($piece) {
+              $piece.classList.remove("is-up", "is-down");
+            }
+          }, 5000);
+          piece.karmaChange = false;
+        }
+      });
+      if (tmp.children.length) {
+        this.$collection.appendChild(tmp);
+      }
+      //const endTime = new Date();
+      //console.log("render pieces", endTime.getTime() - startTime.getTime());
     }
 
     updateForegroundAndBackgroundColors() {

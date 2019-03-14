@@ -1,13 +1,9 @@
 // import PuzzleService from "./puzzle-service.js";
 
 declare class PuzzlePiecesController {
-  $container: HTMLElement;
   renderPieces: Function;
-  status: any;
-  parentoftopleft: number;
   puzzleId: string;
   pieceUpdateHandles: object;
-  pieceRejectedHandles: object;
   instanceId: string;
 
   pieces: object;
@@ -29,8 +25,7 @@ declare class PuzzlePiecesController {
 
   constructor(
     puzzleId: string,
-    puzzleService: any, //PuzzleService,
-    $container: HTMLElement
+    puzzleService: any //PuzzleService,
   );
 }
 

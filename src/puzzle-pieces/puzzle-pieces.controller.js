@@ -6,14 +6,12 @@ function _instanceId() {
 }
 
 export default class PuzzlePiecesController {
-  constructor(puzzleId, puzzleService, $container) {
+  constructor(puzzleId, puzzleService) {
     let self = this
     // For now this is set to one to prevent feature creep
     const maxSelectedPieces = 1
 
     const pieceAttrsThatAreInt = ['g', 'x', 'y', 'r', 's', 'b', 'w', 'h']
-
-    self.$container = $container
 
     this.instanceId = _instanceId()
     this.puzzleId = puzzleId
