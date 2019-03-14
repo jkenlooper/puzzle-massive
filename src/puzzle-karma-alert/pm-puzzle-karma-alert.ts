@@ -39,10 +39,9 @@ customElements.define(
     template(data: TemplateData) {
       return html`
         <div
-          id="pm-puzzle-pieces-karma-status"
           data-karma-level=${data.karmaLevel}
           class=${classMap({
-            "pm-PuzzlePieces-karmaStatus": true,
+            "pm-PuzzleKarmaAlert-status": true,
             "is-active": data.isActive,
           })}
         >

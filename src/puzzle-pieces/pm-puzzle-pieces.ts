@@ -118,7 +118,7 @@ customElements.define(
       let ctrl = (this.ctrl = new PuzzlePiecesController(
         this.puzzleId,
         puzzleService,
-        this.$collection,
+        this.$collection
       ));
       ctrl.renderPieces = renderPieces.bind(this);
       ctrl.status = this.getAttribute("status");
@@ -279,7 +279,7 @@ customElements.define(
       // update DOM for array of piece id's
       function renderPieces(pieces: Pieces, pieceIDs) {
         let tmp = document.createDocumentFragment();
-        const startTime = new Date();
+        //const startTime = new Date();
         pieceIDs.forEach((pieceID) => {
           let piece = pieces[pieceID];
           let $piece = this.$collection.querySelector("#p-" + pieceID);
@@ -326,7 +326,7 @@ customElements.define(
             } else {
               $piece.classList.add("is-down");
             }
-            window.setTimeout(function cleanupKarma($piece) {
+            window.setTimeout(function cleanupKarma() {
               $piece.classList.remove("is-up", "is-down");
             }, 5000);
             piece.karmaChange = false;
@@ -335,8 +335,8 @@ customElements.define(
         if (tmp.children.length) {
           this.$collection.appendChild(tmp);
         }
-        const endTime = new Date();
-        console.log("render pieces", endTime.getTime() - startTime.getTime());
+        //const endTime = new Date();
+        //console.log("render pieces", endTime.getTime() - startTime.getTime());
       }
 
       hashColorService.subscribe(

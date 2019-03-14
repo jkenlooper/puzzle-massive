@@ -167,7 +167,6 @@ export default class PuzzlePiecesController {
       piece.y = data.y || piece.origin.y
       piece.active = false
       self.renderPieces(self.pieces, [data.id])
-      //updateKarmaValue(data.karma)
     }
 
     function onPieceUpdate(data) {
@@ -185,8 +184,6 @@ export default class PuzzlePiecesController {
       Object.assign(piece, data)
       self.karma = data.karma
       self.renderPieces(self.pieces, [data.id])
-
-      //updateKarmaValue(data.karma)
 
       // Remove blocked alert if present when going from 0 to 2
       if (self.karma > 0 && self.blocked) {
