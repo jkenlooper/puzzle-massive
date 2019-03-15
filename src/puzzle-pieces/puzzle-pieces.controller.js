@@ -20,12 +20,11 @@ export default class PuzzlePiecesController {
     self.collection = []
     self.piecesTimestamp = ''
     self.selectedPieces = []
-    self.karmaChange = 0
-    self.karma = 0
+    //self.karmaChange = 0
+    //self.karma = 0
     self.blocked = false
 
     window.subscribe('karma/updated', onKarmaUpdate) // PuzzleService
-    window.subscribe('piece/move/blocked', onMoveBlocked) // PuzzleService
     window.subscribe('piece/move/rejected', onPieceMoveRejected) // PuzzleService
 
     // DivulgerService
@@ -73,8 +72,10 @@ export default class PuzzlePiecesController {
     }
 
     self.selectPiece = function(pieceID) {
-      let index = self.selectedPieces.indexOf(pieceID)
-      if (index === -1 && !self.blocked) {
+      // TODO: move selectPiece to pm-puzzle-pieces?
+      const index = self.selectedPieces.indexOf(pieceID)
+      //if (index === -1 && !self.blocked) {
+      if (index === -1) {
         // add the pieceID to the end of the array
         self.selectedPieces.push(pieceID)
         self.pieces[pieceID].karma = false
@@ -112,12 +113,12 @@ export default class PuzzlePiecesController {
             )
           })
       }
-      if (index === -1 && !self.blocked) {
+      //if (index === -1 && !self.blocked) {
         self.pieces[pieceID].pieceMovementId = puzzleService.token(
           pieceID,
           self.mark
         )
-      }
+      //}
       self.renderPieces(self.pieces, [pieceID])
     }
 
@@ -180,22 +181,8 @@ export default class PuzzlePiecesController {
     function onKarmaUpdate(data) {
       let piece = self.pieces[data.id]
       Object.assign(piece, data)
-      self.karma = data.karma
+      //self.karma = data.karma
       self.renderPieces(self.pieces, [data.id])
-
-      // Remove blocked alert if present when going from 0 to 2
-      if (self.karma > 0 && self.blocked) {
-        self.blocked = false
-      }
-    }
-
-    function onMoveBlocked(data) {
-      if (data.timeout && typeof data.timeout === 'number') {
-        window.setTimeout(() => {
-          self.blocked = false // TODO: Only for karma updates?
-        }, data.timeout * 1000)
-      }
-      self.blocked = true
     }
   }
 

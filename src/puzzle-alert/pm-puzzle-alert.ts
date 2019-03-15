@@ -23,7 +23,8 @@ customElements.define(
     }
     private instanceId: string;
     private puzzleId: string;
-    private blocked: boolean = false;
+    private blockedTimer: number = 0;
+    private blockedTimeout: number | undefined;
     private alerts: Alerts;
 
     constructor() {
@@ -70,8 +71,6 @@ customElements.define(
       this.alerts = alerts;
 
       // @ts-ignore: minpubsub
-      window.subscribe("karma/updated", this.onKarmaUpdate.bind(this)); // PuzzleService
-      // @ts-ignore: minpubsub
       window.subscribe("piece/move/blocked", this.onMoveBlocked.bind(this)); // PuzzleService
       divulgerService.subscribe(
         "socket/max",
@@ -94,15 +93,6 @@ customElements.define(
         this.instanceId
       );
       divulgerService.ping(this.puzzleId);
-    }
-
-    onKarmaUpdate(data) {
-      // Remove blocked alert if present when going from 0 to 2
-      if (data.karma > 0 && this.blocked) {
-        this.alerts.container.classList.remove("is-active");
-        this.alerts.blocked.classList.remove("is-active");
-        this.blocked = false;
-      }
     }
 
     onMoveBlocked(data) {
@@ -140,14 +130,18 @@ customElements.define(
         reasonEl.innerHTML =
           reasonEl.innerHTML + ` Expires: ${expireDate.toLocaleTimeString()}`;
       }
+
       if (data.timeout && typeof data.timeout === "number") {
-        window.setTimeout(() => {
+        const now = new Date().getTime();
+        const remainingTime = Math.max(0, this.blockedTimer - now);
+        const timeout = data.timeout * 1000 + remainingTime;
+        window.clearTimeout(this.blockedTimeout);
+        this.blockedTimer = now + timeout;
+        this.blockedTimeout = window.setTimeout(() => {
           this.alerts.container.classList.remove("is-active");
           this.alerts.blocked.classList.remove("is-active");
-          this.blocked = false; // TODO: Only for karma updates?
-        }, data.timeout * 1000);
+        }, timeout);
       }
-      this.blocked = true;
     }
 
     onMax() {

@@ -60,6 +60,9 @@ customElements.define(
     private slabMassiveOffsetLeft: number;
     private pieceFollow: Function;
     private pieceRejectedHandles: object;
+    private blocked: boolean = false;
+    private blockedTimer: number = 0;
+    private blockedTimeout: number | undefined;
     ctrl: PuzzlePiecesController;
     constructor() {
       super();
@@ -124,6 +127,9 @@ customElements.define(
 
       this.pieceFollow = this._pieceFollow.bind(this);
 
+      // @ts-ignore
+      window.subscribe("piece/move/blocked", this.onMoveBlocked.bind(this)); // PuzzleService
+
       // For all parent elements set the width
       function setParentWidth(node) {
         if (node.style) {
@@ -182,6 +188,20 @@ customElements.define(
       );
     }
 
+    onMoveBlocked(data) {
+      if (data.timeout && typeof data.timeout === "number") {
+        const now = new Date().getTime();
+        const remainingTime = Math.max(0, this.blockedTimer - now);
+        const timeout = data.timeout * 1000 + remainingTime;
+        window.clearTimeout(this.blockedTimeout);
+        this.blockedTimer = now + timeout;
+        this.blockedTimeout = window.setTimeout(() => {
+          this.blocked = false;
+        }, timeout);
+      }
+      this.blocked = true;
+    }
+
     _pieceFollow(ev) {
       this.ctrl.moveBy(
         this.draggedPieceID,
@@ -238,6 +258,7 @@ customElements.define(
         this.draggedPieceID = parseInt(this.draggedPiece.id.substr(2));
         // ignore taps on the viewfinder of slab-massive
         if (ev.target.tagName === "SLAB-MASSIVE") {
+          // TODO: is this check still needed?
           return;
         }
         this.$slabMassive.removeEventListener(
@@ -252,7 +273,7 @@ customElements.define(
           ev.target.classList.contains("p") &&
           !this.ctrl.isImmovable(id) &&
           this.ctrl.selectedPieces.length === 0 &&
-          !this.ctrl.blocked
+          !this.blocked
         ) {
           // listen for piece updates to just this piece while it's being moved.
           // TODO: listen to reject as well?
