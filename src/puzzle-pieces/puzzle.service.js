@@ -27,14 +27,11 @@ export default class PuzzleService {
   token(piece, mark) {
     const puzzleid = this.puzzleid
     const pieceMovementId = this.nextPieceMovementId
+    //console.log('new pieceMovementId', pieceMovementId)
     const pieceMovement = {
       id: pieceMovementId,
       inProcess: false,
     }
-
-    // tokenRequest =
-    // moveRequest =
-    //  after move request it removes pieceMovement from queue
 
     pieceMovement.tokenRequest = function tokenRequest() {
       return reqwest({
@@ -55,6 +52,11 @@ export default class PuzzleService {
               reason: data.response,
             }
           }
+          if (!responseObj.timeout) {
+            const expire = new Date().getTime() / 1000 + 10
+            responseObj.expires = expire
+            responseObj.timeout = 10
+          }
           switch (responseObj.type) {
             case 'piecelock':
             case 'piecequeue':
@@ -73,7 +75,6 @@ export default class PuzzleService {
               window.publish('piece/move/blocked', [responseObj])
           }
           pieceMovement.fail = true
-          pieceMovement.inProcess = false
           // TODO: still need to publish the piece/move/rejected
           try {
             window.publish('piece/move/rejected', [{ id: piece }])
@@ -89,6 +90,14 @@ export default class PuzzleService {
     this.processNextPieceMovement()
 
     return pieceMovementId
+  }
+
+  hasTokenRequest(pieceMovementId) {
+    const pieceMovement = this.pieceMovements[pieceMovementId]
+    if (!pieceMovement) {
+      return false
+    }
+    return !!pieceMovement.tokenRequest
   }
 
   cancelMove(id, origin, pieceMovementId) {
@@ -197,13 +206,18 @@ export default class PuzzleService {
   }
 
   processNextPieceMovement() {
+    //console.log(
+    //  'pieceMovementProcessInterval',
+    //  this.pieceMovementProcessInterval,
+    //  this.pieceMovementQueue
+    //)
     if (!this.pieceMovementProcessInterval) {
       this.pieceMovementProcessInterval = window.setInterval(() => {
         // All done processing movements on the queue
         if (this.pieceMovementQueue.length === 0) {
           window.clearInterval(this.pieceMovementProcessInterval)
           this.pieceMovementProcessInterval = undefined
-          // console.log('All done processing movements on the queue')
+          //console.log('All done processing movements on the queue')
           return
         }
 
@@ -212,10 +226,19 @@ export default class PuzzleService {
 
         const hasMoveRequest = !!pieceMovement.moveRequest
         const hasTokenRequest = !!pieceMovement.tokenRequest
-        // console.log('in pieceMovementProcessInterval', JSON.stringify(Object.assign({}, pieceMovement, {moveRequest: hasMoveRequest, tokenRequest: hasTokenRequest})))
-        if (pieceMovement.fail && !hasMoveRequest) {
+        //console.log(
+        //  'in pieceMovementProcessInterval',
+        //  JSON.stringify(
+        //    Object.assign({}, pieceMovement, {
+        //      moveRequest: hasMoveRequest,
+        //      tokenRequest: hasTokenRequest,
+        //    })
+        //  )
+        //)
+        if (pieceMovement.fail) {
           this.pieceMovementQueue.shift()
           delete this.pieceMovements[pieceMovementId]
+          return
         }
 
         if (!pieceMovement.inProcess) {
@@ -227,8 +250,8 @@ export default class PuzzleService {
           if (hasTokenRequest) {
             // need token
             pieceMovement.tokenRequest().always(() => {
-              pieceMovement.inProcess = false
               pieceMovement.tokenRequest = undefined
+              pieceMovement.inProcess = false
             })
           } else if (hasMoveRequest) {
             // ready to send movement

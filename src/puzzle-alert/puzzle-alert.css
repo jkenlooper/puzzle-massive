@@ -2,7 +2,8 @@
   display: none;
   position: fixed;
   top: calc(50% - ((200px + (10px * 2) / 2)));
-  left: calc(50% - ((300px + (10px * 2) / 2)));
+  left: 50%;
+  transform: translateX(calc((300px / 2) * -1));
   flex-direction: column;
   justify-content: center;
   z-index: 20;

@@ -110,10 +110,12 @@ export default class PuzzlePiecesController {
             )
           })
       }
-      self.pieces[pieceID].pieceMovementId = puzzleService.token(
-        pieceID,
-        self.mark
-      )
+      if (!puzzleService.hasTokenRequest(self.pieces[pieceID].pieceMovementId)) {
+        self.pieces[pieceID].pieceMovementId = puzzleService.token(
+          pieceID,
+          self.mark
+        )
+      }
       self.renderPieces(self.pieces, [pieceID])
     }
 
