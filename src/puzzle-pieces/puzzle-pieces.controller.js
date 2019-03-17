@@ -110,7 +110,9 @@ export default class PuzzlePiecesController {
             )
           })
       }
-      if (!puzzleService.hasTokenRequest(self.pieces[pieceID].pieceMovementId)) {
+      if (!puzzleService.inPieceMovementQueue(pieceID)) {
+        // Only get a new token if this piece movement isn't already in the
+        // queue.
         self.pieces[pieceID].pieceMovementId = puzzleService.token(
           pieceID,
           self.mark

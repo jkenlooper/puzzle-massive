@@ -1,11 +1,11 @@
-from flask import abort, json
+from flask import abort, json, current_app
 from flask.views import MethodView
 import redis
 
 from app import db
 from database import fetch_query_string, rowify
 from constants import ACTIVE, IN_QUEUE
-from user import user_not_banned
+from user import user_not_banned, user_id_from_ip
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
@@ -19,6 +19,7 @@ class PuzzlePieceView(MethodView):
 
     def get(self, puzzle_id, piece):
 
+        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
         cur = db.cursor()
         result = cur.execute(fetch_query_string('select_puzzle_id_by_puzzle_id.sql'), {
             'puzzle_id': puzzle_id
@@ -34,6 +35,10 @@ class PuzzlePieceView(MethodView):
         # Only allow if there is data in redis
         if not redisConnection.zscore('pcupdates', puzzle):
             abort(400)
+
+        # Expire the token at the lock timeout since it shouldn't be used again
+        redisConnection.delete("pctoken:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece))
+        redisConnection.delete('token:{}'.format(user))
 
         # Fetch just the piece properties
         publicPieceProperties = ('x', 'y', 'rotate', 's', 'w', 'h', 'b')

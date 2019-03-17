@@ -27,9 +27,9 @@ export default class PuzzleService {
   token(piece, mark) {
     const puzzleid = this.puzzleid
     const pieceMovementId = this.nextPieceMovementId
-    //console.log('new pieceMovementId', pieceMovementId)
     const pieceMovement = {
       id: pieceMovementId,
+      piece: piece,
       inProcess: false,
     }
 
@@ -92,12 +92,10 @@ export default class PuzzleService {
     return pieceMovementId
   }
 
-  hasTokenRequest(pieceMovementId) {
-    const pieceMovement = this.pieceMovements[pieceMovementId]
-    if (!pieceMovement) {
-      return false
-    }
-    return !!pieceMovement.tokenRequest
+  inPieceMovementQueue(piece) {
+    return Object.values(this.pieceMovements).some((pieceMovement) => {
+      return piece === pieceMovement.piece
+    })
   }
 
   cancelMove(id, origin, pieceMovementId) {
@@ -106,6 +104,7 @@ export default class PuzzleService {
     if (!pieceMovement) {
       return
     }
+    //pieceMovement.fail = true
     pieceMovement.moveRequest = function cancelMoveRequest() {
       return reqwest({
         url: `/newapi/puzzle/${puzzleid}/piece/${id}/`,
@@ -206,18 +205,12 @@ export default class PuzzleService {
   }
 
   processNextPieceMovement() {
-    //console.log(
-    //  'pieceMovementProcessInterval',
-    //  this.pieceMovementProcessInterval,
-    //  this.pieceMovementQueue
-    //)
     if (!this.pieceMovementProcessInterval) {
       this.pieceMovementProcessInterval = window.setInterval(() => {
         // All done processing movements on the queue
         if (this.pieceMovementQueue.length === 0) {
           window.clearInterval(this.pieceMovementProcessInterval)
           this.pieceMovementProcessInterval = undefined
-          //console.log('All done processing movements on the queue')
           return
         }
 
@@ -226,15 +219,6 @@ export default class PuzzleService {
 
         const hasMoveRequest = !!pieceMovement.moveRequest
         const hasTokenRequest = !!pieceMovement.tokenRequest
-        //console.log(
-        //  'in pieceMovementProcessInterval',
-        //  JSON.stringify(
-        //    Object.assign({}, pieceMovement, {
-        //      moveRequest: hasMoveRequest,
-        //      tokenRequest: hasTokenRequest,
-        //    })
-        //  )
-        //)
         if (pieceMovement.fail) {
           this.pieceMovementQueue.shift()
           delete this.pieceMovements[pieceMovementId]
