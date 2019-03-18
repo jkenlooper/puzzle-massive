@@ -10,7 +10,7 @@ import * as Hammer from "hammerjs";
 
 import { rgbToHsl } from "../site/utilities";
 import hashColorService from "../hash-color/hash-color.service";
-import PuzzleService from "./puzzle.service.js";
+import PuzzleService from "./puzzle.service";
 import { divulgerService } from "./divulger.service";
 import PuzzlePiecesController from "./puzzle-pieces.controller.js";
 
@@ -120,7 +120,7 @@ customElements.define(
       this.slabMassiveOffsetTop = this.$slabMassive.offsetTop;
       this.slabMassiveOffsetLeft = this.$slabMassive.offsetLeft;
 
-      const puzzleService = new PuzzleService(this.puzzleId, divulgerService);
+      const puzzleService = new PuzzleService(this.puzzleId);
       this.ctrl = new PuzzlePiecesController(this.puzzleId, puzzleService);
       this.ctrl.renderPieces = this.renderPieces.bind(this);
       this.pieceRejectedHandles = {};
