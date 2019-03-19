@@ -4,7 +4,7 @@ import { puzzleBitsService } from "../puzzle-bits/puzzle-bits.service";
 const PROXY_READ_TIMEOUT = 60;
 const MAX_PINGS = 13;
 
-interface PieceMovementData {
+export interface PieceMovementData {
   id: number;
   parent?: number;
   s?: number;

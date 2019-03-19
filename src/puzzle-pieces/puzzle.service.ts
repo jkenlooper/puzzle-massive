@@ -1,5 +1,5 @@
 import reqwest from "reqwest";
-import { divulgerService } from "./divulger.service";
+import { divulgerService, PieceMovementData } from "./divulger.service";
 
 type PieceMovementId = number;
 
@@ -17,22 +17,117 @@ interface PieceMovements {
   [index: string]: PieceMovement;
 }
 
+interface DefaultPiece {
+  g?: number;
+  x: number;
+  y: number;
+  rotate: string;
+  r?: number;
+  s?: number | null; // s for stacked
+  b: number; // b for background
+  w: number;
+  h: number;
+  // TODO: others
+}
+
+export interface PieceData extends DefaultPiece {
+  id: number;
+  //rotate: number;
+  active?: boolean;
+  karma?: number; // response from move request
+  karmaChange?: number | boolean; // response from move request
+}
+
+interface Pieces {
+  [index: number]: PieceData;
+}
+
+export interface KarmaData {
+  id: number;
+  karma: number;
+  karmaChange: boolean;
+}
+
+    // For now this is set to one to prevent feature creep
+    const maxSelectedPieces = 1
+
+type PiecesUpdateCallback = (data: Array<PieceData>) => any;
+type KarmaUpdatedCallback = (data: KarmaData) => any;
+const piecesMutate = Symbol("pieces/mutate");
+const karmaUpdated = Symbol("karma/updated");
+
+const topics = {
+  "pieces/mutate": piecesMutate,
+  "karma/updated": karmaUpdated,
+};
+
 interface MoveRequestData {
   x: number;
   y: number;
   r?: number;
 }
 
+const pieceAttrsThatAreInt = ["g", "x", "y", "r", "s", "b", "w", "h"];
+
 let _pieceMovementId = 0;
 
-export default class PuzzleService {
+class PuzzleService {
   // Pass in the url to the puzzle pieces
-  private puzzleid: string;
+  private puzzleId: string = "";
   private pieceMovementQueue: Array<PieceMovementId> = [];
   private pieceMovements: PieceMovements = {};
   private pieceMovementProcessInterval: number | undefined = undefined;
-  constructor(puzzleid) {
-    this.puzzleid = puzzleid;
+  private pieces: Pieces = {};
+  private collection: Array<number> = [];
+  private piecesTimestamp = "";
+  private mark: string = "";
+  private selectedPieces: Array<number> = [];
+  private instanceId = 'puzzleService';
+
+  [piecesMutate]: Map<string, PiecesUpdateCallback> = new Map();
+  [karmaUpdated]: Map<string, KarmaUpdatedCallback> = new Map();
+  constructor() {
+    divulgerService.subscribe('piece/update', this.onPieceUpdate.bind(this), this.instanceId)
+  }
+
+  init(puzzleId) {
+    this.puzzleId = puzzleId;
+    fetchPieces(this.puzzleId).then((data) => {
+      let pieceData = JSON.parse(data);
+      this.mark = pieceData.mark;
+      pieceData.positions.forEach((piece) => {
+        // set status
+        Object.keys(piece)
+          .filter((key) => {
+            return pieceAttrsThatAreInt.includes(key);
+          })
+          .forEach((key) => {
+            piece[key] = Number(piece[key]);
+          });
+        const defaultPiece: DefaultPiece = {
+          x: 0,
+          y: 0,
+          rotate: "0",
+          s: null,
+          b: 1,
+          w: 1,
+          h: 1,
+        };
+        this.pieces[piece.id] = Object.assign(defaultPiece, piece);
+      });
+      this.collection = pieceData.positions.map((piece) => {
+        return piece.id;
+      });
+      this.piecesTimestamp = pieceData.timestamp.timestamp;
+      //self.renderPieces(self.pieces, this.collection);
+    });
+
+    function fetchPieces(puzzleId) {
+      return reqwest({
+        url: `/newapi/puzzle-pieces/${puzzleId}/`,
+        method: "get",
+      });
+    }
   }
 
   static get nextPieceMovementId() {
@@ -40,16 +135,56 @@ export default class PuzzleService {
     return _pieceMovementId;
   }
 
-  pieces() {
-    const puzzleid = this.puzzleid;
-    return reqwest({
-      url: `/newapi/puzzle-pieces/${puzzleid}/`,
-      method: "get",
+  moveBy(pieceID, x, y, scale) {
+    let piece = this.pieces[pieceID];
+    if (!piece) {
+      return;
+    }
+    piece.x = x / scale - piece.w / 2;
+    piece.y = y / scale - piece.h / 2;
+
+    this._broadcast(piecesMutate, [piece]);
+    //self.renderPieces(self.pieces, [pieceID]);
+  }
+
+  onKarmaUpdate(data: KarmaData) {
+    let piece = this.pieces[data.id];
+    Object.assign(piece, data);
+    this._broadcast(piecesMutate, [piece]);
+    this._broadcast(karmaUpdated, data);
+    //self.renderPieces(self.pieces, [data.id])
+  }
+
+  _broadcast(topic: symbol, data?: any) {
+    this[topic].forEach((fn /*, id*/) => {
+      fn(data);
     });
   }
 
+  subscribe(
+    topicString: string,
+    fn: PiecesUpdateCallback | KarmaUpdatedCallback,
+    id: string
+  ) {
+    const topic = topics[topicString];
+    if (topic === undefined) {
+      throw new Error(`Cannot subscribe to the '${topicString}'`);
+    }
+    // Add the fn to listeners
+    this[topic].set(id, fn);
+  }
+
+  unsubscribe(topicString: string, id: string) {
+    const topic = topics[topicString];
+    if (topic === undefined) {
+      throw new Error(`Cannot unsubscribe from the '${topicString}'`);
+    }
+    // remove fn from listeners
+    this[topic].delete(id);
+  }
+
   token(piece, mark) {
-    const puzzleid = this.puzzleid;
+    const puzzleId = this.puzzleId;
     const pieceMovementId = PuzzleService.nextPieceMovementId;
     const pieceMovement: PieceMovement = {
       id: pieceMovementId,
@@ -59,7 +194,7 @@ export default class PuzzleService {
 
     pieceMovement.tokenRequest = function tokenRequest() {
       return reqwest({
-        url: `/newapi/puzzle/${puzzleid}/piece/${piece}/token/`,
+        url: `/newapi/puzzle/${puzzleId}/piece/${piece}/token/`,
         data: { mark: mark },
         method: "get",
         type: "json",
@@ -126,14 +261,14 @@ export default class PuzzleService {
 
   cancelMove(id, origin, pieceMovementId) {
     const pieceMovement = this.pieceMovements[pieceMovementId];
-    const puzzleid = this.puzzleid;
+    const puzzleId = this.puzzleId;
     if (!pieceMovement) {
       return;
     }
     //pieceMovement.fail = true
     pieceMovement.moveRequest = function cancelMoveRequest() {
       return reqwest({
-        url: `/newapi/puzzle/${puzzleid}/piece/${id}/`,
+        url: `/newapi/puzzle/${puzzleId}/piece/${id}/`,
         method: "GET",
         type: "json",
         error: function handleGetError() {
@@ -156,7 +291,8 @@ export default class PuzzleService {
 
   move(id, x, y, r, origin, pieceMovementId) {
     const pieceMovement = this.pieceMovements[pieceMovementId];
-    const puzzleid = this.puzzleid;
+    const puzzleId = this.puzzleId;
+    const self = this;
     if (!pieceMovement) {
       return;
     }
@@ -171,9 +307,9 @@ export default class PuzzleService {
         data.r = r;
       }
 
-      divulgerService.ping(puzzleid);
+      divulgerService.ping(puzzleId);
       return reqwest({
-        url: `/newapi/puzzle/${puzzleid}/piece/${id}/move/`,
+        url: `/newapi/puzzle/${puzzleId}/piece/${id}/move/`,
         method: "PATCH",
         type: "json",
         data: data,
@@ -208,7 +344,7 @@ export default class PuzzleService {
           }
           // Reject with piece info from server and fallback to origin if that also fails
           return reqwest({
-            url: `/newapi/puzzle/${puzzleid}/piece/${id}/`,
+            url: `/newapi/puzzle/${puzzleId}/piece/${id}/`,
             method: "GET",
             type: "json",
             data: data,
@@ -230,12 +366,130 @@ export default class PuzzleService {
         },
         success: function(d) {
           // @ts-ignore: minpubsub
-          window.publish("karma/updated", [d]);
-          divulgerService.ping(puzzleid);
+          //window.publish("karma/updated", [d]);
+          self.onKarmaUpdate(d);
+          divulgerService.ping(puzzleId);
         },
       });
     };
   }
+
+  isImmovable(pieceID) {
+    return this.pieces[pieceID].s === 1;
+  }
+  isSelectable(pieceID) {
+    return !this.isImmovable(pieceID) && this.selectedPieces.length === 0;
+  }
+
+    unSelectPiece(pieceID) {
+      let index = this.selectedPieces.indexOf(pieceID)
+      if (index !== -1) {
+        // remove the pieceID from the array
+        this.selectedPieces.splice(index, 1)
+        this.pieces[pieceID].active = false
+        this.cancelMove(
+          pieceID,
+          this.pieces[pieceID].origin,
+          this.pieces[pieceID].pieceMovementId
+        )
+      }
+    }
+
+    selectPiece(pieceID) {
+      // TODO: move selectPiece to pm-puzzle-pieces?
+      const index = this.selectedPieces.indexOf(pieceID)
+      if (index === -1) {
+        // add the pieceID to the end of the array
+        this.selectedPieces.push(pieceID)
+        this.pieces[pieceID].karma = false
+        this.pieces[pieceID].active = true
+        this.pieces[pieceID].origin = {
+          x: this.pieces[pieceID].x,
+          y: this.pieces[pieceID].y,
+          r: this.pieces[pieceID].r,
+        }
+      } else {
+        // remove the pieceID from the array
+        this.selectedPieces.splice(index, 1)
+        this.pieces[pieceID].active = false
+        this.cancelMove(
+          pieceID,
+          this.pieces[pieceID].origin,
+          this.pieces[pieceID].pieceMovementId
+        )
+      }
+
+      // TODO: onPieceUpdate check if piece is already active
+      //this.pieces[pieceID].active = false
+
+      // Only allow a max amount of selected pieces
+      if (this.selectedPieces.length > maxSelectedPieces) {
+        this.selectedPieces
+          .splice(0, this.selectedPieces.length - maxSelectedPieces)
+          .forEach((pieceID) => {
+            // all the pieces that were unselected also set to inactive
+            this.pieces[pieceID].active = false
+            this.cancelMove(
+              pieceID,
+              this.pieces[pieceID].origin,
+              this.pieces[pieceID].pieceMovementId
+            )
+          })
+      }
+      if (!this.inPieceMovementQueue(pieceID)) {
+        // Only get a new token if this piece movement isn't already in the
+        // queue.
+        this.pieces[pieceID].pieceMovementId = this.token(
+          pieceID,
+          this.mark
+        )
+      }
+      //self.renderPieces(self.pieces, [pieceID])
+      this._broadcast(piecesMutate, [this.pieces[pieceID]]);
+    }
+
+    dropSelectedPieces(x, y, scale) {
+      // Update piece locations
+      this.selectedPieces.forEach(function(pieceID) {
+        let piece = this.pieces[pieceID]
+        piece.x = x / scale - piece.w / 2
+        piece.y = y / scale - piece.h / 2
+      })
+
+      // Display the updates
+      //self.renderPieces(self.pieces, self.selectedPieces)
+      const pieces = this.selectedPieces.map((pieceID) => {
+        return this.pieces[pieceID];
+      })
+      this._broadcast(piecesMutate, pieces);
+
+      // Send the updates
+      this.selectedPieces.forEach(function(pieceID) {
+        let piece = this.pieces[pieceID]
+        this.move(
+          pieceID,
+          piece.x,
+          piece.y,
+          '-',
+          piece.origin,
+          piece.pieceMovementId
+        )
+      })
+
+      // Reset the selectedPieces
+      this.selectedPieces = []
+    }
+
+    onPieceUpdate(data: PieceMovementData) {
+      let piece = this.pieces[data.id]
+      if (piece.active) {
+        this.unSelectPiece(data.id)
+      }
+      piece = Object.assign(piece, data)
+      piece.active = false
+      //self.renderPieces(self.pieces, [data.id])
+      this._broadcast(piecesMutate, [piece]);
+    }
 
   processNextPieceMovement() {
     if (!this.pieceMovementProcessInterval) {
@@ -285,3 +539,4 @@ export default class PuzzleService {
     }
   }
 }
+export const puzzleService = new PuzzleService();

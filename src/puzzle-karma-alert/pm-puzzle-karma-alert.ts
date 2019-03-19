@@ -1,6 +1,8 @@
 import { html, render } from "lit-html";
 import { classMap } from "lit-html/directives/class-map.js";
 
+import { puzzleService, KarmaData } from "../puzzle-pieces/puzzle.service";
+
 import "./puzzle-karma-alert.css";
 
 interface TemplateData {
@@ -10,15 +12,15 @@ interface TemplateData {
 }
 
 const tag = "pm-puzzle-karma-alert";
-//let lastInstanceId = 0;
+let lastInstanceId = 0;
 
 customElements.define(
   tag,
   class PmPuzzleKarmaAlert extends HTMLElement {
-    //static get _instanceId(): string {
-    //  return `${tag} ${lastInstanceId++}`;
-    //}
-    //private instanceId: string;
+    static get _instanceId(): string {
+      return `${tag} ${lastInstanceId++}`;
+    }
+    private instanceId: string;
     private karmaStatusIsActiveTimeout: number | undefined;
     private isActive: boolean = false;
     private karma: number = 1;
@@ -26,10 +28,15 @@ customElements.define(
 
     constructor() {
       super();
-      //this.instanceId = PmPuzzleKarmaAlert._instanceId;
+      this.instanceId = PmPuzzleKarmaAlert._instanceId;
 
       // @ts-ignore: minpubsub
-      window.subscribe("karma/updated", this.updateKarmaValue.bind(this)); // PuzzleService
+      //window.subscribe("karma/updated", this.updateKarmaValue.bind(this)); // PuzzleService
+      puzzleService.subscribe(
+        "karma/updated",
+        this.updateKarmaValue.bind(this),
+        this.instanceId
+      );
       // @ts-ignore: minpubsub
       window.subscribe("piece/move/rejected", this.updateKarmaValue.bind(this)); // PuzzleService
 
@@ -61,7 +68,7 @@ customElements.define(
     render() {
       render(this.template(this.data), this);
     }
-    updateKarmaValue(data) {
+    updateKarmaValue(data: KarmaData) {
       const karma = data.karma;
       if (karma && typeof karma === "number") {
         this.karma = karma;

@@ -1,6 +1,8 @@
 import { html, render } from "lit-html";
 import { styleMap } from "lit-html/directives/style-map.js";
 
+import { puzzleService, KarmaData } from "../puzzle-pieces/puzzle.service";
+
 import "./karma-status.css";
 
 interface TemplateData {
@@ -8,23 +10,34 @@ interface TemplateData {
 }
 
 const tag = "pm-karma-status";
+let lastInstanceId = 0;
 
 customElements.define(
   tag,
   class PmKarmaStatus extends HTMLElement {
+    private instanceId: string;
     static max: number = 25;
     private amount: number = 0;
+    static get _instanceId(): string {
+      return `${tag} ${lastInstanceId++}`;
+    }
 
     constructor() {
       super();
+      this.instanceId = PmKarmaStatus._instanceId;
       // @ts-ignore: TODO: minpubsub
-      window.subscribe("karma/updated", this._onKarmaUpdate.bind(this));
+      //window.subscribe("karma/updated", this._onKarmaUpdate.bind(this));
+      puzzleService.subscribe(
+        "karma/updated",
+        this._onKarmaUpdate.bind(this),
+        this.instanceId
+      );
       // @ts-ignore: TODO: minpubsub
       window.subscribe("piece/move/blocked", this._onMoveBlocked.bind(this));
       this.render();
     }
 
-    _onKarmaUpdate(data: any) {
+    _onKarmaUpdate(data: KarmaData) {
       this.amount =
         (Math.min(data.karma, PmKarmaStatus.max) / PmKarmaStatus.max) * 100;
       this.render();

@@ -10,28 +10,12 @@ import * as Hammer from "hammerjs";
 
 import { rgbToHsl } from "../site/utilities";
 import hashColorService from "../hash-color/hash-color.service";
-import PuzzleService from "./puzzle.service";
+import { puzzleService, PieceData, KarmaData } from "./puzzle.service";
 import { divulgerService } from "./divulger.service";
 import PuzzlePiecesController from "./puzzle-pieces.controller.js";
 
 import template from "./puzzle-pieces.html";
 import style from "./puzzle-pieces.css";
-
-interface PieceData {
-  id: number;
-  b: number; // b for background
-  x: number;
-  y: number;
-  rotate: number;
-  s?: number; // s for stacked
-  active?: boolean;
-  karma?: number; // response from move request
-  karmaChange?: number | boolean; // response from move request
-}
-
-interface Pieces {
-  [index: number]: PieceData;
-}
 
 const html = `
   <style>${style}</style>
@@ -120,9 +104,17 @@ customElements.define(
       this.slabMassiveOffsetTop = this.$slabMassive.offsetTop;
       this.slabMassiveOffsetLeft = this.$slabMassive.offsetLeft;
 
-      const puzzleService = new PuzzleService(this.puzzleId);
-      this.ctrl = new PuzzlePiecesController(this.puzzleId, puzzleService);
-      this.ctrl.renderPieces = this.renderPieces.bind(this);
+      puzzleService.init(this.puzzleId);
+      puzzleService.subscribe(
+        "pieces/mutate",
+        this.renderPieces.bind(this),
+        this.instanceId
+      );
+
+      //puzzleService.subscribe("karma/updated", this.onKarmaUpdate.bind(this), this.instanceId);
+
+      //this.ctrl = new PuzzlePiecesController(this.puzzleId, this.puzzleService);
+      //this.ctrl.renderPieces = this.renderPieces.bind(this);
       this.pieceRejectedHandles = {};
 
       this.pieceFollow = this._pieceFollow.bind(this);
@@ -209,7 +201,8 @@ customElements.define(
     }
 
     _pieceFollow(ev) {
-      this.ctrl.moveBy(
+      puzzleService.moveBy(
+        //this.ctrl.moveBy(
         this.draggedPieceID,
         Number(this.$slabMassive.offsetX) +
           ev.pageX -
@@ -245,7 +238,7 @@ customElements.define(
           // @ts-ignore
           delete this.pieceRejectedHandles[this.draggedPieceID];
         }
-        this.ctrl.dropSelectedPieces(
+        puzzleService.dropSelectedPieces(
           Number(this.$slabMassive.offsetX) +
             ev.pageX -
             this.slabMassiveOffsetLeft,
@@ -277,8 +270,9 @@ customElements.define(
         let id = Number(ev.target.id.substr("p-".length));
         if (
           ev.target.classList.contains("p") &&
-          !this.ctrl.isImmovable(id) &&
-          this.ctrl.selectedPieces.length === 0 &&
+          puzzleService.isSelectable(id) &&
+          //!puzzleService.isImmovable(id) &&
+          //this.ctrl.selectedPieces.length === 0 &&
           !this.blocked
         ) {
           // listen for piece updates to just this piece while it's being moved.
@@ -309,7 +303,7 @@ customElements.define(
             window.unsubscribe(this.pieceRejectedHandles[this.draggedPieceID]);
             delete this.pieceRejectedHandles[this.draggedPieceID];
           }
-          this.ctrl.dropSelectedPieces(
+          puzzleService.dropSelectedPieces(
             Number(this.$slabMassive.offsetX) +
               ev.pageX -
               this.slabMassiveOffsetLeft,
@@ -341,19 +335,22 @@ customElements.define(
       }
 
       // Just unselect the piece so the next on tap doesn't move it
-      this.ctrl.unSelectPiece(data.id);
+      puzzleService.unSelectPiece(data.id);
     }
 
-    // update DOM for array of piece id's
-    renderPieces(pieces: Pieces, pieceIDs) {
-      let tmp = document.createDocumentFragment();
+    // update DOM for array of pieces
+    renderPieces(pieces: Array<PieceData>) {
+      let tmp: undefined | DocumentFragment; // = document.createDocumentFragment();
       //const startTime = new Date();
-      pieceIDs.forEach((pieceID) => {
-        let piece = pieces[pieceID];
+      pieces.forEach((piece) => {
+        const pieceID = piece.id;
         let $piece = <HTMLElement | null>(
           this.$collection.querySelector("#p-" + pieceID)
         );
         if (!$piece) {
+          if (tmp === undefined) {
+            tmp = document.createDocumentFragment();
+          }
           $piece = document.createElement("div");
           $piece.classList.add("p");
           $piece.setAttribute("id", "p-" + pieceID);
