@@ -1,4 +1,5 @@
 import { divulgerService } from "../puzzle-pieces/divulger.service";
+import { puzzleService } from "../puzzle-pieces/puzzle.service";
 
 import "./puzzle-alert.css";
 
@@ -70,8 +71,11 @@ customElements.define(
 
       this.alerts = alerts;
 
-      // @ts-ignore: minpubsub
-      window.subscribe("piece/move/blocked", this.onMoveBlocked.bind(this)); // PuzzleService
+      puzzleService.subscribe(
+        "piece/move/blocked",
+        this.onMoveBlocked.bind(this),
+        this.instanceId
+      );
       divulgerService.subscribe(
         "socket/max",
         this.onMax.bind(this),

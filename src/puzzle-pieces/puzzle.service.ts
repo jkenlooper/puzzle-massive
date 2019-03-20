@@ -49,20 +49,45 @@ export interface KarmaData {
   karmaChange: boolean;
 }
 
+enum PieceMoveErrorTypes {
+  sameplayerconcurrent = "sameplayerconcurrent",
+  immovable = "immovable",
+  piecequeue = "piecequeue",
+  piecelock = "piecelock",
+  invalid = "invalid",
+  missing = "missing",
+  expiredtoken = "expiredtoken",
+  bannedusers = "bannedusers",
+  invalidpiecemove = "invalidpiecemove",
+  blockedplayer = "blockedplayer",
+  proximity = "proximity",
+}
+export interface PieceMoveError {
+  msg: string;
+  type: PieceMoveErrorTypes;
+  expires: number;
+  timeout: number;
+  reason: string;
+  action: any; // {msg: string, url: string}
+}
+
 // For now this is set to one to prevent feature creep
 const maxSelectedPieces = 1;
 
 type PiecesUpdateCallback = (data: Array<PieceData>) => any;
 type KarmaUpdatedCallback = (data: KarmaData) => any;
 type PieceMoveRejectedCallback = (data: PieceData) => any;
+type PieceMoveBlockedCallback = (data: PieceMoveError) => any;
 const piecesMutate = Symbol("pieces/mutate");
 const karmaUpdated = Symbol("karma/updated");
 const pieceMoveRejected = Symbol("piece/move/rejected");
+const pieceMoveBlocked = Symbol("piece/move/blocked");
 
 const topics = {
   "pieces/mutate": piecesMutate,
   "karma/updated": karmaUpdated,
   "piece/move/rejected": pieceMoveRejected,
+  "piece/move/blocked": pieceMoveBlocked,
 };
 
 interface MoveRequestData {
@@ -91,6 +116,7 @@ class PuzzleService {
   [piecesMutate]: Map<string, PiecesUpdateCallback> = new Map();
   [karmaUpdated]: Map<string, KarmaUpdatedCallback> = new Map();
   [pieceMoveRejected]: Map<string, PieceMoveRejectedCallback> = new Map();
+  [pieceMoveBlocked]: Map<string, PieceMoveBlockedCallback> = new Map();
   constructor() {
     divulgerService.subscribe(
       "piece/update",
@@ -223,22 +249,21 @@ class PuzzleService {
             responseObj.timeout = 10;
           }
           switch (responseObj.type) {
-            case "piecelock":
-            case "piecequeue":
+            case PieceMoveErrorTypes.piecelock:
+            case PieceMoveErrorTypes.piecequeue:
               // TODO: If piece is locked then publish a 'piece/move/delayed' instead of blocked.
               // TODO: Set a timeout and clear if piece is moved.  Maybe
               // auto-scroll to the moved piece?
               break;
-            case "sameplayerconcurrent":
+            case PieceMoveErrorTypes.sameplayerconcurrent:
               if (responseObj.action) {
                 reqwest({ url: responseObj.action.url, method: "POST" });
               }
               break;
-            case "bannedusers":
-            case "expiredtoken":
+            case PieceMoveErrorTypes.bannedusers:
+            case PieceMoveErrorTypes.expiredtoken:
             default:
-              // @ts-ignore: minpubsub
-              window.publish("piece/move/blocked", [responseObj]);
+              self._broadcast(pieceMoveBlocked, responseObj);
           }
           pieceMovement.fail = true;
           // TODO: still need to publish the piece/move/rejected
@@ -336,8 +361,7 @@ class PuzzleService {
             };
           }
           if (patchError.status === 429) {
-            // @ts-ignore: minpubsub
-            window.publish("piece/move/blocked", [responseObj]);
+            self._broadcast(pieceMoveBlocked, responseObj);
             self.onPieceMoveRejected({
               id: id,
               x: origin.x,

@@ -25,15 +25,16 @@ customElements.define(
     constructor() {
       super();
       this.instanceId = PmKarmaStatus._instanceId;
-      // @ts-ignore: TODO: minpubsub
-      //window.subscribe("karma/updated", this._onKarmaUpdate.bind(this));
       puzzleService.subscribe(
         "karma/updated",
         this._onKarmaUpdate.bind(this),
         this.instanceId
       );
-      // @ts-ignore: TODO: minpubsub
-      window.subscribe("piece/move/blocked", this._onMoveBlocked.bind(this));
+      puzzleService.subscribe(
+        "piece/move/blocked",
+        this._onMoveBlocked.bind(this),
+        this.instanceId
+      );
       this.render();
     }
 

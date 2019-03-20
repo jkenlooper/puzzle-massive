@@ -111,8 +111,11 @@ customElements.define(
 
       this.pieceFollow = this._pieceFollow.bind(this);
 
-      // @ts-ignore
-      window.subscribe("piece/move/blocked", this.onMoveBlocked.bind(this)); // PuzzleService
+      puzzleService.subscribe(
+        "piece/move/blocked",
+        this.onMoveBlocked.bind(this),
+        this.instanceId
+      );
 
       // For all parent elements set the width
       function setParentWidth(node) {
