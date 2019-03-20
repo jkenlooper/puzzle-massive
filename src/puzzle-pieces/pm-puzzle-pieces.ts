@@ -10,9 +10,8 @@ import * as Hammer from "hammerjs";
 
 import { rgbToHsl } from "../site/utilities";
 import hashColorService from "../hash-color/hash-color.service";
-import { puzzleService, PieceData, KarmaData } from "./puzzle.service";
+import { puzzleService, PieceData } from "./puzzle.service";
 import { divulgerService } from "./divulger.service";
-import PuzzlePiecesController from "./puzzle-pieces.controller.js";
 
 import template from "./puzzle-pieces.html";
 import style from "./puzzle-pieces.css";
@@ -43,11 +42,10 @@ customElements.define(
     private slabMassiveOffsetTop: number;
     private slabMassiveOffsetLeft: number;
     private pieceFollow: Function;
-    private pieceRejectedHandles: object;
     private blocked: boolean = false;
     private blockedTimer: number = 0;
     private blockedTimeout: number | undefined;
-    ctrl: PuzzlePiecesController;
+
     constructor() {
       super();
       const self = this;
@@ -110,12 +108,6 @@ customElements.define(
         this.renderPieces.bind(this),
         this.instanceId
       );
-
-      //puzzleService.subscribe("karma/updated", this.onKarmaUpdate.bind(this), this.instanceId);
-
-      //this.ctrl = new PuzzlePiecesController(this.puzzleId, this.puzzleService);
-      //this.ctrl.renderPieces = this.renderPieces.bind(this);
-      this.pieceRejectedHandles = {};
 
       this.pieceFollow = this._pieceFollow.bind(this);
 
@@ -202,7 +194,6 @@ customElements.define(
 
     _pieceFollow(ev) {
       puzzleService.moveBy(
-        //this.ctrl.moveBy(
         this.draggedPieceID,
         Number(this.$slabMassive.offsetX) +
           ev.pageX -
@@ -231,13 +222,10 @@ customElements.define(
     dropTap(ev) {
       ev.preventDefault();
       if (typeof this.draggedPieceID === "number") {
-        // @ts-ignore
-        if (this.pieceRejectedHandles[this.draggedPieceID]) {
-          // @ts-ignore
-          window.unsubscribe(this.pieceRejectedHandles[this.draggedPieceID]);
-          // @ts-ignore
-          delete this.pieceRejectedHandles[this.draggedPieceID];
-        }
+        puzzleService.unsubscribe(
+          "piece/move/rejected",
+          `pieceFollow ${this.draggedPieceID} ${this.instanceId}`
+        );
         puzzleService.dropSelectedPieces(
           Number(this.$slabMassive.offsetX) +
             ev.pageX -
@@ -271,38 +259,34 @@ customElements.define(
         if (
           ev.target.classList.contains("p") &&
           puzzleService.isSelectable(id) &&
-          //!puzzleService.isImmovable(id) &&
-          //this.ctrl.selectedPieces.length === 0 &&
           !this.blocked
         ) {
           // listen for piece updates to just this piece while it's being moved.
-          // TODO: listen to reject as well?
-          // @ts-ignore
-          const rejectHandle = window.subscribe(
+          puzzleService.subscribe(
             "piece/move/rejected",
-            this.onPieceUpdateWhileSelected.bind(this)
+            this.onPieceUpdateWhileSelected.bind(this),
+            `pieceFollow ${id} ${this.instanceId}`
           );
-          this.pieceRejectedHandles[this.draggedPieceID] = rejectHandle;
 
           // tap on piece
-          this.ctrl.selectPiece(id);
+          puzzleService.selectPiece(id);
           this.$slabMassive.addEventListener(
             "mousemove",
             this.pieceFollow,
             false
           );
-          // TODO: subscribe to piece/update to unfollow if active piece is updated
+          // subscribe to piece/update to unfollow if active piece is updated
           divulgerService.subscribe(
             "piece/update",
             this.stopFollowing.bind(this),
             `pieceFollow ${this.instanceId}`
           );
         } else {
-          if (this.pieceRejectedHandles[this.draggedPieceID]) {
-            // @ts-ignore
-            window.unsubscribe(this.pieceRejectedHandles[this.draggedPieceID]);
-            delete this.pieceRejectedHandles[this.draggedPieceID];
-          }
+          puzzleService.unsubscribe(
+            "piece/move/rejected",
+            `pieceFollow ${this.draggedPieceID} ${this.instanceId}`
+          );
+
           puzzleService.dropSelectedPieces(
             Number(this.$slabMassive.offsetX) +
               ev.pageX -
@@ -328,11 +312,10 @@ customElements.define(
       );
 
       // Stop listening for any updates to this piece
-      if (this.pieceRejectedHandles[data.id]) {
-        // @ts-ignore
-        window.unsubscribe(this.pieceRejectedHandles[data.id]);
-        delete this.pieceRejectedHandles[data.id];
-      }
+      puzzleService.unsubscribe(
+        "piece/move/rejected",
+        `pieceFollow ${data.id} ${this.instanceId}`
+      );
 
       // Just unselect the piece so the next on tap doesn't move it
       puzzleService.unSelectPiece(data.id);
@@ -401,7 +384,7 @@ customElements.define(
           piece.karmaChange = false;
         }
       });
-      if (tmp.children.length) {
+      if (tmp !== undefined && tmp.children.length) {
         this.$collection.appendChild(tmp);
       }
       //const endTime = new Date();
@@ -443,7 +426,12 @@ customElements.define(
     }
 
     disconnectedCallback() {
-      this.ctrl.unsubscribe();
+      divulgerService.unsubscribe("piece/update", this.instanceId);
+      puzzleService.unsubscribe("pieces/mutate", this.instanceId);
+      puzzleService.unsubscribe(
+        "piece/move/rejected",
+        `pieceFollow ${this.draggedPieceID} ${this.instanceId}`
+      );
     }
 
     static get observedAttributes() {

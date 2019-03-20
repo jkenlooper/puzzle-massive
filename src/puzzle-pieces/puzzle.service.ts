@@ -21,7 +21,6 @@ interface DefaultPiece {
   g?: number;
   x: number;
   y: number;
-  rotate: string;
   r?: number;
   s?: number | null; // s for stacked
   b: number; // b for background
@@ -32,10 +31,12 @@ interface DefaultPiece {
 
 export interface PieceData extends DefaultPiece {
   id: number;
-  //rotate: number;
+  rotate: number; // rotate comes from r?
   active?: boolean;
-  karma?: number; // response from move request
+  karma?: number | boolean; // response from move request
   karmaChange?: number | boolean; // response from move request
+  origin?: any; // updated after piece movements
+  pieceMovementId?: number; // updated after piece movements
 }
 
 interface Pieces {
@@ -48,17 +49,20 @@ export interface KarmaData {
   karmaChange: boolean;
 }
 
-    // For now this is set to one to prevent feature creep
-    const maxSelectedPieces = 1
+// For now this is set to one to prevent feature creep
+const maxSelectedPieces = 1;
 
 type PiecesUpdateCallback = (data: Array<PieceData>) => any;
 type KarmaUpdatedCallback = (data: KarmaData) => any;
+type PieceMoveRejectedCallback = (data: PieceData) => any;
 const piecesMutate = Symbol("pieces/mutate");
 const karmaUpdated = Symbol("karma/updated");
+const pieceMoveRejected = Symbol("piece/move/rejected");
 
 const topics = {
   "pieces/mutate": piecesMutate,
   "karma/updated": karmaUpdated,
+  "piece/move/rejected": pieceMoveRejected,
 };
 
 interface MoveRequestData {
@@ -67,7 +71,7 @@ interface MoveRequestData {
   r?: number;
 }
 
-const pieceAttrsThatAreInt = ["g", "x", "y", "r", "s", "b", "w", "h"];
+const pieceAttrsThatAreInt = ["g", "x", "y", "r", "s", "b", "w", "h", "rotate"];
 
 let _pieceMovementId = 0;
 
@@ -78,16 +82,21 @@ class PuzzleService {
   private pieceMovements: PieceMovements = {};
   private pieceMovementProcessInterval: number | undefined = undefined;
   private pieces: Pieces = {};
-  private collection: Array<number> = [];
+  // @ts-ignore: piecesTimestamp will be used in the future
   private piecesTimestamp = "";
   private mark: string = "";
   private selectedPieces: Array<number> = [];
-  private instanceId = 'puzzleService';
+  private instanceId = "puzzleService";
 
   [piecesMutate]: Map<string, PiecesUpdateCallback> = new Map();
   [karmaUpdated]: Map<string, KarmaUpdatedCallback> = new Map();
+  [pieceMoveRejected]: Map<string, PieceMoveRejectedCallback> = new Map();
   constructor() {
-    divulgerService.subscribe('piece/update', this.onPieceUpdate.bind(this), this.instanceId)
+    divulgerService.subscribe(
+      "piece/update",
+      this.onPieceUpdate.bind(this),
+      this.instanceId
+    );
   }
 
   init(puzzleId) {
@@ -107,7 +116,7 @@ class PuzzleService {
         const defaultPiece: DefaultPiece = {
           x: 0,
           y: 0,
-          rotate: "0",
+          //rotate: 0,
           s: null,
           b: 1,
           w: 1,
@@ -115,11 +124,9 @@ class PuzzleService {
         };
         this.pieces[piece.id] = Object.assign(defaultPiece, piece);
       });
-      this.collection = pieceData.positions.map((piece) => {
-        return piece.id;
-      });
       this.piecesTimestamp = pieceData.timestamp.timestamp;
-      //self.renderPieces(self.pieces, this.collection);
+      divulgerService.ping(this.puzzleId);
+      this._broadcast(piecesMutate, Object.values(this.pieces));
     });
 
     function fetchPieces(puzzleId) {
@@ -144,7 +151,6 @@ class PuzzleService {
     piece.y = y / scale - piece.h / 2;
 
     this._broadcast(piecesMutate, [piece]);
-    //self.renderPieces(self.pieces, [pieceID]);
   }
 
   onKarmaUpdate(data: KarmaData) {
@@ -152,7 +158,6 @@ class PuzzleService {
     Object.assign(piece, data);
     this._broadcast(piecesMutate, [piece]);
     this._broadcast(karmaUpdated, data);
-    //self.renderPieces(self.pieces, [data.id])
   }
 
   _broadcast(topic: symbol, data?: any) {
@@ -163,7 +168,7 @@ class PuzzleService {
 
   subscribe(
     topicString: string,
-    fn: PiecesUpdateCallback | KarmaUpdatedCallback,
+    fn: PiecesUpdateCallback | KarmaUpdatedCallback | PieceMoveRejectedCallback,
     id: string
   ) {
     const topic = topics[topicString];
@@ -184,6 +189,7 @@ class PuzzleService {
   }
 
   token(piece, mark) {
+    const self = this;
     const puzzleId = this.puzzleId;
     const pieceMovementId = PuzzleService.nextPieceMovementId;
     const pieceMovement: PieceMovement = {
@@ -237,8 +243,7 @@ class PuzzleService {
           pieceMovement.fail = true;
           // TODO: still need to publish the piece/move/rejected
           try {
-            // @ts-ignore: minpubsub
-            window.publish("piece/move/rejected", [{ id: piece }]);
+            self.onPieceMoveRejected({ id: piece });
           } catch (err) {
             console.log("ignoring error with minpubsub", err);
           }
@@ -260,6 +265,7 @@ class PuzzleService {
   }
 
   cancelMove(id, origin, pieceMovementId) {
+    const self = this;
     const pieceMovement = this.pieceMovements[pieceMovementId];
     const puzzleId = this.puzzleId;
     if (!pieceMovement) {
@@ -273,17 +279,23 @@ class PuzzleService {
         type: "json",
         error: function handleGetError() {
           if (origin) {
-            // @ts-ignore: minpubsub
-            window.publish("piece/move/rejected", [
-              { id: id, x: origin.x, y: origin.y, r: origin.r },
-            ]);
+            const pieceMovementData: PieceMovementData = {
+              id: id,
+              x: origin.x,
+              y: origin.y,
+              r: origin.r,
+            };
+            self.onPieceMoveRejected(pieceMovementData);
           }
         },
         success: function handlePieceInfo(data) {
-          // @ts-ignore: minpubsub
-          window.publish("piece/move/rejected", [
-            { id: id, x: data.x, y: data.y, r: data.r },
-          ]);
+          const pieceMovementData: PieceMovementData = {
+            id: id,
+            x: data.x,
+            y: data.y,
+            r: data.r,
+          };
+          self.onPieceMoveRejected(pieceMovementData);
         },
       });
     };
@@ -326,21 +338,21 @@ class PuzzleService {
           if (patchError.status === 429) {
             // @ts-ignore: minpubsub
             window.publish("piece/move/blocked", [responseObj]);
-            // @ts-ignore: minpubsub
-            window.publish("piece/move/rejected", [
-              { id: id, x: origin.x, y: origin.y, r: origin.r },
-            ]);
+            self.onPieceMoveRejected({
+              id: id,
+              x: origin.x,
+              y: origin.y,
+              r: origin.r,
+            });
           } else {
-            // @ts-ignore: minpubsub
-            window.publish("piece/move/rejected", [
-              {
-                id: id,
-                x: origin.x,
-                y: origin.y,
-                r: origin.r,
-                karma: responseObj.karma,
-              },
-            ]);
+            const pieceMovementData: PieceMovementData = {
+              id: id,
+              x: origin.x,
+              y: origin.y,
+              r: origin.r,
+              karma: responseObj.karma,
+            };
+            self.onPieceMoveRejected(pieceMovementData);
           }
           // Reject with piece info from server and fallback to origin if that also fails
           return reqwest({
@@ -350,23 +362,26 @@ class PuzzleService {
             data: data,
             error: function handleGetError() {
               if (origin) {
-                // @ts-ignore: minpubsub
-                window.publish("piece/move/rejected", [
-                  { id: id, x: origin.x, y: origin.y, r: origin.r },
-                ]);
+                self.onPieceMoveRejected({
+                  id: id,
+                  x: origin.x,
+                  y: origin.y,
+                  r: origin.r,
+                });
               }
             },
             success: function handlePieceInfo(data) {
-              // @ts-ignore: minpubsub
-              window.publish("piece/move/rejected", [
-                { id: id, x: data.x, y: data.y, r: data.r },
-              ]);
+              const pieceMovementData: PieceMovementData = {
+                id: id,
+                x: data.x,
+                y: data.y,
+                r: data.r,
+              };
+              self.onPieceMoveRejected(pieceMovementData);
             },
           });
         },
         success: function(d) {
-          // @ts-ignore: minpubsub
-          //window.publish("karma/updated", [d]);
           self.onKarmaUpdate(d);
           divulgerService.ping(puzzleId);
         },
@@ -381,115 +396,115 @@ class PuzzleService {
     return !this.isImmovable(pieceID) && this.selectedPieces.length === 0;
   }
 
-    unSelectPiece(pieceID) {
-      let index = this.selectedPieces.indexOf(pieceID)
-      if (index !== -1) {
-        // remove the pieceID from the array
-        this.selectedPieces.splice(index, 1)
-        this.pieces[pieceID].active = false
-        this.cancelMove(
-          pieceID,
-          this.pieces[pieceID].origin,
-          this.pieces[pieceID].pieceMovementId
-        )
-      }
+  unSelectPiece(pieceID) {
+    let index = this.selectedPieces.indexOf(pieceID);
+    if (index !== -1) {
+      // remove the pieceID from the array
+      this.selectedPieces.splice(index, 1);
+      this.pieces[pieceID].active = false;
+      this.cancelMove(
+        pieceID,
+        this.pieces[pieceID].origin,
+        this.pieces[pieceID].pieceMovementId
+      );
+    }
+  }
+
+  selectPiece(pieceID) {
+    // TODO: move selectPiece to pm-puzzle-pieces?
+    const index = this.selectedPieces.indexOf(pieceID);
+    if (index === -1) {
+      // add the pieceID to the end of the array
+      this.selectedPieces.push(pieceID);
+      this.pieces[pieceID].karma = false; // TODO: why set to false?
+      this.pieces[pieceID].active = true;
+      this.pieces[pieceID].origin = {
+        x: this.pieces[pieceID].x,
+        y: this.pieces[pieceID].y,
+        r: this.pieces[pieceID].r,
+      };
+    } else {
+      // remove the pieceID from the array
+      this.selectedPieces.splice(index, 1);
+      this.pieces[pieceID].active = false;
+      this.cancelMove(
+        pieceID,
+        this.pieces[pieceID].origin,
+        this.pieces[pieceID].pieceMovementId
+      );
     }
 
-    selectPiece(pieceID) {
-      // TODO: move selectPiece to pm-puzzle-pieces?
-      const index = this.selectedPieces.indexOf(pieceID)
-      if (index === -1) {
-        // add the pieceID to the end of the array
-        this.selectedPieces.push(pieceID)
-        this.pieces[pieceID].karma = false
-        this.pieces[pieceID].active = true
-        this.pieces[pieceID].origin = {
-          x: this.pieces[pieceID].x,
-          y: this.pieces[pieceID].y,
-          r: this.pieces[pieceID].r,
-        }
-      } else {
-        // remove the pieceID from the array
-        this.selectedPieces.splice(index, 1)
-        this.pieces[pieceID].active = false
-        this.cancelMove(
-          pieceID,
-          this.pieces[pieceID].origin,
-          this.pieces[pieceID].pieceMovementId
-        )
-      }
-
-      // TODO: onPieceUpdate check if piece is already active
-      //this.pieces[pieceID].active = false
-
-      // Only allow a max amount of selected pieces
-      if (this.selectedPieces.length > maxSelectedPieces) {
-        this.selectedPieces
-          .splice(0, this.selectedPieces.length - maxSelectedPieces)
-          .forEach((pieceID) => {
-            // all the pieces that were unselected also set to inactive
-            this.pieces[pieceID].active = false
-            this.cancelMove(
-              pieceID,
-              this.pieces[pieceID].origin,
-              this.pieces[pieceID].pieceMovementId
-            )
-          })
-      }
-      if (!this.inPieceMovementQueue(pieceID)) {
-        // Only get a new token if this piece movement isn't already in the
-        // queue.
-        this.pieces[pieceID].pieceMovementId = this.token(
-          pieceID,
-          this.mark
-        )
-      }
-      //self.renderPieces(self.pieces, [pieceID])
-      this._broadcast(piecesMutate, [this.pieces[pieceID]]);
+    // Only allow a max amount of selected pieces
+    if (this.selectedPieces.length > maxSelectedPieces) {
+      this.selectedPieces
+        .splice(0, this.selectedPieces.length - maxSelectedPieces)
+        .forEach((pieceID) => {
+          // all the pieces that were unselected also set to inactive
+          this.pieces[pieceID].active = false;
+          this.cancelMove(
+            pieceID,
+            this.pieces[pieceID].origin,
+            this.pieces[pieceID].pieceMovementId
+          );
+        });
     }
-
-    dropSelectedPieces(x, y, scale) {
-      // Update piece locations
-      this.selectedPieces.forEach(function(pieceID) {
-        let piece = this.pieces[pieceID]
-        piece.x = x / scale - piece.w / 2
-        piece.y = y / scale - piece.h / 2
-      })
-
-      // Display the updates
-      //self.renderPieces(self.pieces, self.selectedPieces)
-      const pieces = this.selectedPieces.map((pieceID) => {
-        return this.pieces[pieceID];
-      })
-      this._broadcast(piecesMutate, pieces);
-
-      // Send the updates
-      this.selectedPieces.forEach(function(pieceID) {
-        let piece = this.pieces[pieceID]
-        this.move(
-          pieceID,
-          piece.x,
-          piece.y,
-          '-',
-          piece.origin,
-          piece.pieceMovementId
-        )
-      })
-
-      // Reset the selectedPieces
-      this.selectedPieces = []
+    if (!this.inPieceMovementQueue(pieceID)) {
+      // Only get a new token if this piece movement isn't already in the
+      // queue.
+      this.pieces[pieceID].pieceMovementId = this.token(pieceID, this.mark);
     }
+    this._broadcast(piecesMutate, [this.pieces[pieceID]]);
+  }
 
-    onPieceUpdate(data: PieceMovementData) {
-      let piece = this.pieces[data.id]
-      if (piece.active) {
-        this.unSelectPiece(data.id)
-      }
-      piece = Object.assign(piece, data)
-      piece.active = false
-      //self.renderPieces(self.pieces, [data.id])
-      this._broadcast(piecesMutate, [piece]);
+  dropSelectedPieces(x, y, scale) {
+    // Update piece locations
+    this.selectedPieces.forEach((pieceID) => {
+      let piece = this.pieces[pieceID];
+      piece.x = x / scale - piece.w / 2;
+      piece.y = y / scale - piece.h / 2;
+    });
+
+    // Display the updates
+    const pieces = this.selectedPieces.map((pieceID) => {
+      return this.pieces[pieceID];
+    });
+    this._broadcast(piecesMutate, pieces);
+
+    // Send the updates
+    this.selectedPieces.forEach((pieceID) => {
+      let piece = this.pieces[pieceID];
+      this.move(
+        pieceID,
+        piece.x,
+        piece.y,
+        "-",
+        piece.origin,
+        piece.pieceMovementId
+      );
+    });
+
+    // Reset the selectedPieces
+    this.selectedPieces = [];
+  }
+
+  onPieceUpdate(data: PieceMovementData) {
+    let piece = this.pieces[data.id];
+    if (piece.active) {
+      this.unSelectPiece(data.id);
     }
+    piece = Object.assign(piece, data);
+    piece.active = false;
+    this._broadcast(piecesMutate, [piece]);
+  }
+
+  onPieceMoveRejected(data: PieceMovementData) {
+    let piece = this.pieces[data.id];
+    piece.x = data.x || piece.origin.x;
+    piece.y = data.y || piece.origin.y;
+    piece.active = false;
+    this._broadcast(pieceMoveRejected, data);
+    this._broadcast(piecesMutate, [piece]);
+  }
 
   processNextPieceMovement() {
     if (!this.pieceMovementProcessInterval) {

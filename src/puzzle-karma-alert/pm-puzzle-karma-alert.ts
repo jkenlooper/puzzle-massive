@@ -30,15 +30,16 @@ customElements.define(
       super();
       this.instanceId = PmPuzzleKarmaAlert._instanceId;
 
-      // @ts-ignore: minpubsub
-      //window.subscribe("karma/updated", this.updateKarmaValue.bind(this)); // PuzzleService
       puzzleService.subscribe(
         "karma/updated",
         this.updateKarmaValue.bind(this),
         this.instanceId
       );
-      // @ts-ignore: minpubsub
-      window.subscribe("piece/move/rejected", this.updateKarmaValue.bind(this)); // PuzzleService
+      puzzleService.subscribe(
+        "piece/move/rejected",
+        this.updateKarmaValue.bind(this),
+        this.instanceId
+      );
 
       this.render();
     }
@@ -86,6 +87,11 @@ customElements.define(
         }
         this.render();
       }
+    }
+
+    disconnectedCallback() {
+      puzzleService.unsubscribe("karma/updated", this.instanceId);
+      puzzleService.unsubscribe("piece/move/rejected", this.instanceId);
     }
   }
 );

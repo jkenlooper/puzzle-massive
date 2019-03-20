@@ -10,6 +10,8 @@ export interface PieceMovementData {
   s?: number;
   x?: number;
   y?: number;
+  r?: number;
+  karma?: number; // from PuzzleService piece/move/rejected
 }
 
 export interface BitMovementData {
