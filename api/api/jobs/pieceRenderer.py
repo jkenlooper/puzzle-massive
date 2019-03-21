@@ -214,8 +214,8 @@ def render(*args):
                   "y": randint(0,th),
                   "w": piece_bboxes[str(i)][2] - piece_bboxes[str(i)][0],
                   "h": piece_bboxes[str(i)][3] - piece_bboxes[str(i)][1],
-                  "r": 0,
-                  "rotate": 0,
+                  "r": 0, # mutable rotation of piece
+                  "rotate": 0, # immutable piece orientation
                   "row": -1, # deprecated
                   "col": -1, # deprecated
                   "s": 0, # side

@@ -342,7 +342,7 @@ customElements.define(
         // Move the piece
         if (piece.x !== undefined) {
           $piece.style.transform = `translate3d(${piece.x}px, ${piece.y}px, 0)
-            rotate(${360 - piece.rotate === 360 ? 0 : 360 - piece.rotate}deg)`;
+            rotate(${360 - piece.r === 360 ? 0 : 360 - piece.r}deg)`;
         }
 
         // Piece status can be undefined which would mean the status should be

@@ -40,8 +40,8 @@ def convert(puzzle, db_file=None):
         pc = {
             'x': piece['x'],
             'y': piece['y'],
-            'r': piece['r'],
-            'rotate': piece['rotate'],
+            'r': piece['r'], # mutable rotation of piece
+            'rotate': piece['rotate'], # immutable piece orientation
             'w': piece['w'],
             'h': piece['h'],
             'b': piece['b'],

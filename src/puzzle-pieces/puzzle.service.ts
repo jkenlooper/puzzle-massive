@@ -21,7 +21,7 @@ interface DefaultPiece {
   g?: number;
   x: number;
   y: number;
-  r?: number;
+  r: number;
   s?: number | null; // s for stacked
   b: number; // b for background
   w: number;
@@ -31,7 +31,6 @@ interface DefaultPiece {
 
 export interface PieceData extends DefaultPiece {
   id: number;
-  rotate: number; // rotate comes from r?
   active?: boolean;
   karma?: number | boolean; // response from move request
   karmaChange?: number | boolean; // response from move request
@@ -142,7 +141,7 @@ class PuzzleService {
         const defaultPiece: DefaultPiece = {
           x: 0,
           y: 0,
-          //rotate: 0,
+          r: 0,
           s: null,
           b: 1,
           w: 1,

@@ -109,7 +109,9 @@ class PuzzlePiecesView(MethodView):
         # Create a pipe for buffering commands and disable atomic transactions
         pipe = redisConnection.pipeline(transaction=False)
 
-        publicPieceProperties = ('x', 'y', 'rotate', 's', 'w', 'h', 'b')
+        # The 'rotate' field is not public. It is for the true orientation of the piece.
+        # The 'r' field is the mutable rotation of the piece.
+        publicPieceProperties = ('x', 'y', 'r', 's', 'w', 'h', 'b')
 
         for item in all_pieces:
             piece = item.get('id')
@@ -117,6 +119,7 @@ class PuzzlePiecesView(MethodView):
         allPublicPieceProperties = pipe.execute()
         # convert the list of lists into list of dicts.  Only want to return the public piece props.
         pieces = map(lambda properties: dict(zip(publicPieceProperties, properties)), allPublicPieceProperties)
+        # TODO: Change piece properties to int type instead of string
         for item in all_pieces:
             piece = item.get('id')
             pieces[piece]['id'] = piece

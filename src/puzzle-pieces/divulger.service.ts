@@ -191,6 +191,7 @@ class DivulgerService {
           if (values[3] !== "") {
             pieceData.y = Number(values[3]);
           }
+          // TODO: Add pieceData.r from values[4] when rotate of pieces is enabled
           this._broadcast(pieceUpdate, pieceData);
         } else if (values.length === 4) {
           const bitData: BitMovementData = {
