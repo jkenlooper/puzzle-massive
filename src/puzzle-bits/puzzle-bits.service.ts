@@ -88,12 +88,13 @@ class PuzzleBitsService {
 
   bitUpdate(data: BitMovementData): void {
     const self = this;
+    const bitId = data.id;
     const bit: PlayerBit = Object.assign(
       {
         icon: "unknown-bit",
         ownBit: false,
       },
-      this.bits[data.id] || {},
+      this.bits[bitId] || {},
       data,
       {
         lastUpdate: new Date(),
@@ -103,21 +104,21 @@ class PuzzleBitsService {
     if (bit.icon === "unknown-bit") {
       // fetch player icon and add it to bits
       bit.icon = false;
-      this.getPlayerBitIcon(bit.id)
+      this.getPlayerBitIcon(bitId)
         .then((newBit) => {
-          bit.icon = newBit.icon;
+          self.bits[bitId].icon = newBit.icon;
         })
         .catch(() => {
-          bit.icon = false;
+          self.bits[bitId].icon = false;
         })
         .finally(() => {
           self._updateCollection();
           self._broadcast();
         });
     }
-    this.moveTimeouts[bit.id] = setInactive(bit.id);
+    this.moveTimeouts[bitId] = setInactive(bitId);
 
-    this.bits[bit.id] = bit;
+    this.bits[bitId] = bit;
 
     self._updateCollection();
     self._broadcast();
