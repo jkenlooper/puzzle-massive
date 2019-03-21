@@ -177,12 +177,6 @@ customElements.define(
 
     onMoveBlocked(data) {
       if (data.timeout && typeof data.timeout === "number") {
-        console.log(
-          "onMoveBlocked",
-          data.timeout,
-          this.blockedTimer,
-          this.blocked
-        );
         const now = new Date().getTime();
         const remainingTime = Math.max(0, this.blockedTimer - now);
         const timeout = data.timeout * 1000 + remainingTime;
