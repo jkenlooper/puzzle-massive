@@ -7,7 +7,6 @@ require('file-loader?name=bundles/[name].[ext]!../../node_modules/@webcomponents
 require('file-loader?name=bundles/[name].[ext]!../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-sd-ce.js')
 require('file-loader?name=bundles/[name].[ext]!../../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-sd.js')
 
-require('file-loader?name=[name].[ext]!../../node_modules/minpubsub/minpubsub.js')
 require('file-loader?name=[name].[ext]!../../node_modules/hammerjs/hammer.min.js')
 require('file-loader?name=[name].[ext]!../../node_modules/lazysizes/lazysizes.min.js')
 require('file-loader?name=[name].[ext]!../../node_modules/reqwest/reqwest.min.js')

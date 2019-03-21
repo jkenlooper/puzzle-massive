@@ -68,7 +68,6 @@
     "jscolor-picker": "~2.0.4",
     "lazysizes": "~2.0.7",
     "lit-element": "^2.0.0-rc.5",
-    "minpubsub": "0.0.2",
     "normalize.css": "~4.2.0",
     "reqwest": "~2.0.5",
     "rxjs": "^6.4.0",

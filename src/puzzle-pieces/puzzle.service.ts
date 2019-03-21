@@ -266,12 +266,7 @@ class PuzzleService {
               self._broadcast(pieceMoveBlocked, responseObj);
           }
           pieceMovement.fail = true;
-          // TODO: still need to publish the piece/move/rejected
-          try {
-            self.onPieceMoveRejected({ id: piece });
-          } catch (err) {
-            console.log("ignoring error with minpubsub", err);
-          }
+          self.onPieceMoveRejected({ id: piece });
         });
     };
 
