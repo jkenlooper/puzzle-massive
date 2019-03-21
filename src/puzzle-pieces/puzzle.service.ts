@@ -179,14 +179,14 @@ class PuzzleService {
     this._broadcast(piecesMutate, [piece]);
   }
 
-  onKarmaUpdate(data: KarmaData) {
+  private onKarmaUpdate(data: KarmaData) {
     let piece = this.pieces[data.id];
     Object.assign(piece, data);
     this._broadcast(piecesMutate, [piece]);
     this._broadcast(karmaUpdated, data);
   }
 
-  _broadcast(topic: symbol, data?: any) {
+  private _broadcast(topic: symbol, data?: any) {
     this[topic].forEach((fn /*, id*/) => {
       fn(data);
     });
@@ -214,7 +214,7 @@ class PuzzleService {
     this[topic].delete(id);
   }
 
-  token(piece, mark) {
+  private token(piece, mark) {
     const self = this;
     const puzzleId = this.puzzleId;
     const pieceMovementId = PuzzleService.nextPieceMovementId;
@@ -278,13 +278,13 @@ class PuzzleService {
     return pieceMovementId;
   }
 
-  inPieceMovementQueue(piece) {
+  private inPieceMovementQueue(piece) {
     return Object.values(this.pieceMovements).some((pieceMovement) => {
       return piece === pieceMovement.piece;
     });
   }
 
-  cancelMove(id, origin, pieceMovementId) {
+  private cancelMove(id, origin, pieceMovementId) {
     const self = this;
     const pieceMovement = this.pieceMovements[pieceMovementId];
     const puzzleId = this.puzzleId;
@@ -321,7 +321,7 @@ class PuzzleService {
     };
   }
 
-  move(id, x, y, r, origin, pieceMovementId) {
+  private move(id, x, y, r, origin, pieceMovementId) {
     const pieceMovement = this.pieceMovements[pieceMovementId];
     const puzzleId = this.puzzleId;
     const self = this;
@@ -506,7 +506,7 @@ class PuzzleService {
     this.selectedPieces = [];
   }
 
-  onPieceUpdate(data: PieceMovementData) {
+  private onPieceUpdate(data: PieceMovementData) {
     let piece = this.pieces[data.id];
     if (piece.active) {
       this.unSelectPiece(data.id);
@@ -516,7 +516,7 @@ class PuzzleService {
     this._broadcast(piecesMutate, [piece]);
   }
 
-  onPieceMoveRejected(data: PieceMovementData) {
+  private onPieceMoveRejected(data: PieceMovementData) {
     let piece = this.pieces[data.id];
     piece.x = data.x || piece.origin.x;
     piece.y = data.y || piece.origin.y;
@@ -525,7 +525,7 @@ class PuzzleService {
     this._broadcast(piecesMutate, [piece]);
   }
 
-  processNextPieceMovement() {
+  private processNextPieceMovement() {
     if (!this.pieceMovementProcessInterval) {
       this.pieceMovementProcessInterval = window.setInterval(() => {
         // All done processing movements on the queue

@@ -27,10 +27,6 @@
     {% endblock %}
 
     {% block headscript %}
-    {#
-    <script src="{{ url_for('send_theme_file', filename='custom-elements.min.js') }}"></script>
-    <script src="{{ url_for('send_theme_file', filename='shadydom.min.js') }}"></script>
-    #}
     <script type="module" src="{{ url_for('send_theme_file', filename='modernizr.build.min.js') }}"></script>
     {% endblock %}
 
