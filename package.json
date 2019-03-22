@@ -53,7 +53,7 @@
   },
   "scripts": {
     "offpretest": "stylelint \"src/**/*.css\"",
-    "test": "tsc --project . --outDir tests --module commonjs && tape \"tests/**/*.spec.js\"",
+    "offtest": "tsc --project . --outDir tests --module commonjs && tape \"tests/**/*.spec.js\"",
     "prebuild": "rm -rf dist",
     "build": "webpack --mode=production",
     "debug": "webpack --mode=development --debug --devtool source-map --output-pathinfo",
