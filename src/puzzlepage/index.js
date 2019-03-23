@@ -1,4 +1,4 @@
-require('file-loader?name=[name].[ext]!../../node_modules/slab-massive/dist/slab-massive.min.js')
+import 'slab-massive'
 
 import PuzzlePreviewBox from './puzzle-preview-box.js'
 import ScrollJump from './scroll-jump.js'

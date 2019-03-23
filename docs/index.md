@@ -39,8 +39,6 @@ webpack.
 `templates/` The chill app uses these files when building the pages shown on the
 site.
 
-`ui-lib/` Other javascript and CSS packages that are used client-side.
-
 `web/` Nginx configuration.
 
 

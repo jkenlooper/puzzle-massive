@@ -67,9 +67,6 @@
 
 {% block script %}
 {{ super() }}
-{% if isPuzzleVisible -%}
-<script src="{{ url_for('send_theme_file', filename='slab-massive.min.js') }}"></script>
-{%- endif %}
 {% endblock %}
 
 {# if the puzzle has been deleted the page.info may not be available. #}
