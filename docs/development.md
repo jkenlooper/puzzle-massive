@@ -9,30 +9,57 @@ Written for a Linux machine that is Debian based.  Only tested on Ubuntu.  Use
  [Vagrant](https://www.vagrantup.com/) or something similar if not on a Linux
  machine.
 
+This guide assumes some familiarity with using the terminal and administrating
+a linux based machine like Ubuntu.  If something isn't working right or you get
+stuck, please reach out on the Discord chat channels for the project.
+
+## Initial setup
+
+After cloning or forking the git repo
+[puzzle-massive](https://github.com/jkenlooper/puzzle-massive); open a terminal
+and `cd` to that directory.
+
 If using Vagrant; then run `vagrant up` and ssh in (`vagrant ssh`) and go to
 the /vagrant/ shared directory when running the rest of the commands.
 
-Run the `bin/init.sh` script to configure the server with ssh and a user if
-needed.  Don't need to run this if using Vagrant.
+If using Vagrant and VirtualBox (recommended option):
 
-The `bin/setup.sh` is used to install dependencies for the server.  It is
-automatically run when provisioning a Vagrant machine.
+```bash
+vagrant up;
+vagrant ssh;
+
+# After logging in as the vagrant user on the vagrant machine.
+cd /vagrant/;
+```
+
+If **not** using Vagrant and running locally on a Ubuntu 18.04 (Bionic Beaver)
+machine:
+
+```bash
+# Run only some commands from bin/init.sh to create the 'dev' user:
+sudo adduser dev
+# Set the user to have sudo privileges by placing in the sudo group
+sudo usermod -aG sudo dev
+
+# Install other software dependencies with apt-get and npm.
+sudo ./bin/setup.sh;
+```
+
+At this point the `bin/init.sh` and `/bin/setup.sh` scripts should have been run
+automatically when the vagrant machine was provisioned or manually if running
+locally on a Ubuntu machine.
 
 To have TLS (SSL) on your development machine run the `bin/provision-local.sh`
 script. That will use `openssl` to create some certs in the web/ directory.
 The rootCA.pem should be imported to Keychain Access and marked as always trusted.
 *This step is not necessary.  The site isn't using https yet.*
 
-The website apps are managed as 
-[systemd](https://freedesktop.org/wiki/Software/systemd/) services.
-The service config files are created by running `make` and installed with 
-`sudo make install`.  It is recommended to use Python's `virtualenv .`
-and activating each time for a new shell with `source bin/activate` before
-running `make`.
+### The 'dev' user and sqlite db file
 
-The db file is owned by dev with group dev.  If developing with
+The sqlite db file is owned by dev with group dev.  If developing with
 a different user then run `adduser nameofuser dev` to include the 'nameofuser'
-to the dev group.
+to the dev group.  Make sure to be signed in as the dev user when manually
+modifying the database.
 
 If using Vagrant then change the password for dev user and login as that user.
 
@@ -104,13 +131,22 @@ htpasswd -c .htpasswd admin;
 
 ## Setup For Building
 
+The website apps are managed as 
+[systemd](https://freedesktop.org/wiki/Software/systemd/) services.
+The service config files are created by running `make` and installed with 
+`sudo make install`.  It is recommended to use Python's `virtualenv .`
+and activating each time for a new shell with `source bin/activate` before
+running `make`.
+
 If `nvm` isn't available on the dev machine then install it.  See [github.com/creationix/nvm](https://github.com/creationix/nvm) for more information.
 
 ```bash
 # Install Node Version Manager
 curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
 source ~/.bashrc
-nvm install v10.15.0
+
+# Install and use the version set in .nvmrc
+nvm install
 nvm use
 ```
 
@@ -138,17 +174,6 @@ python api/api/create_database.py site.cfg;
 exit
 
 sudo systemctl reload nginx
-```
-
-Set the credentials to use a compatible s3 setup with either the awscli or
-manually adding the credentials.  At this time it is only for migrating old puzzle
-files.  New development isn't using any AWS services anymore as it isn't needed
-for the project at this time.
-
-```bash
-# As the dev user:
-pip install awscli
-aws configure
 ```
 
 Update `/etc/hosts` to have local-puzzle-massive map to your machine.  Access your
