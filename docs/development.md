@@ -30,6 +30,7 @@ vagrant ssh;
 
 # After logging in as the vagrant user on the vagrant machine.
 cd /vagrant/;
+sudo ./bin/setup.sh;
 ```
 
 If **not** using Vagrant and running locally on a Ubuntu 18.04 (Bionic Beaver)
@@ -44,10 +45,6 @@ sudo usermod -aG sudo dev
 # Install other software dependencies with apt-get and npm.
 sudo ./bin/setup.sh;
 ```
-
-At this point the `bin/init.sh` and `/bin/setup.sh` scripts should have been run
-automatically when the vagrant machine was provisioned or manually if running
-locally on a Ubuntu machine.
 
 To have TLS (SSL) on your development machine run the `bin/provision-local.sh`
 script. That will use `openssl` to create some certs in the web/ directory.
@@ -138,7 +135,23 @@ The service config files are created by running `make` and installed with
 and activating each time for a new shell with `source bin/activate` before
 running `make`.
 
-If `nvm` isn't available on the dev machine then install it.  See [github.com/creationix/nvm](https://github.com/creationix/nvm) for more information.
+**All commands are run from the projects directory unless otherwise noted.**  For
+the Vagrant setup this is the shared folder `/vagrant/`.
+
+```bash
+vagrant ssh;
+cd /vagrant/;
+```
+
+If `nvm` isn't available on the dev machine then install it.  See
+[github.com/creationix/nvm](https://github.com/creationix/nvm) for more
+information.
+
+Note that the `bin/setup.sh` script uses a system installed `npm` in order to
+install `svgo`. The `svgo` command is used by the puzzle piece renderer process.
+When installing `nvm`, it may show a warning about `svgo` when switching to
+a different Node version.  This warning can be ignored since development doesn't
+use `svgo`.
 
 ```bash
 # Install Node Version Manager
@@ -178,7 +191,15 @@ sudo systemctl reload nginx
 
 Update `/etc/hosts` to have local-puzzle-massive map to your machine.  Access your
 local development version of Puzzle Massive at http://local-puzzle-massive/ .
-If using vagrant you'll need to use the 8080 port http://local-puzzle-massive:8080/ .
+**If using vagrant you'll need to use the 8080 port http://local-puzzle-massive:8080/ .**
+
+Append to your `/etc/hosts` file on the host machine (Not vagrant).  The
+location of this file on a Windows machine is different.
+
+```bash
+# Append to /etc/hosts
+127.0.0.1 local-puzzle-massive
+```
 
 ## Developing Puzzle Massive locally and creating puzzles
 
@@ -195,3 +216,36 @@ the rendering process.  That can be accomplished by logging into the admin side:
 http://local-puzzle-massive/chill/site/admin/puzzle/ . This admin UI is super
 clunky and has a lot of room for improvement.  You'll need to batch edit the
 submitted puzzles to be approved and then click on render.
+
+### Building the `dist/` files
+
+The Javascript and CSS files in the `dist/` directory are built from the source
+files in `src/` by running the `npm run build` command.  This uses
+[webpack](https://webpack.js.org/) and is configured with the
+`webpack.config.js`.  The entry file is `src/index.ts` and following that the
+main site bundle (`site.bundle.js`, `site.css`) is built from
+`src/site/index.js`.
+
+The source files for Javascript and CSS are organized mostly as components.  The
+`src/site/` being an exception as it includes CSS and Javascript used across the
+whole site. Each component includes its own CSS (if applicable) and the CSS
+classes follow the 
+[SUIT CSS naming conventions](https://github.com/suitcss/suit/blob/master/doc/naming-conventions.md).
+
+When editing files in `src/` either run `npm run debug` or `npm run watch`.  The
+production version is done with `npm run build` which will create compressed
+versions of the files.
+
+## Creating a versioned dist for deployment
+
+After making any changes to the source files; commit those changes to git in
+order for them to be included in the distribution file.  The distribution file
+is uploaded to the server and the guide to do deployments should then be
+followed.
+
+To create the versioned distribution file (like puzzle-massive-2.2.0.tar.gz) use the
+`make dist` command.  Note that the version is set in the package.json.
+
+The script to create the distribution file only includes the files that have
+been committed to git.  It will also limit these to what is listed in the
+`puzzle-massive/MANIFEST`.
