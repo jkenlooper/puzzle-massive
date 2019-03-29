@@ -12,7 +12,7 @@ Vagrant.configure(2) do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
-  config.vm.box = "ubuntu/bionic64"
+  config.vm.box = "bento/ubuntu-18.04"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -53,7 +53,8 @@ Vagrant.configure(2) do |config|
     # vb.gui = true
 
     # Customize the amount of memory on the VM:
-    vb.memory = "2048"
+    # Bump this up to 2048 or more if needed.
+    vb.memory = "512"
   end
   #
   # View the documentation for the provider you are using for more
@@ -74,21 +75,13 @@ Vagrant.configure(2) do |config|
   #   sudo apt-get install -y apache2
   # SHELL
 
-  #config.vm.provision "shell", path: "./scripts/init.sh" #, args: ["init.cfg", "/vagrant"]
-  #config.vm.provision "shell", path: "./scripts/redis.sh"
-  #config.vm.provision "shell", path: "./scripts/firewall.sh"
-  #config.vm.provision "shell", inline: <<-SHELL
-  #  cp -f /vagrant/puzzle--localhost.conf /etc/nginx/sites-available/puzzle.conf
-  #  ln -fs /etc/nginx/sites-available/puzzle.conf /etc/nginx/sites-enabled/puzzle.conf
-  #  rm -f /etc/nginx/sites-enabled/default
-  #  nginx -s reload
-  #SHELL
-
   # For vagrant just set up the dev user instead of running ./bin/init.sh
   config.vm.provision "shell", inline: <<-SHELL
     adduser dev
     usermod -aG sudo dev
   SHELL
 
-  config.vm.provision "shell", path: "./bin/setup.sh"
+  # Run the bin/setup.sh after ssh in. The setup.sh is interactive so it is no
+  # longer part of the config.vm.provision.
+  #config.vm.provision "shell", path: "./bin/setup.sh"
 end
