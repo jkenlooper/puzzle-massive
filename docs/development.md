@@ -30,7 +30,9 @@ vagrant ssh;
 
 # After logging in as the vagrant user on the vagrant machine.
 cd /vagrant/;
-sudo ./bin/setup.sh;
+
+# The /vagrant/ directory is a shared folder with the host machine.
+ls;
 ```
 
 If **not** using Vagrant and running locally on a Ubuntu 18.04 (Bionic Beaver)

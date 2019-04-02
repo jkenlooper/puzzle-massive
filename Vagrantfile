@@ -81,7 +81,5 @@ Vagrant.configure(2) do |config|
     usermod -aG sudo dev
   SHELL
 
-  # Run the bin/setup.sh after ssh in. The setup.sh is interactive so it is no
-  # longer part of the config.vm.provision.
-  #config.vm.provision "shell", path: "./bin/setup.sh"
+  config.vm.provision "shell", path: "./bin/setup.sh"
 end
