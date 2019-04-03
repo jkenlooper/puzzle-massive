@@ -2,11 +2,13 @@
 
 _Work in Progress_ and is not tested yet.
 
-Follow this guide instead of the [Local Development Guide](development.md) when
-**only** modifying the `src/` files.  This uses a pre-built Vagrant box that is
-setup to automatically build the files in the `dist/` directory when the source
-files in `src/` change.  This also doesn't require extensive knowledge with the
-command line and managing services on the virtual machine with ssh.
+Follow this guide instead of the [Local Development Guide](development.md) to
+get a working version of Puzzle Massive available locally on your own machine.
+After following the steps listed here; the local development version of Puzzle
+Massive will be running on http://localhost:8080/ and will have a few
+pre-generated puzzles and some mock player data in order to show the different
+user interfaces.  This also doesn't require extensive knowledge with the command
+line and managing services on the virtual machine with ssh.
 
 Install [VirtualBox](https://www.virtualbox.org/) and
 [Vagrant](https://www.vagrantup.com/) on your system.  These two applications

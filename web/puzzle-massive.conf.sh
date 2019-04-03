@@ -443,7 +443,7 @@ cat <<HEREBEDEVELOPMENT
   # Only when in development should the site be accessible via internal ip.
   # This makes it easier to test with other devices that may not be able to
   # update a /etc/hosts file.
-  server_name local-puzzle-massive $INTERNALIP;
+  server_name local-puzzle-massive $INTERNALIP localhost;
 HEREBEDEVELOPMENT
 
 else
