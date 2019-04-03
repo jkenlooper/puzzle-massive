@@ -49,13 +49,53 @@ The pre-built box will already have some puzzles generated and the steps to do
 the initial set up are done.  The local version will run on your host machine at
 [http://localhost:8080/](http://localhost:8080/) .  The services are all running
 in debug or development mode so are not optimized for handling production
-traffic.  The response time may slow down may slow down after a while because of this.  A simple restart of the virtual machine will sometimes be needed.
+traffic.  The response time may slow down after a while because of this.
+A simple restart of the virtual machine will be needed periodically.
 
+To start the site run the `puzzlectl.sh start` command.
+
+```bash
+vagrant ssh --command "sudo /vagrant/bin/puzzlectl.sh start"
+```
+
+The `puzzlectl.sh` script is used to manage the different services running for
+the site.  Other sub commands besides `start` can be used such as `stop`, and
+`status`.
+
+## Making changes to code in `src/`
+
+The source code in the `src/` directory is all Javascript, HTML, and CSS.  The
+files in `dist/` are compiled from the files in `src/`.  The site is configured
+to serve files in `dist/` folder under the URL
+http://localhost:8080/theme/2.2.0/ where '2.2.0' is the current version in
+`package.json`.  So, in order for any changes to files in `src/` to be shown on
+the site, a command to compile or build those `dist/` files need to happen.  The
+`npm` command is used to accomplish this and will run various scripts needed.
+Note that `npm` command is only used from the virtual machine and **not** from
+your host machine.  This one liner below uses `ssh` to first login to the
+virtual machine before running `npm`.
+
+```bash
+# Run this command if files in src/ have changed.
+vagrant ssh --command "cd /vagrant/; ./bin/npmrun.sh build" 
+```
+
+When editing files in `src/` and debugging things use the `debug` instead of
+`build`.  This will create `dist/` files that are not compressed.  Use the
+`watch` sub command to automatically compile the files with each change in
+`src/` directory.
+
+```bash
+# Run this command if files in src/ have changed and needing to debug.
+vagrant ssh --command "cd /vagrant/; ./bin/npmrun.sh debug" 
+
+# Run this command to automatically compile src/ files when they are changed.
+vagrant ssh --command "cd /vagrant/; ./bin/npmrun.sh watch" 
+# Use 'ctrl c' to stop the command
+```
 
 ----
 
 ... Work in Progress ...
 
 TODO: publish the jkenlooper/puzzle-massive box
-TODO: Auto set the npm run build when files change in src/
-TODO: Serve on localhost if not already.
