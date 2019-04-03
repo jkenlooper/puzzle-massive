@@ -90,6 +90,7 @@ When editing files in `src/` and debugging things use the `debug` instead of
 vagrant ssh --command "cd /vagrant/; ./bin/npmrun.sh debug" 
 
 # Run this command to automatically compile src/ files when they are changed.
+# TODO: the watched files don't seem to work when shared from the /vagrant/ directory
 vagrant ssh --command "cd /vagrant/; ./bin/npmrun.sh watch" 
 # Use 'ctrl c' to stop the command
 ```
