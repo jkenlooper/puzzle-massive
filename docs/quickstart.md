@@ -97,28 +97,33 @@ vagrant ssh --command "cd /vagrant/; ./bin/npmrun.sh watch"
 
 ## List of puzzle images that were included
 
-At this time the initial puzzles included with the pre-built vagrant box are
-added manually when creating it.  The list below shows the necessary data to
-recreate it.  In the future this process might be automated with a script.
-Maybe it could use cypress or some other end to end testing framework.
+The puzzles listed below are included with the pre-built vagrant box.  Some
+images used are the lower resolution variant to get a smaller puzzle piece
+count.  This is mostly done to easily test completing a puzzle and such.
 
-pieces | background | link | description
------- | ---------- | ---- | -----------
-20 | #224D80 | https://en.wikipedia.org/wiki/File:SantaCruz-CuevaManos-P2210651b.jpg | Hands at the Cuevas de las Manos upon Río Pinturas, near the town of Perito Moreno in Santa Cruz Province, Argentina. Picture taken by me in 2005.
-500 | #224D80 | https://en.wikipedia.org/wiki/File:Ruby_Loftus_screwing_a_Breech-ring_(1943)_(Art._IWM_LD_2850).jpg | A young factory worker in blue overalls is shown at work on a industrial lathe, cutting and turning the breech-ring component of a Bofors anti-aircraft gun. Other factory workers are visible in the background.
-200 | #224D80 | https://en.wikipedia.org/wiki/File:Nighthawks_by_Edward_Hopper_1942.jpg | Nighthawks, Edward Hopper
-300 | #224D80 | https://en.wikipedia.org/wiki/File:Irises-Vincent_van_Gogh.jpg | Irises, Vincent van Gogh
-1200 | #224D80 | https://en.wikipedia.org/wiki/File:Vincent_van_Gogh_-_Wheat_Field_with_Cypresses_(National_Gallery_version).jpg | Wheat Field with Cypresses, Vincent van Gogh
-800 | #224D80 | https://en.wikipedia.org/wiki/File:Albert_Bierstadt_-_The_Rocky_Mountains,_Lander%27s_Peak.jpg | Albert Bierstadt - The Rocky Mountains, Lander's Peak
-4000 | #224D80 | https://en.wikipedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg | Van Gogh - Starry Night
-30 | #224D80 | https://en.wikipedia.org/wiki/File:Meisje_met_de_parel.jpg | Girl with a Pearl Earring, Johannes Vermeer
-2000 | #224D80 | https://en.wikipedia.org/wiki/File:%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg | Raphael - The School of Athens
+pieces | actual | background | link
+------ | ------ | ---------- | ----
+200 | 80 | #224D80 | https://en.wikipedia.org/wiki/File:SantaCruz-CuevaManos-P2210651b.jpg
+2500 | 2288 | #ADDEB1 | https://en.wikipedia.org/wiki/File:Ruby_Loftus_screwing_a_Breech-ring_(1943)_(Art._IWM_LD_2850).jpg
+200 | 15 | #224D80 | https://en.wikipedia.org/wiki/File:Nighthawks_by_Edward_Hopper_1942.jpg
+300 | 300 | #261A26 | https://en.wikipedia.org/wiki/File:Irises-Vincent_van_Gogh.jpg
+1200 | 1178 | #16161F | https://en.wikipedia.org/wiki/File:Vincent_van_Gogh_-_Wheat_Field_with_Cypresses_(National_Gallery_version).jpg
+800 | 792 | #BA9393 | https://en.wikipedia.org/wiki/File:Albert_Bierstadt_-_The_Rocky_Mountains,_Lander%27s_Peak.jpg
+350 | 320 | #CECFAB | https://en.wikipedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg
+200 | 12 | #C2919D | https://en.wikipedia.org/wiki/File:Meisje_met_de_parel.jpg
+2000 | 1989 | #224D80 | https://en.wikipedia.org/wiki/File:%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg
 
+### Admin view for managing puzzles
+
+The admin view of the site is by default protected with basic auth and requires
+editing the included `.htpasswd` file if needing a different or more secure
+user/pass.  The pre-built vagrant box which should **only** be used for
+development purposes has the 'admin' user set with 'admin' as password.  Visit
+http://localhost:8080/chill/site/admin/puzzle/ to manage the puzzles on the
+site.
 
 ----
 
 ... Work in Progress ...
 
 TODO: publish the jkenlooper/puzzle-massive box
-
-TODO: add puzzles automatically?
