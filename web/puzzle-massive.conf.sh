@@ -231,11 +231,17 @@ cat <<HERE
       return 444;
     }
 
+HERE
+if test "${ENVIRONMENT}" != 'development'; then
+cat <<HERE
     # Set to droplet ip not floating ip.
     # Requires using SOCKS proxy (ssh -D 8080 user@host)
     allow $INTERNALIP;
     allow 127.0.0.1;
     deny all;
+HERE
+fi
+cat <<HERE
 
     proxy_pass_header Server;
     proxy_set_header Host \$http_host;
@@ -336,11 +342,17 @@ cat <<HERE
 
   location /chill/site/admin/ {
 
+HERE
+if test "${ENVIRONMENT}" != 'development'; then
+cat <<HERE
     # Set to droplet ip not floating ip.
     # Requires using SOCKS proxy (ssh -D 8080 user@host)
     allow $INTERNALIP;
     allow 127.0.0.1;
     deny all;
+HERE
+fi
+cat <<HERE
 
     proxy_pass_header Server;
     proxy_set_header Host \$http_host;
