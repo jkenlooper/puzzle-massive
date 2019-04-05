@@ -12,7 +12,12 @@ echo "Converting pieces to DB from Redis...";
 
 python api/api/jobs/convertPiecesToDB.py site.cfg || exit 1;
 
+# Allow passing in a file path of where to save the db dump file
+if [ -n "${1-}" ]; then
+DBDUMPFILE="$1";
+else
 DBDUMPFILE="db-$(date +%F).dump.gz";
+fi;
 
 echo "";
 echo "Creating db dump: $DBDUMPFILE";
