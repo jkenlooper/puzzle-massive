@@ -1,2 +1,0 @@
-# All new users start with 1300 points.
-update User set points = points + 1300;
