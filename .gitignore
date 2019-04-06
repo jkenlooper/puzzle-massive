@@ -1,6 +1,7 @@
 *.DS_Store
 /.env
 /.htpasswd
+/.vagrant/
 /site.cfg
 /frozen.tar.gz
 /web/puzzle-massive.conf
