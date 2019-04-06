@@ -60,7 +60,10 @@ a different user then run `adduser nameofuser dev` to include the 'nameofuser'
 to the dev group.  Make sure to be signed in as the dev user when manually
 modifying the database.
 
-If using Vagrant then change the password for dev user and login as that user.
+If using Vagrant then change the password for dev user and login as that user
+when doing anything with the sqlite db file.  Any other commands that modify the
+source files and such should be done as the vagrant user (default user when
+using `vagrant ssh`).
 
 ```bash
 sudo passwd dev;

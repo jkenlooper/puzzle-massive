@@ -1,2 +1,3 @@
 -r ../requirements.txt
 chill==0.4.0
+psycopg2==2.7.5
