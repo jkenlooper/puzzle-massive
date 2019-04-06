@@ -42,7 +42,20 @@ Now the virtual machine can be provisioned and started up.  Use the command
 `vagrant up` to accomplish this.
 
 ```bash
-vagrant up
+vagrant up;
+
+# TODO: add the .env, .htpasswd, and dist that were packaged
+
+# Run some initial setup
+vagrant ssh;
+cd /vagrant/;
+virtualenv .;
+source bin/activate;
+nvm use;
+npm install;
+npm run build;
+make;
+sudo make install;
 ```
 
 The pre-built box will already have some puzzles generated and the steps to do

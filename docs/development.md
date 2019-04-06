@@ -194,6 +194,9 @@ exit
 sudo systemctl reload nginx
 ```
 
+The puzzle site is available on your own machine at http://localhost or
+http://localhost:8080 if using Vagrant.
+
 Update `/etc/hosts` to have local-puzzle-massive map to your machine.  Access your
 local development version of Puzzle Massive at http://local-puzzle-massive/ .
 **If using vagrant you'll need to use the 8080 port http://local-puzzle-massive:8080/ .**
