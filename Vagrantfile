@@ -77,6 +77,7 @@ Vagrant.configure(2) do |config|
 
   # For vagrant just set up the dev user instead of running ./bin/init.sh
   config.vm.provision "shell", inline: <<-SHELL
+    apt-get --yes update
     adduser dev
     usermod -aG sudo dev
   SHELL
