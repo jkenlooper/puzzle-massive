@@ -1,8 +1,6 @@
 # Quick Start Guide
 
-_Work in Progress_ and is not tested yet.
-
-Follow this guide instead of the [Local Development Guide](development.md) to
+Follow this guide instead of the [local development guide](development.md) to
 get a working version of Puzzle Massive available locally on your own machine.
 After following the steps listed here; the local development version of Puzzle
 Massive will be running on http://localhost:8080/ and will have a few
@@ -29,33 +27,58 @@ to that directory.  All the commands after this assume that the current working
 directory is the top level of the puzzle-massive project (the directory that has
 the `package.json` file in it).
 
-The `Vagrantfile` in the project is set to a base box for Ubuntu.  For the quick
-start setup it will use the pre-built Vagrant box.  Use `vagrant init -f` to
-overwrite the `Vagrantfile` with this pre-built Vagrant box.
+The virtual machine can be provisioned and started up.  Use the command
+`vagrant up` to accomplish this.  It will download the pre-built Vagrant box
+[jkenlooper/puzzle-massive](https://app.vagrantup.com/jkenlooper/boxes/puzzle-massive).
+The virtual machine uses a shared folder with the host machine.  This shared
+folder is located at `/vagrant/` on the virtual machine and is the same folder
+that the `Vagrantfile` is in.
+
+The source files in the `/vagrant/` shared directory have not been compiled and
+built yet.  Open a terminal with the working directory set to the same file the
+`Vagrantfile` is in and do the following commands to start.
 
 ```bash
-# Create new Vagrantfile replacing the current one
-vagrant init -f jkenlooper/puzzle-massive
-```
-
-Now the virtual machine can be provisioned and started up.  Use the command
-`vagrant up` to accomplish this.
-
-```bash
+# Provision and start up the virtual machine
 vagrant up;
 
-# TODO: add the .env, .htpasswd, and dist that were packaged
-
-# Run some initial setup
+# SSH in to the virtual machine
 vagrant ssh;
+
+# Change to the shared /vagrant directory
 cd /vagrant/;
+
+# Copy over the included .env and .htpasswd files to the shared /vagrant
+# Skip doing this if you already have these files.
+cp ~/.env ~/.htpasswd /vagrant/;
+
+# Build and install
+
+# Isolate the python environment and make it active
 virtualenv .;
 source bin/activate;
+
+# Use nvm to set Node version 
 nvm use;
+
+# Install front end build tools and dependencies
 npm install;
+
+# Build all the front end code in src/
 npm run build;
+
+# Build the apps for the site and create the configuration files
 make;
+
+# Install the apps
 sudo make install;
+
+# Start the site and reload the web server config
+sudo ./bin/puzzlectl.sh start
+sudo systemctl reload nginx;
+
+# Log out of the virtual machine
+exit;
 ```
 
 The pre-built box will already have some puzzles generated and the steps to do
@@ -65,15 +88,36 @@ in debug or development mode so are not optimized for handling production
 traffic.  The response time may slow down after a while because of this.
 A simple restart of the virtual machine will be needed periodically.
 
-To start the site run the `puzzlectl.sh start` command.
+To stop the site run the `puzzlectl.sh stop` command.
 
 ```bash
+# Stop the site
+vagrant ssh --command "sudo /vagrant/bin/puzzlectl.sh stop"
+
+# Shutdown the virtual machine
+vagrant halt
+```
+
+To start the site again run these commands.
+
+```bash
+# Start the virtual machine
+vagrant up;
+
+# Start the site
 vagrant ssh --command "sudo /vagrant/bin/puzzlectl.sh start"
 ```
 
 The `puzzlectl.sh` script is used to manage the different services running for
-the site.  Other sub commands besides `start` can be used such as `stop`, and
+the site.  Other sub commands besides `stop` can be used such as `start`, and
 `status`.
+
+The `bin/log.sh` is used to show the logging for the puzzle apps that are
+running.  It is sometimes useful to monitor that when troubleshooting.
+
+```bash
+vagrant ssh --command "/vagrant/bin/log.sh"
+```
 
 ## Making changes to code in `src/`
 
@@ -94,18 +138,11 @@ vagrant ssh --command "cd /vagrant/; ./bin/npmrun.sh build"
 ```
 
 When editing files in `src/` and debugging things use the `debug` instead of
-`build`.  This will create `dist/` files that are not compressed.  Use the
-`watch` sub command to automatically compile the files with each change in
-`src/` directory.
+`build`.  This will create `dist/` files that are not compressed.
 
 ```bash
 # Run this command if files in src/ have changed and needing to debug.
 vagrant ssh --command "cd /vagrant/; ./bin/npmrun.sh debug" 
-
-# Run this command to automatically compile src/ files when they are changed.
-# TODO: the watched files don't seem to work when shared from the /vagrant/ directory
-vagrant ssh --command "cd /vagrant/; ./bin/npmrun.sh watch" 
-# Use 'ctrl c' to stop the command
 ```
 
 ## List of puzzle images that were included
@@ -134,9 +171,3 @@ user/pass.  The pre-built vagrant box which should **only** be used for
 development purposes has the 'admin' user set with 'admin' as password.  Visit
 http://localhost:8080/chill/site/admin/puzzle/ to manage the puzzles on the
 site.
-
-----
-
-... Work in Progress ...
-
-TODO: publish the jkenlooper/puzzle-massive box

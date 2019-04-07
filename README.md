@@ -23,8 +23,11 @@ License.
 
 More documentation is available within the docs directory.
 
+* [Quick start guide](docs/quickstart.md) for quickly getting started by using
+    a pre-built local development virtual machine.
 * [Local development guide](docs/development.md) for getting a local version
-    running on your own machine.
+    running on your own machine.  This is an alternative and more advanced guide
+    to the quick start guide.
 * [Deployment guide](docs/deployment.md) for deploying to a live server. This
     covers both in-place deployments and blue-green deployments.
 
@@ -40,7 +43,6 @@ a piece or two are missing when putting the project together.  If you have ran
 into a problem getting this project working on your own machine; please ask for
 help.  I'm looking to improve the process where I can and am looking for more
 experience helping others in web development stuff like this.
-
 
 ## License
 

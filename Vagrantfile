@@ -12,7 +12,10 @@ Vagrant.configure(2) do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
-  config.vm.box = "bento/ubuntu-18.04"
+  # When creating the package.box use the ubuntu version below
+  #config.vm.box = "bento/ubuntu-18.04"
+  config.vm.box = "jkenlooper/puzzle-massive"
+
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -53,8 +56,7 @@ Vagrant.configure(2) do |config|
     # vb.gui = true
 
     # Customize the amount of memory on the VM:
-    # Bump this up to 2048 or more if needed.
-    vb.memory = "512"
+    vb.memory = "2048"
   end
   #
   # View the documentation for the provider you are using for more

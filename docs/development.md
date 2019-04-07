@@ -6,12 +6,16 @@ create a dist file (`make dist`) for deploying to a production server.
 
 Written for a Linux machine that is Debian based.  Only tested on Ubuntu.  Use
  [VirtualBox](https://www.virtualbox.org/) and
- [Vagrant](https://www.vagrantup.com/) or something similar if not on a Linux
- machine.
+ [Vagrant](https://www.vagrantup.com/) if not on a Linux machine.  Initialize or
+ update the `Vagrantfile` with `bento/ubuntu-18.04`.
 
 This guide assumes some familiarity with using the terminal and administrating
 a linux based machine like Ubuntu.  If something isn't working right or you get
 stuck, please reach out on the Discord chat channels for the project.
+
+A Vagrant box is available that has already been set up with some puzzles
+and such.  Please follow the [Quick start guide](quickstart.md) to get
+a virtual machine up which will use the included `Vagrantfile`.
 
 ## Initial setup
 
@@ -19,12 +23,14 @@ After cloning or forking the git repo
 [puzzle-massive](https://github.com/jkenlooper/puzzle-massive); open a terminal
 and `cd` to that directory.
 
-If using Vagrant; then run `vagrant up` and ssh in (`vagrant ssh`) and go to
+If using Vagrant; then run `vagrant up` after switching the box back to the
+ubuntu version in the `Vagrantfile` and ssh in (`vagrant ssh`) and go to
 the /vagrant/ shared directory when running the rest of the commands.
 
-If using Vagrant and VirtualBox (recommended option):
+If using Vagrant and VirtualBox:
 
 ```bash
+# Edit Vagrantfile to switch the box to ubuntu version first.
 vagrant up;
 vagrant ssh;
 
