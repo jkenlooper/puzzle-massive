@@ -27,10 +27,10 @@ If using Vagrant; then run `vagrant up` after switching the box back to the
 ubuntu version in the `Vagrantfile` and ssh in (`vagrant ssh`) and go to
 the /vagrant/ shared directory when running the rest of the commands.
 
-If using Vagrant and VirtualBox:
+If using Vagrant and VirtualBox then edit Vagrantfile to switch the box to
+ubuntu version first and enable the provisioning scripts.
 
 ```bash
-# Edit Vagrantfile to switch the box to ubuntu version first.
 vagrant up;
 vagrant ssh;
 

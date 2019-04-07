@@ -12,7 +12,8 @@ Vagrant.configure(2) do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
-  # When creating the package.box use the ubuntu version below
+  # When creating the package.box use the ubuntu version below and uncomment the
+  # provisioning scripts at the end of this Vagrantfile.
   #config.vm.box = "bento/ubuntu-18.04"
   config.vm.box = "jkenlooper/puzzle-massive"
 
@@ -78,11 +79,12 @@ Vagrant.configure(2) do |config|
   # SHELL
 
   # For vagrant just set up the dev user instead of running ./bin/init.sh
-  config.vm.provision "shell", inline: <<-SHELL
-    apt-get --yes update
-    adduser dev
-    usermod -aG sudo dev
-  SHELL
-
-  config.vm.provision "shell", path: "./bin/setup.sh"
+  # Uncomment these provision scripts if using the ubuntu box and not the
+  # pre-built jkenlooper/puzzle-massive one.
+  #config.vm.provision "shell", inline: <<-SHELL
+  #  apt-get --yes update
+  #  adduser dev
+  #  usermod -aG sudo dev
+  #SHELL
+  #config.vm.provision "shell", path: "./bin/setup.sh"
 end
