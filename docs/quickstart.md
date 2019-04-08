@@ -44,6 +44,10 @@ vagrant up;
 
 # SSH in to the virtual machine
 vagrant ssh;
+```
+
+```bash
+# After logging in to the virtual machine (vagrant ssh)
 
 # Change to the shared /vagrant directory
 cd /vagrant/;
