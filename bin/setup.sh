@@ -14,6 +14,7 @@ apt-get --yes install \
   python-dev \
   python-pip \
   sqlite3 \
+  libpq-dev \
   python-psycopg2 \
   virtualenv
 
