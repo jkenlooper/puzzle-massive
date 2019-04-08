@@ -49,6 +49,9 @@ vagrant ssh;
 ```bash
 # After logging in to the virtual machine (vagrant ssh)
 
+# Patch in any changes since this last vagrant box was published
+sudo apt-get --yes install libpq-dev
+
 # Change to the shared /vagrant directory
 cd /vagrant/;
 
