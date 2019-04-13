@@ -1,15 +1,17 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from random import randint
 
 from flask import current_app, redirect, request, make_response, abort, request
 from flask.views import MethodView
 import redis
 
-from app import db
-from database import rowify
-from constants import ACTIVE, COMPLETED
-from timeline import archive_and_clear
-from user import user_id_from_ip, user_not_banned
-from jobs.convertPiecesToRedis import convert
+from .app import db
+from .database import rowify
+from .constants import ACTIVE, COMPLETED
+from .timeline import archive_and_clear
+from .user import user_id_from_ip, user_not_banned
+from .jobs.convertPiecesToRedis import convert
 
 redisConnection = redis.from_url('redis://localhost:6379/0/')
 

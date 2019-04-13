@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import os
 from random import randint
 
@@ -6,14 +7,14 @@ from flask.views import MethodView
 import redis
 from PIL import Image
 
-from app import db
+from .app import db
 
-from database import rowify
-from constants import REBUILD, COMPLETED
-from timeline import archive_and_clear
-from user import user_id_from_ip, user_not_banned
-from jobs.convertPiecesToRedis import convert
-from tools import deletePieceDataFromRedis
+from .database import rowify
+from .constants import REBUILD, COMPLETED
+from .timeline import archive_and_clear
+from .user import user_id_from_ip, user_not_banned
+from .jobs.convertPiecesToRedis import convert
+from .tools import deletePieceDataFromRedis
 
 redisConnection = redis.from_url('redis://localhost:6379/0/')
 

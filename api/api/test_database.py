@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 import unittest
 
-from app import db
-from database import init_db, rowify
+from .app import db
+from .database import init_db, rowify
 
-from helper_tests import APITestCase
+from .helper_tests import APITestCase
 
 class DatabaseTest(APITestCase):
     def test_connection(self):

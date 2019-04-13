@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import re
 import time
@@ -135,7 +136,7 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
     db.commit()
 
     puzzle = rowify(cur.execute("select id from Puzzle where puzzle_id = :puzzle_id;", {'puzzle_id':puzzle_id}).fetchall(), cur.description)[0][0]
-    print puzzle
+    print(puzzle)
     puzzle = puzzle['id']
 
     insert_file = "insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);"

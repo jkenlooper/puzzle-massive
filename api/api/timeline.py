@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 import os
 import json
 
 from flask import current_app
 
-from app import db
-from database import rowify
+from .app import db
+from .database import rowify
 
 query_select_timeline_for_puzzle = """
 select t.player as p, t.message as m, t.points as c, t.timestamp as t

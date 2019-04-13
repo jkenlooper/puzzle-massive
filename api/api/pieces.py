@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import time
 import uuid
 
@@ -7,13 +9,13 @@ from flask.views import MethodView
 from werkzeug.exceptions import HTTPException
 import redis
 
-from app import db
-from database import fetch_query_string, rowify
-from tools import formatPieceMovementString
-from jobs.convertPiecesToRedis import convert
-from user import user_id_from_ip, increase_ban_time
+from .app import db
+from .database import fetch_query_string, rowify
+from .tools import formatPieceMovementString
+from .jobs.convertPiecesToRedis import convert
+from .user import user_id_from_ip, increase_ban_time
 
-from constants import ACTIVE, IN_QUEUE
+from .constants import ACTIVE, IN_QUEUE
 #from jobs import pieceMove
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)

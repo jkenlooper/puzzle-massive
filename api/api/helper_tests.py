@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 import unittest
 import tempfile
 import logging
 
-from app import make_app, db
+from .app import make_app, db
 
 class APITestCase(unittest.TestCase):
 

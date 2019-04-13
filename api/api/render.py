@@ -1,8 +1,10 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from flask import current_app, request, make_response, abort
 from flask.views import MethodView
 
 from api.app import db
-from database import fetch_query_string, rowify
+from .database import fetch_query_string, rowify
 from api.constants import (
         IN_RENDER_QUEUE,
         REBUILD

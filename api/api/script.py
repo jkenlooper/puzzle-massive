@@ -13,10 +13,12 @@ Subcommands:
     run     - Start the web server in the foreground. Don't use for production.
     serve   - Starts a daemon web server with Gevent.
 """
+from __future__ import print_function
+from __future__ import absolute_import
 from docopt import docopt
 #from ConfigParser import RawConfigParser
 
-from app import make_app
+from .app import make_app
 from api.tools import loadConfig
 
 def main():

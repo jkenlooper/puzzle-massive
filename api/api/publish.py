@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import datetime
 import time
 import uuid
@@ -7,14 +8,14 @@ from flask.views import MethodView
 from werkzeug.exceptions import HTTPException
 import redis
 
-from app import db
-from database import fetch_query_string, rowify
-from tools import formatPieceMovementString, formatBitMovementString, init_karma_key, get_public_karma_points
+from .app import db
+from .database import fetch_query_string, rowify
+from .tools import formatPieceMovementString, formatBitMovementString, init_karma_key, get_public_karma_points
 
-from constants import ACTIVE, IN_QUEUE, BUGGY_UNLISTED, POINT_COST_FOR_CHANGING_BIT, NEW_USER_STARTING_POINTS
+from .constants import ACTIVE, IN_QUEUE, BUGGY_UNLISTED, POINT_COST_FOR_CHANGING_BIT, NEW_USER_STARTING_POINTS
 #from jobs import pieceMove
-from jobs import pieceTranslate
-from user import user_id_from_ip, user_not_banned, increase_ban_time
+from .jobs import pieceTranslate
+from .user import user_id_from_ip, user_not_banned, increase_ban_time
 
 redisConnection = redis.from_url('redis://localhost:6379/0/')
 encoder = json.JSONEncoder(indent=2, sort_keys=True)

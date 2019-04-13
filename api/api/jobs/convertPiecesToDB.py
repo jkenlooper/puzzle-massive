@@ -1,3 +1,4 @@
+from __future__ import print_function
 # TODO: Save the pieces from redis back to the SQL DB for archiving.  The
 # pieceData in Redis should be deleted afterwards.
 #

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import re
 import uuid
 
@@ -12,7 +13,7 @@ from api.database import rowify
 from api.constants import SUGGESTED
 from api.user import user_id_from_ip
 from api.notify import send_message
-from user import user_not_banned
+from .user import user_not_banned
 
 #permissions
 PUBLIC   = 0  # obvious...

@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 import unittest
 
-from helper_tests import APITestCase
+from .helper_tests import APITestCase
 
 # Tests can be run with: `python -m unittest discover`
 # Or individually `python test_example.py`

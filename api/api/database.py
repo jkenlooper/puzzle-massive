@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 import os
 
 from flask import current_app
-from app import db
+from .app import db
 
 PUZZLE_CREATE_TABLE_LIST = (
         'create_table_puzzle.sql',

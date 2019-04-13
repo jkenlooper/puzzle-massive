@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 
 from websocket import create_connection
@@ -28,11 +29,11 @@ class PuzzlePiecesMoveSubscribeTest(APITestCase):
         "wsdump.py ws://localhost:5000/echo"
 
         ws = create_connection("ws://echo.websocket.org/")
-        print "Sending 'Hello, World'..."
+        print("Sending 'Hello, World'...")
         ws.send("Hello, World")
-        print "Sent"
-        print "Receiving..."
+        print("Sent")
+        print("Receiving...")
         result =  ws.recv()
-        print "Received '%s'" % result
+        print("Received '%s'" % result)
         assert result == "Hello, World"
         ws.close()

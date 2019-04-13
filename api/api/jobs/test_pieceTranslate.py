@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import unittest
 import tempfile
@@ -121,8 +122,8 @@ class JobTestCase(unittest.TestCase):
         (topic, msg) = translate(0, testPuzzle, piece, x, y, r, db_file=self.tmp_db.name)
         # Piece 7 moved away from 6, 5, and 0; proximity status isn't changed for those
         expectedMsg = ':{piece}:{x}:{y}:180::'.format(**locals())
-        print '({0})'.format(expectedMsg)
-        print '[{0}]'.format(msg)
+        print('({0})'.format(expectedMsg))
+        print('[{0}]'.format(msg))
         assert expectedMsg == msg
 
         cur.close()
@@ -170,8 +171,8 @@ class JobTestCase(unittest.TestCase):
         (topic, msg) = translate(0, testPuzzle, piece, x, y, r, db_file=self.tmp_db.name)
         # Pieces 11, 1 and 8 are grouped. 11 gets moved and then the others move as well.
         expectedMsg = ':{piece}:{x}:{y}:90:8:\n:1:433:31:::\n:8:303:31:::'.format(**locals())
-        print '({0})'.format(expectedMsg)
-        print '[{0}]'.format(msg)
+        print('({0})'.format(expectedMsg))
+        print('[{0}]'.format(msg))
         assert len(expectedMsg) == len(msg)
         for l in expectedMsg.split('\n'):
             assert l in msg
@@ -297,8 +298,8 @@ class JobTestCase(unittest.TestCase):
         (topic, msg) = translate(0, testPuzzle, piece, x, y, r, db_file=self.tmp_db.name)
 
         expectedMsg = ':{piece}:{x}:{y}:0::\n:6:428:218:0:4:1\n:4::::4:'.format(**locals())
-        print '({0})'.format(expectedMsg)
-        print '[{0}]'.format(msg)
+        print('({0})'.format(expectedMsg))
+        print('[{0}]'.format(msg))
         assert len(expectedMsg) == len(msg)
         for l in expectedMsg.split('\n'):
             assert l in msg
@@ -366,8 +367,8 @@ class JobTestCase(unittest.TestCase):
         (piece, x, y) = (11, 436, 293)
         (topic, msg) = translate(0, testPuzzle, piece, x, y, r, db_file=self.tmp_db.name)
         expectedMsg = ':{piece}:{x}:{y}:90:8:\n:1:493:283::4:1\n:8:363:283::4:1\n:11::::4:\n:11:428:283:90:4:1'.format(**locals())
-        print '({0})'.format(expectedMsg)
-        print '[{0}]'.format(msg)
+        print('({0})'.format(expectedMsg))
+        print('[{0}]'.format(msg))
         assert len(expectedMsg) == len(msg)
         for l in expectedMsg.split('\n'):
             assert l in msg
