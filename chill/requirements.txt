@@ -1,3 +1,4 @@
 -r ../requirements.txt
-chill==0.4.0
+https://github.com/jkenlooper/chill/archive/develop.zip#egg=chill
 psycopg2<2.9.0
+git+https://github.com/jkenlooper/pyselect#egg=pyselect
