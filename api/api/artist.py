@@ -1,3 +1,4 @@
+from builtins import map
 import os
 
 import redis

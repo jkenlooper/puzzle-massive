@@ -22,6 +22,10 @@
 
 from __future__ import absolute_import
 
+from builtins import zip
+from builtins import str
+from past.builtins import basestring
+from builtins import object
 import time
 import re
 import logging
@@ -49,7 +53,7 @@ else:
         return s.decode('unicode_escape')
     # These names don't exist in py3, so use noqa comments to disable
     # warnings in flake8.
-    unicode_type = unicode  # noqa
+    unicode_type = str  # noqa
     basestring_type = basestring  # noqa
 
 def utf8(value):

@@ -1,3 +1,4 @@
+from builtins import map
 query_idle_puzzles = """
 select * from Puzzle where m_date < datetime('now', '-10 minutes') order by m_date
 """

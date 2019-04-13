@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import map
 import os.path
 import math
 
@@ -108,7 +109,7 @@ def migrate(db, puzzle):
         #print('convert piece {id} for puzzle: {puzzle}'.format(**piece))
         offsets = get_offset_of_adjacent_pieces(piece, mask_width, piece_width)
         # Create the adjacent pieces string from offsets
-        adjacent = ' '.join(map(lambda k, v: '{0}:{1}'.format(k, v), offsets.keys(), offsets.values()))
+        adjacent = ' '.join(map(lambda k, v: '{0}:{1}'.format(k, v), list(offsets.keys()), list(offsets.values())))
         #print offsets
         # Add Piece Properties
         pc = {

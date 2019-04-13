@@ -1,3 +1,4 @@
+from builtins import range
 import unittest
 from random import randint
 from time import sleep
@@ -29,7 +30,7 @@ def make_puzzle(**kw):
             }
     puzzle.update(kw)
     pieces = []
-    for p in xrange(0, puzzle['pieces']):
+    for p in range(0, puzzle['pieces']):
         pieces.append({
             'id': p + 1,
             'puzzle': 1,

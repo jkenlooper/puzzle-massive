@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+from __future__ import division
+from past.utils import old_div
 import os
 from random import randint
 
@@ -96,7 +98,7 @@ class PuzzlePiecesRebuildView(MethodView):
         im = Image.open(imagefile)
         (width, height) = im.size
         im.close()
-        max_pieces_that_will_fit = int((width/MIN_PIECE_SIZE)*(height/MIN_PIECE_SIZE))
+        max_pieces_that_will_fit = int((old_div(width,MIN_PIECE_SIZE))*(old_div(height,MIN_PIECE_SIZE)))
 
         # The user points for rebuilding the puzzle is decreased by the piece
         # count for the puzzle. Use at least 200 points for smaller puzzles.

@@ -33,7 +33,7 @@ def convert(puzzle, db_file=None):
     for piece in all_pieces:
         #print('convert piece {id} for puzzle: {puzzle}'.format(**piece))
         offsets = {}
-        for (k, v) in map(lambda x: x.split(':'), piece.get('adjacent', '').split(' ')):
+        for (k, v) in [x.split(':') for x in piece.get('adjacent', '').split(' ')]:
             offsets[k] = v
         #print offsets
         # Add Piece Properties

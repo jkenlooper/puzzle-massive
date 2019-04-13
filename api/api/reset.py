@@ -1,5 +1,6 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import range
 from random import randint
 
 from flask import current_app, redirect, request, make_response, abort, request
@@ -102,7 +103,7 @@ class PuzzlePiecesResetView(MethodView):
 
         (result, col_names) = rowify(cur.execute(query_select_top_left_piece, {'puzzle': puzzleData['id']}).fetchall(), cur.description)
         topLeftPiece = result[0]
-        allPiecesExceptTopLeft = range(0, puzzleData['pieces'])
+        allPiecesExceptTopLeft = list(range(0, puzzleData['pieces']))
         allPiecesExceptTopLeft.remove(topLeftPiece['id'])
 
         # Create a pipe for buffering commands and disable atomic transactions

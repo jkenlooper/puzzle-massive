@@ -1,3 +1,8 @@
+from __future__ import division
+from builtins import map
+from builtins import zip
+from builtins import str
+from past.utils import old_div
 import os.path
 import math
 import time
@@ -15,7 +20,7 @@ RECENT_POINTS_EXPIRE = 7200
 PIECE_GROUP_MOVE_MAX_BEFORE_PENALTY = 5
 MAX_RECENT_POINTS = 25
 MAX_KARMA = 25
-MIN_KARMA = (int(MAX_KARMA/2) * -1) # -12
+MIN_KARMA = (int(old_div(MAX_KARMA,2)) * -1) # -12
 
 POINTS_CAP = 15000
 
@@ -177,7 +182,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         pipe = redisConnection.pipeline(transaction=True)
         for groupedPiece in allOtherPiecesInPieceGroup:
             pipe.hmget('pc:{puzzle}:{groupedPiece}'.format(puzzle=puzzle, groupedPiece=groupedPiece), ['x', 'y'])
-        groupedPiecesXY = dict(zip(allOtherPiecesInPieceGroup, pipe.execute()))
+        groupedPiecesXY = dict(list(zip(allOtherPiecesInPieceGroup, pipe.execute())))
         #print 'groupedPiecesXY'
         #print groupedPiecesXY
 
@@ -233,12 +238,12 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         y = puzzleData['table_height']
 
     # Save the origin position
-    (originX, originY) = map(int, redisConnection.hmget('pc:{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ['x', 'y']))
+    (originX, originY) = list(map(int, redisConnection.hmget('pc:{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ['x', 'y'])))
 
     pieceGroup = redisConnection.hget('pc:{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), 'g')
 
     # Check proximity to other pieces with unique groups
-    tolerance = int(100/2)
+    tolerance = int(old_div(100,2))
     #print('{0} {1} {2}'.format('pcx:{puzzle}'.format(**locals()), x - tolerance, x + tolerance))
     proximityX = set(map(int, redisConnection.zrangebyscore('pcx:{puzzle}'.format(puzzle=puzzle), x - tolerance, x + tolerance)))
     proximityY = set(map(int, redisConnection.zrangebyscore('pcy:{puzzle}'.format(puzzle=puzzle), y - tolerance, y + tolerance)))
@@ -317,11 +322,11 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     p += formatPieceMovementString(piece, **pieceProperties)
 
     # Get Adjacent Piece Properties
-    adjacentPiecesList = map(int, filter(lambda x: x not in ('x', 'y', 'r', 'w', 'h', 'b', 'rotate', 'g', 's'), pieceProperties.keys()))
+    adjacentPiecesList = list(map(int, [x for x in list(pieceProperties.keys()) if x not in ('x', 'y', 'r', 'w', 'h', 'b', 'rotate', 'g', 's')]))
     pipe = redisConnection.pipeline(transaction=False)
     for adjacentPiece in adjacentPiecesList:
         pipe.hgetall('pc:{puzzle}:{adjacentPiece}'.format(puzzle=puzzle, adjacentPiece=adjacentPiece))
-    adjacentPieceProperties = dict(zip(adjacentPiecesList, pipe.execute()))
+    adjacentPieceProperties = dict(list(zip(adjacentPiecesList, pipe.execute())))
     #print adjacentPieceProperties
 
     # Check if piece is close enough to any adjacent piece
@@ -335,7 +340,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
                 #print('Skipping since adjacent piece in same group')
                 continue
 
-        (offsetFromPieceX, offsetFromPieceY) = map(int, pieceProperties.get(str(adjacentPiece)).split(','))
+        (offsetFromPieceX, offsetFromPieceY) = list(map(int, pieceProperties.get(str(adjacentPiece)).split(',')))
         targetX = offsetFromPieceX + int(pieceProperties['x'])
         targetY = offsetFromPieceY + int(pieceProperties['y'])
         adjacentPieceProps = adjacentPieceProperties.get(adjacentPiece)

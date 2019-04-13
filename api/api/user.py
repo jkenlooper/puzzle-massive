@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import str
+from past.utils import old_div
 import crypt
 import string
 import random
@@ -58,7 +61,7 @@ def generate_password():
     "Create a random string for use as password. Return as cleartext and encrypted."
     timestamp = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
     random_int = random.randint(1, 99999)
-    p_string = hashlib.sha224("%s%i" % (timestamp, int(random_int/2))).hexdigest()[:13]
+    p_string = hashlib.sha224("%s%i" % (timestamp, int(old_div(random_int,2)))).hexdigest()[:13]
     salt = '%s%s' % (random.choice(LETTERS), random.choice(LETTERS))
     password = crypt.crypt(p_string, salt)
 

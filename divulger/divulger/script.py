@@ -1,9 +1,10 @@
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
 import sys
 
 from collections import OrderedDict
 
-from ConfigParser import RawConfigParser
 from geventwebsocket import WebSocketServer, Resource
 
 from api.tools import loadConfig

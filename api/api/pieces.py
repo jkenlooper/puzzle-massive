@@ -1,5 +1,6 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import zip
 import time
 import uuid
 
@@ -120,7 +121,7 @@ class PuzzlePiecesView(MethodView):
             pipe.hmget('pc:{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), *publicPieceProperties)
         allPublicPieceProperties = pipe.execute()
         # convert the list of lists into list of dicts.  Only want to return the public piece props.
-        pieces = map(lambda properties: dict(zip(publicPieceProperties, properties)), allPublicPieceProperties)
+        pieces = [dict(list(zip(publicPieceProperties, properties))) for properties in allPublicPieceProperties]
         # TODO: Change piece properties to int type instead of string
         for item in all_pieces:
             piece = item.get('id')

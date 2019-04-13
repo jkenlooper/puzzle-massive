@@ -26,7 +26,7 @@ def puzzle_updates(ws, puzzle):
         print('clients: {0}'.format(len(ws.handler.server.clients)))
         # TODO: With redis set the count of total players on the site as well as for each puzzle.
                 
-        for (key, client) in ws.handler.server.clients.items():
+        for (key, client) in list(ws.handler.server.clients.items()):
             if client.ws.closed:
                 # TODO: I don't think this happens.  This code block hasn't been tested.
                 print('remove closed client {0}'.format(key))
@@ -120,7 +120,7 @@ def puzzle_updates(ws, puzzle):
         # Close all connections for this puzzle if it's stale
         if (ws.handler.environ['last_activity'] + 60) < int(time.time()):
             print("close all stale connections for puzzle {0}".format(puzzle))
-            for (key, client) in ws.handler.server.clients.items():
+            for (key, client) in list(ws.handler.server.clients.items()):
                 if client.ws.path.find(puzzle) != -1:
                     ws.handler.server.clients.pop(key)
 

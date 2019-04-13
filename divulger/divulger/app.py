@@ -85,7 +85,7 @@ class DivulgeApplication(WebSocketApplication):
         #print('clients: {0}'.format(len(self.ws.handler.server.clients)))
         # TODO: With redis set the count of total players on the site as well as for each puzzle.
 
-        for (key, client) in self.ws.handler.server.clients.items():
+        for (key, client) in list(self.ws.handler.server.clients.items()):
             if client.ws.closed:
                 # TODO: I don't think this happens.  This code block hasn't been tested.
                 print('remove closed client {0}'.format(key))

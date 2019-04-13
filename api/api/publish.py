@@ -1,4 +1,8 @@
 from __future__ import absolute_import
+from __future__ import division
+from builtins import str
+from builtins import map
+from past.utils import old_div
 import datetime
 import time
 import uuid
@@ -25,7 +29,7 @@ MINUTE = 60 # minute in seconds
 
 BLOCKEDPLAYER_EXPIRE_TIMEOUT = HOUR
 MAX_KARMA = 25
-MIN_KARMA = (int(MAX_KARMA/2) * -1) # -12
+MIN_KARMA = (int(old_div(MAX_KARMA,2)) * -1) # -12
 MOVES_BEFORE_PENALTY = 12
 STACK_PENALTY = 1
 HOTSPOT_EXPIRE = 30
@@ -249,7 +253,7 @@ class PuzzlePieceTokenView(MethodView):
         redisConnection.set('token:{}'.format(user), '{puzzle}:{piece}:{mark}'.format(puzzle=puzzle, piece=piece, mark=mark), ex=TOKEN_LOCK_TIMEOUT)
 
         # Claim the piece by showing the bit icon next to it.
-        (x, y) = map(int, redisConnection.hmget('pc:{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ['x', 'y']))
+        (x, y) = list(map(int, redisConnection.hmget('pc:{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ['x', 'y'])))
         msg = formatBitMovementString(user, x, y)
         redisConnection.publish(u'move:{0}'.format(puzzle_id), msg)
 
@@ -303,7 +307,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         if request.form:
             args.update(request.form.to_dict(flat=True))
 
-        if len(args.keys()) == 0:
+        if len(list(args.keys())) == 0:
             err_msg = {
                 'msg': "invalid args",
                 'type': "invalid",
@@ -312,7 +316,7 @@ class PuzzlePiecesMovePublishView(MethodView):
             }
             return make_response(encoder.encode(err_msg), 400)
         # check if args are only in acceptable set
-        if len(self.ACCEPTABLE_ARGS.intersection(set(args.keys()))) != len(args.keys()):
+        if len(self.ACCEPTABLE_ARGS.intersection(set(args.keys()))) != len(list(args.keys())):
             err_msg = {
                 'msg': "invalid args",
                 'type': "invalid",
@@ -321,7 +325,7 @@ class PuzzlePiecesMovePublishView(MethodView):
             }
             return make_response(encoder.encode(err_msg), 400)
         # validate that all values are int
-        for key, value in args.items():
+        for key, value in list(args.items()):
             if not isinstance(value, int):
                 try:
                     args[key] = int(value)
@@ -544,7 +548,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         # what pieceTranslate does.  This includes immovable pieces, and the
         # pieces own group which would normally be filtered out when checking
         # if the piece can be joined.
-        (pieceWidth, pieceHeight) = map(int, redisConnection.hmget('pc:{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ['w', 'h']))
+        (pieceWidth, pieceHeight) = list(map(int, redisConnection.hmget('pc:{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), ['w', 'h'])))
         toleranceX = min(pieceWidth, 200)
         toleranceY = min(pieceHeight, 200)
         proximityX = set(map(int, redisConnection.zrangebyscore('pcx:{puzzle}'.format(puzzle=puzzle), int(x) - toleranceX, int(x) + toleranceX)))

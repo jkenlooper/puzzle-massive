@@ -1,4 +1,9 @@
 from __future__ import print_function
+from __future__ import division
+from builtins import map
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import os
 import json
 import sys
@@ -190,7 +195,7 @@ def render(*args):
 
         # Update the css file with dimensions for puzzle outline
         cssfile = open(os.path.join(puzzle_dir, 'scale-100', 'raster.css'), 'a')
-        cssfile.write("[id=puzzle-outline]{{width:{width}px;height:{height}px;left:{left}px;top:{top}px;}}".format(width=pieces.width, height=pieces.height, left=int(round((tw - pieces.width) / 2)), top=int(round((th - pieces.height) / 2))))
+        cssfile.write("[id=puzzle-outline]{{width:{width}px;height:{height}px;left:{left}px;top:{top}px;}}".format(width=pieces.width, height=pieces.height, left=int(round(old_div((tw - pieces.width), 2))), top=int(round(old_div((th - pieces.height), 2)))))
         cssfile.close()
 
 
@@ -198,7 +203,7 @@ def render(*args):
         top_left_piece = "0"
         minLeft = piece_bboxes[top_left_piece][0]
         minTop = piece_bboxes[top_left_piece][1]
-        for key in piece_bboxes.keys():
+        for key in list(piece_bboxes.keys()):
             if piece_bboxes[key][0] <= minLeft and piece_bboxes[key][1] <= minTop:
                 top_left_piece = key
                 minLeft = piece_bboxes[key][0]
@@ -226,8 +231,8 @@ def render(*args):
                 })
 
         # Set the top left piece to the top left corner and make it immovable
-        piece_properties[top_left_piece]["x"] = int(round((tw - pieces.width) / 2))
-        piece_properties[top_left_piece]["y"] = int(round((th - pieces.height) / 2))
+        piece_properties[top_left_piece]["x"] = int(round(old_div((tw - pieces.width), 2)))
+        piece_properties[top_left_piece]["y"] = int(round(old_div((th - pieces.height), 2)))
         piece_properties[top_left_piece]["status"] = 1
         piece_properties[top_left_piece]["g"] = top_left_piece
         # set row and col for finding the top left piece again after reset of puzzle
@@ -267,10 +272,10 @@ def render(*args):
             filtered_adjacent_pieces = {}
 
             # filter out the corner adjacent pieces
-            for target_id, target_adjacent_list in adjacent_pieces.items():
+            for target_id, target_adjacent_list in list(adjacent_pieces.items()):
                 target_bbox = piece_bboxes[target_id] # [0, 0, 499, 500]
-                target_center_x = target_bbox[0] + int(round((target_bbox[2] - target_bbox[0]) / 2))
-                target_center_y = target_bbox[1] + int(round((target_bbox[3] - target_bbox[1]) / 2))
+                target_center_x = target_bbox[0] + int(round(old_div((target_bbox[2] - target_bbox[0]), 2)))
+                target_center_y = target_bbox[1] + int(round(old_div((target_bbox[3] - target_bbox[1]), 2)))
                 filtered_adjacent_list = []
                 for adjacent_id in target_adjacent_list:
                     adjacent_bbox = piece_bboxes[adjacent_id] # [0, 347, 645, 996]
@@ -314,7 +319,7 @@ def render(*args):
                 x = piece_bboxes[adj_pc][0] - origin_x
                 y = piece_bboxes[adj_pc][1] - origin_y
                 offsets[adj_pc] = '{x},{y}'.format(x=x, y=y)
-            adjacent_str = ' '.join(map(lambda k, v: '{0}:{1}'.format(k, v), offsets.keys(), offsets.values()))
+            adjacent_str = ' '.join(map(lambda k, v: '{0}:{1}'.format(k, v), list(offsets.keys()), list(offsets.values())))
             pc['adjacent'] = adjacent_str
 
         # The original.jpg is assumed to be available locally because of migratePuzzleFile.py

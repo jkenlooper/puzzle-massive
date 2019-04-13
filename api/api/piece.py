@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from builtins import zip
 from flask import abort, json, current_app
 from flask.views import MethodView
 import redis
@@ -44,5 +45,5 @@ class PuzzlePieceView(MethodView):
         # Fetch just the piece properties
         publicPieceProperties = ('x', 'y', 'rotate', 's', 'w', 'h', 'b')
         pieceProperties = redisConnection.hmget('pc:{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), *publicPieceProperties)
-        pieceData = dict(zip(publicPieceProperties, pieceProperties))
+        pieceData = dict(list(zip(publicPieceProperties, pieceProperties)))
         return encoder.encode(pieceData)

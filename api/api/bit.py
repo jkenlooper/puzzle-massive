@@ -1,3 +1,4 @@
+from builtins import str
 from random import randint
 
 from flask import current_app, abort, json, redirect, make_response, request
@@ -56,7 +57,7 @@ class ChooseBitView(MethodView):
         # List of bit icon names that are available
         result = cur.execute(fetch_query_string('select_random_bit_batch.sql'), {'offset_time': offset_time}).fetchall()
         (result, col_names) = rowify(result, cur.description)
-        bits = map(lambda x: x['icon'], result)
+        bits = [x['icon'] for x in result]
 
 
         response = make_response(encoder.encode({'data':bits}), 200)

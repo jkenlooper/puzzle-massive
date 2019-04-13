@@ -5,6 +5,8 @@ Meant to run periodically to migrate existing puzzles.  Will not handle rerender
 - If source.unsplash; update description with links to photographer and unsplash.  Include photo description on next line.
 """
 
+from future import standard_library
+standard_library.install_aliases()
 import re
 import sqlite3
 import os
@@ -13,7 +15,7 @@ import sys
 import time
 import math
 import random
-from urlparse import urlparse
+from urllib.parse import urlparse
 import requests
 import logging
 

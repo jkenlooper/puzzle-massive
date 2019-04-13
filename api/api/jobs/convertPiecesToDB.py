@@ -5,6 +5,7 @@ from __future__ import print_function
 # This job should be ran by a janitor worker.  It should find all puzzles in
 # redis that haven't had any activity in the last week or so.
 
+from builtins import input
 import sys
 import os.path
 import math
@@ -97,6 +98,6 @@ def transferAll():
         print('used_memory: {used_memory_human}'.format(**memory))
 
 if __name__ == '__main__':
-    confirm = raw_input("Transfer all puzzle data out of redis and into sqlite database? y/n\n")
+    confirm = input("Transfer all puzzle data out of redis and into sqlite database? y/n\n")
     if confirm == 'y':
         transferAll()
