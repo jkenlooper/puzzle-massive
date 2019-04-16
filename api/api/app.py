@@ -3,14 +3,11 @@ import os
 from werkzeug.local import LocalProxy
 from flask import Flask
 from flask import Flask, g, current_app
-#from flask_sockets import Sockets
-#from geventwebsocket import WebSocketServer, Resource
 import sqlite3
 import redis
 
 from rq import Queue
 from rq.job import Job
-#from worker import redisConnection
 
 from api.flask_secure_cookie import SecureCookie
 
@@ -79,13 +76,10 @@ def make_app(config=None, **kw):
     #
     app.secure_cookie = SecureCookie(app, cookie_secret=kw['cookie_secret'])
 
-    #sockets = Sockets(app)
-
     redisConnection = redis.from_url(app.config.get('REDIS_URI', 'redis://localhost:6379/0/'))
 
     app.queries = files_loader('queries')
 
-    app.queue = Queue('puzzle_updates', connection=redisConnection)
     app.cleanupqueue = Queue('puzzle_cleanup', connection=redisConnection)
     app.createqueue = Queue('puzzle_create', connection=redisConnection)
 
@@ -113,7 +107,6 @@ def make_app(config=None, **kw):
     from api.piece import PuzzlePieceView
     from api.publish import PuzzlePiecesMovePublishView, PuzzlePieceTokenView
     from api.pieces import PuzzlePiecesView
-    #from subscribe import puzzle_updates
     #from api.reset import PuzzlePiecesResetView
     from api.rebuild import PuzzlePiecesRebuildView
     from api.upload import PuzzleUploadView, AdminPuzzlePromoteSuggestedView
@@ -192,11 +185,6 @@ def make_app(config=None, **kw):
                      view_func=AdminBlockedPlayersList.as_view('admin-player-blocked'))
     app.add_url_rule('/admin/user/banned/',
                      view_func=AdminBannedUserList.as_view('admin-user-banned'))
-
-
-
-    # register the websockets
-    #sockets.add_url_rule('/puzzle/<puzzle>/updates/', 'puzzle_updates', puzzle_updates)
 
     return app
 

@@ -55,16 +55,16 @@ class PuzzlePiecesMovePublishTest(APITestCase):
             with self.app.test_client() as c:
                 init_db()
 
-    def tearDown(self):
-        for jobID in self.jobs:
-            self.waitForJob(jobID)
+    #def tearDown(self):
+    #    for jobID in self.jobs:
+    #        self.waitForJob(jobID)
 
-        super(PuzzlePiecesMovePublishTest, self).tearDown()
+    #    super(PuzzlePiecesMovePublishTest, self).tearDown()
 
-    def waitForJob(self, jobID):
-        job = self.app.queue.fetch_job(jobID)
-        while not (job.is_finished or job.is_failed):
-            sleep(.5)
+    #def waitForJob(self, jobID):
+    #    job = self.app.queue.fetch_job(jobID)
+    #    while not (job.is_finished or job.is_failed):
+    #        sleep(.5)
 
     def test_patch_request_valid(self):
         "Patch response 204 for valid requests"
@@ -85,7 +85,7 @@ class PuzzlePiecesMovePublishTest(APITestCase):
 
                 self.jobs.append(rv.headers.get('Job-ID'))
 
-                #partial 
+                #partial
                 data = { 'x': 1 }
                 rv = c.patch('/puzzle/{puzzle_id}/piece/{piece}/move/'.format(puzzle_id=puzzle_abc.get('puzzle_id'), piece=1),
                         follow_redirects=True, data=data, headers=headers)
@@ -160,7 +160,7 @@ class PuzzlePiecesMovePublishTest(APITestCase):
                 (puzzle_abc, pieces_abc) = make_puzzle()
                 self.insertPuzzleAndPieces(puzzle_abc, pieces_abc)
 
-                
+
                 # 403 for moving a piece without a token
                 data = { 'x': 1 }
                 rv = c.patch('/puzzle/abc/piece/2/move/', follow_redirects=True, data=data, headers={})
