@@ -25,9 +25,6 @@ def main():
     ""
     args = docopt(__doc__, version='0.0')
     config_file = args['--config']
-    # parse args and pass to run, server, etc.
-    #site_config = RawConfigParser()
-    #site_config.read('site.cfg')
 
     appconfig = loadConfig(config_file)
     cookie_secret = appconfig.get('SECURE_COOKIE_SECRET')
@@ -53,8 +50,6 @@ def run(config, cookie_secret):
 
 def serve(config, cookie_secret):
     from gevent import pywsgi
-    #from geventwebsocket.handler import WebSocketHandler
-    #from geventwebsocket import WebSocketServer, Resource
 
     app = make_app(config=config, cookie_secret=cookie_secret)
 

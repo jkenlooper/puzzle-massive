@@ -33,7 +33,7 @@ CACHEDIR := $(PREFIXDIR)/var/lib/puzzle-massive/cache/
 INTERNALIP := $(shell hostname -I | cut -d' ' -f1)
 
 # Get the version from the package.json
-TAG := $(shell cat package.json | python -c 'import sys, json; print json.load(sys.stdin)["version"]')
+TAG := $(shell cat package.json | python -c 'import sys, json; print(json.load(sys.stdin)["version"])')
 
 # For debugging what is set in variables
 inspect.%:
@@ -43,7 +43,7 @@ ifeq ($(shell which virtualenv),)
 $(error run "./bin/setup.sh" to install virtualenv)
 endif
 ifeq ($(shell ls bin/activate),)
-$(error run "virtualenv .")
+$(error run "virtualenv . -p python2")
 endif
 ifneq ($(shell which pip),$(project_dir)bin/pip)
 $(warning run "source bin/activate" to activate the virtualenv. Using $(shell which pip). Ignore this warning if using sudo make install.)
@@ -62,7 +62,7 @@ objects := site.cfg web/puzzle-massive.conf stats/awstats.puzzle.massive.xyz.con
 	#openssl dhparam -out $@ 2048
 
 bin/chill: chill/requirements.txt requirements.txt
-	pip install -r $<
+	pip install --upgrade --upgrade-strategy eager -r $<
 	touch $@;
 
 objects += chill/puzzle-massive-chill.service
@@ -77,11 +77,11 @@ frozen.tar.gz: db.dump.sql site.cfg package.json $(shell find templates/ -type f
 
 # Also installs janitor and artist
 bin/puzzle-massive-api: api/requirements.txt requirements.txt api/setup.py
-	pip install -r $<
+	pip install --upgrade --upgrade-strategy eager -r $<
 	touch $@;
 
 bin/puzzle-massive-divulger: divulger/requirements.txt requirements.txt divulger/setup.py
-	pip install -r $<
+	pip install --upgrade --upgrade-strategy eager -r $<
 	touch $@;
 
 

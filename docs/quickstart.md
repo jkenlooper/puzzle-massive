@@ -62,7 +62,7 @@ cp ~/.env ~/.htpasswd /vagrant/;
 # Build and install
 
 # Isolate the python environment and make it active
-virtualenv .;
+virtualenv . -p python2;
 source bin/activate;
 
 # Use nvm to set Node version 

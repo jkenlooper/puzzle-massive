@@ -35,4 +35,5 @@
 /thresholder.py
 /viewer.py
 /wsdump.py
-
+/futurize
+/pasteurize

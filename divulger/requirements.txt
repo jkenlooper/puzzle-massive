@@ -1,2 +1,5 @@
 -r ../requirements.txt
+websocket-client==0.53.0
+gevent-websocket==0.10.1
+# TODO: include numpy and wsaccel to improve performance of ws.send
 -e divulger/

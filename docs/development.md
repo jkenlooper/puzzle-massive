@@ -178,7 +178,7 @@ When first installing on the dev machine run:
 
 ```bash
 # Setup to use a virtual python environment
-virtualenv .;
+virtualenv . -p python2;
 source bin/activate;
 
 # Makes the initial development version
