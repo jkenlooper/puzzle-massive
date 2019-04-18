@@ -204,7 +204,7 @@ class PuzzlePieceTokenView(MethodView):
             # Append this player to a queue for getting the next token. This
             # will prevent the player with the lock from continually locking the
             # same piece.
-            redisConnection.zadd(piece_token_queue_key, user, now)
+            redisConnection.zadd(piece_token_queue_key, {user: now})
             queue_rank = redisConnection.zrank(piece_token_queue_key, user)
         redisConnection.expire(piece_token_queue_key, TOKEN_LOCK_TIMEOUT + 5)
 
@@ -529,15 +529,15 @@ class PuzzlePiecesMovePublishView(MethodView):
                 blockedplayers_for_puzzle_key = 'blockedplayers:{puzzle}'.format(puzzle=puzzle)
                 # Add the player to the blocked players list for the puzzle and
                 # extend the expiration of the key.
-                redisConnection.zadd(blockedplayers_for_puzzle_key, user, expires)
+                redisConnection.zadd(blockedplayers_for_puzzle_key, {user: expires})
                 redisConnection.expire(blockedplayers_for_puzzle_key, BLOCKEDPLAYER_EXPIRE_TIMEOUT)
 
                 # Reset the karma for the player
                 redisConnection.delete(karma_key)
 
                 # TODO: drop these keys
-                redisConnection.zadd('blockedplayers', '{ip}-{user}'.format(ip=ip, user=user), int(time.time()))
-                redisConnection.zadd('blockedplayers:puzzle', '{ip}-{user}-{puzzle}'.format(ip=ip, user=user, puzzle=puzzle), int(recent_points))
+                redisConnection.zadd('blockedplayers', {'{ip}-{user}'.format(ip=ip, user=user): int(time.time())})
+                redisConnection.zadd('blockedplayers:puzzle', {'{ip}-{user}-{puzzle}'.format(ip=ip, user=user, puzzle=puzzle): int(recent_points)})
 
                 err_msg = get_blockedplayers_err_msg(expires, expires - now)
                 err_msg['karma'] = get_public_karma_points(redisConnection, ip, user, puzzle)

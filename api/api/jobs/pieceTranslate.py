@@ -110,7 +110,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         # Update puzzle last modified date only if joined a piece
         if points != 0:
             cur.execute(query_update_puzzle_m_date, {'puzzle':puzzle})
-        redisConnection.zadd('pcupdates', puzzle, int(time.time()))
+        redisConnection.zadd('pcupdates', {puzzle: int(time.time())})
 
         #TODO:
         #return (topic, msg)
@@ -170,8 +170,8 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     def savePiecePosition(puzzle, piece, x, y):
         # Move the piece
         redisConnection.hmset('pc:{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), {'x': x, 'y': y})
-        redisConnection.zadd('pcx:{puzzle}'.format(puzzle=puzzle), piece, x)
-        redisConnection.zadd('pcy:{puzzle}'.format(puzzle=puzzle), piece, y)
+        redisConnection.zadd('pcx:{puzzle}'.format(puzzle=puzzle), {piece: x})
+        redisConnection.zadd('pcy:{puzzle}'.format(puzzle=puzzle), {piece: y})
 
     def updateGroupedPiecesPositions(puzzle, piece, pieceGroup, offsetX, offsetY, newGroup=None, status=None):
         "Update all other pieces x,y in group to the offset, if newGroup then assign them to the newGroup"
@@ -202,8 +202,8 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
                 pipe.sadd('pcfixed:{puzzle}'.format(puzzle=puzzle), groupedPiece)
                 pipe.srem('pcstacked:{puzzle}'.format(puzzle=puzzle), groupedPiece)
             pipe.hmset('pc:{puzzle}:{groupedPiece}'.format(puzzle=puzzle, groupedPiece=groupedPiece), newPC)
-            pipe.zadd('pcx:{puzzle}'.format(puzzle=puzzle), groupedPiece, newX)
-            pipe.zadd('pcy:{puzzle}'.format(puzzle=puzzle), groupedPiece, newY)
+            pipe.zadd('pcx:{puzzle}'.format(puzzle=puzzle), {groupedPiece: newX})
+            pipe.zadd('pcy:{puzzle}'.format(puzzle=puzzle), {groupedPiece: newY})
             lines.append(formatPieceMovementString(groupedPiece, x=newX, y=newY, g=newGroup, s=status))
         if status == '1':
             pipe.sadd('pcfixed:{puzzle}'.format(puzzle=puzzle), piece)
@@ -266,13 +266,13 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     lines = []
     if len(piecesInProximity) >= 4:
         pipe = redisConnection.pipeline(transaction=False)
-        pipe.sadd('pcstacked:{puzzle}'.format(puzzle=puzzle), piecesInProximity)
+        pipe.sadd('pcstacked:{puzzle}'.format(puzzle=puzzle), *piecesInProximity)
         for pieceInProximity in piecesInProximity:
             pipe.hset('pc:{puzzle}:{pieceInProximity}'.format(puzzle=puzzle, pieceInProximity=pieceInProximity), 's', 2)
             lines.append(formatPieceMovementString(pieceInProximity, s=2))
         pipe.hmset('pc:{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece), {'x': x, 'y': y, 's': 2})
-        pipe.zadd('pcx:{puzzle}'.format(puzzle=puzzle), piece, x)
-        pipe.zadd('pcy:{puzzle}'.format(puzzle=puzzle), piece, y)
+        pipe.zadd('pcx:{puzzle}'.format(puzzle=puzzle), {piece: x})
+        pipe.zadd('pcy:{puzzle}'.format(puzzle=puzzle), {piece: y})
         pipe.execute()
         p = '\n'.join(lines)
         p += '\n'
@@ -299,7 +299,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     elif len(piecesInProximity) > 1:
         #print piecesInProximity
         pipe = redisConnection.pipeline(transaction=False)
-        pipe.srem('pcstacked:{puzzle}'.format(puzzle=puzzle), piecesInProximity)
+        pipe.srem('pcstacked:{puzzle}'.format(puzzle=puzzle), *piecesInProximity)
         for pieceInProximity in piecesInProximity:
             pipe.hdel('pc:{puzzle}:{pieceInProximity}'.format(puzzle=puzzle, pieceInProximity=pieceInProximity), 's')
             lines.append(formatPieceMovementString(pieceInProximity, s=None))

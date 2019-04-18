@@ -71,13 +71,13 @@ def convert(puzzle, db_file=None):
                 pipe.sadd('pcstacked:{puzzle}'.format(**locals()), piece['id'])
 
         # Add Piece x Set
-        pipe.zadd('pcx:{puzzle}'.format(**piece), piece['id'], piece['x'])
+        pipe.zadd('pcx:{puzzle}'.format(**piece), {piece['id']: piece['x']})
 
         # Add Piece y Set
-        pipe.zadd('pcy:{puzzle}'.format(**piece), piece['id'], piece['y'])
+        pipe.zadd('pcy:{puzzle}'.format(**piece), {piece['id']: piece['y']})
 
     # Add to the pcupdates sorted set
-    pipe.zadd('pcupdates', puzzle, int(time.time()))
+    pipe.zadd('pcupdates', {puzzle: int(time.time())})
 
     pipe.execute()
     cur.close()

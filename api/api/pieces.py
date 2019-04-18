@@ -103,7 +103,7 @@ class PuzzlePiecesView(MethodView):
         else:
             # The act of just loading the puzzle should update the pcupdates.
             # This will prevent the puzzle from being deleted by the janitor.
-            redisConnection.zadd('pcupdates', puzzle, int(time.time()))
+            redisConnection.zadd('pcupdates', {puzzle: int(time.time())})
 
 
         query = """select id from Piece where (puzzle = :puzzle)"""

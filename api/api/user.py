@@ -135,7 +135,7 @@ def increase_ban_time(user, seconds):
     current = int(redisConnection.zscore('bannedusers', user) or now)
     current = max(current, now)
     ban_timestamp = min(current + seconds, now + MAX_BAN_TIME)
-    redisConnection.zadd('bannedusers', user, ban_timestamp)
+    redisConnection.zadd('bannedusers', {user: ban_timestamp})
     return {
         'msg': "Temporarily banned. Ban time has increased by {} seconds".format(seconds),
         'type': "bannedusers",

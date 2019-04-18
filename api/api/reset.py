@@ -133,8 +133,8 @@ class PuzzlePiecesResetView(MethodView):
 
         # Add top left piece group back in
         pipe.sadd('pcg:{puzzle}:{topLeft}'.format(puzzle=puzzle, topLeft=topLeftPiece['parent']), topLeftPiece['id'])
-        pipe.zadd('pcx:{puzzle}'.format(puzzle=puzzle), topLeftPiece['id'], topLeftPiece['x'])
-        pipe.zadd('pcy:{puzzle}'.format(puzzle=puzzle), topLeftPiece['id'], topLeftPiece['y'])
+        pipe.zadd('pcx:{puzzle}'.format(puzzle=puzzle), {topLeftPiece['id']: topLeftPiece['x']})
+        pipe.zadd('pcy:{puzzle}'.format(puzzle=puzzle), {topLeftPiece['id']: topLeftPiece['y']})
 
         # Randomize piece x, y
         for piece in allPiecesExceptTopLeft:
@@ -144,8 +144,8 @@ class PuzzlePiecesResetView(MethodView):
                 'x': x,
                 'y': y,
                 })
-            pipe.zadd('pcx:{puzzle}'.format(puzzle=puzzle), piece, x)
-            pipe.zadd('pcy:{puzzle}'.format(puzzle=puzzle), piece, y)
+            pipe.zadd('pcx:{puzzle}'.format(puzzle=puzzle), {piece: x})
+            pipe.zadd('pcy:{puzzle}'.format(puzzle=puzzle), {piece: y})
 
         pipe.execute()
         cur.execute(query_update_status_puzzle_for_puzzle_id, {'puzzle_id': puzzle_id, 'status': ACTIVE})
