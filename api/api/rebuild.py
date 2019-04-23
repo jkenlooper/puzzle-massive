@@ -18,7 +18,7 @@ from .user import user_id_from_ip, user_not_banned
 from .jobs.convertPiecesToRedis import convert
 from .tools import deletePieceDataFromRedis
 
-redisConnection = redis.from_url('redis://localhost:6379/0/')
+redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
 
 query_select_puzzle_for_puzzle_id_and_status = """
 select * from Puzzle where puzzle_id = :puzzle_id and status = :status

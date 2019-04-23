@@ -10,7 +10,7 @@ from api.database import rowify
 from api.tools import formatPieceMovementString
 from api.constants import COMPLETED
 
-redisConnection = redis.from_url('redis://localhost:6379/0/')
+redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
 
 def convert(puzzle, db_file=None):
     if db_file:

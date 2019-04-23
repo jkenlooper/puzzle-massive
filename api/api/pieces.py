@@ -21,7 +21,7 @@ from .constants import ACTIVE, IN_QUEUE
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
-redisConnection = redis.from_url('redis://localhost:6379/0/')
+redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
 
 # TODO: create a puzzle status web socket that will update when the status of
 # the puzzle changes from converting, done, active, etc.

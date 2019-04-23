@@ -1,5 +1,5 @@
 from __future__ import division
-from builtins import str
+from builtins import str, bytes
 from past.utils import old_div
 import crypt
 import string
@@ -54,14 +54,14 @@ QUERY_USER_ID_BY_LOGIN = """
 select id from User where ip = :ip and login = :login;
 """
 
-redisConnection = redis.from_url('redis://localhost:6379/0/')
+redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
 def generate_password():
     "Create a random string for use as password. Return as cleartext and encrypted."
     timestamp = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
     random_int = random.randint(1, 99999)
-    p_string = hashlib.sha224("%s%i" % (timestamp, int(old_div(random_int,2)))).hexdigest()[:13]
+    p_string = hashlib.sha224(bytes("%s%i" % (timestamp, int(old_div(random_int,2))), 'utf-8')).hexdigest()[:13]
     salt = '%s%s' % (random.choice(LETTERS), random.choice(LETTERS))
     password = crypt.crypt(p_string, salt)
 
@@ -71,7 +71,7 @@ def generate_user_login():
     "Create a unique login"
     timestamp = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
     random_int = random.randint(1, 99999)
-    login = hashlib.sha224("%s%i" % (timestamp, random_int)).hexdigest()[:13]
+    login = hashlib.sha224(bytes("%s%i" % (timestamp, random_int), 'utf-8')).hexdigest()[:13]
 
     return login
 

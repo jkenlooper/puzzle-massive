@@ -11,7 +11,7 @@ from .user import user_not_banned, user_id_from_ip
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
-redisConnection = redis.from_url('redis://localhost:6379/0/')
+redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
 
 class PuzzlePieceView(MethodView):
     """

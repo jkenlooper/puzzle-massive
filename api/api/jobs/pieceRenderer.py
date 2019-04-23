@@ -12,7 +12,6 @@ import subprocess
 import time
 
 import sqlite3
-import redis
 from PIL import Image
 from piecemaker.base import JigsawPieceClipsSVG, Pieces
 from piecemaker.adjacent import Adjacent
@@ -57,9 +56,6 @@ try:
 except (IOError, IndexError):
     # Most likely being run from a test setup
     pass
-
-redisConnection = redis.from_url('redis://localhost:6379/0/')
-
 
 def handle_render_fail(job, exception, exception_func, traceback):
     """

@@ -21,7 +21,7 @@ from .constants import ACTIVE, IN_QUEUE, BUGGY_UNLISTED, POINT_COST_FOR_CHANGING
 from .jobs import pieceTranslate
 from .user import user_id_from_ip, user_not_banned, increase_ban_time
 
-redisConnection = redis.from_url('redis://localhost:6379/0/')
+redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
 HOUR = 3600 # hour in seconds

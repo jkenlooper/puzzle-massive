@@ -73,7 +73,7 @@ query_update_puzzle_status = """update Puzzle set status = :status where id = :p
 #    # Most likely being run from a test setup
 #    pass
 
-redisConnection = redis.from_url('redis://localhost:6379/0/')
+redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
 
 def get_earned_points(pieces):
     earns = 7

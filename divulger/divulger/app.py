@@ -12,7 +12,7 @@ from gevent import sleep
 from geventwebsocket import WebSocketApplication
 from geventwebsocket.exceptions import WebSocketError
 
-redisConnection = redis.from_url('redis://localhost:6379/0/')
+redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
 
 
 # Prevent too many files open errors by limiting the number of possible

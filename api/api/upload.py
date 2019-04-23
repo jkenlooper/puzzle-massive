@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import bytes
 import os
 import re
 import time
@@ -43,7 +44,7 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
 
         d = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
         filename = unsplash_match.group(1)
-        u_id = "%s" % (hashlib.sha224("%s%s" % (filename, d)).hexdigest()[0:9])
+        u_id = "%s" % (hashlib.sha224(bytes("%s%s" % (filename, d), 'utf-8')).hexdigest()[0:9])
         puzzle_id = "unsplash{filename}-mxyz-{u_id}".format(filename=filename, u_id=u_id)
 
         # Create puzzle dir
@@ -65,7 +66,7 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
             abort(400)
 
         d = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
-        puzzle_id = "%i%s" % (max_id, hashlib.sha224("%s%s" % (filename, d)).hexdigest()[0:9])
+        puzzle_id = "%i%s" % (max_id, hashlib.sha224(bytes("%s%s" % (filename, d), 'utf-8')).hexdigest()[0:9])
 
         # Create puzzle dir
         puzzle_dir = os.path.join(current_app.config.get('PUZZLE_RESOURCES'), puzzle_id)
@@ -76,7 +77,7 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
         upload_file.save(upload_file_path)
 
         # verify the image file format
-        identify_format = subprocess.check_output(['identify', '-format', '%m', upload_file_path])
+        identify_format = subprocess.check_output(['identify', '-format', '%m', upload_file_path], encoding='utf-8')
         identify_format = identify_format.lower()
         if identify_format not in ALLOWED_EXTENSIONS:
             os.unlink(upload_file_path)
@@ -310,9 +311,15 @@ class UnsplashPuzzleThread(threading.Thread):
 
         puzzle_dir = os.path.join(self.puzzle_resources, self.puzzle_id)
         filename = os.path.join(puzzle_dir, 'original.jpg')
-        f = open(filename, 'w')
+        f = open(filename, 'w+b')
 
-        r = requests.get(data.get('links').get('download'))
+        links = data.get('links')
+        if not links:
+            raise Exception('Unsplash returned no links')
+        download = links.get('download')
+        if not download:
+            raise Exception('Unsplash returned no download')
+        r = requests.get(download)
         f.write(r.content)
         f.close()
 

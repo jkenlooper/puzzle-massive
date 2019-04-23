@@ -76,7 +76,7 @@ def make_app(config=None, **kw):
     #
     app.secure_cookie = SecureCookie(app, cookie_secret=kw['cookie_secret'])
 
-    redisConnection = redis.from_url(app.config.get('REDIS_URI', 'redis://localhost:6379/0/'))
+    redisConnection = redis.from_url(app.config.get('REDIS_URI', 'redis://localhost:6379/0/'), decode_responses=True)
 
     app.queries = files_loader('queries')
 

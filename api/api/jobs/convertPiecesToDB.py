@@ -26,7 +26,7 @@ config = loadConfig(config_file)
 db_file = config['SQLITE_DATABASE_URI']
 db = sqlite3.connect(db_file)
 
-redisConnection = redis.from_url('redis://localhost:6379/0/')
+redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
 
 def transfer(puzzle):
     cur = db.cursor()
