@@ -43,7 +43,7 @@ ifeq ($(shell which virtualenv),)
 $(error run "./bin/setup.sh" to install virtualenv)
 endif
 ifeq ($(shell ls bin/activate),)
-$(error run "virtualenv . -p python2")
+$(error run "virtualenv . -p python3")
 endif
 ifneq ($(shell which pip),$(project_dir)bin/pip)
 $(warning run "source bin/activate" to activate the virtualenv. Using $(shell which pip). Ignore this warning if using sudo make install.)

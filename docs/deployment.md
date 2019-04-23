@@ -75,7 +75,7 @@ been uploaded to the home directory.
 
     ```bash
     cd /usr/local/src/puzzle-massive;
-    virtualenv . -p python2;
+    virtualenv . -p python3;
     source bin/activate;
     make ENVIRONMENT=production && \
     sudo make ENVIRONMENT=production install;
@@ -130,7 +130,7 @@ by the public.
 
     ```bash
     cd /usr/local/src/puzzle-massive/;
-    virtualenv . -p python2;
+    virtualenv . -p python3;
     source bin/activate;
     make ENVIRONMENT=production;
     cp chill-data.sql db.dump.sql;
