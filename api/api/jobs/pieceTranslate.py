@@ -158,8 +158,11 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
 
         # TODO: Optimize by using redis for puzzle status
         if complete:
-            query = """update Puzzle set status = :completed where id = :puzzle;"""
             cur.execute(query_update_puzzle_status, {'puzzle':puzzle, 'status':COMPLETED})
+            db.commit()
+            job = current_app.cleanupqueue.enqueue_call(
+                func='api.jobs.convertPiecesToDB.transfer', args=(puzzle,), result_ttl=0
+            )
 
         db.commit()
         cur.close()

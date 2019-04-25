@@ -15,4 +15,5 @@ pz.permission FROM Puzzle AS pz
 JOIN Piece AS pc ON (pz.id = pc.puzzle)
 WHERE pz.puzzle_id = :puzzle_id
 and pc.id = :piece
+and pz.status in (1, 2, 5) -- ACTIVE, IN_QUEUE, BUGGY_UNLISTED
 ;

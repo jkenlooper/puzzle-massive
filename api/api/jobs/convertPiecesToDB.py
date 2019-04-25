@@ -29,6 +29,7 @@ db = sqlite3.connect(db_file)
 redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
 
 def transfer(puzzle):
+    print('transferring puzzle: {0}'.format(puzzle))
     cur = db.cursor()
 
     query = """select * from Puzzle where (id = :puzzle)"""
@@ -96,6 +97,10 @@ def transferAll():
         transfer(puzzle)
         memory = redisConnection.info(section='memory')
         print('used_memory: {used_memory_human}'.format(**memory))
+
+def handle_fail(job, exception, exception_func, traceback):
+    print("Handle janitor fail {0}".format(job.args[0]))
+
 
 if __name__ == '__main__':
     confirm = input("Transfer all puzzle data out of redis and into sqlite database? y/n\n")

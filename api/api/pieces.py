@@ -16,7 +16,7 @@ from .tools import formatPieceMovementString
 from .jobs.convertPiecesToRedis import convert
 from .user import user_id_from_ip, increase_ban_time
 
-from .constants import ACTIVE, IN_QUEUE
+from .constants import ACTIVE, IN_QUEUE, COMPLETED
 #from jobs import pieceMove
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
@@ -65,7 +65,7 @@ class PuzzlePiecesView(MethodView):
         self.bump_count(user)
 
         cur = db.cursor()
-        result = cur.execute(fetch_query_string('select_puzzle_id_by_puzzle_id.sql'), {
+        result = cur.execute(fetch_query_string('select_viewable_puzzle_id.sql'), {
             'puzzle_id': puzzle_id
             }).fetchall()
         if not result:
@@ -74,6 +74,7 @@ class PuzzlePiecesView(MethodView):
 
         (result, col_names) = rowify(result, cur.description)
         puzzle = result[0].get('puzzle')
+        status = result[0].get('status')
 
         #TODO: if puzzle is not in redis then create a job to convert and respond with a 202 Accepted
         # if job is already active for this request respond with 202 Accepted
@@ -97,7 +98,6 @@ class PuzzlePiecesView(MethodView):
                         func='api.jobs.convertPiecesToDB.transferOldest', args=(target_memory,), result_ttl=0
                     )
 
-
             # For now just convert as it doesn't take long
             convert(puzzle)
         else:
@@ -105,6 +105,12 @@ class PuzzlePiecesView(MethodView):
             # This will prevent the puzzle from being deleted by the janitor.
             redisConnection.zadd('pcupdates', {puzzle: int(time.time())})
 
+        if status == COMPLETED:
+            # transfer completed puzzles back out
+            print('transfer {0}'.format(puzzle))
+            job = current_app.cleanupqueue.enqueue_call(
+                func='api.jobs.convertPiecesToDB.transfer', args=(puzzle,), result_ttl=0
+            )
 
         query = """select id from Piece where (puzzle = :puzzle)"""
         (all_pieces, col_names) = rowify(cur.execute(query, {'puzzle': puzzle}).fetchall(), cur.description)
