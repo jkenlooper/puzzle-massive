@@ -225,6 +225,7 @@ class PuzzlePieceTokenView(MethodView):
         existing_token_and_player = redisConnection.get(puzzle_piece_token_key)
         if existing_token_and_player:
             (other_token, other_player) = existing_token_and_player.split(':')
+            other_player = int(other_player)
             puzzle_and_piece = redisConnection.get('token:{}'.format(other_player))
             # Check if there is a lock on this piece by other player
             if puzzle_and_piece:
@@ -296,7 +297,8 @@ class PuzzlePiecesMovePublishView(MethodView):
         r
         """
         ip = request.headers.get('X-Real-IP')
-        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
+        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
+        current_app.logger.debug('user {}'.format(user))
         now = int(time.time())
 
         # validate the args and headers
@@ -373,15 +375,16 @@ class PuzzlePiecesMovePublishView(MethodView):
         # print("token key: {}".format(puzzle_piece_token_key))
         token_and_player = redisConnection.get(puzzle_piece_token_key)
         if token_and_player:
-            player = int(user)
+            player = user
             (valid_token, other_player) = token_and_player.split(':')
+            other_player = int(other_player)
             if token != valid_token:
                 # print("token invalid {} != {}".format(token, valid_token))
                 err_msg = increase_ban_time(user, TOKEN_INVALID_BAN_TIME_INCR)
                 err_msg['reason'] = "Token is invalid"
                 cur.close()
                 return make_response(encoder.encode(err_msg), 409)
-            if player != int(other_player):
+            if player != other_player:
                 # print("player invalid {} != {}".format(player, other_player))
                 err_msg = increase_ban_time(user, TOKEN_INVALID_BAN_TIME_INCR)
                 err_msg['reason'] = "Player is invalid"

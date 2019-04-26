@@ -21,7 +21,7 @@ class PuzzlePieceView(MethodView):
 
     def get(self, puzzle_id, piece):
 
-        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
+        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
         cur = db.cursor()
         result = cur.execute(fetch_query_string('select_puzzle_id_by_puzzle_id.sql'), {
             'puzzle_id': puzzle_id

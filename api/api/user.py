@@ -103,7 +103,7 @@ def user_id_from_ip(ip, skip_generate=False):
         user_id = result[0]['id']
 
     cur.close()
-    return str(user_id)
+    return user_id
 
 def user_not_banned(f):
     """Check if the user is not banned and respond with 429 if so"""
@@ -111,6 +111,7 @@ def user_not_banned(f):
         ip = request.headers.get('X-Real-IP')
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip, skip_generate=True)
         if not user == None:
+            user = int(user)
             banneduser_score = redisConnection.zscore('bannedusers', user)
             if banneduser_score:
                 now = int(time.time())
@@ -152,8 +153,8 @@ class CurrentUserIDView(MethodView):
 
     def get(self):
         "return the user id by secure cookie or by ip."
-        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP'))
-        return user
+        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
+        return str(user)
 
 class GenerateAnonymousLogin(MethodView):
     """
@@ -169,13 +170,14 @@ class GenerateAnonymousLogin(MethodView):
         user = current_app.secure_cookie.get(u'user')
         if user is None:
             return make_response('no user', 403)
+        user = int(user)
 
         (p_string, password) = generate_password()
 
         # Store encrypted password in db
         cur = db.cursor()
         try:
-            result = cur.execute(QUERY_USER_LOGIN, {'id':int(user)}).fetchall()
+            result = cur.execute(QUERY_USER_LOGIN, {'id':user}).fetchall()
         except IndexError:
             # user may have been added after a db rollback
             return make_response('no user', 404)
@@ -186,7 +188,7 @@ class GenerateAnonymousLogin(MethodView):
         (result, col_names) = rowify(result, cur.description)
         user_data = result[0]
 
-        cur.execute(QUERY_SET_PASSWORD, {'id':int(user), 'password':password})
+        cur.execute(QUERY_SET_PASSWORD, {'id':user, 'password':password})
         db.commit()
 
         cur.close()
@@ -251,15 +253,12 @@ class UserDetailsView(MethodView):
     def get(self):
         response = make_response(redirect('/'))
 
-        # Verify user is logged in
-        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP'))
-        if user is None:
-            return make_response('not logged in', 403)
+        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
 
         cur = db.cursor()
 
         try:
-            result = cur.execute(QUERY_USER_DETAILS, {'id':int(user)}).fetchall()
+            result = cur.execute(QUERY_USER_DETAILS, {'id':user}).fetchall()
         except IndexError:
             # user may have been added after a db rollback
             return make_response('no user', 404)
@@ -287,15 +286,12 @@ class ClaimRandomBit(MethodView):
     decorators = [user_not_banned]
 
     def post(self):
-        # Verify user is logged in
-        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP'))
-        if user is None:
-            return make_response('not logged in', 400)
+        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
 
         cur = db.cursor()
 
         try:
-            result = cur.execute(QUERY_USER_DETAILS, {'id':int(user)}).fetchall()
+            result = cur.execute(QUERY_USER_DETAILS, {'id':user}).fetchall()
         except IndexError:
             # user may have been added after a db rollback
             return make_response('no user', 404)
@@ -309,7 +305,7 @@ class ClaimRandomBit(MethodView):
         if user_details['icon']:
             return make_response('icon', 400)
 
-        cur.execute(fetch_query_string('claim_random_bit_icon.sql'), {'user': int(user)})
+        cur.execute(fetch_query_string('claim_random_bit_icon.sql'), {'user': user})
         db.commit()
 
         cur.close()
@@ -336,6 +332,7 @@ class SplitPlayer(MethodView):
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip, skip_generate=True)
         if user is None:
             return make_response('not logged in', 400)
+        user = int(user)
 
         response = make_response('', 200)
 
@@ -446,7 +443,7 @@ class BanishSelf(MethodView):
     def get(self):
         "The url for this is listed in robots.txt under a Disallow"
         ip = request.headers.get('X-Real-IP')
-        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
+        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
         increase_ban_time(user, HONEY_POT_BAN_TIME)
 
         return make_response(self.response_text, 201)
@@ -454,7 +451,7 @@ class BanishSelf(MethodView):
     def post(self):
         "User filled out and submitted the hidden form.  Most likely a spam bot."
         ip = request.headers.get('X-Real-IP')
-        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
+        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
 
         increase_ban_time(user, HONEY_POT_BAN_TIME)
         return make_response(self.response_text, 201)

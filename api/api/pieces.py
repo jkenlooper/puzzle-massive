@@ -61,7 +61,7 @@ class PuzzlePiecesView(MethodView):
     def get(self, puzzle_id):
         ""
         ip = request.headers.get('X-Real-IP')
-        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
+        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
         self.bump_count(user)
 
         cur = db.cursor()

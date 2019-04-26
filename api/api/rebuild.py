@@ -69,10 +69,7 @@ class PuzzlePiecesRebuildView(MethodView):
         if pieces < current_app.config['MINIMUM_PIECE_COUNT']:
             abort(400)
 
-        # Verify user is logged in
-        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP'))
-        if user == None:
-            abort(403)
+        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
 
         cur = db.cursor()
         result = cur.execute(query_select_puzzle_for_puzzle_id_and_status, {'puzzle_id': puzzle_id, 'status': COMPLETED}).fetchall()

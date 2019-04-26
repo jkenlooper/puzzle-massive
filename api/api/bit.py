@@ -112,10 +112,12 @@ class ClaimBitView(MethodView):
         response = make_response('', 200)
         user = current_app.secure_cookie.get(u'user')
         if not user:
-            user = user_id_from_ip(request.headers.get('X-Real-IP'))
+            user = int(user_id_from_ip(request.headers.get('X-Real-IP')))
             self.register_new_user(user)
             # Save as a cookie
             current_app.secure_cookie.set(u'user', str(user), response, expires_days=365)
+        else:
+            user = int(user)
 
         # Update user points for changing bit icon
         result = cur.execute("select points from User where id = :id and points >= :cost + :startpoints;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT, 'startpoints': NEW_USER_STARTING_POINTS}).fetchone()

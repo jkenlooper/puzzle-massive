@@ -46,10 +46,7 @@ class SuggestImageView(MethodView):
         else:
             bg_color = "#808080"
 
-        # Verify user is logged in
-        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP'))
-        if user == None:
-            abort(403)
+        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
 
         # All puzzles are public
         permission = PUBLIC
