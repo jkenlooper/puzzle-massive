@@ -11,6 +11,7 @@
 /api/puzzle-massive-api.service
 /api/puzzle-massive-artist.service
 /api/puzzle-massive-janitor.service
+/api/puzzle-massive-scheduler.service
 /divulger/puzzle-massive-divulger.service
 /db
 /dist/

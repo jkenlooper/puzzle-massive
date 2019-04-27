@@ -54,6 +54,10 @@ systemctl stop puzzle-massive-janitor
 systemctl disable puzzle-massive-janitor
 rm -f "${SYSTEMDDIR}puzzle-massive-janitor.service";
 
+systemctl stop puzzle-massive-scheduler
+systemctl disable puzzle-massive-scheduler
+rm -f "${SYSTEMDDIR}puzzle-massive-scheduler.service";
+
 # TODO: Should it remove the database file in an uninstall?
 echo "Skipping removal of sqlite database file ${DATABASEDIR}db"
 #rm -f "${DATABASEDIR}db"

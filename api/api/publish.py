@@ -298,7 +298,6 @@ class PuzzlePiecesMovePublishView(MethodView):
         """
         ip = request.headers.get('X-Real-IP')
         user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
-        current_app.logger.debug('user {}'.format(user))
         now = int(time.time())
 
         # validate the args and headers

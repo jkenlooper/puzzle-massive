@@ -20,7 +20,8 @@ setuptools.setup(
         'console_scripts': [
             'puzzle-massive-api = api.script:main',
             'puzzle-massive-janitor = api.janitor:main',
-            'puzzle-massive-artist = api.artist:main'
+            'puzzle-massive-artist = api.artist:main',
+            'puzzle-massive-scheduler = api.scheduler:main'
         ]
     },
 )

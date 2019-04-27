@@ -75,7 +75,7 @@ chill/puzzle-massive-chill.service: chill/puzzle-massive-chill.service.sh
 frozen.tar.gz: db.dump.sql site.cfg package.json $(shell find templates/ -type f -print) $(shell find documents/ -type f -print) $(shell find queries/ -type f -print)
 	bin/freeze.sh $@
 
-# Also installs janitor and artist
+# Also installs janitor, scheduler and artist
 bin/puzzle-massive-api: api/requirements.txt requirements.txt api/setup.py
 	pip install --upgrade --upgrade-strategy eager -r $<
 	touch $@;
@@ -95,6 +95,10 @@ api/puzzle-massive-artist.service: api/puzzle-massive-artist.service.sh
 
 objects += api/puzzle-massive-janitor.service
 api/puzzle-massive-janitor.service: api/puzzle-massive-janitor.service.sh
+	./$< $(project_dir) > $@
+
+objects += api/puzzle-massive-scheduler.service
+api/puzzle-massive-scheduler.service: api/puzzle-massive-scheduler.service.sh
 	./$< $(project_dir) > $@
 
 objects += divulger/puzzle-massive-divulger.service

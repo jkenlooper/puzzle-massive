@@ -3,6 +3,7 @@ api/api
 api/puzzle-massive-api.service.sh
 api/puzzle-massive-artist.service.sh
 api/puzzle-massive-janitor.service.sh
+api/puzzle-massive-scheduler.service.sh
 api/requirements.txt
 api/setup.py
 bin/backup-db.sh
