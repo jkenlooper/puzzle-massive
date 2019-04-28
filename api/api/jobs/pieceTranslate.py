@@ -8,6 +8,7 @@ import math
 import time
 import sys
 
+from flask import current_app
 import sqlite3
 import redis
 from api.app import db
