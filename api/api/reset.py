@@ -94,7 +94,7 @@ class PuzzlePiecesResetView(MethodView):
 
         # TODO: archive the timeline
         # timeline ui should only show when the puzzle is in 'complete' status.
-        archive_and_clear(puzzle)
+        archive_and_clear(puzzle, db, current_app.config.get('PUZZLE_ARCHIVE'))
 
         (x1, y1, x2, y2) = (0, 0, puzzleData['table_width'], puzzleData['table_height'])
 

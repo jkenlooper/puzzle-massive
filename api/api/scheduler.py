@@ -1,14 +1,18 @@
 import sys
 from time import sleep, time, ctime
+import random
 import logging
 
 import sqlite3
 import redis
+from rq import Queue
 
 from api.app import db
 from api.database import rowify, read_query_file
 from api.tools import loadConfig
+from api.tools import deletePieceDataFromRedis
 from api.timeline import archive_and_clear
+from api.constants import REBUILD, COMPLETED, NEW_USER_STARTING_POINTS
 
 # Get the args from the janitor and connect to the database
 config_file = sys.argv[1]
@@ -28,7 +32,7 @@ HOUR = 3600 # hour in seconds
 DAY = HOUR * 24
 MINUTE = 60 # minute in seconds
 
-SCHEDULER_INTERVAL = MINUTE
+SCHEDULER_INTERVAL = 5 if config['DEBUG'] else MINUTE
 scheduler_key = 'sc'
 
 class Task:
@@ -55,6 +59,10 @@ class AutoRebuildCompletedPuzzle(Task):
     "Auto rebuild a completed puzzle that is no longer recent"
     interval = MINUTE
 
+    def __init__(self, id):
+        super().__init__(id)
+        self.queue = Queue('puzzle_create', connection=redisConnection)
+
     def do_task(self):
         logger.info("Doing task {task_name} {task_id}".format(**{
             'task_name':__class__.__name__,
@@ -62,18 +70,34 @@ class AutoRebuildCompletedPuzzle(Task):
         }))
 
         cur = db.cursor()
-        (result, col_names) = rowify(cur.execute(read_query_file("_select-puzzles-for-queue--complete.sql")).fetchall(), cur.description)
+        (result, col_names) = rowify(cur.execute(read_query_file("select_random_puzzle_to_rebuild.sql"), {'status': COMPLETED}).fetchall(), cur.description)
         if result:
             completed_puzzle = result[0]
-            #print(completed_puzzle)
+            puzzle = completed_puzzle['id']
+
             logger.debug("found puzzle {id}".format(**completed_puzzle))
-            # TODO: update puzzleData for this puzzle to rebuild
-            #job = current_app.createqueue.enqueue_call(
-            #    func='api.jobs.pieceRenderer.render', args=([puzzleData]), result_ttl=0,
-            #    timeout='24h'
-            #)
-            #archive_and_clear(puzzle)
+            # Update puzzle status to be REBUILD and change the piece count
+            pieces = random.randint(max(int(config['MINIMUM_PIECE_COUNT']), completed_puzzle['pieces'] - 400), completed_puzzle['pieces'] + 400)
+            cur.execute(read_query_file("update_status_puzzle_for_puzzle_id.sql"), {'puzzle_id': completed_puzzle['puzzle_id'], 'status': REBUILD, 'pieces': pieces})
+            completed_puzzle['status'] = REBUILD
+            completed_puzzle['pieces'] = pieces
+
+            db.commit()
+
+            # Delete any piece data from redis since it is no longer needed.
+            query_select_all_pieces_for_puzzle = """select * from Piece where (puzzle = :puzzle)"""
+            (all_pieces, col_names) = rowify(cur.execute(query_select_all_pieces_for_puzzle, {'puzzle': puzzle}).fetchall(), cur.description)
+            deletePieceDataFromRedis(redisConnection, puzzle, all_pieces)
+
+            job = self.queue.enqueue_call(
+                func='api.jobs.pieceRenderer.render', args=([completed_puzzle]), result_ttl=0,
+                timeout='24h'
+            )
+
+            archive_and_clear(puzzle, db, config.get('PUZZLE_ARCHIVE'))
+
         cur.close()
+        db.commit()
 
 class BumpMinimumDotsForPlayers(Task):
     "Increase dots for players that have less then the minimum"
@@ -84,6 +108,11 @@ class BumpMinimumDotsForPlayers(Task):
             'task_name':__class__.__name__,
             'task_id':self.id
         }))
+
+        cur = db.cursor()
+        cur.execute(read_query_file("update_points_to_minimum_for_all_users.sql"), {'minimum': NEW_USER_STARTING_POINTS})
+        cur.close()
+        db.commit()
 
 def main():
     ""

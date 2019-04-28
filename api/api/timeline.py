@@ -3,14 +3,11 @@ from builtins import str
 import os
 import json
 
-from flask import current_app
-
-from .app import db
 from .database import rowify
 
 query_select_timeline_for_puzzle = """
 select t.player as p, t.message as m, t.points as c, t.timestamp as t
-from Timeline as t 
+from Timeline as t
 join Puzzle as pz on (pz.id = t.puzzle)
 where t.puzzle = :puzzle
 """
@@ -32,7 +29,7 @@ def get_next_file(path):
     count += 1
     return os.path.join(path, '{0}.json'.format(count))
 
-def archive_and_clear(puzzle):
+def archive_and_clear(puzzle, db, archive_directory):
     """
     Create an archive file for all timeline data for this puzzle.  Clear the
     timeline entries in the database.
@@ -44,7 +41,6 @@ def archive_and_clear(puzzle):
         return
 
     (result, col_names) = rowify(result, cur.description)
-    archive_directory = current_app.config.get('PUZZLE_ARCHIVE')
     puzzle_directory = os.path.join(archive_directory, str(puzzle))
     try:
         os.mkdir(puzzle_directory)

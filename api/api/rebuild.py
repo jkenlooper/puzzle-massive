@@ -11,7 +11,7 @@ from PIL import Image
 
 from .app import db
 
-from .database import rowify
+from .database import rowify, fetch_query_string
 from .constants import REBUILD, COMPLETED
 from .timeline import archive_and_clear
 from .user import user_id_from_ip, user_not_banned
@@ -19,19 +19,6 @@ from .jobs.convertPiecesToRedis import convert
 from .tools import deletePieceDataFromRedis
 
 redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
-
-query_select_puzzle_for_puzzle_id_and_status = """
-select * from Puzzle where puzzle_id = :puzzle_id and status = :status
-and strftime('%s', m_date) <= strftime('%s', 'now', '-7 hours');
-"""
-
-query_update_status_puzzle_for_puzzle_id = """
-update Puzzle set status = :status, m_date = '', pieces = :pieces where puzzle_id = :puzzle_id;
-"""
-
-query_select_top_left_piece = """
-select * from Piece where puzzle = :puzzle and row = 0 and col = 0;
-"""
 
 query_user_points_prereq = """
 select u.points from User as u
@@ -72,7 +59,7 @@ class PuzzlePiecesRebuildView(MethodView):
         user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
 
         cur = db.cursor()
-        result = cur.execute(query_select_puzzle_for_puzzle_id_and_status, {'puzzle_id': puzzle_id, 'status': COMPLETED}).fetchall()
+        result = cur.execute(fetch_query_string("select_puzzle_for_puzzle_id_and_status_and_not_recent.sql"), {'puzzle_id': puzzle_id, 'status': COMPLETED}).fetchall()
         if not result:
             # Puzzle does not exist or is not completed status.
             # Reload the page as the status may have been changed.
@@ -103,7 +90,7 @@ class PuzzlePiecesRebuildView(MethodView):
         cur.execute(query_update_user_points_for_resetting_puzzle, {'user': user, 'points': point_cost})
 
         # Update puzzle status to be REBUILD and change the piece count
-        cur.execute(query_update_status_puzzle_for_puzzle_id, {'puzzle_id': puzzle_id, 'status': REBUILD, 'pieces': pieces})
+        cur.execute(fetch_query_string("update_status_puzzle_for_puzzle_id.sql"), {'puzzle_id': puzzle_id, 'status': REBUILD, 'pieces': pieces})
         puzzleData['status'] = REBUILD
         puzzleData['pieces'] = pieces
 
@@ -119,7 +106,7 @@ class PuzzlePiecesRebuildView(MethodView):
             timeout='24h'
         )
 
-        archive_and_clear(puzzle)
+        archive_and_clear(puzzle, db, current_app.config.get('PUZZLE_ARCHIVE'))
 
         cur.close()
         db.commit()
