@@ -1,5 +1,5 @@
 import sys
-from time import sleep, time
+from time import sleep, time, ctime
 import logging
 
 import sqlite3
@@ -23,67 +23,98 @@ logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG if config['DEBUG'] else logging.INFO)
 
-SCHEDULER_INTERVAL = 5
+
 HOUR = 3600 # hour in seconds
 DAY = HOUR * 24
 MINUTE = 60 # minute in seconds
 
-TASKS = [
-    'task_auto_rebuild_completed_puzzle',
-    'bump_minimum_dots_for_players'
-]
+SCHEDULER_INTERVAL = MINUTE
 scheduler_key = 'sc'
+
+class Task:
+    interval = 5
+
+    def __init__(self, id):
+        self.id = id
+
+    def __call__(self):
+        self.do_task()
+        now = int(time())
+        due = now + self.interval
+        logger.info("Setting task {task_name} {task_id} due date to {format_due}".format(**{
+            'format_due':ctime(due),
+            'task_name':__class__.__name__,
+            'task_id':self.id
+        }))
+        redisConnection.zadd(scheduler_key, {self.id: due})
+
+    def do_task(self):
+        logger.info('do task')
+
+class AutoRebuildCompletedPuzzle(Task):
+    "Auto rebuild a completed puzzle that is no longer recent"
+    interval = MINUTE
+
+    def do_task(self):
+        logger.info("Doing task {task_name} {task_id}".format(**{
+            'task_name':__class__.__name__,
+            'task_id':self.id
+        }))
+
+        cur = db.cursor()
+        (result, col_names) = rowify(cur.execute(read_query_file("_select-puzzles-for-queue--complete.sql")).fetchall(), cur.description)
+        if result:
+            completed_puzzle = result[0]
+            #print(completed_puzzle)
+            logger.debug("found puzzle {id}".format(**completed_puzzle))
+            # TODO: update puzzleData for this puzzle to rebuild
+            #job = current_app.createqueue.enqueue_call(
+            #    func='api.jobs.pieceRenderer.render', args=([puzzleData]), result_ttl=0,
+            #    timeout='24h'
+            #)
+            #archive_and_clear(puzzle)
+        cur.close()
+
+class BumpMinimumDotsForPlayers(Task):
+    "Increase dots for players that have less then the minimum"
+    interval = DAY
+
+    def do_task(self):
+        logger.info("Doing task {task_name} {task_id}".format(**{
+            'task_name':__class__.__name__,
+            'task_id':self.id
+        }))
 
 def main():
     ""
+    # Reset scheduler to start by removing any previous scheduled tasks
+    redisConnection.delete(scheduler_key)
+
     now = int(time())
-    # a little crazy, but it does this: redisConnection.zadd(scheduler_key, {0: now, 1: now})
-    redisConnection.zadd(scheduler_key, dict(zip(range(len(TASKS)), list(map(lambda x: now, range(len(TASKS)))))))
+    task_registry = [
+        AutoRebuildCompletedPuzzle,
+        BumpMinimumDotsForPlayers,
+    ]
+    tasks = {}
+    for index in range(len(task_registry)):
+        # Create each task with an id corresponding to the index
+        tasks[index] = task_registry[index](index)
+
+    task_ids_scheduled_to_now = dict(zip(tasks.keys(), map(lambda x: now, range(len(tasks)))))
+
+    # reset all tasks to be scheduled now
+    redisConnection.zadd(scheduler_key, task_ids_scheduled_to_now)
+
     while True:
         now = int(time())
-        # Get list of tasks on the schedule that are past the now time.
-        tasks = list(map(int, redisConnection.zrangebyscore(scheduler_key, 0, now)))
+        # Get list of tasks on the schedule that are due.
+        task_ids = list(map(int, redisConnection.zrangebyscore(scheduler_key, 0, now)))
 
         # Cycle over each and call the task
-        for taskid in tasks:
-            globals()[TASKS[taskid]]()
+        for task_id in task_ids:
+            tasks[task_id]()
 
         sleep(SCHEDULER_INTERVAL)
-
-def bump_minimum_dots_for_players():
-    "Increase dots for players that have less then the minimum"
-    interval = DAY
-    task_id = 1
-    task_name = TASKS[task_id]
-
-    logger.info("do task: {0}".format(task_name))
-
-    now = int(time())
-    redisConnection.zadd(scheduler_key, {task_id: now + interval})
-
-def task_auto_rebuild_completed_puzzle():
-    "Auto rebuild a completed puzzle that is no longer recent"
-    interval = MINUTE
-    task_id = 0
-    task_name = TASKS[task_id]
-
-    logger.info("do task: {0}".format(task_name))
-
-    cur = db.cursor()
-    (result, col_names) = rowify(cur.execute(read_query_file("_select-puzzles-for-queue--complete.sql")).fetchall(), cur.description)
-    if result:
-        completed_puzzle = result[0]
-        #print(completed_puzzle)
-        logger.debug("found puzzle {id}".format(**completed_puzzle))
-        # TODO: update puzzleData for this puzzle to rebuild
-        #job = current_app.createqueue.enqueue_call(
-        #    func='api.jobs.pieceRenderer.render', args=([puzzleData]), result_ttl=0,
-        #    timeout='24h'
-        #)
-        #archive_and_clear(puzzle)
-
-    now = int(time())
-    redisConnection.zadd(scheduler_key, {task_id: now + interval})
 
 if __name__ == '__main__':
     main()
