@@ -20,3 +20,7 @@ DELETED_OLD      = -12 # out with the old
 DELETED_REQUEST  = -13 # deleted on request from the owner. Can be deleted automatically after completion or date or?
 SUGGESTED        = -20 # No image has been set; only a link to source image
 SUGGESTED_DONE   = -21 # Suggested image has been processed
+
+#permission
+PUBLIC           = 0   # Is listed on the site
+PRIVATE          = -1  # Only shows for the owner of the puzzle, can still be played by anyone with the link.

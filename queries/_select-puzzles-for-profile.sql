@@ -11,8 +11,8 @@ JOIN User AS u ON (u.id = p.owner)
 WHERE pf.name == 'preview_full'
 
 AND u.login == :login
--- ACTIVE, IN_QUEUE
-AND p.status IN (1, 2)
+AND p.status IN (1, 2, 3, 5) -- ACTIVE, IN_QUEUE, COMPLETED, BUGGY_UNLISTED
+AND p.permission in (0, -1) -- PUBLIC, PRIVATE
 GROUP BY p.id
 ORDER BY p.m_date
 ;

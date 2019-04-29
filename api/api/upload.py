@@ -17,11 +17,8 @@ from werkzeug.urls import url_fix
 
 from api.app import db
 from api.database import rowify, fetch_query_string, read_query_file
-from api.constants import COMPLETED, NEEDS_MODERATION
+from api.constants import COMPLETED, NEEDS_MODERATION, PUBLIC
 from api.user import user_id_from_ip, user_not_banned
-
-#permissions
-PUBLIC   = 0  # obvious...
 
 # Not allowing anything other then jpg to protect against potential picture bombs.
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
