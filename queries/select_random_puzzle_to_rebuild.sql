@@ -1,6 +1,6 @@
 select * from Puzzle
 where status = :status
-and strftime('%s', m_date) <= strftime('%s', 'now', '-7 hours')
+and strftime('%s', m_date) <= strftime('%s', 'now', '-7 days')
 order by random()
-limit 1
+limit 5
 ;

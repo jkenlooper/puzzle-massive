@@ -56,8 +56,8 @@ class Task:
         logger.info('do task')
 
 class AutoRebuildCompletedPuzzle(Task):
-    "Auto rebuild a completed puzzle that is no longer recent"
-    interval = MINUTE
+    "Auto rebuild completed puzzles that are no longer recent"
+    interval = 15 * HOUR + 26 * MINUTE
 
     def __init__(self, id):
         super().__init__(id)
@@ -72,29 +72,29 @@ class AutoRebuildCompletedPuzzle(Task):
         cur = db.cursor()
         (result, col_names) = rowify(cur.execute(read_query_file("select_random_puzzle_to_rebuild.sql"), {'status': COMPLETED}).fetchall(), cur.description)
         if result:
-            completed_puzzle = result[0]
-            puzzle = completed_puzzle['id']
+            for completed_puzzle in result:
+                puzzle = completed_puzzle['id']
 
-            logger.debug("found puzzle {id}".format(**completed_puzzle))
-            # Update puzzle status to be REBUILD and change the piece count
-            pieces = random.randint(max(int(config['MINIMUM_PIECE_COUNT']), completed_puzzle['pieces'] - 400), completed_puzzle['pieces'] + 400)
-            cur.execute(read_query_file("update_status_puzzle_for_puzzle_id.sql"), {'puzzle_id': completed_puzzle['puzzle_id'], 'status': REBUILD, 'pieces': pieces})
-            completed_puzzle['status'] = REBUILD
-            completed_puzzle['pieces'] = pieces
+                logger.debug("found puzzle {id}".format(**completed_puzzle))
+                # Update puzzle status to be REBUILD and change the piece count
+                pieces = random.randint(max(int(config['MINIMUM_PIECE_COUNT']), completed_puzzle['pieces'] - 400), completed_puzzle['pieces'] + 400)
+                cur.execute(read_query_file("update_status_puzzle_for_puzzle_id.sql"), {'puzzle_id': completed_puzzle['puzzle_id'], 'status': REBUILD, 'pieces': pieces})
+                completed_puzzle['status'] = REBUILD
+                completed_puzzle['pieces'] = pieces
 
-            db.commit()
+                db.commit()
 
-            # Delete any piece data from redis since it is no longer needed.
-            query_select_all_pieces_for_puzzle = """select * from Piece where (puzzle = :puzzle)"""
-            (all_pieces, col_names) = rowify(cur.execute(query_select_all_pieces_for_puzzle, {'puzzle': puzzle}).fetchall(), cur.description)
-            deletePieceDataFromRedis(redisConnection, puzzle, all_pieces)
+                # Delete any piece data from redis since it is no longer needed.
+                query_select_all_pieces_for_puzzle = """select * from Piece where (puzzle = :puzzle)"""
+                (all_pieces, col_names) = rowify(cur.execute(query_select_all_pieces_for_puzzle, {'puzzle': puzzle}).fetchall(), cur.description)
+                deletePieceDataFromRedis(redisConnection, puzzle, all_pieces)
 
-            job = self.queue.enqueue_call(
-                func='api.jobs.pieceRenderer.render', args=([completed_puzzle]), result_ttl=0,
-                timeout='24h'
-            )
+                job = self.queue.enqueue_call(
+                    func='api.jobs.pieceRenderer.render', args=([completed_puzzle]), result_ttl=0,
+                    timeout='24h'
+                )
 
-            archive_and_clear(puzzle, db, config.get('PUZZLE_ARCHIVE'))
+                archive_and_clear(puzzle, db, config.get('PUZZLE_ARCHIVE'))
 
         cur.close()
         db.commit()
