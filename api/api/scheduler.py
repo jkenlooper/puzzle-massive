@@ -114,6 +114,26 @@ class BumpMinimumDotsForPlayers(Task):
         cur.close()
         db.commit()
 
+class UpdateModifiedDateOnPuzzle(Task):
+    "Update the m_date for all recently updated puzzles based on pcupdates redis sorted set"
+    interval = 58
+    last_update = int(time())
+
+    def do_task(self):
+        logger.info("Doing task {task_name} {task_id}".format(**{
+            'task_name':__class__.__name__,
+            'task_id':self.id
+        }))
+
+        cur = db.cursor()
+        puzzles = map(int, redisConnection.zrangebyscore('pcupdates', self.last_update, '+inf'))
+        self.last_update = int(time()) - 2 # allow some overlap
+        for puzzle in puzzles:
+            cur.execute(read_query_file("update_puzzle_m_date_to_now.sql"), {'puzzle': puzzle})
+            logger.info("Updating puzzle m_date {0}".format(puzzle))
+        cur.close()
+        db.commit()
+
 def main():
     ""
     # Reset scheduler to start by removing any previous scheduled tasks
@@ -123,6 +143,7 @@ def main():
     task_registry = [
         AutoRebuildCompletedPuzzle,
         BumpMinimumDotsForPlayers,
+        UpdateModifiedDateOnPuzzle,
     ]
     tasks = {}
     for index in range(len(task_registry)):

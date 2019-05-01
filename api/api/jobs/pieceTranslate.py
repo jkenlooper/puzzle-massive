@@ -25,44 +25,6 @@ MIN_KARMA = (int(old_div(MAX_KARMA,2)) * -1) # -12
 
 POINTS_CAP = 15000
 
-query_update_puzzle_m_date = """
-update Puzzle set m_date = datetime('now') where id = :puzzle and (m_date < datetime('now', '-58 seconds') or m_date isnull);
-"""
-
-query_append_to_timeline = """
-insert into Timeline (puzzle, player, message, points, timestamp) values
-(:puzzle, :player, :message, :points, datetime('now'));
-"""
-
-query_update_user_points = """
-update User set points = min(points + :points, :POINTS_CAP), score = score + :score, m_date = datetime('now') where id = :id
-"""
-
-
-UPDATE_BIT_ICON_EXPIRATION = """
--- Ran each time a player earns a point, but only if last_viewed has been at
--- least 1 day ago. This will potentially increase the bit expiration to the
--- next tier if the player meets the score requirements. New players that don't
--- get past the initial tier within a day will have their bit expire.
-
-UPDATE BitIcon SET
-expiration = (
-  SELECT datetime('now', (
-    SELECT be.extend FROM BitExpiration AS be
-      JOIN User AS u
-       WHERE u.score >= be.score AND u.id = :user
-       ORDER BY be.score DESC LIMIT 1
-    )
-  )
-),
-last_viewed = datetime('now')
-WHERE user = :user
-and (last_viewed < datetime('now', '-50 minutes') or last_viewed isnull)
-;
-"""
-
-query_update_puzzle_status = """update Puzzle set status = :status where id = :puzzle;"""
-
 # Get the args from the worker and connect to the database
 #try:
 #    config_file = sys.argv[1]
@@ -107,18 +69,15 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         #return (topic, msg)
         cur = db.cursor()
 
-        #TODO: Optimize by moving last modified to redis
-        # Update puzzle last modified date only if joined a piece
-        if points != 0:
-            cur.execute(query_update_puzzle_m_date, {'puzzle':puzzle})
         redisConnection.zadd('pcupdates', {puzzle: int(time.time())})
 
         #TODO:
         #return (topic, msg)
 
-        #TODO: Optimize by simply appending to a file? Maybe a puzzle instance per file
+        #TODO: Optimize by incr puzzle/player/points data to redis key; use scheduler to update Timeline
+        #TODO: Optimize by appending message to timeline archive redis key
         # Append msg to timeline
-        cur.execute(query_append_to_timeline, {
+        cur.execute(fetch_query_string("append_to_timeline.sql"), {
           'puzzle': puzzle,
           'player': user,
           'message': '', # TODO: no longer care about saving the msg
@@ -153,13 +112,13 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
                     if recent_points + earns <= MAX_RECENT_POINTS:
                         redisConnection.incr(points_key, amount=earns)
 
-            # TODO: Optimize by using redis here for user points
-            db.execute(query_update_user_points, {'id':user, 'points':earns, 'score':1, 'POINTS_CAP':POINTS_CAP})
-            db.execute(UPDATE_BIT_ICON_EXPIRATION, {'user':user})
+            # TODO: Optimize by using redis here for user score/rank
+            db.execute(fetch_query_string("update_user_points_and_m_date.sql"), {'id':user, 'points':earns, 'score':1, 'POINTS_CAP':POINTS_CAP})
+            db.execute(fetch_query_string("update_bit_icon_expiration.sql"), {'user':user})
 
         # TODO: Optimize by using redis for puzzle status
         if complete:
-            cur.execute(query_update_puzzle_status, {'puzzle':puzzle, 'status':COMPLETED})
+            cur.execute(fetch_query_string("update_puzzle_status_for_puzzle.sql"), {'puzzle':puzzle, 'status':COMPLETED})
             db.commit()
             job = current_app.cleanupqueue.enqueue_call(
                 func='api.jobs.convertPiecesToDB.transfer', args=(puzzle,), result_ttl=0
