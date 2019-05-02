@@ -134,6 +134,44 @@ class UpdateModifiedDateOnPuzzle(Task):
         cur.close()
         db.commit()
 
+class UpdatePlayer(Task):
+    "Update the User points, score, m_date from what has recently been put on redis"
+    interval = 25
+    first_run = True
+    POINTS_CAP = 15000
+
+    def do_task(self):
+        logger.info("Doing task {task_name} {task_id}".format(**{
+            'task_name':__class__.__name__,
+            'task_id':self.id
+        }))
+        cur = db.cursor()
+
+        user = redisConnection.spop('batchuser')
+        while user:
+            score = redisConnection.getset('batchscore:{user}'.format(user=user), value=0)
+            redisConnection.expire('batchscore:{user}'.format(user=user), DAY)
+            points = redisConnection.getset('batchpoints:{user}'.format(user=user), value=0)
+            redisConnection.expire('batchpoints:{user}'.format(user=user), DAY)
+
+            cur.execute(read_query_file("update_user_points_and_m_date.sql"), {'id':user, 'points':points, 'score':score, 'POINTS_CAP':self.POINTS_CAP})
+            cur.execute(read_query_file("update_bit_icon_expiration.sql"), {'user':user})
+
+            user = redisConnection.spop('batchuser')
+
+        if self.first_run:
+            result = cur.execute(read_query_file("select_user_scores.sql")).fetchall(), cur.description
+            #logger.debug("user scores result {0}".format(result))
+            if result:
+                user_scores = dict(result[0])
+                #logger.debug("user scores dict {0}".format(user_scores))
+                redisConnection.zadd('rank', user_scores)
+            self.first_run = False
+
+        cur.close()
+        db.commit()
+
+
 def main():
     ""
     # Reset scheduler to start by removing any previous scheduled tasks
@@ -144,6 +182,7 @@ def main():
         AutoRebuildCompletedPuzzle,
         BumpMinimumDotsForPlayers,
         UpdateModifiedDateOnPuzzle,
+        UpdatePlayer,
     ]
     tasks = {}
     for index in range(len(task_registry)):

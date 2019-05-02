@@ -103,6 +103,7 @@ def handle_fail(job, exception, exception_func, traceback):
 
 
 if __name__ == '__main__':
+    # TODO: run scheduler to transfer batch points and batch score to database
     confirm = input("Transfer all puzzle data out of redis and into sqlite database? y/n\n")
     if confirm == 'y':
         transferAll()

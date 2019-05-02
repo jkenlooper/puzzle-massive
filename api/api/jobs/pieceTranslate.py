@@ -23,7 +23,7 @@ MAX_RECENT_POINTS = 25
 MAX_KARMA = 25
 MIN_KARMA = (int(old_div(MAX_KARMA,2)) * -1) # -12
 
-POINTS_CAP = 15000
+#POINTS_CAP = 15000
 
 # Get the args from the worker and connect to the database
 #try:
@@ -69,7 +69,9 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         #return (topic, msg)
         cur = db.cursor()
 
-        redisConnection.zadd('pcupdates', {puzzle: int(time.time())})
+        now = int(time.time())
+
+        redisConnection.zadd('pcupdates', {puzzle: now})
 
         #TODO:
         #return (topic, msg)
@@ -83,9 +85,15 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
           'message': '', # TODO: no longer care about saving the msg
           'points': points
           })
+        #bump the m_date for this player on the puzzle
+        redisConnection.zadd('timeline:{puzzle}'.format(puzzle=puzzle), {user: now})
 
         # Update player points
         if points != 0 and user != None:
+            redisConnection.zincrby('score:{puzzle}'.format(puzzle=puzzle), amount=1, value=user)
+            redisConnection.sadd('batchuser', user)
+            redisConnection.incr('batchscore:{user}'.format(user=user), amount=1)
+            redisConnection.zincrby('rank', amount=1, value=user)
             points_key = 'points:{user}'.format(user=user)
             pieces = int(puzzleData['pieces'])
             earns = get_earned_points(pieces)
@@ -112,9 +120,9 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
                     if recent_points + earns <= MAX_RECENT_POINTS:
                         redisConnection.incr(points_key, amount=earns)
 
-            # TODO: Optimize by using redis here for user score/rank
-            db.execute(fetch_query_string("update_user_points_and_m_date.sql"), {'id':user, 'points':earns, 'score':1, 'POINTS_CAP':POINTS_CAP})
-            db.execute(fetch_query_string("update_bit_icon_expiration.sql"), {'user':user})
+            redisConnection.incr('batchpoints:{user}'.format(user=user), amount=earns)
+            #db.execute(fetch_query_string("update_user_points_and_m_date.sql"), {'id':user, 'points':earns, 'score':1, 'POINTS_CAP':POINTS_CAP})
+            #db.execute(fetch_query_string("update_bit_icon_expiration.sql"), {'user':user})
 
         # TODO: Optimize by using redis for puzzle status
         if complete:
