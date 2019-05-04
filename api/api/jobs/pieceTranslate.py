@@ -79,12 +79,12 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         #TODO: Optimize by incr puzzle/player/points data to redis key; use scheduler to update Timeline
         #TODO: Optimize by appending message to timeline archive redis key
         # Append msg to timeline
-        cur.execute(fetch_query_string("append_to_timeline.sql"), {
-          'puzzle': puzzle,
-          'player': user,
-          'message': '', # TODO: no longer care about saving the msg
-          'points': points
-          })
+        #cur.execute(fetch_query_string("append_to_timeline.sql"), {
+        #  'puzzle': puzzle,
+        #  'player': user,
+        #  'message': '', # TODO: no longer care about saving the msg
+        #  'points': points
+        #  })
         #bump the m_date for this player on the puzzle
         redisConnection.zadd('timeline:{puzzle}'.format(puzzle=puzzle), {user: now})
 
@@ -92,7 +92,9 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         if points != 0 and user != None:
             redisConnection.zincrby('score:{puzzle}'.format(puzzle=puzzle), amount=1, value=user)
             redisConnection.sadd('batchuser', user)
+            redisConnection.sadd('batchpuzzle', puzzle)
             redisConnection.incr('batchscore:{user}'.format(user=user), amount=1)
+            redisConnection.incr('batchpoints:{puzzle}:{user}'.format(puzzle=puzzle, user=user), amount=points)
             redisConnection.zincrby('rank', amount=1, value=user)
             points_key = 'points:{user}'.format(user=user)
             pieces = int(puzzleData['pieces'])

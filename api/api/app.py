@@ -125,6 +125,7 @@ def make_app(config=None, **kw):
         BanishSelf
         )
     from api.bit import BitIconView, ChooseBitView, ClaimBitView
+    from api.stats import PuzzleStatsView
 
     # admin views
     from api.puzzle_batch_edit import AdminPuzzleBatchEditView
@@ -169,6 +170,8 @@ def make_app(config=None, **kw):
                      view_func=ChooseBitView.as_view('choose-bit'))
     app.add_url_rule('/claim-bit/',
                      view_func=ClaimBitView.as_view('claim-bit'))
+    app.add_url_rule('/puzzle-stats/<puzzle_id>/',
+                     view_func=PuzzleStatsView.as_view('puzzle-stats'))
 
     # Requires user to press any key to continue
     app.add_url_rule('/post-comment/',

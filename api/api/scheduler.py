@@ -1,5 +1,5 @@
 import sys
-from time import sleep, time, ctime
+from time import sleep, time, ctime, strftime, gmtime
 import random
 import logging
 
@@ -136,7 +136,7 @@ class UpdateModifiedDateOnPuzzle(Task):
 
 class UpdatePlayer(Task):
     "Update the User points, score, m_date from what has recently been put on redis"
-    interval = 25
+    interval = 125
     first_run = True
     POINTS_CAP = 15000
 
@@ -154,6 +154,7 @@ class UpdatePlayer(Task):
             points = redisConnection.getset('batchpoints:{user}'.format(user=user), value=0)
             redisConnection.expire('batchpoints:{user}'.format(user=user), DAY)
 
+            logger.debug("update user {id} with {points} points and score of {score}".format(**{'id':user, 'points':points, 'score':score}))
             cur.execute(read_query_file("update_user_points_and_m_date.sql"), {'id':user, 'points':points, 'score':score, 'POINTS_CAP':self.POINTS_CAP})
             cur.execute(read_query_file("update_bit_icon_expiration.sql"), {'user':user})
 
@@ -161,16 +162,50 @@ class UpdatePlayer(Task):
 
         if self.first_run:
             result = cur.execute(read_query_file("select_user_scores.sql")).fetchall(), cur.description
-            #logger.debug("user scores result {0}".format(result))
+            logger.debug("user scores result {0}".format(result))
             if result:
                 user_scores = dict(result[0])
-                #logger.debug("user scores dict {0}".format(user_scores))
+                logger.debug("user scores dict {0}".format(user_scores))
                 redisConnection.zadd('rank', user_scores)
             self.first_run = False
 
         cur.close()
         db.commit()
 
+class UpdatePuzzleStats(Task):
+    "Update the puzzle stats/timeline from what has recently been put on redis"
+    interval = 60
+    last_run = 0
+
+    def do_task(self):
+        logger.info("Doing task {task_name} {task_id}".format(**{
+            'task_name':__class__.__name__,
+            'task_id':self.id
+        }))
+        cur = db.cursor()
+
+        puzzle = redisConnection.spop('batchpuzzle')
+        while puzzle:
+            last_batch = redisConnection.zrangebyscore('timeline:{puzzle}'.format(puzzle=puzzle), self.last_run, '+inf', withscores=True)
+            for (user, update_timestamp) in last_batch:
+                #self.last_run = int(max(self.last_run, update_timestamp))
+                logger.debug("user: {user}, {update_timestamp}".format(user=user, update_timestamp=update_timestamp))
+                user = int(user)
+                points = int(redisConnection.getset('batchpoints:{puzzle}:{user}'.format(puzzle=puzzle, user=user), value=0) or '0')
+                redisConnection.expire('batchpoints:{puzzle}:{user}'.format(puzzle=puzzle, user=user), DAY)
+                if points != 0:
+                    timestamp = strftime('%Y-%m-%d %H:%M:%S', gmtime(update_timestamp))
+                    logger.debug("{timestamp} - bumping {points} points on {puzzle} for player: {player}".format(puzzle=puzzle, player=user, points=points, timestamp=timestamp))
+                    cur.execute(read_query_file("insert_batchpoints_to_timeline.sql"), {
+                      'puzzle': puzzle,
+                      'player': user,
+                      'points': points,
+                      'timestamp': timestamp
+                      })
+            puzzle = redisConnection.spop('batchpuzzle')
+        self.last_run = int(time())
+        cur.close()
+        db.commit()
 
 def main():
     ""
@@ -183,6 +218,7 @@ def main():
         BumpMinimumDotsForPlayers,
         UpdateModifiedDateOnPuzzle,
         UpdatePlayer,
+        UpdatePuzzleStats,
     ]
     tasks = {}
     for index in range(len(task_registry)):
