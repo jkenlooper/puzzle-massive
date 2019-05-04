@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from builtins import zip
-from flask import abort, json, current_app
+from flask import abort, json, current_app, request
 from flask.views import MethodView
 import redis
 
