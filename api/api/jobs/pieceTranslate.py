@@ -76,15 +76,6 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         #TODO:
         #return (topic, msg)
 
-        #TODO: Optimize by incr puzzle/player/points data to redis key; use scheduler to update Timeline
-        #TODO: Optimize by appending message to timeline archive redis key
-        # Append msg to timeline
-        #cur.execute(fetch_query_string("append_to_timeline.sql"), {
-        #  'puzzle': puzzle,
-        #  'player': user,
-        #  'message': '', # TODO: no longer care about saving the msg
-        #  'points': points
-        #  })
         #bump the m_date for this player on the puzzle
         redisConnection.zadd('timeline:{puzzle}'.format(puzzle=puzzle), {user: now})
 
@@ -123,8 +114,6 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
                         redisConnection.incr(points_key, amount=earns)
 
             redisConnection.incr('batchpoints:{user}'.format(user=user), amount=earns)
-            #db.execute(fetch_query_string("update_user_points_and_m_date.sql"), {'id':user, 'points':earns, 'score':1, 'POINTS_CAP':POINTS_CAP})
-            #db.execute(fetch_query_string("update_bit_icon_expiration.sql"), {'user':user})
 
         # TODO: Optimize by using redis for puzzle status
         if complete:

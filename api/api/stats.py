@@ -1,4 +1,4 @@
-from flask import current_app, request, abort, json
+from flask import current_app, request, abort, json, make_response
 from flask.views import MethodView
 import redis
 import time
@@ -10,6 +10,72 @@ from api.database import fetch_query_string, rowify
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
 redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
+
+class PlayerRanksView(MethodView):
+    """
+interface RankData {
+  active: number; bit expiration > now
+  icon: string;
+  id: number;
+  rank: number; // not used
+  score: number;
+}
+    """
+    def get(self):
+        ""
+        args = {}
+        if request.args:
+            args.update(request.args.to_dict(flat=True))
+        start = args.get('start')
+        count = args.get('count')
+        if start == None or count == None:
+            return make_response(encoder.encode({
+                'msg': "missing start and count params"
+            }), 400)
+
+        # TODO:
+        #if count > 45:
+        #    return make_response(encoder.encode({
+        #        'msg': "Count arg is too high"
+        #    }), 400)
+
+        start = int(start)
+        count = int(count)
+        stop = start + count
+
+        cur = db.cursor()
+
+        # TODO: use stop to limit the range
+        rank_slice = redisConnection.zrevrange('rank', start, -1, withscores=True)
+
+        result = cur.execute(fetch_query_string('select-bit-icons-for-ranks.sql')).fetchall()
+        (result, col_names) = rowify(result, cur.description)
+        bit_icons = {}
+        for item in result:
+            bit_icons[item['user']] = item
+
+        ranks = []
+        for index, item in enumerate(rank_slice):
+            (user, score) = map(int, item)
+            bit_icon = bit_icons.get(user, {})
+            ranks.append({
+                "id": user,
+                "score": score,
+                "rank": start + index,
+                "icon": bit_icon.get("icon", ''),
+                "active": bit_icons.get("active", 0)
+            })
+
+        #TODO:
+        #player_ranks = {
+        #    "total_players": 0,
+        #    "total_active_players": 0,
+        #    "user_rank": 0,
+        #    "rank_slice": ranks,
+        #}
+
+        cur.close()
+        return encoder.encode(ranks)
 
 class PuzzleStatsView(MethodView):
     """

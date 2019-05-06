@@ -85,7 +85,8 @@ customElements.define(
       let playerId = userDetailsService.userDetails.id;
       if (playerId != undefined) {
         this.playerId = playerId;
-        this._setPlayerRanks(playerId);
+        let start = 0; // TODO:
+        this._setPlayerRanks(playerId, start);
       } else {
         userDetailsService.subscribe(updateOnce, this.instanceId);
       }
@@ -95,15 +96,18 @@ customElements.define(
           throw new Error("No user id available to set player ranking");
         }
         self.playerId = playerId;
-        self._setPlayerRanks(playerId);
+        let start = 0; // TODO:
+        self._setPlayerRanks(playerId, start);
         userDetailsService.unsubscribe(self.instanceId);
       }
 
       this.render();
     }
 
-    _setPlayerRanks(playerId: number) {
-      const rankingService = new FetchService(this.player_ranks_url);
+    _setPlayerRanks(playerId: number, start: number) {
+      const rankingService = new FetchService(
+          this.player_ranks_url + "?start=" + start + "&count=20000" // TODO:
+      );
       const self = this;
       rankingService
         .get<Array<RankData>>()
