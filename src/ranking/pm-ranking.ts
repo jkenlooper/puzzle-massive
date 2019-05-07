@@ -20,13 +20,20 @@ interface PlayerRankDetail extends RankData {
   iconAlt: string;
 }
 
+interface PlayerStatsData {
+  total_players: number;
+  total_active_players: number;
+  player_rank: number;
+  rank_slice: Array<RankData>;
+}
+
 interface TemplateData {
   isReady: boolean;
   hasError: boolean;
   errorMessage?: string;
   playerRank: number;
   playerId: number | undefined;
-  totalActivePlayers: number;
+  totalPlayers: number;
   hasUp: boolean;
   hasDown: boolean;
   playerRanks: Array<PlayerRankDetail>;
@@ -45,11 +52,10 @@ customElements.define(
     hasError: boolean = false;
     errorMessage: string = "";
     range: number = 15;
-    private allPlayerRanks: Array<PlayerRankDetail> = [];
     playerRanks: Array<PlayerRankDetail> = [];
     playerRank: number = 0;
     playerId: number | undefined;
-    totalActivePlayers: number = 0;
+    totalPlayers: number = 0;
     hasUp: boolean = false;
     hasDown: boolean = false;
     private instanceId: string;
@@ -83,10 +89,10 @@ customElements.define(
       }
 
       let playerId = userDetailsService.userDetails.id;
+      const setPlayerRanks = this._setPlayerRanks.bind(this);
       if (playerId != undefined) {
         this.playerId = playerId;
-        let start = 0; // TODO:
-        this._setPlayerRanks(playerId, start);
+        setPlayerRanks();
       } else {
         userDetailsService.subscribe(updateOnce, this.instanceId);
       }
@@ -96,44 +102,49 @@ customElements.define(
           throw new Error("No user id available to set player ranking");
         }
         self.playerId = playerId;
-        let start = 0; // TODO:
-        self._setPlayerRanks(playerId, start);
+        setPlayerRanks();
         userDetailsService.unsubscribe(self.instanceId);
       }
 
       this.render();
     }
 
-    _setPlayerRanks(playerId: number, start: number) {
+    _setPlayerRanks(start?: number) {
       const rankingService = new FetchService(
-          this.player_ranks_url + "?start=" + start + "&count=20000" // TODO:
+        `${this.player_ranks_url}?${
+          start === undefined ? "" : `start=${start}&`
+        }count=${this.range}`
       );
       const self = this;
-      rankingService
-        .get<Array<RankData>>()
-        .then((data) => {
-          const list = data.filter((item) => {
-            return (
-              item.id === playerId || !(item.score === 0 || item.icon === "")
-            );
-          });
-          this.playerRank = list.findIndex((item) => item.id === playerId) + 1;
+      return rankingService
+        .get<PlayerStatsData>()
+        .then((playerStats) => {
+          this.playerRank = playerStats.player_rank;
+          const first = playerStats.rank_slice[0];
+          if (first) {
+            this.offset = first.rank;
+          } else {
+            this.offset = 0;
+          }
 
-          this.allPlayerRanks = list.map(setPlayerRankDetails);
-          this.totalActivePlayers = this.allPlayerRanks.length;
-          this.selectPlayerRanks(this.offset);
+          this.playerRanks = playerStats.rank_slice.map(setPlayerRankDetails);
+          this.totalPlayers = playerStats.total_players;
+          this.hasUp = this.offset > 1;
+          const end = this.offset + this.range;
+          this.hasDown = end < this.totalPlayers;
+        })
+        .catch(() => {
+          this.hasError = true;
+          this.errorMessage = "Error getting the player ranks data.";
         })
         .finally(() => {
           this.isReady = true;
           this.render();
         });
-      function setPlayerRankDetails(
-        item: RankData,
-        index: number
-      ): PlayerRankDetail {
+      function setPlayerRankDetails(item: RankData): PlayerRankDetail {
         const playerRank = <PlayerRankDetail>Object.assign(
           {
-            topPlayer: index < 15,
+            topPlayer: item.rank < 15,
             iconSrc: `${self.mediaPath}bit-icons/64-${item.icon ||
               "unknown-bit"}.png`,
             iconAlt: item.icon || "unknown bit",
@@ -167,7 +178,7 @@ customElements.define(
           <p>
             <strong>
               Your Rank is ${data.playerRank} out of ${
-          data.totalActivePlayers
+          data.totalPlayers
         } players.
             </strong>
           </p>
@@ -245,9 +256,10 @@ customElements.define(
       return {
         isReady: this.isReady,
         hasError: this.hasError,
+        errorMessage: this.errorMessage,
         playerRank: this.playerRank,
         playerId: this.playerId,
-        totalActivePlayers: this.totalActivePlayers,
+        totalPlayers: this.totalPlayers,
         hasUp: this.hasUp,
         hasDown: this.hasDown,
         playerRanks: this.playerRanks,
@@ -260,27 +272,18 @@ customElements.define(
       render(this.template(this.data), this);
     }
 
-    selectPlayerRanks(offset: number) {
-      let start = Math.max(this.playerRank - 1 - offset - this.range / 2, 0);
-      let end = Math.max(
-        this.playerRank - 1 - offset + this.range / 2,
-        this.range
-      );
-      this.playerRanks = this.allPlayerRanks.slice(start, end);
-      this.hasUp = start > 1;
-      this.hasDown = end < this.allPlayerRanks.length;
-    }
-
     selectPlayerRanksUp() {
-      this.offset = this.offset + this.range;
-      this.selectPlayerRanks(this.offset);
-      this.render();
+      const start = Math.max(0, this.offset - this.range);
+      this._setPlayerRanks(start).finally(() => {
+        this.render();
+      });
     }
 
     selectPlayerRanksDown() {
-      this.offset = this.offset - this.range;
-      this.selectPlayerRanks(this.offset);
-      this.render();
+      const start = this.offset + this.range;
+      this._setPlayerRanks(start).finally(() => {
+        this.render();
+      });
     }
   }
 );

@@ -4,49 +4,55 @@ import redis
 import time
 
 from api.app import db
-from api.user import user_id_from_ip
+from api.user import user_id_from_ip, user_not_banned
 from api.database import fetch_query_string, rowify
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
 redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
 
+DAY = 24 * 60 * 60
+ACTIVE_RANGE = 14 * DAY
+
 class PlayerRanksView(MethodView):
     """
-interface RankData {
-  active: number; bit expiration > now
-  icon: string;
-  id: number;
-  rank: number; // not used
-  score: number;
-}
     """
+
+    decorators = [user_not_banned]
+
     def get(self):
         ""
+        ip = request.headers.get('X-Real-IP')
+        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
         args = {}
         if request.args:
             args.update(request.args.to_dict(flat=True))
         start = args.get('start')
         count = args.get('count')
-        if start == None or count == None:
+        if count == None:
             return make_response(encoder.encode({
-                'msg': "missing start and count params"
+                'msg': "missing count param"
             }), 400)
 
-        # TODO:
-        #if count > 45:
-        #    return make_response(encoder.encode({
-        #        'msg': "Count arg is too high"
-        #    }), 400)
-
-        start = int(start)
         count = int(count)
-        stop = start + count
+        if count > 45:
+            return make_response(encoder.encode({
+                'msg': "Count arg is too high"
+            }), 400)
+
 
         cur = db.cursor()
+        now = int(time.time())
+        player_rank = redisConnection.zrevrank('rank', user)
+        total_players = redisConnection.zcard('rank')
+        total_active_players = redisConnection.zcount('timeline', now - ACTIVE_RANGE, -1)
 
-        # TODO: use stop to limit the range
-        rank_slice = redisConnection.zrevrange('rank', start, -1, withscores=True)
+        if start == None:
+            start = max(0, player_rank - int(count / 2))
+        else:
+            start = int(start)
+        stop = start + count
+        rank_slice = redisConnection.zrevrange('rank', start, stop, withscores=True)
 
         result = cur.execute(fetch_query_string('select-bit-icons-for-ranks.sql')).fetchall()
         (result, col_names) = rowify(result, cur.description)
@@ -66,21 +72,23 @@ interface RankData {
                 "active": bit_icons.get("active", 0)
             })
 
-        #TODO:
-        #player_ranks = {
-        #    "total_players": 0,
-        #    "total_active_players": 0,
-        #    "user_rank": 0,
-        #    "rank_slice": ranks,
-        #}
+        player_ranks = {
+            "total_players": total_players,
+            "total_active_players": total_active_players,
+            "player_rank": player_rank,
+            "rank_slice": ranks,
+        }
 
         cur.close()
-        return encoder.encode(ranks)
+        return encoder.encode(player_ranks)
 
 class PuzzleStatsView(MethodView):
     """
     Return statistics on a puzzle.
     """
+
+    decorators = [user_not_banned]
+
     def get(self, puzzle_id):
         ""
         ip = request.headers.get('X-Real-IP')

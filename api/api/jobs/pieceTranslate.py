@@ -76,8 +76,9 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         #TODO:
         #return (topic, msg)
 
-        #bump the m_date for this player on the puzzle
+        #bump the m_date for this player on the puzzle and timeline
         redisConnection.zadd('timeline:{puzzle}'.format(puzzle=puzzle), {user: now})
+        redisConnection.zadd('timeline', {user: now})
 
         # Update player points
         if points != 0 and user != None:
