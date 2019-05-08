@@ -7,7 +7,8 @@ import { classMap } from "lit-html/directives/class-map.js";
 import "./ranking.css";
 
 interface RankData {
-  active: number;
+  active: boolean;
+  bitactive: boolean;
   icon: string;
   id: number;
   rank: number;
@@ -34,6 +35,7 @@ interface TemplateData {
   playerRank: number;
   playerId: number | undefined;
   totalPlayers: number;
+  totalActivePlayers: number;
   hasUp: boolean;
   hasDown: boolean;
   playerRanks: Array<PlayerRankDetail>;
@@ -56,6 +58,7 @@ customElements.define(
     playerRank: number = 0;
     playerId: number | undefined;
     totalPlayers: number = 0;
+    totalActivePlayers: number = 0;
     hasUp: boolean = false;
     hasDown: boolean = false;
     private instanceId: string;
@@ -129,6 +132,7 @@ customElements.define(
 
           this.playerRanks = playerStats.rank_slice.map(setPlayerRankDetails);
           this.totalPlayers = playerStats.total_players;
+          this.totalActivePlayers = playerStats.total_active_players;
           this.hasUp = this.offset > 1;
           const end = this.offset + this.range;
           this.hasDown = end < this.totalPlayers;
@@ -182,6 +186,9 @@ customElements.define(
         } players.
             </strong>
           </p>
+          <p>
+          ${data.totalActivePlayers} active players in the last two weeks.
+          </p>
           <p class="u-textRight">
           ${
             data.hasUp
@@ -225,6 +232,7 @@ customElements.define(
                 role="listitem"
                 class=${classMap({
                   "pm-Ranking-listitem": true,
+                  isExpired: !item.bitactive,
                   "pm-Ranking-listitem--current": item.id === data.playerId,
                   "pm-Ranking-listitem--topPlayer": item.topPlayer,
                 })}
@@ -239,9 +247,9 @@ customElements.define(
 
                 <strong class="pm-Ranking-rank">${item.score}</strong>
                 <span class="pm-Ranking-status">
-                  ${item.active === 0
+                  ${item.active
                     ? html`
-                        <small title="bit icon has expired">Inactive</small>
+                        <small>Active</small>
                       `
                     : html``}
                 </span>
@@ -260,6 +268,7 @@ customElements.define(
         playerRank: this.playerRank,
         playerId: this.playerId,
         totalPlayers: this.totalPlayers,
+        totalActivePlayers: this.totalActivePlayers,
         hasUp: this.hasUp,
         hasDown: this.hasDown,
         playerRanks: this.playerRanks,

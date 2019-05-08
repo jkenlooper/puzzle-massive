@@ -161,12 +161,13 @@ class UpdatePlayer(Task):
             user = redisConnection.spop('batchuser')
 
         if self.first_run:
-            result = cur.execute(read_query_file("select_user_scores.sql")).fetchall(), cur.description
-            logger.debug("user scores result {0}".format(result))
+            result = cur.execute(read_query_file("select_user_score_and_timestamp.sql")).fetchall(), cur.description
             if result:
-                user_scores = dict(result[0])
-                logger.debug("user scores dict {0}".format(user_scores))
+                logger.info("Set rank and timeline on {0} players".format(len(result[0])))
+                user_scores = dict(map(lambda x: [x[0], x[1]], result[0]))
+                user_timestamps = dict(map(lambda x: [x[0], int(x[2])], result[0]))
                 redisConnection.zadd('rank', user_scores)
+                redisConnection.zadd('timeline', user_timestamps)
             self.first_run = False
 
         cur.close()

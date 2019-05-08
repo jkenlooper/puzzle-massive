@@ -43,9 +43,9 @@ class PlayerRanksView(MethodView):
 
         cur = db.cursor()
         now = int(time.time())
-        player_rank = redisConnection.zrevrank('rank', user)
+        player_rank = redisConnection.zrevrank('rank', user) + 1
         total_players = redisConnection.zcard('rank')
-        total_active_players = redisConnection.zcount('timeline', now - ACTIVE_RANGE, -1)
+        active_players = frozenset(map(int, redisConnection.zrevrangebyscore('timeline', '+inf', now - ACTIVE_RANGE)))
 
         if start == None:
             start = max(0, player_rank - int(count / 2))
@@ -69,12 +69,13 @@ class PlayerRanksView(MethodView):
                 "score": score,
                 "rank": start + index,
                 "icon": bit_icon.get("icon", ''),
-                "active": bit_icons.get("active", 0)
+                "active": user in active_players,
+                "bitactive": bool(bit_icon.get("active", 0))
             })
 
         player_ranks = {
             "total_players": total_players,
-            "total_active_players": total_active_players,
+            "total_active_players": len(active_players),
             "player_rank": player_rank,
             "rank_slice": ranks,
         }

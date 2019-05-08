@@ -36,17 +36,16 @@
 
 .pm-Ranking-listitem--current .pm-Ranking-img {
   transform: scale(2.6);
-  transform-origin: 50%;
+  transform-origin: 100%;
+}
+
+.pm-Ranking-listitem.isExpired .pm-Ranking-img {
+  opacity: 0.7;
 }
 
 .pm-Ranking-rank {
   width: 4em;
   text-align: right;
-}
-
-.pm-Ranking-listitem--current .pm-Ranking-rank {
-  transform: scale(1.5);
-  transform-origin: 100% 50%;
 }
 
 .pm-Ranking-listitem--topPlayer .pm-Ranking-rank {
