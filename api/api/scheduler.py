@@ -38,36 +38,42 @@ scheduler_key = 'sc'
 class Task:
     interval = 5
 
-    def __init__(self, id):
+    def __init__(self, id, task_name='Task'):
         self.id = id
+        self.task_name = task_name
 
     def __call__(self):
         self.do_task()
         now = int(time())
         due = now + self.interval
-        logger.info("Setting task {task_name} {task_id} due date to {format_due}".format(**{
+        logger.info("{format_due} - task {task_name} {task_id} due date".format(**{
             'format_due':ctime(due),
-            'task_name':__class__.__name__,
+            'task_name':self.task_name,
             'task_id':self.id
         }))
         redisConnection.zadd(scheduler_key, {self.id: due})
 
     def do_task(self):
-        logger.info('do task')
+        logger.info("Doing task {task_name} {task_id}".format(**{
+            'task_name':self.task_name,
+            'task_id':self.id
+        }))
+        logger.debug("{task_name} {task_id} task description:\n {doc}".format(**{
+            'task_name':self.task_name,
+            'task_id':self.id,
+            'doc': self.__doc__
+        }))
 
 class AutoRebuildCompletedPuzzle(Task):
     "Auto rebuild completed puzzles that are no longer recent"
     interval = 15 * HOUR + 26 * MINUTE
 
     def __init__(self, id):
-        super().__init__(id)
+        super().__init__(id, __class__.__name__)
         self.queue = Queue('puzzle_create', connection=redisConnection)
 
     def do_task(self):
-        logger.info("Doing task {task_name} {task_id}".format(**{
-            'task_name':__class__.__name__,
-            'task_id':self.id
-        }))
+        super().do_task()
 
         cur = db.cursor()
         (result, col_names) = rowify(cur.execute(read_query_file("select_random_puzzle_to_rebuild.sql"), {'status': COMPLETED}).fetchall(), cur.description)
@@ -103,11 +109,11 @@ class BumpMinimumDotsForPlayers(Task):
     "Increase dots for players that have less then the minimum"
     interval = DAY
 
+    def __init__(self, id):
+        super().__init__(id, __class__.__name__)
+
     def do_task(self):
-        logger.info("Doing task {task_name} {task_id}".format(**{
-            'task_name':__class__.__name__,
-            'task_id':self.id
-        }))
+        super().do_task()
 
         cur = db.cursor()
         cur.execute(read_query_file("update_points_to_minimum_for_all_users.sql"), {'minimum': NEW_USER_STARTING_POINTS})
@@ -119,11 +125,11 @@ class UpdateModifiedDateOnPuzzle(Task):
     interval = 58
     last_update = int(time())
 
+    def __init__(self, id):
+        super().__init__(id, __class__.__name__)
+
     def do_task(self):
-        logger.info("Doing task {task_name} {task_id}".format(**{
-            'task_name':__class__.__name__,
-            'task_id':self.id
-        }))
+        super().do_task()
 
         cur = db.cursor()
         puzzles = map(int, redisConnection.zrangebyscore('pcupdates', self.last_update, '+inf'))
@@ -140,11 +146,12 @@ class UpdatePlayer(Task):
     first_run = True
     POINTS_CAP = 15000
 
+    def __init__(self, id):
+        super().__init__(id, __class__.__name__)
+
     def do_task(self):
-        logger.info("Doing task {task_name} {task_id}".format(**{
-            'task_name':__class__.__name__,
-            'task_id':self.id
-        }))
+        super().do_task()
+
         cur = db.cursor()
 
         user = redisConnection.spop('batchuser')
@@ -178,11 +185,12 @@ class UpdatePuzzleStats(Task):
     interval = 60
     last_run = 0
 
+    def __init__(self, id):
+        super().__init__(id, __class__.__name__)
+
     def do_task(self):
-        logger.info("Doing task {task_name} {task_id}".format(**{
-            'task_name':__class__.__name__,
-            'task_id':self.id
-        }))
+        super().do_task()
+
         cur = db.cursor()
 
         puzzle = redisConnection.spop('batchpuzzle')
