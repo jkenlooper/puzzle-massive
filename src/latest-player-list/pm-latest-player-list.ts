@@ -1,32 +1,21 @@
 import { html, render } from "lit-html";
-import FetchService from "../site/fetch.service";
+import {
+  puzzleStatsService,
+  PlayerStatsData,
+  PlayerDetail,
+} from "../site/puzzle-stats.service";
 import "./latest-player-list.css";
 
-interface PlayerStatsData {
-  now: number;
-  players: Array<PlayerData>;
-}
-
-interface PlayerData {
-  bitactive: boolean;
-  icon: string;
-  id: number;
-  rank: number;
-  score: number;
-  seconds_from_now: number;
-}
-
-interface PlayerDetail extends PlayerData {
+interface PlayerDetailWithIconSrc extends PlayerDetail {
   iconSrc: string;
   iconAlt: string;
-  timeSince: string;
 }
 
 interface TemplateData {
   errorMessage?: string;
   hasError: boolean;
   isReady: boolean;
-  players: Array<PlayerDetail>;
+  players: Array<PlayerDetailWithIconSrc>;
   showTimeSince: boolean;
 }
 
@@ -42,7 +31,7 @@ customElements.define(
     offset: number = 0;
     limit: number = 10;
     showTimeSince: boolean = false;
-    players: Array<PlayerDetail> = [];
+    players: Array<PlayerDetailWithIconSrc> = [];
     private mediaPath: string;
     constructor() {
       super();
@@ -80,8 +69,6 @@ customElements.define(
       this.render();
     }
 
-    // <pm-latest-player-list media-path="" puzzle-id="{{recent.puzzle_id}}" show-time-since limit="9"></pm-latest-player-list>
-    // <pm-latest-player-list media-path="" puzzle-id="{{recent.puzzle_id}}" offset="9" limit="25"></pm-latest-player-list>
     template(data: TemplateData) {
       if (!data.isReady) {
         return html`
@@ -94,6 +81,9 @@ customElements.define(
         `;
       }
 
+      const offset = this.offset;
+      const limit = this.limit;
+
       if (data.showTimeSince) {
         return playerListWithTimeSince();
       } else {
@@ -103,27 +93,32 @@ customElements.define(
       function playerListWithTimeSince() {
         return html`
           <div class="pm-Preview-latest">
-            <h2>Players</h2>
-            <div class="pm-Preview-latestList" role="list">
-              <div class="pm-Preview-latestItem">
-                <small class="pm-Preview-latestItemCell"></small>
-                <small
-                  class="pm-Preview-latestItemCell pm-Preview-latestItemCell--pieces"
-                >
-                  Pieces
-                </small>
-                <small class="pm-Preview-latestItemCell">
-                  Time since
-                </small>
-              </div>
-              ${itemsWithTimeSince()}
-            </div>
+            ${data.players.length === 0
+              ? html``
+              : html`
+                  <h2>Players</h2>
+                  <div class="pm-Preview-latestList" role="list">
+                    <div class="pm-Preview-latestItem">
+                      <small class="pm-Preview-latestItemCell"></small>
+                      <small
+                        class="pm-Preview-latestItemCell pm-Preview-latestItemCell--pieces"
+                      >
+                        Pieces
+                      </small>
+                      <small class="pm-Preview-latestItemCell">
+                        Time since
+                      </small>
+                    </div>
+                    ${itemsWithTimeSince()}
+                  </div>
+                `}
           </div>
         `;
       }
       function itemsWithTimeSince() {
+        const playerSlice = data.players.slice(offset, limit);
         return html`
-          ${data.players.map((item) => {
+          ${playerSlice.map((item) => {
             return html`
               <div class="pm-Preview-latestItem" role="listitem">
                 <small class="pm-Preview-latestItemCell">
@@ -162,17 +157,22 @@ customElements.define(
                   </p>
                 `
               : html`
-                  <h2 class="u-textRight">Players (continued)</h2>
-                  <div class="pm-Preview-pieceJoinsList" role="list">
-                    ${itemsWithoutTimeSince()}
-                  </div>
+                  ${data.players.length > offset
+                    ? html`
+                        <h2 class="u-textRight">Players (continued)</h2>
+                        <div class="pm-Preview-pieceJoinsList" role="list">
+                          ${itemsWithoutTimeSince()}
+                        </div>
+                      `
+                    : html``}
                 `}
           </div>
         `;
       }
       function itemsWithoutTimeSince() {
+        const playerSlice = data.players.slice(offset, limit);
         return html`
-          ${data.players.map((item) => {
+          ${playerSlice.map((item) => {
             return html`
               <span class="pm-Preview-pieceJoinsListItem" role="listitem">
                 <img
@@ -203,39 +203,12 @@ customElements.define(
       render(this.template(this.data), this);
     }
 
-    getTimePassed(secondsFromNow: number): string {
-      let timePassed = "";
-
-      if (secondsFromNow < 60) {
-        timePassed = "less than a minute";
-      } else if (secondsFromNow < 2 * 60) {
-        timePassed = "1 minute";
-      } else if (secondsFromNow < 60 * 60) {
-        timePassed = `${Math.floor(secondsFromNow / 60)} minutes`;
-      } else if (secondsFromNow < 60 * 60 * 2) {
-        timePassed = "1 hour";
-      } else if (secondsFromNow < 60 * 60 * 24) {
-        timePassed = `${Math.floor(secondsFromNow / 60 / 60)} hours`;
-      } else if (secondsFromNow < 60 * 60 * 24 * 2) {
-        timePassed = "1 day";
-      } else if (secondsFromNow < 60 * 60 * 24 * 14) {
-        timePassed = `${Math.floor(secondsFromNow / 60 / 60 / 24)} days`;
-      } else {
-        timePassed = "a long time";
-      }
-      timePassed = `${timePassed} ago`;
-      return timePassed;
-    }
-
     _setPlayers() {
-      const puzzleStatsService = new FetchService(
-        `/newapi/puzzle-stats/${this.puzzleId}/`
-      );
-      const self = this;
       const setPlayerDetails = _setPlayerDetails.bind(this);
+      const mediaPath = this.mediaPath;
       return puzzleStatsService
-        .get<PlayerStatsData>()
-        .then((playerStats) => {
+        .getPlayerStatsOnPuzzle(this.puzzleId)
+        .then((playerStats: PlayerStatsData) => {
           this.players = playerStats.players.map(setPlayerDetails);
         })
         .catch(() => {
@@ -247,13 +220,12 @@ customElements.define(
           this.render();
         });
 
-      function _setPlayerDetails(item: PlayerData): PlayerDetail {
-        const playerDetail = <PlayerDetail>Object.assign(
+      function _setPlayerDetails(item: PlayerDetail): PlayerDetailWithIconSrc {
+        const playerDetail = <PlayerDetailWithIconSrc>Object.assign(
           {
-            iconSrc: `${self.mediaPath}bit-icons/64-${item.icon ||
+            iconSrc: `${mediaPath}bit-icons/64-${item.icon ||
               "unknown-bit"}.png`,
             iconAlt: item.icon || "unknown bit",
-            timeSince: this.getTimePassed(item.seconds_from_now),
           },
           item
         );

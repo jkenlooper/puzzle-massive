@@ -85,47 +85,12 @@ two minute over an hour:{{ timePassed(60*62) }}<br>
         <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{recent.url|safe}}" alt="">
       {% endif %}
 
-
       <pm-latest-player-list
         media-path="{{ url_for('send_media_file', filename='') }}"
         puzzle-id="{{recent.puzzle_id}}"
         show-time-since="true"
         limit="9"></pm-latest-player-list>
-      {#
-      <div class="pm-Preview-latest">
-        {% if players | length > 0 %}
-        <h2>Players</h2>
-        <div class="pm-Preview-latestList" role="list">
-            <div class="pm-Preview-latestItem">
-              <small class="pm-Preview-latestItemCell"></small>
-              <small class="pm-Preview-latestItemCell pm-Preview-latestItemCell--pieces">
-                Pieces
-              </small>
-              <small class="pm-Preview-latestItemCell">
-                Time since
-              </small>
-            </div>
-        {% for item in players[0:9]%}
-            <div class="pm-Preview-latestItem" role="listitem">
-              <small class="pm-Preview-latestItemCell">
-              {% if item.icon -%}
-              <img width="32" height="32" src="{{ url_for('send_media_file', filename='bit-icons/64-{}.png'.format(item.icon)) }}" alt="{{item.icon}}">
-              {% else %}
-              <img width="32" height="32" src="{{ url_for('send_media_file', filename='64-unknown-bit-icon.png') }}" alt="Unknown bit">
-              {%- endif %}
-              </small>
-              <small class="pm-Preview-latestItemCell pm-Preview-latestItemCell--pieces">
-                {{ item.points }}
-              </small>
-              <small class="pm-Preview-latestItemCell">
-                {{ timePassed(item.seconds_from_now) }}
-              </small>
-            </div>
-        {% endfor %}
-        </div>
-        {% endif %}
-      </div>
-      #}
+
       <p class="pm-Preview-description u-textTruncate">
         <small>
           {{recent.description}}
@@ -141,40 +106,11 @@ two minute over an hour:{{ timePassed(60*62) }}<br>
         <span>pieces</span>
       </div>
 
-
-
-      {# TODO: use a component here instead of rendering it server-side?
       <pm-latest-player-list
         media-path="{{ url_for('send_media_file', filename='') }}"
         puzzle-id="{{recent.puzzle_id}}"
         offset="9"
         limit="25"></pm-latest-player-list>
-      #}
-      <div class="pm-Preview-pieceJoins">
-        {% if players | length == 0 %}
-        <p><small>No active players<br> have joined pieces<br> in the last 2 weeks.</small></p>
-        {% endif %}
-
-        {% if players | length > 9 %}
-        <h2 class="u-textRight">Players (continued)</h2>
-        <div class="pm-Preview-pieceJoinsList" role="list">
-        {% for item in  players[9:] -%}
-          {# Only 25 will fit in this container #}
-          {%- if loop.index <= 25 %}
-          <span class="pm-Preview-pieceJoinsListItem" role="listitem">
-            {% if item.icon -%}
-            <img width="32" height="32" src="{{ url_for('send_media_file', filename='bit-icons/64-{}.png'.format(item.icon)) }}" alt="{{item.icon}}">
-            {% else %}
-            <img width="32" height="32" src="{{ url_for('send_media_file', filename='64-unknown-bit-icon.png') }}" alt="Unknown bit">
-            {%- endif %}
-            {{ item.points }}
-          </span>
-          {%- endif %}
-        {%- endfor %}
-        </div>
-        {% endif %}
-
-      </div>
 
     </div>
     </div>
