@@ -104,49 +104,39 @@ class PuzzleStatsView(MethodView):
 
         (result, col_names) = rowify(result, cur.description)
         puzzle = result[0].get('id')
-        status = result[0].get('status')
-        now = int(time())
+        now = int(time.time())
 
-        timeline = redisConnection.zrange('timeline:{puzzle}'.format(puzzle=puzzle), 0, -1, withscores=True)
-        score = dict(redisConnection.zrange('score:{puzzle}'.format(puzzle=puzzle), 0, -1, withscores=True))
-        def set_entry(timeline_entry):
-            (user, timestamp) = timeline_entry
-            return {
-                'player': int(user), # TODO: should include bit icon as well
-                'seconds_from_now': now - int(timestamp),
-                'score': int(score.get(user, 0))
-            }
+        result = cur.execute(fetch_query_string('select-bit-icons-for-ranks.sql')).fetchall()
+        (result, col_names) = rowify(result, cur.description)
+        bit_icons = {}
+        for item in result:
+            bit_icons[item['user']] = item
+
+        timeline = redisConnection.zrevrange('timeline:{puzzle}'.format(puzzle=puzzle), 0, -1, withscores=True)
+        score_puzzle = redisConnection.zrange('score:{puzzle}'.format(puzzle=puzzle), 0, -1, withscores=True)
+        user_score = dict(score_puzzle)
+        user_rank = {}
+        for index, item in enumerate(score_puzzle):
+            user_rank[int(item[0])] = index + 1
+
+        players = []
+        for index, item in enumerate(timeline):
+            (user, timestamp) = item
+            bit_icon = bit_icons.get(int(user), {})
+            players.append({
+                "id": int(user),
+                "score": int(user_score.get(user, 0)),
+                "rank": user_rank.get(int(user), 0), # a 0 value means the player hasn't joined any pieces
+                "seconds_from_now": int(now - timestamp),
+                "icon": bit_icon.get("icon", ''),
+                "bitactive": bool(bit_icon.get("active", 0))
+            })
 
         # similar to queries/_recent-timeline-for-puzzle.sql
         puzzle_stats = {
-            'players': list(map(set_entry, timeline))
+            "now": now,
+            "players": players
         }
 
         cur.close()
         return encoder.encode(puzzle_stats)
-
-
-# TODO: convert to client-side
-#{% macro timePassed(seconds_from_now) -%}
-#{# for testing
-#{{ seconds_from_now }} =
-##}
-#    {% if seconds_from_now < 60 %}
-#     less than a minute
-#    {% elif seconds_from_now < 2 * 60 %}
-#      1 minute
-#    {% elif seconds_from_now < 60 * 60 %}
-#      {{ seconds_from_now // 60 }} minutes
-#    {% elif seconds_from_now < 60 * 60 * 2 %}
-#      1 hour
-#    {% elif seconds_from_now < 60 * 60 * 24 %}
-#      {{ seconds_from_now // 60 // 60 }} hours
-#    {% elif seconds_from_now < 60 * 60 * 24 * 2 %}
-#      1 day
-#    {% elif seconds_from_now < 60 * 60 * 24 * 14 %}
-#      {{ seconds_from_now // 60 // 60 // 24 }} days
-#    {% else %}
-#      a long time
-#    {% endif %}
-#    ago
-#{%- endmacro %}

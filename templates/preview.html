@@ -86,8 +86,13 @@ two minute over an hour:{{ timePassed(60*62) }}<br>
       {% endif %}
 
 
+      <pm-latest-player-list
+        media-path="{{ url_for('send_media_file', filename='') }}"
+        puzzle-id="{{recent.puzzle_id}}"
+        show-time-since="true"
+        limit="9"></pm-latest-player-list>
+      {#
       <div class="pm-Preview-latest">
-        {# TODO: use a component here instead of rendering it server-side? #}
         {% if players | length > 0 %}
         <h2>Players</h2>
         <div class="pm-Preview-latestList" role="list">
@@ -120,6 +125,7 @@ two minute over an hour:{{ timePassed(60*62) }}<br>
         </div>
         {% endif %}
       </div>
+      #}
       <p class="pm-Preview-description u-textTruncate">
         <small>
           {{recent.description}}
@@ -136,9 +142,15 @@ two minute over an hour:{{ timePassed(60*62) }}<br>
       </div>
 
 
-      <div class="pm-Preview-pieceJoins">
 
-        {# TODO: use a component here instead of rendering it server-side? #}
+      {# TODO: use a component here instead of rendering it server-side?
+      <pm-latest-player-list
+        media-path="{{ url_for('send_media_file', filename='') }}"
+        puzzle-id="{{recent.puzzle_id}}"
+        offset="9"
+        limit="25"></pm-latest-player-list>
+      #}
+      <div class="pm-Preview-pieceJoins">
         {% if players | length == 0 %}
         <p><small>No active players<br> have joined pieces<br> in the last 2 weeks.</small></p>
         {% endif %}
