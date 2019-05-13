@@ -3,9 +3,10 @@ import os
 
 from flask import current_app, redirect, request, make_response, abort
 from flask.views import MethodView
+import redis
 
 from api.app import db
-from api.database import rowify
+from api.database import rowify, fetch_query_string
 from api.constants import (
         ACTIVE,
         IN_QUEUE,
@@ -21,6 +22,8 @@ from api.constants import (
         DELETED_OLD,
         DELETED_REQUEST
         )
+
+redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
 
 ACTIONS = (
     'approve',
@@ -127,7 +130,9 @@ class AdminPuzzleBatchEditView(MethodView):
                 c.execute("""delete from PuzzleFile where puzzle = :id""", {'id': id})
                 c.execute("""delete from Piece where puzzle = :id""", {'id': id})
                 c.execute("""delete from Timeline where puzzle = :id""", {'id': id})
-                #TODO: clear redis keys associated with puzzle
+                c.execute(fetch_query_string('delete_puzzle_timeline.sql'), {'puzzle': id})
+                redisConnection.delete('timeline:{puzzle}'.format(puzzle=id))
+                redisConnection.delete('score:{puzzle}'.format(puzzle=id))
             db.commit()
 
         cur = db.cursor()

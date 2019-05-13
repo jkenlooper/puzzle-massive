@@ -3,7 +3,11 @@ from builtins import str
 import os
 import json
 
-from .database import rowify
+import redis
+
+from .database import rowify, fetch_query_string
+
+redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
 
 query_select_timeline_for_puzzle = """
 select t.player as p, t.message as m, t.points as c, t.timestamp as t
@@ -59,8 +63,9 @@ def archive_and_clear(puzzle, db, archive_directory):
     json.dump(result, archive_file, separators=(',',':'), sort_keys=True)
     archive_file.close()
 
-    cur.execute(query_clear_timeline_for_puzzle, {'puzzle': puzzle})
-    #TODO: clear redis keys associated with puzzle
+    cur.execute(fetch_query_string('delete_puzzle_timeline.sql'), {'puzzle': puzzle})
+    redisConnection.delete('timeline:{puzzle}'.format(puzzle=puzzle))
+    redisConnection.delete('score:{puzzle}'.format(puzzle=puzzle))
 
     cur.close()
     db.commit()
