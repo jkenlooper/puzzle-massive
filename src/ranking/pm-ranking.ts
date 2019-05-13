@@ -221,6 +221,9 @@ customElements.define(
               : html``
           }
           </p>
+        <p>
+          <em>Players shown without bit icons have lost them due to inactivity.</em>
+        </p>
         </section>
       `;
       }
@@ -237,13 +240,19 @@ customElements.define(
                   "pm-Ranking-listitem--topPlayer": item.topPlayer,
                 })}
               >
-                <img
-                  class="pm-Ranking-img"
-                  src=${item.iconSrc}
-                  width="64"
-                  height="64"
-                  alt=${item.iconAlt}
-                />
+                ${item.icon
+                  ? html`
+                      <img
+                        class="pm-Ranking-img"
+                        src=${item.iconSrc}
+                        width="64"
+                        height="64"
+                        alt=${item.iconAlt}
+                      />
+                    `
+                  : html`
+                      <div class="pm-Ranking-img"></div>
+                    `}
 
                 <strong class="pm-Ranking-rank">${item.score}</strong>
                 <span class="pm-Ranking-status">
