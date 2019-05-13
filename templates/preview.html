@@ -1,65 +1,11 @@
 {% from 'preview-unknown.html' import preview_unknown %}
 {% if recent %}
-{% macro timePassed(seconds_from_now) -%}
-{# for testing
-{{ seconds_from_now }} =
-#}
-    {% if seconds_from_now < 60 %}
-     less than a minute
-    {% elif seconds_from_now < 2 * 60 %}
-      1 minute
-    {% elif seconds_from_now < 60 * 60 %}
-      {{ seconds_from_now // 60 }} minutes
-    {% elif seconds_from_now < 60 * 60 * 2 %}
-      1 hour
-    {% elif seconds_from_now < 60 * 60 * 24 %}
-      {{ seconds_from_now // 60 // 60 }} hours
-    {% elif seconds_from_now < 60 * 60 * 24 * 2 %}
-      1 day
-    {% elif seconds_from_now < 60 * 60 * 24 * 14 %}
-      {{ seconds_from_now // 60 // 60 // 24 }} days
-    {% else %}
-      a long time
-    {% endif %}
-    ago
-{%- endmacro %}
 
 {# puzzle has been assembled #}
 {% set COMPLETED        = 3   %}
 
 {% set width = recent.long if recent.table_width > recent.table_height else recent.short %}
 {% set height = recent.short if recent.table_width > recent.table_height else recent.long %}
-
-{# testing the time passed
-{{ timePassed(0) }}<br>
-{{ timePassed(1) }}<br>
-{{ timePassed(10) }}<br>
-{{ timePassed(59) }}<br>
-{{ timePassed(60) }}<br>
-{{ timePassed(61) }}<br>
-{{ timePassed(120) }}<br>
-{{ timePassed(121) }}<br>
-{{ timePassed(240) }}<br>
-less than an hour:{{ timePassed(60*59) }}<br>
-one hour:{{ timePassed(60*60) }}<br>
-one minute over an hour:{{ timePassed(60*61) }}<br>
-two minute over an hour:{{ timePassed(60*62) }}<br>
-2 hour:{{ timePassed(60*60*2) }}<br>
-23 hour:{{ timePassed(60*60*23) }}<br>
-24 hour:{{ timePassed(60*60*24) }}<br>
-24 hour and one minute:{{ timePassed((60*60*24)+60) }}<br>
-1 day 23 hour and 59 minute:{{ timePassed((60*60*24)+(60*60*23)+(60*59)) }}<br>
-2 days:{{ timePassed((60*60*24*2)) }}<br>
-12 days:{{ timePassed((60*60*24*12)) }}<br>
-14 days:{{ timePassed((60*60*24*14)) }}<br>
-22 days:{{ timePassed(60*60*24*22) }}<br>
-222 days:{{ timePassed(60*60*24*222) }}<br>
-#}
-
-{# chill will make the players variable into a mapping if only one result #}
-{% if players is mapping -%}
-  {% set players = [players] %}
-{%- endif %}
 
 <div class="pm-Preview">
   {% if recent.link -%}

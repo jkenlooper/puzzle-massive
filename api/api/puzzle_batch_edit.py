@@ -127,6 +127,7 @@ class AdminPuzzleBatchEditView(MethodView):
                 c.execute("""delete from PuzzleFile where puzzle = :id""", {'id': id})
                 c.execute("""delete from Piece where puzzle = :id""", {'id': id})
                 c.execute("""delete from Timeline where puzzle = :id""", {'id': id})
+                #TODO: clear redis keys associated with puzzle
             db.commit()
 
         cur = db.cursor()

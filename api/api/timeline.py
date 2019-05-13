@@ -60,6 +60,7 @@ def archive_and_clear(puzzle, db, archive_directory):
     archive_file.close()
 
     cur.execute(query_clear_timeline_for_puzzle, {'puzzle': puzzle})
+    #TODO: clear redis keys associated with puzzle
 
     cur.close()
     db.commit()

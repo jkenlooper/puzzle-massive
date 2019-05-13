@@ -72,7 +72,7 @@ customElements.define(
     template(data: TemplateData) {
       if (!data.isReady) {
         return html`
-          ... loading ...
+          loading...
         `;
       }
       if (data.hasError) {
