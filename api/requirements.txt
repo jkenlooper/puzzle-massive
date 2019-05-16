@@ -7,7 +7,5 @@ https://github.com/jkenlooper/piecemaker/archive/develop.zip#egg=piecemaker
 #pycurl==7.43.0.2
 
 requests==2.21
-#TODO: update to cairosvg==2.3.0 when only supporting py3
-cairosvg==1.0.22
-pycairo==1.17.1
+cairosvg==2.3.1
 -e api/
