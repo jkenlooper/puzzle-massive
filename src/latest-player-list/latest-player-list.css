@@ -1,4 +1,10 @@
-/* */
+.pm-Preview-bitIcon {
+}
+.hasNoBit.pm-Preview-bitIcon {
+  background-color: var(--color-dark);
+  border-radius: 37%;
+  border: 2px solid var(--color-dark-dark);
+}
 
 .pm-Preview-latest {
   display: flex;
@@ -31,6 +37,7 @@
 .pm-Preview-latestItemCell {
   min-width: 32px;
 }
+
 .pm-Preview-latestItemCell--pieces {
   /* 6em is width for 'pieces' label */
   min-width: 6em;

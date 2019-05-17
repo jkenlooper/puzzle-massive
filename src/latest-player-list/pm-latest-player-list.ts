@@ -1,4 +1,5 @@
 import { html, render } from "lit-html";
+import { classMap } from "lit-html/directives/class-map.js";
 import {
   puzzleStatsService,
   PlayerStatsData,
@@ -17,6 +18,8 @@ interface TemplateData {
   isReady: boolean;
   players: Array<PlayerDetailWithIconSrc>;
   showTimeSince: boolean;
+  hasPlayersWithLostBit: boolean;
+  lostBitIconSrc: string;
 }
 
 const tag = "pm-latest-player-list";
@@ -125,6 +128,10 @@ customElements.define(
                   <img
                     width="32"
                     height="32"
+                    class=${classMap({
+                      hasNoBit: !item.icon,
+                      "pm-Preview-bitIcon": true,
+                    })}
                     src=${item.iconSrc}
                     alt=${item.iconAlt}
                   />
@@ -149,11 +156,7 @@ customElements.define(
             ${data.players.length === 0
               ? html`
                   <p>
-                    <small
-                      >No players<br />
-                      have moved pieces<br />
-                      on this puzzle.</small
-                    >
+                    <small>No players have moved pieces on this puzzle.</small>
                   </p>
                 `
               : html`
@@ -166,6 +169,24 @@ customElements.define(
                       `
                     : html``}
                 `}
+            ${data.hasPlayersWithLostBit
+              ? html`
+                  <p>
+                    <em
+                      >Players shown with
+                      <img
+                        style="vertical-align: middle;"
+                        width="20"
+                        height="20"
+                        class="hasNoBit pm-Preview-bitIcon"
+                        src=${data.lostBitIconSrc}
+                        alt="lost bit"
+                      />
+                      icons have lost them due to inactivity.</em
+                    >
+                  </p>
+                `
+              : html``}
           </div>
         `;
       }
@@ -178,6 +199,10 @@ customElements.define(
                 <img
                   width="32"
                   height="32"
+                  class=${classMap({
+                    hasNoBit: !item.icon,
+                    "pm-Preview-bitIcon": true,
+                  })}
                   src=${item.iconSrc}
                   alt=${item.iconAlt}
                 />
@@ -196,6 +221,10 @@ customElements.define(
         errorMessage: this.errorMessage,
         showTimeSince: this.showTimeSince,
         players: this.players,
+        hasPlayersWithLostBit: this.players.some((player) => {
+          return !player.icon;
+        }),
+        lostBitIconSrc: `${this.mediaPath}bit-icons/64-unknown-bit.png`,
       };
     }
 
@@ -225,7 +254,7 @@ customElements.define(
           {
             iconSrc: `${mediaPath}bit-icons/64-${item.icon ||
               "unknown-bit"}.png`,
-            iconAlt: item.icon || "unknown bit",
+            iconAlt: item.icon || "lost bit",
           },
           item
         );

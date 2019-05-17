@@ -165,7 +165,7 @@ config.optimization = {
 config.performance = {
   hints: 'warning',
   maxAssetSize: 500000,
-  maxEntrypointSize: 400000,
+  maxEntrypointSize: 800000,
 }
 
 module.exports = (env, argv) => {
