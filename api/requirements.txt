@@ -1,9 +1,9 @@
 -r ../requirements.txt
 Pillow == 6.0.0
 git+https://github.com/jkenlooper/glue#egg=glue
-https://github.com/jkenlooper/pixsaw/archive/develop.zip#egg=pixsaw
+pixsaw==0.2.0
 docopt==0.6.2
-https://github.com/jkenlooper/piecemaker/archive/develop.zip#egg=piecemaker
+piecemaker==0.3.0
 #pycurl==7.43.0.2
 
 requests==2.21
