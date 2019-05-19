@@ -196,6 +196,9 @@ on the old server and copy all the data over to the new puzzle-green server.
     sudo ./bin/puzzlectl.sh stop;
     rm /var/lib/puzzle-massive/sqlite3/db;
     rm -rf /srv/puzzle-massive/resources/*;
+    
+    # do a `flushall` on the new server redis to clean out stuff
+    redis-cli
     ```
 
 3)  Copy the backup db (db-YYYY-MM-DD.dump.gz) to the new server and replace the
