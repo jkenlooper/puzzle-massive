@@ -29,8 +29,8 @@ apt-get --yes install imagemagick
 #apt-get --yes install libcurl4-openssl-dev
 
 # Install support for Pillow
-apt-get --yes install python-imaging
-# TODO: Are these libs still needed if installing python-imaging?
+apt-get --yes install python3-pil
+# TODO: Are these libs still needed if installing python3-pil?
 apt-get --yes install libtiff5-dev libjpeg8-dev zlib1g-dev libfreetype6-dev liblcms2-dev libwebp-dev tcl8.5-dev tk8.5-dev python-tk
 
 apt-get --yes install libsqlite3-dev

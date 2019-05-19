@@ -135,12 +135,15 @@ by the public.
     make ENVIRONMENT=production;
     cp chill-data.sql db.dump.sql;
     sudo make ENVIRONMENT=production install;
+    sudo ./bin/puzzlectl.sh stop;
 
     # Update the limits in /etc/ImageMagick-6/policy.xml
     # Refer to notes in api/api/jobs/pieceRenderer.py
 
     # should be run as 'dev' user
     python api/api/create_database.py site.cfg;
+
+    sudo ./bin/puzzlectl.sh start;
     ```
 
 

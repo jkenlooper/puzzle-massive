@@ -169,7 +169,7 @@ class UpdatePlayer(Task):
 
         if self.first_run:
             result = cur.execute(read_query_file("select_user_score_and_timestamp.sql")).fetchall(), cur.description
-            if result:
+            if result and len(result[0]):
                 logger.info("Set rank and timeline on {0} players".format(len(result[0])))
                 user_scores = dict(map(lambda x: [x[0], x[1]], result[0]))
                 user_timestamps = dict(map(lambda x: [x[0], int(x[2])], result[0]))
