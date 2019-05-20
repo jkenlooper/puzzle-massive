@@ -30,7 +30,7 @@ def main():
     cookie_secret = appconfig.get('SECURE_COOKIE_SECRET')
 
     if args['run']:
-        run(config_file, cookie_secret=cookie_secret) # TODO: can't use app.run when using websockets
+        run(config_file, cookie_secret=cookie_secret)
 
     if args['serve']:
         serve(config_file, cookie_secret=cookie_secret)

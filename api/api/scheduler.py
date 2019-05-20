@@ -38,12 +38,16 @@ scheduler_key = 'sc'
 class Task:
     interval = 5
 
-    def __init__(self, id, task_name='Task'):
+    def __init__(self, id=None, task_name='Task'):
         self.id = id
         self.task_name = task_name
 
     def __call__(self):
         self.do_task()
+        if self.id == None:
+            # The id may be None if the task is being run manually.  Running
+            # a task manually shouldn't change the schedule.
+            return
         now = int(time())
         due = now + self.interval
         logger.info("{format_due} - task {task_name} {task_id} due date".format(**{
@@ -68,7 +72,7 @@ class AutoRebuildCompletedPuzzle(Task):
     "Auto rebuild completed puzzles that are no longer recent"
     interval = 15 * HOUR + 26 * MINUTE
 
-    def __init__(self, id):
+    def __init__(self, id=None):
         super().__init__(id, __class__.__name__)
         self.queue = Queue('puzzle_create', connection=redisConnection)
 
@@ -109,7 +113,7 @@ class BumpMinimumDotsForPlayers(Task):
     "Increase dots for players that have less then the minimum"
     interval = DAY
 
-    def __init__(self, id):
+    def __init__(self, id=None):
         super().__init__(id, __class__.__name__)
 
     def do_task(self):
@@ -125,7 +129,7 @@ class UpdateModifiedDateOnPuzzle(Task):
     interval = 58
     last_update = int(time())
 
-    def __init__(self, id):
+    def __init__(self, id=None):
         super().__init__(id, __class__.__name__)
 
     def do_task(self):
@@ -146,7 +150,7 @@ class UpdatePlayer(Task):
     first_run = True
     POINTS_CAP = 15000
 
-    def __init__(self, id):
+    def __init__(self, id=None):
         super().__init__(id, __class__.__name__)
 
     def do_task(self):
@@ -185,7 +189,9 @@ class UpdatePuzzleStats(Task):
     interval = 60
     last_run = 0
 
-    def __init__(self, id):
+    #TODO: write migrate script for transferring Timeline data to redis when updating from 2.2.0 to 2.3.0
+
+    def __init__(self, id=None):
         super().__init__(id, __class__.__name__)
 
     def do_task(self):
@@ -251,4 +257,14 @@ def main():
         sleep(SCHEDULER_INTERVAL)
 
 if __name__ == '__main__':
-    main()
+    # Check if running a one-off, otherwise just run main
+    task_name = sys.argv[2]
+    if task_name:
+        OneOffTask = locals().get(task_name)
+        if issubclass(OneOffTask, Task):
+            # Run the task
+            oneOffTask = OneOffTask()
+            oneOffTask()
+
+    else:
+        main()

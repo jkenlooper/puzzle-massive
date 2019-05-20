@@ -12,6 +12,10 @@ echo "Converting pieces to DB from Redis...";
 
 python api/api/jobs/convertPiecesToDB.py site.cfg || exit 1;
 
+echo "Running one-off scheduler tasks to clean up any batched data";
+python api/api/scheduler.py site.cfg UpdatePlayer || exit 1;
+python api/api/scheduler.py site.cfg UpdatePuzzleStats || exit 1;
+
 # Allow passing in a file path of where to save the db dump file
 if [ -n "${1-}" ]; then
 DBDUMPFILE="$1";
