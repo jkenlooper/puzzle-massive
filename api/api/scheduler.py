@@ -172,11 +172,11 @@ class UpdatePlayer(Task):
             user = redisConnection.spop('batchuser')
 
         if self.first_run:
-            result = cur.execute(read_query_file("select_user_score_and_timestamp.sql")).fetchall(), cur.description
-            if result and len(result[0]):
-                logger.info("Set rank and timeline on {0} players".format(len(result[0])))
-                user_scores = dict(map(lambda x: [x[0], x[1]], result[0]))
-                user_timestamps = dict(map(lambda x: [x[0], int(x[2])], result[0]))
+            result = cur.execute(read_query_file("select_user_score_and_timestamp.sql")).fetchall()
+            if result and len(result):
+                logger.info("Set rank and timeline on {0} players".format(len(result)))
+                user_scores = dict(map(lambda x: [x[0], x[1]], result))
+                user_timestamps = dict(map(lambda x: [x[0], int(x[2])], result))
                 redisConnection.zadd('rank', user_scores)
                 redisConnection.zadd('timeline', user_timestamps)
             self.first_run = False
@@ -187,9 +187,9 @@ class UpdatePlayer(Task):
 class UpdatePuzzleStats(Task):
     "Update the puzzle stats/timeline from what has recently been put on redis"
     interval = 60
+    first_run = True
     last_run = 0
 
-    #TODO: write migrate script for transferring Timeline data to redis when updating from 2.2.0 to 2.3.0
 
     def __init__(self, id=None):
         super().__init__(id, __class__.__name__)
@@ -203,7 +203,6 @@ class UpdatePuzzleStats(Task):
         while puzzle:
             last_batch = redisConnection.zrangebyscore('timeline:{puzzle}'.format(puzzle=puzzle), self.last_run, '+inf', withscores=True)
             for (user, update_timestamp) in last_batch:
-                #self.last_run = int(max(self.last_run, update_timestamp))
                 logger.debug("user: {user}, {update_timestamp}".format(user=user, update_timestamp=update_timestamp))
                 user = int(user)
                 points = int(redisConnection.getset('batchpoints:{puzzle}:{user}'.format(puzzle=puzzle, user=user), value=0) or '0')
@@ -218,6 +217,22 @@ class UpdatePuzzleStats(Task):
                       'timestamp': timestamp
                       })
             puzzle = redisConnection.spop('batchpuzzle')
+
+        if self.first_run:
+            result = cur.execute(read_query_file("get_list_of_puzzles_in_timeline.sql")).fetchall()
+            if result and len(result):
+                puzzle_list = list(map(lambda x: x[0], result))
+                for puzzle in puzzle_list:
+                    result = cur.execute(read_query_file("select_user_score_and_timestamp_per_puzzle.sql"), {"puzzle":puzzle}).fetchall()
+                    if result and len(result):
+                        logger.info("Set puzzle score and puzzle timeline on {0} players".format(len(result)))
+                        user_score = dict(map(lambda x: [x[0], x[1]], result))
+                        user_timestamps = dict(map(lambda x: [x[0], int(x[2])], result))
+                        redisConnection.zadd('timeline:{puzzle}'.format(puzzle=puzzle), user_timestamps)
+                        redisConnection.zadd('score:{puzzle}'.format(puzzle=puzzle), user_score)
+
+            self.first_run = False
+
         self.last_run = int(time())
         cur.close()
         db.commit()
