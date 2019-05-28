@@ -219,13 +219,14 @@ class UpdatePuzzleStats(Task):
             puzzle = redisConnection.spop('batchpuzzle')
 
         if self.first_run:
+            cur.execute(read_query_file("create_timeline_puzzle_index.sql"))
             result = cur.execute(read_query_file("get_list_of_puzzles_in_timeline.sql")).fetchall()
             if result and len(result):
                 puzzle_list = list(map(lambda x: x[0], result))
                 for puzzle in puzzle_list:
                     result = cur.execute(read_query_file("select_user_score_and_timestamp_per_puzzle.sql"), {"puzzle":puzzle}).fetchall()
                     if result and len(result):
-                        logger.info("Set puzzle score and puzzle timeline on {0} players".format(len(result)))
+                        logger.info("Set puzzle ({0}) score and puzzle timeline on {1} players".format(puzzle, len(result)))
                         user_score = dict(map(lambda x: [x[0], x[1]], result))
                         user_timestamps = dict(map(lambda x: [x[0], int(x[2])], result))
                         redisConnection.zadd('timeline:{puzzle}'.format(puzzle=puzzle), user_timestamps)

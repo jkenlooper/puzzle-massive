@@ -1,7 +1,4 @@
 from __future__ import print_function
-# TODO: Save the pieces from redis back to the SQL DB for archiving.  The
-# pieceData in Redis should be deleted afterwards.
-#
 # This job should be ran by a janitor worker.  It should find all puzzles in
 # redis that haven't had any activity in the last week or so.
 
@@ -103,7 +100,6 @@ def handle_fail(job, exception, exception_func, traceback):
 
 
 if __name__ == '__main__':
-    # TODO: run scheduler to transfer batch points and batch score to database
     confirm = input("Transfer all puzzle data out of redis and into sqlite database? y/n\n")
     if confirm == 'y':
         transferAll()
