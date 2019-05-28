@@ -50,7 +50,10 @@ vagrant ssh;
 # After logging in to the virtual machine (vagrant ssh)
 
 # Patch in any changes since this last vagrant box was published
-sudo apt-get --yes install libpq-dev
+sudo apt-get --yes update;
+sudo apt-get --yes install libpq-dev;
+sudo apt-get --yes install python3-dev;
+sudo apt-get --yes install python3-pil;
 
 # Change to the shared /vagrant directory
 cd /vagrant/;
