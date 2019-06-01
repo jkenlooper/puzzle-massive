@@ -3,6 +3,7 @@ pm-profile-bit {
 }
 
 .pm-profileBit {
+  --pm-profileBit-color: var(--color-dark);
 }
 
 .pm-profileBit.isExpired {
@@ -10,6 +11,15 @@ pm-profile-bit {
 
 .pm-profileBit-link {
   display: block;
+}
+
+.pm-profileBit-background {
+  display: inline-block;
+  color: var(--pm-profileBit-color);
+  background-color: currentColor;
+  box-shadow: 0 0 0px 3px currentColor;
+  border-radius: 37%;
+  text-shadow: 0 0 4px var(--color-light-light), 0 0 1px var(--color-dark-dark);
 }
 
 .pm-profileBit-img {

@@ -1,5 +1,6 @@
 import { html, render } from "lit-html";
 import { classMap } from "lit-html/directives/class-map.js";
+import { styleMap } from "lit-html/directives/style-map.js";
 
 import userDetailsService from "../site/user-details.service";
 import { colorForPlayer } from "../player-bit/player-bit-img.service";
@@ -14,6 +15,7 @@ interface TemplateData {
   profileLink: string;
   iconSrc: string;
   iconAlt: string;
+  bitBackground: string;
   hasIcon: boolean;
   userId: number;
   showScore: boolean;
@@ -79,13 +81,20 @@ customElements.define(
                 <a class="pm-profileBit-link" href=${data.profileLink}>
                   ${data.hasIcon
                     ? html`
-                        <img
-                          class="pm-profileBit-img"
-                          src=${data.iconSrc}
-                          width="64"
-                          height="64"
-                          alt=${data.iconAlt}
-                        />
+                        <span
+                          style=${styleMap({
+                            "--pm-profileBit-color": data.bitBackground,
+                          })}
+                          class="pm-profileBit-background"
+                        >
+                          <img
+                            class="pm-profileBit-img"
+                            src=${data.iconSrc}
+                            width="64"
+                            height="64"
+                            alt=${data.iconAlt}
+                          />
+                        </span>
                       `
                     : html`
                         <span
@@ -98,6 +107,9 @@ customElements.define(
                       `}
                 </a>
               `}
+          <strong class="u-textCenter u-block">
+            ${data.iconAlt.substr(0, 26)}<!-- TODO: use player assigned name -->
+          </strong>
         </div>
         ${data.showScore
           ? html`
@@ -158,6 +170,7 @@ customElements.define(
         iconSrc: `${this.mediaPath}bit-icons/64-${
           userDetailsService.userDetails.icon
         }.png`,
+        bitBackground: userDetailsService.userDetails.bitBackground,
         userId: userDetailsService.userDetails.id || 0,
         showScore: this.showScore,
         score: userDetailsService.userDetails.score,

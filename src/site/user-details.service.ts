@@ -1,4 +1,5 @@
 import FetchService from "./fetch.service";
+import { colorList } from "./color-list";
 
 type UserDetailsCallback = () => any;
 
@@ -24,6 +25,7 @@ interface UserDetailsResponse {
 }
 interface UserDetailsData extends UserDetailsResponse {
   hasBit: boolean;
+  bitBackground: string;
   loginAgain: boolean;
   hasUserPuzzleSlots: boolean;
   hasAvailableUserPuzzleSlot: boolean;
@@ -46,6 +48,7 @@ class UserDetailsService {
     dots: 0,
     score: 0,
     hasBit: false,
+    bitBackground: "",
     loginAgain: false,
     user_puzzle_count: 0,
     puzzle_instance_count: 0,
@@ -164,6 +167,8 @@ class UserDetailsService {
           this.userDetails = Object.assign(
             {
               hasBit: hasBit,
+              bitBackground:
+                colorList[Math.round(Math.random() * (colorList.length - 1))],
             },
             userDetails,
             {

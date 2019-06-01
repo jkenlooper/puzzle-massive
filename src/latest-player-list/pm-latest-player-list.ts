@@ -1,5 +1,6 @@
 import { html, render } from "lit-html";
 import { classMap } from "lit-html/directives/class-map.js";
+import { styleMap } from "lit-html/directives/style-map.js";
 import {
   puzzleStatsService,
   PlayerStatsData,
@@ -8,9 +9,12 @@ import {
 import { colorForPlayer } from "../player-bit/player-bit-img.service";
 import "./latest-player-list.css";
 
+import { colorList } from "../site/color-list";
+
 interface PlayerDetailWithIconSrc extends PlayerDetail {
   iconSrc: string;
   iconAlt: string;
+  bitBackground: string;
 }
 
 interface TemplateData {
@@ -147,13 +151,20 @@ customElements.define(
                 <small class="pm-Preview-latestItemCell">
                   ${item.icon
                     ? html`
-                        <img
-                          width="32"
-                          height="32"
-                          class="pm-PlayerBit"
-                          src=${item.iconSrc}
-                          alt=${item.iconAlt}
-                        />
+                        <span
+                          style=${styleMap({
+                            "--pm-Preview-bitIcon-color": item.bitBackground,
+                          })}
+                          class="pm-Preview-bitIconBackground"
+                        >
+                          <img
+                            width="32"
+                            height="32"
+                            class="pm-PlayerBit"
+                            src=${item.iconSrc}
+                            alt=${item.iconAlt}
+                          />
+                        </span>
                       `
                     : html`
                         <span
@@ -164,6 +175,9 @@ customElements.define(
                           >${item.id.toString(36)}</span
                         >
                       `}
+                  <strong class="pm-Preview-bitName">
+                    ${item.iconAlt.substr(0, 26)}<!-- TODO: use player assigned name -->
+                  </strong>
                 </small>
                 <small
                   class="pm-Preview-latestItemCell pm-Preview-latestItemCell--pieces"
@@ -201,18 +215,22 @@ customElements.define(
             ${data.hasPlayersWithLostBit
               ? html`
                   <p>
-                    <em
-                      >Players shown with
-                      <img
-                        style="vertical-align: middle;"
-                        width="20"
-                        height="20"
-                        class="hasNoBit pm-Preview-bitIcon"
-                        src=${data.lostBitIconSrc}
-                        alt="lost bit"
-                      />
-                      icons have lost them due to inactivity.</em
-                    >
+                    <em>
+                      <span
+                        style="--pm-Preview-bitIcon-color: #e2acbb"
+                        class="pm-Preview-bitIconBackground"
+                      >
+                        <img
+                          style="vertical-align: middle;"
+                          width="20"
+                          height="20"
+                          class="hasNoBit pm-Preview-bitIcon"
+                          src=${data.lostBitIconSrc}
+                          alt="no bit"
+                        />
+                      </span>
+                      represents players without a bit icon.
+                    </em>
                   </p>
                 `
               : html``}
@@ -301,6 +319,8 @@ customElements.define(
             iconSrc: `${mediaPath}bit-icons/64-${item.icon ||
               "unknown-bit"}.png`,
             iconAlt: item.icon || "lost bit",
+            bitBackground:
+              colorList[Math.round(Math.random() * (colorList.length - 1))],
           },
           item
         );

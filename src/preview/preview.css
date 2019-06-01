@@ -75,43 +75,6 @@ a.pm-Preview-grid:active img.pm-Preview-img {
   transform: scale(1.06);
 }
 
-.pm-Preview-latest {
-  display: flex;
-  flex-direction: column;
-  align-self: stretch;
-  justify-content: space-between;
-  padding: 0 13px;
-}
-
-.pm-Preview-latest > h2 {
-  flex: none;
-  font-size: 1.7rem;
-}
-
-.pm-Preview-latestList {
-  flex: 1 0;
-  justify-content: space-around;
-}
-
-.pm-Preview-latestItem {
-  display: flex;
-  align-items: center;
-  padding: 5px 0;
-}
-
-.pm-Preview-latestItem > * + * {
-  padding-left: 20px;
-}
-
-.pm-Preview-latestItemCell {
-  min-width: 32px;
-}
-.pm-Preview-latestItemCell--pieces {
-  /* 6em is width for 'pieces' label */
-  min-width: 6em;
-  text-align: right;
-}
-
 .pm-Preview-description {
   align-self: flex-end;
   margin: 13px 0 0 0;
@@ -144,42 +107,4 @@ a.pm-Preview-grid:active img.pm-Preview-img {
 .pm-Preview-pieceCount {
   display: block;
   font-size: 1.3em;
-}
-
-.pm-Preview-pieceJoins {
-  flex: 1 0;
-  margin-left: 13px;
-  overflow: hidden;
-}
-
-.pm-Preview-pieceJoins > * + * {
-  margin-top: 13px;
-}
-
-.pm-Preview-pieceJoins > h2 {
-  border-bottom: 1px solid black;
-  padding-left: 13px;
-  font-size: 1.7rem;
-}
-
-.pm-Preview-pieceJoinsList {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: flex-start;
-}
-
-.pm-Preview-pieceJoinsListItem {
-  flex: none;
-  margin-bottom: 5px;
-  margin-left: auto;
-  padding-left: 13px;
-  width: calc(64px + 10px + 2em);
-  line-height: 1.6em;
-}
-
-.pm-Preview-pieceJoinsListItem > * {
-  display: inline-block;
-  vertical-align: middle;
 }
