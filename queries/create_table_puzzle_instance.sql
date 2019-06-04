@@ -1,8 +1,8 @@
 CREATE TABLE PuzzleInstance (
-    original integer,
-    instance integer,
-    variant integer,
-    foreign key ( original ) references Puzzle ( id ) on delete cascade,
-    foreign key ( instance ) references Puzzle ( id ) on delete cascade,
+    original integer not null,
+    instance integer not null, -- is same as original if it is the original
+    variant integer not null,
+    foreign key ( original ) references Puzzle ( id ),
+    foreign key ( instance ) references Puzzle ( id ),
     foreign key ( variant ) references PuzzleVariant ( id )
 );

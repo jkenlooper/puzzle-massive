@@ -37,16 +37,21 @@ if __name__ == '__main__':
             'cleanup_migrate_from_2_3_x_to_puzzle_instances.sql',
             'create_table_puzzle_variant.sql',
             'create_table_puzzle_instance.sql',
+            'initial_puzzle_variant.sql',
             ):
         for statement in read_query_file(filename).split(';'):
             cur.execute(statement)
             db.commit()
 
-    ## Populate the new Puzzle_PuzzleFile table
+    classic_variant = cur.execute("select id from PuzzleVariant where slug = 'classic';").fetchone()[0]
+
+    ## Populate the puzzle instances
     result = cur.execute("SELECT id FROM Puzzle;").fetchall()
     if result:
-        logger.info("migrating {} puzzles".format(len(result)))
+        logger.info("migrating existing {} puzzles to all be classic variants in the instance table".format(len(result)))
         for id in map(lambda x: x[0], result):
             logger.debug("id: {}".format(id))
+            cur.execute("insert into PuzzleInstance (original, instance, variant) values (:puzzle, :instance, :variant);", {"puzzle": id, "instance": id, "variant": classic_variant})
 
+    db.commit()
     cur.close()
