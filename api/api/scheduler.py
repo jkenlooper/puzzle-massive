@@ -72,6 +72,10 @@ class AutoRebuildCompletedPuzzle(Task):
     "Auto rebuild completed puzzles that are no longer recent"
     interval = 15 * HOUR + 26 * MINUTE
 
+    # The minimum count of incomplete puzzles before the auto rebuild task will
+    # find random puzzles to rebuild.
+    minimum_count = 26
+
     def __init__(self, id=None):
         super().__init__(id, __class__.__name__)
         self.queue = Queue('puzzle_create', connection=redisConnection)
@@ -80,31 +84,33 @@ class AutoRebuildCompletedPuzzle(Task):
         super().do_task()
 
         cur = db.cursor()
-        (result, col_names) = rowify(cur.execute(read_query_file("select_random_puzzle_to_rebuild.sql"), {'status': COMPLETED}).fetchall(), cur.description)
-        if result:
-            for completed_puzzle in result:
-                puzzle = completed_puzzle['id']
+        active_puzzle_count = cur.execute(read_query_file("get_incomplete_puzzle_count.sql")).fetchone()[0]
+        if active_puzzle_count < self.minimum_count:
+            (result, col_names) = rowify(cur.execute(read_query_file("select_random_puzzle_to_rebuild.sql"), {'status': COMPLETED}).fetchall(), cur.description)
+            if result:
+                for completed_puzzle in result:
+                    puzzle = completed_puzzle['id']
 
-                logger.debug("found puzzle {id}".format(**completed_puzzle))
-                # Update puzzle status to be REBUILD and change the piece count
-                pieces = random.randint(max(int(config['MINIMUM_PIECE_COUNT']), completed_puzzle['pieces'] - 400), completed_puzzle['pieces'] + 400)
-                cur.execute(read_query_file("update_status_puzzle_for_puzzle_id.sql"), {'puzzle_id': completed_puzzle['puzzle_id'], 'status': REBUILD, 'pieces': pieces})
-                completed_puzzle['status'] = REBUILD
-                completed_puzzle['pieces'] = pieces
+                    logger.debug("found puzzle {id}".format(**completed_puzzle))
+                    # Update puzzle status to be REBUILD and change the piece count
+                    pieces = random.randint(max(int(config['MINIMUM_PIECE_COUNT']), completed_puzzle['pieces'] - 400), completed_puzzle['pieces'] + 400)
+                    cur.execute(read_query_file("update_status_puzzle_for_puzzle_id.sql"), {'puzzle_id': completed_puzzle['puzzle_id'], 'status': REBUILD, 'pieces': pieces})
+                    completed_puzzle['status'] = REBUILD
+                    completed_puzzle['pieces'] = pieces
 
-                db.commit()
+                    db.commit()
 
-                # Delete any piece data from redis since it is no longer needed.
-                query_select_all_pieces_for_puzzle = """select * from Piece where (puzzle = :puzzle)"""
-                (all_pieces, col_names) = rowify(cur.execute(query_select_all_pieces_for_puzzle, {'puzzle': puzzle}).fetchall(), cur.description)
-                deletePieceDataFromRedis(redisConnection, puzzle, all_pieces)
+                    # Delete any piece data from redis since it is no longer needed.
+                    query_select_all_pieces_for_puzzle = """select * from Piece where (puzzle = :puzzle)"""
+                    (all_pieces, col_names) = rowify(cur.execute(query_select_all_pieces_for_puzzle, {'puzzle': puzzle}).fetchall(), cur.description)
+                    deletePieceDataFromRedis(redisConnection, puzzle, all_pieces)
 
-                job = self.queue.enqueue_call(
-                    func='api.jobs.pieceRenderer.render', args=([completed_puzzle]), result_ttl=0,
-                    timeout='24h'
-                )
+                    job = self.queue.enqueue_call(
+                        func='api.jobs.pieceRenderer.render', args=([completed_puzzle]), result_ttl=0,
+                        timeout='24h'
+                    )
 
-                archive_and_clear(puzzle, db, config.get('PUZZLE_ARCHIVE'))
+                    archive_and_clear(puzzle, db, config.get('PUZZLE_ARCHIVE'))
 
         cur.close()
         db.commit()
