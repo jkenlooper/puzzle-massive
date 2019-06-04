@@ -5,7 +5,7 @@ import json
 
 import redis
 
-from .database import rowify, fetch_query_string
+from .database import rowify, read_query_file
 
 redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
 
@@ -63,7 +63,7 @@ def archive_and_clear(puzzle, db, archive_directory):
     json.dump(result, archive_file, separators=(',',':'), sort_keys=True)
     archive_file.close()
 
-    cur.execute(fetch_query_string('delete_puzzle_timeline.sql'), {'puzzle': puzzle})
+    cur.execute(read_query_file('delete_puzzle_timeline.sql'), {'puzzle': puzzle})
     redisConnection.delete('timeline:{puzzle}'.format(puzzle=puzzle))
     redisConnection.delete('score:{puzzle}'.format(puzzle=puzzle))
 
