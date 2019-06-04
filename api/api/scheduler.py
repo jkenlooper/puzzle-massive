@@ -226,6 +226,7 @@ class UpdatePuzzleStats(Task):
 
         if self.first_run:
             cur.execute(read_query_file("create_timeline_puzzle_index.sql"))
+            cur.execute(read_query_file("create_timeline_timestamp_index.sql"))
             result = cur.execute(read_query_file("get_list_of_puzzles_in_timeline.sql")).fetchall()
             if result and len(result):
                 puzzle_list = list(map(lambda x: x[0], result))
