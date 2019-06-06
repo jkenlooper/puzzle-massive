@@ -5,6 +5,23 @@
 
   <div class="pm-Header-main">
       <pm-profile-bit media-path="{{ url_for('send_media_file', filename='') }}" player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
+
+      <div class="pm-PlayerPuzzleInstanceList">
+        <ul class="pm-PlayerPuzzleInstanceList-list">
+          {% for item in range(0,2) -%}
+          <li class="pm-PlayerPuzzleInstanceList-listItem"></li>
+          {%- endfor -%}
+          {%- for item in range(0,2) -%}
+          <li class="pm-PlayerPuzzleInstanceList-listItem">
+            <a href="/link-to-puzzle-instance/">
+              <img width="26" height="26" src="https://placekitten.com/150/80" alt="">
+            </a>
+          </li>
+          {%- endfor %}
+        </ul>
+        <a class="pm-PlayerPuzzleInstanceList-add" href="/link-to-create-instance/">Add</a>
+      </div>
+
   </div>
 
 </div>

@@ -27,18 +27,23 @@
 }
 
 .pm-Header-main {
+  /*
   display: flex;
-  flex: 1 auto;
   justify-content: flex-end;
+  */
+  text-align: right;
+  flex: 1 auto;
   max-width: calc(100vw - 240px);
 }
 
+/*
 @media (--sm-viewport) {
   .pm-Header-main {
     display: block;
     text-align: right;
   }
 }
+*/
 
 @media (--lg-viewport) {
   .pm-Header-main {
