@@ -20,6 +20,7 @@ interface TemplateData {
   showTimeSince: boolean;
   hasPlayersWithLostBit: boolean;
   lostBitIconSrc: string;
+  recentPlayersCount: number;
 }
 
 const tag = "pm-latest-player-list";
@@ -99,7 +100,19 @@ customElements.define(
             ${data.players.length === 0
               ? html``
               : html`
-                  <h2>Players</h2>
+                  <h2>
+                    ${data.players.length > 1 ? data.players.length : ""}
+                    Players
+                    ${data.recentPlayersCount > 0
+                      ? html`
+                          <em class="pm-Preview-activeCount"
+                            ><small
+                              >${data.recentPlayersCount} Active</small
+                            ></em
+                          >
+                        `
+                      : ""}
+                  </h2>
                   <div class="pm-Preview-latestList" role="list">
                     <div class="pm-Preview-latestItem">
                       <small class="pm-Preview-latestItemCell"></small>
@@ -123,7 +136,13 @@ customElements.define(
         return html`
           ${playerSlice.map((item) => {
             return html`
-              <div class="pm-Preview-latestItem" role="listitem">
+              <div
+                class=${classMap({
+                  "pm-Preview-latestItem": true,
+                  isActive: item.isRecent,
+                })}
+                role="listitem"
+              >
                 <small class="pm-Preview-latestItemCell">
                   <img
                     width="32"
@@ -191,11 +210,17 @@ customElements.define(
         `;
       }
       function itemsWithoutTimeSince() {
-        const playerSlice = data.players.slice(offset, limit);
+        const playerSlice = data.players.slice(offset);
         return html`
           ${playerSlice.map((item) => {
             return html`
-              <span class="pm-Preview-pieceJoinsListItem" role="listitem">
+              <span
+                class=${classMap({
+                  "pm-Preview-pieceJoinsListItem": true,
+                  isActive: item.isRecent,
+                })}
+                role="listitem"
+              >
                 <img
                   width="32"
                   height="32"
@@ -225,6 +250,12 @@ customElements.define(
           return !player.icon;
         }),
         lostBitIconSrc: `${this.mediaPath}bit-icons/64-unknown-bit.png`,
+        recentPlayersCount: this.players.reduce((acc, player) => {
+          if (player.isRecent) {
+            acc += 1;
+          }
+          return acc;
+        }, 0),
       };
     }
 

@@ -16,6 +16,7 @@ interface PlayerData {
 
 export interface PlayerDetail extends PlayerData {
   timeSince: string;
+  isRecent: boolean;
 }
 
 interface PuzzleStats {
@@ -55,6 +56,7 @@ class PuzzleStatsService {
       const playerDetail = <PlayerDetail>Object.assign(
         {
           timeSince: getTimePassed(item.seconds_from_now),
+          isRecent: getIsRecent(item.seconds_from_now),
         },
         item
       );
@@ -64,8 +66,10 @@ class PuzzleStatsService {
     function getTimePassed(secondsFromNow: number): string {
       let timePassed = "";
 
-      if (secondsFromNow < 60) {
-        timePassed = "less than a minute";
+      if (secondsFromNow < 2) {
+        timePassed = "1 second";
+      } else if (secondsFromNow < 60) {
+        timePassed = `${secondsFromNow} seconds`;
       } else if (secondsFromNow < 2 * 60) {
         timePassed = "1 minute";
       } else if (secondsFromNow < 60 * 60) {
@@ -76,13 +80,14 @@ class PuzzleStatsService {
         timePassed = `${Math.floor(secondsFromNow / 60 / 60)} hours`;
       } else if (secondsFromNow < 60 * 60 * 24 * 2) {
         timePassed = "1 day";
-      } else if (secondsFromNow < 60 * 60 * 24 * 14) {
-        timePassed = `${Math.floor(secondsFromNow / 60 / 60 / 24)} days`;
       } else {
-        timePassed = "a long time";
+        timePassed = `${Math.floor(secondsFromNow / 60 / 60 / 24)} days`;
       }
-      timePassed = `${timePassed} ago`;
       return timePassed;
+    }
+
+    function getIsRecent(secondsFromNow: number): boolean {
+      return secondsFromNow <= 5 * 60;
     }
   }
 }

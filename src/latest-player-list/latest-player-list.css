@@ -11,12 +11,16 @@
   flex-direction: column;
   align-self: stretch;
   justify-content: space-between;
-  padding: 0 13px;
+  padding: 13px 13px 0;
 }
 
 .pm-Preview-latest > h2 {
   flex: none;
   font-size: 1.7rem;
+}
+
+.pm-Preview-activeCount {
+  color: var(--color-accent);
 }
 
 .pm-Preview-latestList {
@@ -27,7 +31,10 @@
 .pm-Preview-latestItem {
   display: flex;
   align-items: center;
-  padding: 5px 0;
+  padding: 0;
+}
+.isActive.pm-Preview-latestItem {
+  color: var(--color-accent);
 }
 
 .pm-Preview-latestItem > * + * {
@@ -75,6 +82,9 @@
   padding-left: 13px;
   width: calc(64px + 10px + 2em);
   line-height: 1.6em;
+}
+.isActive.pm-Preview-pieceJoinsListItem {
+  color: var(--color-accent);
 }
 
 .pm-Preview-pieceJoinsListItem > * {
