@@ -1,0 +1,71 @@
+{% from 'preview-unknown.html' import preview_unknown %}
+
+{% set width = puzzle.long if puzzle.table_width > puzzle.table_height else puzzle.short %}
+{% set height = puzzle.short if puzzle.table_width > puzzle.table_height else puzzle.long %}
+
+<form enctype="multipart/form-data" id="suggest-image-form" method="post" action="/newapi/create-puzzle-instance/">
+
+  {% if puzzle.link -%}
+  <small class="pm-Preview-source u-textTruncate">
+    Picture source:
+  <a href="{{puzzle.link}}" rel="nofollow">
+    {{puzzle.link|replace('http://', '')|replace('https://', '')}}
+  </a>
+  </small>
+  {%- endif %}
+
+  {% if puzzle.url == '' %}
+    {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
+  {% else %}
+    <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{puzzle.url|safe}}" alt="">
+  {% endif %}
+
+  {% if puzzle.description %}
+    <p>
+      {{ puzzle.description }}
+    </p>
+  {% endif %}
+
+  {% if puzzle.attribution %}
+  <p class="pm-Preview-attribution">{{ '[chill route /internal/attribution/{}/ ]'.format(puzzle.attribution) }}</p>
+  {% endif %}
+
+  <div class="pm-UploadForm">
+    <div class="pm-UploadForm-row">
+      <label for="pieces">
+        Piece Count
+      </label>
+      <div>
+        <input type="number"
+               min="{{ config.MINIMUM_PIECE_COUNT }}"
+               max="50000"
+               id="pieces" name="pieces" value="{{ puzzle.pieces }}">
+        <p>
+        When the puzzle is being rendered try to create this many pieces from the image.
+        </p>
+      </div>
+    </div>
+
+    <div class="pm-UploadForm-row">
+      <label for="bg_color">
+        Background Color
+        <svg class="pm-UploadForm-icon"><use xlink:href="#paint-can-sprite"/></svg>
+      </label>
+      <input id="bg_color" class="jscolor pm-UploadForm-colorPicker u-textCenter" type="text" name="bg_color" value="{{ puzzle.bg_color }}">
+    </div>
+
+
+    {# TODO: Should a new instance description be allowed?  It could show after the original description.
+    <div class="pm-UploadForm-row">
+      <label for="instance_description">Instance Description</label>
+      <textarea id="instance_description" name="instance_description" maxlength="1000"></textarea>
+    </div>
+    #}
+
+
+    <div class="u-textRight">
+      <input class="button" type="submit" name="create" value="Create Instance" />
+    </div>
+  </div>
+</form>
+
