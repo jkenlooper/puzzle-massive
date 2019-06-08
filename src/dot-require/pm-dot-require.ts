@@ -48,9 +48,16 @@ customElements.define(
           this.wrapperEl.appendChild(this.removeChild(this.firstChild));
         }
       }
-      this.appendChild(this.wrapperEl);
       this.wrapperEl.classList.add(`pm-DotRequire--${_type}`);
       this.wrapperEl.classList.add("pm-DotRequire");
+      switch (_type) {
+        case HIDDEN:
+        case NONE:
+          this.wrapperEl.classList.add("is-dotted");
+          break;
+      }
+
+      this.appendChild(this.wrapperEl);
 
       userDetailsService.subscribe(
         this.updateIsDottedClass.bind(this),

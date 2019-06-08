@@ -1,34 +1,39 @@
 @import "../site/viewport-breakpoints.css";
 
 .pm-PlayerPuzzleInstanceList {
+  --PlayerPuzzleInstanceList-size: 30px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+.pm-PlayerPuzzleInstanceList > * {
+  flex: none;
 }
 
 .pm-PlayerPuzzleInstanceList-list {
   margin: 0;
   padding: 0;
-  display: inline-block;
-  height: 26px;
-  vertical-align: middle;
+  height: var(--PlayerPuzzleInstanceList-size);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 .pm-PlayerPuzzleInstanceList-list > * {
   margin: 1px 2px;
+  flex: none;
 }
 
 .pm-PlayerPuzzleInstanceList-listItem {
-  display: inline-block;
+  display: block;
   list-style: none;
-  width: 26px;
-  height: 26px;
-  overflow: hidden;
-  border: 1px solid var(--color-dark);
-  border-radius: 5px;
+  width: var(--PlayerPuzzleInstanceList-size);
+  height: var(--PlayerPuzzleInstanceList-size);
 }
 
-.pm-PlayerPuzzleInstanceList-listItem:empty {
-  background-color: var(--color-dark-light);
-}
-.pm-PlayerPuzzleInstanceList-listItem:empty::before {
-  content: "";
+.pm-PlayerPuzzleInstanceList-instanceLink {
+  display: block;
+  border-radius: 5px;
+  overflow: hidden;
 }
 
 .pm-PlayerPuzzleInstanceList-listItem img {
@@ -37,10 +42,20 @@
 }
 
 .pm-PlayerPuzzleInstanceList-add {
-  display: inline-block;
-  width: 26px;
-  height: 26px;
-  border: 1px solid var(--color-accent);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: var(--PlayerPuzzleInstanceList-size);
+  height: var(--PlayerPuzzleInstanceList-size);
+  border: 2px solid var(--color-accent);
   border-radius: 5px;
   background-color: var(--color-dark-light);
+  font-weight: bold;
+  font-size: large;
+  text-decoration: none;
+}
+.isDisabled.pm-PlayerPuzzleInstanceList-add {
+  border: 1px solid var(--color-dark);
+  background-color: var(--color-dark-light);
+  opacity: 0.4;
 }

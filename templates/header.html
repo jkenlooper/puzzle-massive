@@ -6,20 +6,30 @@
   <div class="pm-Header-main">
       <pm-profile-bit media-path="{{ url_for('send_media_file', filename='') }}" player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
 
-      <div class="pm-PlayerPuzzleInstanceList">
+      <div class="pm-PlayerPuzzleInstanceList"> {# TODO: This is a mock-up. Convert to web component. #}
+
+        {# TODO: This will only be shown to players that have puzzle instances.  Requires the player to meet some criteria like a minimum score and each slot should cost some dots to add. #}
         <ul class="pm-PlayerPuzzleInstanceList-list">
-          {% for item in range(0,2) -%}
-          <li class="pm-PlayerPuzzleInstanceList-listItem"></li>
-          {%- endfor -%}
-          {%- for item in range(0,2) -%}
+          {% for item in range(0,3) -%} {# TODO: show available puzzle instance slots for this player #}
           <li class="pm-PlayerPuzzleInstanceList-listItem">
-            <a href="/link-to-puzzle-instance/">
-              <img width="26" height="26" src="https://placekitten.com/150/80" alt="">
+            <pm-dot-require min="2400" type="none">
+              <a class="pm-PlayerPuzzleInstanceList-add" href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance') }}">+</a>
+            </pm-dot-require>
+            <pm-dot-require min="2400" type="info">
+              <span class="pm-PlayerPuzzleInstanceList-add isDisabled">+</span>
+            </pm-dot-require>
+          </li>
+          {%- endfor -%}
+          {%- for item in range(0,1) -%} {# TODO: show puzzle instances for this player #}
+          <li class="pm-PlayerPuzzleInstanceList-listItem">
+            <a class="pm-PlayerPuzzleInstanceList-instanceLink" href="/link-to-puzzle-instance/">
+              <img width="30" height="30" src="https://placekitten.com/150/80" alt="">
             </a>
           </li>
           {%- endfor %}
         </ul>
-        <a class="pm-PlayerPuzzleInstanceList-add" href="/link-to-create-instance/">Add</a>
+
+
       </div>
 
   </div>
