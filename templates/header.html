@@ -22,7 +22,7 @@
           {%- endfor -%}
           {%- for item in range(0,1) -%} {# TODO: show puzzle instances for this player #}
           <li class="pm-PlayerPuzzleInstanceList-listItem">
-            <a class="pm-PlayerPuzzleInstanceList-instanceLink" href="/link-to-puzzle-instance/">
+            <a class="pm-PlayerPuzzleInstanceList-instanceLink" href="/chill{{ url_for('.page_uri', uri='front/{}'.format(item.puzzle_id)) }}">
               <img width="30" height="30" src="https://placekitten.com/150/80" alt="">
             </a>
           </li>
