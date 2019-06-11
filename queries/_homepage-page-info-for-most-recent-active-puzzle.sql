@@ -12,18 +12,12 @@ WHERE pf.name == 'preview_full'
 -- Get the most active puzzle in last 5 minutes or fall back on most recently updated one.
 AND p.puzzle_id = (
     select puzzle_id from Puzzle as p1
-    join Timeline as t1 on (t1.puzzle = p1.id and t1.timestamp > datetime('now', '-5 minutes'))
+    left outer join Timeline as t1 on (t1.puzzle = p1.id and t1.timestamp > datetime('now', '-5 minutes'))
     where p1.permission = 0
     and p1.status in (1, 2)
     group by puzzle_id
-    order by count(t1.timestamp) desc
+    order by count(t1.timestamp) desc, p1.m_date desc
     limit 1
-)
-OR p.puzzle_id = (
-    select puzzle_id from Puzzle as p1
-    where p1.permission = 0
-    and p1.status in (1, 2)
-    order by p1.m_date desc limit 1
 )
 GROUP BY p.id
 limit 1
