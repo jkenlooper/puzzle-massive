@@ -1,0 +1,54 @@
+{# TODO: Drop having a completed queue page in favor of using this puzzle image picker page. #}
+
+<div class="pm-PuzzleImagePicker">
+  <h2>Puzzle Image Picker</h2>
+  <p>
+    <strong>{{ public_image_count.value }}</strong> available images.
+  </p>
+  <div>
+    <strong>Filter images</strong>
+
+    <div>
+      <label>Recently visited
+        <input type="checkbox" checked value="1" name="puzzle-image-picker-filter--recent-visit">
+      </label>
+    </div>
+    {# TODO: checkboxes for:
+    Recently Active
+    Recently Completed
+    #}
+
+    {# TODO: list of radio button tags like cat, landscape, color, art, etc. #}
+
+    <div>
+      <label for="puzzle-image-picker--pieces">Maximum piece count</label>
+      <input type="range" min="100" max="6000" step="100" list="puzzle-image-picker--pieces-list">
+      <datalist id="puzzle-image-picker--pieces-list"> {#<!-- No FF support, Chrome supports tickmarks -->#}
+        <option value="100" label="100">
+        <option value="1000" label="1000">
+        <option value="2000" label="2000">
+        <option value="6000" label="6000+">
+      </datalist>
+      <p>
+      <em>Show only images that are big enough to have this many pieces</em>
+      </p>
+    </div>
+
+  </div>
+
+
+  {# TODO: Display results with js and move to client-side. #}
+  {# Show the filtered results and paginate if necessary #}
+  <ul>
+    {%- for item in range(0,3) -%}
+    {% set width = 230 %}
+    {% set height = 130 %}
+    {% set src = 'https://placekitten.com/230/130' %}
+    <li>
+      <a href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format('884a4755500a')) }}">
+        {% include 'previewFullImg.html' %}
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>

@@ -15,8 +15,12 @@
         This requires 2400
       </pm-dot-require>
 
-      <pm-dot-require min="2400" type="blur">
-    {% include 'puzzle-instance-form.html' %}
+      <pm-dot-require min="2400" type="none">
+      {% if route and route.puzzle_id %}
+        {% include 'puzzle-instance-form.html' %}
+      {% else %}
+        {% include 'puzzle-image-picker.html' %}
+      {% endif %}
       </pm-dot-require>
   </section>
 

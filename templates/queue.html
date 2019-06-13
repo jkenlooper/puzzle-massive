@@ -1,7 +1,9 @@
-{% macro queue(puzzles) -%}
+{% macro queue(puzzles, limit=0) -%}
 <div class="pm-Queue">
   <div class="pm-Queue-list" role="list">
+    {% set this = namespace(puzzles_skipped = 0) %}
     {% for item in puzzles %}
+    {% if not limit or loop.index <= limit %}
       {% set width = item.long if item.table_width > item.table_height else item.short %}
       {% set height = item.short if item.table_width > item.table_height else item.long %}
       {% set src = item.url %}
@@ -21,7 +23,13 @@
         </pm-dot-require>
        {%- endif %}
     </a>
+    {% else %}
+      {% set this.puzzles_skipped = this.puzzles_skipped + 1 %}
+    {% endif %}
     {% endfor %}
+    {% if this.puzzles_skipped > 0 %}
+      + {{ this.puzzles_skipped }} more
+    {% endif %}
   </div>
 </div>
 {%- endmacro %}
