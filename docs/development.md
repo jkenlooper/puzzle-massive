@@ -263,3 +263,31 @@ To create the versioned distribution file (like puzzle-massive-2.2.0.tar.gz) use
 The script to create the distribution file only includes the files that have
 been committed to git.  It will also limit these to what is listed in the
 `puzzle-massive/MANIFEST`.
+
+## Feature branches and chill-data
+
+_WIP support for new chill dump and load yaml is from 
+[chill feature/chill-dump-yaml](https://github.com/jkenlooper/chill)_
+
+The `chill-data.sql` contains only a dump of the database tables that are used
+in chill.  The Chill, Node, Node_Node, Query, Route, and Template tables are
+rebuilt if the `cat chill-data.sql | sqlite3 /path/to/sqlite/db` command is run.
+This command is commonly run when deploying or setting up the puzzle on
+a machine.  A new feature on a git feature branch will sometimes require updates
+to the `chill-data.sql` file.  There is a potential that if multiple feature
+branches are being developed, that there will be messy git conflicts in
+`chill-data.sql`.  That would happen if those feature branches committed any
+changes to `chill-data.sql`.
+
+To solve this potential problem of conflicts with `chill-data.sql`, feature
+branches should *not* be committing any changes to the `chill-data.sql`.
+Instead the new additions to the chill data should be dumped into
+a `chill-data-feature-[feature-name].yaml` file using the `chill dump` command.
+Then when the feature branch is being merged into the develop branch, the `chill
+load` command is used to load only the changes for the feature branch into the
+database.  Then the `chill-data.sql` file is updated by running the
+`create-chill-data.sh` script.
+
+The `chill-data-feature-[feature-name].yaml` dump file should also be edited to
+*only* include changes that are being added for the feature branch.  Usually any
+new ChillNode objects that are added will be at the bottom of this file.
