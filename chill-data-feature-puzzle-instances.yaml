@@ -1,0 +1,19 @@
+--- !ChillNode
+name: puzzleinstancepage
+route: /create-puzzle-instance/
+template: puzzleinstancepage.html
+value:
+  page:
+    description: Create a new puzzle instance from an existing puzzle image.
+    title: Select Image For New Puzzle Instance
+  public_image_count: select_total_puzzle_image_count.sql
+--- !ChillNode
+name: puzzleinstanceformpage
+route: /create-puzzle-instance/<puzzle_id>/
+template: puzzleinstancepage.html
+value:
+  page:
+    description: Create a new puzzle instance from the image.
+    title: Create New Puzzle Instance
+  puzzle: _frontpage-page-info-for-puzzle_id.sql
+  route: _route-pass-puzzle_id.sql
