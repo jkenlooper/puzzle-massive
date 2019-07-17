@@ -174,6 +174,7 @@ module.exports = (env, argv) => {
     config.watch = argv.watch
     config.watchOptions = {
       aggregateTimeout: 300,
+      poll: 1000,
     }
     config.optimization = {}
   }

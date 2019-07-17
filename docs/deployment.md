@@ -133,7 +133,6 @@ by the public.
     virtualenv . -p python3;
     source bin/activate;
     make ENVIRONMENT=production;
-    cp chill-data.sql db.dump.sql;
     sudo make ENVIRONMENT=production install;
     sudo ./bin/puzzlectl.sh stop;
 
@@ -212,7 +211,7 @@ on the old server and copy all the data over to the new puzzle-green server.
       dev@puzzle-blue:/usr/local/src/puzzle-massive/$DBDUMPFILE \
       /usr/local/src/puzzle-massive/;
     zcat $DBDUMPFILE | sqlite3 /var/lib/puzzle-massive/sqlite3/db
-    cat chill-data.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
+    cat db.dump.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
     echo 'pragma journal_mode=wal' | sqlite3 /var/lib/puzzle-massive/sqlite3/db
     ```
 

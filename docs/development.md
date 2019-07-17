@@ -49,7 +49,12 @@ machine:
 sudo adduser dev
 # Set the user to have sudo privileges by placing in the sudo group
 sudo usermod -aG sudo dev
+```
 
+Run the initial `bin/setup.sh` script after logging into the development
+machine.
+
+```bash
 # Install other software dependencies with apt-get and npm.
 sudo ./bin/setup.sh;
 ```
@@ -169,28 +174,33 @@ use `svgo`.
 curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
 source ~/.bashrc
 
+# Install latest Nodejs LTS version and set it in the .nvmrc
+nvm install --lts=Dubnium
+nvm current > .nvmrc
+
 # Install and use the version set in .nvmrc
 nvm install
 nvm use
 ```
 
-When first installing on the dev machine run:
+When first installing on a development machine (not production) run:
 
 ```bash
 # Setup to use a virtual python environment
 virtualenv . -p python3;
 source bin/activate;
 
-# Makes the initial development version
-make;
-cp chill-data.sql db.dump.sql;
-
 # Build the dist files for local development
 npm install;
 npm run build;
 
+# Makes the initial development version and the db.dump.sql file
+make;
+
+# Creates the initial database from the db.dump.sql file, installs other files
 sudo make install;
 
+# Create the puzzle database tables and initial data
 # As the dev user:
 sudo su dev
 source bin/activate
@@ -233,15 +243,15 @@ submitted puzzles to be approved and then click on render.
 
 ### Building the `dist/` files
 
-The Javascript and CSS files in the `dist/` directory are built from the source
+The javascript and CSS files in the `dist/` directory are built from the source
 files in `src/` by running the `npm run build` command.  This uses
 [webpack](https://webpack.js.org/) and is configured with the
 `webpack.config.js`.  The entry file is `src/index.ts` and following that the
 main site bundle (`site.bundle.js`, `site.css`) is built from
 `src/site/index.js`.
 
-The source files for Javascript and CSS are organized mostly as components.  The
-`src/site/` being an exception as it includes CSS and Javascript used across the
+The source files for javascript and CSS are organized mostly as components.  The
+`src/site/` being an exception as it includes CSS and javascript used across the
 whole site. Each component includes its own CSS (if applicable) and the CSS
 classes follow the 
 [SUIT CSS naming conventions](https://github.com/suitcss/suit/blob/master/doc/naming-conventions.md).

@@ -14,6 +14,7 @@
 /api/puzzle-massive-scheduler.service
 /divulger/puzzle-massive-divulger.service
 /db
+/db.dump.sql
 /dist/
 /frozen/
 /logs/
@@ -33,6 +34,7 @@
 /web/server.crt
 /web/server.csr
 /web/server.key
+/web/v3.ext
 
 /include/
 /lib/

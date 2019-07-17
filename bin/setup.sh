@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -eu -o pipefail
 
+apt-get --yes update
+apt-get --yes upgrade
+
 apt-get --yes install \
   software-properties-common \
   rsync \
