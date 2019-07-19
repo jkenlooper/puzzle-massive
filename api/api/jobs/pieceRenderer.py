@@ -118,6 +118,8 @@ def render(*args):
         im.save(os.path.join(puzzle_dir, 'preview_full.jpg'))
         im.close()
 
+        # TODO: get path of original.jpg via the PuzzleFile query
+        # TODO: use requests.get to get original.jpg and run in another thread
         imagefile = os.path.join(puzzle_dir, 'original.jpg')
 
         im = Image.open(imagefile)

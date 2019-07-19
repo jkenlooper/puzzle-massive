@@ -4,7 +4,7 @@ from past.utils import old_div
 import os
 from random import randint
 
-from flask import current_app, redirect, request, make_response, abort, request
+from flask import current_app, redirect, make_response, abort, request
 from flask.views import MethodView
 import redis
 from PIL import Image
@@ -19,12 +19,6 @@ from .jobs.convertPiecesToRedis import convert
 from .tools import deletePieceDataFromRedis
 
 redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
-
-query_user_points_prereq = """
-select u.points from User as u
-join Puzzle as pz on (u.points >= :pieces)
-where u.id = :user and pz.id = :puzzle;
-"""
 
 query_update_user_points_for_resetting_puzzle = """
 update User set points = points - :points where id = :user;
@@ -69,15 +63,15 @@ class PuzzlePiecesRebuildView(MethodView):
         puzzleData = result[0]
         puzzle = puzzleData['id']
 
-        userHasEnoughPoints = cur.execute(query_user_points_prereq, {'user': user, 'puzzle': puzzle, 'pieces': pieces}).fetchall()
-        if not userHasEnoughPoints:
+        userCanRebuildPuzzle = cur.execute(fetch_query_string("select-user-rebuild-puzzle-prereq.sql"), {'user': user, 'puzzle': puzzle, 'pieces': pieces}).fetchall()
+        if not userCanRebuildPuzzle:
             abort(400)
 
         # Get the adjusted piece count depending on the size of the original and
         # the minimum piece size.
-        # TODO: Store the width and height of the original in the Puzzle
-        # database table.
         puzzle_dir = os.path.join(current_app.config['PUZZLE_RESOURCES'], puzzle_id)
+        # TODO: get path of original.jpg via the PuzzleFile query
+        # TODO: use requests.get to get original.jpg and run in another thread
         imagefile = os.path.join(puzzle_dir, 'original.jpg')
         im = Image.open(imagefile)
         (width, height) = im.size

@@ -407,8 +407,9 @@ cat <<HERE
     if (\$invalid_referer) {
       return 444;
     }
-    auth_basic "Restricted Content";
-    auth_basic_user_file ${SRVDIR}.htpasswd;
+    allow $INTERNALIP;
+    allow 127.0.0.1;
+    deny all;
     root ${SRVDIR};
   }
 

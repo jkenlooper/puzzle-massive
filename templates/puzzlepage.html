@@ -173,6 +173,8 @@
         <pm-dot-require min="{{ config.MINIMUM_PIECE_COUNT }}" type="none">
           <pm-rebuild-form max-point-cost="{{ config.MAX_POINT_COST_FOR_REBUILDING }}"
                            puzzle-id="{{puzzle.puzzle_id}}"
+                           is-original="{{ puzzle.is_original }}"
+                           owner="{{ puzzle.owner }}"
                            min-piece-count="{{ config.MINIMUM_PIECE_COUNT }}"
                            piece-count="{{ piece_count }}"
                            >

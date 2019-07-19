@@ -84,7 +84,7 @@ class AutoRebuildCompletedPuzzle(Task):
         super().do_task()
 
         cur = db.cursor()
-        active_puzzle_count = cur.execute(read_query_file("get_incomplete_puzzle_count.sql")).fetchone()[0]
+        active_puzzle_count = cur.execute(read_query_file("get_active_puzzle_count.sql")).fetchone()[0]
         if active_puzzle_count < self.minimum_count:
             (result, col_names) = rowify(cur.execute(read_query_file("select_random_puzzle_to_rebuild.sql"), {'status': COMPLETED}).fetchall(), cur.description)
             if result:
