@@ -16,7 +16,7 @@ from PIL import Image
 from piecemaker.base import JigsawPieceClipsSVG, Pieces
 from piecemaker.adjacent import Adjacent
 
-from api.database import rowify
+from api.database import read_query_file
 from api.tools import loadConfig
 from api.constants import (
         IN_RENDER_QUEUE,
@@ -105,22 +105,31 @@ def render(*args):
             print("Puzzle {puzzle_id} no longer in rendering status; skipping.".format(**puzzle))
             continue
 
+        result = cur.execute(read_query_file('get_original_puzzle_id_from_puzzle_instance.sql'), {'puzzle': puzzle['id']}).fetchone()
+        if not result:
+            print("Error with puzzle instance {puzzle_id} ; skipping.".format(**puzzle))
+            continue
+        original_puzzle_id = result[0]
+        puzzle_id = puzzle['puzzle_id']
+        original_puzzle_dir = os.path.join(config['PUZZLE_RESOURCES'], original_puzzle_id)
+        puzzle_dir = os.path.join(config['PUZZLE_RESOURCES'], puzzle_id)
+
         # If it is being rebuilt then delete all the other resources.
-        cleanup(puzzle['puzzle_id'], ['original.jpg'])
+        cleanup(puzzle_id, ['original.jpg'])
 
         scaled_sizes = [100,]
 
-        puzzle_dir = os.path.join(config['PUZZLE_RESOURCES'], puzzle['puzzle_id'])
 
         # Create the preview full
-        im = Image.open(os.path.join(puzzle_dir, 'original.jpg')).copy()
+        # TODO: use requests.get to get original.jpg and run in another thread
+        im = Image.open(os.path.join(original_puzzle_dir, 'original.jpg')).copy()
         im.thumbnail(size=(384, 384))
         im.save(os.path.join(puzzle_dir, 'preview_full.jpg'))
         im.close()
 
         # TODO: get path of original.jpg via the PuzzleFile query
         # TODO: use requests.get to get original.jpg and run in another thread
-        imagefile = os.path.join(puzzle_dir, 'original.jpg')
+        imagefile = os.path.join(original_puzzle_dir, 'original.jpg')
 
         im = Image.open(imagefile)
         (width, height) = im.size

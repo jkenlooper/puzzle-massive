@@ -67,12 +67,13 @@ class PuzzlePiecesRebuildView(MethodView):
         if not userCanRebuildPuzzle:
             abort(400)
 
+        original_puzzle_id = puzzleData['original_puzzle_id']
         # Get the adjusted piece count depending on the size of the original and
         # the minimum piece size.
-        puzzle_dir = os.path.join(current_app.config['PUZZLE_RESOURCES'], puzzle_id)
+        original_puzzle_dir = os.path.join(current_app.config['PUZZLE_RESOURCES'], original_puzzle_id)
         # TODO: get path of original.jpg via the PuzzleFile query
         # TODO: use requests.get to get original.jpg and run in another thread
-        imagefile = os.path.join(puzzle_dir, 'original.jpg')
+        imagefile = os.path.join(original_puzzle_dir, 'original.jpg')
         im = Image.open(imagefile)
         (width, height) = im.size
         im.close()

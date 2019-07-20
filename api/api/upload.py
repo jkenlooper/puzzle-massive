@@ -151,6 +151,10 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
         'url': '/resources/{0}/preview_full.jpg'.format(puzzle_id)
         })
 
+    classic_variant = cur.execute("select id from PuzzleVariant where slug = 'classic';").fetchone()[0]
+    insert_puzzle_instance = "insert into PuzzleInstance (original, instance, variant) values (:puzzle, :instance, :variant);"
+    cur.execute(insert_puzzle_instance, {"puzzle": puzzle, "instance": puzzle, "variant": classic_variant})
+
     db.commit()
     cur.close()
 
