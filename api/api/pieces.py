@@ -85,11 +85,10 @@ class PuzzlePiecesView(MethodView):
             # TODO: publish the job to the worker queue
             # Respond with 202
 
-            # TODO: check redis memory usage and create cleanup job if it's past a threshold
+            # Check redis memory usage and create cleanup job if it's past a threshold
             memory = redisConnection.info(section='memory')
             print('used_memory: {used_memory_human}'.format(**memory))
             maxmemory = memory.get('maxmemory')
-            #maxmemory = 1024 * 2000
             if maxmemory != 0:
                 target_memory = (maxmemory * 0.5)
                 if memory.get('used_memory') > target_memory:
@@ -104,13 +103,6 @@ class PuzzlePiecesView(MethodView):
             # The act of just loading the puzzle should update the pcupdates.
             # This will prevent the puzzle from being deleted by the janitor.
             redisConnection.zadd('pcupdates', {puzzle: int(time.time())})
-
-        if status == COMPLETED:
-            # transfer completed puzzles back out
-            print('transfer {0}'.format(puzzle))
-            job = current_app.cleanupqueue.enqueue_call(
-                func='api.jobs.convertPiecesToDB.transfer', args=(puzzle,), result_ttl=0
-            )
 
         query = """select id from Piece where (puzzle = :puzzle)"""
         (all_pieces, col_names) = rowify(cur.execute(query, {'puzzle': puzzle}).fetchall(), cur.description)
@@ -140,4 +132,12 @@ class PuzzlePiecesView(MethodView):
                 }
 
         cur.close()
+
+        if status == COMPLETED:
+            # transfer completed puzzles back out
+            print('transfer {0}'.format(puzzle))
+            job = current_app.cleanupqueue.enqueue_call(
+                func='api.jobs.convertPiecesToDB.transfer', args=(puzzle,), result_ttl=0
+            )
+
         return encoder.encode(pieceData)
