@@ -50,7 +50,7 @@ npm install -g svgo
 
 
 apt-get --yes install redis-server
-redis-cli config set maxmemory "100mb"
+redis-cli config set maxmemory "500mb"
 redis-cli config rewrite
 
 # Remove the default nginx config
