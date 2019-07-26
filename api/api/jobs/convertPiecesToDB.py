@@ -50,9 +50,10 @@ def transfer(puzzle):
     for piece in all_pieces:
         pieceFromRedis = redisConnection.hgetall('pc:{puzzle}:{id}'.format(**piece))
 
-        piece['x'] = pieceFromRedis.get('x')
-        piece['y'] = pieceFromRedis.get('y')
-        piece['r'] = pieceFromRedis.get('r')
+        # The redis data may be empty so fall back on what is in db.
+        piece['x'] = pieceFromRedis.get('x', piece['x'])
+        piece['y'] = pieceFromRedis.get('y', piece['y'])
+        piece['r'] = pieceFromRedis.get('r', piece['r'])
         piece['parent'] = pieceFromRedis.get('g', None)
         # status is reset here based on what was in redis
         piece['status'] = pieceFromRedis.get('s', None)
@@ -96,6 +97,7 @@ def transferAll():
         print('used_memory: {used_memory_human}'.format(**memory))
 
 def handle_fail(job, exception, exception_func, traceback):
+    # TODO: handle fail for janitor; see handle_render_fail of pieceRenderer.py
     print("Handle janitor fail {0}".format(job.args[0]))
 
 
