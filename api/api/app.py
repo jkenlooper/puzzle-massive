@@ -109,6 +109,7 @@ def make_app(config=None, **kw):
     from api.pieces import PuzzlePiecesView
     #from api.reset import PuzzlePiecesResetView
     from api.rebuild import PuzzlePiecesRebuildView
+    from api.instance import CreatePuzzleInstanceView
     from api.upload import PuzzleUploadView, AdminPuzzlePromoteSuggestedView
     from api.suggest_image import SuggestImageView
     from api.render import RenderPuzzlesView
@@ -149,6 +150,8 @@ def make_app(config=None, **kw):
     #                 view_func=PuzzlePiecesResetView.as_view('puzzle-reset'))
     app.add_url_rule('/puzzle-rebuild/',
                      view_func=PuzzlePiecesRebuildView.as_view('puzzle-rebuild'))
+    app.add_url_rule('/puzzle-instance/',
+                     view_func=CreatePuzzleInstanceView.as_view('puzzle-instance'))
     app.add_url_rule('/puzzle-upload/', view_func=PuzzleUploadView.as_view('puzzle-upload'))
     app.add_url_rule('/suggest-image/', view_func=SuggestImageView.as_view('suggest-image'))
 

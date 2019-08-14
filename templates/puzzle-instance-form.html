@@ -3,7 +3,8 @@
 {% set width = puzzle.long if puzzle.table_width > puzzle.table_height else puzzle.short %}
 {% set height = puzzle.short if puzzle.table_width > puzzle.table_height else puzzle.long %}
 
-<form enctype="multipart/form-data" id="suggest-image-form" method="post" action="/newapi/create-puzzle-instance/">
+<form enctype="multipart/form-data" id="puzzle-instance-form" method="post" action="/newapi/puzzle-instance/">
+  <input type="hidden" name="puzzle_id" value="{{puzzle.puzzle_id}}">
 
   {% if puzzle.link -%}
   <small class="pm-Preview-source u-textTruncate">
@@ -36,6 +37,7 @@
         Piece Count
       </label>
       <div>
+        {# TODO: Convert this form to web component and set the max pieces depending on the player's dots. #}
         <input type="number"
                min="{{ config.MINIMUM_PIECE_COUNT }}"
                max="50000"
