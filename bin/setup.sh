@@ -43,9 +43,10 @@ apt-get --yes install optipng
 curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
 apt-get install -y nodejs # also installs npm
 
-apt-get --yes install potrace libffi-dev python-libxml2 libxml2-dev python-lxml python-xcffib
+apt-get --yes install potrace libffi-dev python-libxml2 libxml2-dev python3-lxml python-xcffib
 apt-get --yes install libcairo2-dev
 apt-get --yes install python-cairo
+# TODO: install python3-cairo instead?
 npm install -g svgo
 
 
