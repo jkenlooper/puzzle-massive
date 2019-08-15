@@ -1,5 +1,8 @@
 #/newapi/create-puzzle-instance/
+import os
 import re
+import time
+import hashlib
 
 from flask import current_app, redirect, make_response, abort, request
 from flask.views import MethodView
@@ -8,7 +11,7 @@ from api.app import db
 from api.database import rowify, fetch_query_string
 from api.user import user_id_from_ip, user_not_banned
 from api.constants import (
-    PUBLIC
+    PUBLIC,
     ACTIVE,
     IN_QUEUE,
     COMPLETED,
@@ -49,7 +52,14 @@ class CreatePuzzleInstanceView(MethodView):
         else:
             bg_color = "#808080"
 
+        # Check puzzle_id
+        original_puzzle_id = args.get('puzzle_id')
+        if (not original_puzzle_id):
+            abort(400)
+
         user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
+
+        cur = db.cursor()
 
         # The user should have
         # 2400 or more dots (points)
@@ -65,15 +75,16 @@ class CreatePuzzleInstanceView(MethodView):
 
         # TODO: Check if puzzle is valid to be a new puzzle instance
         cur = db.cursor()
-        result = cur.execute(fetch_query_string("select-valid-puzzle-for-new-puzzle-instance.sql"), {'puzzle_id': puzzle_id,
-                                                          'ACTIVE': ACTIVE,
-                                                          'IN_QUEUE': IN_QUEUE,
-                                                          'COMPLETED': COMPLETED,
-                                                          'FROZEN': FROZEN,
-                                                          'REBUILD': REBUILD,
-                                                          'IN_RENDER_QUEUE': IN_RENDER_QUEUE,
-                                                          'RENDERING': RENDERING,
-                                                          'PUBLIC': PUBLIC}).fetchall()
+        result = cur.execute(fetch_query_string("select-valid-puzzle-for-new-puzzle-instance.sql"), {
+            'puzzle_id': original_puzzle_id,
+            'ACTIVE': ACTIVE,
+            'IN_QUEUE': IN_QUEUE,
+            'COMPLETED': COMPLETED,
+            'FROZEN': FROZEN,
+            'REBUILD': REBUILD,
+            'IN_RENDER_QUEUE': IN_RENDER_QUEUE,
+            'RENDERING': RENDERING,
+            'PUBLIC': PUBLIC}).fetchall()
         if not result:
             # Puzzle does not exist or is not a valid puzzle to create instance from.
             abort(400)
@@ -92,7 +103,7 @@ class CreatePuzzleInstanceView(MethodView):
           count = 1
 
         d = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
-        puzzle_id = "%i%s" % (max_id, hashlib.sha224(bytes("%s%s" % (filename, d), 'utf-8')).hexdigest()[0:9])
+        puzzle_id = "%i%s" % (max_id, hashlib.sha224(bytes("%s%s" % (originalPuzzleData['name'], d), 'utf-8')).hexdigest()[0:9])
 
         # Create puzzle dir
         puzzle_dir = os.path.join(current_app.config.get('PUZZLE_RESOURCES'), puzzle_id)
@@ -133,25 +144,13 @@ class CreatePuzzleInstanceView(MethodView):
         """, d)
         db.commit()
 
-        puzzle = rowify(cur.execute("select id from Puzzle where puzzle_id = :puzzle_id;", {'puzzle_id':puzzle_id}).fetchall(), cur.description)[0][0]
-        print(puzzle)
-        puzzle = puzzle['id']
+        result = cur.execute("select * from Puzzle where puzzle_id = :puzzle_id;", {'puzzle_id': puzzle_id}).fetchall()
+        if not result:
+            abort(500)
 
-        #TODO: link to original
-        #insert_file = "insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);"
-        #cur.execute(insert_file, {
-        #    'puzzle': puzzle,
-        #    'name': 'original',
-        #    'url': '/resources/{0}/original.jpg'.format(puzzle_id) # Not a public file (only on admin page)
-        #    })
-
-        #TODO: link to original
-        #insert_file = "insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);"
-        #cur.execute(insert_file, {
-        #    'puzzle': puzzle,
-        #    'name': 'preview_full',
-        #    'url': '/resources/{0}/preview_full.jpg'.format(puzzle_id)
-        #    })
+        (result, col_names) = rowify(result, cur.description)
+        puzzleData = result[0]
+        puzzle = puzzleData['id']
 
         classic_variant = cur.execute("select id from PuzzleVariant where slug = 'classic';").fetchone()[0]
         insert_puzzle_instance = "insert into PuzzleInstance (original, instance, variant) values (:originalPuzzle, :instance, :variant);"
@@ -159,3 +158,10 @@ class CreatePuzzleInstanceView(MethodView):
 
         db.commit()
         cur.close()
+
+        job = current_app.createqueue.enqueue_call(
+            func='api.jobs.pieceRenderer.render', args=([puzzleData]), result_ttl=0,
+            timeout='24h'
+        )
+
+        return redirect('/chill/site/puzzle/{0}/'.format(puzzle_id), code=303)

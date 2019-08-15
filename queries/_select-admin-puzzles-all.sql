@@ -6,7 +6,9 @@ round((min(CAST(p.table_width AS float), CAST(p.table_height AS float)) / max(CA
 64.0 AS long
 
 FROM Puzzle AS p
-JOIN PuzzleFile AS pf ON (pf.puzzle = p.id)
+JOIN PuzzleInstance as pi on (pi.instance = p.id)
+join Puzzle as p1 on (p1.id = pi.original)
+JOIN PuzzleFile AS pf ON (pf.puzzle = p1.id) -- Get the original
 WHERE pf.name == 'preview_full'
 
 -- ACTIVE, IN_QUEUE

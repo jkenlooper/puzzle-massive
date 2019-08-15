@@ -105,7 +105,7 @@
     {% set msg = "The Puzzle is currently in the rebuild queue and will be rendered soon." %}
     {% set title = "In Rebuild Queue" %}
   {% elif puzzle.status == IN_RENDER_QUEUE %}
-    {% set msg = "The Puzzle is currently in the render queue.  This may take up to 24 hours as it only renders puzzles once a day." %}
+    {% set msg = "The Puzzle is currently in the render queue.  This may take some time if there are other puzzles being rendered." %}
     {% set title = "In Render Queue" %}
   {% elif puzzle.status == RENDERING %}
     {% set msg = "The Puzzle is rendering." %}

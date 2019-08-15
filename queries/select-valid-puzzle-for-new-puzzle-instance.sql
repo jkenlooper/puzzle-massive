@@ -1,4 +1,4 @@
-select p1.id
+select p1.id,
 p1.puzzle_id,
 p1.name,
 p1.link,

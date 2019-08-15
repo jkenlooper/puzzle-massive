@@ -7,6 +7,7 @@ from past.utils import old_div
 import os
 import json
 import sys
+import logging
 from random import randint
 import subprocess
 import time
@@ -25,6 +26,7 @@ from api.constants import (
         RENDERING_FAILED,
         IN_QUEUE,
         )
+
 
 # https://www.imagemagick.org/script/architecture.php#cache
 # Need to update the limits in /etc/ImageMagick-6/policy.xml to something like:
@@ -56,6 +58,10 @@ try:
 except (IOError, IndexError):
     # Most likely being run from a test setup
     pass
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG if config['DEBUG'] else logging.INFO)
 
 def handle_render_fail(job, exception, exception_func, traceback):
     """
@@ -122,10 +128,11 @@ def render(*args):
 
         # Create the preview full
         # TODO: use requests.get to get original.jpg and run in another thread
-        im = Image.open(os.path.join(original_puzzle_dir, 'original.jpg')).copy()
-        im.thumbnail(size=(384, 384))
-        im.save(os.path.join(puzzle_dir, 'preview_full.jpg'))
-        im.close()
+        if original_puzzle_id == puzzle_id:
+            im = Image.open(os.path.join(original_puzzle_dir, 'original.jpg')).copy()
+            im.thumbnail(size=(384, 384))
+            im.save(os.path.join(puzzle_dir, 'preview_full.jpg'))
+            im.close()
 
         # TODO: get path of original.jpg via the PuzzleFile query
         # TODO: use requests.get to get original.jpg and run in another thread

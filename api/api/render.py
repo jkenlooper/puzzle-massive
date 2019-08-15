@@ -4,15 +4,11 @@ from flask import current_app, request, make_response, abort
 from flask.views import MethodView
 
 from api.app import db
-from .database import fetch_query_string, rowify
+from .database import read_query_file, rowify
 from api.constants import (
         IN_RENDER_QUEUE,
         REBUILD
         )
-
-query_select_puzzles_in_render_queue = """
-select * from Puzzle where status in (:IN_RENDER_QUEUE, :REBUILD) order by queue;
-"""
 
 
 class RenderPuzzlesView(MethodView):
@@ -26,7 +22,7 @@ class RenderPuzzlesView(MethodView):
         #     abort(403)
 
         cur = db.cursor()
-        puzzles = rowify(cur.execute(query_select_puzzles_in_render_queue,
+        puzzles = rowify(cur.execute(read_query_file("select-puzzles-in-render-queue.sql"),
             {'IN_RENDER_QUEUE': IN_RENDER_QUEUE,
              'REBUILD': REBUILD})
             .fetchall(), cur.description)[0]

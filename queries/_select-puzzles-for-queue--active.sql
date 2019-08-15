@@ -6,11 +6,12 @@ round((min(CAST(p.table_width AS float), CAST(p.table_height AS float)) / max(CA
 --strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 days') as is_recent
 
 FROM Puzzle AS p
-JOIN PuzzleFile AS pf ON (pf.puzzle = p.id)
-WHERE pf.name == 'preview_full' -- PUBLIC
-AND p.permission = 0
--- ACTIVE, IN_QUEUE
-AND p.status IN (1, 2)
+JOIN PuzzleInstance as pi on (pi.instance = p.id)
+join Puzzle as p1 on (p1.id = pi.original)
+JOIN PuzzleFile AS pf ON (pf.puzzle = p1.id) -- Get the original
+WHERE pf.name == 'preview_full'
+AND p.permission = 0 -- PUBLIC
+AND p.status IN (1, 2) -- ACTIVE, IN_QUEUE
 -- Filter out the 10 most recent puzzles
 AND not (p.id in (select id from Puzzle where permission = 0 and status in (1, 2) and strftime('%s', m_date) >= strftime('%s', 'now', '-7 hours') order by m_date desc ))
 GROUP BY p.id

@@ -11,8 +11,9 @@ strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 hours') as is_recent,
 
 strftime('%s','now') - strftime('%s', p.m_date) as seconds_from_now
  FROM Puzzle AS p
-JOIN PuzzleFile AS pf ON (pf.puzzle = p.id)
+JOIN PuzzleFile AS pf ON (pf.puzzle = p1.id) -- Get the original
 JOIN PuzzleInstance as pi on (pi.instance = p.id)
+join Puzzle as p1 on (p1.id = pi.original)
 JOIN PuzzleVariant as pv on (pi.variant = pv.id)
 WHERE pf.name == 'preview_full'
 AND p.puzzle_id = :puzzle_id

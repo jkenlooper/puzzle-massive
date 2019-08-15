@@ -6,9 +6,11 @@ round((min(CAST(p.table_width AS float), CAST(p.table_height AS float)) / max(CA
 strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 hours') as is_recent
 
 FROM Puzzle AS p
-JOIN PuzzleFile AS pf ON (pf.puzzle = p.id)
-WHERE pf.name == 'preview_full' -- PUBLIC
-AND p.permission = 0
+JOIN PuzzleInstance as pi on (pi.instance = p.id)
+join Puzzle as p1 on (p1.id = pi.original)
+JOIN PuzzleFile AS pf ON (pf.puzzle = p1.id) -- Get the original
+WHERE pf.name == 'preview_full'
+AND p.permission = 0 -- PUBLIC
 AND p.status == 3 -- COMPLETE
 AND not is_recent -- not recently complete
 -- Filter out the recent completed puzzles

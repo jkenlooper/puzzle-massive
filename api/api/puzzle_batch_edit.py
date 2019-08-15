@@ -16,6 +16,7 @@ from api.constants import (
         FAILED_LICENSE,
         NO_ATTRIBUTION,
         IN_RENDER_QUEUE,
+        REBUILD,
         RENDERING,
         DELETED_LICENSE,
         DELETED_INAPT,
@@ -143,5 +144,19 @@ class AdminPuzzleBatchEditView(MethodView):
 
         cur.executemany(query_update_status_for_puzzle_id, each(puzzle_ids))
         db.commit()
+
+        if action == 'approve':
+            puzzles = rowify(cur.execute(fetch_query_string("select-puzzles-in-render-queue.sql"),
+                {'IN_RENDER_QUEUE': IN_RENDER_QUEUE,
+                 'REBUILD': REBUILD})
+                .fetchall(), cur.description)[0]
+            print("found {0} puzzles to render".format(len(puzzles)))
+
+            # push each puzzle to artist job queue
+            for puzzle in puzzles:
+                job = current_app.createqueue.enqueue_call(
+                    func='api.jobs.pieceRenderer.render', args=([puzzle]), result_ttl=0,
+                    timeout='24h'
+                )
 
         return make_response('204', 204)
