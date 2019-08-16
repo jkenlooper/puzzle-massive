@@ -1,4 +1,4 @@
-#/newapi/create-puzzle-instance/
+#/newapi/puzzle-instance/
 import os
 
 from flask import current_app, redirect, make_response, abort, request

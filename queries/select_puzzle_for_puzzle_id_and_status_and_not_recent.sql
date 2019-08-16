@@ -1,4 +1,4 @@
-select p.puzzle_id, p.id, p.pieces, p.status,
+select p.puzzle_id, p.id, p.pieces, p.status, p.owner,
 p1.puzzle_id as original_puzzle_id
 from Puzzle as p
 join PuzzleInstance as pi on (p.id = pi.instance)

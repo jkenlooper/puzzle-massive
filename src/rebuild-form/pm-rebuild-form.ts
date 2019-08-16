@@ -8,9 +8,11 @@ interface TemplateData {
   dots: number;
   maxPointCost: number;
   minPieceCount: number;
+  maxPieceCount: number;
   maxPieceCountForDots: number;
   pieceCount: number;
   puzzleId: string;
+  playerOwnsPuzzleInstance: boolean;
   canRebuild: boolean;
 }
 
@@ -67,13 +69,22 @@ customElements.define(
     template(data: TemplateData) {
       if (data.canRebuild) {
         return html`
-          <p>
-            You have earned
-            <strong>${data.dots}</strong>
-            dots by putting together puzzles. Rebuilding puzzles will decrease
-            the number of dots depending on the piece count selected up to
-            ${data.maxPointCost} dots.
-          </p>
+          ${data.playerOwnsPuzzleInstance
+            ? html`
+                <p>
+                  You are the owner of this puzzle instance and you can rebuild
+                  it without using any dots.
+                </p>
+              `
+            : html`
+                <p>
+                  You have earned
+                  <strong>${data.dots}</strong>
+                  dots by putting together puzzles. Rebuilding puzzles will
+                  decrease the number of dots depending on the piece count
+                  selected up to ${data.maxPointCost} dots.
+                </p>
+              `}
           <form method="post" action="/newapi/puzzle-rebuild/">
             <input type="hidden" name="puzzle_id" value=${data.puzzleId} />
             <label for="pieces">
@@ -82,7 +93,9 @@ customElements.define(
             <input
               type="number"
               min=${data.minPieceCount}
-              max=${data.maxPieceCountForDots}
+              max=${data.playerOwnsPuzzleInstance
+                ? data.maxPieceCount
+                : data.maxPieceCountForDots}
               name="pieces"
               id="pieces"
               value=${data.pieceCount}
@@ -104,12 +117,15 @@ customElements.define(
         dots: userDetailsService.userDetails.dots,
         maxPointCost: this.maxPointCost,
         minPieceCount: this.minPieceCount,
+        maxPieceCount: maxPieceCount,
         maxPieceCountForDots: Math.min(
           userDetailsService.userDetails.dots,
           maxPieceCount
         ),
         pieceCount: this.pieceCount,
         puzzleId: this.puzzleId,
+        playerOwnsPuzzleInstance:
+          userDetailsService.userDetails.id === this.owner && !this.isOriginal,
         canRebuild:
           this.isOriginal || userDetailsService.userDetails.id === this.owner,
       };

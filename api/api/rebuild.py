@@ -81,8 +81,11 @@ class PuzzlePiecesRebuildView(MethodView):
 
         # The user points for rebuilding the puzzle is decreased by the piece
         # count for the puzzle. Use at least 200 points for smaller puzzles.
+        # Players that own a puzzle instance do not decrease any points (dots)
+        # if the puzzle is complete.
         point_cost = max(current_app.config['MINIMUM_PIECE_COUNT'], min(max_pieces_that_will_fit, pieces, current_app.config['MAX_POINT_COST_FOR_REBUILDING']))
-        cur.execute(query_update_user_points_for_resetting_puzzle, {'user': user, 'points': point_cost})
+        if not (puzzleData['owner'] == user and puzzleData['puzzle_id'] == puzzleData['original_puzzle_id']):
+            cur.execute(query_update_user_points_for_resetting_puzzle, {'user': user, 'points': point_cost})
 
         # Update puzzle status to be REBUILD and change the piece count
         cur.execute(fetch_query_string("update_status_puzzle_for_puzzle_id.sql"), {'puzzle_id': puzzle_id, 'status': REBUILD, 'pieces': pieces})

@@ -161,7 +161,13 @@
       {% if title or msg %}
         <h1>{{ title }}</h1>
         {% if puzzle.status == COMPLETED and puzzle.is_recent == 1 %}
-        <p>This jigsaw puzzle has been recently completed, it can be redone after {{ puzzle.redo_date }}.</p>
+          <p>
+            This jigsaw puzzle has been recently completed.  {% if puzzle.is_original -%}
+            Anyone
+            {%- else -%}
+            Only the owner of this puzzle instance
+            {%- endif %} can rebuild it after {{ puzzle.redo_date }}.
+          </p>
         {% else %}
         <p>{{ msg }}</p>
         {% if puzzle.status == COMPLETED %}
