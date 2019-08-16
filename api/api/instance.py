@@ -1,15 +1,13 @@
 #/newapi/create-puzzle-instance/
 import os
-import re
-import time
-import hashlib
 
 from flask import current_app, redirect, make_response, abort, request
 from flask.views import MethodView
 
 from api.app import db
-from api.database import rowify, fetch_query_string
+from api.database import rowify, fetch_query_string, generate_new_puzzle_id
 from api.user import user_id_from_ip, user_not_banned
+from api.tools import check_bg_color
 from api.constants import (
     PUBLIC,
     ACTIVE,
@@ -18,7 +16,8 @@ from api.constants import (
     FROZEN,
     REBUILD,
     IN_RENDER_QUEUE,
-    RENDERING
+    RENDERING,
+    CLASSIC
 )
 
 
@@ -43,14 +42,7 @@ class CreatePuzzleInstanceView(MethodView):
         if pieces < current_app.config['MINIMUM_PIECE_COUNT']:
             abort(400)
 
-        # Check bg_color
-        color_regex = re.compile('.*?#?([a-f0-9]{6}|[a-f0-9]{3}).*?', re.IGNORECASE)
-        bg_color = args.get('bg_color', '#808080')[:50]
-        color_match = color_regex.match(bg_color)
-        if (color_match):
-            bg_color = "#{0}".format(color_match.group(1))
-        else:
-            bg_color = "#808080"
+        bg_color = check_bg_color(args.get('bg_color', '#808080')[:50])
 
         # Check puzzle_id
         original_puzzle_id = args.get('puzzle_id')
@@ -92,23 +84,16 @@ class CreatePuzzleInstanceView(MethodView):
         (result, col_names) = rowify(result, cur.description)
         originalPuzzleData = result[0]
 
-        # TODO: copied from upload.py
-        puzzle_id = None
-        query = """select max(id)*13 from Puzzle;"""
-        max_id = cur.execute(query).fetchone()[0] or 1 # in case there are no puzzles found.
-
-        query = """select max(queue)+1 from Puzzle where permission = 0;"""
-        count = cur.execute(query).fetchone()[0]
-        if (not count):
-          count = 1
-
-        d = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
-        puzzle_id = "%i%s" % (max_id, hashlib.sha224(bytes("%s%s" % (originalPuzzleData['name'], d), 'utf-8')).hexdigest()[0:9])
+        puzzle_id = generate_new_puzzle_id(originalPuzzleData['name'])
 
         # Create puzzle dir
         puzzle_dir = os.path.join(current_app.config.get('PUZZLE_RESOURCES'), puzzle_id)
         os.mkdir(puzzle_dir)
 
+        query = """select max(queue)+1 from Puzzle where permission = 0;"""
+        count = cur.execute(query).fetchone()[0]
+        if (not count):
+          count = 1
 
         d = {'puzzle_id':puzzle_id,
             'pieces':pieces,
@@ -152,9 +137,8 @@ class CreatePuzzleInstanceView(MethodView):
         puzzleData = result[0]
         puzzle = puzzleData['id']
 
-        classic_variant = cur.execute("select id from PuzzleVariant where slug = 'classic';").fetchone()[0]
-        insert_puzzle_instance = "insert into PuzzleInstance (original, instance, variant) values (:originalPuzzle, :instance, :variant);"
-        cur.execute(insert_puzzle_instance, {"originalPuzzle": originalPuzzleData['id'], "instance": puzzle, "variant": classic_variant})
+        classic_variant = cur.execute(fetch_query_string("select-puzzle-variant-id-for-slug.sql"), {"slug": CLASSIC}).fetchone()[0]
+        cur.execute(fetch_query_string("insert-puzzle-instance.sql"), {"original": originalPuzzleData['id'], "instance": puzzle, "variant": classic_variant})
 
         db.commit()
         cur.close()

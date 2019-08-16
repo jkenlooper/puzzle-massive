@@ -16,9 +16,10 @@ from werkzeug.utils import secure_filename, escape
 from werkzeug.urls import url_fix
 
 from api.app import db
-from api.database import rowify, fetch_query_string, read_query_file
-from api.constants import COMPLETED, NEEDS_MODERATION, PUBLIC
+from api.database import rowify, fetch_query_string, read_query_file, generate_new_puzzle_id
+from api.constants import COMPLETED, NEEDS_MODERATION, PUBLIC, CLASSIC
 from api.user import user_id_from_ip, user_not_banned
+from api.tools import check_bg_color
 
 # Not allowing anything other then jpg to protect against potential picture bombs.
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
@@ -31,8 +32,6 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
 
     puzzle_id = None
     cur = db.cursor()
-    query = """select max(id)*13 from Puzzle;"""
-    max_id = cur.execute(query).fetchone()[0] or 1 # in case there are no puzzles found.
 
     unsplash_match = re.search(r"unsplash.com/photos/([^/]+)", link)
     if link and unsplash_match:
@@ -62,8 +61,7 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
             cur.close()
             abort(400)
 
-        d = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
-        puzzle_id = "%i%s" % (max_id, hashlib.sha224(bytes("%s%s" % (filename, d), 'utf-8')).hexdigest()[0:9])
+        puzzle_id = generate_new_puzzle_id(filename)
 
         # Create puzzle dir
         puzzle_dir = os.path.join(current_app.config.get('PUZZLE_RESOURCES'), puzzle_id)
@@ -151,9 +149,8 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
         'url': '/resources/{0}/preview_full.jpg'.format(puzzle_id)
         })
 
-    classic_variant = cur.execute("select id from PuzzleVariant where slug = 'classic';").fetchone()[0]
-    insert_puzzle_instance = "insert into PuzzleInstance (original, instance, variant) values (:puzzle, :instance, :variant);"
-    cur.execute(insert_puzzle_instance, {"puzzle": puzzle, "instance": puzzle, "variant": classic_variant})
+    classic_variant = cur.execute(fetch_query_string("select-puzzle-variant-id-for-slug.sql"), {"slug": CLASSIC}).fetchone()[0]
+    cur.execute(fetch_query_string("insert-puzzle-instance.sql"), {"original": puzzle, "instance": puzzle, "variant": classic_variant})
 
     db.commit()
     cur.close()
@@ -187,14 +184,7 @@ class PuzzleUploadView(MethodView):
         if pieces < current_app.config['MINIMUM_PIECE_COUNT']:
             abort(400)
 
-        # Check bg_color
-        color_regex = re.compile('.*?#?([a-f0-9]{6}|[a-f0-9]{3}).*?', re.IGNORECASE)
-        bg_color = args.get('bg_color', '#808080')[:50]
-        color_match = color_regex.match(bg_color)
-        if (color_match):
-            bg_color = "#{0}".format(color_match.group(1))
-        else:
-            bg_color = "#808080"
+        bg_color = check_bg_color(args.get('bg_color', '#808080')[:50])
 
         user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
 
@@ -238,14 +228,7 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
         if pieces < current_app.config['MINIMUM_PIECE_COUNT']:
             abort(400)
 
-        # Check bg_color
-        color_regex = re.compile('.*?#?([a-f0-9]{6}|[a-f0-9]{3}).*?', re.IGNORECASE)
-        bg_color = args.get('bg_color', '#808080')[:50]
-        color_match = color_regex.match(bg_color)
-        if (color_match):
-            bg_color = "#{0}".format(color_match.group(1))
-        else:
-            bg_color = "#808080"
+        bg_color = check_bg_color(args.get('bg_color', '#808080')[:50])
 
         # All puzzles are public
         permission = PUBLIC

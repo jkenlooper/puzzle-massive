@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-import re
 import uuid
 
 import sqlite3
@@ -10,6 +9,7 @@ from werkzeug.urls import url_fix
 
 from api.app import db
 from api.database import rowify
+from api.tools import check_bg_color
 from api.constants import SUGGESTED, PUBLIC
 from api.user import user_id_from_ip
 from api.notify import send_message
@@ -34,14 +34,7 @@ class SuggestImageView(MethodView):
         if pieces < current_app.config['MINIMUM_PIECE_COUNT']:
             abort(400)
 
-        # Check bg_color
-        color_regex = re.compile('.*?#?([a-f0-9]{6}|[a-f0-9]{3}).*?', re.IGNORECASE)
-        bg_color = args.get('bg_color', '#808080')[:50]
-        color_match = color_regex.match(bg_color)
-        if (color_match):
-            bg_color = "#{0}".format(color_match.group(1))
-        else:
-            bg_color = "#808080"
+        bg_color = check_bg_color(args.get('bg_color', '#808080')[:50])
 
         user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
 

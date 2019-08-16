@@ -24,3 +24,6 @@ SUGGESTED_DONE   = -21 # Suggested image has been processed
 #permission
 PUBLIC           = 0   # Is listed on the site
 PRIVATE          = -1  # Only shows for the owner of the puzzle, can still be played by anyone with the link.
+
+# Puzzle Variant Slug names
+CLASSIC = 'classic' # initial_puzzle_variant.sql

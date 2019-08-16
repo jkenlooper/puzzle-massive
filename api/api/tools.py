@@ -1,6 +1,7 @@
 from __future__ import division
 from past.utils import old_div
 import os
+import re
 
 from flask import Config
 
@@ -76,4 +77,13 @@ def deletePieceDataFromRedis(redisConnection, puzzle, all_pieces):
     pipe.zrem('pcupdates', puzzle)
 
     pipe.execute()
+
+def check_bg_color(bg_color):
+    "Validate the bg_color that was submitted and return a default not valid."
+    color_regex = re.compile('.*?#?([a-f0-9]{6}|[a-f0-9]{3}).*?', re.IGNORECASE)
+    color_match = color_regex.match(bg_color)
+    if (color_match):
+        return "#{0}".format(color_match.group(1))
+    else:
+        return "#808080"
 

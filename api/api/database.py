@@ -1,6 +1,8 @@
 from __future__ import absolute_import
-from builtins import zip
+from builtins import zip, bytes
 import os
+import time
+import hashlib
 
 from flask import current_app
 from .app import db
@@ -72,3 +74,14 @@ def read_query_file(file_name):
             return f.read()
     else:
         raise Exception("File not found: {}".format(file_path))
+
+def generate_new_puzzle_id(name):
+    """
+    The puzzle_id has an increasing number prefix and then some hashed unique string.
+    """
+    cur = db.cursor()
+    max_id = cur.execute(fetch_query_string("select-next-puzzle-id.sql")).fetchone()[0] or 1 # in case there are no puzzles found.
+    d = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
+    puzzle_id = "%i%s" % (max_id, hashlib.sha224(bytes("%s%s" % (name, d), 'utf-8')).hexdigest()[0:9])
+    cur.close()
+    return puzzle_id

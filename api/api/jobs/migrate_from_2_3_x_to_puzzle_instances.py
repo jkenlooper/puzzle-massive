@@ -15,6 +15,7 @@ import logging
 from api.app import db
 from api.database import rowify, read_query_file
 from api.tools import loadConfig
+from api.constants import CLASSIC
 
 
 # Get the args and connect to the database
@@ -43,7 +44,7 @@ if __name__ == '__main__':
             cur.execute(statement)
             db.commit()
 
-    classic_variant = cur.execute("select id from PuzzleVariant where slug = 'classic';").fetchone()[0]
+    classic_variant = cur.execute(read_query_file("select-puzzle-variant-id-for-slug.sql"), {"slug": CLASSIC}).fetchone()[0]
 
     ## Populate the puzzle instances
     result = cur.execute("SELECT id FROM Puzzle;").fetchall()
