@@ -76,8 +76,19 @@
   {% endif %}
   {% if recent.status == COMPLETED and not recent.is_recent -%}
   <p class="pm-Preview-statusNote">
-  This jigsaw puzzle has been completed and requires using dots to redo it.  Dots are earned by putting together puzzles.
+  This jigsaw puzzle has been completed.
   </p>
+  {% endif %}
+
+  {% if not recent.is_original %}
+  Puzzle instance created by {{ recent.owner }}<!-- <pm-player-bit player-id></pm-player-bit> -->
+  from this <a href="/chill{{ url_for('.page_uri', uri='front/{}'.format(recent.original_puzzle_id)) }}">original puzzle</a>
+  <!-- <pm-puzzle-instance-actions puzzle-id>
+    buttons:
+      delete
+      freeze/unfreeze
+    </pm-puzzle-instance-actions>
+  -->
   {% endif %}
 
 </div>

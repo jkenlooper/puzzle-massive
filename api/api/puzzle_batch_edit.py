@@ -159,4 +159,6 @@ class AdminPuzzleBatchEditView(MethodView):
                     timeout='24h'
                 )
 
+        # TODO: if action in ('reject', 'delete'): #Also apply to any puzzle instances
+
         return make_response('204', 204)

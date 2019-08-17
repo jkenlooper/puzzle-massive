@@ -13,6 +13,7 @@ WHERE pf.name == 'preview_full'
 AND p.permission = 0 -- PUBLIC
 AND p.status == 3 -- COMPLETE
 AND not is_recent -- not recently complete
+AND p1.id == p.id -- only show original puzzles and no copies
 -- Filter out the recent completed puzzles
 AND not (p.id in (select id from Puzzle where permission = 0 and status = 3 and strftime('%s', m_date) >= strftime('%s', 'now', '-7 hours')))
 GROUP BY p.id
