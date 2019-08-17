@@ -17,3 +17,10 @@ value:
     title: Create New Puzzle Instance
   puzzle: _frontpage-page-info-for-puzzle_id.sql
   route: _route-pass-puzzle_id.sql
+--- !ChillNode
+name: internal_player_bit_for_id
+route: /internal/player-bit/<int:player_id>/
+template: player-bit.html
+value:
+  bit: select-bit-icon-for-player-id.sql
+  player_id: route-pass-player-id.sql

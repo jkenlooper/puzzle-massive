@@ -81,7 +81,8 @@
   {% endif %}
 
   {% if not recent.is_original %}
-  Puzzle instance created by {{ recent.owner }}<!-- <pm-player-bit player-id></pm-player-bit> -->
+  Puzzle instance created by
+  {{ '[chill route /internal/player-bit/{}/ ]'.format(recent.owner) }}
   from this <a href="/chill{{ url_for('.page_uri', uri='front/{}'.format(recent.original_puzzle_id)) }}">original puzzle</a>
   <!-- <pm-puzzle-instance-actions puzzle-id>
     buttons:
