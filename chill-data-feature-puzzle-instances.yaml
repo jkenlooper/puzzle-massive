@@ -24,9 +24,3 @@ template: player-bit.html
 value:
   bit: select-bit-icon-for-player-id.sql
   player_id: route-pass-player-id.sql
---- !ChillNode
-name: api_puzzle_details
-route: /api/puzzle-details/<puzzle_id>/
-value:
-  puzzle: select-puzzle-details-for-puzzle_id.sql
-  route: _route-pass-puzzle_id.sql

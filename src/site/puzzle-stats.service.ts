@@ -23,22 +23,9 @@ interface PuzzleStats {
   [puzzleId: string]: PlayerStatsData;
 }
 
-export interface PuzzleDetails {}
-
 class PuzzleStatsService {
   _puzzleStats: PuzzleStats = {};
   constructor() {}
-
-  getPuzzleDetails(puzzleId: string): Promise<PuzzleDetails> {
-    const puzzleDetailsService = new FetchService(
-      `/chill/site/api/puzzle-details/${puzzleId}/`
-    );
-
-    return puzzleDetailsService.get<PuzzleDetails>().then((puzzleDetails) => {
-      console.log(puzzleDetails);
-      return puzzleDetails;
-    });
-  }
 
   getPlayerStatsOnPuzzle(puzzleId: string): Promise<PlayerStatsData> {
     const puzzleStats = this._puzzleStats[puzzleId] || {

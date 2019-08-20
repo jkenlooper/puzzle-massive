@@ -84,13 +84,7 @@
   Puzzle instance created by
   {{ '[chill route /internal/player-bit/{}/ ]'.format(recent.owner) }}
   from this <a href="/chill{{ url_for('.page_uri', uri='front/{}'.format(recent.original_puzzle_id)) }}">original puzzle</a>
-  <pm-puzzle-instance-actions puzzle-id="{{ recent.puzzle_id }}" owner="{{ recent.owner }}"></pm-puzzle-instance-actions>
-  <!-- <pm-puzzle-instance-actions puzzle-id owner>
-    buttons:
-      delete
-      freeze/unfreeze
-    </pm-puzzle-instance-actions>
-  -->
+  <pm-puzzle-instance-actions class="u-block" puzzle-id="{{ recent.puzzle_id }}" owner="{{ recent.owner }}" status="{{ recent.status }}"></pm-puzzle-instance-actions>
   {% endif %}
 
 </div>

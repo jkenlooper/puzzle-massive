@@ -4,15 +4,20 @@ import userDetailsService from "../site/user-details.service";
 import "./puzzle-instance-actions.css";
 
 import {
-  puzzleStatsService,
+  puzzleDetailsService,
   PuzzleDetails,
-} from "../site/puzzle-stats.service";
+} from "../site/puzzle-details.service";
 
 interface TemplateData {
   errorMessage?: string;
   hasError: boolean;
   isReady: boolean;
-  puzzleDetails: boolean | PuzzleDetails;
+  hasPuzzleDetails: boolean;
+  isFrozen: boolean;
+  canDelete: boolean;
+  deletePenalty: number;
+  deleteDisabledMessage: string;
+  isProcessing: boolean; // the status on the puzzle page is not the same as the status returned.
 }
 
 const tag = "pm-puzzle-instance-actions";
@@ -31,7 +36,8 @@ customElements.define(
     hasError: boolean = false;
     errorMessage: string = "";
     isReady: boolean = false;
-    puzzleDetails: boolean | PuzzleDetails = false;
+    puzzleDetails: undefined | PuzzleDetails = undefined;
+    status: number = -99;
 
     constructor() {
       super();
@@ -54,6 +60,14 @@ customElements.define(
         this.owner = parseInt(owner.value);
       }
 
+      const status = this.attributes.getNamedItem("status");
+      if (!status || !status.value) {
+        this.hasError = true;
+        this.errorMessage = "No status has been set.";
+      } else {
+        this.status = parseInt(status.value);
+      }
+
       userDetailsService.subscribe(
         this._setPuzzleData.bind(this),
         this.instanceId
@@ -66,7 +80,7 @@ customElements.define(
         this.render();
         return;
       }
-      return puzzleStatsService
+      return puzzleDetailsService
         .getPuzzleDetails(this.puzzleId)
         .then((puzzleDetails: PuzzleDetails) => {
           this.puzzleDetails = puzzleDetails;
@@ -90,11 +104,43 @@ customElements.define(
           ${data.errorMessage}
         `;
       }
-      if (!data.puzzleDetails) {
+      if (!data.hasPuzzleDetails) {
         return html``;
       }
+      if (data.isProcessing) {
+        // When action buttons are pressed the server will respond with
+        // a processing request code (202 or something?).  This is because the
+        // front page is cached for a minute and removing that cache isn't within
+        // scope of this.
+        return html`
+          <em>Processing last action that has updated the puzzle status.</em>
+        `;
+      }
+      // TODO: wire up button actions
       return html`
-        ...
+        ${data.canDelete
+          ? html`
+              <button>delete</button>
+              ${data.deletePenalty > 0
+                ? html`
+                    <em
+                      >Deleting this puzzle will cost ${data.deletePenalty}
+                      dots</em
+                    >
+                  `
+                : html``}
+            `
+          : html`
+              <button disabled>delete</button>
+              <em>${data.deleteDisabledMessage}</em>
+            `}
+        ${data.isFrozen
+          ? html`
+              <button>unfreeze</button>
+            `
+          : html`
+              <button>freeze</button>
+            `}
       `;
     }
 
@@ -103,7 +149,17 @@ customElements.define(
         isReady: this.isReady,
         hasError: this.hasError,
         errorMessage: this.errorMessage,
-        puzzleDetails: this.puzzleDetails,
+        hasPuzzleDetails: !!this.puzzleDetails,
+        isFrozen: !!this.puzzleDetails ? this.puzzleDetails.isFrozen : false,
+        canDelete: !!this.puzzleDetails ? this.puzzleDetails.canDelete : false,
+        deletePenalty: !!this.puzzleDetails
+          ? this.puzzleDetails.deletePenalty
+          : -1,
+        deleteDisabledMessage: !!this.puzzleDetails
+          ? this.puzzleDetails.deleteDisabledMessage
+          : "",
+        isProcessing:
+          !!this.puzzleDetails && this.status != this.puzzleDetails.status,
       };
     }
 
