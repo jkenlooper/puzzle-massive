@@ -6,7 +6,13 @@ class FetchService {
   }
 
   get<T>(): Promise<T> {
-    return fetch(this.url).then((response: Response) => {
+    return fetch(this.url, {
+      method: "GET",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).then((response: Response) => {
       if (!response.ok) {
         throw new Error(response.statusText);
       }

@@ -2,7 +2,13 @@ export class ChooseBitService {
   constructor() {}
 
   getBits(limit: number): Promise<string[]> {
-    return fetch("/newapi/choose-bit/").then(function(response: Response) {
+    return fetch("/newapi/choose-bit/", {
+      method: "GET",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).then(function(response: Response) {
       if (!response.ok) {
         throw new Error(response.statusText);
       }
@@ -17,6 +23,10 @@ export class ChooseBitService {
     params.append("icon", bit);
     const request = new Request(`/newapi/claim-bit/?${params}`, {
       method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
 
     return fetch(request).then((response: Response) => {

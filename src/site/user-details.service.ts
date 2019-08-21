@@ -19,6 +19,10 @@ interface UserDetailsData extends UserDetailsResponse {
 function claimRandomBit(): Promise<void> {
   return fetch("/newapi/claim-random-bit/", {
     method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+    },
   }).then((response: Response) => {
     if (!response.ok) {
       throw new Error(response.statusText);
@@ -101,7 +105,13 @@ class UserDetailsService {
   }
 
   currentUserId(): Promise<string> {
-    return fetch("/newapi/current-user-id/").then((response: Response) => {
+    return fetch("/newapi/current-user-id/", {
+      method: "GET",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).then((response: Response) => {
       if (!response.ok) {
         throw new Error(response.statusText);
       }
@@ -123,7 +133,13 @@ class UserDetailsService {
 
     function getUserDetails() {
       // get the new user details from server
-      return fetch("/newapi/user-details/")
+      return fetch("/newapi/user-details/", {
+        method: "GET",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
         .then((response: Response) => {
           if (!response.ok) {
             throw new Error(response.statusText);

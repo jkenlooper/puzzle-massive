@@ -134,7 +134,13 @@ class PuzzleBitsService {
   }
 
   getPlayerBitIcon(playerId: number): Promise<PlayerBitIconResponse> {
-    return fetch(`/newapi/bit-icon/${playerId}/`).then((response: Response) => {
+    return fetch(`/newapi/bit-icon/${playerId}/`, {
+      method: "GET",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).then((response: Response) => {
       if (!response.ok) {
         throw new Error(response.statusText);
       }
