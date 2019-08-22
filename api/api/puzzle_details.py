@@ -5,7 +5,7 @@ import redis
 from api.app import db
 from api.user import user_id_from_ip, user_not_banned
 from api.database import fetch_query_string, rowify, delete_puzzle_resources
-from api.constants import DELETED_REQUEST, FROZEN, ACTIVE
+from api.constants import DELETED_REQUEST, FROZEN, ACTIVE, COMPLETED
 
 redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
 
@@ -23,6 +23,16 @@ class PuzzleDetailsView(MethodView):
 
     decorators = [user_not_banned]
 
+    def get_delete_prereq(self, puzzleData):
+        delete_penalty = 0
+        can_delete = True
+        delete_disabled_message = ''
+        if puzzleData['status'] != COMPLETED:
+            delete_penalty = max(current_app.config['MINIMUM_PIECE_COUNT'], puzzleData['pieces'])
+            can_delete = puzzleData['user_points'] >= delete_penalty
+            if not can_delete:
+                delete_disabled_message = 'Not enough dots to delete this puzzle'
+        return (delete_penalty, can_delete, delete_disabled_message)
 
     def patch(self, puzzle_id):
         ip = request.headers.get('X-Real-IP')
@@ -63,6 +73,17 @@ class PuzzleDetailsView(MethodView):
         response = {}
 
         if action == 'delete':
+
+            (delete_penalty, can_delete, delete_disabled_message) = self.get_delete_prereq(puzzleData)
+            if not can_delete:
+                response = {
+                    'msg': delete_disabled_message
+                }
+                return make_response(encoder.encode(response), 400)
+
+            if delete_penalty > 0:
+                cur.execute(fetch_query_string("decrease-user-points.sql"), {'user': user, 'points': delete_penalty})
+
             delete_puzzle_resources(puzzle_id)
             cur.execute(fetch_query_string("delete_puzzle_file_for_puzzle.sql"), {'puzzle': puzzleData['id']})
             cur.execute(fetch_query_string("delete_piece_for_puzzle.sql"), {'puzzle': puzzleData['id']})
@@ -122,11 +143,11 @@ class PuzzleDetailsView(MethodView):
         (result, col_names) = rowify(result, cur.description)
         puzzleData = result[0]
 
-        # TODO: set the return values for puzzle-details
+        (delete_penalty, can_delete, delete_disabled_message) = self.get_delete_prereq(puzzleData)
         response = {
-            'deletePenalty': 0,
-            'canDelete': True,
-            'deleteDisabledMessage': 'Not enough dots to delete this puzzle',
+            'canDelete': can_delete,
+            'deleteDisabledMessage': delete_disabled_message,
+            'deletePenalty': delete_penalty,
             'isFrozen': puzzleData.get('status') == FROZEN,
             'status': puzzleData.get('status', -99)
         }

@@ -20,10 +20,6 @@ from .tools import deletePieceDataFromRedis
 
 redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
 
-query_update_user_points_for_resetting_puzzle = """
-update User set points = points - :points where id = :user;
-"""
-
 # From pieceRenderer
 MIN_PIECE_SIZE = 64
 
@@ -85,7 +81,7 @@ class PuzzlePiecesRebuildView(MethodView):
         # if the puzzle is complete.
         point_cost = max(current_app.config['MINIMUM_PIECE_COUNT'], min(max_pieces_that_will_fit, pieces, current_app.config['MAX_POINT_COST_FOR_REBUILDING']))
         if not (puzzleData['owner'] == user and puzzleData['puzzle_id'] == puzzleData['original_puzzle_id']):
-            cur.execute(query_update_user_points_for_resetting_puzzle, {'user': user, 'points': point_cost})
+            cur.execute(fetch_query_string("decrease-user-points.sql"), {'user': user, 'points': point_cost})
 
         # Update puzzle status to be REBUILD and change the piece count
         cur.execute(fetch_query_string("update_status_puzzle_for_puzzle_id.sql"), {'puzzle_id': puzzle_id, 'status': REBUILD, 'pieces': pieces})

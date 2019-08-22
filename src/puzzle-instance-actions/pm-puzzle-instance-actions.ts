@@ -146,8 +146,8 @@ customElements.define(
               ${data.deletePenalty > 0
                 ? html`
                     <em
-                      >Deleting this puzzle will cost ${data.deletePenalty}
-                      dots</em
+                      >Deleting this puzzle will cost ${data.deletePenalty} dots
+                      because it is not complete.</em
                     >
                   `
                 : html``}
