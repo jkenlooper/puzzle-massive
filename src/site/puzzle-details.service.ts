@@ -20,6 +20,21 @@ class PuzzleDetailsService {
       return puzzleDetails;
     });
   }
+
+  patchPuzzleDetails(puzzleId: string, action: string): Promise<PuzzleDetails> {
+    const puzzleDetailsService = new FetchService(
+      `/newapi/puzzle-details/${puzzleId}/`
+    );
+
+    const data = {
+      action: action,
+    };
+    return puzzleDetailsService
+      .patch<PuzzleDetails>(data)
+      .then((puzzleDetails) => {
+        return puzzleDetails;
+      });
+  }
 }
 
 export const puzzleDetailsService = new PuzzleDetailsService();

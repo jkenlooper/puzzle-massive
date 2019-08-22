@@ -21,6 +21,24 @@ class FetchService {
       });
     });
   }
+
+  patch<T>(data): Promise<T> {
+    return fetch(this.url, {
+      method: "PATCH",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    }).then((response: Response) => {
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+      return response.json().then((response: T) => {
+        return response;
+      });
+    });
+  }
 }
 
 export default FetchService;

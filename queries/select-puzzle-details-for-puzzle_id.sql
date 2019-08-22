@@ -1,4 +1,5 @@
 SELECT
+p.id,
 p.puzzle_id,
 p.pieces,
 p.owner,

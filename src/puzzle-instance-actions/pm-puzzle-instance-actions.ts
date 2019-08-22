@@ -18,6 +18,7 @@ interface TemplateData {
   deletePenalty: number;
   deleteDisabledMessage: string;
   isProcessing: boolean; // the status on the puzzle page is not the same as the status returned.
+  actionHandler: any; // event listener object
 }
 
 const tag = "pm-puzzle-instance-actions";
@@ -95,6 +96,26 @@ customElements.define(
         });
     }
 
+    handleAction(e) {
+      const action = e.target.dataset["action"];
+      this.isReady = false;
+      puzzleDetailsService
+        .patchPuzzleDetails(this.puzzleId, action)
+        .then((data) => {
+          if (this.puzzleDetails) {
+            this.puzzleDetails.status = data.status;
+          }
+        })
+        .catch(() => {
+          this.hasError = true;
+          this.errorMessage = `Oops. That puzzle action (${action}) had an error.`;
+        })
+        .finally(() => {
+          this.isReady = true;
+          this.render();
+        });
+    }
+
     template(data: TemplateData) {
       if (!data.isReady) {
         return html``;
@@ -116,11 +137,12 @@ customElements.define(
           <em>Processing last action that has updated the puzzle status.</em>
         `;
       }
-      // TODO: wire up button actions
       return html`
         ${data.canDelete
           ? html`
-              <button>delete</button>
+              <button data-action="delete" @click="${data.actionHandler}">
+                delete
+              </button>
               ${data.deletePenalty > 0
                 ? html`
                     <em
@@ -136,10 +158,14 @@ customElements.define(
             `}
         ${data.isFrozen
           ? html`
-              <button>unfreeze</button>
+              <button data-action="unfreeze" @click="${data.actionHandler}">
+                unfreeze
+              </button>
             `
           : html`
-              <button>freeze</button>
+              <button data-action="freeze" @click="${data.actionHandler}">
+                freeze
+              </button>
             `}
       `;
     }
@@ -160,6 +186,10 @@ customElements.define(
           : "",
         isProcessing:
           !!this.puzzleDetails && this.status != this.puzzleDetails.status,
+        actionHandler: {
+          handleEvent: this.handleAction.bind(this),
+          capture: true,
+        },
       };
     }
 

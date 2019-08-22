@@ -3,6 +3,8 @@
 
 {# puzzle has been assembled #}
 {% set COMPLETED        = 3   %}
+{% set DELETED_REQUEST  = -13 %}
+{% set FROZEN           = 4   %}
 
 {% set width = recent.long if recent.table_width > recent.table_height else recent.short %}
 {% set height = recent.short if recent.table_width > recent.table_height else recent.long %}
@@ -80,11 +82,24 @@
   </p>
   {% endif %}
 
+  {% if recent.status == DELETED_REQUEST and not recent.is_original  %}
+  <p class="pm-Preview-statusNote">
+    This puzzle instance has been removed by request of the owner.
+  </p>
+  {% elif recent.status == FROZEN and not recent.is_original %}
+  <p class="pm-Preview-statusNote">
+  This puzzle instance is currently frozen by the owner.  Pieces can't be moved
+  on the puzzle until the owner unfreezes it.
+  </p>
+  {% endif %}
+
   {% if not recent.is_original %}
   Puzzle instance created by
   {{ '[chill route /internal/player-bit/{}/ ]'.format(recent.owner) }}
   from this <a href="/chill{{ url_for('.page_uri', uri='front/{}'.format(recent.original_puzzle_id)) }}">original puzzle</a>
-  <pm-puzzle-instance-actions class="u-block" puzzle-id="{{ recent.puzzle_id }}" owner="{{ recent.owner }}" status="{{ recent.status }}"></pm-puzzle-instance-actions>
+    {% if recent.status != DELETED_REQUEST %}
+    <pm-puzzle-instance-actions class="u-block" puzzle-id="{{ recent.puzzle_id }}" owner="{{ recent.owner }}" status="{{ recent.status }}"></pm-puzzle-instance-actions>
+    {% endif %}
   {% endif %}
 
 </div>

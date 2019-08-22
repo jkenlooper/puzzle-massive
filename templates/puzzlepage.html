@@ -169,7 +169,13 @@
             {%- endif %} can rebuild it after {{ puzzle.redo_date }}.
           </p>
         {% else %}
-        <p>{{ msg }}</p>
+        <p>{{ msg }}
+          {% if not puzzle.is_original -%}
+  Puzzle instance created by
+  {{ '[chill route /internal/player-bit/{}/ ]'.format(puzzle.owner)|shortcodes }}
+  from this <a href="/chill{{ url_for('.page_uri', uri='front/{}'.format(puzzle.original_puzzle_id)) }}">original puzzle</a>
+          {% endif %}
+        </p>
         {% if puzzle.status == COMPLETED %}
           {% if config.MINIMUM_PIECE_COUNT > puzzle.pieces %}
             {% set piece_count = config.MINIMUM_PIECE_COUNT %}

@@ -6,7 +6,7 @@ from flask.views import MethodView
 import redis
 
 from api.app import db
-from api.database import rowify, fetch_query_string
+from api.database import rowify, fetch_query_string, delete_puzzle_resources
 from api.constants import (
         ACTIVE,
         IN_QUEUE,
@@ -32,17 +32,6 @@ ACTIONS = (
     'delete',
     'tag'
     )
-
-def delete_puzzle_resources(puzzle_id):
-    puzzle_dir = os.path.join(current_app.config['PUZZLE_RESOURCES'], puzzle_id)
-    if not os.path.exists(puzzle_dir):
-        return
-    for (dirpath, dirnames, filenames) in os.walk(puzzle_dir, False):
-        for filename in filenames:
-            os.unlink(os.path.join(dirpath, filename))
-        for dirname in dirnames:
-            os.rmdir(os.path.join(dirpath, dirname))
-    os.rmdir(puzzle_dir)
 
 
 
@@ -85,30 +74,18 @@ class AdminPuzzleBatchEditView(MethodView):
         if not isinstance(puzzle_ids, list):
             puzzle_ids = [puzzle_ids]
 
+        status = None
+
         if action == 'approve':
-            query_update_status_for_puzzle_id = """
-            -- IN_RENDER_QUEUE
-            update Puzzle set status = -5
-            -- NEEDS_MODERATION, RENDERING, RENDERING_FAILED
-            where status in (0, -6, -7)
-            and puzzle_id = :puzzle_id;
-            """ #.format(IN_RENDER_QUEUE=IN_RENDER_QUEUE, NEEDS_MODERATION=NEEDS_MODERATION)
+            status = IN_RENDER_QUEUE
 
         if action == 'reject':
-            status = None
             if reject == 'license':
                 status = FAILED_LICENSE
             elif reject == 'attribution':
                 status = NO_ATTRIBUTION
-            # Careful not to allow for sql injection attack here.
-            query_update_status_for_puzzle_id = """
-            update Puzzle set status = {status}
-            where status = {NEEDS_MODERATION}
-            and puzzle_id = :puzzle_id;
-            """.format(status=status, NEEDS_MODERATION=NEEDS_MODERATION)
 
         if action == 'delete':
-            status = None
             if delete == 'license':
                 status = DELETED_LICENSE
             elif delete == 'inapt':
@@ -117,32 +94,25 @@ class AdminPuzzleBatchEditView(MethodView):
                 status = DELETED_OLD
             elif delete == 'request':
                 status = DELETED_REQUEST
-            # Careful not to allow for sql injection attack here.
-            query_update_status_for_puzzle_id = """
-            update Puzzle set status = {status}
-            where puzzle_id = :puzzle_id;
-            """.format(status=status)
 
-            c = db.cursor()
+            cur = db.cursor()
             for puzzle_id in puzzle_ids:
                 delete_puzzle_resources(puzzle_id)
-                id = c.execute("select id from Puzzle where puzzle_id = :puzzle_id", {'puzzle_id': puzzle_id}).fetchone()[0]
+                id = cur.execute(fetch_query_string("select_puzzle_id_by_puzzle_id.sql"), {'puzzle_id': puzzle_id}).fetchone()[0]
                 #current_app.logger.info('deleting puzzle resources for id {}'.format(id))
-                c.execute("""delete from PuzzleFile where puzzle = :id""", {'id': id})
-                c.execute("""delete from Piece where puzzle = :id""", {'id': id})
-                c.execute("""delete from Timeline where puzzle = :id""", {'id': id})
-                c.execute(fetch_query_string('delete_puzzle_timeline.sql'), {'puzzle': id})
+                cur.execute(fetch_query_string("delete_puzzle_file_for_puzzle.sql"), {'puzzle': id})
+                cur.execute(fetch_query_string("delete_piece_for_puzzle.sql"), {'puzzle': id})
+                cur.execute(fetch_query_string('delete_puzzle_timeline.sql'), {'puzzle': id})
                 redisConnection.delete('timeline:{puzzle}'.format(puzzle=id))
                 redisConnection.delete('score:{puzzle}'.format(puzzle=id))
             db.commit()
 
-        cur = db.cursor()
 
         def each(puzzle_ids):
             for puzzle_id in puzzle_ids:
-                yield {'puzzle_id': puzzle_id}
+                yield {'puzzle_id': puzzle_id, 'status': status}
 
-        cur.executemany(query_update_status_for_puzzle_id, each(puzzle_ids))
+        cur.executemany(fetch_query_string("update_puzzle_status_for_puzzle_id.sql"), each(puzzle_ids))
         db.commit()
 
         if action == 'approve':
@@ -160,5 +130,6 @@ class AdminPuzzleBatchEditView(MethodView):
                 )
 
         # TODO: if action in ('reject', 'delete'): #Also apply to any puzzle instances
+        cur.close()
 
         return make_response('204', 204)

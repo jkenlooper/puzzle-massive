@@ -85,3 +85,15 @@ def generate_new_puzzle_id(name):
     puzzle_id = "%i%s" % (max_id, hashlib.sha224(bytes("%s%s" % (name, d), 'utf-8')).hexdigest()[0:9])
     cur.close()
     return puzzle_id
+
+def delete_puzzle_resources(puzzle_id):
+    puzzle_dir = os.path.join(current_app.config['PUZZLE_RESOURCES'], puzzle_id)
+    if not os.path.exists(puzzle_dir):
+        return
+    for (dirpath, dirnames, filenames) in os.walk(puzzle_dir, False):
+        for filename in filenames:
+            os.unlink(os.path.join(dirpath, filename))
+        for dirname in dirnames:
+            os.rmdir(os.path.join(dirpath, dirname))
+    os.rmdir(puzzle_dir)
+
