@@ -38,6 +38,7 @@ if __name__ == '__main__':
             'cleanup_migrate_from_2_3_x_to_puzzle_instances.sql',
             'create_table_puzzle_variant.sql',
             'create_table_puzzle_instance.sql',
+            'create_table_user_puzzle.sql',
             'initial_puzzle_variant.sql',
             ):
         for statement in read_query_file(filename).split(';'):
