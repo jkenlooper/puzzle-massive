@@ -143,18 +143,9 @@ customElements.define(
               <button data-action="delete" @click="${data.actionHandler}">
                 delete
               </button>
-              ${data.deletePenalty > 0
-                ? html`
-                    <em
-                      >Deleting this puzzle will cost ${data.deletePenalty} dots
-                      because it is not complete.</em
-                    >
-                  `
-                : html``}
             `
           : html`
               <button disabled>delete</button>
-              <em>${data.deleteDisabledMessage}</em>
             `}
         ${data.isFrozen
           ? html`
@@ -166,6 +157,24 @@ customElements.define(
               <button data-action="freeze" @click="${data.actionHandler}">
                 freeze
               </button>
+            `}
+        ${data.canDelete
+          ? html`
+              <p>
+                ${data.deletePenalty > 0
+                  ? html`
+                    <em
+                      >Deleting this puzzle will cost ${data.deletePenalty} dots
+                      because it is not complete.</em
+                    >
+                  </p>`
+                  : html``}
+              </p>
+            `
+          : html`
+              <p>
+                <em>${data.deleteDisabledMessage}</em>
+              </p>
             `}
       `;
     }

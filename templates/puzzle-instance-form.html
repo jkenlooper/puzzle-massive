@@ -37,10 +37,15 @@
         Piece Count
       </label>
       <div>
+          {% if config.MINIMUM_PIECE_COUNT > puzzle.pieces %}
+            {% set piece_count = config.MINIMUM_PIECE_COUNT %}
+          {% else %}
+            {% set piece_count = puzzle.pieces %}
+          {% endif %}
         <input type="number"
                min="{{ config.MINIMUM_PIECE_COUNT }}"
                max="50000"
-               id="pieces" name="pieces" value="{{ puzzle.pieces }}">
+               id="pieces" name="pieces" value="{{ piece_count }}">
         <p>
         When the puzzle is being rendered try to create this many pieces from the image.
         </p>

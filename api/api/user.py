@@ -275,6 +275,10 @@ class UserDetailsView(MethodView):
             cur.execute(EXTEND_COOKIE_QUERY, {'id': user_details['id']})
             db.commit()
         del user_details['will_expire_cookie']
+
+        # TODO: Include available puzzle instance slot count and list of puzzle
+        # instances this player has.
+
         cur.close()
 
         return encoder.encode(user_details)

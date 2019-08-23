@@ -66,6 +66,7 @@
   <p class="pm-Preview-attribution">{{ '[chill route /internal/attribution/{}/ ]'.format(recent.attribution) }}</p>
   {% endif %}
 
+
   {% if recent.permission == -1 -%}
   <p class="pm-Preview-statusNote">
   This jigsaw puzzle is not publicly listed on the site.
@@ -93,13 +94,20 @@
   </p>
   {% endif %}
 
+  {# TODO: the Create new instance link should only show for a player that has an empty slot. #}
+            <pm-dot-require min="3400" type="none">
+  <a class="u-block u-textRight" href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}">Create New Puzzle Instance</a>
+            </pm-dot-require>
+
   {% if not recent.is_original %}
+  <p class="pm-Preview-statusNote">
   Puzzle instance created by
   {{ '[chill route /internal/player-bit/{}/ ]'.format(recent.owner) }}
   from this <a href="/chill{{ url_for('.page_uri', uri='front/{}'.format(recent.original_puzzle_id)) }}">original puzzle</a>
     {% if recent.status != DELETED_REQUEST %}
     <pm-puzzle-instance-actions class="u-block" puzzle-id="{{ recent.puzzle_id }}" owner="{{ recent.owner }}" status="{{ recent.status }}"></pm-puzzle-instance-actions>
     {% endif %}
+  </p>
   {% endif %}
 
 </div>
