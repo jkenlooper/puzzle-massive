@@ -1,1 +1,1 @@
-import './player-puzzle-instance-list.css'
+import './pm-player-puzzle-instance-list'

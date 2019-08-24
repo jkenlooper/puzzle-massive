@@ -8,7 +8,7 @@ import time
 import datetime
 import hashlib
 
-from flask import current_app, json, redirect, make_response, request
+from flask import current_app, json, redirect, make_response, request, url_for
 from flask.views import MethodView
 import redis
 
@@ -29,16 +29,6 @@ HONEY_POT_BAN_TIME = LITTLE_MORE_THAN_A_DAY
 OLD_QUERY_USER_DETAILS = """select login, icon, score, points as dots, id, cookie_expires,
   strftime('%s', cookie_expires) <= strftime('%s', 'now', '+351 days') as will_expire_cookie
   from User where id = :id;"""
-
-QUERY_USER_DETAILS = """
-SELECT u.login, b.name AS icon, u.score, u.points as dots, u.id, u.cookie_expires,
-strftime('%s', u.cookie_expires) <= strftime('%s', 'now', '+351 days') as will_expire_cookie,
-strftime('%s', b.expiration) <= strftime('%s', 'now') as bit_expired
-FROM User AS u
-LEFT OUTER JOIN BitIcon AS b ON u.id = b.user
-WHERE u.id = :id;
-"""
-
 
 EXTEND_COOKIE_QUERY = """
 update User set cookie_expires = strftime('%Y-%m-%d', 'now', '+365 days') where id = :id;
@@ -258,7 +248,7 @@ class UserDetailsView(MethodView):
         cur = db.cursor()
 
         try:
-            result = cur.execute(QUERY_USER_DETAILS, {'id':user}).fetchall()
+            result = cur.execute(fetch_query_string("select-user-details.sql"), {'id':user}).fetchall()
         except IndexError:
             # user may have been added after a db rollback
             return make_response('no user', 404)
@@ -276,8 +266,39 @@ class UserDetailsView(MethodView):
             db.commit()
         del user_details['will_expire_cookie']
 
-        # TODO: Include available puzzle instance slot count and list of puzzle
-        # instances this player has.
+        puzzle_instance_list = []
+        if user_details['user_puzzle_count'] > 0:
+            result = cur.execute(fetch_query_string("select-user-puzzle-slot-for-player.sql"), {'player':user}).fetchall()
+            if result:
+                (result, col_names) = rowify(result, cur.description)
+                def set_urls(puzzle_instance):
+                    puzzle_id = puzzle_instance.get('puzzle_id')
+                    front_url = None
+                    if puzzle_id:
+                        front_url = "/chill/site/front/{}/".format(puzzle_id)
+
+                    table_width = puzzle_instance.get('table_width', 0) or 0
+                    table_height = puzzle_instance.get('table_height', 0) or 0
+                    long = puzzle_instance.get('long', 0) or 0
+                    short = puzzle_instance.get('short', 0) or 0
+                    width = long if table_width > table_height else short
+                    height = short if table_width > table_height else long
+                    puzzle_instance['width'] = width
+                    puzzle_instance['height'] = height
+
+                    return {
+                        'width': width,
+                        'height': height,
+                        'front_url': front_url,
+                        'src': puzzle_instance.get('src'),
+                    }
+
+                if isinstance(puzzle_instance_list, list):
+                    puzzle_instance_list = list(map(set_urls, result))
+
+        del user_details['user_puzzle_count']
+
+        user_details['puzzle_instance_list'] = puzzle_instance_list
 
         cur.close()
 
@@ -295,7 +316,7 @@ class ClaimRandomBit(MethodView):
         cur = db.cursor()
 
         try:
-            result = cur.execute(QUERY_USER_DETAILS, {'id':user}).fetchall()
+            result = cur.execute(fetch_query_string("select-user-details.sql"), {'id':user}).fetchall()
         except IndexError:
             # user may have been added after a db rollback
             return make_response('no user', 404)

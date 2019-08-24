@@ -2,6 +2,15 @@ import FetchService from "./fetch.service";
 
 type UserDetailsCallback = () => any;
 
+interface PuzzleInstanceItem {
+  readonly front_url: string | null;
+  readonly src: string | null;
+  readonly width: number | null;
+  readonly height: number | null;
+}
+
+export type PuzzleInstanceList = Array<PuzzleInstanceItem>;
+
 interface UserDetailsResponse {
   bit_expired?: boolean;
   cookie_expires?: string;
@@ -10,10 +19,13 @@ interface UserDetailsResponse {
   id?: number;
   login?: string;
   score: number;
+  readonly puzzle_instance_list?: PuzzleInstanceList;
 }
 interface UserDetailsData extends UserDetailsResponse {
   hasBit: boolean;
   loginAgain: boolean;
+  hasUserPuzzleSlots: boolean;
+  hasAvailableUserPuzzleSlot: boolean;
 }
 
 function claimRandomBit(): Promise<void> {
@@ -46,6 +58,8 @@ class UserDetailsService {
     score: 0,
     hasBit: false,
     loginAgain: false,
+    hasUserPuzzleSlots: false,
+    hasAvailableUserPuzzleSlot: false,
   };
   static anonymousLoginName = "anonymous-login";
   static localUserId = "user-id";
@@ -157,6 +171,15 @@ class UserDetailsService {
             userDetails,
             {
               loginAgain: this.userDetails.loginAgain,
+              hasUserPuzzleSlots:
+                userDetails.puzzle_instance_list &&
+                userDetails.puzzle_instance_list.length,
+              hasAvailableUserPuzzleSlot:
+                userDetails.puzzle_instance_list &&
+                userDetails.puzzle_instance_list.length &&
+                userDetails.puzzle_instance_list.some((puzzleInstanceItem) => {
+                  return !puzzleInstanceItem.front_url;
+                }),
             }
           );
           if (!hasBit && !notClaimRandomBit) {

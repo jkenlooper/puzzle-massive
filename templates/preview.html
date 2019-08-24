@@ -94,10 +94,7 @@
   </p>
   {% endif %}
 
-  {# TODO: the Create new instance link should only show for a player that has an empty slot. #}
-            <pm-dot-require min="3400" type="none">
-  <a class="u-block u-textRight" href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}">Create New Puzzle Instance</a>
-            </pm-dot-require>
+  <pm-player-create-puzzle-instance-link create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}"></pm-player-create-puzzle-instance-link>
 
   {% if not recent.is_original %}
   <p class="pm-Preview-statusNote">
