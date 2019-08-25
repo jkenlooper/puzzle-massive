@@ -57,25 +57,24 @@ customElements.define(
 
     template(data: TemplateData) {
       if (!data.isReady || !data.hasUserPuzzleSlots) {
+        // TODO: show link to get an initial user puzzle slot
         return html``;
-      }
-      if (!data.hasAvailableUserPuzzleSlot) {
-        return html`
-          <span>${data.linkText}</span>
-        `;
       }
       return html`
         <div class="u-block u-textRight">
           ${!data.hasAvailableUserPuzzleSlot
             ? html`
-                <span>Create New Puzzle Instance</span>
+                <span
+                  >${data.linkText}
+                  <em class="u-block"
+                    ><small
+                      >All your slot are belong to another puzzle.</small
+                    ></em
+                  ></span
+                >
               `
             : html`
-                <a
-                  class="u-block u-textRight"
-                  href=${data.createPuzzleInstanceHref}
-                  >${data.linkText}</a
-                >
+                <a href=${data.createPuzzleInstanceHref}>${data.linkText}</a>
               `}
         </div>
       `;

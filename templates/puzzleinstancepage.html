@@ -11,18 +11,11 @@
   <section>
     <h1>Create New Instance of a Puzzle</h1>
 
-    {# TODO: Change from dot requirement to player available puzzle instance slots. #}
-      <pm-dot-require min="2400" type="info">
-        This requires 2400
-      </pm-dot-require>
-
-      <pm-dot-require min="2400" type="none">
       {% if route and route.puzzle_id %}
         {% include 'puzzle-instance-form.html' %}
       {% else %}
         {% include 'puzzle-image-picker.html' %}
       {% endif %}
-      </pm-dot-require>
   </section>
 
 </div>

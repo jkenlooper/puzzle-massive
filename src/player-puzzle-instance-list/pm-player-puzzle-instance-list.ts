@@ -79,8 +79,8 @@ customElements.define(
                           title="player puzzle instance"
                         >
                           <img
-                            width=${puzzleInstanceItem.width}
-                            height=${puzzleInstanceItem.height}
+                            width="30"
+                            height="30"
                             src=${puzzleInstanceItem.src}
                             alt=""
                           />

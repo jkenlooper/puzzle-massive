@@ -277,18 +277,7 @@ class UserDetailsView(MethodView):
                     if puzzle_id:
                         front_url = "/chill/site/front/{}/".format(puzzle_id)
 
-                    table_width = puzzle_instance.get('table_width', 0) or 0
-                    table_height = puzzle_instance.get('table_height', 0) or 0
-                    long = puzzle_instance.get('long', 0) or 0
-                    short = puzzle_instance.get('short', 0) or 0
-                    width = long if table_width > table_height else short
-                    height = short if table_width > table_height else long
-                    puzzle_instance['width'] = width
-                    puzzle_instance['height'] = height
-
                     return {
-                        'width': width,
-                        'height': height,
                         'front_url': front_url,
                         'src': puzzle_instance.get('src'),
                     }

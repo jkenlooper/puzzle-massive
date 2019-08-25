@@ -74,6 +74,7 @@ class AdminPuzzleBatchEditView(MethodView):
         if not isinstance(puzzle_ids, list):
             puzzle_ids = [puzzle_ids]
 
+        cur = db.cursor()
         status = None
 
         if action == 'approve':
@@ -95,7 +96,6 @@ class AdminPuzzleBatchEditView(MethodView):
             elif delete == 'request':
                 status = DELETED_REQUEST
 
-            cur = db.cursor()
             for puzzle_id in puzzle_ids:
                 delete_puzzle_resources(puzzle_id)
                 id = cur.execute(fetch_query_string("select_puzzle_id_by_puzzle_id.sql"), {'puzzle_id': puzzle_id}).fetchone()[0]
@@ -130,6 +130,5 @@ class AdminPuzzleBatchEditView(MethodView):
                 )
 
         # TODO: if action in ('reject', 'delete'): #Also apply to any puzzle instances
-        cur.close()
 
         return make_response('204', 204)

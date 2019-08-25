@@ -7,7 +7,7 @@ from Puzzle as p
 join PuzzleInstance as pi on (p.id = pi.instance)
 join Puzzle as p1 on (p1.id = pi.original)
 where p.puzzle_id = :puzzle_id
-and p.status in (
+and p1.status in (
     :ACTIVE,
     :IN_QUEUE,
     :COMPLETED,
@@ -16,4 +16,4 @@ and p.status in (
     :IN_RENDER_QUEUE,
     :RENDERING
 )
-and p.permission = :PUBLIC;
+and p1.permission = :PUBLIC;

@@ -91,6 +91,8 @@ class PuzzleDetailsView(MethodView):
             redisConnection.delete('timeline:{puzzle}'.format(puzzle=puzzleData['id']))
             redisConnection.delete('score:{puzzle}'.format(puzzle=puzzleData['id']))
             cur.execute(fetch_query_string("update_puzzle_status_for_puzzle.sql"), {'status': DELETED_REQUEST, 'puzzle': puzzleData['id']})
+            cur.execute(fetch_query_string("empty-user-puzzle-slot.sql"), {'player': user, 'puzzle': puzzleData['id']})
+
             db.commit()
 
             response = {

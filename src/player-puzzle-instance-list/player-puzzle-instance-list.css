@@ -32,13 +32,13 @@
 
 .pm-PlayerPuzzleInstanceList-instanceLink {
   display: block;
-  border-radius: 5px;
   overflow: hidden;
 }
 
 .pm-PlayerPuzzleInstanceList-listItem img {
   display: block;
   object-fit: cover;
+  border: 1px solid var(--color-dark);
 }
 
 .pm-PlayerPuzzleInstanceList-add {

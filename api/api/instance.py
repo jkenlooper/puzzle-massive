@@ -55,18 +55,18 @@ class CreatePuzzleInstanceView(MethodView):
 
         # The user should have
         # 2400 or more dots (points)
-        # TODO: drop this dot requirement for creating puzzle instance
-        userHasEnoughPoints = cur.execute(fetch_query_string("select-minimum-points-for-user.sql"), {'user': user, 'points': 2400}).fetchall()
-        if not userHasEnoughPoints:
-            abort(400)
+        # TODO: this could be configurable per site or for other reasons.
+        #userHasEnoughPoints = cur.execute(fetch_query_string("select-minimum-points-for-user.sql"), {'user': user, 'points': 2400}).fetchall()
+        #if not userHasEnoughPoints:
+        #    abort(400)
 
-        # An available instance slot (max count of 4)
-        userHasAvailablePuzzleInstanceSlot = True # TODO: Create query to check if user has available slot
+        # An available instance slot
+        result = cur.execute(fetch_query_string("select-available-user-puzzle-slot-for-player.sql"), {'player': user}).fetchone()[0]
+        userHasAvailablePuzzleInstanceSlot = bool(result)
         if not userHasAvailablePuzzleInstanceSlot:
             abort(400)
 
-        # TODO: Check if puzzle is valid to be a new puzzle instance
-        cur = db.cursor()
+        # Check if puzzle is valid to be a new puzzle instance
         result = cur.execute(fetch_query_string("select-valid-puzzle-for-new-puzzle-instance.sql"), {
             'puzzle_id': original_puzzle_id,
             'ACTIVE': ACTIVE,
@@ -140,6 +140,8 @@ class CreatePuzzleInstanceView(MethodView):
         classic_variant = cur.execute(fetch_query_string("select-puzzle-variant-id-for-slug.sql"), {"slug": CLASSIC}).fetchone()[0]
         cur.execute(fetch_query_string("insert-puzzle-instance.sql"), {"original": originalPuzzleData['id'], "instance": puzzle, "variant": classic_variant})
 
+        cur.execute(fetch_query_string("fill-user-puzzle-slot.sql"), {'player': user, 'puzzle': puzzle})
+
         db.commit()
         cur.close()
 
@@ -147,5 +149,6 @@ class CreatePuzzleInstanceView(MethodView):
             func='api.jobs.pieceRenderer.render', args=([puzzleData]), result_ttl=0,
             timeout='24h'
         )
+
 
         return redirect('/chill/site/puzzle/{0}/'.format(puzzle_id), code=303)

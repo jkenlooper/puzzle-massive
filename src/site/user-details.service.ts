@@ -5,8 +5,6 @@ type UserDetailsCallback = () => any;
 interface PuzzleInstanceItem {
   readonly front_url: string | null;
   readonly src: string | null;
-  readonly width: number | null;
-  readonly height: number | null;
 }
 
 export type PuzzleInstanceList = Array<PuzzleInstanceItem>;
