@@ -1,4 +1,12 @@
-<div>
-  Admin
+Admin
+<nav>
   <a href="/newapi/admin/player/blocked/" target="_blank">Blocked Players</a>
-</div>
+
+    <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle') }}">
+      Puzzles
+    </a>
+
+    <a href="/chill{{ url_for('.page_uri', uri='admin/player') }}">
+      Players
+    </a>
+</nav>

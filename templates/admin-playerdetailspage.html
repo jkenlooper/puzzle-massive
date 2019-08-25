@@ -1,0 +1,85 @@
+{% extends 'admin-base.html' %}
+
+{% block title %}
+ | Player Details
+{%- endblock %}
+
+{% block description %}
+  Player Details
+{% endblock %}
+
+{% block main %}
+
+<section>
+  <h1>
+      Players Details
+  </h1>
+
+
+    <dl>
+      <dt>Player</dt>
+      <dd>{{ player.id }}</dd>
+
+      <dt>Bit expired</dt>
+      <dd>
+      {{ player.bit_expired }}
+      </dd>
+
+      {% if player.icon %}
+      <dt>Bit icon</dt>
+      <dd>
+        <img width="64" height="64" src="{{ url_for('send_media_file', filename='bit-icons/64-{}.png'.format(player.icon or 'unknown-bit')) }}" alt="{{player.icon}}">
+      </dd>
+
+      <dt>Bit icon name</dt>
+      <dd>
+      {{ player.icon }}
+      </dd>
+      {% endif %}
+
+      <!--
+      <dt>username</dt>
+      <dd></dd>
+
+      <dt>email</dt>
+      <dd></dd>
+      -->
+
+      <dt>Last active date</dt>
+      <dd>{{ player.m_date }}
+      </dd>
+
+      <dt>Seconds since last active</dt>
+      <dd>
+        {{ player.seconds_from_now }}
+      </dd>
+
+      <dt>Dots</dt>
+      <dd>{{ player.dots }}</dd>
+
+      <dt>Score</dt>
+      <dd>{{ player.score }}</dd>
+
+      <dt>Empty slots</dt>
+      <dd>{{ player.empty_slots_count }}
+    <form action="/newapi/admin/player/details/slots/" method="POST">
+      <input type="hidden" id="action" name="action" value="add">
+      <input type="hidden" id="player" name="player" value="{{ player.id }}">
+      <input type="submit" value="Add new slot">
+    </form>
+    <form action="/newapi/admin/player/details/slots/" method="POST">
+      <input type="hidden" id="action" name="action" value="delete">
+      <input type="hidden" id="player" name="player" value="{{ player.id }}">
+      <input type="submit" value="Remove an empty slot">
+    </form>
+      </dd>
+
+      <dt>Filled slots</dt>
+      <dd>{{ player.filled_slots_count }}</dd>
+
+    </dl>
+
+</section>
+
+{% endblock %}
+

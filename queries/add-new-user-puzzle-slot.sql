@@ -1,1 +1,1 @@
-insert into User_Puzzle (player) values (607);
+insert into User_Puzzle (player) values (:player);

@@ -1,0 +1,70 @@
+{% extends 'admin-base.html' %}
+
+{% block title %}
+ | Player Management
+{%- endblock %}
+
+{% block description %}
+  Player management
+{% endblock %}
+
+{% block main %}
+
+<section>
+  <h1>
+      Players
+  </h1>
+
+  <table style="width: 100%">
+    <thead>
+    <tr>
+      <td>action</td>
+      <th>id</th>
+      <!--
+      <th>username</th>
+      <th>email</th>
+      -->
+      <th>bit</th>
+      <th>m_date</th>
+      <th>seconds</th>
+      <th>dots</th>
+      <th>score</th>
+      <th>empty slots</th>
+      <th>filled slots</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for player in players %}
+    <tr>
+      <td><a href="/chill{{ url_for('.page_uri', uri='admin/player/details/{}'.format(player.id)) }}">edit</a></td>
+      <td>{{ player.id }}</td>
+      <!--
+      <td>username</td>
+      <td>email</td>
+      -->
+      <td>
+  {{ player.bit_expired }}
+        {% if player.icon %}
+        <img width="16" height="16" src="{{ url_for('send_media_file', filename='bit-icons/64-{}.png'.format(player.icon or 'unknown-bit')) }}" alt="{{player.icon}}">
+        {{ player.icon }}
+        {% endif %}
+      </td>
+      <td>{{ player.m_date }}
+      </td>
+      <td>
+        {{ player.seconds_from_now }}
+      </td>
+      <td>{{ player.dots }}</td>
+      <td>{{ player.score }}</td>
+      <td>{{ player.empty_slots_count }}</td>
+      <td>{{ player.filled_slots_count }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+
+
+</section>
+
+{% endblock %}

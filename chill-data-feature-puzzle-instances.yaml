@@ -1,3 +1,7 @@
+# On updates to this; run the below commands.
+# make
+# sudo su dev -c "sqlite3 \"/var/lib/puzzle-massive/sqlite3/db\" < db.dump.sql"
+# sudo su dev -c "echo \"pragma journal_mode=wal\" | sqlite3 /var/lib/puzzle-massive/sqlite3/db"
 --- !ChillNode
 name: puzzleinstancepage
 route: /create-puzzle-instance/
@@ -23,4 +27,20 @@ route: /internal/player-bit/<int:player_id>/
 template: player-bit.html
 value:
   bit: select-bit-icon-for-player-id.sql
+  player_id: route-pass-player-id.sql
+
+--- !ChillNode
+name: admin_player_page
+route: /admin/player/
+template: admin-playerpage.html
+value:
+  players: select-players.sql
+
+
+--- !ChillNode
+name: admin_player_details_page
+route: /admin/player/details/<int:player_id>/
+template: admin-playerdetailspage.html
+value:
+  player: select-admin-player-details-for-player-id.sql
   player_id: route-pass-player-id.sql
