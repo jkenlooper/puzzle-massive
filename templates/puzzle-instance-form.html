@@ -6,32 +6,44 @@
 <form enctype="multipart/form-data" id="puzzle-instance-form" method="post" action="/newapi/puzzle-instance/">
   <input type="hidden" name="puzzle_id" value="{{puzzle.puzzle_id}}">
 
-  {% if puzzle.link -%}
-  <small class="pm-Preview-source u-textTruncate">
-    Picture source:
-  <a href="{{puzzle.link}}" rel="nofollow">
-    {{puzzle.link|replace('http://', '')|replace('https://', '')}}
-  </a>
-  </small>
-  {%- endif %}
-
-  {% if puzzle.url == '' %}
-    {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
-  {% else %}
-    <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{puzzle.url|safe}}" alt="">
-  {% endif %}
-
-  {% if puzzle.description %}
-    <p>
-      {{ puzzle.description }}
-    </p>
-  {% endif %}
-
-  {% if puzzle.attribution %}
-  <p class="pm-Preview-attribution">{{ '[chill route /internal/attribution/{}/ ]'.format(puzzle.attribution) }}</p>
-  {% endif %}
-
   <div class="pm-UploadForm">
+
+    <div class="pm-UploadForm-row">
+      <span>
+        Image
+      </span>
+      <div>
+        {% if puzzle.link -%}
+        <small class="pm-Preview-source u-textTruncate">
+          Picture source:
+        <a href="{{puzzle.link}}" rel="nofollow">
+          {{puzzle.link|replace('http://', '')|replace('https://', '')}}
+        </a>
+        </small>
+        {%- endif %}
+        {% if puzzle.url == '' %}
+          {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
+        {% else %}
+          <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{puzzle.url|safe}}" alt="">
+        {% endif %}
+        {% if puzzle.attribution %}
+        <p class="pm-Preview-attribution">{{ '[chill route /internal/attribution/{}/ ]'.format(puzzle.attribution)|shortcodes }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="pm-UploadForm-row">
+      <label for="pieces">
+        Unlisted
+      </label>
+      <div>
+        <input type="checkbox" id="permission" name="permission" value="-1">
+        <p>
+          Check this box to <em>not</em> have this puzzle publicly listed on the site.
+        </p>
+      </div>
+    </div>
+
     <div class="pm-UploadForm-row">
       <label for="pieces">
         Piece Count

@@ -10,6 +10,7 @@ from api.user import user_id_from_ip, user_not_banned
 from api.tools import check_bg_color
 from api.constants import (
     PUBLIC,
+    PRIVATE,
     ACTIVE,
     IN_QUEUE,
     COMPLETED,
@@ -47,6 +48,12 @@ class CreatePuzzleInstanceView(MethodView):
         # Check puzzle_id
         original_puzzle_id = args.get('puzzle_id')
         if (not original_puzzle_id):
+            abort(400)
+
+
+        # Check permission
+        permission = int(args.get('permission', PUBLIC))
+        if permission not in (PUBLIC, PRIVATE):
             abort(400)
 
         user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
@@ -104,7 +111,7 @@ class CreatePuzzleInstanceView(MethodView):
             'owner':user,
             'queue':count,
             'status': IN_RENDER_QUEUE,
-            'permission':PUBLIC}
+            'permission':permission}
         cur.execute("""insert into Puzzle (
         puzzle_id,
         pieces,
