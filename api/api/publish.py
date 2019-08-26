@@ -123,9 +123,8 @@ class PuzzlePieceTokenView(MethodView):
         if not result:
             # 400 if puzzle does not exist or piece is not found
             err_msg = {
-                'msg': "piece can't be found",
-                'type': "immovable",
-                'expires': now + 5,
+                'msg': "puzzle pieces can't be moved. Please refresh.",
+                'type': "puzzleimmutable",
                 'timeout': 5
             }
             cur.close()

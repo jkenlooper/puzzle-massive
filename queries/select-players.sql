@@ -18,4 +18,4 @@ select count(*) as filled_slots_count, player from User_Puzzle where puzzle is n
 ) as up2 on (up2.player = u.id)
 where u.m_date is not null
 order by seconds_from_now asc
-limit 40;
+;

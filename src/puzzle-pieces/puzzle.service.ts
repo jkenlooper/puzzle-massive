@@ -49,6 +49,7 @@ export interface KarmaData {
 }
 
 enum PieceMoveErrorTypes {
+  puzzleimmutable = "puzzleimmutable",
   sameplayerconcurrent = "sameplayerconcurrent",
   immovable = "immovable",
   piecequeue = "piecequeue",
@@ -261,6 +262,7 @@ class PuzzleService {
               break;
             case PieceMoveErrorTypes.bannedusers:
             case PieceMoveErrorTypes.expiredtoken:
+            case PieceMoveErrorTypes.puzzleimmutable:
             default:
               self._broadcast(pieceMoveBlocked, responseObj);
           }
