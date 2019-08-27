@@ -3,14 +3,15 @@
 # sudo su dev -c "sqlite3 \"/var/lib/puzzle-massive/sqlite3/db\" < db.dump.sql"
 # sudo su dev -c "echo \"pragma journal_mode=wal\" | sqlite3 /var/lib/puzzle-massive/sqlite3/db"
 --- !ChillNode
-name: puzzleinstancepage
-route: /create-puzzle-instance/
-template: puzzleinstancepage.html
+name: puzzleimagepickerpage
+route: /puzzle-images/
+template: puzzleimagepickerpage.html
 value:
   page:
-    description: Create a new puzzle instance from an existing puzzle image.
-    title: Select Image For New Puzzle Instance
+    description: Find a puzzle by the image
+    title: Available puzzle images
   public_image_count: select_total_puzzle_image_count.sql
+  puzzles: select_available_puzzle_images.sql
 --- !ChillNode
 name: puzzleinstanceformpage
 route: /create-puzzle-instance/<puzzle_id>/

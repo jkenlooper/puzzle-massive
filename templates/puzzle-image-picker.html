@@ -1,4 +1,7 @@
 {# TODO: Drop having a completed queue page in favor of using this puzzle image picker page. #}
+{% if puzzles is mapping -%}
+{% set puzzles = [puzzles] %}
+{%- endif %}
 
 <div class="pm-PuzzleImagePicker">
   <h2>Puzzle Image Picker</h2>
@@ -30,7 +33,7 @@
         <option value="6000" label="6000+">
       </datalist>
       <p>
-      <em>Show only images that are big enough to have this many pieces</em>
+        <em>Show only images that are big enough to have this many pieces</em>
       </p>
     </div>
 
@@ -39,16 +42,47 @@
 
   {# TODO: Display results with js and move to client-side. #}
   {# Show the filtered results and paginate if necessary #}
-  <ul>
-    {%- for item in range(0,3) -%}
-    {% set width = 230 %}
-    {% set height = 130 %}
-    {% set src = 'https://placekitten.com/230/130' %}
-    <li>
-      <a href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format('884a4755500a')) }}">
-        {% include 'previewFullImg.html' %}
-      </a>
-    </li>
-    {% endfor %}
-  </ul>
+  {% if puzzles %}
+
+  <div class="pm-Queuepage">
+
+    <div class="pm-Queue">
+      <div class="pm-Queue-list" role="list">
+        {% for item in puzzles %}
+        {% set width = item.long if item.table_width > item.table_height else item.short %}
+        {% set height = item.short if item.table_width > item.table_height else item.long %}
+        {% set src = item.src %}
+        <a href="/chill{{ url_for('.page_uri', uri='front/{0}'.format(item.puzzle_id)) }}">
+          {% if item.status == 3 and not item.is_recent -%}
+          <pm-dot-require min="{{item.pieces}}" type="blur">
+            {%- endif %}
+            <div class="pm-Queue-listitem" role="listitem">
+              {% include 'previewFullImg.html' %}
+            </div>
+            <span class="pm-Queue-pieceCount"><strong>{{item.pieces}}</strong> pieces
+              {% if item.status == 3 -%}
+              <small class="u-block">Completed</small>
+              {%- elif item.status == 4 -%}
+              <small class="u-block">Frozen</small>
+              {%- elif item.status == -3 -%}
+              <small class="u-block">Rebuild queue</small>
+              {%- elif item.status == -5 -%}
+              <small class="u-block">Render queue</small>
+              {%- elif item.status == -6 -%}
+              <small class="u-block">Rendering</small>
+              {%- elif item.status == -7 -%}
+              <small class="u-block">Rendering failed</small>
+              {%- endif %}
+            </span>
+            {% if item.status == 3 and not item.is_recent -%}
+          </pm-dot-require>
+          {%- endif %}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+  {% endif %}
 </div>
