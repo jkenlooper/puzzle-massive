@@ -1,4 +1,5 @@
 import FetchService from "./fetch.service";
+import { getTimePassed } from "./utilities";
 
 export interface PlayerStatsData {
   now: number;
@@ -23,9 +24,31 @@ interface PuzzleStats {
   [puzzleId: string]: PlayerStatsData;
 }
 
+export interface PlayerCountData {
+  now: number;
+  count: number;
+}
+
 class PuzzleStatsService {
   _puzzleStats: PuzzleStats = {};
   constructor() {}
+
+  getActivePlayerCountOnPuzzle(puzzleId: string): Promise<PlayerCountData> {
+    const activePlayerCountService = new FetchService(
+      `/newapi/puzzle-stats/${puzzleId}/active-player-count/`
+    );
+
+    return activePlayerCountService
+      .get<PlayerCountData>()
+      .then((playerCountData) => {
+        const playerCount = {
+          now: playerCountData.now,
+          count: playerCountData.count,
+        };
+        console.log("getActivePlayerCountOnPuzzle", puzzleId);
+        return playerCount;
+      });
+  }
 
   getPlayerStatsOnPuzzle(puzzleId: string): Promise<PlayerStatsData> {
     const puzzleStats = this._puzzleStats[puzzleId] || {
@@ -61,29 +84,6 @@ class PuzzleStatsService {
         item
       );
       return playerDetail;
-    }
-
-    function getTimePassed(secondsFromNow: number): string {
-      let timePassed = "";
-
-      if (secondsFromNow < 2) {
-        timePassed = "1 second";
-      } else if (secondsFromNow < 60) {
-        timePassed = `${secondsFromNow} seconds`;
-      } else if (secondsFromNow < 2 * 60) {
-        timePassed = "1 minute";
-      } else if (secondsFromNow < 60 * 60) {
-        timePassed = `${Math.floor(secondsFromNow / 60)} minutes`;
-      } else if (secondsFromNow < 60 * 60 * 2) {
-        timePassed = "1 hour";
-      } else if (secondsFromNow < 60 * 60 * 24) {
-        timePassed = `${Math.floor(secondsFromNow / 60 / 60)} hours`;
-      } else if (secondsFromNow < 60 * 60 * 24 * 2) {
-        timePassed = "1 day";
-      } else {
-        timePassed = `${Math.floor(secondsFromNow / 60 / 60 / 24)} days`;
-      }
-      return timePassed;
     }
 
     function getIsRecent(secondsFromNow: number): boolean {

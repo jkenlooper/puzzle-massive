@@ -6,11 +6,12 @@
 
 {% block main %}
 
-<div class="pm-Queuepage">
+<div class="pm-PuzzleImagePickerPage">
 
   <section>
-    <h1>Available Puzzle Images</h1>
-    {% include 'puzzle-image-picker.html' %}
+    <h1>{{ public_image_count.value }} Unique Puzzle Images</h1>
+
+    <pm-puzzle-image-picker front-fragment-href="/chill{{ url_for('.page_uri', uri='front') }}"></pm-puzzle-image-picker>
   </section>
 
 </div>

@@ -1,13 +1,10 @@
-select pf.url as src, p.puzzle_id, p.status, p.pieces, p.table_width, p.table_height,
-
--- Find the short and long dimensions of the preview img by checking the table_width
--- and table_height since the img width and height is not currently stored.
-round((min(CAST(p.table_width AS float), CAST(p.table_height AS float)) / max(CAST(p.table_width AS float), CAST(p.table_height AS float))) * 124) AS short,
-124.0 AS long,
+select pf.url as src, p.puzzle_id, p.status, p.pieces,
 
 strftime('%Y-%m-%d %H:%M', p.m_date, '+7 hours') as redo_date,
 strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 hours') as is_recent,
 strftime('%s','now') - strftime('%s', p.m_date) as seconds_from_now,
+pi.original == pi.instance as is_original,
+p.owner,
 
 a.title,
 a.author_link,
@@ -17,8 +14,10 @@ l.source as license_source,
 l.name as license_name,
 l.title as license_title
 
-from PuzzleFile as pf
-join Puzzle as p on (p.id = pf.puzzle)
+from Puzzle as p
+join PuzzleInstance as pi on (pi.instance = p.id)
+join Puzzle as p1 on (pi.original = p1.id)
+join PuzzleFile as pf on (p1.id = pf.puzzle)
 left outer join Attribution as a on (a.id = pf.attribution)
 left outer join License as l on (l.id = a.license)
 

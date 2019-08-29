@@ -143,3 +143,37 @@ class PuzzleStatsView(MethodView):
 
         cur.close()
         return encoder.encode(puzzle_stats)
+
+class PuzzleActiveCountView(MethodView):
+    """
+    Return active player count on a puzzle.
+    """
+
+    decorators = [user_not_banned]
+
+    def get(self, puzzle_id):
+        ""
+        ip = request.headers.get('X-Real-IP')
+        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
+        cur = db.cursor()
+        result = cur.execute(fetch_query_string('select_viewable_puzzle_id.sql'), {
+            'puzzle_id': puzzle_id
+            }).fetchall()
+        if not result:
+            # 404 if puzzle does not exist
+            abort(404)
+
+        (result, col_names) = rowify(result, cur.description)
+        puzzle = result[0].get('puzzle')
+        status = result[0].get('status')
+        now = int(time.time())
+
+        count = redisConnection.zcount('timeline:{puzzle}'.format(puzzle=puzzle), now - 5*60, "+inf") or 0
+
+        player_active_count = {
+            "now": now,
+            "count": count
+        }
+
+        cur.close()
+        return json.jsonify(player_active_count)

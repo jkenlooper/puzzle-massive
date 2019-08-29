@@ -89,12 +89,7 @@ customElements.define(
                     `
                   : html`
                       <li class="pm-PlayerPuzzleInstanceList-listItem">
-                        <a
-                          class="pm-PlayerPuzzleInstanceList-add"
-                          href=${data.createPuzzleInstanceHref}
-                          title="Add a new puzzle instance"
-                          >+</a
-                        >
+                        <span class="pm-PlayerPuzzleInstanceList-add">+</span>
                       </li>
                     `}
               `

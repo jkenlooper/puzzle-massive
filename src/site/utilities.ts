@@ -48,3 +48,26 @@ export function rgbToHsl(r16, g16, b16) {
 
   return [h, s, l];
 }
+
+export function getTimePassed(secondsFromNow: number): string {
+  let timePassed = "";
+
+  if (secondsFromNow < 2) {
+    timePassed = "1 second";
+  } else if (secondsFromNow < 60) {
+    timePassed = `${secondsFromNow} seconds`;
+  } else if (secondsFromNow < 2 * 60) {
+    timePassed = "1 minute";
+  } else if (secondsFromNow < 60 * 60) {
+    timePassed = `${Math.floor(secondsFromNow / 60)} minutes`;
+  } else if (secondsFromNow < 60 * 60 * 2) {
+    timePassed = "1 hour";
+  } else if (secondsFromNow < 60 * 60 * 24) {
+    timePassed = `${Math.floor(secondsFromNow / 60 / 60)} hours`;
+  } else if (secondsFromNow < 60 * 60 * 24 * 2) {
+    timePassed = "1 day";
+  } else {
+    timePassed = `${Math.floor(secondsFromNow / 60 / 60 / 24)} days`;
+  }
+  return timePassed;
+}

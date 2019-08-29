@@ -4,14 +4,17 @@
 # sudo su dev -c "echo \"pragma journal_mode=wal\" | sqlite3 /var/lib/puzzle-massive/sqlite3/db"
 --- !ChillNode
 name: puzzleimagepickerpage
-route: /puzzle-images/
+route: /puzzle-list/
 template: puzzleimagepickerpage.html
 value:
   page:
-    description: Find a puzzle by the image
-    title: Available puzzle images
+    description: Find a jigsaw puzzle by searching through all existing puzzles on the Puzzle Massive site.
+    title: Available puzzles
   public_image_count: select_total_puzzle_image_count.sql
-  puzzles: select_available_puzzle_images.sql
+--- !ChillNode
+name: puzzleimagepickerjson
+route: /api/puzzle-images/
+value: select_available_puzzle_images.sql
 --- !ChillNode
 name: puzzleinstanceformpage
 route: /create-puzzle-instance/<puzzle_id>/
