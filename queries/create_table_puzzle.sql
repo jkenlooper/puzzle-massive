@@ -13,7 +13,7 @@ CREATE TABLE Puzzle (
     description,
     bg_color,
     m_date,
-    owner,
+    owner, -- TODO: set as integer
     queue integer DEFAULT 0,
     status,
     permission

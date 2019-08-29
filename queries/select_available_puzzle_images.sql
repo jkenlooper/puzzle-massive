@@ -4,7 +4,7 @@ strftime('%Y-%m-%d %H:%M', p.m_date, '+7 hours') as redo_date,
 strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 hours') as is_recent,
 strftime('%s','now') - strftime('%s', p.m_date) as seconds_from_now,
 pi.original == pi.instance as is_original,
-p.owner,
+CAST(p.owner as integer) as owner,
 
 a.title,
 a.author_link,

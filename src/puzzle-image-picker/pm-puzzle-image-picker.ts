@@ -176,42 +176,44 @@ customElements.define(
                               : html``}
                             ${puzzle.isAvailable
                               ? html`
-                                  ${puzzle.timeSince &&
-                                    html`
-                                      <div
-                                        class="pm-PuzzleImagePicker-timeSince"
-                                      >
-                                        <span
-                                          class="pm-PuzzleImagePicker-timeSinceLabel"
+                                  ${puzzle.timeSince
+                                    ? html`
+                                        <div
+                                          class="pm-PuzzleImagePicker-timeSince"
                                         >
-                                          Last active
-                                        </span>
-                                        <span
-                                          class="pm-PuzzleImagePicker-timeSinceAmount"
-                                          >${puzzle.timeSince}</span
-                                        >
-                                        <span
-                                          class="pm-PuzzleImagePicker-timeSinceLabel"
-                                        >
-                                          ago
-                                        </span>
-                                      </div>
-                                    `}
+                                          <span
+                                            class="pm-PuzzleImagePicker-timeSinceLabel"
+                                          >
+                                            Last active
+                                          </span>
+                                          <span
+                                            class="pm-PuzzleImagePicker-timeSinceAmount"
+                                            >${puzzle.timeSince}</span
+                                          >
+                                          <span
+                                            class="pm-PuzzleImagePicker-timeSinceLabel"
+                                          >
+                                            ago
+                                          </span>
+                                        </div>
+                                      `
+                                    : ""}
                                 `
                               : html`
                                   <div class="pm-PuzzleImagePicker-infoMessage">
                                     Puzzle currently not available
                                   </div>
                                 `}
-                            ${!puzzle.isOriginal &&
-                              html`
-                                <small>
-                                  Puzzle instance created by
-                                  <pm-player-bit
-                                    player=${puzzle.owner}
-                                  ></pm-player-bit>
-                                </small>
-                              `}
+                            ${!puzzle.isOriginal
+                              ? html`
+                                  <small>
+                                    Instance by
+                                    <pm-player-bit
+                                      player=${puzzle.owner}
+                                    ></pm-player-bit>
+                                  </small>
+                                `
+                              : ""}
                           </div>
                         `;
                       })

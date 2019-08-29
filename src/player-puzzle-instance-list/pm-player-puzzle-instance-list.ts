@@ -23,6 +23,8 @@ customElements.define(
 
     private instanceId: string;
     createPuzzleInstanceHref: string = "";
+    start: number = 0;
+    end: undefined | number = undefined;
 
     isReady: boolean = false;
     puzzleInstanceList: PuzzleInstanceList = [];
@@ -43,6 +45,18 @@ customElements.define(
         this.createPuzzleInstanceHref = createPuzzleInstanceHref.value;
       }
 
+      const end = this.attributes.getNamedItem("end");
+      if (end && end.value) {
+        this.end = parseInt(end.value);
+      }
+      const start = this.attributes.getNamedItem("start");
+      if (start && start.value) {
+        this.start = parseInt(start.value);
+      }
+
+      // TODO: support a size attribute so all the instances can be shown on the
+      // profile page.
+
       userDetailsService.subscribe(
         this._setPuzzleInstanceList.bind(this),
         this.instanceId
@@ -54,8 +68,17 @@ customElements.define(
         userDetailsService.userDetails.puzzle_instance_list &&
         userDetailsService.userDetails.puzzle_instance_list.length
       ) {
-        this.puzzleInstanceList =
-          userDetailsService.userDetails.puzzle_instance_list;
+        if (this.end !== undefined) {
+          this.puzzleInstanceList = userDetailsService.userDetails.puzzle_instance_list.slice(
+            userDetailsService.userDetails.puzzle_instance_list.length -
+              this.end,
+            userDetailsService.userDetails.puzzle_instance_list.length -
+              this.start
+          );
+        } else {
+          this.puzzleInstanceList =
+            userDetailsService.userDetails.puzzle_instance_list;
+        }
       }
       this.isReady = true;
       this.render();
@@ -70,9 +93,9 @@ customElements.define(
           <ul class="pm-PlayerPuzzleInstanceList-list">
             ${data.puzzleInstanceList.map(
               (puzzleInstanceItem) => html`
-                ${puzzleInstanceItem.front_url
-                  ? html`
-                      <li class="pm-PlayerPuzzleInstanceList-listItem">
+                <li class="pm-PlayerPuzzleInstanceList-listItem">
+                  ${puzzleInstanceItem.front_url
+                    ? html`
                         <a
                           class="pm-PlayerPuzzleInstanceList-instanceLink"
                           href=${puzzleInstanceItem.front_url}
@@ -85,13 +108,11 @@ customElements.define(
                             alt=""
                           />
                         </a>
-                      </li>
-                    `
-                  : html`
-                      <li class="pm-PlayerPuzzleInstanceList-listItem">
-                        <span class="pm-PlayerPuzzleInstanceList-add">+</span>
-                      </li>
-                    `}
+                      `
+                    : html`
+                        <span class="pm-PlayerPuzzleInstanceList-add"></span>
+                      `}
+                </li>
               `
             )}
           </ul>

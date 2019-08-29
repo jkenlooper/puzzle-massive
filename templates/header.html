@@ -5,7 +5,7 @@
 
   <div class="pm-Header-main">
       <pm-profile-bit media-path="{{ url_for('send_media_file', filename='') }}" player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
-      <pm-player-puzzle-instance-list create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='puzzle-images') }}"></pm-player-puzzle-instance-list>
+      <pm-player-puzzle-instance-list start="0" end="4" create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='puzzle-images') }}"></pm-player-puzzle-instance-list>
   </div>
 
 </div>

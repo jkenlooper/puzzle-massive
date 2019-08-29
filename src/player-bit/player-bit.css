@@ -1,0 +1,9 @@
+.pm-PlayerBit {
+  display: inline-block;
+  vertical-align: middle;
+}
+.hasNoBit.pm-PlayerBit {
+  background-color: var(--color-dark);
+  border-radius: 37%;
+  border: 2px solid var(--color-dark-dark);
+}

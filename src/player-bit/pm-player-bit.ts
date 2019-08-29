@@ -1,4 +1,5 @@
 import { playerBitImgService } from "./player-bit-img.service";
+import "./player-bit.css";
 
 const tag = "pm-player-bit";
 

@@ -1,37 +1,37 @@
+interface PlayerBits {
+  [playerId: number]: string | Promise<string>;
+}
+
+const _playerBits: PlayerBits = {};
+
 class PlayerBitImgService {
   constructor() {}
 
   getPlayerBitForPlayer(player: number): Promise<string> {
-    return fetch(`/chill/site/internal/player-bit/${player}/`, {
-      method: "GET",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "text/html",
-      },
-    }).then((response: Response) => {
-      if (!response.ok) {
-        return "";
-      }
-      return response.text();
-    });
+    if (_playerBits[player]) {
+      return Promise.resolve(_playerBits[player]);
+    } else {
+      const defer = fetch(`/chill/site/internal/player-bit/${player}/`, {
+        method: "GET",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "text/html",
+        },
+      })
+        .then((response: Response) => {
+          if (response.ok) {
+            return response.text();
+          }
+          return Promise.resolve("");
+        })
+        .then((playerBit: string) => {
+          _playerBits[player] = playerBit;
+          return playerBit;
+        });
+      _playerBits[player] = defer;
+      return defer;
+    }
   }
-
-  /*
-  currentUserId(): Promise<string> {
-    return fetch("/newapi/current-user-id/", {
-      method: "GET",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }).then((response: Response) => {
-      if (!response.ok) {
-        throw new Error(response.statusText);
-      }
-      return response.text();
-    });
-  }
-     */
 }
 
 export const playerBitImgService = new PlayerBitImgService();

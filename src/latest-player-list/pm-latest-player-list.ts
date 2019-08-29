@@ -149,7 +149,7 @@ customElements.define(
                     height="32"
                     class=${classMap({
                       hasNoBit: !item.icon,
-                      "pm-Preview-bitIcon": true,
+                      "pm-PlayerBit": true,
                     })}
                     src=${item.iconSrc}
                     alt=${item.iconAlt}
