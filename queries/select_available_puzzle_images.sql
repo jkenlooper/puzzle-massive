@@ -23,6 +23,6 @@ left outer join License as l on (l.id = a.license)
 
 where pf.name == 'preview_full'
 and p.permission = 0 -- PUBLIC
-and p.status in (1, 2, 3, -3, -5, -6, -7) -- ACTIVE, IN_QUEUE, COMPLETED, REBUILD, IN_RENDER_QUEUE, RENDERING, RENDERING_FAILED
+and p.status in (1, 2, 3, 4, -3, -5, -6, -7) -- ACTIVE, IN_QUEUE, COMPLETED, FROZEN, REBUILD, IN_RENDER_QUEUE, RENDERING, RENDERING_FAILED
 order by p.m_date desc
 ;

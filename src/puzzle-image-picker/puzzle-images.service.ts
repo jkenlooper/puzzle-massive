@@ -28,6 +28,7 @@ interface PuzzleImage {
   isRecent: boolean;
   isComplete: boolean;
   isAvailable: boolean;
+  isFrozen: boolean;
   isOriginal: boolean;
   statusText: string;
   timeSince: string;
@@ -48,6 +49,7 @@ enum Status {
   ACTIVE = 1,
   IN_QUEUE = 2,
   COMPLETED = 3,
+  FROZEN = 4,
 }
 const PuzzleAvailableStatuses = [
   Status.ACTIVE,
@@ -75,10 +77,13 @@ class PuzzleImagesService {
             isRecent: !!puzzle.is_recent,
             isComplete: puzzle.status === Status.COMPLETED,
             isAvailable: PuzzleAvailableStatuses.includes(puzzle.status),
+            isFrozen: puzzle.status == Status.FROZEN,
             isOriginal: !!puzzle.is_original,
-            statusText: puzzle.is_recent
-              ? "Recent"
-              : this.statusToStatusText(puzzle.status),
+            statusText: this.statusToStatusText(
+              puzzle.status,
+              !!puzzle.is_recent,
+              puzzle.seconds_from_now != null
+            ),
             timeSince:
               puzzle.seconds_from_now != null
                 ? getTimePassed(puzzle.seconds_from_now)
@@ -96,14 +101,24 @@ class PuzzleImagesService {
       });
   }
 
-  private statusToStatusText(status: number): string {
+  private statusToStatusText(
+    status: number,
+    is_recent: boolean,
+    has_m_date: boolean
+  ): string {
+    if (is_recent && status !== Status.FROZEN) {
+      return "Recent";
+    }
     switch (status) {
       case Status.ACTIVE:
       case Status.IN_QUEUE:
-        return "";
+        return has_m_date ? "" : "New";
         break;
       case Status.COMPLETED:
         return "Completed";
+        break;
+      case Status.FROZEN:
+        return "Frozen";
         break;
       default:
         return "Unavailable";

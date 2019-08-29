@@ -108,6 +108,7 @@ class PuzzleDetailsView(MethodView):
             }
 
         elif action == 'unfreeze':
+            # TODO: set status to COMPLETE if puzzle has been completed instead of ACTIVE
             cur.execute(fetch_query_string("update_puzzle_status_for_puzzle.sql"), {'status': ACTIVE, 'puzzle': puzzleData['id']})
             db.commit()
 

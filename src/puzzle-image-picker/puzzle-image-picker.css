@@ -42,6 +42,15 @@
 .pm-PuzzleImagePicker-puzzleLink.isComplete {
   background-color: var(--color-dark);
 }
+.pm-PuzzleImagePicker-puzzleLink.notAvailable {
+  background-color: var(--color-dark-dark);
+  opacity: 0.6;
+}
+.pm-PuzzleImagePicker-puzzleLink.notAvailable:active,
+.pm-PuzzleImagePicker-puzzleLink.notAvailable:focus,
+.pm-PuzzleImagePicker-puzzleLink.notAvailable:hover {
+  opacity: 1.0;
+}
 
 .pm-PuzzleImagePicker-image {
   object-fit: cover;
