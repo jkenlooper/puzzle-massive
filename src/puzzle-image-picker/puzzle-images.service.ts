@@ -28,6 +28,7 @@ interface PuzzleImage {
   isRecent: boolean;
   isComplete: boolean;
   isAvailable: boolean;
+  isNew: boolean;
   isFrozen: boolean;
   isOriginal: boolean;
   statusText: string;
@@ -58,47 +59,57 @@ const PuzzleAvailableStatuses = [
 ];
 
 class PuzzleImagesService {
+  private puzzleImages: undefined | Promise<PuzzleImages>;
+
   constructor() {}
 
   getPuzzleImages(): Promise<PuzzleImages> {
-    const puzzleImagesService = new FetchService(
-      `/chill/site/api/puzzle-images/`
-    );
+    if (this.puzzleImages) {
+      return this.puzzleImages;
+    } else {
+      const puzzleImagesService = new FetchService(
+        `/chill/site/api/puzzle-images/`
+      );
 
-    return puzzleImagesService
-      .get<PuzzleImagesData>()
-      .then((puzzleImagesData) => {
-        return puzzleImagesData.map((puzzle) => {
-          return {
-            src: puzzle.src,
-            puzzleId: puzzle.puzzle_id,
-            pieces: puzzle.pieces,
-            isActive: !!puzzle.is_recent && puzzle.status != Status.COMPLETED,
-            isRecent: !!puzzle.is_recent,
-            isComplete: puzzle.status === Status.COMPLETED,
-            isAvailable: PuzzleAvailableStatuses.includes(puzzle.status),
-            isFrozen: puzzle.status == Status.FROZEN,
-            isOriginal: !!puzzle.is_original,
-            statusText: this.statusToStatusText(
-              puzzle.status,
-              !!puzzle.is_recent,
-              puzzle.seconds_from_now != null
-            ),
-            timeSince:
-              puzzle.seconds_from_now != null
-                ? getTimePassed(puzzle.seconds_from_now)
-                : "",
-            owner: puzzle.owner,
-            title: puzzle.title,
-            authorLink: puzzle.author_link,
-            authorName: puzzle.author_name,
-            source: puzzle.source,
-            licenseSource: puzzle.license_source,
-            licenseName: puzzle.license_name,
-            licenseTitle: puzzle.license_title,
-          };
+      this.puzzleImages = puzzleImagesService
+        .get<PuzzleImagesData>()
+        .then((puzzleImagesData) => {
+          return puzzleImagesData.map((puzzle) => {
+            return {
+              src: puzzle.src,
+              puzzleId: puzzle.puzzle_id,
+              pieces: puzzle.pieces,
+              isActive: !!puzzle.is_recent && puzzle.status != Status.COMPLETED,
+              isRecent: !!puzzle.is_recent,
+              isComplete: puzzle.status === Status.COMPLETED,
+              isAvailable: PuzzleAvailableStatuses.includes(puzzle.status),
+              isNew:
+                [Status.ACTIVE, Status.IN_QUEUE].includes(puzzle.status) &&
+                puzzle.seconds_from_now === null,
+              isFrozen: puzzle.status == Status.FROZEN,
+              isOriginal: !!puzzle.is_original,
+              statusText: this.statusToStatusText(
+                puzzle.status,
+                !!puzzle.is_recent,
+                puzzle.seconds_from_now != null
+              ),
+              timeSince:
+                puzzle.seconds_from_now != null
+                  ? getTimePassed(puzzle.seconds_from_now)
+                  : "",
+              owner: puzzle.owner,
+              title: puzzle.title,
+              authorLink: puzzle.author_link,
+              authorName: puzzle.author_name,
+              source: puzzle.source,
+              licenseSource: puzzle.license_source,
+              licenseName: puzzle.license_name,
+              licenseTitle: puzzle.license_title,
+            };
+          });
         });
-      });
+      return this.puzzleImages;
+    }
   }
 
   private statusToStatusText(

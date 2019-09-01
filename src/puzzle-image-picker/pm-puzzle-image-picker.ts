@@ -1,7 +1,7 @@
 import { html, render } from "lit-html";
 import { classMap } from "lit-html/directives/class-map.js";
 
-import userDetailsService from "../site/user-details.service";
+import filterGroupService from "./filter-group.service";
 import { PuzzleImages, puzzleImagesService } from "./puzzle-images.service";
 
 import "./puzzle-image-picker.css";
@@ -17,108 +17,6 @@ interface TemplateData {
 const tag = "pm-puzzle-image-picker";
 let lastInstanceId = 0;
 
-const StatusFilterItems = [
-  {
-    label: "Recent",
-    value: "recent",
-    id: "puzzle-image-picker-status--recent",
-    checked: true,
-  },
-  {
-    label: "Active",
-    value: "active",
-    id: "puzzle-image-picker-status--active",
-    checked: true,
-  },
-  {
-    label: "New", // TODO: Show status label for puzzles that have not been modified
-    value: "new",
-    id: "puzzle-image-picker-status--new",
-    checked: false,
-  },
-  {
-    label: "Complete",
-    value: "complete",
-    id: "puzzle-image-picker-status--complete",
-    checked: false,
-  },
-  {
-    label: "Unavailable",
-    value: "unavailable",
-    id: "puzzle-image-picker-status--unavailable",
-    checked: false,
-  },
-];
-
-const PieceCountFilterItems = [
-  {
-    label: "Less than 300",
-    value: "0-300",
-    id: "puzzle-image-picker-pieces--0",
-    checked: false,
-  },
-  {
-    label: "300 to 600",
-    value: "300-600",
-    id: "puzzle-image-picker-pieces--1",
-    checked: true,
-  },
-  {
-    label: "600 to 1000",
-    value: "600-1000",
-    id: "puzzle-image-picker-pieces--2",
-    checked: false,
-  },
-  {
-    label: "1000 to 2000",
-    value: "1000-2000",
-    id: "puzzle-image-picker-pieces--3",
-    checked: false,
-  },
-  {
-    label: "2000 to 3000",
-    value: "2000-3000",
-    id: "puzzle-image-picker-pieces--4",
-    checked: false,
-  },
-  {
-    label: "Greater than 3000",
-    value: "3000-60000",
-    id: "puzzle-image-picker-pieces--5",
-    checked: false,
-  },
-];
-
-const TypeFilterItems = [
-  {
-    label: "Originals",
-    value: "original",
-    id: "puzzle-image-picker-type--original",
-    checked: true,
-  },
-  {
-    label: "Instances",
-    value: "instances",
-    id: "puzzle-image-picker-type--instances",
-    checked: true,
-  },
-];
-
-const OrderByItems = [
-  {
-    label: "Modified date",
-    value: "m_date",
-    id: "puzzle-image-picker-orderby--m_date",
-    checked: true,
-  },
-  {
-    label: "Pieces",
-    value: "pieces",
-    id: "puzzle-image-picker-orderby--pieces",
-    checked: false,
-  },
-];
-
 customElements.define(
   tag,
   class PmPuzzleImagePicker extends HTMLElement {
@@ -132,6 +30,12 @@ customElements.define(
     hasError: boolean = false;
     errorMessage: string = "";
     isReady: boolean = false;
+
+    //filtersInitialized: undefined | Promise<boolean>;
+    filterStatus: undefined | Array<string>;
+    filterPieces: undefined | Array<string>;
+    filterType: undefined | Array<string>;
+    orderBy: undefined | string;
 
     constructor() {
       super();
@@ -147,18 +51,51 @@ customElements.define(
       } else {
         this.frontFragmentHref = frontFragmentHref.value;
       }
-
-      userDetailsService.subscribe(
-        this._setPuzzleImages.bind(this),
-        this.instanceId
-      );
     }
 
     _setPuzzleImages() {
+      //const filterPuzzleImages = _filterPuzzleImages.bind(this);
+      console.log(
+        "_filterPuzzleImages",
+        this,
+        this.filterStatus,
+        this.filterPieces,
+        this.filterType,
+        this.orderBy
+      );
       return puzzleImagesService
         .getPuzzleImages()
         .then((puzzleImages: PuzzleImages) => {
-          this.puzzles = puzzleImages;
+          this.puzzles = puzzleImages.filter((puzzle) => {
+            if (Array.isArray(this.filterStatus)) {
+              return this.filterStatus.some((status) => {
+                let accept = false;
+                switch (status) {
+                  case "recent":
+                    accept = puzzle.isRecent;
+                    break;
+                  case "active":
+                    accept = puzzle.isActive;
+                    break;
+                  case "new":
+                    accept = puzzle.isNew;
+                    break;
+                  case "complete":
+                    accept = puzzle.isComplete;
+                    break;
+                  case "frozen":
+                    accept = puzzle.isFrozen;
+                    break;
+                  case "unavailable":
+                    accept = !puzzle.isAvailable && !puzzle.isFrozen;
+                    break;
+                }
+                return accept;
+              });
+            }
+            console.warn("filterStatus is not an array; ignoring");
+            return true;
+          });
         })
         .catch(() => {
           this.hasError = true;
@@ -184,79 +121,37 @@ customElements.define(
           <div>
             <strong>Filter puzzles</strong>
 
-            <fieldset>
-              <legend>Status</legend>
-              ${StatusFilterItems.map((item) => {
-                return html`
-                  <div>
-                    <input
-                      type="checkbox"
-                      name="status"
-                      id=${item.id}
-                      ?checked=${item.checked}
-                      value=${item.value}
-                    />
-                    <label for=${item.id}>${item.label}</label>
-                  </div>
-                `;
-              })}
-            </fieldset>
+            <pm-filter-group
+              name="status"
+              legend="Status"
+              type="checkbox"
+              labels="Recent, Active, New, Complete, Frozen, Unavailable"
+              values="recent, active, new, complete, frozen, unavailable"
+            ></pm-filter-group>
 
-            <fieldset>
-              <legend>Piece count</legend>
-              ${PieceCountFilterItems.map((item) => {
-                return html`
-                  <div>
-                    <input
-                      type="checkbox"
-                      name="pieces"
-                      id=${item.id}
-                      ?checked=${item.checked}
-                      value=${item.value}
-                    />
-                    <label for=${item.id}>${item.label}</label>
-                  </div>
-                `;
-              })}
-            </fieldset>
+            <pm-filter-group
+              name="pieces"
+              legend="Piece count"
+              type="checkbox"
+              labels="Less than 300, 300 to 600, 600 to 1000, 1000 to 2000, 2000 to 3000, Greater than 3000"
+              values="0-300, 300-600, 600-1000, 1000-2000, 2000-3000, 3000-60000"
+            ></pm-filter-group>
 
-            <fieldset>
-              <legend>Type</legend>
-              ${TypeFilterItems.map((item) => {
-                return html`
-                  <div>
-                    <input
-                      type="checkbox"
-                      name="type"
-                      id=${item.id}
-                      ?checked=${item.checked}
-                      value=${item.value}
-                    />
-                    <label for=${item.id}>${item.label}</label>
-                  </div>
-                `;
-              })}
-            </fieldset>
+            <pm-filter-group
+              name="type"
+              legend="Type"
+              type="checkbox"
+              labels="Originals, Instances"
+              values="original, instances"
+            ></pm-filter-group>
 
-            <fieldset>
-              <legend>
-                Order by
-              </legend>
-              ${OrderByItems.map((item) => {
-                return html`
-                  <div>
-                    <input
-                      type="radio"
-                      name="orderby"
-                      id=${item.id}
-                      ?checked=${item.checked}
-                      value=${item.value}
-                    />
-                    <label for=${item.id}>${item.label}</label>
-                  </div>
-                `;
-              })}
-            </fieldset>
+            <pm-filter-group
+              name="orderby"
+              legend="Order by"
+              type="radio"
+              labels="Modified date, Pieces"
+              values="m_date, pieces"
+            ></pm-filter-group>
           </div>
 
           ${data.puzzles && data.puzzles.length
@@ -398,10 +293,33 @@ customElements.define(
 
     connectedCallback() {
       //console.log("connectedCallback");
+      const setPuzzleImages = this._setPuzzleImages.bind(this);
+
+      const replay = true;
+      filterGroupService.subscribe(
+        (filterGroupItem) => {
+          switch (filterGroupItem.name) {
+            case "status":
+              this.filterStatus = filterGroupItem.checked;
+              break;
+            case "pieces":
+              this.filterPieces = filterGroupItem.checked;
+              break;
+            case "type":
+              this.filterType = filterGroupItem.checked;
+              break;
+          }
+          if (this.filterStatus && this.filterPieces && this.filterType) {
+            setPuzzleImages();
+          }
+        },
+        this.instanceId,
+        replay
+      );
     }
     disconnectedCallback() {
       //console.log("disconnectedCallback", this.instanceId);
-      userDetailsService.unsubscribe(this.instanceId);
+      filterGroupService.unsubscribe(this.instanceId);
     }
     adoptedCallback() {
       //console.log("adoptedCallback");

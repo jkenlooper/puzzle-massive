@@ -45,7 +45,6 @@ class PuzzleStatsService {
           now: playerCountData.now,
           count: playerCountData.count,
         };
-        console.log("getActivePlayerCountOnPuzzle", puzzleId);
         return playerCount;
       });
   }
