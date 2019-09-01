@@ -36,8 +36,10 @@
   box-shadow: 0 0 0 1px var(--color-light-light),
     0px 0px 0px 3px var(--color-accent);
 }
-.pm-PuzzleImagePicker-puzzleLink.isActive {
+.pm-PuzzleImagePicker-puzzleLink.isRecent {
   background-color: var(--color-accent);
+}
+.pm-PuzzleImagePicker-puzzleLink.isActive {
 }
 .pm-PuzzleImagePicker-puzzleLink.isComplete {
   background-color: var(--color-dark);
@@ -49,7 +51,7 @@
 .pm-PuzzleImagePicker-puzzleLink.notAvailable:active,
 .pm-PuzzleImagePicker-puzzleLink.notAvailable:focus,
 .pm-PuzzleImagePicker-puzzleLink.notAvailable:hover {
-  opacity: 1.0;
+  opacity: 1;
 }
 
 .pm-PuzzleImagePicker-image {

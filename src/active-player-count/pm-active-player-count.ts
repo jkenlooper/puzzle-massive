@@ -11,16 +11,10 @@ interface TemplateData {
 }
 
 const tag = "pm-active-player-count";
-let lastInstanceId = 0;
 
 customElements.define(
   tag,
   class PmActivePlayerCount extends HTMLElement {
-    static get _instanceId(): string {
-      return `${tag} ${lastInstanceId++}`;
-    }
-
-    private instanceId: string;
     hasError: boolean = false;
     isReady: boolean = false;
     puzzleId: string = "";
@@ -28,7 +22,6 @@ customElements.define(
 
     constructor() {
       super();
-      this.instanceId = PmActivePlayerCount._instanceId;
     }
 
     _setPlayerCount() {
@@ -90,8 +83,6 @@ customElements.define(
       } else {
         this.puzzleId = puzzleId.value;
       }
-      console.log(this.instanceId);
-
       this._setPlayerCount();
     }
     disconnectedCallback() {

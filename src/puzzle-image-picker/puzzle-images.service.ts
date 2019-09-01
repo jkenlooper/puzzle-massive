@@ -33,6 +33,7 @@ interface PuzzleImage {
   isOriginal: boolean;
   statusText: string;
   timeSince: string;
+  secondsFromNow: null | number;
   owner: number;
   title: string;
   authorLink: string;
@@ -79,7 +80,11 @@ class PuzzleImagesService {
               src: puzzle.src,
               puzzleId: puzzle.puzzle_id,
               pieces: puzzle.pieces,
-              isActive: !!puzzle.is_recent && puzzle.status != Status.COMPLETED,
+              isActive:
+                !puzzle.is_recent &&
+                puzzle.status != Status.COMPLETED &&
+                PuzzleAvailableStatuses.includes(puzzle.status) &&
+                puzzle.seconds_from_now !== null,
               isRecent: !!puzzle.is_recent,
               isComplete: puzzle.status === Status.COMPLETED,
               isAvailable: PuzzleAvailableStatuses.includes(puzzle.status),
@@ -97,6 +102,7 @@ class PuzzleImagesService {
                 puzzle.seconds_from_now != null
                   ? getTimePassed(puzzle.seconds_from_now)
                   : "",
+              secondsFromNow: puzzle.seconds_from_now,
               owner: puzzle.owner,
               title: puzzle.title,
               authorLink: puzzle.author_link,

@@ -1,5 +1,6 @@
 import { html, render } from "lit-html";
 import { classMap } from "lit-html/directives/class-map.js";
+import { repeat } from "lit-html/directives/repeat";
 
 import filterGroupService from "./filter-group.service";
 import { PuzzleImages, puzzleImagesService } from "./puzzle-images.service";
@@ -54,48 +55,97 @@ customElements.define(
     }
 
     _setPuzzleImages() {
-      //const filterPuzzleImages = _filterPuzzleImages.bind(this);
-      console.log(
-        "_filterPuzzleImages",
-        this,
-        this.filterStatus,
-        this.filterPieces,
-        this.filterType,
-        this.orderBy
-      );
       return puzzleImagesService
         .getPuzzleImages()
         .then((puzzleImages: PuzzleImages) => {
-          this.puzzles = puzzleImages.filter((puzzle) => {
-            if (Array.isArray(this.filterStatus)) {
+          const puzzles = puzzleImages
+            .filter((puzzle) => {
+              if (!Array.isArray(this.filterStatus)) {
+                console.warn(`Ignoring filterStatus`);
+                return true;
+              }
               return this.filterStatus.some((status) => {
-                let accept = false;
                 switch (status) {
                   case "recent":
-                    accept = puzzle.isRecent;
+                    return puzzle.isRecent;
                     break;
                   case "active":
-                    accept = puzzle.isActive;
+                    return puzzle.isActive;
                     break;
                   case "new":
-                    accept = puzzle.isNew;
+                    return puzzle.isNew;
                     break;
                   case "complete":
-                    accept = puzzle.isComplete;
+                    return puzzle.isComplete;
                     break;
                   case "frozen":
-                    accept = puzzle.isFrozen;
+                    return puzzle.isFrozen;
                     break;
                   case "unavailable":
-                    accept = !puzzle.isAvailable && !puzzle.isFrozen;
+                    return !puzzle.isAvailable && !puzzle.isFrozen;
                     break;
                 }
-                return accept;
+                return true;
               });
+            })
+            .filter((puzzle) => {
+              if (!Array.isArray(this.filterPieces)) {
+                console.warn(`Ignoring filterPieces`);
+                return true;
+              }
+              return this.filterPieces.some((item) => {
+                let min;
+                let max;
+                [min, max] = item.split("-").map((x) => parseInt(x));
+                return puzzle.pieces >= min && puzzle.pieces <= max;
+              });
+            })
+
+            .filter((puzzle) => {
+              if (!Array.isArray(this.filterType)) {
+                console.warn(`Ignoring filterType`);
+                return true;
+              }
+              return this.filterType.some((_type) => {
+                switch (_type) {
+                  case "original":
+                    return puzzle.isOriginal;
+                    break;
+                  case "instance":
+                    return !puzzle.isOriginal;
+                    break;
+                }
+                return true;
+              });
+            });
+
+          if (Array.isArray(this.orderBy) && this.orderBy.length) {
+            switch (this.orderBy[0]) {
+              case "m_date":
+                puzzles.sort((puzzleA, puzzleB) => {
+                  // handle null values
+                  if (puzzleA.secondsFromNow === puzzleB.secondsFromNow) {
+                    return 0;
+                  }
+                  if (puzzleA.secondsFromNow === null) {
+                    return -1;
+                  }
+                  if (puzzleB.secondsFromNow === null) {
+                    return -1;
+                  }
+
+                  return puzzleA.secondsFromNow - puzzleB.secondsFromNow;
+                });
+                break;
+              case "pieces":
+                puzzles.sort((puzzleA, puzzleB) => {
+                  return puzzleA.pieces - puzzleB.pieces;
+                });
+                break;
             }
-            console.warn("filterStatus is not an array; ignoring");
-            return true;
-          });
+          }
+
+          this.puzzles = puzzles;
         })
         .catch(() => {
           this.hasError = true;
@@ -141,15 +191,15 @@ customElements.define(
               name="type"
               legend="Type"
               type="checkbox"
-              labels="Originals, Instances"
-              values="original, instances"
+              labels="Original, Instance"
+              values="original, instance"
             ></pm-filter-group>
 
             <pm-filter-group
               name="orderby"
               legend="Order by"
               type="radio"
-              labels="Modified date, Pieces"
+              labels="Modified date, Piece count"
               values="m_date, pieces"
             ></pm-filter-group>
           </div>
@@ -163,110 +213,115 @@ customElements.define(
                   Page 1 of 5
 
                   <div class="pm-PuzzleImagePicker-list" role="list">
-                    ${data.puzzles.map((puzzle) => {
-                      return html`
-                        <div class="pm-PuzzleImagePicker-listItem">
-                          ${puzzle.isRecent && !puzzle.isComplete
-                            ? html`
-                                <pm-active-player-count
-                                  class="pm-PuzzleImagePicker-activePlayerCount"
-                                  puzzle-id=${puzzle.puzzleId}
-                                ></pm-active-player-count>
-                              `
-                            : html`
-                                <span
-                                  class="pm-PuzzleImagePicker-activePlayerCount"
-                                ></span>
-                              `}
-                          <a
-                            class=${classMap({
-                              "pm-PuzzleImagePicker-puzzleLink": true,
-                              isActive: puzzle.isActive,
-                              isComplete: puzzle.isComplete,
-                              notAvailable: !puzzle.isAvailable,
-                            })}
-                            href=${`${data.frontFragmentHref}${
-                              puzzle.puzzleId
-                            }/`}
-                          >
-                            <div class="pm-PuzzleImagePicker-pieceCount">
-                              <strong>${puzzle.pieces}</strong>
-                              <small>Pieces</small>
-                            </div>
-                            <img
-                              class="lazyload pm-PuzzleImagePicker-image"
-                              width="160"
-                              height="160"
-                              data-src=${puzzle.src}
-                              alt=""
-                            />
-                            <em class="pm-PuzzleImagePicker-status"
-                              >${puzzle.statusText}</em
+                    ${repeat(
+                      data.puzzles,
+                      (puzzle) => puzzle.puzzleId,
+                      (puzzle) => {
+                        return html`
+                          <div class="pm-PuzzleImagePicker-listItem">
+                            ${puzzle.isRecent && !puzzle.isComplete
+                              ? html`
+                                  <pm-active-player-count
+                                    class="pm-PuzzleImagePicker-activePlayerCount"
+                                    puzzle-id=${puzzle.puzzleId}
+                                  ></pm-active-player-count>
+                                `
+                              : html`
+                                  <span
+                                    class="pm-PuzzleImagePicker-activePlayerCount"
+                                  ></span>
+                                `}
+                            <a
+                              class=${classMap({
+                                "pm-PuzzleImagePicker-puzzleLink": true,
+                                isActive: puzzle.isActive,
+                                isRecent: puzzle.isRecent,
+                                isComplete: puzzle.isComplete,
+                                notAvailable: !puzzle.isAvailable,
+                              })}
+                              href=${`${data.frontFragmentHref}${
+                                puzzle.puzzleId
+                              }/`}
                             >
-                          </a>
+                              <div class="pm-PuzzleImagePicker-pieceCount">
+                                <strong>${puzzle.pieces}</strong>
+                                <small>Pieces</small>
+                              </div>
+                              <img
+                                class="lazyload pm-PuzzleImagePicker-image"
+                                width="160"
+                                height="160"
+                                data-src=${puzzle.src}
+                                alt=""
+                              />
+                              <em class="pm-PuzzleImagePicker-status"
+                                >${puzzle.statusText}</em
+                              >
+                            </a>
 
-                          ${puzzle.licenseName === "unsplash"
-                            ? html`
-                                <small>
-                                  <a href=${puzzle.source}>${puzzle.title}</a>
-                                  by
-                                  <a
-                                    xmlns:cc="http://creativecommons.org/ns#"
-                                    href=${puzzle.authorLink}
-                                    property="cc:attributionName"
-                                    rel="cc:attributionURL"
-                                    >${puzzle.authorName}</a
-                                  >
-                                  on
-                                  <a href=${puzzle.licenseSource}
-                                    >${puzzle.licenseTitle}</a
-                                  >
-                                </small>
-                              `
-                            : html``}
-                          ${puzzle.isAvailable || puzzle.isFrozen
-                            ? html`
-                                ${puzzle.timeSince
-                                  ? html`
-                                      <div
-                                        class="pm-PuzzleImagePicker-timeSince"
-                                      >
-                                        <span
-                                          class="pm-PuzzleImagePicker-timeSinceLabel"
+                            ${puzzle.licenseName === "unsplash"
+                              ? html`
+                                  <small>
+                                    <a href=${puzzle.source}>${puzzle.title}</a>
+                                    by
+                                    <a
+                                      xmlns:cc="http://creativecommons.org/ns#"
+                                      href=${puzzle.authorLink}
+                                      property="cc:attributionName"
+                                      rel="cc:attributionURL"
+                                      >${puzzle.authorName}</a
+                                    >
+                                    on
+                                    <a href=${puzzle.licenseSource}
+                                      >${puzzle.licenseTitle}</a
+                                    >
+                                  </small>
+                                `
+                              : html``}
+                            ${puzzle.isAvailable || puzzle.isFrozen
+                              ? html`
+                                  ${puzzle.timeSince
+                                    ? html`
+                                        <div
+                                          class="pm-PuzzleImagePicker-timeSince"
                                         >
-                                          Last active
-                                        </span>
-                                        <span
-                                          class="pm-PuzzleImagePicker-timeSinceAmount"
-                                          >${puzzle.timeSince}</span
-                                        >
-                                        <span
-                                          class="pm-PuzzleImagePicker-timeSinceLabel"
-                                        >
-                                          ago
-                                        </span>
-                                      </div>
-                                    `
-                                  : ""}
-                              `
-                            : html`
-                                <div class="pm-PuzzleImagePicker-infoMessage">
-                                  Currently not available
-                                </div>
-                              `}
-                          ${!puzzle.isOriginal
-                            ? html`
-                                <small>
-                                  Instance by
-                                  <pm-player-bit
-                                    player=${puzzle.owner}
-                                  ></pm-player-bit>
-                                </small>
-                              `
-                            : ""}
-                        </div>
-                      `;
-                    })}
+                                          <span
+                                            class="pm-PuzzleImagePicker-timeSinceLabel"
+                                          >
+                                            Last active
+                                          </span>
+                                          <span
+                                            class="pm-PuzzleImagePicker-timeSinceAmount"
+                                            >${puzzle.timeSince}</span
+                                          >
+                                          <span
+                                            class="pm-PuzzleImagePicker-timeSinceLabel"
+                                          >
+                                            ago
+                                          </span>
+                                        </div>
+                                      `
+                                    : ""}
+                                `
+                              : html`
+                                  <div class="pm-PuzzleImagePicker-infoMessage">
+                                    Currently not available
+                                  </div>
+                                `}
+                            ${!puzzle.isOriginal
+                              ? html`
+                                  <small>
+                                    Instance by
+                                    <pm-player-bit
+                                      player=${puzzle.owner}
+                                    ></pm-player-bit>
+                                  </small>
+                                `
+                              : ""}
+                          </div>
+                        `;
+                      }
+                    )}
                   </div>
                 </div>
               `
@@ -308,8 +363,16 @@ customElements.define(
             case "type":
               this.filterType = filterGroupItem.checked;
               break;
+            case "orderby":
+              this.orderBy = filterGroupItem.checked;
+              break;
           }
-          if (this.filterStatus && this.filterPieces && this.filterType) {
+          if (
+            this.filterStatus &&
+            this.filterPieces &&
+            this.filterType &&
+            this.orderBy
+          ) {
             setPuzzleImages();
           }
         },

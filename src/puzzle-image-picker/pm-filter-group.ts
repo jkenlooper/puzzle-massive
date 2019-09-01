@@ -62,7 +62,7 @@ customElements.define(
         this.legend = legend.value;
       }
 
-      const filtertype = this.attributes.getNamedItem("filtertype");
+      const filtertype = this.attributes.getNamedItem("type");
       if (filtertype && filterGroupTypeStrings.includes(filtertype.value)) {
         this.filtertype = filtertype.value;
       }
@@ -127,18 +127,23 @@ customElements.define(
       const name = el.getAttribute("name");
       const value = el.value;
       const isChecked = el.checked;
-      const checked = this.filterItems.reduce(
-        (acc, item) => {
-          if (value === item.value) {
-            item.checked = isChecked;
-          }
-          if (item.checked) {
-            acc.push(item.value);
-          }
-          return acc;
-        },
-        <Array<string>>[]
-      );
+      let checked;
+      if (this.filtertype === "radio") {
+        checked = [value];
+      } else {
+        checked = this.filterItems.reduce(
+          (acc, item) => {
+            if (value === item.value) {
+              item.checked = isChecked;
+            }
+            if (item.checked) {
+              acc.push(item.value);
+            }
+            return acc;
+          },
+          <Array<string>>[]
+        );
+      }
       const filterGroupItemValueChangeEvent = new CustomEvent(
         "filterGroupItemValueChange",
         {
