@@ -21,6 +21,7 @@ interface TemplateData {
   isReady: boolean;
   legend: string;
   filtertype: string;
+  group: string;
   name: string;
   filterItems: Array<FilterItem>;
   itemValueChangeHandler: any; // event listener object
@@ -57,74 +58,15 @@ customElements.define(
         this.name = name.value;
       }
 
-      const legend = this.attributes.getNamedItem("legend");
-      if (legend && legend.value) {
-        this.legend = legend.value;
-      }
-
       const filtertype = this.attributes.getNamedItem("type");
       if (filtertype && filterGroupTypeStrings.includes(filtertype.value)) {
         this.filtertype = filtertype.value;
       }
-
-      let labels: Array<string> = [];
-      const labelsAttr = this.attributes.getNamedItem("labels");
-      if (
-        labelsAttr &&
-        labelsAttr.value &&
-        typeof labelsAttr.value === "string"
-      ) {
-        labels = labelsAttr.value.split(",").map((item) => item.trim());
-      }
-
-      let values: Array<string> = [];
-      const valuesAttr = this.attributes.getNamedItem("values");
-      if (
-        valuesAttr &&
-        valuesAttr.value &&
-        typeof valuesAttr.value === "string"
-      ) {
-        values = valuesAttr.value.split(",").map((item) => item.trim());
-      }
-      if (labels.length !== values.length) {
-        throw new Error(
-          `${this.legend} ${
-            this.instanceId
-          } must have same number of labels and values.`
-        );
-      }
-
-      this.filterItems = labels.map((label, index) => {
-        return {
-          label: label,
-          value: values[index],
-          checked: filterGroupService.isItemChecked(this.name, values[index]),
-        };
-      });
-
-      const replay = false;
-      filterGroupService.subscribe(
-        (filterGroupItem) => {
-          if (filterGroupItem.name === this.name) {
-            this.filterItems = this.filterItems.map((item) => {
-              const newItem = {
-                label: item.label,
-                value: item.value,
-                checked: filterGroupItem.checked.includes(item.value),
-              };
-              return newItem;
-            });
-            this.render();
-          }
-        },
-        this.instanceId,
-        replay
-      );
     }
 
     handleItemValueChange(e) {
       const el = e.target;
-      const name = el.getAttribute("name");
+      const name = el.getAttribute("group");
       const value = el.value;
       const isChecked = el.checked;
       let checked;
@@ -170,6 +112,7 @@ customElements.define(
                 <input
                   @click=${data.itemValueChangeHandler}
                   type=${data.filtertype}
+                  group=${data.group}
                   name=${data.name}
                   ?checked=${item.checked}
                   value=${item.value}
@@ -188,7 +131,8 @@ customElements.define(
         legend: this.legend,
         filtertype: this.filtertype,
         filterItems: this.filterItems,
-        name: this.name,
+        group: this.name,
+        name: `${this.name}-${this.instanceId}`,
         itemValueChangeHandler: {
           handleEvent: this.handleItemValueChange.bind(this),
           capture: true,
@@ -200,8 +144,107 @@ customElements.define(
       render(this.template(this.data), this);
     }
 
+    attributeChangedCallback(
+      name: string,
+      _oldValue: string | null,
+      _newValue: string | null
+    ) {
+      const value: string = _newValue !== null ? _newValue : "";
+      let labels = this.buildArrayFromAttr("labels");
+      let values = this.buildArrayFromAttr("values");
+      switch (name) {
+        case "legend":
+          this.legend = value;
+          this.render();
+          break;
+        case "labels":
+          labels = this.buildArrayFromAttr("labels", value);
+          break;
+        case "values":
+          values = this.buildArrayFromAttr("values", value);
+          break;
+      }
+      if (name === "labels" || name === "values") {
+        if (labels.length === 0 || labels.length === values.length) {
+          // TODO: update filterItems with new labels, values if labels length same
+          // as values length
+          [labels, values] = this.buildFilterItems(labels, values);
+          this.render();
+        }
+      }
+    }
+
+    buildArrayFromAttr(name: string, value?: string): Array<string> {
+      const attr = this.attributes.getNamedItem(name);
+      const _value: string =
+        value !== undefined
+          ? value
+          : attr && attr.value && typeof attr.value === "string"
+          ? attr.value
+          : "";
+
+      return _value ? _value.split(",").map((item) => item.trim()) : [];
+    }
+
+    buildFilterItems(
+      labels: Array<string>,
+      values: Array<string>
+    ): Array<Array<string>> {
+      const _labels =
+        labels.length !== values.length && labels.length === 0
+          ? [...values]
+          : [...labels];
+      const _values = [...values];
+
+      if (_labels.length !== _values.length) {
+        throw new Error(
+          `${this.legend} ${
+            this.instanceId
+          } must have same number of labels and values. (${_labels}) (${_values})`
+        );
+      }
+
+      this.filterItems = _labels.map((label, index) => {
+        return {
+          label: label,
+          value: _values[index],
+          checked: filterGroupService.isItemChecked(this.name, _values[index]),
+        };
+      });
+
+      return [_labels, _values];
+    }
+
     connectedCallback() {
       //console.log("connectedCallback");
+      const legend = this.attributes.getNamedItem("legend");
+      if (legend && legend.value) {
+        this.legend = legend.value;
+      }
+
+      let labels = this.buildArrayFromAttr("labels");
+      let values = this.buildArrayFromAttr("values");
+
+      [labels, values] = this.buildFilterItems(labels, values);
+
+      const replay = false;
+      filterGroupService.subscribe(
+        (filterGroupItem) => {
+          if (filterGroupItem.name === this.name) {
+            this.filterItems = this.filterItems.map((item) => {
+              const newItem = {
+                label: item.label,
+                value: item.value,
+                checked: filterGroupItem.checked.includes(item.value),
+              };
+              return newItem;
+            });
+            this.render();
+          }
+        },
+        this.instanceId,
+        replay
+      );
       this.isReady = true;
       this.render();
     }

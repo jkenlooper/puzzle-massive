@@ -12,6 +12,9 @@ interface TemplateData {
   hasError: boolean;
   isReady: boolean;
   puzzles: undefined | PuzzleImages;
+  hasPagination: boolean;
+  paginationLegend: string;
+  pages: string;
   frontFragmentHref: undefined | string;
 }
 
@@ -171,6 +174,7 @@ customElements.define(
           <div>
             <strong>Filter puzzles</strong>
 
+            <!-- TODO: only show values that are applicable for status -->
             <pm-filter-group
               name="status"
               legend="Status"
@@ -179,6 +183,7 @@ customElements.define(
               values="recent, active, new, complete, frozen, unavailable"
             ></pm-filter-group>
 
+            <!-- TODO: only show values that are applicable for piece count -->
             <pm-filter-group
               name="pieces"
               legend="Piece count"
@@ -187,6 +192,7 @@ customElements.define(
               values="0-300, 300-600, 600-1000, 1000-2000, 2000-3000, 3000-60000"
             ></pm-filter-group>
 
+            <!-- TODO: Hide this filter group if no instances-->
             <pm-filter-group
               name="type"
               legend="Type"
@@ -209,117 +215,29 @@ customElements.define(
                 <div>
                   Found ${data.puzzles.length} puzzles<br />
 
-                  <em>TODO: pagination</em><br />
-                  Page 1 of 5
+                  ${data.hasPagination
+                    ? html`
+                        ${data.paginationLegend}
+
+                        <button>Previous</button>
+
+                        <pm-filter-group
+                          name="pagination"
+                          legend=${data.paginationLegend}
+                          type="radio"
+                          values=${data.pages}
+                        ></pm-filter-group>
+
+                        <button>Next</button>
+                      `
+                    : ""}
 
                   <div class="pm-PuzzleImagePicker-list" role="list">
                     ${repeat(
                       data.puzzles,
                       (puzzle) => puzzle.puzzleId,
                       (puzzle) => {
-                        return html`
-                          <div class="pm-PuzzleImagePicker-listItem">
-                            ${puzzle.isRecent && !puzzle.isComplete
-                              ? html`
-                                  <pm-active-player-count
-                                    class="pm-PuzzleImagePicker-activePlayerCount"
-                                    puzzle-id=${puzzle.puzzleId}
-                                  ></pm-active-player-count>
-                                `
-                              : html`
-                                  <span
-                                    class="pm-PuzzleImagePicker-activePlayerCount"
-                                  ></span>
-                                `}
-                            <a
-                              class=${classMap({
-                                "pm-PuzzleImagePicker-puzzleLink": true,
-                                isActive: puzzle.isActive,
-                                isRecent: puzzle.isRecent,
-                                isComplete: puzzle.isComplete,
-                                notAvailable: !puzzle.isAvailable,
-                              })}
-                              href=${`${data.frontFragmentHref}${
-                                puzzle.puzzleId
-                              }/`}
-                            >
-                              <div class="pm-PuzzleImagePicker-pieceCount">
-                                <strong>${puzzle.pieces}</strong>
-                                <small>Pieces</small>
-                              </div>
-                              <img
-                                class="lazyload pm-PuzzleImagePicker-image"
-                                width="160"
-                                height="160"
-                                data-src=${puzzle.src}
-                                alt=""
-                              />
-                              <em class="pm-PuzzleImagePicker-status"
-                                >${puzzle.statusText}</em
-                              >
-                            </a>
-
-                            ${puzzle.licenseName === "unsplash"
-                              ? html`
-                                  <small>
-                                    <a href=${puzzle.source}>${puzzle.title}</a>
-                                    by
-                                    <a
-                                      xmlns:cc="http://creativecommons.org/ns#"
-                                      href=${puzzle.authorLink}
-                                      property="cc:attributionName"
-                                      rel="cc:attributionURL"
-                                      >${puzzle.authorName}</a
-                                    >
-                                    on
-                                    <a href=${puzzle.licenseSource}
-                                      >${puzzle.licenseTitle}</a
-                                    >
-                                  </small>
-                                `
-                              : html``}
-                            ${puzzle.isAvailable || puzzle.isFrozen
-                              ? html`
-                                  ${puzzle.timeSince
-                                    ? html`
-                                        <div
-                                          class="pm-PuzzleImagePicker-timeSince"
-                                        >
-                                          <span
-                                            class="pm-PuzzleImagePicker-timeSinceLabel"
-                                          >
-                                            Last active
-                                          </span>
-                                          <span
-                                            class="pm-PuzzleImagePicker-timeSinceAmount"
-                                            >${puzzle.timeSince}</span
-                                          >
-                                          <span
-                                            class="pm-PuzzleImagePicker-timeSinceLabel"
-                                          >
-                                            ago
-                                          </span>
-                                        </div>
-                                      `
-                                    : ""}
-                                `
-                              : html`
-                                  <div class="pm-PuzzleImagePicker-infoMessage">
-                                    Currently not available
-                                  </div>
-                                `}
-                            ${!puzzle.isOriginal
-                              ? html`
-                                  <small>
-                                    Instance by
-                                    <pm-player-bit
-                                      player=${puzzle.owner}
-                                    ></pm-player-bit>
-                                  </small>
-                                `
-                              : ""}
-                          </div>
-                        `;
+                        return listItem(puzzle);
                       }
                     )}
                   </div>
@@ -330,6 +248,95 @@ customElements.define(
               `}
         </div>
       `;
+
+      function listItem(puzzle) {
+        return html`
+          <div class="pm-PuzzleImagePicker-listItem">
+            ${puzzle.isRecent && !puzzle.isComplete
+              ? html`
+                  <pm-active-player-count
+                    class="pm-PuzzleImagePicker-activePlayerCount"
+                    puzzle-id=${puzzle.puzzleId}
+                  ></pm-active-player-count>
+                `
+              : html`
+                  <span class="pm-PuzzleImagePicker-activePlayerCount"></span>
+                `}
+            <a
+              class=${classMap({
+                "pm-PuzzleImagePicker-puzzleLink": true,
+                isActive: puzzle.isActive,
+                isRecent: puzzle.isRecent,
+                isComplete: puzzle.isComplete,
+                notAvailable: !puzzle.isAvailable,
+              })}
+              href=${`${data.frontFragmentHref}${puzzle.puzzleId}/`}
+            >
+              <div class="pm-PuzzleImagePicker-pieceCount">
+                <strong>${puzzle.pieces}</strong>
+                <small>Pieces</small>
+              </div>
+              <img
+                class="lazyload pm-PuzzleImagePicker-image"
+                width="160"
+                height="160"
+                data-src=${puzzle.src}
+                alt=""
+              />
+              <em class="pm-PuzzleImagePicker-status">${puzzle.statusText}</em>
+            </a>
+
+            ${puzzle.licenseName === "unsplash"
+              ? html`
+                  <small>
+                    <a href=${puzzle.source}>${puzzle.title}</a>
+                    by
+                    <a
+                      xmlns:cc="http://creativecommons.org/ns#"
+                      href=${puzzle.authorLink}
+                      property="cc:attributionName"
+                      rel="cc:attributionURL"
+                      >${puzzle.authorName}</a
+                    >
+                    on
+                    <a href=${puzzle.licenseSource}>${puzzle.licenseTitle}</a>
+                  </small>
+                `
+              : html``}
+            ${puzzle.isAvailable || puzzle.isFrozen
+              ? html`
+                  ${puzzle.timeSince
+                    ? html`
+                        <div class="pm-PuzzleImagePicker-timeSince">
+                          <span class="pm-PuzzleImagePicker-timeSinceLabel">
+                            Last active
+                          </span>
+                          <span class="pm-PuzzleImagePicker-timeSinceAmount"
+                            >${puzzle.timeSince}</span
+                          >
+                          <span class="pm-PuzzleImagePicker-timeSinceLabel">
+                            ago
+                          </span>
+                        </div>
+                      `
+                    : ""}
+                `
+              : html`
+                  <div class="pm-PuzzleImagePicker-infoMessage">
+                    Currently not available
+                  </div>
+                `}
+            ${!puzzle.isOriginal
+              ? html`
+                  <small>
+                    Instance by
+                    <pm-player-bit player=${puzzle.owner}></pm-player-bit>
+                  </small>
+                `
+              : ""}
+          </div>
+        `;
+      }
     }
 
     get data(): TemplateData {
@@ -338,6 +345,9 @@ customElements.define(
         hasError: this.hasError,
         errorMessage: this.errorMessage,
         puzzles: this.puzzles,
+        hasPagination: true,
+        paginationLegend: "Page 2 of 4",
+        pages: "1, 2, 3, 4",
         frontFragmentHref: this.frontFragmentHref,
       };
     }
