@@ -31,7 +31,7 @@ customElements.define(
       return `${tag} ${lastInstanceId++}`;
     }
 
-    private puzzlesPerPage = 50;
+    private pageSize: number = 50;
 
     private instanceId: string;
     frontFragmentHref: undefined | string;
@@ -64,6 +64,11 @@ customElements.define(
         this.errorMessage = "No front-fragment-href has been set.";
       } else {
         this.frontFragmentHref = frontFragmentHref.value;
+      }
+
+      const pageSizeAttr = this.attributes.getNamedItem("page-size");
+      if (pageSizeAttr && pageSizeAttr.value) {
+        this.pageSize = parseInt(pageSizeAttr.value);
       }
     }
 
@@ -164,9 +169,7 @@ customElements.define(
             console.warn(`Ignoring filterPage`);
             this.puzzles = puzzles;
           } else {
-            const newPageCount = Math.ceil(
-              puzzles.length / this.puzzlesPerPage
-            );
+            const newPageCount = Math.ceil(puzzles.length / this.pageSize);
             this.currentPage = Math.min(
               newPageCount,
               parseInt(this.filterPage[0])
@@ -194,8 +197,8 @@ customElements.define(
             }
 
             this.pageCount = newPageCount;
-            const start = this.puzzlesPerPage * (this.currentPage - 1);
-            this.puzzles = puzzles.slice(start, start + this.puzzlesPerPage);
+            const start = this.pageSize * (this.currentPage - 1);
+            this.puzzles = puzzles.slice(start, start + this.pageSize);
           }
         })
         .catch(() => {
@@ -394,9 +397,8 @@ customElements.define(
         errorMessage: this.errorMessage,
         puzzles: this.puzzles,
         hasPagination:
-          !this.refreshPagination &&
-          this.puzzleCountFiltered > this.puzzlesPerPage,
-        paginationLegend: `${this.puzzlesPerPage} Per Page`,
+          !this.refreshPagination && this.puzzleCountFiltered > this.pageSize,
+        paginationLegend: `${this.pageSize} Per Page`,
         pages: getPagesString(this.pageCount),
         currentPage: this.currentPage,
         puzzleCount: this.puzzleCount,
