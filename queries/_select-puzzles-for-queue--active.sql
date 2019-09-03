@@ -17,4 +17,7 @@ AND not (p.id in (select id from Puzzle where permission = 0 and status in (1, 2
 GROUP BY p.id
 ORDER BY p.pieces asc
 -- Can't limit or offset since it varies what is actually visible to each player depending on dots
+
+-- Deprecated in favor of using puzzle-image-picker
+limit 0
 ;

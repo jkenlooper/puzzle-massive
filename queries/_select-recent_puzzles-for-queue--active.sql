@@ -16,4 +16,7 @@ AND p.status IN (1, 2)
 AND strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 hours')
 GROUP BY p.id
 ORDER BY p.m_date desc
+
+-- Deprecated in favor of using puzzle-image-picker
+limit 0
 ;

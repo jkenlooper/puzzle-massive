@@ -108,6 +108,9 @@ cat <<HERE
   rewrite ^/chill/site/puzzle/([^/]+)/scale//\$ /chill/site/puzzle/\$1/scale/0/? last;
   rewrite ^/chill/site/puzzle/([^/]+)/scale/(\d+)/\$ /chill/site/puzzle/\$1/scale/1/? last;
 
+  # redirect old puzzle queues
+  rewrite ^/chill/site/queue/(.*)\$ /chill/site/puzzle-list/ permanent;
+
   location /stats/ {
     root   ${SRVDIR}stats;
     index  awstats.puzzle.massive.xyz.html;
