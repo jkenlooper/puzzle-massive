@@ -15,6 +15,9 @@ interface TemplateData {
   hasPagination: boolean;
   paginationLegend: string;
   pages: string;
+  currentPage: number;
+  puzzleCount: number;
+  puzzleCountFiltered: number;
   frontFragmentHref: undefined | string;
 }
 
@@ -28,18 +31,25 @@ customElements.define(
       return `${tag} ${lastInstanceId++}`;
     }
 
+    private puzzlesPerPage = 50;
+
     private instanceId: string;
     frontFragmentHref: undefined | string;
     puzzles: undefined | PuzzleImages = undefined;
+    currentPage: number = 1;
+    pageCount: number = 1;
+    puzzleCount: number = 0;
     hasError: boolean = false;
     errorMessage: string = "";
     isReady: boolean = false;
+    refreshPagination: boolean = false;
 
-    //filtersInitialized: undefined | Promise<boolean>;
     filterStatus: undefined | Array<string>;
     filterPieces: undefined | Array<string>;
     filterType: undefined | Array<string>;
-    orderBy: undefined | string;
+    filterPage: undefined | Array<string>;
+    orderBy: undefined | Array<string>;
+    puzzleCountFiltered: number = 0;
 
     constructor() {
       super();
@@ -61,6 +71,7 @@ customElements.define(
       return puzzleImagesService
         .getPuzzleImages()
         .then((puzzleImages: PuzzleImages) => {
+          this.puzzleCount = puzzleImages.length;
           const puzzles = puzzleImages
             .filter((puzzle) => {
               if (!Array.isArray(this.filterStatus)) {
@@ -147,8 +158,45 @@ customElements.define(
                 break;
             }
           }
+          this.puzzleCountFiltered = puzzles.length;
 
-          this.puzzles = puzzles;
+          if (!this.filterPage || !Array.isArray(this.filterPage)) {
+            console.warn(`Ignoring filterPage`);
+            this.puzzles = puzzles;
+          } else {
+            const newPageCount = Math.ceil(
+              puzzles.length / this.puzzlesPerPage
+            );
+            this.currentPage = Math.min(
+              newPageCount,
+              parseInt(this.filterPage[0])
+            );
+
+            if (this.pageCount !== newPageCount) {
+              const filterGroupItemValueChangeEvent = new CustomEvent(
+                "filterGroupItemValueChange",
+                {
+                  detail: {
+                    name: "pagination",
+                    checked: ["1"],
+                  },
+                  bubbles: true,
+                }
+              );
+              window.setTimeout(() => {
+                // Work around to sync the pagination filter group
+                this.refreshPagination = true;
+                this.render();
+                this.dispatchEvent(filterGroupItemValueChangeEvent);
+                this.refreshPagination = false;
+                this.render();
+              }, 1);
+            }
+
+            this.pageCount = newPageCount;
+            const start = this.puzzlesPerPage * (this.currentPage - 1);
+            this.puzzles = puzzles.slice(start, start + this.puzzlesPerPage);
+          }
         })
         .catch(() => {
           this.hasError = true;
@@ -171,81 +219,81 @@ customElements.define(
       }
       return html`
         <div class="pm-PuzzleImagePicker">
-          <div>
-            <strong>Filter puzzles</strong>
+          <div class="pm-PuzzleImagePicker-filter">
+            <strong
+              >Found ${data.puzzleCountFiltered} of ${data.puzzleCount}
+              puzzles</strong
+            >
 
-            <!-- TODO: only show values that are applicable for status -->
-            <pm-filter-group
-              name="status"
-              legend="Status"
-              type="checkbox"
-              labels="Recent, Active, New, Complete, Frozen, Unavailable"
-              values="recent, active, new, complete, frozen, unavailable"
-            ></pm-filter-group>
+            <div class="pm-PuzzleImagePicker-filterGroups">
+              <pm-filter-group
+                class="pm-PuzzleImagePicker-filterGroup"
+                name="status"
+                legend="Status"
+                type="checkbox"
+                labels="Recent, Active, New, Complete, Frozen, Unavailable"
+                values="recent, active, new, complete, frozen, unavailable"
+              ></pm-filter-group>
 
-            <!-- TODO: only show values that are applicable for piece count -->
-            <pm-filter-group
-              name="pieces"
-              legend="Piece count"
-              type="checkbox"
-              labels="Less than 300, 300 to 600, 600 to 1000, 1000 to 2000, 2000 to 3000, Greater than 3000"
-              values="0-300, 300-600, 600-1000, 1000-2000, 2000-3000, 3000-60000"
-            ></pm-filter-group>
+              <pm-filter-group
+                class="pm-PuzzleImagePicker-filterGroup"
+                name="type"
+                legend="Type"
+                type="checkbox"
+                labels="Original, Instance"
+                values="original, instance"
+              ></pm-filter-group>
 
-            <!-- TODO: Hide this filter group if no instances-->
-            <pm-filter-group
-              name="type"
-              legend="Type"
-              type="checkbox"
-              labels="Original, Instance"
-              values="original, instance"
-            ></pm-filter-group>
+              <pm-filter-group
+                class="pm-PuzzleImagePicker-filterGroup"
+                name="pieces"
+                legend="Piece count"
+                type="checkbox"
+                labels="Less than 300, 300 to 600, 600 to 1000, 1000 to 2000, 2000 to 3000, Greater than 3000"
+                values="0-300, 300-600, 600-1000, 1000-2000, 2000-3000, 3000-60000"
+              ></pm-filter-group>
 
-            <pm-filter-group
-              name="orderby"
-              legend="Order by"
-              type="radio"
-              labels="Modified date, Piece count"
-              values="m_date, pieces"
-            ></pm-filter-group>
-          </div>
+              <hr />
+              <pm-filter-group
+                class="pm-PuzzleImagePicker-filterGroup"
+                name="orderby"
+                legend="Order by"
+                type="radio"
+                labels="Modified date, Piece count"
+                values="m_date, pieces"
+              ></pm-filter-group>
 
-          ${data.puzzles && data.puzzles.length
-            ? html`
-                <div>
-                  Found ${data.puzzles.length} puzzles<br />
+              ${data.hasPagination
+                ? html`
+                    <pm-filter-group
+                      class="pm-PuzzleImagePicker-filterGroup"
+                      name="pagination"
+                      legend=${data.paginationLegend}
+                      type="radio"
+                      values=${data.pages}
+                    ></pm-filter-group>
+                  `
+                : ""}
+            </div>
 
-                  ${data.hasPagination
-                    ? html`
-                        ${data.paginationLegend}
-
-                        <button>Previous</button>
-
-                        <pm-filter-group
-                          name="pagination"
-                          legend=${data.paginationLegend}
-                          type="radio"
-                          values=${data.pages}
-                        ></pm-filter-group>
-
-                        <button>Next</button>
-                      `
-                    : ""}
-
-                  <div class="pm-PuzzleImagePicker-list" role="list">
-                    ${repeat(
-                      data.puzzles,
-                      (puzzle) => puzzle.puzzleId,
-                      (puzzle) => {
-                        return listItem(puzzle);
-                      }
-                    )}
+            ${data.puzzles && data.puzzles.length
+              ? html`
+                  <div>
+                    <div class="pm-PuzzleImagePicker-list" role="list">
+                      ${repeat(
+                        data.puzzles,
+                        (puzzle) => puzzle.puzzleId,
+                        (puzzle) => {
+                          return listItem(puzzle);
+                        }
+                      )}
+                    </div>
                   </div>
-                </div>
-              `
-            : html`
-                <p>No puzzles found that match the criteria.</p>
-              `}
+                `
+              : html`
+                  <p>No puzzles found that match the criteria.</p>
+                `}
+          </div>
         </div>
       `;
 
@@ -345,9 +393,14 @@ customElements.define(
         hasError: this.hasError,
         errorMessage: this.errorMessage,
         puzzles: this.puzzles,
-        hasPagination: true,
-        paginationLegend: "Page 2 of 4",
-        pages: "1, 2, 3, 4",
+        hasPagination:
+          !this.refreshPagination &&
+          this.puzzleCountFiltered > this.puzzlesPerPage,
+        paginationLegend: `${this.puzzlesPerPage} Per Page`,
+        pages: getPagesString(this.pageCount),
+        currentPage: this.currentPage,
+        puzzleCount: this.puzzleCount,
+        puzzleCountFiltered: this.puzzleCountFiltered,
         frontFragmentHref: this.frontFragmentHref,
       };
     }
@@ -373,6 +426,9 @@ customElements.define(
             case "type":
               this.filterType = filterGroupItem.checked;
               break;
+            case "pagination":
+              this.filterPage = filterGroupItem.checked;
+              break;
             case "orderby":
               this.orderBy = filterGroupItem.checked;
               break;
@@ -381,6 +437,7 @@ customElements.define(
             this.filterStatus &&
             this.filterPieces &&
             this.filterType &&
+            this.filterPage &&
             this.orderBy
           ) {
             setPuzzleImages();
@@ -399,3 +456,13 @@ customElements.define(
     }
   }
 );
+
+function getPagesString(pageCount: number): string {
+  let count = 1;
+  const pages: Array<number> = [];
+  while (count <= pageCount) {
+    pages.push(count);
+    count += 1;
+  }
+  return pages.join(", ");
+}

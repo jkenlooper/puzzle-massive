@@ -1,6 +1,14 @@
 .pm-PuzzleImagePicker {
 }
 
+.pm-PuzzleImagePicker-filterGroups {
+  margin-bottom: 15px;
+}
+
+.pm-PuzzleImagePicker-filterGroup {
+  display: inline-block;
+}
+
 .pm-PuzzleImagePicker-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));

@@ -1,6 +1,8 @@
 import { html, render } from "lit-html";
+import { repeat } from "lit-html/directives/repeat";
 
 import filterGroupService from "./filter-group.service";
+import "./filter-group.css";
 
 enum FilterGroupType {
   Checkbox = "checkbox",
@@ -37,6 +39,12 @@ customElements.define(
       return `${tag} ${lastInstanceId++}`;
     }
 
+    /*
+    static get observedAttributes() {
+      return ["values", "legend"];
+    }
+     */
+
     private instanceId: string;
     isReady: boolean = false;
     name: string = "";
@@ -68,7 +76,12 @@ customElements.define(
       const el = e.target;
       const name = el.getAttribute("group");
       const value = el.value;
-      const isChecked = el.checked;
+
+      const filterItem = this.filterItems.find((item) => {
+        return item.value === value;
+      });
+      const isChecked = filterItem ? !filterItem.checked : el.checked;
+
       let checked;
       if (this.filtertype === "radio") {
         checked = [value];
@@ -104,23 +117,28 @@ customElements.define(
         return html``;
       }
       return html`
-        <fieldset>
-          <legend>${data.legend}</legend>
-          ${data.filterItems.map((item) => {
-            return html`
-              <label>
-                <input
-                  @click=${data.itemValueChangeHandler}
-                  type=${data.filtertype}
-                  group=${data.group}
-                  name=${data.name}
-                  ?checked=${item.checked}
-                  value=${item.value}
-                />
-                ${item.label}</label
-              >
-            `;
-          })}
+        <fieldset class="pm-FilterGroup">
+          <legend class="pm-FilterGroup-legend">${data.legend}</legend>
+          ${repeat(
+            data.filterItems,
+            (item) => item.value,
+            (item) => {
+              return html`
+                <label class="pm-FilterGroup-label">
+                  <input
+                    class="pm-FilterGroup-input"
+                    @click=${data.itemValueChangeHandler}
+                    type=${data.filtertype}
+                    group=${data.group}
+                    name=${data.name}
+                    ?checked=${item.checked}
+                    value=${item.value}
+                  />
+                  <span class="pm-FilterGroup-text">${item.label}</span></label
+                >
+              `;
+            }
+          )}
         </fieldset>
       `;
     }
@@ -144,35 +162,17 @@ customElements.define(
       render(this.template(this.data), this);
     }
 
+    /* Need to set observedAttributes if using attributeChangedCallback,
+     * but it seems to have an issue with lit-html here
+     */
+    /*
     attributeChangedCallback(
       name: string,
       _oldValue: string | null,
       _newValue: string | null
     ) {
-      const value: string = _newValue !== null ? _newValue : "";
-      let labels = this.buildArrayFromAttr("labels");
-      let values = this.buildArrayFromAttr("values");
-      switch (name) {
-        case "legend":
-          this.legend = value;
-          this.render();
-          break;
-        case "labels":
-          labels = this.buildArrayFromAttr("labels", value);
-          break;
-        case "values":
-          values = this.buildArrayFromAttr("values", value);
-          break;
-      }
-      if (name === "labels" || name === "values") {
-        if (labels.length === 0 || labels.length === values.length) {
-          // TODO: update filterItems with new labels, values if labels length same
-          // as values length
-          [labels, values] = this.buildFilterItems(labels, values);
-          this.render();
-        }
-      }
     }
+         */
 
     buildArrayFromAttr(name: string, value?: string): Array<string> {
       const attr = this.attributes.getNamedItem(name);
@@ -216,7 +216,6 @@ customElements.define(
     }
 
     connectedCallback() {
-      //console.log("connectedCallback");
       const legend = this.attributes.getNamedItem("legend");
       if (legend && legend.value) {
         this.legend = legend.value;
@@ -229,31 +228,35 @@ customElements.define(
 
       const replay = false;
       filterGroupService.subscribe(
-        (filterGroupItem) => {
-          if (filterGroupItem.name === this.name) {
-            this.filterItems = this.filterItems.map((item) => {
-              const newItem = {
-                label: item.label,
-                value: item.value,
-                checked: filterGroupItem.checked.includes(item.value),
-              };
-              return newItem;
-            });
-            this.render();
-          }
-        },
+        this.updateFilterItem.bind(this),
         this.instanceId,
         replay
       );
       this.isReady = true;
       this.render();
     }
+
+    updateFilterItem(filterGroupItem) {
+      if (filterGroupItem.name === this.name) {
+        let labels = this.buildArrayFromAttr("labels");
+        let values = this.buildArrayFromAttr("values");
+
+        [labels, values] = this.buildFilterItems(labels, values);
+        this.filterItems = this.filterItems.map((item) => {
+          const newItem = {
+            label: item.label,
+            value: item.value,
+            checked: filterGroupItem.checked.includes(item.value),
+          };
+          return newItem;
+        });
+        this.render();
+      }
+    }
+
     disconnectedCallback() {
-      //console.log("disconnectedCallback", this.instanceId);
       filterGroupService.unsubscribe(this.instanceId);
     }
-    adoptedCallback() {
-      //console.log("adoptedCallback");
-    }
+    adoptedCallback() {}
   }
 );

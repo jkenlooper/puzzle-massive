@@ -17,6 +17,10 @@ const FilterGroupItems: Array<any> = [
     name: "orderby",
     checked: ["m_date"],
   },
+  {
+    name: "pagination",
+    checked: ["1"],
+  },
 ];
 
 class FilterGroupService {
