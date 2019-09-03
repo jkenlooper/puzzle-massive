@@ -23,7 +23,7 @@
     <meta name="msapplication-tap-highlight" content="no" />
 
     {% block stylesheet %}
-    <link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='site.css') }}">
+    <link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='site.css') }}{% if config.DEBUG == True and config.CACHE_TYPE == "null" %}?debug-no-cache={{ chill_now }}{% endif %}">
     {% endblock %}
 
     {% block headscript %}
@@ -45,8 +45,12 @@
     <script type="module" src="{{ url_for('send_theme_file', filename='lazysizes.min.js') }}"></script>
     <script src="{{ url_for('send_theme_file', filename='reqwest.min.js') }}"></script>
 
-    <script type="module" src="{{ url_for('send_theme_file', filename='site.bundle.js') }}"></script>
+    <script type="module" src="{{ url_for('send_theme_file', filename='site.bundle.js') }}{% if config.DEBUG == True and config.CACHE_TYPE == "null" %}?debug-no-cache={{ chill_now }}{% endif %}"></script>
     {% endblock %}
+
+{% if config.DEBUG == True and config.CACHE_TYPE == "null" %}
+config.DEBUG: True; config.CACHE_TYPE: "null"; chill_now: {{ chill_now }}
+{% endif %}
 
   </body>
 </html>
