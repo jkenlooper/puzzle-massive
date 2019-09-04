@@ -1,0 +1,176 @@
+!ChillNode
+name: frontpage
+route: /front/<puzzle_id>/
+template: front.html
+value:
+  page:
+    content: frontpage-content.html
+    description: Massively Multiplayer Online Jigsaw Puzzles
+    info: _frontpage-page-info-for-puzzle_id.sql
+--- !ChillNode
+name: scorespage
+route: /high-scores/
+template: scorespage.html
+value:
+  page:
+    description: High scores and ranking for players
+    highScores:
+      chill_template: highScores.html
+      chill_value: _select-high-scores.sql
+--- !ChillNode
+name: player_ranks
+route: /api/player-ranks/
+value: _select-player-ranks.sql
+--- !ChillNode
+name: puzzleuploadpage
+route: /new-puzzle/<contributor>/
+template: puzzleuploadpage.html
+value:
+  page:
+    description: Create custom puzzles by uploading a picture
+  route: _select-args-for-uploadpage.sql
+--- !ChillNode
+name: puzzlepage
+route: /puzzle/<puzzle_id>/scale/<int:scale>/
+template: puzzlepage.html
+value:
+  args: _select-args-for-puzzlepage.sql
+  page:
+    description: puzzle assembly
+  parent_of_top_left: _select-puzzle-piece-top-left-parent.sql
+  preview_full: _select-puzzle-resources-preview_full-by-puzzle_id.sql
+  puzzle: _select-puzzle-by-puzzle_id.sql
+  puzzle_files: _select-puzzle-resources-by-puzzle_id.sql
+--- !ChillNode
+name: pieces
+route: /api/puzzle-pieces/<puzzle_id>/
+value:
+  positions: _select-piece-by-puzzle_id.sql
+  timestamp: _select-timestamp-now.sql
+--- !ChillNode
+name: profilepage
+route: /player/
+template: profilepage.html
+value:
+  player: _select-player-for-profile.sql
+  puzzles: _select-puzzles-for-profile.sql
+--- !ChillNode
+name: profilepage
+route: /player/<login>/
+template: profilepage.html
+value:
+  player: _select-player-for-profile.sql
+  puzzles: _select-puzzles-for-profile.sql
+--- !ChillNode
+name: biticonspartial
+route: /bit-icons/<iconname>/
+template: bit-icons-img.html
+value: _select-iconname-for-route.sql
+--- !ChillNode
+name: footerpages_item
+route: /credits/
+template: docs.html
+value:
+  content: creditspage-content.html
+  description: List of people who put this site together
+  order: '50'
+  slug: credits
+  title: Credits
+--- !ChillNode
+name: artist_martin_berube_bit_icons
+route: /artist/martin-berube/bit-icons/
+template: credit-bit-icons-for-martin-berube.html
+--- !ChillNode
+name: artist_mackenzie_deragon_bit_icons
+route: /artist/mackenzie-deragon/bit-icons/
+template: credit-bit-icons-for-mackenzie-deragon.html
+--- !ChillNode
+name: homepage
+route: /front/
+template: front.html
+value:
+  page:
+    content: frontpage-content.html
+    description: ' Massively Multiplayer Online Jigsaw Puzzles'
+    info: _homepage-page-info-for-most-recent-active-puzzle.sql
+--- !ChillNode
+name: api_front_for_puzzle_id
+route: /api/front/<puzzle_id>/
+template: frontpage.html
+value:
+  gallery:
+    chill_template: gallery.html
+    chill_value:
+      recent: _select-frontpage-gallery-preview_full.sql
+  preview:
+    chill_template: preview.html
+    chill_value:
+      players: _recent-timeline-for-puzzle.sql
+      recent: _select-frontpage-preview.sql
+  puzzle_id: _route-pass-puzzle_id.sql
+--- !ChillNode
+name: admin_puzzle_page
+route:
+  method: GET
+  path: /admin/puzzle/
+  weight: 1
+template: admin-puzzlepage.html
+value:
+  admin_puzzle_menu:
+    puzzle_status_count: _select-puzzle-status-count.sql
+--- !ChillNode
+name: admin_puzzle_page_all
+route: /admin/puzzle/all/
+template: admin-puzzlepage.html
+value:
+  admin_puzzle_menu:
+    puzzle_status_count: _select-puzzle-status-count.sql
+  puzzles: _select-admin-puzzles-all.sql
+--- !ChillNode
+name: admin_puzzle_page_submitted
+route: /admin/puzzle/submitted/
+template: admin-puzzlepage.html
+value:
+  admin_puzzle_menu:
+    puzzle_status_count: _select-puzzle-status-count.sql
+  puzzles: _select-admin-puzzles-needs-moderation.sql
+--- !ChillNode
+name: admin_puzzle_page_renderqueue
+route: /admin/puzzle/renderqueue/
+template: admin-puzzlepage.html
+value:
+  admin_puzzle_menu:
+    puzzle_status_count: _select-puzzle-status-count.sql
+  puzzles: _select-admin-puzzles-render.sql
+--- !ChillNode
+name: admin_puzzle_page_suggested
+route: /admin/puzzle/suggested/
+template: admin-puzzlepage.html
+value:
+  admin_puzzle_menu:
+    puzzle_status_count: _select-puzzle-status-count.sql
+  puzzles: _select-admin-puzzles-suggested.sql
+--- !ChillNode
+name: admin_puzzle_page_suggested_add
+route: /admin/puzzle/suggested/<puzzle_id>/
+template: admin-puzzle-suggested-page.html
+value:
+  page:
+    description: Manage suggested puzzle data
+    title: Suggested Puzzle
+  puzzle: _select-suggested-puzzle-by-puzzle_id.sql
+--- !ChillNode
+name: suggested_puzzle_thank_you_page
+route: /suggested-puzzle-thank-you/
+template: docs.html
+value:
+  content: suggested-puzzle-thank-you-content.html
+  description: Thank you page shown after player has suggested an image for a puzzle.
+  title: Thank You
+--- !ChillNode
+name: internal_attribution_for_id
+route: /internal/attribution/<int:attribution_id>/
+template: attribution.html
+value:
+  attribution: _select_attribution_for_id.sql
+  attribution_id: _route_pass_attribution_id.sql

@@ -293,11 +293,22 @@ To solve this potential problem of conflicts with `chill-data.sql`, feature
 branches should *not* be committing any changes to the `chill-data.sql`.
 Instead the new additions to the chill data should be dumped into
 a `chill-data-feature-[feature-name].yaml` file using the `chill dump` command.
-Then when the feature branch is being merged into the develop branch, the `chill
-load` command is used to load only the changes for the feature branch into the
-database.  Then the `chill-data.sql` file is updated by running the
-`create-chill-data.sh` script.
+Then when the feature branch is being merged into the develop branch, 
+the chill feature yaml can also be merged into the `chill-data.yaml`
 
 The `chill-data-feature-[feature-name].yaml` dump file should also be edited to
 *only* include changes that are being added for the feature branch.  Usually any
 new ChillNode objects that are added will be at the bottom of this file.
+
+On updates to any chill-data*.yaml files; run the below commands to reload the chill database.
+```bash
+# stop the apps first
+sudo ./bin/puzzlectl.sh stop;
+
+# Builds new db.dump.sql
+make;
+
+# Reset the chill data tables with what is in the new db.dump.sql file
+sudo su dev -c "sqlite3 \"/var/lib/puzzle-massive/sqlite3/db\" < db.dump.sql";
+sudo su dev -c "echo \"pragma journal_mode=wal\" | sqlite3 /var/lib/puzzle-massive/sqlite3/db";
+```

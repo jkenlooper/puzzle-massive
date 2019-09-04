@@ -59,7 +59,6 @@ The below list of top level files are mostly explanatory.
 chill-data.sql
 CODE_OF_CONDUCT.md
 CONTRIBUTING.md
-create-chill-data.sh
 db.dump.sql
 LICENSE.txt
 Makefile

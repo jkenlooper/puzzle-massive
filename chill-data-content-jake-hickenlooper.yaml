@@ -1,0 +1,40 @@
+--- !ChillNode
+name: footerpages_item
+route: /faq/
+template: docs.html
+value:
+  content: faqpage-content.html
+  description: Frequently Asked Questions
+  order: '40'
+  slug: faq
+  title: Questions and Answers
+--- !ChillNode
+name: footerpages_item
+route: /contact/
+template: docs.html
+value:
+  content: contactpage-content.html
+  description: a contact form
+  order: '30'
+  slug: contact
+  title: Contact
+--- !ChillNode
+name: footerpages_item
+route: /about/
+template: docs.html
+value:
+  content: aboutpage-content.html
+  description: 'About page for online jigsaw puzzle site: Puzzle Massive'
+  order: '10'
+  slug: about
+  title: About
+--- !ChillNode
+name: footerpages_item
+route: /help/
+template: docs.html
+value:
+  content: helppage-content.html
+  description: Tutorial for new players
+  order: '20'
+  slug: help
+  title: Help
