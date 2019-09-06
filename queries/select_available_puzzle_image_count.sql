@@ -1,29 +1,16 @@
--- should match results from select_available_puzzle_image_count.sql
+-- should match results from select_available_puzzle_images.sql
 
-select pf.url as src, p.puzzle_id, p.status, p.pieces,
-
-strftime('%Y-%m-%d %H:%M', p.m_date, '+7 hours') as redo_date,
+select count(*) as puzzle_count from (
+    select
 p.m_date is not null and strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 hours') as is_recent,
-strftime('%s','now') - strftime('%s', p.m_date) as seconds_from_now,
 p.m_date is not null and not strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 hours') and p.status in (1, 2) as is_active,
 p.m_date is null and p.status in (1, 2) as is_new, -- ACTIVE, IN_QUEUE
-pi.original == pi.instance as is_original,
-CAST(p.owner as integer) as owner,
-
-a.title,
-a.author_link,
-a.author_name,
-a.source,
-l.source as license_source,
-l.name as license_name,
-l.title as license_title
+pi.original == pi.instance as is_original
 
 from Puzzle as p
 join PuzzleInstance as pi on (pi.instance = p.id)
 join Puzzle as p1 on (pi.original = p1.id)
 join PuzzleFile as pf on (p1.id = pf.puzzle)
-left outer join Attribution as a on (a.id = pf.attribution)
-left outer join License as l on (l.id = a.license)
 
 where pf.name == 'preview_full'
 and p.permission = 0 -- PUBLIC
@@ -34,14 +21,5 @@ and is_original in {original_type}
 and p.status in {status}
 and p.pieces >= :pieces_min
 and p.pieces <= :pieces_max
-order by
-
-case
-when 'm_date' == :orderby then p.m_date
-when 'pieces' == :orderby then p.pieces
-else is_recent
-end
-
-  desc
-limit :page_size offset :offset
+) as puzzle_list
 ;

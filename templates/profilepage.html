@@ -21,6 +21,9 @@
     <div class="pm-Profilepage-gridB">
       <pm-choose-bit message="Change bit icon" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
     </div>
+
+    {# puzzles for a specific player no longer shows on profile page #}
+    {#
     {% if puzzles %}
       <div class="pm-Profilepage-gridC">
       {% if puzzles is mapping -%}
@@ -42,6 +45,8 @@
 
       </div>
     {% endif %}
+    #}
+
     <div class="pm-Profilepage-gridD">
       <pm-account>
         {#

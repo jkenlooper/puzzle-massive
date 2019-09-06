@@ -1,7 +1,3 @@
-# On updates to this; run the below commands.
-# make
-# sudo su dev -c "sqlite3 \"/var/lib/puzzle-massive/sqlite3/db\" < db.dump.sql"
-# sudo su dev -c "echo \"pragma journal_mode=wal\" | sqlite3 /var/lib/puzzle-massive/sqlite3/db"
 --- !ChillNode
 name: puzzleimagepickerpage
 route: /puzzle-list/
@@ -11,10 +7,7 @@ value:
     description: Find a jigsaw puzzle by searching through all existing puzzles on the Puzzle Massive site.
     title: Available puzzles
   public_image_count: select_total_puzzle_image_count.sql
---- !ChillNode
-name: puzzleimagepickerjson
-route: /api/puzzle-images/
-value: select_available_puzzle_images.sql
+
 --- !ChillNode
 name: puzzleinstanceformpage
 route: /create-puzzle-instance/<puzzle_id>/

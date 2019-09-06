@@ -3,7 +3,11 @@ import { classMap } from "lit-html/directives/class-map.js";
 import { repeat } from "lit-html/directives/repeat";
 
 import filterGroupService from "./filter-group.service";
-import { PuzzleImages, puzzleImagesService } from "./puzzle-images.service";
+import {
+  PuzzleList,
+  PuzzleImages,
+  puzzleImagesService,
+} from "./puzzle-images.service";
 
 import "./puzzle-image-picker.css";
 
@@ -16,7 +20,7 @@ interface TemplateData {
   paginationLegend: string;
   pages: string;
   currentPage: number;
-  puzzleCount: number;
+  totalPuzzleCount: number;
   puzzleCountFiltered: number;
   frontFragmentHref: undefined | string;
 }
@@ -31,14 +35,14 @@ customElements.define(
       return `${tag} ${lastInstanceId++}`;
     }
 
-    private pageSize: number = 50;
+    private pageSize: number = 0;
 
     private instanceId: string;
     frontFragmentHref: undefined | string;
     puzzles: undefined | PuzzleImages = undefined;
     currentPage: number = 1;
     pageCount: number = 1;
-    puzzleCount: number = 0;
+    totalPuzzleCount: number = 0;
     hasError: boolean = false;
     errorMessage: string = "";
     isReady: boolean = false;
@@ -65,141 +69,87 @@ customElements.define(
       } else {
         this.frontFragmentHref = frontFragmentHref.value;
       }
-
-      const pageSizeAttr = this.attributes.getNamedItem("page-size");
-      if (pageSizeAttr && pageSizeAttr.value) {
-        this.pageSize = parseInt(pageSizeAttr.value);
-      }
     }
 
     _setPuzzleImages() {
+      const page =
+        !this.filterPage || !Array.isArray(this.filterPage)
+          ? 1
+          : parseInt(this.filterPage[0]);
+
+      interface MinMax {
+        min?: undefined | number;
+        max?: undefined | number;
+      }
+      let minmax: MinMax = {};
+      if (this.filterPieces) {
+        minmax = this.filterPieces.reduce(
+          (acc, item) => {
+            let min;
+            let max;
+            [min, max] = item.split("-").map((x) => parseInt(x));
+
+            if (acc.min === undefined) {
+              acc.min = min;
+            } else {
+              acc.min = Math.min(min, acc.min);
+            }
+            if (acc.max === undefined) {
+              acc.max = max;
+            } else {
+              acc.max = Math.max(max, acc.max);
+            }
+
+            return acc;
+          },
+          <MinMax>{}
+        );
+      }
+      const piecesMin = minmax.min || 0;
+      const piecesMax = minmax.max || 6000;
+
       return puzzleImagesService
-        .getPuzzleImages()
-        .then((puzzleImages: PuzzleImages) => {
-          this.puzzleCount = puzzleImages.length;
-          const puzzles = puzzleImages
-            .filter((puzzle) => {
-              if (!Array.isArray(this.filterStatus)) {
-                console.warn(`Ignoring filterStatus`);
-                return true;
+        .getPuzzleImages(
+          this.filterStatus || [],
+          this.filterType || [],
+          piecesMin,
+          piecesMax,
+          page
+        )
+        .then((puzzleList: PuzzleList) => {
+          this.pageSize = puzzleList.pageSize;
+          this.totalPuzzleCount = puzzleList.totalPuzzleCount;
+          const puzzles = puzzleList.puzzles;
+          this.puzzleCountFiltered = puzzleList.puzzleCount;
+
+          this.puzzles = puzzles;
+          this.currentPage = puzzleList.currentPage;
+          const newPageCount = Math.ceil(
+            puzzleList.puzzleCount / puzzleList.pageSize
+          );
+
+          if (this.pageCount !== newPageCount) {
+            const filterGroupItemValueChangeEvent = new CustomEvent(
+              "filterGroupItemValueChange",
+              {
+                detail: {
+                  name: "pagination",
+                  checked: ["1"],
+                },
+                bubbles: true,
               }
-              return this.filterStatus.some((status) => {
-                switch (status) {
-                  case "recent":
-                    return puzzle.isRecent;
-                    break;
-                  case "active":
-                    return puzzle.isActive;
-                    break;
-                  case "new":
-                    return puzzle.isNew;
-                    break;
-                  case "complete":
-                    return puzzle.isComplete;
-                    break;
-                  case "frozen":
-                    return puzzle.isFrozen;
-                    break;
-                  case "unavailable":
-                    return !puzzle.isAvailable && !puzzle.isFrozen;
-                    break;
-                }
-                return true;
-              });
-            })
-            .filter((puzzle) => {
-              if (!Array.isArray(this.filterPieces)) {
-                console.warn(`Ignoring filterPieces`);
-                return true;
-              }
-              return this.filterPieces.some((item) => {
-                let min;
-                let max;
-                [min, max] = item.split("-").map((x) => parseInt(x));
-                return puzzle.pieces >= min && puzzle.pieces <= max;
-              });
-            })
-
-            .filter((puzzle) => {
-              if (!Array.isArray(this.filterType)) {
-                console.warn(`Ignoring filterType`);
-                return true;
-              }
-              return this.filterType.some((_type) => {
-                switch (_type) {
-                  case "original":
-                    return puzzle.isOriginal;
-                    break;
-                  case "instance":
-                    return !puzzle.isOriginal;
-                    break;
-                }
-                return true;
-              });
-            });
-
-          if (Array.isArray(this.orderBy) && this.orderBy.length) {
-            switch (this.orderBy[0]) {
-              case "m_date":
-                puzzles.sort((puzzleA, puzzleB) => {
-                  // handle null values
-                  if (puzzleA.secondsFromNow === puzzleB.secondsFromNow) {
-                    return 0;
-                  }
-                  if (puzzleA.secondsFromNow === null) {
-                    return -1;
-                  }
-                  if (puzzleB.secondsFromNow === null) {
-                    return -1;
-                  }
-
-                  return puzzleA.secondsFromNow - puzzleB.secondsFromNow;
-                });
-                break;
-              case "pieces":
-                puzzles.sort((puzzleA, puzzleB) => {
-                  return puzzleA.pieces - puzzleB.pieces;
-                });
-                break;
-            }
-          }
-          this.puzzleCountFiltered = puzzles.length;
-
-          if (!this.filterPage || !Array.isArray(this.filterPage)) {
-            console.warn(`Ignoring filterPage`);
-            this.puzzles = puzzles;
-          } else {
-            const newPageCount = Math.ceil(puzzles.length / this.pageSize);
-            this.currentPage = Math.min(
-              newPageCount,
-              parseInt(this.filterPage[0])
             );
-
-            if (this.pageCount !== newPageCount) {
-              const filterGroupItemValueChangeEvent = new CustomEvent(
-                "filterGroupItemValueChange",
-                {
-                  detail: {
-                    name: "pagination",
-                    checked: ["1"],
-                  },
-                  bubbles: true,
-                }
-              );
-              window.setTimeout(() => {
-                // Work around to sync the pagination filter group
-                this.refreshPagination = true;
-                this.render();
-                this.dispatchEvent(filterGroupItemValueChangeEvent);
-                this.refreshPagination = false;
-                this.render();
-              }, 1);
-            }
-
-            this.pageCount = newPageCount;
-            const start = this.pageSize * (this.currentPage - 1);
-            this.puzzles = puzzles.slice(start, start + this.pageSize);
+            window.setTimeout(() => {
+              // Work around to sync the pagination filter group
+              this.refreshPagination = true;
+              this.render();
+              this.dispatchEvent(filterGroupItemValueChangeEvent);
+              this.refreshPagination = false;
+              this.render();
+            }, 1);
           }
+
+          this.pageCount = newPageCount;
         })
         .catch(() => {
           this.hasError = true;
@@ -224,7 +174,7 @@ customElements.define(
         <div class="pm-PuzzleImagePicker">
           <div class="pm-PuzzleImagePicker-filter">
             <strong
-              >Found ${data.puzzleCountFiltered} of ${data.puzzleCount}
+              >Found ${data.puzzleCountFiltered} of ${data.totalPuzzleCount}
               puzzles</strong
             >
 
@@ -243,7 +193,7 @@ customElements.define(
                 name="type"
                 legend="Type"
                 type="checkbox"
-                labels="Original, Instance"
+                labels="Original, Other players"
                 values="original, instance"
               ></pm-filter-group>
 
@@ -401,7 +351,7 @@ customElements.define(
         paginationLegend: `${this.pageSize} Per Page`,
         pages: getPagesString(this.pageCount),
         currentPage: this.currentPage,
-        puzzleCount: this.puzzleCount,
+        totalPuzzleCount: this.totalPuzzleCount,
         puzzleCountFiltered: this.puzzleCountFiltered,
         frontFragmentHref: this.frontFragmentHref,
       };

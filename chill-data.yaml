@@ -7,6 +7,7 @@ value:
     content: frontpage-content.html
     description: Massively Multiplayer Online Jigsaw Puzzles
     info: _frontpage-page-info-for-puzzle_id.sql
+
 --- !ChillNode
 name: scorespage
 route: /high-scores/
@@ -17,10 +18,12 @@ value:
     highScores:
       chill_template: highScores.html
       chill_value: _select-high-scores.sql
+
 --- !ChillNode
 name: player_ranks
 route: /api/player-ranks/
 value: _select-player-ranks.sql
+
 --- !ChillNode
 name: puzzleuploadpage
 route: /new-puzzle/<contributor>/
@@ -29,6 +32,7 @@ value:
   page:
     description: Create custom puzzles by uploading a picture
   route: _select-args-for-uploadpage.sql
+
 --- !ChillNode
 name: puzzlepage
 route: /puzzle/<puzzle_id>/scale/<int:scale>/
@@ -41,26 +45,22 @@ value:
   preview_full: _select-puzzle-resources-preview_full-by-puzzle_id.sql
   puzzle: _select-puzzle-by-puzzle_id.sql
   puzzle_files: _select-puzzle-resources-by-puzzle_id.sql
---- !ChillNode
-name: pieces
-route: /api/puzzle-pieces/<puzzle_id>/
-value:
-  positions: _select-piece-by-puzzle_id.sql
-  timestamp: _select-timestamp-now.sql
+
 --- !ChillNode
 name: profilepage
 route: /player/
 template: profilepage.html
 value:
-  player: _select-player-for-profile.sql
   puzzles: _select-puzzles-for-profile.sql
+
+# TODO: drop /player/<login>/ route
 --- !ChillNode
 name: profilepage
 route: /player/<login>/
 template: profilepage.html
 value:
-  player: _select-player-for-profile.sql
   puzzles: _select-puzzles-for-profile.sql
+
 --- !ChillNode
 name: biticonspartial
 route: /bit-icons/<iconname>/
