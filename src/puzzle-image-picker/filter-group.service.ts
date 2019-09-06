@@ -7,7 +7,7 @@ const FilterGroupItems: Array<any> = [
   },
   {
     name: "pieces",
-    checked: ["0-300", "300-600"],
+    checked: ["0", "600"],
   },
   {
     name: "type",

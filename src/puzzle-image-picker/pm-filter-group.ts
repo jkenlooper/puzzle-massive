@@ -7,10 +7,12 @@ import "./filter-group.css";
 enum FilterGroupType {
   Checkbox = "checkbox",
   Radio = "radio",
+  Interval = "interval",
 }
 const filterGroupTypeStrings: Array<string> = [
   FilterGroupType.Checkbox,
   FilterGroupType.Radio,
+  FilterGroupType.Interval,
 ];
 
 interface FilterItem {
@@ -22,7 +24,7 @@ interface FilterItem {
 interface TemplateData {
   isReady: boolean;
   legend: string;
-  filtertype: string;
+  inputtype: FilterGroupType;
   group: string;
   name: string;
   filterItems: Array<FilterItem>;
@@ -83,8 +85,44 @@ customElements.define(
       const isChecked = filterItem ? !filterItem.checked : el.checked;
 
       let checked;
-      if (this.filtertype === "radio") {
+      if (this.filtertype === FilterGroupType.Radio) {
         checked = [value];
+      } else if (this.filtertype === FilterGroupType.Interval) {
+        // two numbers sorted
+        checked = this.filterItems
+          .reduce(
+            (acc, item) => {
+              if (value === item.value) {
+                item.checked = isChecked;
+              }
+              if (item.checked) {
+                acc.push(item.value);
+              }
+              return acc;
+            },
+            <Array<string>>[]
+          )
+          .map((item) => parseInt(item))
+          .filter((item) => {
+            return !isNaN(item);
+          })
+          .reduce(
+            (acc, item) => {
+              if (acc.length === 0) {
+                acc.push(item);
+                acc.push(item);
+              } else {
+                if (item < acc[0]) {
+                  acc[0] = item;
+                } else if (item > acc[1]) {
+                  acc[1] = item;
+                }
+              }
+              return acc;
+            },
+            <Array<number>>[]
+          )
+          .map((item) => String(item));
       } else {
         checked = this.filterItems.reduce(
           (acc, item) => {
@@ -128,7 +166,7 @@ customElements.define(
                   <input
                     class="pm-FilterGroup-input"
                     @click=${data.itemValueChangeHandler}
-                    type=${data.filtertype}
+                    type=${data.inputtype}
                     group=${data.group}
                     name=${data.name}
                     ?checked=${item.checked}
@@ -147,7 +185,11 @@ customElements.define(
       return {
         isReady: this.isReady,
         legend: this.legend,
-        filtertype: this.filtertype,
+        inputtype: [FilterGroupType.Checkbox, FilterGroupType.Radio].includes(<
+          FilterGroupType
+        >this.filtertype)
+          ? <FilterGroupType>this.filtertype
+          : FilterGroupType.Checkbox,
         filterItems: this.filterItems,
         group: this.name,
         name: `${this.name}-${this.instanceId}`,

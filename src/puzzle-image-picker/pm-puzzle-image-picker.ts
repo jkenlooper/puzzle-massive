@@ -83,27 +83,27 @@ customElements.define(
       }
       let minmax: MinMax = {};
       if (this.filterPieces) {
-        minmax = this.filterPieces.reduce(
-          (acc, item) => {
-            let min;
-            let max;
-            [min, max] = item.split("-").map((x) => parseInt(x));
-
-            if (acc.min === undefined) {
-              acc.min = min;
-            } else {
-              acc.min = Math.min(min, acc.min);
-            }
-            if (acc.max === undefined) {
-              acc.max = max;
-            } else {
-              acc.max = Math.max(max, acc.max);
-            }
-
-            return acc;
-          },
-          <MinMax>{}
-        );
+        minmax = this.filterPieces
+          .map((item) => {
+            const piecesCount = parseInt(item);
+            return isNaN(piecesCount) ? 0 : piecesCount;
+          })
+          .reduce(
+            (acc, pieceCount) => {
+              if (acc.min === undefined) {
+                acc.min = pieceCount;
+              } else {
+                acc.min = Math.min(pieceCount, acc.min);
+              }
+              if (acc.max === undefined) {
+                acc.max = pieceCount;
+              } else {
+                acc.max = Math.max(pieceCount, acc.max);
+              }
+              return acc;
+            },
+            <MinMax>{}
+          );
       }
       const piecesMin = minmax.min || 0;
       const piecesMax = minmax.max || 6000;
@@ -201,9 +201,8 @@ customElements.define(
                 class="pm-PuzzleImagePicker-filterGroup"
                 name="pieces"
                 legend="Piece count"
-                type="checkbox"
-                labels="Less than 300, 300 to 600, 600 to 1000, 1000 to 2000, 2000 to 3000, Greater than 3000"
-                values="0-300, 300-600, 600-1000, 1000-2000, 2000-3000, 3000-60000"
+                type="interval"
+                values="0, 50, 100, 200, 300, 450, 600, 800, 1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 15000, 20000, 30000, 40000, 50000, 60000"
               ></pm-filter-group>
 
               <hr />
