@@ -19,11 +19,41 @@ interface TemplateData {
   hasPagination: boolean;
   paginationLegend: string;
   pages: string;
+  pieces: string;
   currentPage: number;
   totalPuzzleCount: number;
   puzzleCountFiltered: number;
   frontFragmentHref: undefined | string;
 }
+
+const piecesCountList = [
+  0,
+  50,
+  100,
+  200,
+  300,
+  450,
+  600,
+  800,
+  1000,
+  1500,
+  2000,
+  2500,
+  3000,
+  4000,
+  5000,
+  6000,
+  7000,
+  8000,
+  9000,
+  10000,
+  15000,
+  20000,
+  30000,
+  40000,
+  50000,
+  60000,
+];
 
 const tag = "pm-puzzle-image-picker";
 let lastInstanceId = 0;
@@ -43,6 +73,7 @@ customElements.define(
     currentPage: number = 1;
     pageCount: number = 1;
     totalPuzzleCount: number = 0;
+    maxPieces: number = 0;
     hasError: boolean = false;
     errorMessage: string = "";
     isReady: boolean = false;
@@ -105,7 +136,7 @@ customElements.define(
           );
       }
       const piecesMin = minmax.min || 0;
-      const piecesMax = minmax.max || 6000;
+      const piecesMax = minmax.max || 0;
 
       return puzzleImagesService
         .getPuzzleImages(
@@ -118,6 +149,7 @@ customElements.define(
         .then((puzzleList: PuzzleList) => {
           this.pageSize = puzzleList.pageSize;
           this.totalPuzzleCount = puzzleList.totalPuzzleCount;
+          this.maxPieces = puzzleList.maxPieces;
           const puzzles = puzzleList.puzzles;
           this.puzzleCountFiltered = puzzleList.puzzleCount;
 
@@ -195,7 +227,7 @@ customElements.define(
                 name="pieces"
                 legend="Piece count"
                 type="interval"
-                values="0, 50, 100, 200, 300, 450, 600, 800, 1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 15000, 20000, 30000, 40000, 50000, 60000"
+                values=${data.pieces}
               ></pm-filter-group>
 
               <hr />
@@ -343,6 +375,7 @@ customElements.define(
         pages: getPagesString(this.pageCount),
         currentPage: this.currentPage,
         totalPuzzleCount: this.totalPuzzleCount,
+        pieces: getPiecesString(this.maxPieces),
         puzzleCountFiltered: this.puzzleCountFiltered,
         frontFragmentHref: this.frontFragmentHref,
       };
@@ -408,4 +441,17 @@ function getPagesString(pageCount: number): string {
     count += 1;
   }
   return pages.join(", ");
+}
+
+function getPiecesString(maxPieces: number): string {
+  const pieces: Array<number> = piecesCountList.filter((item) => {
+    return item <= maxPieces;
+  });
+  if (pieces.length < piecesCountList.length) {
+    // add the next pieces value from piecesCountList
+    pieces.push(
+      piecesCountList[piecesCountList.indexOf(pieces[pieces.length - 1]) + 1]
+    );
+  }
+  return pieces.join(", ");
 }
