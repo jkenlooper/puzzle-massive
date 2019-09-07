@@ -46,7 +46,6 @@ customElements.define(
     hasError: boolean = false;
     errorMessage: string = "";
     isReady: boolean = false;
-    refreshPagination: boolean = false;
 
     filterStatus: undefined | Array<string>;
     filterPieces: undefined | Array<string>;
@@ -139,14 +138,8 @@ customElements.define(
                 bubbles: true,
               }
             );
-            window.setTimeout(() => {
-              // Work around to sync the pagination filter group
-              this.refreshPagination = true;
-              this.render();
-              this.dispatchEvent(filterGroupItemValueChangeEvent);
-              this.refreshPagination = false;
-              this.render();
-            }, 1);
+
+            this.dispatchEvent(filterGroupItemValueChangeEvent);
           }
 
           this.pageCount = newPageCount;
@@ -345,8 +338,7 @@ customElements.define(
         hasError: this.hasError,
         errorMessage: this.errorMessage,
         puzzles: this.puzzles,
-        hasPagination:
-          !this.refreshPagination && this.puzzleCountFiltered > this.pageSize,
+        hasPagination: this.puzzleCountFiltered > this.pageSize,
         paginationLegend: `${this.pageSize} Per Page`,
         pages: getPagesString(this.pageCount),
         currentPage: this.currentPage,

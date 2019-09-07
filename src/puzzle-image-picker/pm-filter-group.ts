@@ -75,6 +75,7 @@ customElements.define(
     }
 
     handleItemValueChange(e) {
+      e.preventDefault();
       const el = e.target;
       const name = el.getAttribute("group");
       const value = el.value;
@@ -82,7 +83,7 @@ customElements.define(
       const filterItem = this.filterItems.find((item) => {
         return item.value === value;
       });
-      const isChecked = filterItem ? !filterItem.checked : el.checked;
+      const isChecked = filterItem ? !filterItem.checked : !el.checked;
 
       let checked;
       if (this.filtertype === FilterGroupType.Radio) {
@@ -202,6 +203,25 @@ customElements.define(
 
     render() {
       render(this.template(this.data), this);
+
+      window.setTimeout(() => {
+        // Need to set the checked prop here since can't only be done at the
+        // template for input type radio and checkbox.
+        const checked = this.filterItems.reduce(
+          (acc, item) => {
+            if (item.checked) {
+              const value = item.value;
+              acc.push(value);
+            }
+            return acc;
+          },
+          <Array<string>>[]
+        );
+        const inputElNodeList = this.querySelectorAll("input");
+        inputElNodeList.forEach((item) => {
+          item.checked = checked.includes(item.value);
+        });
+      }, 1);
     }
 
     /* Need to set observedAttributes if using attributeChangedCallback,
