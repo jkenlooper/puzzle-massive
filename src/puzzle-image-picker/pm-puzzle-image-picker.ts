@@ -2,7 +2,6 @@ import { html, render } from "lit-html";
 import { classMap } from "lit-html/directives/class-map.js";
 import { repeat } from "lit-html/directives/repeat";
 
-import filterGroupService from "./filter-group.service";
 import {
   PuzzleList,
   PuzzleImages,
@@ -11,10 +10,15 @@ import {
 
 import "./puzzle-image-picker.css";
 
+interface FilterGroupItem {
+  name: string;
+  checked: Array<string>;
+}
+
 interface TemplateData {
   errorMessage?: string;
   hasError: boolean;
-  isReady: boolean;
+  isLoadingPuzzles: boolean;
   puzzles: undefined | PuzzleImages;
   hasPagination: boolean;
   paginationLegend: string;
@@ -66,8 +70,6 @@ customElements.define(
     }
 
     private pageSize: number = 0;
-
-    private instanceId: string;
     frontFragmentHref: undefined | string;
     puzzles: undefined | PuzzleImages = undefined;
     currentPage: number = 1;
@@ -76,18 +78,17 @@ customElements.define(
     maxPieces: number = 0;
     hasError: boolean = false;
     errorMessage: string = "";
-    isReady: boolean = false;
+    isLoadingPuzzles: boolean = true;
 
     filterStatus: undefined | Array<string>;
     filterPieces: undefined | Array<string>;
     filterType: undefined | Array<string>;
-    filterPage: undefined | Array<string>;
+    filterPage: Array<string> = ["1"];
     orderBy: undefined | Array<string>;
     puzzleCountFiltered: number = 0;
 
     constructor() {
       super();
-      this.instanceId = PmPuzzleImagePicker._instanceId;
 
       // Set the attribute values
       const frontFragmentHref = this.attributes.getNamedItem(
@@ -99,6 +100,11 @@ customElements.define(
       } else {
         this.frontFragmentHref = frontFragmentHref.value;
       }
+
+      this.addEventListener(
+        "filterGroupItemValueChange",
+        this._onFilterGroupItemValueChange.bind(this)
+      );
     }
 
     _setPuzzleImages() {
@@ -138,13 +144,17 @@ customElements.define(
       const piecesMin = minmax.min || 0;
       const piecesMax = minmax.max || 0;
 
+      const orderby: string =
+        this.orderBy && this.orderBy.length ? this.orderBy[0] : "m_date";
+
       return puzzleImagesService
         .getPuzzleImages(
           this.filterStatus || [],
           this.filterType || [],
           piecesMin,
           piecesMax,
-          page
+          page,
+          orderby
         )
         .then((puzzleList: PuzzleList) => {
           this.pageSize = puzzleList.pageSize;
@@ -160,18 +170,6 @@ customElements.define(
           );
 
           if (this.pageCount !== newPageCount) {
-            const filterGroupItemValueChangeEvent = new CustomEvent(
-              "filterGroupItemValueChange",
-              {
-                detail: {
-                  name: "pagination",
-                  checked: ["1"],
-                },
-                bubbles: true,
-              }
-            );
-
-            this.dispatchEvent(filterGroupItemValueChangeEvent);
           }
 
           this.pageCount = newPageCount;
@@ -181,15 +179,12 @@ customElements.define(
           this.errorMessage = "Error getting the puzzle images.";
         })
         .finally(() => {
-          this.isReady = true;
+          this.isLoadingPuzzles = false;
           this.render();
         });
     }
 
     template(data: TemplateData) {
-      if (!data.isReady) {
-        return html``;
-      }
       if (data.hasError) {
         return html`
           ${data.errorMessage}
@@ -198,10 +193,14 @@ customElements.define(
       return html`
         <div class="pm-PuzzleImagePicker">
           <div class="pm-PuzzleImagePicker-filter">
-            <strong
-              >Found ${data.puzzleCountFiltered} of ${data.totalPuzzleCount}
-              puzzles</strong
-            >
+            ${!data.isLoadingPuzzles
+              ? html`
+                  <strong
+                    >Found ${data.puzzleCountFiltered} of
+                    ${data.totalPuzzleCount} puzzles</strong
+                  >
+                `
+              : ""}
 
             <div class="pm-PuzzleImagePicker-filterGroups">
               <pm-filter-group
@@ -210,7 +209,7 @@ customElements.define(
                 legend="Status"
                 type="checkbox"
                 labels="Recent, Active, New, Complete, Frozen, Unavailable"
-                values="recent, active, new, complete, frozen, unavailable"
+                values="*recent, *active, new, complete, frozen, unavailable"
               ></pm-filter-group>
 
               <pm-filter-group
@@ -219,7 +218,7 @@ customElements.define(
                 legend="Type"
                 type="checkbox"
                 labels="Original, Other players"
-                values="original, instance"
+                values="*original, instance"
               ></pm-filter-group>
 
               <pm-filter-group
@@ -237,7 +236,7 @@ customElements.define(
                 legend="Order by"
                 type="radio"
                 labels="Modified date, Piece count"
-                values="m_date, pieces"
+                values="*m_date, pieces"
               ></pm-filter-group>
 
               ${data.hasPagination
@@ -253,22 +252,28 @@ customElements.define(
                 : ""}
             </div>
 
-            ${data.puzzles && data.puzzles.length
+            ${data.isLoadingPuzzles
               ? html`
-                  <div>
-                    <div class="pm-PuzzleImagePicker-list" role="list">
-                      ${repeat(
-                        data.puzzles,
-                        (puzzle) => puzzle.puzzleId,
-                        (puzzle) => {
-                          return listItem(puzzle);
-                        }
-                      )}
-                    </div>
-                  </div>
+                  Loading puzzles...
                 `
               : html`
-                  <p>No puzzles found that match the criteria.</p>
+                  ${data.puzzles && data.puzzles.length
+                    ? html`
+                        <div>
+                          <div class="pm-PuzzleImagePicker-list" role="list">
+                            ${repeat(
+                              data.puzzles,
+                              (puzzle) => puzzle.puzzleId,
+                              (puzzle) => {
+                                return listItem(puzzle);
+                              }
+                            )}
+                          </div>
+                        </div>
+                      `
+                    : html`
+                        <p>No puzzles found that match the criteria.</p>
+                      `}
                 `}
           </div>
         </div>
@@ -366,7 +371,7 @@ customElements.define(
 
     get data(): TemplateData {
       return {
-        isReady: this.isReady,
+        isLoadingPuzzles: this.isLoadingPuzzles,
         hasError: this.hasError,
         errorMessage: this.errorMessage,
         puzzles: this.puzzles,
@@ -385,51 +390,42 @@ customElements.define(
       render(this.template(this.data), this);
     }
 
-    connectedCallback() {
-      //console.log("connectedCallback");
+    _onFilterGroupItemValueChange(ev) {
       const setPuzzleImages = this._setPuzzleImages.bind(this);
+      const filterGroupItem = <FilterGroupItem>ev.detail;
+      switch (filterGroupItem.name) {
+        case "status":
+          this.filterStatus = filterGroupItem.checked;
+          break;
+        case "pieces":
+          this.filterPieces = filterGroupItem.checked;
+          break;
+        case "type":
+          this.filterType = filterGroupItem.checked;
+          break;
+        case "pagination":
+          this.filterPage = filterGroupItem.checked;
+          break;
+        case "orderby":
+          this.orderBy = filterGroupItem.checked;
+          break;
+      }
+      if (
+        this.filterStatus &&
+        this.filterPieces &&
+        this.filterType &&
+        this.filterPage &&
+        this.orderBy
+      ) {
+        setPuzzleImages();
+      }
+    }
 
-      const replay = true;
-      filterGroupService.subscribe(
-        (filterGroupItem) => {
-          switch (filterGroupItem.name) {
-            case "status":
-              this.filterStatus = filterGroupItem.checked;
-              break;
-            case "pieces":
-              this.filterPieces = filterGroupItem.checked;
-              break;
-            case "type":
-              this.filterType = filterGroupItem.checked;
-              break;
-            case "pagination":
-              this.filterPage = filterGroupItem.checked;
-              break;
-            case "orderby":
-              this.orderBy = filterGroupItem.checked;
-              break;
-          }
-          if (
-            this.filterStatus &&
-            this.filterPieces &&
-            this.filterType &&
-            this.filterPage &&
-            this.orderBy
-          ) {
-            setPuzzleImages();
-          }
-        },
-        this.instanceId,
-        replay
-      );
+    connectedCallback() {
+      this.render();
     }
-    disconnectedCallback() {
-      //console.log("disconnectedCallback", this.instanceId);
-      filterGroupService.unsubscribe(this.instanceId);
-    }
-    adoptedCallback() {
-      //console.log("adoptedCallback");
-    }
+    disconnectedCallback() {}
+    adoptedCallback() {}
   }
 );
 
@@ -440,7 +436,8 @@ function getPagesString(pageCount: number): string {
     pages.push(count);
     count += 1;
   }
-  return pages.join(", ");
+
+  return `*${pages.join(", ")}`;
 }
 
 function getPiecesString(maxPieces: number): string {
@@ -453,5 +450,15 @@ function getPiecesString(maxPieces: number): string {
       piecesCountList[piecesCountList.indexOf(pieces[pieces.length - 1]) + 1]
     );
   }
-  return pieces.join(", ");
+  const piecesWithDefault: Array<string> = pieces.map((item) => {
+    return item.toString();
+  });
+  // Mark the first and last as default checked
+  if (piecesWithDefault.length) {
+    piecesWithDefault[0] = `*${piecesWithDefault[0]}`;
+    piecesWithDefault[piecesWithDefault.length - 1] = `*${
+      piecesWithDefault[piecesWithDefault.length - 1]
+    }`;
+  }
+  return piecesWithDefault.join(", ");
 }

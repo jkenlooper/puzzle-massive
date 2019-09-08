@@ -85,7 +85,8 @@ class PuzzleImagesService {
     _type: Array<string>,
     piecesMin: number,
     piecesMax: number,
-    page: number
+    page: number,
+    orderby: string
   ): Promise<PuzzleList> {
     const query = new window.URLSearchParams();
     status.forEach((statusName) => {
@@ -99,6 +100,8 @@ class PuzzleImagesService {
     _type.forEach((typeName) => {
       query.append("type", typeName);
     });
+
+    query.append("orderby", orderby);
 
     const puzzleImagesService = new FetchService(
       `/newapi/puzzle-list/?${query.toString()}`
