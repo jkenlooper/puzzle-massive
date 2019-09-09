@@ -141,8 +141,6 @@ class PuzzleListView(MethodView):
 
         status = set(request.args.getlist('status'))
         if len(status) > 0 and not status.issubset(STATUS):
-            current_app.logger.debug(STATUS)
-            current_app.logger.debug(status)
             abort(400)
         status = tuple(status)
 
@@ -183,15 +181,17 @@ class PuzzleListView(MethodView):
         page_max = math.ceil(puzzle_count / page_size)
         page = min(page_max, page)
 
-        current_app.logger.debug('offset {}'.format((page - 1) * page_size))
+        select_available_puzzle_images = ""
+        if orderby == 'pieces':
+            select_available_puzzle_images = build_select_available_puzzle_sql('select_available_puzzle_images--orderby-pieces.sql', status, type)
+        else:
+            select_available_puzzle_images = build_select_available_puzzle_sql('select_available_puzzle_images--orderby-m_date.sql', status, type)
 
-        select_available_puzzle_images = build_select_available_puzzle_sql('select_available_puzzle_images.sql', status, type)
         result = cur.execute(select_available_puzzle_images, {
             "pieces_min": pieces_min,
             "pieces_max": pieces_max,
             "page_size": page_size,
-            "offset": (page - 1) * page_size,
-            "orderby": orderby
+            "offset": (page - 1) * page_size
             }).fetchall()
         if not result:
             puzzle_list = []

@@ -393,20 +393,26 @@ customElements.define(
     _onFilterGroupItemValueChange(ev) {
       const setPuzzleImages = this._setPuzzleImages.bind(this);
       const filterGroupItem = <FilterGroupItem>ev.detail;
+      let hasChanged = false;
       switch (filterGroupItem.name) {
         case "status":
+          hasChanged = getHasChanged(this.filterStatus);
           this.filterStatus = filterGroupItem.checked;
           break;
         case "pieces":
+          hasChanged = getHasChanged(this.filterPieces);
           this.filterPieces = filterGroupItem.checked;
           break;
         case "type":
+          hasChanged = getHasChanged(this.filterType);
           this.filterType = filterGroupItem.checked;
           break;
         case "pagination":
+          hasChanged = getHasChanged(this.filterPage);
           this.filterPage = filterGroupItem.checked;
           break;
         case "orderby":
+          hasChanged = getHasChanged(this.orderBy);
           this.orderBy = filterGroupItem.checked;
           break;
       }
@@ -415,9 +421,16 @@ customElements.define(
         this.filterPieces &&
         this.filterType &&
         this.filterPage &&
-        this.orderBy
+        this.orderBy &&
+        hasChanged
       ) {
         setPuzzleImages();
+      }
+      function getHasChanged(item: Array<string> | undefined): boolean {
+        const hasChanged = item
+          ? item.toString() !== filterGroupItem.checked.toString()
+          : true;
+        return hasChanged;
       }
     }
 

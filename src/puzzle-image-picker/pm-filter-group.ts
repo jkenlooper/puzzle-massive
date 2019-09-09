@@ -137,14 +137,39 @@ export default class PmFilterGroup extends HTMLElement {
     if (value === this.valueList) {
       return;
     }
-    const _valueList = value ? value.split(",").map((item) => item.trim()) : [];
+    let _valueList = value ? value.split(",").map((item) => item.trim()) : [];
 
-    this._checkedList = _valueList
+    let _checkedValueList = _valueList
       .filter((item) => {
         return item.startsWith("*");
       })
       .map((item) => item.substr(1));
-    this._valueList = _valueList.map((item) => item.replace(/^\*/, ""));
+    let storedCheckedList = [];
+    const checkedValues = window.localStorage.getItem(`${prefix}${this.name}`);
+    if (checkedValues !== null) {
+      try {
+        storedCheckedList = JSON.parse(checkedValues);
+      } catch (err) {
+        // Use default if checked value is a string and not json
+        // parseable.
+        console.warn(
+          `Error: ${err}. Using default value for filter group ${name}`
+        );
+      }
+    }
+
+    _valueList = _valueList.map((item) => item.replace(/^\*/, ""));
+
+    this._checkedList = storedCheckedList.length
+      ? storedCheckedList
+      : _checkedValueList;
+
+    window.localStorage.setItem(
+      `${prefix}${this.name}`,
+      JSON.stringify(this._checkedList)
+    );
+
+    this._valueList = _valueList;
 
     // Sync with label
     if (this.labelList.length === 0) {
@@ -371,14 +396,25 @@ export default class PmFilterGroup extends HTMLElement {
   adoptedCallback() {}
 
   attributeChangedCallback(
-    name: string,
+    attr: string,
     _oldValue: string | null,
     _newValue: string | null
   ) {
     if (_newValue && _oldValue !== _newValue) {
-      switch (name) {
+      switch (attr) {
         case "values":
           this.valueList = _newValue;
+          const filterGroupItemValueChangeEvent = new CustomEvent(
+            "filterGroupItemValueChange",
+            {
+              detail: {
+                name: this.name,
+                checked: this.checked,
+              },
+              bubbles: true,
+            }
+          );
+          this.dispatchEvent(filterGroupItemValueChangeEvent);
           break;
         case "legend":
           this.legend = _newValue;

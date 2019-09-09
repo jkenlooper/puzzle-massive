@@ -1,4 +1,5 @@
--- should match results from select_available_puzzle_image_count.sql
+-- should match results from select_available_puzzle_image_count.sql,
+-- select_available_puzzle_images--orderby-pieces.sql
 
 select pf.url as src, p.puzzle_id, p.status, p.pieces,
 
@@ -34,14 +35,9 @@ and is_original in {original_type}
 and p.status in {status}
 and p.pieces >= :pieces_min
 and p.pieces <= :pieces_max
-order by
 
-case
-when 'm_date' == :orderby then p.m_date
-when 'pieces' == :orderby then p.pieces
-else is_recent
-end
+order by p.m_date desc
 
-  desc
 limit :page_size offset :offset
 ;
+
