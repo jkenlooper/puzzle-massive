@@ -8,7 +8,7 @@ interface TemplateData {
   isReady: boolean;
   hasPuzzleInstanceList: boolean;
   puzzleInstanceList: PuzzleInstanceList;
-  createPuzzleInstanceHref: string;
+  newPuzzleInstanceSlotHref: string;
 }
 
 const tag = "pm-player-puzzle-instance-list";
@@ -22,7 +22,7 @@ customElements.define(
     }
 
     private instanceId: string;
-    createPuzzleInstanceHref: string = "";
+    newPuzzleInstanceSlotHref: string = "";
     start: number = 0;
     end: undefined | number = undefined;
 
@@ -34,24 +34,27 @@ customElements.define(
       this.instanceId = PmPlayerPuzzleInstanceList._instanceId;
 
       // Set the attribute values
-      const createPuzzleInstanceHref = this.attributes.getNamedItem(
-        "create-puzzle-instance-href"
+      const newPuzzleInstanceSlotHrefAttr = this.attributes.getNamedItem(
+        "new-puzzle-instance-slot-href"
       );
-      if (!createPuzzleInstanceHref || !createPuzzleInstanceHref.value) {
+      if (
+        !newPuzzleInstanceSlotHrefAttr ||
+        !newPuzzleInstanceSlotHrefAttr.value
+      ) {
         throw new Error(
-          "no create-puzzle-instance-href attribute has been set"
+          "no new-puzzle-instance-slot-href attribute has been set"
         );
       } else {
-        this.createPuzzleInstanceHref = createPuzzleInstanceHref.value;
+        this.newPuzzleInstanceSlotHref = newPuzzleInstanceSlotHrefAttr.value;
       }
 
-      const end = this.attributes.getNamedItem("end");
-      if (end && end.value) {
-        this.end = parseInt(end.value);
+      const endAttr = this.attributes.getNamedItem("end");
+      if (endAttr && endAttr.value) {
+        this.end = parseInt(endAttr.value);
       }
-      const start = this.attributes.getNamedItem("start");
-      if (start && start.value) {
-        this.start = parseInt(start.value);
+      const startAttr = this.attributes.getNamedItem("start");
+      if (startAttr && startAttr.value) {
+        this.start = parseInt(startAttr.value);
       }
 
       // TODO: support a size attribute so all the instances can be shown on the
@@ -85,8 +88,18 @@ customElements.define(
     }
 
     template(data: TemplateData) {
-      if (!data.isReady || !data.hasPuzzleInstanceList) {
+      if (!data.isReady) {
         return html``;
+      }
+      if (!data.hasPuzzleInstanceList) {
+        return html`
+          <div class="pm-PlayerPuzzleInstanceList">
+            You have 0 slots&mdash;<a href="">get a puzzle instance slot</a>
+            <span class="u-block">
+              and create instances of existing puzzles.
+            </span>
+          </div>
+        `;
       }
       return html`
         <div class="pm-PlayerPuzzleInstanceList">
@@ -127,7 +140,7 @@ customElements.define(
           this.puzzleInstanceList && this.puzzleInstanceList.length
         ),
         puzzleInstanceList: this.puzzleInstanceList,
-        createPuzzleInstanceHref: this.createPuzzleInstanceHref,
+        newPuzzleInstanceSlotHref: this.newPuzzleInstanceSlotHref,
       };
     }
 

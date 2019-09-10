@@ -2,12 +2,6 @@
 
 .pm-PlayerPuzzleInstanceList {
   --PlayerPuzzleInstanceList-size: 30px;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-}
-.pm-PlayerPuzzleInstanceList > * {
-  flex: none;
 }
 
 .pm-PlayerPuzzleInstanceList-list {
