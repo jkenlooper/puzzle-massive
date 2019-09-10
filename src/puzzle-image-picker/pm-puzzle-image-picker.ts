@@ -193,15 +193,6 @@ customElements.define(
       return html`
         <div class="pm-PuzzleImagePicker">
           <div class="pm-PuzzleImagePicker-filter">
-            ${!data.isLoadingPuzzles
-              ? html`
-                  <strong
-                    >Found ${data.puzzleCountFiltered} of
-                    ${data.totalPuzzleCount} puzzles</strong
-                  >
-                `
-              : ""}
-
             <div class="pm-PuzzleImagePicker-filterGroups">
               <pm-filter-group
                 class="pm-PuzzleImagePicker-filterGroup"
@@ -230,6 +221,17 @@ customElements.define(
               ></pm-filter-group>
 
               <hr />
+              ${!data.isLoadingPuzzles
+                ? html`
+                    <h2>
+                      <small>Found </small
+                      ><strong>${data.puzzleCountFiltered}</strong
+                      ><small> of</small> ${data.totalPuzzleCount}<small>
+                        puzzles</small
+                      >
+                    </h2>
+                  `
+                : ""}
               <pm-filter-group
                 class="pm-PuzzleImagePicker-filterGroup"
                 name="orderby"
@@ -254,7 +256,7 @@ customElements.define(
 
             ${data.isLoadingPuzzles
               ? html`
-                  Loading puzzles...
+                  Loading puzzles&hellip;
                 `
               : html`
                   ${data.puzzles && data.puzzles.length

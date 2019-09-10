@@ -6,10 +6,8 @@ pm-filter-group {
   /* fieldset */
 }
 .pm-FilterGroup--interval {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
   width: 100%;
+  position: relative;
   overflow: hidden;
 }
 .pm-FilterGroup--checkbox {
@@ -31,15 +29,20 @@ pm-filter-group {
   margin: 0;
   text-align: center;
   min-width: 4em;
-  flex: 1;
-  max-width: 1px;
+  display: block;
+  float: left;
 }
 
 .pm-FilterGroup-input {
 }
 .pm-FilterGroup--interval .pm-FilterGroup-input {
-  position: absolute;
-  left: -100px;
+  border: 0 !important;
+  clip: rect(1px, 1px, 1px, 1px) !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  position: absolute !important;
+  width: 1px !important;
 }
 
 .pm-FilterGroup-text {
