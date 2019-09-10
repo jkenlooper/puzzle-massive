@@ -1,4 +1,5 @@
 import { html, render } from "lit-html";
+import { classMap } from "lit-html/directives/class-map.js";
 import { repeat } from "lit-html/directives/repeat";
 
 import "./filter-group.css";
@@ -296,7 +297,16 @@ export default class PmFilterGroup extends HTMLElement {
       return html``;
     }
     return html`
-      <fieldset class="pm-FilterGroup">
+      <fieldset
+        class=${classMap({
+          "pm-FilterGroup": true,
+          "pm-FilterGroup--interval":
+            FilterGroupType.Interval === this.filtertype,
+          "pm-FilterGroup--checkbox":
+            FilterGroupType.Checkbox === this.filtertype,
+          "pm-FilterGroup--radio": FilterGroupType.Radio === this.filtertype,
+        })}
+      >
         <legend class="pm-FilterGroup-legend">${data.legend}</legend>
         ${repeat(
           data.filterItems,
