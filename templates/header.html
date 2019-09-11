@@ -1,13 +1,20 @@
 <div id="header" class="pm-Header">
+
+  <div class="pm-Header-profile">
+      <pm-profile-bit media-path="{{ url_for('send_media_file', filename='') }}" player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
+  </div>
+
   <div class="pm-Header-logo">
     {% include './logo.html' %}
   </div>
 
   <div class="pm-Header-main">
-    <small>
-      <pm-player-puzzle-instance-list start="0" end="4" new-puzzle-instance-slot-href="/chill{{ url_for('.page_uri', uri='new-puzzle-instance-slot') }}"></pm-player-puzzle-instance-list>
-    </small>
-      <pm-profile-bit media-path="{{ url_for('send_media_file', filename='') }}" player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
+
+  <div class="pm-Header-cta">
+      <a href=""><strong>Buy Stuff</strong></a>
+  </div>
+
+      <pm-player-puzzle-instance-list class="u-block" start="0" end="4" new-puzzle-instance-slot-href="/chill{{ url_for('.page_uri', uri='new-puzzle-instance-slot') }}"></pm-player-puzzle-instance-list>
   </div>
 
 </div>

@@ -93,12 +93,6 @@ customElements.define(
       }
       if (!data.hasPuzzleInstanceList) {
         return html`
-          <div class="pm-PlayerPuzzleInstanceList">
-            You have 0 slots&mdash;<a href="">get a puzzle instance slot</a>
-            <span class="u-block">
-              and create instances of existing puzzles.
-            </span>
-          </div>
         `;
       }
       return html`

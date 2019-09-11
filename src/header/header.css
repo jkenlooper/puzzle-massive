@@ -11,6 +11,10 @@
   color: var(--color-primary-dark);
 }
 
+.pm-Header-profile {
+  flex: 1;
+}
+
 .pm-Header-logo {
   display: flex;
   margin-top: 13px;
@@ -33,7 +37,9 @@
   */
   text-align: right;
   flex: 1 auto;
+  /*
   max-width: calc(100vw - 240px);
+  */
 }
 
 /*
@@ -50,4 +56,7 @@
     width: calc(100% - 574px);
     max-width: calc(100vw - 574px);
   }
+}
+.pm-Header-main > * + * {
+  margin-top: 5px;
 }
