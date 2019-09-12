@@ -1,5 +1,5 @@
 import { html, render } from "lit-html";
-//import { classMap } from "lit-html/directives/class-map.js";
+import { classMap } from "lit-html/directives/class-map.js";
 import userDetailsService from "../site/user-details.service";
 import { PuzzleInstanceList } from "../site/user-details.service";
 import "./player-puzzle-instance-list.css";
@@ -8,6 +8,8 @@ interface TemplateData {
   isReady: boolean;
   hasPuzzleInstanceList: boolean;
   puzzleInstanceList: PuzzleInstanceList;
+  emptySlotCount: number;
+  puzzleInstanceCount: number;
   newPuzzleInstanceSlotHref: string;
 }
 
@@ -28,6 +30,8 @@ customElements.define(
 
     isReady: boolean = false;
     puzzleInstanceList: PuzzleInstanceList = [];
+    emptySlotCount = 0;
+    puzzleInstanceCount = 0;
 
     constructor() {
       super();
@@ -82,6 +86,15 @@ customElements.define(
           this.puzzleInstanceList =
             userDetailsService.userDetails.puzzle_instance_list;
         }
+
+        this.emptySlotCount = userDetailsService.userDetails.puzzle_instance_list.filter(
+          (puzzleInstanceItem) => {
+            return !puzzleInstanceItem.front_url;
+          }
+        ).length;
+        this.puzzleInstanceCount =
+          userDetailsService.userDetails.puzzle_instance_list.length -
+          this.emptySlotCount;
       }
       this.isReady = true;
       this.render();
@@ -92,12 +105,29 @@ customElements.define(
         return html``;
       }
       if (!data.hasPuzzleInstanceList) {
-        return html`
-        `;
+        return html``;
       }
       return html`
         <div class="pm-PlayerPuzzleInstanceList">
           <ul class="pm-PlayerPuzzleInstanceList-list">
+            <li class="pm-PlayerPuzzleInstanceList-listItem">
+              <a
+                href=""
+                title=${puzzleInstancesAndSlotsText()}
+                class=${classMap({
+                  "pm-PlayerPuzzleInstanceList-available": true,
+                  "pm-PlayerPuzzleInstanceList-available--overTen":
+                    data.puzzleInstanceCount + data.emptySlotCount > 10,
+                })}
+              >
+                <span class="pm-PlayerPuzzleInstanceList-availableCount"
+                  >${data.puzzleInstanceCount}</span
+                >
+                <span class="pm-PlayerPuzzleInstanceList-availableCount"
+                  >${data.puzzleInstanceCount + data.emptySlotCount}</span
+                >
+              </a>
+            </li>
             ${data.puzzleInstanceList.map(
               (puzzleInstanceItem) => html`
                 <li class="pm-PlayerPuzzleInstanceList-listItem">
@@ -109,8 +139,8 @@ customElements.define(
                           title="player puzzle instance"
                         >
                           <img
-                            width="30"
-                            height="30"
+                            width="50"
+                            height="50"
                             src=${puzzleInstanceItem.src}
                             alt=""
                           />
@@ -125,6 +155,39 @@ customElements.define(
           </ul>
         </div>
       `;
+
+      function puzzleInstancesAndSlotsText(): string {
+        if (data.puzzleInstanceCount > 0) {
+          // TODO: clean up whitespace
+          return `
+            You own ${data.puzzleInstanceCount} puzzle
+            ${pluralize("instance", data.puzzleInstanceCount)}
+            ${
+              data.emptySlotCount > 0
+                ? `
+                  and have ${data.emptySlotCount} empty
+                  ${pluralize("slot", data.puzzleInstanceCount)}
+                `
+                : `
+                  and no empty slots
+                `
+            }
+          `;
+        } else {
+          return `
+            You have ${data.emptySlotCount} puzzle instance
+            ${pluralize("slot", data.emptySlotCount)}
+          `;
+        }
+      }
+
+      function pluralize(word: string, count: number) {
+        if (count > 1) {
+          return `${word}s`;
+        } else {
+          return word;
+        }
+      }
     }
 
     get data(): TemplateData {
@@ -134,6 +197,8 @@ customElements.define(
           this.puzzleInstanceList && this.puzzleInstanceList.length
         ),
         puzzleInstanceList: this.puzzleInstanceList,
+        emptySlotCount: this.emptySlotCount,
+        puzzleInstanceCount: this.puzzleInstanceCount,
         newPuzzleInstanceSlotHref: this.newPuzzleInstanceSlotHref,
       };
     }

@@ -1,7 +1,7 @@
 @import "../site/viewport-breakpoints.css";
 
 .pm-PlayerPuzzleInstanceList {
-  --PlayerPuzzleInstanceList-size: 30px;
+  --PlayerPuzzleInstanceList-size: 50px;
 }
 
 .pm-PlayerPuzzleInstanceList-list {
@@ -52,4 +52,28 @@
   border: 1px solid var(--color-dark);
   background-color: var(--color-dark-light);
   opacity: 0.4;
+}
+
+.pm-PlayerPuzzleInstanceList-available {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: var(--PlayerPuzzleInstanceList-size);
+  height: var(--PlayerPuzzleInstanceList-size);
+  border: 2px solid currentColor;
+  border-radius: 5px;
+  background-color: var(--color-dark-light);
+  font-weight: bold;
+  text-decoration: none;
+}
+.pm-PlayerPuzzleInstanceList-available--overTen {
+  font-size: small;
+  font-weight: normal;
+}
+
+.pm-PlayerPuzzleInstanceList-availableCount {
+}
+.pm-PlayerPuzzleInstanceList-availableCount
+  + .pm-PlayerPuzzleInstanceList-availableCount:before {
+  content: "/";
 }
