@@ -38,3 +38,19 @@ value:
   order: '20'
   slug: help
   title: Help
+
+--- !ChillNode
+name: header_cta
+route: /internal/header-cta/
+template: header-cta.html
+value:
+  content: header-cta-buy-stuff.html
+
+--- !ChillNode
+name: buystuffpage
+route: /buy-stuff/
+template: docs.html
+value:
+  content: buystuffpage-content.html
+  description: Enable some advanced options for puzzles.
+  title: Buy Stuff
