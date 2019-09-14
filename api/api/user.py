@@ -267,7 +267,8 @@ class UserDetailsView(MethodView):
         del user_details['will_expire_cookie']
 
         puzzle_instance_list = []
-        if user_details['user_puzzle_count'] > 0:
+
+        if user_details['puzzle_instance_count'] > 0:
             result = cur.execute(fetch_query_string("select-user-puzzle-slot-for-player.sql"), {'player':user}).fetchall()
             if result:
                 (result, col_names) = rowify(result, cur.description)
@@ -284,8 +285,6 @@ class UserDetailsView(MethodView):
 
                 if isinstance(puzzle_instance_list, list):
                     puzzle_instance_list = list(map(set_urls, result))
-
-        del user_details['user_puzzle_count']
 
         user_details['puzzle_instance_list'] = puzzle_instance_list
 

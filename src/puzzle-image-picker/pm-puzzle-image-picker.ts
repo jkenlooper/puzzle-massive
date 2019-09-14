@@ -160,21 +160,15 @@ customElements.define(
           this.pageSize = puzzleList.pageSize;
           this.totalPuzzleCount = puzzleList.totalPuzzleCount;
           this.maxPieces = puzzleList.maxPieces;
-          const puzzles = puzzleList.puzzles;
+          this.puzzles = puzzleList.puzzles;
           this.puzzleCountFiltered = puzzleList.puzzleCount;
-
-          this.puzzles = puzzles;
           this.currentPage = puzzleList.currentPage;
-          const newPageCount = Math.ceil(
+          this.pageCount = Math.ceil(
             puzzleList.puzzleCount / puzzleList.pageSize
           );
-
-          if (this.pageCount !== newPageCount) {
-          }
-
-          this.pageCount = newPageCount;
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error(err);
           this.hasError = true;
           this.errorMessage = "Error getting the puzzle images.";
         })
@@ -208,7 +202,7 @@ customElements.define(
                 name="type"
                 legend="Type"
                 type="checkbox"
-                labels="Original, Other players"
+                labels="Original, Instance"
                 values="*original, instance"
               ></pm-filter-group>
 
@@ -281,6 +275,7 @@ customElements.define(
         </div>
       `;
 
+      // TODO: replace with puzzle-image-card
       function listItem(puzzle) {
         return html`
           <div class="pm-PuzzleImagePicker-listItem">

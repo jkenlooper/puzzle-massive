@@ -22,7 +22,7 @@ interface PuzzleImageData {
   license_title: string;
 }
 
-interface PuzzleImage {
+export interface PuzzleImage {
   src: string;
   puzzleId: string;
   pieces: number;
@@ -46,6 +46,10 @@ interface PuzzleImage {
   licenseTitle: string;
 }
 
+interface PlayerPuzzleListResponse {
+  puzzles: Array<PuzzleImageData>;
+}
+
 interface PuzzleListResponse {
   puzzles: Array<PuzzleImageData>;
   totalPuzzleCount: number;
@@ -56,6 +60,9 @@ interface PuzzleListResponse {
 }
 
 export type PuzzleImages = Array<PuzzleImage>;
+export type PlayerPuzzleList = {
+  puzzles: PuzzleImages;
+};
 export type PuzzleList = {
   puzzles: PuzzleImages;
   totalPuzzleCount: number;
@@ -79,6 +86,24 @@ const PuzzleAvailableStatuses = [
 
 class PuzzleImagesService {
   constructor() {}
+
+  getPlayerPuzzleImages(): Promise<PlayerPuzzleList> {
+    const playerPuzzleImagesService = new FetchService(
+      "/newapi/player-puzzle-list/"
+    );
+
+    const puzzleList: Promise<PlayerPuzzleList> = playerPuzzleImagesService
+      .get<PlayerPuzzleListResponse>()
+      .then((playerPuzzleListResponse) => {
+        const puzzles = playerPuzzleListResponse.puzzles.map(
+          this.getPuzzleImage.bind(this)
+        );
+        return {
+          puzzles,
+        };
+      });
+    return puzzleList;
+  }
 
   getPuzzleImages(
     status: Array<string>,
@@ -110,38 +135,9 @@ class PuzzleImagesService {
     const puzzleList: Promise<PuzzleList> = puzzleImagesService
       .get<PuzzleListResponse>()
       .then((puzzleListResponse) => {
-        const puzzles = puzzleListResponse.puzzles.map((puzzle) => {
-          return {
-            src: puzzle.src,
-            puzzleId: puzzle.puzzle_id,
-            pieces: puzzle.pieces,
-            isActive: !!puzzle.is_active,
-            isRecent: !!puzzle.is_recent,
-            isComplete: puzzle.status === Status.COMPLETED,
-            isAvailable: PuzzleAvailableStatuses.includes(puzzle.status),
-            isNew: !!puzzle.is_new,
-            isFrozen: puzzle.status == Status.FROZEN,
-            isOriginal: !!puzzle.is_original,
-            statusText: this.statusToStatusText(
-              puzzle.status,
-              !!puzzle.is_recent,
-              puzzle.seconds_from_now != null
-            ),
-            timeSince:
-              puzzle.seconds_from_now != null
-                ? getTimePassed(puzzle.seconds_from_now)
-                : "",
-            secondsFromNow: puzzle.seconds_from_now,
-            owner: puzzle.owner,
-            title: puzzle.title,
-            authorLink: puzzle.author_link,
-            authorName: puzzle.author_name,
-            source: puzzle.source,
-            licenseSource: puzzle.license_source,
-            licenseName: puzzle.license_name,
-            licenseTitle: puzzle.license_title,
-          };
-        });
+        const puzzles = puzzleListResponse.puzzles.map(
+          this.getPuzzleImage.bind(this)
+        );
         return {
           puzzles,
           totalPuzzleCount: puzzleListResponse.totalPuzzleCount,
@@ -152,6 +148,39 @@ class PuzzleImagesService {
         };
       });
     return puzzleList;
+  }
+
+  private getPuzzleImage(puzzle: PuzzleImageData): PuzzleImage {
+    return {
+      src: puzzle.src,
+      puzzleId: puzzle.puzzle_id,
+      pieces: puzzle.pieces,
+      isActive: !!puzzle.is_active,
+      isRecent: !!puzzle.is_recent,
+      isComplete: puzzle.status === Status.COMPLETED,
+      isAvailable: PuzzleAvailableStatuses.includes(puzzle.status),
+      isNew: !!puzzle.is_new,
+      isFrozen: puzzle.status == Status.FROZEN,
+      isOriginal: !!puzzle.is_original,
+      statusText: this.statusToStatusText(
+        puzzle.status,
+        !!puzzle.is_recent,
+        puzzle.seconds_from_now != null
+      ),
+      timeSince:
+        puzzle.seconds_from_now != null
+          ? getTimePassed(puzzle.seconds_from_now)
+          : "",
+      secondsFromNow: puzzle.seconds_from_now,
+      owner: puzzle.owner,
+      title: puzzle.title,
+      authorLink: puzzle.author_link,
+      authorName: puzzle.author_name,
+      source: puzzle.source,
+      licenseSource: puzzle.license_source,
+      licenseName: puzzle.license_name,
+      licenseTitle: puzzle.license_title,
+    };
   }
 
   private statusToStatusText(

@@ -3,8 +3,8 @@ import FetchService from "./fetch.service";
 type UserDetailsCallback = () => any;
 
 interface PuzzleInstanceItem {
-  readonly front_url: string | null;
-  readonly src: string | null;
+  readonly front_url: string;
+  readonly src: string;
 }
 
 export type PuzzleInstanceList = Array<PuzzleInstanceItem>;
@@ -18,12 +18,16 @@ interface UserDetailsResponse {
   login?: string;
   score: number;
   readonly puzzle_instance_list?: PuzzleInstanceList;
+  readonly user_puzzle_count: number;
+  readonly puzzle_instance_count: number;
 }
 interface UserDetailsData extends UserDetailsResponse {
   hasBit: boolean;
   loginAgain: boolean;
   hasUserPuzzleSlots: boolean;
   hasAvailableUserPuzzleSlot: boolean;
+  emptySlotCount: number;
+  puzzleInstanceCount: number;
 }
 
 function claimRandomBit(): Promise<void> {
@@ -56,8 +60,12 @@ class UserDetailsService {
     score: 0,
     hasBit: false,
     loginAgain: false,
+    user_puzzle_count: 0,
+    puzzle_instance_count: 0,
     hasUserPuzzleSlots: false,
     hasAvailableUserPuzzleSlot: false,
+    emptySlotCount: 0,
+    puzzleInstanceCount: 0,
   };
   static anonymousLoginName = "anonymous-login";
   static localUserId = "user-id";
@@ -169,15 +177,15 @@ class UserDetailsService {
             userDetails,
             {
               loginAgain: this.userDetails.loginAgain,
-              hasUserPuzzleSlots:
-                userDetails.puzzle_instance_list &&
-                userDetails.puzzle_instance_list.length,
-              hasAvailableUserPuzzleSlot:
-                userDetails.puzzle_instance_list &&
-                userDetails.puzzle_instance_list.length &&
-                userDetails.puzzle_instance_list.some((puzzleInstanceItem) => {
-                  return !puzzleInstanceItem.front_url;
-                }),
+              hasUserPuzzleSlots: !!userDetails.user_puzzle_count,
+              hasAvailableUserPuzzleSlot: !!(
+                userDetails.user_puzzle_count -
+                userDetails.puzzle_instance_count
+              ),
+              emptySlotCount:
+                userDetails.user_puzzle_count -
+                userDetails.puzzle_instance_count,
+              puzzleInstanceCount: userDetails.puzzle_instance_count,
             }
           );
           if (!hasBit && !notClaimRandomBit) {

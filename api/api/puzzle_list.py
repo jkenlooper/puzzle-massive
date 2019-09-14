@@ -213,3 +213,42 @@ class PuzzleListView(MethodView):
 
         return json.jsonify(response)
 
+
+class PlayerPuzzleListView(MethodView):
+    """
+    """
+
+    decorators = [user_not_banned]
+
+    def get(self):
+        """
+        /newapi/player-puzzle-list/
+
+        returns
+        {
+        puzzles: [],
+        }
+
+        """
+
+        ip = request.headers.get('X-Real-IP')
+        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
+
+        cur = db.cursor()
+
+        puzzle_list = []
+        result = cur.execute(fetch_query_string('select_available_player_puzzle_images.sql'), {
+            "player": user
+            }).fetchall()
+        if result:
+            (result, col_names) = rowify(result, cur.description)
+            puzzle_list = result
+
+        response = {
+            "puzzles": puzzle_list,
+        }
+
+        cur.close()
+
+        return json.jsonify(response)
+

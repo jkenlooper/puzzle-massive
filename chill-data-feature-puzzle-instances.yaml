@@ -41,3 +41,13 @@ template: admin-playerdetailspage.html
 value:
   player: select-admin-player-details-for-player-id.sql
   player_id: route-pass-player-id.sql
+
+--- !ChillNode
+name: playerpuzzlelistpage
+route: /player-puzzle-list/
+template: playerpuzzlelistpage.html
+value:
+  page:
+    description: Puzzle instances that are owned by the current player
+    title: Player Puzzle List
+

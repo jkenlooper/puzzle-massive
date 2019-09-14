@@ -6,11 +6,11 @@ import "./player-puzzle-instance-list.css";
 
 interface TemplateData {
   isReady: boolean;
-  hasPuzzleInstanceList: boolean;
+  hasPuzzleSlots: boolean;
   puzzleInstanceList: PuzzleInstanceList;
   emptySlotCount: number;
   puzzleInstanceCount: number;
-  newPuzzleInstanceSlotHref: string;
+  playerPuzzleListHref: string;
 }
 
 const tag = "pm-player-puzzle-instance-list";
@@ -24,7 +24,7 @@ customElements.define(
     }
 
     private instanceId: string;
-    newPuzzleInstanceSlotHref: string = "";
+    playerPuzzleListHref: string = "";
     start: number = 0;
     end: undefined | number = undefined;
 
@@ -38,18 +38,13 @@ customElements.define(
       this.instanceId = PmPlayerPuzzleInstanceList._instanceId;
 
       // Set the attribute values
-      const newPuzzleInstanceSlotHrefAttr = this.attributes.getNamedItem(
-        "new-puzzle-instance-slot-href"
+      const playerPuzzleListHrefAttr = this.attributes.getNamedItem(
+        "player-puzzle-list-href"
       );
-      if (
-        !newPuzzleInstanceSlotHrefAttr ||
-        !newPuzzleInstanceSlotHrefAttr.value
-      ) {
-        throw new Error(
-          "no new-puzzle-instance-slot-href attribute has been set"
-        );
+      if (!playerPuzzleListHrefAttr || !playerPuzzleListHrefAttr.value) {
+        throw new Error("no player-puzzle-list-href attribute has been set");
       } else {
-        this.newPuzzleInstanceSlotHref = newPuzzleInstanceSlotHrefAttr.value;
+        this.playerPuzzleListHref = playerPuzzleListHrefAttr.value;
       }
 
       const endAttr = this.attributes.getNamedItem("end");
@@ -75,26 +70,12 @@ customElements.define(
         userDetailsService.userDetails.puzzle_instance_list &&
         userDetailsService.userDetails.puzzle_instance_list.length
       ) {
-        if (this.end !== undefined) {
-          this.puzzleInstanceList = userDetailsService.userDetails.puzzle_instance_list.slice(
-            userDetailsService.userDetails.puzzle_instance_list.length -
-              this.end,
-            userDetailsService.userDetails.puzzle_instance_list.length -
-              this.start
-          );
-        } else {
-          this.puzzleInstanceList =
-            userDetailsService.userDetails.puzzle_instance_list;
-        }
+        this.puzzleInstanceList =
+          userDetailsService.userDetails.puzzle_instance_list;
 
-        this.emptySlotCount = userDetailsService.userDetails.puzzle_instance_list.filter(
-          (puzzleInstanceItem) => {
-            return !puzzleInstanceItem.front_url;
-          }
-        ).length;
+        this.emptySlotCount = userDetailsService.userDetails.emptySlotCount;
         this.puzzleInstanceCount =
-          userDetailsService.userDetails.puzzle_instance_list.length -
-          this.emptySlotCount;
+          userDetailsService.userDetails.puzzleInstanceCount;
       }
       this.isReady = true;
       this.render();
@@ -104,7 +85,7 @@ customElements.define(
       if (!data.isReady) {
         return html``;
       }
-      if (!data.hasPuzzleInstanceList) {
+      if (!data.hasPuzzleSlots) {
         return html``;
       }
       return html`
@@ -112,7 +93,7 @@ customElements.define(
           <ul class="pm-PlayerPuzzleInstanceList-list">
             <li class="pm-PlayerPuzzleInstanceList-listItem">
               <a
-                href=""
+                href=${data.playerPuzzleListHref}
                 title=${puzzleInstancesAndSlotsText()}
                 class=${classMap({
                   "pm-PlayerPuzzleInstanceList-available": true,
@@ -131,24 +112,18 @@ customElements.define(
             ${data.puzzleInstanceList.map(
               (puzzleInstanceItem) => html`
                 <li class="pm-PlayerPuzzleInstanceList-listItem">
-                  ${puzzleInstanceItem.front_url
-                    ? html`
-                        <a
-                          class="pm-PlayerPuzzleInstanceList-instanceLink"
-                          href=${puzzleInstanceItem.front_url}
-                          title="player puzzle instance"
-                        >
-                          <img
-                            width="50"
-                            height="50"
-                            src=${puzzleInstanceItem.src}
-                            alt=""
-                          />
-                        </a>
-                      `
-                    : html`
-                        <span class="pm-PlayerPuzzleInstanceList-add"></span>
-                      `}
+                  <a
+                    class="pm-PlayerPuzzleInstanceList-instanceLink"
+                    href=${puzzleInstanceItem.front_url}
+                    title="player puzzle instance"
+                  >
+                    <img
+                      width="50"
+                      height="50"
+                      src=${puzzleInstanceItem.src}
+                      alt=""
+                    />
+                  </a>
                 </li>
               `
             )}
@@ -158,26 +133,22 @@ customElements.define(
 
       function puzzleInstancesAndSlotsText(): string {
         if (data.puzzleInstanceCount > 0) {
-          // TODO: clean up whitespace
-          return `
-            You own ${data.puzzleInstanceCount} puzzle
-            ${pluralize("instance", data.puzzleInstanceCount)}
-            ${
-              data.emptySlotCount > 0
-                ? `
-                  and have ${data.emptySlotCount} empty
-                  ${pluralize("slot", data.puzzleInstanceCount)}
-                `
-                : `
-                  and no empty slots
-                `
-            }
-          `;
+          return `You own ${data.puzzleInstanceCount} puzzle ${pluralize(
+            "instance",
+            data.puzzleInstanceCount
+          )} ${
+            data.emptySlotCount > 0
+              ? `and have ${data.emptySlotCount} empty ${pluralize(
+                  "slot",
+                  data.puzzleInstanceCount
+                )}`
+              : `and no empty slots`
+          }`;
         } else {
-          return `
-            You have ${data.emptySlotCount} puzzle instance
-            ${pluralize("slot", data.emptySlotCount)}
-          `;
+          return `You have ${data.emptySlotCount} puzzle instance ${pluralize(
+            "slot",
+            data.emptySlotCount
+          )}`;
         }
       }
 
@@ -193,13 +164,11 @@ customElements.define(
     get data(): TemplateData {
       return {
         isReady: this.isReady,
-        hasPuzzleInstanceList: !!(
-          this.puzzleInstanceList && this.puzzleInstanceList.length
-        ),
+        hasPuzzleSlots: !!(this.emptySlotCount + this.puzzleInstanceCount),
         puzzleInstanceList: this.puzzleInstanceList,
         emptySlotCount: this.emptySlotCount,
         puzzleInstanceCount: this.puzzleInstanceCount,
-        newPuzzleInstanceSlotHref: this.newPuzzleInstanceSlotHref,
+        playerPuzzleListHref: this.playerPuzzleListHref,
       };
     }
 
