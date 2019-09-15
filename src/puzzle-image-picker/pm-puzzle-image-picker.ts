@@ -1,10 +1,9 @@
 import { html, render } from "lit-html";
-import { classMap } from "lit-html/directives/class-map.js";
 import { repeat } from "lit-html/directives/repeat";
 
 import {
-  PuzzleList,
-  PuzzleImages,
+  PuzzleListResponse,
+  PuzzleImageData,
   puzzleImagesService,
 } from "./puzzle-images.service";
 
@@ -19,7 +18,7 @@ interface TemplateData {
   errorMessage?: string;
   hasError: boolean;
   isLoadingPuzzles: boolean;
-  puzzles: undefined | PuzzleImages;
+  puzzles: undefined | Array<PuzzleImageData>;
   hasPagination: boolean;
   paginationLegend: string;
   pages: string;
@@ -71,7 +70,7 @@ customElements.define(
 
     private pageSize: number = 0;
     frontFragmentHref: undefined | string;
-    puzzles: undefined | PuzzleImages = undefined;
+    puzzles: undefined | Array<PuzzleImageData> = undefined;
     currentPage: number = 1;
     pageCount: number = 1;
     totalPuzzleCount: number = 0;
@@ -156,7 +155,7 @@ customElements.define(
           page,
           orderby
         )
-        .then((puzzleList: PuzzleList) => {
+        .then((puzzleList: PuzzleListResponse) => {
           this.pageSize = puzzleList.pageSize;
           this.totalPuzzleCount = puzzleList.totalPuzzleCount;
           this.maxPieces = puzzleList.maxPieces;
@@ -255,16 +254,17 @@ customElements.define(
               : html`
                   ${data.puzzles && data.puzzles.length
                     ? html`
-                        <div>
-                          <div class="pm-PuzzleImagePicker-list" role="list">
-                            ${repeat(
-                              data.puzzles,
-                              (puzzle) => puzzle.puzzleId,
-                              (puzzle) => {
-                                return listItem(puzzle);
-                              }
-                            )}
-                          </div>
+                        <div class="pm-PuzzleImagePicker-list" role="list">
+                          ${repeat(
+                            data.puzzles,
+                            (puzzle) => puzzle.puzzle_id,
+                            (puzzle) => html`
+                              <pm-puzzle-image-card
+                                .puzzle=${puzzle}
+                                front-fragment-href=${data.frontFragmentHref}
+                              ></pm-puzzle-image-card>
+                            `
+                          )}
                         </div>
                       `
                     : html`
@@ -274,96 +274,6 @@ customElements.define(
           </div>
         </div>
       `;
-
-      // TODO: replace with puzzle-image-card
-      function listItem(puzzle) {
-        return html`
-          <div class="pm-PuzzleImagePicker-listItem">
-            ${puzzle.isRecent && !puzzle.isComplete
-              ? html`
-                  <pm-active-player-count
-                    class="pm-PuzzleImagePicker-activePlayerCount"
-                    puzzle-id=${puzzle.puzzleId}
-                  ></pm-active-player-count>
-                `
-              : html`
-                  <span class="pm-PuzzleImagePicker-activePlayerCount"></span>
-                `}
-            <a
-              class=${classMap({
-                "pm-PuzzleImagePicker-puzzleLink": true,
-                isActive: puzzle.isActive,
-                isRecent: puzzle.isRecent,
-                isComplete: puzzle.isComplete,
-                notAvailable: !puzzle.isAvailable,
-              })}
-              href=${`${data.frontFragmentHref}${puzzle.puzzleId}/`}
-            >
-              <div class="pm-PuzzleImagePicker-pieceCount">
-                <strong>${puzzle.pieces}</strong>
-                <small>Pieces</small>
-              </div>
-              <img
-                class="lazyload pm-PuzzleImagePicker-image"
-                width="160"
-                height="160"
-                data-src=${puzzle.src}
-                alt=""
-              />
-              <em class="pm-PuzzleImagePicker-status">${puzzle.statusText}</em>
-            </a>
-
-            ${puzzle.licenseName === "unsplash"
-              ? html`
-                  <small>
-                    <a href=${puzzle.source}>${puzzle.title}</a>
-                    by
-                    <a
-                      xmlns:cc="http://creativecommons.org/ns#"
-                      href=${puzzle.authorLink}
-                      property="cc:attributionName"
-                      rel="cc:attributionURL"
-                      >${puzzle.authorName}</a
-                    >
-                    on
-                    <a href=${puzzle.licenseSource}>${puzzle.licenseTitle}</a>
-                  </small>
-                `
-              : html``}
-            ${puzzle.isAvailable || puzzle.isFrozen
-              ? html`
-                  ${puzzle.timeSince
-                    ? html`
-                        <div class="pm-PuzzleImagePicker-timeSince">
-                          <span class="pm-PuzzleImagePicker-timeSinceLabel">
-                            Last active
-                          </span>
-                          <span class="pm-PuzzleImagePicker-timeSinceAmount"
-                            >${puzzle.timeSince}</span
-                          >
-                          <span class="pm-PuzzleImagePicker-timeSinceLabel">
-                            ago
-                          </span>
-                        </div>
-                      `
-                    : ""}
-                `
-              : html`
-                  <div class="pm-PuzzleImagePicker-infoMessage">
-                    Currently not available
-                  </div>
-                `}
-            ${!puzzle.isOriginal
-              ? html`
-                  <small>
-                    Instance by
-                    <pm-player-bit player=${puzzle.owner}></pm-player-bit>
-                  </small>
-                `
-              : ""}
-          </div>
-        `;
-      }
     }
 
     get data(): TemplateData {

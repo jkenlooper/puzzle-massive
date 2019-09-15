@@ -1,17 +1,16 @@
 import FetchService from "../site/fetch.service";
-import { getTimePassed } from "../site/utilities";
 
-interface PuzzleImageData {
+export interface PuzzleImageData {
   src: string;
   puzzle_id: string;
   status: number;
   pieces: number;
-  redo_date: string;
+  redo_date?: string;
   is_active: number;
   is_new: number;
   is_recent: number;
   is_original: number;
-  seconds_from_now: number;
+  seconds_from_now: number | null;
   owner: number;
   title: string;
   author_link: string;
@@ -22,35 +21,11 @@ interface PuzzleImageData {
   license_title: string;
 }
 
-export interface PuzzleImage {
-  src: string;
-  puzzleId: string;
-  pieces: number;
-  isActive: boolean;
-  isRecent: boolean;
-  isComplete: boolean;
-  isAvailable: boolean;
-  isNew: boolean;
-  isFrozen: boolean;
-  isOriginal: boolean;
-  statusText: string;
-  timeSince: string;
-  secondsFromNow: null | number;
-  owner: number;
-  title: string;
-  authorLink: string;
-  authorName: string;
-  source: string;
-  licenseSource: string;
-  licenseName: string;
-  licenseTitle: string;
-}
-
-interface PlayerPuzzleListResponse {
+export interface PlayerPuzzleListResponse {
   puzzles: Array<PuzzleImageData>;
 }
 
-interface PuzzleListResponse {
+export interface PuzzleListResponse {
   puzzles: Array<PuzzleImageData>;
   totalPuzzleCount: number;
   puzzleCount: number;
@@ -59,26 +34,13 @@ interface PuzzleListResponse {
   maxPieces: number;
 }
 
-export type PuzzleImages = Array<PuzzleImage>;
-export type PlayerPuzzleList = {
-  puzzles: PuzzleImages;
-};
-export type PuzzleList = {
-  puzzles: PuzzleImages;
-  totalPuzzleCount: number;
-  puzzleCount: number;
-  pageSize: number;
-  currentPage: number;
-  maxPieces: number;
-};
-
-enum Status {
+export enum Status {
   ACTIVE = 1,
   IN_QUEUE = 2,
   COMPLETED = 3,
   FROZEN = 4,
 }
-const PuzzleAvailableStatuses = [
+export const PuzzleAvailableStatuses = [
   Status.ACTIVE,
   Status.IN_QUEUE,
   Status.COMPLETED,
@@ -87,19 +49,18 @@ const PuzzleAvailableStatuses = [
 class PuzzleImagesService {
   constructor() {}
 
-  getPlayerPuzzleImages(): Promise<PlayerPuzzleList> {
+  getPlayerPuzzleImages(): Promise<PlayerPuzzleListResponse> {
     const playerPuzzleImagesService = new FetchService(
       "/newapi/player-puzzle-list/"
     );
 
-    const puzzleList: Promise<PlayerPuzzleList> = playerPuzzleImagesService
+    const puzzleList: Promise<
+      PlayerPuzzleListResponse
+    > = playerPuzzleImagesService
       .get<PlayerPuzzleListResponse>()
       .then((playerPuzzleListResponse) => {
-        const puzzles = playerPuzzleListResponse.puzzles.map(
-          this.getPuzzleImage.bind(this)
-        );
         return {
-          puzzles,
+          puzzles: playerPuzzleListResponse.puzzles,
         };
       });
     return puzzleList;
@@ -112,7 +73,7 @@ class PuzzleImagesService {
     piecesMax: number,
     page: number,
     orderby: string
-  ): Promise<PuzzleList> {
+  ): Promise<PuzzleListResponse> {
     const query = new window.URLSearchParams();
     status.forEach((statusName) => {
       query.append("status", statusName);
@@ -132,14 +93,11 @@ class PuzzleImagesService {
       `/newapi/puzzle-list/?${query.toString()}`
     );
 
-    const puzzleList: Promise<PuzzleList> = puzzleImagesService
+    const puzzleList: Promise<PuzzleListResponse> = puzzleImagesService
       .get<PuzzleListResponse>()
       .then((puzzleListResponse) => {
-        const puzzles = puzzleListResponse.puzzles.map(
-          this.getPuzzleImage.bind(this)
-        );
         return {
-          puzzles,
+          puzzles: puzzleListResponse.puzzles,
           totalPuzzleCount: puzzleListResponse.totalPuzzleCount,
           puzzleCount: puzzleListResponse.puzzleCount,
           pageSize: puzzleListResponse.pageSize,
@@ -150,40 +108,7 @@ class PuzzleImagesService {
     return puzzleList;
   }
 
-  private getPuzzleImage(puzzle: PuzzleImageData): PuzzleImage {
-    return {
-      src: puzzle.src,
-      puzzleId: puzzle.puzzle_id,
-      pieces: puzzle.pieces,
-      isActive: !!puzzle.is_active,
-      isRecent: !!puzzle.is_recent,
-      isComplete: puzzle.status === Status.COMPLETED,
-      isAvailable: PuzzleAvailableStatuses.includes(puzzle.status),
-      isNew: !!puzzle.is_new,
-      isFrozen: puzzle.status == Status.FROZEN,
-      isOriginal: !!puzzle.is_original,
-      statusText: this.statusToStatusText(
-        puzzle.status,
-        !!puzzle.is_recent,
-        puzzle.seconds_from_now != null
-      ),
-      timeSince:
-        puzzle.seconds_from_now != null
-          ? getTimePassed(puzzle.seconds_from_now)
-          : "",
-      secondsFromNow: puzzle.seconds_from_now,
-      owner: puzzle.owner,
-      title: puzzle.title,
-      authorLink: puzzle.author_link,
-      authorName: puzzle.author_name,
-      source: puzzle.source,
-      licenseSource: puzzle.license_source,
-      licenseName: puzzle.license_name,
-      licenseTitle: puzzle.license_title,
-    };
-  }
-
-  private statusToStatusText(
+  public statusToStatusText(
     status: number,
     is_recent: boolean,
     has_m_date: boolean
