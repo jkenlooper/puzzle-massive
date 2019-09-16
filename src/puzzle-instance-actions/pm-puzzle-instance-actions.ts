@@ -13,6 +13,7 @@ interface TemplateData {
   hasError: boolean;
   isReady: boolean;
   hasPuzzleDetails: boolean;
+  hasActions: boolean;
   isFrozen: boolean;
   canDelete: boolean;
   deletePenalty: number;
@@ -125,7 +126,7 @@ customElements.define(
           ${data.errorMessage}
         `;
       }
-      if (!data.hasPuzzleDetails) {
+      if (!data.hasPuzzleDetails || !data.hasActions) {
         return html``;
       }
       if (data.isProcessing) {
@@ -185,6 +186,7 @@ customElements.define(
         hasError: this.hasError,
         errorMessage: this.errorMessage,
         hasPuzzleDetails: !!this.puzzleDetails,
+        hasActions: this.puzzleDetails ? this.puzzleDetails.hasActions : false,
         isFrozen: !!this.puzzleDetails ? this.puzzleDetails.isFrozen : false,
         canDelete: !!this.puzzleDetails ? this.puzzleDetails.canDelete : false,
         deletePenalty: !!this.puzzleDetails

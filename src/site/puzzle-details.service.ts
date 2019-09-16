@@ -3,6 +3,7 @@ import FetchService from "./fetch.service";
 export interface PuzzleDetails {
   deletePenalty: number;
   canDelete: boolean;
+  hasActions: boolean;
   deleteDisabledMessage: string; //Not enough dots to delete this puzzle
   isFrozen: boolean;
   status: number;

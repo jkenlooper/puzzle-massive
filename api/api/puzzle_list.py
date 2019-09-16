@@ -242,7 +242,7 @@ class PlayerPuzzleListView(MethodView):
             }).fetchall()
         if result:
             (result, col_names) = rowify(result, cur.description)
-            puzzle_list = result
+            puzzle_list = list(filter(lambda puzzle: puzzle['puzzle_id'], result)) + list(filter(lambda puzzle: not puzzle['puzzle_id'], result))
 
         response = {
             "puzzles": puzzle_list,

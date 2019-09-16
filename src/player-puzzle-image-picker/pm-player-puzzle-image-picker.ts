@@ -89,15 +89,16 @@ customElements.define(
                               ? html`
                                   <pm-puzzle-image-card
                                     .puzzle=${puzzle}
+                                    hide-owner
                                     front-fragment-href=${data.frontFragmentHref}
                                   ></pm-puzzle-image-card>
                                 `
                               : html`
-                                    <div
-                                      class="pm-PlayerPuzzleImagePicker-emptySlot"
-                                    >
+                                  <div
+                                    class="pm-PlayerPuzzleImagePicker-emptySlot"
+                                  >
                                     Empty Slot
-                                    </div>
+                                  </div>
                                 `}
                           `
                         )}

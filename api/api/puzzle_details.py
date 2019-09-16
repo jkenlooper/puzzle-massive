@@ -5,7 +5,13 @@ import redis
 from api.app import db
 from api.user import user_id_from_ip, user_not_banned
 from api.database import fetch_query_string, rowify, delete_puzzle_resources
-from api.constants import DELETED_REQUEST, FROZEN, ACTIVE, COMPLETED
+from api.constants import (
+    DELETED_REQUEST,
+    FROZEN,
+    ACTIVE,
+    IN_QUEUE,
+    COMPLETED
+)
 
 redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
 
@@ -70,6 +76,9 @@ class PuzzleDetailsView(MethodView):
         if puzzleData['owner'] != user or puzzleData['is_original']:
             abort(400)
 
+        if puzzleData['status'] not in (FROZEN, ACTIVE, IN_QUEUE, COMPLETED):
+            abort(400)
+
         response = {}
 
         if action == 'delete':
@@ -123,6 +132,7 @@ class PuzzleDetailsView(MethodView):
         """
   deletePenalty: number;
   canDelete: boolean;
+  hasActions: boolean;
   deleteDisabledMessage: string; //Not enough dots to delete this puzzle
   isFrozen: boolean;
   status: number;
@@ -149,6 +159,7 @@ class PuzzleDetailsView(MethodView):
         (delete_penalty, can_delete, delete_disabled_message) = self.get_delete_prereq(puzzleData)
         response = {
             'canDelete': can_delete,
+            'hasActions': puzzleData.get('status') in (FROZEN, ACTIVE, IN_QUEUE, COMPLETED),
             'deleteDisabledMessage': delete_disabled_message,
             'deletePenalty': delete_penalty,
             'isFrozen': puzzleData.get('status') == FROZEN,

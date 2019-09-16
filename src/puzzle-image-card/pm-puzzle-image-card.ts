@@ -32,6 +32,7 @@ interface TemplateData {
   licenseSource: string;
   licenseName: string;
   licenseTitle: string;
+  hideOwner: boolean;
   frontFragmentHref: string;
 }
 
@@ -140,7 +141,7 @@ customElements.define(
                   Currently not available
                 </div>
               `}
-          ${!data.isOriginal
+          ${!data.isOriginal && !data.hideOwner
             ? html`
                 <small>
                   Instance by
@@ -159,6 +160,7 @@ customElements.define(
         pieces: this.puzzle.pieces,
         isOriginal: !!this.puzzle.is_original,
         owner: this.puzzle.owner,
+        hideOwner: this.getAttribute("hide-owner") !== null,
         title: this.puzzle.title,
         authorLink: this.puzzle.author_link,
         authorName: this.puzzle.author_name,
