@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% from 'queue.html' import queue %}
 {% set ngModule = 'profilepage' %}
 
 {% block title %}
@@ -21,31 +20,6 @@
     <div class="pm-Profilepage-gridB">
       <pm-choose-bit message="Change bit icon" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
     </div>
-
-    {# puzzles for a specific player no longer shows on profile page #}
-    {#
-    {% if puzzles %}
-      <div class="pm-Profilepage-gridC">
-      {% if puzzles is mapping -%}
-        {% set puzzles = [puzzles] %}
-      {%- endif %}
-      {% for group in puzzles|groupby('permission') %}
-
-        {% if group.grouper == 0 %}
-        <h2>Public puzzles</h2>
-        <p>You have created {{ group.list | length }} puzzles that anyone has access to.</p>
-        {% endif %}
-        {% if group.grouper == -1 %}
-        <h2>Private puzzles</h2>
-        <p>You have created {{ group.list | length }} puzzles that only you have a link to.</p>
-        {% endif %}
-
-        {{ queue(group.list) }}
-      {% endfor %}
-
-      </div>
-    {% endif %}
-    #}
 
     <div class="pm-Profilepage-gridD">
       <pm-account>

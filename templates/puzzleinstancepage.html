@@ -10,12 +10,7 @@
 
   <section>
     <h1>Create New Instance of a Puzzle</h1>
-
-      {% if route and route.puzzle_id %}
-        {% include 'puzzle-instance-form.html' %}
-      {% else %}
-        {% include 'puzzle-image-picker.html' %}
-      {% endif %}
+    {% include 'puzzle-instance-form.html' %}
   </section>
 
 </div>

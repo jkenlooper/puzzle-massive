@@ -7,7 +7,7 @@ import {
   PuzzleImageData,
   Status,
   PuzzleAvailableStatuses,
-} from "../puzzle-image-picker/puzzle-images.service";
+} from "../site/puzzle-images.service";
 import "./puzzle-image-card.css";
 
 interface TemplateData {
@@ -65,20 +65,20 @@ customElements.define(
 
     template(data: TemplateData) {
       return html`
-        <div class="pm-PuzzleImagePicker-listItem">
+        <div class="pm-PuzzleImageCard">
           ${data.isRecent && !data.isComplete
             ? html`
                 <pm-active-player-count
-                  class="pm-PuzzleImagePicker-activePlayerCount"
+                  class="pm-PuzzleImageCard-activePlayerCount"
                   puzzle-id=${data.puzzleId}
                 ></pm-active-player-count>
               `
             : html`
-                <span class="pm-PuzzleImagePicker-activePlayerCount"></span>
+                <span class="pm-PuzzleImageCard-activePlayerCount"></span>
               `}
           <a
             class=${classMap({
-              "pm-PuzzleImagePicker-puzzleLink": true,
+              "pm-PuzzleImageCard-puzzleLink": true,
               isActive: data.isActive,
               isRecent: data.isRecent,
               isComplete: data.isComplete,
@@ -86,18 +86,18 @@ customElements.define(
             })}
             href=${`${data.frontFragmentHref}${data.puzzleId}/`}
           >
-            <div class="pm-PuzzleImagePicker-pieceCount">
+            <div class="pm-PuzzleImageCard-pieceCount">
               <strong>${data.pieces}</strong>
               <small>Pieces</small>
             </div>
             <img
-              class="lazyload pm-PuzzleImagePicker-image"
+              class="lazyload pm-PuzzleImageCard-image"
               width="160"
               height="160"
               data-src=${data.src}
               alt=""
             />
-            <em class="pm-PuzzleImagePicker-status">${data.statusText}</em>
+            <em class="pm-PuzzleImageCard-status">${data.statusText}</em>
           </a>
 
           ${data.licenseName === "unsplash"
@@ -121,14 +121,14 @@ customElements.define(
             ? html`
                 ${data.timeSince
                   ? html`
-                      <div class="pm-PuzzleImagePicker-timeSince">
-                        <span class="pm-PuzzleImagePicker-timeSinceLabel">
+                      <div class="pm-PuzzleImageCard-timeSince">
+                        <span class="pm-PuzzleImageCard-timeSinceLabel">
                           Last active
                         </span>
-                        <span class="pm-PuzzleImagePicker-timeSinceAmount"
+                        <span class="pm-PuzzleImageCard-timeSinceAmount"
                           >${data.timeSince}</span
                         >
-                        <span class="pm-PuzzleImagePicker-timeSinceLabel">
+                        <span class="pm-PuzzleImageCard-timeSinceLabel">
                           ago
                         </span>
                       </div>
@@ -136,7 +136,7 @@ customElements.define(
                   : ""}
               `
             : html`
-                <div class="pm-PuzzleImagePicker-infoMessage">
+                <div class="pm-PuzzleImageCard-infoMessage">
                   Currently not available
                 </div>
               `}

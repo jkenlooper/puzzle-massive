@@ -5,7 +5,7 @@ import {
   PuzzleListResponse,
   PuzzleImageData,
   puzzleImagesService,
-} from "./puzzle-images.service";
+} from "../site/puzzle-images.service";
 
 import "./puzzle-image-picker.css";
 
@@ -107,6 +107,8 @@ customElements.define(
     }
 
     _setPuzzleImages() {
+      this.isLoadingPuzzles = true;
+      this.render();
       const page =
         !this.filterPage || !Array.isArray(this.filterPage)
           ? 1
@@ -214,17 +216,12 @@ customElements.define(
               ></pm-filter-group>
 
               <hr />
-              ${!data.isLoadingPuzzles
-                ? html`
-                    <h2>
-                      <small>Found </small
-                      ><strong>${data.puzzleCountFiltered}</strong
-                      ><small> of</small> ${data.totalPuzzleCount}<small>
-                        puzzles</small
-                      >
-                    </h2>
-                  `
-                : ""}
+              <h2>
+                <small>Found </small><strong>${data.puzzleCountFiltered}</strong
+                ><small> of</small> ${data.totalPuzzleCount}<small>
+                  puzzles</small
+                >
+              </h2>
               <pm-filter-group
                 class="pm-PuzzleImagePicker-filterGroup"
                 name="orderby"
@@ -254,7 +251,7 @@ customElements.define(
               : html`
                   ${data.puzzles && data.puzzles.length
                     ? html`
-                        <div class="pm-PuzzleImagePicker-list" role="list">
+                        <div class="pm-PuzzleList" role="list">
                           ${repeat(
                             data.puzzles,
                             (puzzle) => puzzle.puzzle_id,
@@ -287,7 +284,7 @@ customElements.define(
         pages: getPagesString(this.pageCount),
         currentPage: this.currentPage,
         totalPuzzleCount: this.totalPuzzleCount,
-        pieces: getPiecesString(this.maxPieces),
+        pieces: getPiecesString(this.maxPieces || 1000),
         puzzleCountFiltered: this.puzzleCountFiltered,
         frontFragmentHref: this.frontFragmentHref,
       };

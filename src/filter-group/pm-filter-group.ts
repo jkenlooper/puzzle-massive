@@ -323,8 +323,9 @@ export default class PmFilterGroup extends HTMLElement {
                   ?checked=${item.checked}
                   ?disabled=${item.disabled}
                   value=${item.value}
-                />
-                <span class="pm-FilterGroup-text">${item.label}</span></label
+                />&nbsp;<span class="pm-FilterGroup-text"
+                  >${item.label}</span
+                ></label
               >
             `;
           }

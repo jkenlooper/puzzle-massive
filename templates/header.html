@@ -1,5 +1,5 @@
 <div id="header" class="pm-Header">
-
+<div class="pm-Header-content">
   <div class="pm-Header-profile">
       <pm-profile-bit media-path="{{ url_for('send_media_file', filename='') }}" player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
   </div>
@@ -16,7 +16,8 @@
     {#- A 404 error HTML comment is inserted here if this route is not defined. -#}
   </div>
 
-      <pm-player-puzzle-instance-list class="u-block" start="0" end="4" player-puzzle-list-href="/chill{{ url_for('.page_uri', uri='player-puzzle-list') }}"></pm-player-puzzle-instance-list>
+      <pm-player-puzzle-instance-list class="u-block" player-puzzle-list-href="/chill{{ url_for('.page_uri', uri='player-puzzle-list') }}"></pm-player-puzzle-instance-list>
   </div>
 
+</div>
 </div>

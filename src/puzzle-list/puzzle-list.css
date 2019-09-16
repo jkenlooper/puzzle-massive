@@ -1,0 +1,10 @@
+.pm-PuzzleList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+
+  grid-gap: 10px;
+  justify-content: center;
+}
+
+.pm-PuzzleList-item {
+}

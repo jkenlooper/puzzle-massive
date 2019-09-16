@@ -1,4 +1,4 @@
-import FetchService from "../site/fetch.service";
+import FetchService from "./fetch.service";
 
 export interface PuzzleImageData {
   src: string;

@@ -5,7 +5,9 @@ import {
   PlayerPuzzleListResponse,
   PuzzleImageData,
   puzzleImagesService,
-} from "../puzzle-image-picker/puzzle-images.service";
+} from "../site/puzzle-images.service";
+
+import "./player-puzzle-image-picker.css";
 
 interface TemplateData {
   errorMessage?: string;
@@ -70,7 +72,7 @@ customElements.define(
         `;
       }
       return html`
-        <div class="pm-PuzzleImagePicker">
+        <div class="pm-PlayerPuzzleImagePicker">
           ${data.isLoadingPuzzles
             ? html`
                 Loading puzzles&hellip;
@@ -78,7 +80,7 @@ customElements.define(
             : html`
                 ${data.puzzles && data.puzzles.length
                   ? html`
-                      <div class="pm-PuzzleImagePicker-list" role="list">
+                      <div class="pm-PuzzleList" role="list">
                         ${repeat(
                           data.puzzles,
                           (puzzle) => puzzle.puzzle_id,
@@ -91,13 +93,11 @@ customElements.define(
                                   ></pm-puzzle-image-card>
                                 `
                               : html`
-                                  <div class="pm-PuzzleImagePicker-listItem">
                                     <div
-                                      class="pm-PuzzleImagePicker-puzzleLink"
+                                      class="pm-PlayerPuzzleImagePicker-emptySlot"
                                     >
-                                      +
+                                    Empty Slot
                                     </div>
-                                  </div>
                                 `}
                           `
                         )}

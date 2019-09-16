@@ -1,62 +1,44 @@
 @import "../site/viewport-breakpoints.css";
 
 .pm-Header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
   outline: 2px solid var(--color-light);
   border-bottom: 2px solid var(--color-light-light);
   background-color: var(--color-light);
-  padding: 10px 20px;
   color: var(--color-primary-dark);
 }
 
+.pm-Header-content {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  max-width: calc(100vw - 20px);
+}
+.pm-Header-content > * {
+  padding: 10px;
+}
+
 .pm-Header-profile {
-  flex: 1;
+  flex: none;
+  width: 100px;
 }
 
 .pm-Header-logo {
+  flex: none;
   display: flex;
-  margin-top: 13px;
-  margin-bottom: 13px;
-  width: 200px;
-  height: 64px;
+  width: 220px;
 }
 
 @media (--lg-viewport) {
   .pm-Header-logo {
-    padding-left: 74px;
-    width: 500px;
+    width: 360px;
   }
 }
 
 .pm-Header-main {
-  /*
-  display: flex;
-  justify-content: flex-end;
-  */
   text-align: right;
   flex: 1 auto;
-  /*
-  max-width: calc(100vw - 240px);
-  */
 }
 
-/*
-@media (--sm-viewport) {
-  .pm-Header-main {
-    display: block;
-    text-align: right;
-  }
-}
-*/
-
-@media (--lg-viewport) {
-  .pm-Header-main {
-    width: calc(100% - 574px);
-    max-width: calc(100vw - 574px);
-  }
-}
 .pm-Header-main > * + * {
   margin-top: 5px;
 }

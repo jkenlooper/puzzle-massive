@@ -19,6 +19,7 @@ pm-filter-group {
 }
 
 .pm-FilterGroup-label {
+  white-space: nowrap;
 }
 .pm-FilterGroup-label + .pm-FilterGroup-label {
   margin-left: 15px;
@@ -31,6 +32,7 @@ pm-filter-group {
   min-width: 4em;
   display: block;
   float: left;
+  height: calc(2em + 2 * 5px);
 }
 
 .pm-FilterGroup-input {
@@ -73,6 +75,8 @@ pm-filter-group {
   border-top-color: white;
   border-bottom-width: 5px;
   border-bottom-color: white;
+  border-left-width: 2px;
+  border-right-width: 2px;
   opacity: 0.8;
   cursor: not-allowed;
 }

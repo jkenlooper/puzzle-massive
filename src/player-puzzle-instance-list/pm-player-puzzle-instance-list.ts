@@ -25,8 +25,6 @@ customElements.define(
 
     private instanceId: string;
     playerPuzzleListHref: string = "";
-    start: number = 0;
-    end: undefined | number = undefined;
 
     isReady: boolean = false;
     puzzleInstanceList: PuzzleInstanceList = [];
@@ -47,18 +45,6 @@ customElements.define(
         this.playerPuzzleListHref = playerPuzzleListHrefAttr.value;
       }
 
-      const endAttr = this.attributes.getNamedItem("end");
-      if (endAttr && endAttr.value) {
-        this.end = parseInt(endAttr.value);
-      }
-      const startAttr = this.attributes.getNamedItem("start");
-      if (startAttr && startAttr.value) {
-        this.start = parseInt(startAttr.value);
-      }
-
-      // TODO: support a size attribute so all the instances can be shown on the
-      // profile page.
-
       userDetailsService.subscribe(
         this._setPuzzleInstanceList.bind(this),
         this.instanceId
@@ -66,16 +52,15 @@ customElements.define(
     }
 
     _setPuzzleInstanceList() {
+      this.emptySlotCount = userDetailsService.userDetails.emptySlotCount;
+      this.puzzleInstanceCount =
+        userDetailsService.userDetails.puzzleInstanceCount;
       if (
         userDetailsService.userDetails.puzzle_instance_list &&
         userDetailsService.userDetails.puzzle_instance_list.length
       ) {
         this.puzzleInstanceList =
           userDetailsService.userDetails.puzzle_instance_list;
-
-        this.emptySlotCount = userDetailsService.userDetails.emptySlotCount;
-        this.puzzleInstanceCount =
-          userDetailsService.userDetails.puzzleInstanceCount;
       }
       this.isReady = true;
       this.render();
