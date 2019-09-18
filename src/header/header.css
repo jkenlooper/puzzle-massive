@@ -15,28 +15,60 @@
 }
 .pm-Header-content > * {
   padding: 10px;
+  padding: 4px;
 }
 
 .pm-Header-profile {
   flex: none;
-  width: 100px;
+  max-width: 100px;
+  width: calc(32px + (4px * 2));
+}
+
+@media (--md-viewport) {
+  .pm-Header-profile {
+    width: calc(64px + (4px * 2));
+  }
+}
+@media (--lg-viewport) {
+  .pm-Header-profile {
+    width: calc(64px + (4px * 2));
+  }
 }
 
 .pm-Header-logo {
   flex: none;
   display: flex;
-  width: 220px;
+  width: calc(122px + (4px * 2));
 }
-
+@media (--md-viewport) {
+  .pm-Header-logo {
+    width: 220px;
+  }
+}
 @media (--lg-viewport) {
   .pm-Header-logo {
-    width: 360px;
+    width: 220px;
   }
 }
 
 .pm-Header-main {
   text-align: right;
   flex: 1 auto;
+  height: 70px;
+  width: 170px;
+  --PlayerPuzzleInstanceList-width: 170px;
+}
+@media (--md-viewport) {
+  .pm-Header-main {
+    height: 100px;
+    --PlayerPuzzleInstanceList-width: 300px;
+  }
+}
+@media (--lg-viewport) {
+  .pm-Header-main {
+    height: 100px;
+    --PlayerPuzzleInstanceList-width: 300px;
+  }
 }
 
 .pm-Header-main > * + * {

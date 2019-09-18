@@ -1,6 +1,9 @@
 .pm-Logo {
-  max-width: 100%;
-  height: auto;
+  max-width: 731px;
+  max-height: 192px;
+  width: 100%;
+  height: 100%;
   font-size: 2.6em;
   line-height: 0.6em;
+  object-fit: contain;
 }
