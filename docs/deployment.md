@@ -163,6 +163,19 @@ by the public.
     sudo systemctl reload nginx
     ```
 
+7)  Generate some random data and test.
+
+    ```bash
+    puzzle-massive-testdata players --count=100;
+
+    puzzle-massive-testdata puzzles --count=2 --min-pieces=200 --pieces=900 --size=1800x1300\!;
+    puzzle-massive-testdata puzzles --count=2 --min-pieces=200 --pieces=900 --size=800x1500\!;
+    puzzle-massive-testdata puzzles --count=1 --pieces=2000 --size=3800x3500\!;
+    puzzle-massive-testdata puzzles --count=300 --pieces=9 --size=180x180\!;
+
+    puzzle-massive-testdata instances --count=10 --min-pieces=9 --pieces=50;
+    ```
+
 Note that by default the production version of the nginx conf for Puzzle Massive
 is hosted at http://puzzle.massive.xyz/ as well as http://puzzle-blue/ and
 http://puzzle-green/ .  You can edit your `/etc/hosts` to point to the old

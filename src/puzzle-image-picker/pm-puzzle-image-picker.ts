@@ -171,7 +171,7 @@ customElements.define(
         .catch((err) => {
           console.error(err);
           this.hasError = true;
-          this.errorMessage = "Error getting the puzzle images.";
+          this.errorMessage = err || "Error getting the puzzle images.";
         })
         .finally(() => {
           this.isLoadingPuzzles = false;
