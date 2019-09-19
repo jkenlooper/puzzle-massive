@@ -7,4 +7,4 @@ psycopg2<2.9.0
 redis == 3.2.1
 hiredis == 1.0.0
 rq==1.0
-
+docopt==0.6.2

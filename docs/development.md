@@ -241,6 +241,24 @@ http://local-puzzle-massive/chill/site/admin/puzzle/ . This admin UI is super
 clunky and has a lot of room for improvement.  You'll need to batch edit the
 submitted puzzles to be approved and then click on render.
 
+### Creating random puzzles and players for testing
+
+A script to generate a variety of puzzles and player data is used when
+developing to better simulate conditions on a production version.  Run this
+script as needed.  Some examples to get started are shown here.
+
+```bash
+puzzle-massive-testdata players --count=100;
+
+puzzle-massive-testdata puzzles --count=10 --min-pieces=200 --pieces=900 --size=1800x1300!;
+puzzle-massive-testdata puzzles --count=10 --min-pieces=200 --pieces=900 --size=800x1500!;
+puzzle-massive-testdata puzzles --count=1 --pieces=2000 --size=3800x3500!;
+puzzle-massive-testdata puzzles --count=300 --min-pieces=9 --pieces=200 --size=180x180!;
+
+puzzle-massive-testdata instances --count=10 --min-pieces=200 --pieces=500;
+```
+
+
 ### Building the `dist/` files
 
 The javascript and CSS files in the `dist/` directory are built from the source

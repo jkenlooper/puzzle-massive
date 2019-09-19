@@ -1,3 +1,23 @@
+"""puzzle-massive-testdata - Generate random puzzle data for testing
+
+Usage: puzzle-massive-testdata players [--count=<n>]
+       puzzle-massive-testdata puzzles [--count=<n>] [--pieces=<n>] [--min-pieces=<n>] [--size=<s>]
+       puzzle-massive-testdata instances [--count=<n>] [--pieces=<n>] [--min-pieces=<n>]
+       puzzle-massive-testdata --help
+
+Options:
+    -h --help         Show this screen.
+    --count=<n>       Create this many items [default: 1]
+    --size=<s>        Random image size (passed to imagemagick resize opt) [default: 180x180!]
+    --pieces=<n>      Piece count max [default: 9]
+    --min-pieces=<n>  Piece count min [default: 0]
+
+Subcommands:
+    players     - Generate some random player data
+    puzzles     - Create random images and create puzzles
+    instances   - Create instances of existing puzzles for random players
+"""
+
 import sys
 import os
 import time
@@ -9,6 +29,7 @@ import sqlite3
 
 import redis
 from rq import Queue
+from docopt import docopt
 
 from api.tools import loadConfig
 from api.user import generate_user_login
@@ -27,12 +48,10 @@ from api.constants import (
 )
 from api.database import rowify, PUZZLE_CREATE_TABLE_LIST, read_query_file, generate_new_puzzle_id
 
-QUERY_USER_ID_BY_LOGIN = """
-select id from User where ip = :ip and login = :login;
-"""
+args = docopt(__doc__, version='0.0')
 
 # Get the args and create db
-config_file = sys.argv[1]
+config_file = 'site.cfg'
 config = loadConfig(config_file)
 
 db_file = config['SQLITE_DATABASE_URI']
@@ -40,6 +59,12 @@ db = sqlite3.connect(db_file)
 
 redisConnection = redis.from_url(config.get('REDIS_URI', 'redis://localhost:6379/0/'), decode_responses=True)
 createqueue = Queue('puzzle_create', connection=redisConnection)
+
+
+
+QUERY_USER_ID_BY_LOGIN = """
+select id from User where ip = :ip and login = :login;
+"""
 
 def generate_users(count):
     cur = db.cursor()
@@ -70,13 +95,17 @@ def generate_users(count):
     cur.close()
     db.commit()
 
-def generate_puzzles(count=1, size="180x180!", pieces=9, user=3):
+def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=3):
     cur = db.cursor()
     for index in range(count):
         link = ''
         description = ''
         bg_color = '#444444'
         permission = PUBLIC
+        if min_pieces:
+            pieces = randint(min_pieces, max_pieces)
+        else:
+            pieces = max_pieces
         filename = 'random-{}.png'.format(str(uuid4()))
         d = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
         puzzle_id = "random-{}".format(hashlib.sha224(bytes("%s%s" % (filename, d), 'utf-8')).hexdigest()[0:30])
@@ -155,7 +184,7 @@ def generate_puzzles(count=1, size="180x180!", pieces=9, user=3):
         cur.execute(read_query_file("insert-puzzle-instance.sql"), {"original": puzzle, "instance": puzzle, "variant": classic_variant})
 
         db.commit()
-        print(puzzle_id)
+        print("pieces: {pieces} {puzzle_id}".format(**locals()))
 
     puzzles = rowify(cur.execute(read_query_file("select-puzzles-in-render-queue.sql"),
         {'IN_RENDER_QUEUE': IN_RENDER_QUEUE,
@@ -173,15 +202,18 @@ def generate_puzzles(count=1, size="180x180!", pieces=9, user=3):
 
     cur.close()
 
-def generate_puzzle_instances(count=1, pieces=9):
+def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
     cur = db.cursor()
     for index in range(count):
         bg_color = '#444444'
         permission = PUBLIC
+        if min_pieces:
+            pieces = randint(min_pieces, max_pieces)
+        else:
+            pieces = max_pieces
         result = cur.execute(read_query_file("select-random-player-with-available-user-puzzle-slot.sql")).fetchone()[0]
         if result:
             player = result
-            print(player)
             # select a random original puzzle
 
             result = cur.execute(read_query_file("select-random-puzzle-for-new-puzzle-instance.sql"), {
@@ -262,7 +294,7 @@ def generate_puzzle_instances(count=1, pieces=9):
             cur.execute(read_query_file("fill-user-puzzle-slot.sql"), {'player': player, 'puzzle': puzzle})
 
             db.commit()
-            print(puzzle_id)
+            print("pieces: {pieces} {puzzle_id}".format(**locals()))
 
             job = createqueue.enqueue_call(
                 func='api.jobs.pieceRenderer.render', args=([puzzleData]), result_ttl=0,
@@ -271,11 +303,23 @@ def generate_puzzle_instances(count=1, pieces=9):
     cur.close()
 
 
+def main():
+    count = int(args.get('--count'))
+    size = args.get('--size')
+    max_pieces = int(args.get('--pieces'))
+    min_pieces = int(args.get('--min-pieces'))
+
+    if args.get('players'):
+        print('Creating {} players'.format(count))
+        generate_users(count)
+
+    elif args.get('puzzles'):
+        print('Creating {count} puzzles at {size} with up to {max_pieces} pieces'.format(count=count, size=size, max_pieces=max_pieces, min_pieces=min_pieces))
+        generate_puzzles(count=count, size=size, min_pieces=min_pieces, max_pieces=max_pieces)
+
+    elif args.get('instances'):
+        print('Creating {count} puzzle instances with up to {max_pieces} pieces'.format(count=count, max_pieces=max_pieces, min_pieces=min_pieces))
+        generate_puzzle_instances(count=count, min_pieces=min_pieces, max_pieces=max_pieces)
+
 if __name__ == "__main__":
-    generate_users(500)
-    generate_puzzles(count=500, size="180x180!", pieces=9)
-    generate_puzzles(count=10, size="800x500!", pieces=200)
-    generate_puzzles(count=5, size="1800x1800!", pieces=900)
-    generate_puzzle_instances(count=5, pieces=900)
-    generate_puzzle_instances(count=20, pieces=200)
-    generate_puzzle_instances(count=500, pieces=9)
+    main()
