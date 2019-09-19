@@ -18,6 +18,10 @@ PUZZLE_CREATE_TABLE_LIST = (
         'create_table_bit_icon.sql',
         'create_table_attribution.sql',
         'create_table_license.sql',
+        'create_table_puzzle_variant.sql',
+        'create_table_puzzle_instance.sql',
+        'create_table_user_puzzle.sql',
+        'initial_puzzle_variant.sql',
         )
 
 

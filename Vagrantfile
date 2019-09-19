@@ -14,8 +14,7 @@ Vagrant.configure(2) do |config|
   # boxes at https://atlas.hashicorp.com/search.
   # When creating the package.box use the ubuntu version below and uncomment the
   # provisioning scripts at the end of this Vagrantfile.
-  #config.vm.box = "bento/ubuntu-18.04"
-  config.vm.box = "jkenlooper/puzzle-massive"
+  config.vm.box = "bento/ubuntu-18.04"
 
 
   # Disable automatic box update checking. If you disable this, then
@@ -71,12 +70,11 @@ Vagrant.configure(2) do |config|
   # end
 
   # For vagrant just set up the dev user instead of running ./bin/init.sh
-  # Uncomment this provision script if using the ubuntu box and not the
-  # pre-built jkenlooper/puzzle-massive one.
-  #config.vm.provision "shell", inline: <<-SHELL
-  #  adduser dev
-  #  usermod -aG sudo dev
-  #SHELL
+  # To do db stuff as dev use `sudo su dev`.
+  config.vm.provision "shell", inline: <<-SHELL
+    adduser dev --disabled-login
+    usermod -aG sudo dev
+  SHELL
 
   # Run the bin/setup.sh script after logging in
 end

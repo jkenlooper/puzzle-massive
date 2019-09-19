@@ -1,5 +1,8 @@
 # Quick Start Guide
 
+_Deprecating this guide in favor of using the development.md instead 
+- Jake 2019-09-18_
+
 Follow this guide instead of the [local development guide](development.md) to
 get a working version of Puzzle Massive available locally on your own machine.
 After following the steps listed here; the local development version of Puzzle

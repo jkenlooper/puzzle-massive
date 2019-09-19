@@ -23,11 +23,8 @@ License.
 
 More documentation is available within the docs directory.
 
-* [Quick start guide](docs/quickstart.md) for quickly getting started by using
-    a pre-built local development virtual machine.
 * [Local development guide](docs/development.md) for getting a local version
-    running on your own machine.  This is an alternative and more advanced guide
-    to the quick start guide.
+    running on your own machine.
 * [Deployment guide](docs/deployment.md) for deploying to a live server. This
     covers both in-place deployments and blue-green deployments.
 

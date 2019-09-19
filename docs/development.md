@@ -4,18 +4,13 @@ Get a local development version of Puzzle Massive to run on your machine by
 following these (super awesome) instructions. This is necessary in order to
 create a dist file (`make dist`) for deploying to a production server.
 
-Written for a Linux machine that is Debian based.  Only tested on Ubuntu.  Use
+Written for a Linux machine that is Debian based.  Only tested on Ubuntu 18.04.  Use
  [VirtualBox](https://www.virtualbox.org/) and
- [Vagrant](https://www.vagrantup.com/) if not on a Linux machine.  Initialize or
- update the `Vagrantfile` with `bento/ubuntu-18.04`.
+ [Vagrant](https://www.vagrantup.com/) if not on a Linux machine.
 
 This guide assumes some familiarity with using the terminal and administrating
 a linux based machine like Ubuntu.  If something isn't working right or you get
 stuck, please reach out on the Discord chat channels for the project.
-
-A Vagrant box is available that has already been set up with some puzzles
-and such.  Please follow the [Quick start guide](quickstart.md) to get
-a virtual machine up which will use the included `Vagrantfile`.
 
 ## Initial setup
 
@@ -24,21 +19,27 @@ After cloning or forking the git repo
 and `cd` to that directory.
 
 If using Vagrant; then run `vagrant up` after switching the box back to the
-ubuntu version in the `Vagrantfile` and ssh in (`vagrant ssh`) and go to
+ubuntu version in the `Vagrantfile` and ssh in (`vagrant ssh`) and clone go to
 the /vagrant/ shared directory when running the rest of the commands.
 
-If using Vagrant and VirtualBox then edit Vagrantfile to switch the box to
-ubuntu version first and enable the provisioning scripts.
+If using Vagrant and VirtualBox, then it is recommended to not do development on
+a shared folder and instead create a dev user and clone from the shared
+/vagrant/ folder.  This avoids potential weird issues when using a shared folder
+between VirtualBox and your host machine.  The repo should be cloned from the
+shared /vagrant folder to the /home/dev/puzzle-massive folder in the virtual
+machine.
 
 ```bash
 vagrant up;
 vagrant ssh;
 
-# After logging in as the vagrant user on the vagrant machine.
-cd /vagrant/;
-
-# The /vagrant/ directory is a shared folder with the host machine.
-ls;
+# After logging in as the vagrant user on the vagrant machine. 
+# Switch to the dev user.
+# and clone the repo from the shared vagrant folder.
+sudo su dev;
+cd;
+git clone /vagrant/ puzzle-massive;
+cd puzzle-massive;
 ```
 
 If **not** using Vagrant and running locally on a Ubuntu 18.04 (Bionic Beaver)
@@ -52,11 +53,16 @@ sudo usermod -aG sudo dev
 ```
 
 Run the initial `bin/setup.sh` script after logging into the development
-machine.
+machine.  This may take some time and it will ask a few questions.
 
 ```bash
 # Install other software dependencies with apt-get and npm.
 sudo ./bin/setup.sh;
+
+# Fix permissions on home .config and .npm directories because of sudo npm
+# install command used in setup.sh script.  
+sudo chown -R dev:dev ~/.config
+sudo chown -R dev:dev ~/.npm
 ```
 
 To have TLS (SSL) on your development machine run the `bin/provision-local.sh`
@@ -71,14 +77,8 @@ a different user then run `adduser nameofuser dev` to include the 'nameofuser'
 to the dev group.  Make sure to be signed in as the dev user when manually
 modifying the database.
 
-If using Vagrant then change the password for dev user and login as that user
-when doing anything with the sqlite db file.  Any other commands that modify the
-source files and such should be done as the vagrant user (default user when
-using `vagrant ssh`).
-
 ```bash
-sudo passwd dev;
-su dev;
+sudo su dev;
 ```
 
 ## Configuration with `.env`
@@ -152,11 +152,13 @@ and activating each time for a new shell with `source bin/activate` before
 running `make`.
 
 **All commands are run from the projects directory unless otherwise noted.**  For
-the Vagrant setup this is the shared folder `/vagrant/`.
+the Vagrant setup this should be the home folder of the dev user
+`/home/dev/puzzle-massive/`.
 
 ```bash
 vagrant ssh;
-cd /vagrant/;
+sudo su dev;
+cd /home/dev/puzzle-massive/;
 ```
 
 If `nvm` isn't available on the dev machine then install it.  See
@@ -170,13 +172,9 @@ a different Node version.  This warning can be ignored since development doesn't
 use `svgo`.
 
 ```bash
+# On Vagrant or dev machine
 # Install Node Version Manager
 curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
-source ~/.bashrc
-
-# Install latest Nodejs LTS version and set it in the .nvmrc
-nvm install --lts=Dubnium
-nvm current > .nvmrc
 
 # Install and use the version set in .nvmrc
 nvm install
@@ -191,6 +189,7 @@ virtualenv . -p python3;
 source bin/activate;
 
 # Build the dist files for local development
+nvm use
 npm install;
 npm run build;
 
@@ -327,6 +326,6 @@ sudo ./bin/puzzlectl.sh stop;
 make;
 
 # Reset the chill data tables with what is in the new db.dump.sql file
-sudo su dev -c "sqlite3 \"/var/lib/puzzle-massive/sqlite3/db\" < db.dump.sql";
-sudo su dev -c "echo \"pragma journal_mode=wal\" | sqlite3 /var/lib/puzzle-massive/sqlite3/db";
+sqlite3 "/var/lib/puzzle-massive/sqlite3/db" < db.dump.sql;
+echo "pragma journal_mode=wal" | sqlite3 /var/lib/puzzle-massive/sqlite3/db;
 ```

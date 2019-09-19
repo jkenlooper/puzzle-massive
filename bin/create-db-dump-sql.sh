@@ -3,7 +3,9 @@ set -eu -o pipefail
 
 # Create a tmpdb from chill-data.sql and tmpsite.cfg to use the temporary
 # database.
-sed "/^CHILL_DATABASE_URI/ s/sqlite:\/\/\/.*db/sqlite:\/\/\/tmpdb/" site.cfg > tmpsite.cfg
+# Also set cache to null since the cache directory may not exist yet.
+sed "/^CHILL_DATABASE_URI/ s/sqlite:\/\/\/.*db/sqlite:\/\/\/tmpdb/ ; /^CACHE_TYPE/ s/filesystem/null/" \
+   site.cfg > tmpsite.cfg
 sqlite3 tmpdb < chill-data.sql
 
 for chilly in chill-*.yaml; do
