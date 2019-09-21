@@ -1,4 +1,5 @@
 import { html, render } from "lit-html";
+import { classMap } from "lit-html/directives/class-map.js";
 import { repeat } from "lit-html/directives/repeat";
 
 import {
@@ -57,6 +58,12 @@ const piecesCountList = [
   50000,
   60000,
 ];
+// Set a minimum delay to prevent getting a too many requests error (429).  The
+// puzzle-list endpoint is rate-limited per ip at one request every 2 seconds
+// with a burst/bucket of 20. The burst here is set to half of that limit and is
+// used to limit requests on the client side without triggering the rate limit.
+const minDelay = 2000; // puzzle-massive.conf: puzzle_list_limit_per_ip
+const burst = 10; // puzzle-massive.conf: puzzle_list_limit_per_ip
 
 const tag = "pm-puzzle-image-picker";
 let lastInstanceId = 0;
@@ -77,7 +84,8 @@ customElements.define(
     maxPieces: number = 0;
     hasError: boolean = false;
     errorMessage: string = "";
-    isLoadingPuzzles: boolean = true;
+    isLoadingPuzzles: boolean = false;
+    burstCount: number = 0;
 
     filterStatus: undefined | Array<string>;
     filterPieces: undefined | Array<string>;
@@ -148,6 +156,15 @@ customElements.define(
       const orderby: string =
         this.orderBy && this.orderBy.length ? this.orderBy[0] : "m_date";
 
+      if (piecesMin === piecesMax) {
+        return new Promise((resolve) => {
+          this.isLoadingPuzzles = false;
+          this.render();
+          resolve();
+        });
+      }
+      this.burstCount++;
+      const timeStart = new Date();
       return puzzleImagesService
         .getPuzzleImages(
           this.filterStatus || [],
@@ -167,6 +184,23 @@ customElements.define(
           this.pageCount = Math.ceil(
             puzzleList.puzzleCount / puzzleList.pageSize
           );
+          this.render();
+          return true;
+        })
+        .then(() => {
+          const timeEnd = new Date();
+          const timePassed = timeEnd.getTime() - timeStart.getTime();
+          const delay = Math.max(minDelay - timePassed, 0);
+          window.setTimeout(() => this.burstCount--, delay * this.burstCount);
+          return new Promise((resolve) => {
+            if (this.burstCount >= burst && delay > 0) {
+              window.setTimeout(() => {
+                resolve();
+              }, delay);
+            } else {
+              resolve();
+            }
+          });
         })
         .catch((err) => {
           console.error(err);
@@ -194,6 +228,7 @@ customElements.define(
                 name="status"
                 legend="Status"
                 type="checkbox"
+                ?disabled=${data.isLoadingPuzzles}
                 labels="Recent, Active, New, Complete, Frozen, Unavailable"
                 values="*recent, *active, new, complete, frozen, unavailable"
               ></pm-filter-group>
@@ -203,6 +238,7 @@ customElements.define(
                 name="type"
                 legend="Type"
                 type="checkbox"
+                ?disabled=${data.isLoadingPuzzles}
                 labels="Original, Instance"
                 values="*original, instance"
               ></pm-filter-group>
@@ -212,6 +248,7 @@ customElements.define(
                 name="pieces"
                 legend="Piece count"
                 type="interval"
+                ?disabled=${data.isLoadingPuzzles}
                 values=${data.pieces}
               ></pm-filter-group>
 
@@ -227,46 +264,41 @@ customElements.define(
                 name="orderby"
                 legend="Order by"
                 type="radio"
+                ?disabled=${data.isLoadingPuzzles}
                 labels="Modified date, Piece count"
                 values="*m_date, pieces"
               ></pm-filter-group>
 
-              ${data.hasPagination
-                ? html`
-                    <pm-filter-group
-                      class="pm-PuzzleImagePicker-filterGroup"
-                      name="pagination"
-                      legend=${data.paginationLegend}
-                      type="radio"
-                      values=${data.pages}
-                    ></pm-filter-group>
-                  `
-                : ""}
+              <pm-filter-group
+                class=${classMap({
+                  "pm-PuzzleImagePicker-filterGroup": true,
+                  "u-hidden": !data.hasPagination,
+                })}
+                name="pagination"
+                legend=${data.paginationLegend}
+                type="radio"
+                ?disabled=${data.isLoadingPuzzles}
+                values=${data.pages}
+              ></pm-filter-group>
             </div>
 
-            ${data.isLoadingPuzzles
+            ${data.puzzles && data.puzzles.length
               ? html`
-                  Loading puzzles&hellip;
+                  <div class="pm-PuzzleList" role="list">
+                    ${repeat(
+                      data.puzzles,
+                      (puzzle) => puzzle.puzzle_id,
+                      (puzzle) => html`
+                        <pm-puzzle-image-card
+                          .puzzle=${puzzle}
+                          front-fragment-href=${data.frontFragmentHref}
+                        ></pm-puzzle-image-card>
+                      `
+                    )}
+                  </div>
                 `
               : html`
-                  ${data.puzzles && data.puzzles.length
-                    ? html`
-                        <div class="pm-PuzzleList" role="list">
-                          ${repeat(
-                            data.puzzles,
-                            (puzzle) => puzzle.puzzle_id,
-                            (puzzle) => html`
-                              <pm-puzzle-image-card
-                                .puzzle=${puzzle}
-                                front-fragment-href=${data.frontFragmentHref}
-                              ></pm-puzzle-image-card>
-                            `
-                          )}
-                        </div>
-                      `
-                    : html`
-                        <p>No puzzles found that match the criteria.</p>
-                      `}
+                  <p>No puzzles found that match the criteria.</p>
                 `}
           </div>
         </div>
@@ -280,7 +312,7 @@ customElements.define(
         errorMessage: this.errorMessage,
         puzzles: this.puzzles,
         hasPagination: this.puzzleCountFiltered > this.pageSize,
-        paginationLegend: `${this.pageSize} Per Page`,
+        paginationLegend: `Page ${this.currentPage} of ${this.pageCount}`,
         pages: getPagesString(this.pageCount),
         currentPage: this.currentPage,
         totalPuzzleCount: this.totalPuzzleCount,

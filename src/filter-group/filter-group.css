@@ -4,15 +4,23 @@ pm-filter-group {
 
 .pm-FilterGroup {
   /* fieldset */
+  cursor: not-allowed;
 }
 .pm-FilterGroup--interval {
   width: 100%;
   position: relative;
   overflow: hidden;
+  opacity: 0.5;
 }
 .pm-FilterGroup--checkbox {
 }
 .pm-FilterGroup--radio {
+}
+.pm-FilterGroup.isEnabled {
+  cursor: pointer;
+}
+.pm-FilterGroup--interval.isEnabled {
+  opacity: 1;
 }
 
 .pm-FilterGroup-legend {
@@ -62,7 +70,7 @@ pm-filter-group {
   background-color: var(--color-accent);
   border: 1px solid black;
 }
-.pm-FilterGroup--interval
+.pm-FilterGroup--interval.isEnabled
   .pm-FilterGroup-input:disabled
   + .pm-FilterGroup-text {
   background-color: var(--color-dark);
@@ -80,13 +88,17 @@ pm-filter-group {
   opacity: 0.8;
   cursor: not-allowed;
 }
-.pm-FilterGroup--interval .pm-FilterGroup-label:hover .pm-FilterGroup-text,
-.pm-FilterGroup--interval .pm-FilterGroup-input:focus + .pm-FilterGroup-text {
+.pm-FilterGroup--interval.isEnabled
+  .pm-FilterGroup-label:hover
+  .pm-FilterGroup-text,
+.pm-FilterGroup--interval.isEnabled
+  .pm-FilterGroup-input:focus
+  + .pm-FilterGroup-text {
   outline: 4px dotted var(--color-dark-dark);
   z-index: 3;
   position: relative;
 }
-.pm-FilterGroup--interval
+.pm-FilterGroup--interval.isEnabled
   .pm-FilterGroup-label:hover
   .pm-FilterGroup-input:disabled
   + .pm-FilterGroup-text {

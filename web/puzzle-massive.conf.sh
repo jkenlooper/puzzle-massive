@@ -22,7 +22,7 @@ limit_req_zone \$binary_remote_addr zone=piece_token_limit_per_ip:1m rate=60r/m;
 limit_req_zone \$binary_remote_addr zone=puzzle_upload_limit_per_ip:1m rate=3r/m;
 limit_req_zone \$server_name zone=puzzle_upload_limit_per_server:1m rate=20r/m;
 limit_req_zone \$binary_remote_addr zone=puzzle_list_limit_per_ip:1m rate=30r/m;
-limit_req_zone \$server_name zone=puzzle_list_limit_per_server:1m rate=1r/s;
+limit_req_zone \$server_name zone=puzzle_list_limit_per_server:1m rate=20r/s;
 
 limit_req_zone \$binary_remote_addr zone=chill_puzzle_limit_per_ip:1m rate=30r/m;
 limit_req_zone \$binary_remote_addr zone=chill_limit_per_ip:1m rate=24r/m;
@@ -237,7 +237,7 @@ cat <<HERE
     }
 
     # Prevent too many puzzle list queries at once.
-    limit_req zone=puzzle_list_limit_per_ip burst=10 nodelay;
+    limit_req zone=puzzle_list_limit_per_ip burst=20 nodelay;
     limit_req zone=puzzle_list_limit_per_server burst=200;
     limit_req_status 429;
 

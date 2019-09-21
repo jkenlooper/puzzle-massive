@@ -30,6 +30,7 @@ interface TemplateData {
   name: string;
   filterItems: Array<FilterItem>;
   itemValueChangeHandler: any; // event listener object
+  disabled: boolean;
 }
 
 const prefix = "filter-group-";
@@ -42,7 +43,7 @@ export default class PmFilterGroup extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ["values", "legend"];
+    return ["values", "legend", "disabled"];
   }
 
   private instanceId: string;
@@ -55,6 +56,7 @@ export default class PmFilterGroup extends HTMLElement {
   private _valueList: Array<string>;
   private _checkedList: Array<string>;
   private readonly filtertype: string = FilterGroupType.Checkbox;
+  private _disabled: boolean = false;
 
   constructor() {
     super();
@@ -83,6 +85,11 @@ export default class PmFilterGroup extends HTMLElement {
       this._legend = legendAttr.value;
     } else {
       this._legend = "";
+    }
+
+    const disabledAttr = this.attributes.getNamedItem("disabled");
+    if (disabledAttr && disabledAttr.value) {
+      this._disabled = !!disabledAttr.value;
     }
 
     this.labelList = this.buildArrayFromAttr("labels");
@@ -128,6 +135,14 @@ export default class PmFilterGroup extends HTMLElement {
   }
   set legend(value: string) {
     this._legend = value;
+    this.render();
+  }
+
+  get disabled() {
+    return this._disabled ? "disabled" : "";
+  }
+  set disabled(value: string) {
+    this._disabled = !!value;
     this.render();
   }
 
@@ -184,7 +199,7 @@ export default class PmFilterGroup extends HTMLElement {
     return this._checkedList;
   }
 
-  get disabled() {
+  get disabledList() {
     let _disabled: Array<string> = [];
     if (this.filtertype === FilterGroupType.Interval) {
       const minIndex = this._valueList
@@ -299,6 +314,7 @@ export default class PmFilterGroup extends HTMLElement {
     return html`
       <fieldset
         class=${classMap({
+          isEnabled: !data.disabled,
           "pm-FilterGroup": true,
           "pm-FilterGroup--interval":
             FilterGroupType.Interval === this.filtertype,
@@ -307,7 +323,13 @@ export default class PmFilterGroup extends HTMLElement {
           "pm-FilterGroup--radio": FilterGroupType.Radio === this.filtertype,
         })}
       >
-        <legend class="pm-FilterGroup-legend">${data.legend}</legend>
+        <legend class="pm-FilterGroup-legend">
+          ${data.legend}${data.disabled
+            ? html`
+                &hellip;
+              `
+            : ""}
+        </legend>
         ${repeat(
           data.filterItems,
           (item) => item.value,
@@ -321,7 +343,7 @@ export default class PmFilterGroup extends HTMLElement {
                   group=${data.group}
                   name=${data.name}
                   ?checked=${item.checked}
-                  ?disabled=${item.disabled}
+                  ?disabled=${item.disabled || data.disabled}
                   value=${item.value}
                 />&nbsp;<span class="pm-FilterGroup-text"
                   >${item.label}</span
@@ -340,7 +362,7 @@ export default class PmFilterGroup extends HTMLElement {
         label: this._labelList[index],
         value: value,
         checked: this.checked.includes(value),
-        disabled: this.disabled.includes(value),
+        disabled: this.disabledList.includes(value),
       };
     });
 
@@ -355,6 +377,7 @@ export default class PmFilterGroup extends HTMLElement {
       filterItems: filterItems,
       group: this.name,
       name: `${this.name}-${this.instanceId}`,
+      disabled: this._disabled,
       itemValueChangeHandler: {
         handleEvent: this.handleItemValueChange.bind(this),
         capture: true,
@@ -431,6 +454,9 @@ export default class PmFilterGroup extends HTMLElement {
           this.legend = _newValue;
           break;
       }
+    }
+    if (attr === "disabled") {
+      this.disabled = _newValue === null ? "" : "disabled";
     }
   }
 }
