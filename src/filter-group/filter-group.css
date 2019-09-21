@@ -28,6 +28,7 @@ pm-filter-group {
 
 .pm-FilterGroup-label {
   white-space: nowrap;
+  display: inline-block;
 }
 .pm-FilterGroup-label + .pm-FilterGroup-label {
   margin-left: 15px;
@@ -44,6 +45,8 @@ pm-filter-group {
 }
 
 .pm-FilterGroup-input {
+  vertical-align: middle;
+  margin-right: 5px;
 }
 .pm-FilterGroup--interval .pm-FilterGroup-input {
   border: 0 !important;

@@ -8,11 +8,13 @@ enum FilterGroupType {
   Checkbox = "checkbox",
   Radio = "radio",
   Interval = "interval",
+  Pagination = "pagination",
 }
 const filterGroupTypeStrings: Array<string> = [
   FilterGroupType.Checkbox,
   FilterGroupType.Radio,
   FilterGroupType.Interval,
+  FilterGroupType.Pagination,
 ];
 
 interface FilterItem {
@@ -25,10 +27,11 @@ interface FilterItem {
 interface TemplateData {
   isReady: boolean;
   legend: string;
-  inputtype: FilterGroupType;
+  filtertype: FilterGroupType;
   group: string;
   name: string;
   filterItems: Array<FilterItem>;
+  firstCheckedItemIndex: number;
   itemValueChangeHandler: any; // event listener object
   disabled: boolean;
 }
@@ -232,6 +235,8 @@ export default class PmFilterGroup extends HTMLElement {
     let checked;
     if (this.filtertype === FilterGroupType.Radio) {
       checked = [value];
+    } else if (this.filtertype === FilterGroupType.Pagination) {
+      checked = [value];
     } else if (this.filtertype === FilterGroupType.Interval) {
       // two numbers sorted
       checked = this._valueList
@@ -330,28 +335,98 @@ export default class PmFilterGroup extends HTMLElement {
               `
             : ""}
         </legend>
-        ${repeat(
-          data.filterItems,
-          (item) => item.value,
-          (item) => {
-            return html`
-              <label class="pm-FilterGroup-label">
-                <input
+        ${data.filtertype === FilterGroupType.Pagination
+          ? html`
+              <button
+                class="pm-FilterGroup-input"
+                @click=${data.itemValueChangeHandler}
+                group=${data.group}
+                name=${data.name}
+                ?disabled=${data.disabled || data.firstCheckedItemIndex === 0}
+                value=${data.firstCheckedItemIndex > 0
+                  ? data.firstCheckedItemIndex
+                  : 0}
+              >
+                Previous
+              </button>
+              <span
+                class=${classMap({
+                  "u-hidden": data.firstCheckedItemIndex === 0,
+                })}
+              >
+                <button
                   class="pm-FilterGroup-input"
                   @click=${data.itemValueChangeHandler}
-                  type=${data.inputtype}
                   group=${data.group}
                   name=${data.name}
-                  ?checked=${item.checked}
-                  ?disabled=${item.disabled || data.disabled}
-                  value=${item.value}
-                />&nbsp;<span class="pm-FilterGroup-text"
-                  >${item.label}</span
-                ></label
+                  ?disabled=${data.disabled || data.firstCheckedItemIndex === 0}
+                  value="1"
+                >
+                  1</button
+                >&hellip;
+              </span>
+              ${data.firstCheckedItemIndex + 1}
+              <span
+                class=${classMap({
+                  "u-hidden":
+                    data.firstCheckedItemIndex === data.filterItems.length - 1,
+                })}
               >
-            `;
-          }
-        )}
+                &hellip;
+                <button
+                  class="pm-FilterGroup-input"
+                  @click=${data.itemValueChangeHandler}
+                  group=${data.group}
+                  name=${data.name}
+                  ?disabled=${data.disabled}
+                  value=${data.filterItems.length}
+                >
+                  ${data.filterItems.length}
+                </button>
+              </span>
+              <button
+                class="pm-FilterGroup-input"
+                @click=${data.itemValueChangeHandler}
+                group=${data.group}
+                name=${data.name}
+                ?disabled=${data.disabled ||
+                  data.firstCheckedItemIndex >= data.filterItems.length - 1}
+                value=${data.firstCheckedItemIndex < data.filterItems.length - 1
+                  ? data.firstCheckedItemIndex + 2
+                  : 0}
+              >
+                Next
+              </button>
+            `
+          : html`
+              ${repeat(
+                data.filterItems,
+                (item) => item.value,
+                (item) => {
+                  return html`
+                    <label class="pm-FilterGroup-label">
+                      <input
+                        class="pm-FilterGroup-input"
+                        @click=${data.itemValueChangeHandler}
+                        type=${[
+                          FilterGroupType.Checkbox,
+                          FilterGroupType.Radio,
+                        ].includes(<FilterGroupType>data.filtertype)
+                          ? <FilterGroupType>data.filtertype
+                          : FilterGroupType.Checkbox}
+                        group=${data.group}
+                        name=${data.name}
+                        ?checked=${item.checked}
+                        ?disabled=${item.disabled || data.disabled}
+                        value=${item.value}
+                      /><span class="pm-FilterGroup-text"
+                        >${item.label}</span
+                      ></label
+                    >
+                  `;
+                }
+              )}
+            `}
       </fieldset>
     `;
   }
@@ -366,15 +441,16 @@ export default class PmFilterGroup extends HTMLElement {
       };
     });
 
+    const firstCheckedItemIndex = filterItems.findIndex((item) => {
+      return item.checked;
+    });
+
     return {
       isReady: this.isReady,
       legend: this.legend,
-      inputtype: [FilterGroupType.Checkbox, FilterGroupType.Radio].includes(<
-        FilterGroupType
-      >this.filtertype)
-        ? <FilterGroupType>this.filtertype
-        : FilterGroupType.Checkbox,
+      filtertype: <FilterGroupType>this.filtertype,
       filterItems: filterItems,
+      firstCheckedItemIndex: firstCheckedItemIndex,
       group: this.name,
       name: `${this.name}-${this.instanceId}`,
       disabled: this._disabled,

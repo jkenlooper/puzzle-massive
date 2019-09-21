@@ -276,7 +276,7 @@ customElements.define(
                 })}
                 name="pagination"
                 legend=${data.paginationLegend}
-                type="radio"
+                type="pagination"
                 ?disabled=${data.isLoadingPuzzles}
                 values=${data.pages}
               ></pm-filter-group>
