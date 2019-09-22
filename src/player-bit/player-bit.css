@@ -12,29 +12,18 @@
   border: 1px solid var(--color-dark-dark);
   padding: 0 4px;
 }
-.pm-Preview-bitIconBackground {
+
+.pm-PlayerBit-bitIconBackground {
   display: inline-block;
-  color: var(--pm-Preview-bitIcon-color);
+  color: var(--pm-PlayerBit-bitIcon-color);
   background-color: currentColor;
   box-shadow: 0 0 0px 3px currentColor;
   border-radius: 37%;
   text-shadow: 0 0 4px var(--color-light-light), 0 0 1px var(--color-dark-dark);
 }
 
-.pm-Preview-bitIcon {
-  display: block;
-}
-.hasNoBit.pm-Preview-bitIcon {
-  /*
-  background-color: var(--color-dark);
-  border-radius: 37%;
-  border: 2px solid var(--color-dark-dark);
-  */
-}
-
-.pm-Preview-bitName {
+.pm-PlayerBit-bitName {
   white-space: nowrap;
   display: block;
   width: 32px;
 }
-

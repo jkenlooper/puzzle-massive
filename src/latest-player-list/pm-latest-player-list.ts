@@ -153,9 +153,9 @@ customElements.define(
                     ? html`
                         <span
                           style=${styleMap({
-                            "--pm-Preview-bitIcon-color": item.bitBackground,
+                            "--pm-PlayerBit-bitIcon-color": item.bitBackground,
                           })}
-                          class="pm-Preview-bitIconBackground"
+                          class="pm-PlayerBit-bitIconBackground"
                         >
                           <img
                             width="32"
@@ -175,8 +175,8 @@ customElements.define(
                           >${item.id.toString(36)}</span
                         >
                       `}
-                  <strong class="pm-Preview-bitName">
-                    ${item.iconAlt.substr(0, 26)}<!-- TODO: use player assigned name -->
+                  <strong class="pm-PlayerBit-bitName">
+                    ${item.icon ? item.iconAlt.substr(0, 26) : "???"}<!-- TODO: use player assigned name -->
                   </strong>
                 </small>
                 <small
@@ -217,14 +217,14 @@ customElements.define(
                   <p>
                     <em>
                       <span
-                        style="--pm-Preview-bitIcon-color: #e2acbb"
-                        class="pm-Preview-bitIconBackground"
+                        style="--pm-PlayerBit-bitIcon-color: #e2acbb"
+                        class="pm-PlayerBit-bitIconBackground"
                       >
                         <img
                           style="vertical-align: middle;"
                           width="20"
                           height="20"
-                          class="hasNoBit pm-Preview-bitIcon"
+                          class="hasNoBit pm-PlayerBit"
                           src=${data.lostBitIconSrc}
                           alt="no bit"
                         />
