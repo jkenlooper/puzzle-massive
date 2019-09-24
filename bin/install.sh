@@ -1,32 +1,34 @@
 #!/usr/bin/env bash
 set -eu -o pipefail
 
+ENVIRONMENT=$1
+
 # /srv/puzzle-massive/
-SRVDIR=$1
+SRVDIR=$2
 
 # /etc/nginx/
-NGINXDIR=$2
+NGINXDIR=$3
 
 # /var/log/nginx/puzzle-massive/
-NGINXLOGDIR=$3
+NGINXLOGDIR=$4
 
 # /var/log/awstats/puzzle-massive/
-AWSTATSLOGDIR=$4
+AWSTATSLOGDIR=$5
 
 # /etc/systemd/system/
-SYSTEMDDIR=$5
+SYSTEMDDIR=$6
 
 # All processes using a database must be on the same host computer; WAL does not
 # work over a network filesystem. If using Vagrant, the db file can't be in
 # a shared directory.
 # /var/lib/puzzle-massive/sqlite3/
-DATABASEDIR=$6
+DATABASEDIR=$7
 
 # /var/lib/puzzle-massive/archive/
-ARCHIVEDIR=$7
+ARCHIVEDIR=$8
 
 # /var/lib/puzzle-massive/cache/
-CACHEDIR=$8
+CACHEDIR=$9
 
 mkdir -p "${SRVDIR}root/";
 chown -R dev:dev "${SRVDIR}root/";
@@ -57,6 +59,26 @@ fi
 #  "${FROZENTMP}/frozen/" "${SRVDIR}frozen/";
 #echo "rsynced files in frozen.tar.gz to ${SRVDIR}frozen/";
 #rm -rf "${FROZENTMP}";
+
+if test "${ENVIRONMENT}" != 'development'; then
+mkdir -p "${SRVDIR}dist/";
+mkdir -p "${SRVDIR}media/";
+chown -R dev:dev "${SRVDIR}dist/";
+chown -R dev:dev "${SRVDIR}media/";
+rsync --archive \
+  --inplace \
+  --delete \
+  --itemize-changes \
+  dist/ "${SRVDIR}dist/";
+echo "rsynced files in dist to ${SRVDIR}dist/";
+rsync --archive \
+  --inplace \
+  --delete \
+  --exclude=bit-icons \
+  --itemize-changes \
+  media/ "${SRVDIR}media/";
+echo "rsynced files in media to ${SRVDIR}media/";
+fi
 
 mkdir -p "${NGINXLOGDIR}";
 

@@ -139,7 +139,7 @@ all: bin/chill bin/puzzle-massive-api bin/puzzle-massive-divulger $(objects)
 
 .PHONY: install
 install:
-	./bin/install.sh $(SRVDIR) $(NGINXDIR) $(NGINXLOGDIR) $(AWSTATSLOGDIR) $(SYSTEMDDIR) $(DATABASEDIR) $(ARCHIVEDIR) $(CACHEDIR)
+	./bin/install.sh $(ENVIRONMENT) $(SRVDIR) $(NGINXDIR) $(NGINXLOGDIR) $(AWSTATSLOGDIR) $(SYSTEMDDIR) $(DATABASEDIR) $(ARCHIVEDIR) $(CACHEDIR)
 
 # Remove any created files in the src directory which were created by the
 # `make all` recipe.

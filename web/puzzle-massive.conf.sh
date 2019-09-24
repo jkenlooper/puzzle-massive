@@ -323,6 +323,36 @@ cat <<HERE
     rewrite ^/chill/(.*)\$  /\$1 break;
   }
 
+  location /chill/site/internal/ {
+    # Allow robots to index the site as long as they are following the
+    # robots.txt disallow bit.  The burst includes the count of pages and a bit
+    # more. This prevents robots from indexing the whole site which isn't
+    # wanted.
+    #limit_req zone=chill_limit_per_ip burst=5 nodelay;
+    #limit_req_status 503;
+
+    # At this time all routes on chill/* are GETs
+    limit_except GET {
+      deny all;
+    }
+
+    proxy_pass_header Server;
+    proxy_set_header Host \$http_host;
+    proxy_set_header  X-Real-IP  \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+
+    ## Prevent others from skipping cache
+    proxy_set_header Chill-Skip-Cache "";
+
+    proxy_redirect off;
+    proxy_pass http://localhost:${PORTCHILL};
+
+    expires 1d;
+    add_header Cache-Control "public";
+    rewrite ^/chill/(.*)\$  /\$1 break;
+  }
+
+
   location /chill/ {
     # At this time all routes on chill/* are GETs
     limit_except GET {
@@ -353,6 +383,7 @@ cat <<HERE
     # more. This prevents robots from indexing the whole site which isn't
     # wanted.
     limit_req zone=chill_limit_per_ip burst=15 nodelay;
+    limit_req_status 429;
 
     proxy_pass_header Server;
     proxy_set_header Host \$http_host;
@@ -361,6 +392,9 @@ cat <<HERE
 
     ## Prevent others from skipping cache
     proxy_set_header Chill-Skip-Cache "";
+
+    expires 1m;
+    add_header Cache-Control "public";
 
     proxy_redirect off;
     proxy_pass http://localhost:${PORTCHILL};
@@ -398,9 +432,42 @@ cat <<HERE
     rewrite ^/chill/(.*)\$  /\$1 break;
   }
 
+HERE
+if test "${ENVIRONMENT}" != 'development'; then
+cat <<HEREBEPRODUCTION
+  location ~* ^/theme/.*?/(.*)\$ {
+    # Not available for hotlinking
+    valid_referers server_names;
+    if (\$invalid_referer) {
+      return 444;
+    }
+    expires 1y;
+    add_header Cache-Control "public";
+    alias ${SRVDIR}dist/\$1;
+  }
+
+  location /media/ {
+    # Not available for hotlinking
+    valid_referers server_names;
+    if (\$invalid_referer) {
+      return 444;
+    }
+    root ${SRVDIR};
+  }
+HEREBEPRODUCTION
+
+else
+
+cat <<HEREBEDEVELOPMENT
   location /theme/ {
+    # Not available for hotlinking
+    valid_referers server_names;
+    if (\$invalid_referer) {
+      return 444;
+    }
     rewrite ^/theme/(.*)\$  /chill/theme/\$1;
   }
+
   location /media/ {
     # Not available for hotlinking
     valid_referers server_names;
@@ -409,6 +476,9 @@ cat <<HERE
     }
     rewrite ^/media/(.*)\$  /chill/media/\$1;
   }
+HEREBEDEVELOPMENT
+fi
+cat <<HERE
 
   location /media/bit-icons/ {
     root ${SRVDIR};

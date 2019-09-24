@@ -26,6 +26,8 @@ CACHEDIR=$6
 rm -rf ${SRVDIR}root/!(.well-known|.|..)
 
 rm -rf "${SRVDIR}frozen/"
+rm -rf "${SRVDIR}dist/"
+rm -rf "${SRVDIR}media/"
 
 rm -f "${NGINXDIR}sites-enabled/puzzle-massive.conf";
 rm -f "${NGINXDIR}sites-available/puzzle-massive.conf";
