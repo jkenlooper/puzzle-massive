@@ -296,9 +296,6 @@ been committed to git.  It will also limit these to what is listed in the
 
 ## Feature branches and chill-data
 
-_WIP support for new chill dump and load yaml is from 
-[chill feature/chill-dump-yaml](https://github.com/jkenlooper/chill)_
-
 The `chill-data.sql` contains only a dump of the database tables that are used
 in chill.  The Chill, Node, Node_Node, Query, Route, and Template tables are
 rebuilt if the `cat chill-data.sql | sqlite3 /path/to/sqlite/db` command is run.
