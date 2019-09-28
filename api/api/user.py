@@ -26,12 +26,11 @@ MAX_BAN_TIME = LITTLE_LESS_THAN_A_WEEK
 HONEY_POT_BAN_TIME = LITTLE_MORE_THAN_A_DAY
 
 # after 14 days reset the expiration date of the cookie by setting will_expire_cookie
-OLD_QUERY_USER_DETAILS = """select login, icon, score, points as dots, id, cookie_expires,
-  strftime('%s', cookie_expires) <= strftime('%s', 'now', '+351 days') as will_expire_cookie
-  from User where id = :id;"""
-
+# In select-user-details.sql the will_expire_cookie is set when it is within 7 days of expire date.
+# --strftime('%s', u.cookie_expires) <= strftime('%s', 'now', '+7 days') as will_expire_cookie,
+# The actual cookie expire date is set for 365 days and is extended every 7 days.
 EXTEND_COOKIE_QUERY = """
-update User set cookie_expires = strftime('%Y-%m-%d', 'now', '+365 days') where id = :id;
+update User set cookie_expires = strftime('%Y-%m-%d', 'now', '+14 days') where id = :id;
 """
 
 QUERY_SET_PASSWORD = """update User set password = :password where id = :id"""
@@ -241,8 +240,6 @@ class UserDetailsView(MethodView):
     decorators = [user_not_banned]
 
     def get(self):
-        response = make_response(redirect('/'))
-
         user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
 
         cur = db.cursor()
@@ -259,9 +256,9 @@ class UserDetailsView(MethodView):
         (result, col_names) = rowify(result, cur.description)
         user_details = result[0]
 
-        if user_details['will_expire_cookie'] == 1:
-            # extend the cookie
-            current_app.secure_cookie.set(u'user', str(user_details['id']), response, expires_days=365)
+        extend_cookie = False
+        if user_details['will_expire_cookie'] != 0:
+            extend_cookie = True
             cur.execute(EXTEND_COOKIE_QUERY, {'id': user_details['id']})
             db.commit()
         del user_details['will_expire_cookie']
@@ -290,7 +287,11 @@ class UserDetailsView(MethodView):
 
         cur.close()
 
-        return encoder.encode(user_details)
+        # extend the cookie
+        response = make_response(encoder.encode(user_details), 200)
+        if extend_cookie:
+            current_app.secure_cookie.set(u'user', str(user_details['id']), response, expires_days=365)
+        return response
 
 class ClaimRandomBit(MethodView):
     """
@@ -366,7 +367,7 @@ class SplitPlayer(MethodView):
         query = """
         insert into User
         (password, m_date, cookie_expires, points, score, login, ip) values
-        (:password, datetime('now'), strftime('%Y-%m-%d', 'now', '+365 days'), :points, 0, :login, :ip);
+        (:password, datetime('now'), strftime('%Y-%m-%d', 'now', '+14 days'), :points, 0, :login, :ip);
         """
         cur.execute(query, {'password': password, 'ip': ip, 'points': NEW_USER_STARTING_POINTS, 'login': login})
 
