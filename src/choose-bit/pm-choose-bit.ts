@@ -15,7 +15,7 @@ interface TemplateData {
   dots: number;
 }
 
-const minimumDotsRequired = 1400;
+const minimumDotsRequired = 1400 - 500;
 const limitBits = 10;
 
 const tag = "pm-choose-bit";

@@ -120,7 +120,7 @@ class ClaimBitView(MethodView):
             user = int(user)
 
         # Update user points for changing bit icon
-        result = cur.execute("select points from User where id = :id and points >= :cost + :startpoints;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT, 'startpoints': NEW_USER_STARTING_POINTS}).fetchone()
+        result = cur.execute("select points from User where id = :id and points >= :startpoints - (:cost * 5);", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT, 'startpoints': NEW_USER_STARTING_POINTS}).fetchone()
         if not result:
             abort(400)
         cur.execute("update User set points = points - :cost where id = :id;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT})
