@@ -71,6 +71,11 @@ class UserDetailsService {
   static localUserId = "user-id";
 
   constructor() {
+    if (!window.localStorage) {
+      // User may have blocked the site from storing cookies and using
+      // localStorage.
+      return;
+    }
     this.currentUserId().then((currentUserId) => {
       // verify locally saved bit login with id that comes back.  If it is
       // different then login again.

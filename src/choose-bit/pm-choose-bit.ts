@@ -4,6 +4,7 @@ import { repeat } from "lit-html/directives/repeat";
 import userDetailsService from "../site/user-details.service";
 import "./choose-bit.css";
 import { chooseBitService } from "./choose-bit.service";
+import { areCookiesEnabled } from "../site/cookies";
 
 interface TemplateData {
   isLoading: boolean;
@@ -80,7 +81,7 @@ customElements.define(
         }
       }, this.instanceId);
 
-      //this.render();
+      this.render();
     }
 
     handleClickMore() {
@@ -91,6 +92,17 @@ customElements.define(
 
     template(data: TemplateData) {
       const self = this;
+
+      if (!areCookiesEnabled()) {
+        return html`
+          <p>
+            <strong
+              >Please enable cookies in your browser for this website.</strong
+            >
+            Choosing a bit icon and logging in require browser cookies.
+          </p>
+        `;
+      }
 
       if (!(data.dots > minimumDotsRequired)) {
         return html`
