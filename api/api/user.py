@@ -37,7 +37,7 @@ QUERY_SET_PASSWORD = """update User set password = :password where id = :id"""
 QUERY_USER_LOGIN = """select login from User where id = :id"""
 
 QUERY_USER_ID_BY_IP = """
-select id from User where ip = :ip and cookie_expires isnull limit 1;
+select id from User where ip = :ip and password isnull limit 1;
 """
 QUERY_USER_ID_BY_LOGIN = """
 select id from User where ip = :ip and login = :login;
