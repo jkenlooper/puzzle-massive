@@ -400,8 +400,8 @@ cat <<HERE
     proxy_redirect off;
     proxy_pass http://localhost:${PORTCHILL};
 
-    # Redirect players without a user cookie to the new-player page
-    if (\$http_cookie ~* "user=([^;]+)(?:;|\$)") {
+    # Redirect players without a user or shareduser cookie to the new-player page
+    if (\$http_cookie ~* "(user|shareduser)=([^;]+)(?:;|\$)") {
       rewrite ^/chill/(.*)\$  /\$1 break;
     }
     rewrite ^/chill/(.*)\$  /chill/site/new-player/?next=/chill/\$1 redirect;

@@ -1,5 +1,6 @@
 from builtins import str
 from random import randint
+import datetime
 
 from flask import current_app, abort, json, redirect, make_response, request
 from flask.views import MethodView
@@ -116,6 +117,9 @@ class ClaimBitView(MethodView):
             self.register_new_user(user)
             # Save as a cookie
             current_app.secure_cookie.set(u'user', str(user), response, expires_days=365)
+            # Remove shareduser
+            expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
+            current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
         else:
             user = int(user)
 

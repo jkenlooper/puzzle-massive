@@ -67,6 +67,13 @@ def generate_user_login():
 def user_id_from_ip(ip, skip_generate=False):
     cur = db.cursor()
 
+    shareduser = current_app.secure_cookie.get(u'shareduser')
+    if not shareduser == None:
+        return int(shareduser)
+
+    # Handle players that had a cookie in their browser, but then deleted it.
+    # Or new players that are from the same ip that existing players are on.
+    # These players are shown the new-player page.
     result = cur.execute(QUERY_USER_ID_BY_IP, {'ip':ip}).fetchall()
     user_id = ANONYMOUS_USER_ID
 
@@ -141,9 +148,22 @@ class CurrentUserIDView(MethodView):
     decorators = [user_not_banned]
 
     def get(self):
-        "return the user id by secure cookie or by ip."
-        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
-        return str(user)
+        """
+        Return the user ID by secure cookie or by IP.  Sets the shareduser
+        cookie if user is authenticated via their IP.
+        """
+        set_cookie = False
+        user = current_app.secure_cookie.get(u'user')
+        if user is None:
+            user = user_id_from_ip(request.headers.get('X-Real-IP'))
+            if not current_app.secure_cookie.get(u'shareduser'):
+                set_cookie = True
+        user = int(user)
+
+        response = make_response(str(user), 200)
+        if set_cookie:
+            current_app.secure_cookie.set(u'shareduser', str(user), response, expires_days=365)
+        return response
 
 class GenerateAnonymousLogin(MethodView):
     """
@@ -206,13 +226,14 @@ class UserLoginView(MethodView):
         (result, col_names) = rowify(result, cur.description)
         user_data = result[0]
 
+        expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
         if crypt.crypt(password, user_data['password']) == user_data['password']:
+            current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
             current_app.secure_cookie.set(u'user', str(user_data['id']), response, expires_days=365)
             cur.execute(EXTEND_COOKIE_QUERY, {'id': user_data['id']})
             db.commit()
         else:
             # Invalid anon login; delete cookie just in case it's there
-            expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
             current_app.secure_cookie.set(u'user', "", response, expires=expires)
 
         cur.close()
@@ -230,6 +251,7 @@ class UserLogoutView(MethodView):
         response = make_response(redirect('/'))
         expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
         current_app.secure_cookie.set(u'user', "", response, expires=expires)
+        current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
 
         return response
 
@@ -290,7 +312,12 @@ class UserDetailsView(MethodView):
         # extend the cookie
         response = make_response(encoder.encode(user_details), 200)
         if extend_cookie:
-            current_app.secure_cookie.set(u'user', str(user_details['id']), response, expires_days=365)
+            # Only set user cookie if it exists
+            if current_app.secure_cookie.get(u'user'):
+                current_app.secure_cookie.set(u'user', str(user_details['id']), response, expires_days=365)
+            # Only set shareduser cookie if it exists
+            if current_app.secure_cookie.get(u'shareduser'):
+                current_app.secure_cookie.set(u'shareduser', str(user_details['id']), response, expires_days=365)
         return response
 
 class ClaimRandomBit(MethodView):
@@ -376,6 +403,10 @@ class SplitPlayer(MethodView):
         newuser = result[0]['id']
 
         current_app.secure_cookie.set(u'user', str(newuser), response, expires_days=365)
+
+        # Remove shareduser cookie in case it exists
+        expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
+        current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
 
         # Claim a random bit icon
         cur.execute(fetch_query_string('claim_random_bit_icon.sql'), {'user': newuser})
