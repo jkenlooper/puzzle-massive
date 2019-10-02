@@ -83,10 +83,12 @@ class ClaimBitView(MethodView):
         update User set
         password = :password,
         m_date = datetime('now'),
-        cookie_expires = strftime('%Y-%m-%d', 'now', '+365 days')
-        where ip = :ip and id = :id and cookie_expires isnull;
+        cookie_expires = strftime('%Y-%m-%d', 'now', '+14 days')
+        where ip = :ip and id = :id and password isnull;
         """
         cur.execute(query, {'id': user_id, 'password': password, 'ip': request.headers.get('X-Real-IP')})
+        # TODO: create a new shareduser in case others are on the same
+        # network.
         db.commit()
         cur.close()
 

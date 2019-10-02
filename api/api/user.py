@@ -64,12 +64,18 @@ def generate_user_login():
 
     return login
 
-def user_id_from_ip(ip, skip_generate=False):
+def user_id_from_ip(ip, skip_generate=True):
     cur = db.cursor()
 
     shareduser = current_app.secure_cookie.get(u'shareduser')
-    if not shareduser == None:
-        return int(shareduser)
+    if shareduser != None:
+        # Check if this shareduser is still valid and another user hasn't chosen
+        # a bit icon.
+        query = """select * from User where password is null and id = :shareduser;"""
+        result = cur.execute(query, {'shareduser':shareduser}).fetchall()
+        if result:
+            cur.close()
+            return int(shareduser)
 
     # Handle players that had a cookie in their browser, but then deleted it.
     # Or new players that are from the same ip that existing players are on.
@@ -90,10 +96,6 @@ def user_id_from_ip(ip, skip_generate=False):
         result = cur.execute(QUERY_USER_ID_BY_LOGIN, {'ip':ip, 'login':login}).fetchall()
         (result, col_names) = rowify(result, cur.description)
         user_id = result[0]['id']
-
-        # Claim a random bit icon
-        cur.execute(fetch_query_string('claim_random_bit_icon.sql'), {'user': user_id})
-        db.commit()
     else:
         (result, col_names) = rowify(result, cur.description)
         user_id = result[0]['id']
@@ -105,7 +107,7 @@ def user_not_banned(f):
     """Check if the user is not banned and respond with 429 if so"""
     def decorator(*args, **kwargs):
         ip = request.headers.get('X-Real-IP')
-        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip, skip_generate=True)
+        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
         if not user == None:
             user = int(user)
             banneduser_score = redisConnection.zscore('bannedusers', user)
@@ -153,10 +155,22 @@ class CurrentUserIDView(MethodView):
         cookie if user is authenticated via their IP.
         """
         set_cookie = False
+        user_has_password = False
         user = current_app.secure_cookie.get(u'user')
+
         if user is None:
-            user = user_id_from_ip(request.headers.get('X-Real-IP'))
-            if not current_app.secure_cookie.get(u'shareduser'):
+            shareduser = current_app.secure_cookie.get(u'shareduser')
+            if shareduser:
+                shareduser = int(shareduser)
+                cur = db.cursor()
+                query = """select * from User where password is not null and id = :shareduser;"""
+                result = cur.execute(query, {'shareduser':shareduser}).fetchall()
+                if result:
+                    user_has_password = True
+                cur.close()
+
+            user = user_id_from_ip(request.headers.get('X-Real-IP'), skip_generate=False)
+            if not current_app.secure_cookie.get(u'shareduser') or user_has_password:
                 set_cookie = True
         user = int(user)
 
