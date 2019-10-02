@@ -17,7 +17,13 @@ customElements.define(
         playerBitImgService
           .getPlayerBitForPlayer(this.player)
           .then((fragment) => {
-            this.innerHTML = fragment;
+            if (this.player && typeof this.player === "number") {
+              fragment = fragment.replace(
+                `[[${this.player.toString()}]]`,
+                this.player.toString(36)
+              );
+              this.innerHTML = fragment;
+            }
           });
       }
     }

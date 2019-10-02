@@ -1,1 +1,6 @@
+{#- The string [[1234]] for the bit.player is replaced in javascript with the base 36 version. -#}
+{%- if not bit.icon -%}
+<span class="hasNoBit pm-PlayerBit">[[{{ bit.player }}]]</span>
+{%- else -%}
 <img width="32" height="32" src="{{ url_for('send_media_file', filename='bit-icons/64-{}.png'.format(bit.icon or 'unknown-bit')) }}" alt="{{bit.icon}}" class="{% if not bit.icon %}hasNoBit {% endif %}pm-PlayerBit">
+{%- endif -%}

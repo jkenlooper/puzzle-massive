@@ -4,6 +4,7 @@
 }
 .hasNoBit.pm-PlayerBit {
   background-color: var(--color-dark);
+  color: var(--color-light);
   border-radius: 37%;
   border: 2px solid var(--color-dark-dark);
 }

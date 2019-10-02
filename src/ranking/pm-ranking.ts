@@ -240,19 +240,23 @@ customElements.define(
                   "pm-Ranking-listitem--topPlayer": item.topPlayer,
                 })}
               >
-                ${item.icon
-                  ? html`
-                      <img
-                        class="pm-Ranking-img"
-                        src=${item.iconSrc}
-                        width="64"
-                        height="64"
-                        alt=${item.iconAlt}
-                      />
-                    `
-                  : html`
-                      <div class="pm-Ranking-img"></div>
-                    `}
+                <div class="pm-Ranking-img">
+                  ${item.icon
+                    ? html`
+                        <img
+                          width="32"
+                          height="32"
+                          class="pm-PlayerBit"
+                          src=${item.iconSrc}
+                          alt=${item.iconAlt}
+                        />
+                      `
+                    : html`
+                        <span class="hasNoBit pm-PlayerBit"
+                          >${item.id.toString(36)}</span
+                        >
+                      `}
+                </div>
 
                 <strong class="pm-Ranking-rank">${item.score}</strong>
                 <span class="pm-Ranking-status">

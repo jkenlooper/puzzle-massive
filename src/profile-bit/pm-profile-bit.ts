@@ -83,7 +83,7 @@ customElements.define(
                         />
                       `
                     : html`
-                        <span>${data.userId}</span>
+                        <span>${data.userId.toString(36)}</span>
                       `}
                 </a>
               `}
