@@ -7,7 +7,7 @@ import datetime
 import time
 import uuid
 
-from flask import current_app, make_response, request, json, url_for
+from flask import current_app, make_response, request, json, url_for, redirect
 from flask.views import MethodView
 from werkzeug.exceptions import HTTPException
 import redis
@@ -109,7 +109,21 @@ class PuzzlePieceTokenView(MethodView):
 
     def get(self, puzzle_id, piece):
         ip = request.headers.get('X-Real-IP')
-        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
+        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
+        if user == None:
+            err_msg = {
+                'msg': "Please reload the page.",
+                'reason': "The player login that you were using is no longer valid.  This may have happened if another player on your network has selected a bit icon.  Refreshing the page should set a new player login cookie.",
+                'type': "puzzlereload",
+                'timeout': 300
+            }
+            response = make_response(encoder.encode(err_msg), 400)
+            expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
+            current_app.secure_cookie.set(u'user', "", response, expires=expires)
+            current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
+            return response
+
+        user = int(user)
         mark = request.args.get('mark', '000')[:3]
         now = int(time.time())
 

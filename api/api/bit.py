@@ -87,8 +87,8 @@ class ClaimBitView(MethodView):
         where ip = :ip and id = :id and password isnull;
         """
         cur.execute(query, {'id': user_id, 'password': password, 'ip': request.headers.get('X-Real-IP')})
-        # TODO: create a new shareduser in case others are on the same
-        # network.
+        # Other players on the same network that are tracked by shareduser
+        # cookie will have it updated to a new value.
         db.commit()
         cur.close()
 

@@ -386,7 +386,12 @@ class SplitPlayer(MethodView):
         # Verify user is logged in
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip, skip_generate=True)
         if user is None:
-            return make_response('not logged in', 400)
+            # TODO: remove cookies
+            response = make_response('not logged in', 400)
+            expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
+            current_app.secure_cookie.set(u'user', "", response, expires=expires)
+            current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
+            return response
         user = int(user)
 
         response = make_response('', 200)
