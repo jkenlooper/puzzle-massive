@@ -1,5 +1,6 @@
 import FetchService from "../site/fetch.service";
 import userDetailsService from "../site/user-details.service";
+import { colorForPlayer } from "../player-bit/player-bit-img.service";
 
 import { html, render } from "lit-html";
 import { classMap } from "lit-html/directives/class-map.js";
@@ -252,7 +253,11 @@ customElements.define(
                         />
                       `
                     : html`
-                        <span class="hasNoBit pm-PlayerBit"
+                        <span
+                          class="hasNoBit pm-PlayerBit"
+                          style=${`--pm-PlayerBit-color:${colorForPlayer(
+                            item.id
+                          )}`}
                           >${item.id.toString(36)}</span
                         >
                       `}

@@ -2,6 +2,7 @@ import { html, render } from "lit-html";
 import { classMap } from "lit-html/directives/class-map.js";
 
 import userDetailsService from "../site/user-details.service";
+import { colorForPlayer } from "../player-bit/player-bit-img.service";
 
 import "./profile-bit.css";
 
@@ -83,7 +84,13 @@ customElements.define(
                         />
                       `
                     : html`
-                        <span>${data.userId.toString(36)}</span>
+                        <span
+                          class="hasNoBit pm-PlayerBit"
+                          style=${`--pm-PlayerBit-color:${colorForPlayer(
+                            data.userId
+                          )}`}
+                          >${data.userId.toString(36)}</span
+                        >
                       `}
                 </a>
               `}

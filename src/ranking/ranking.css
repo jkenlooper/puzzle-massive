@@ -19,7 +19,6 @@
   justify-content: center;
   width: calc(64px + 5em + 5em);
   height: 32px;
-  font-size: 2rem;
 }
 
 .pm-Ranking-listitem--current {
@@ -40,7 +39,6 @@
 }
 
 .pm-Ranking-listitem.isExpired .pm-Ranking-img {
-  opacity: 0.7;
 }
 
 .pm-Ranking-rank {
@@ -50,6 +48,7 @@
 
 .pm-Ranking-listitem--topPlayer .pm-Ranking-rank {
   color: var(--color-accent);
+  font-size: 2rem;
 }
 
 .pm-Ranking-status {

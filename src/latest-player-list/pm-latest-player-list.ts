@@ -5,6 +5,7 @@ import {
   PlayerStatsData,
   PlayerDetail,
 } from "../site/puzzle-stats.service";
+import { colorForPlayer } from "../player-bit/player-bit-img.service";
 import "./latest-player-list.css";
 
 interface PlayerDetailWithIconSrc extends PlayerDetail {
@@ -155,7 +156,11 @@ customElements.define(
                         />
                       `
                     : html`
-                        <span class="hasNoBit pm-PlayerBit"
+                        <span
+                          class="hasNoBit pm-PlayerBit"
+                          style=${`--pm-PlayerBit-color:${colorForPlayer(
+                            item.id
+                          )}`}
                           >${item.id.toString(36)}</span
                         >
                       `}
