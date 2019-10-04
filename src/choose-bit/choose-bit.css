@@ -15,7 +15,6 @@
 @media (--lg-viewport) {
   .pm-ChooseBit-message {
     width: auto;
-    font-size: calc(100vw * 0.02);
   }
 }
 

@@ -104,17 +104,25 @@ customElements.define(
         `;
       }
 
+      if (!data.dots) {
+        return html``;
+      }
+
       if (!(data.dots > minimumDotsRequired)) {
         return html`
-          Insufficient dots to pick a different bit.
+          <p>
+            <strong>
+              Insufficient dots to pick a different bit.
+            </strong>
+          </p>
         `;
       }
 
       return html`
-        <section class="pm-ChooseBit">
-          <h1 class="pm-ChooseBit-message">
-            ${data.message}
-          </h1>
+        <div class="pm-ChooseBit">
+          <p class="pm-ChooseBit-message">
+            <strong>${data.message}</strong>
+          </p>
           <div class="pm-ChooseBit-items">
             ${items()}
           </div>
@@ -124,7 +132,7 @@ customElements.define(
           >
             More
           </button>
-        </section>
+        </div>
       `;
 
       // During and after successfully loading the count of items should be

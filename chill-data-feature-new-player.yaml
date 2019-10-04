@@ -6,5 +6,5 @@ value:
   page:
     description: Select a bit icon to use while playing
     title: Select your player bit icon
-
+  next: route-pass-new-player-next.sql
 

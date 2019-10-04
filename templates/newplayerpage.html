@@ -5,15 +5,39 @@
 {%- endblock %}
 
 {% block main %}
-<div>
-... intro
-</div>
+<section  class="pm-Doc">
 
-<div>
-    <pm-choose-bit message="Change bit icon" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
-</div>
+<h1>Puzzle Massive</h1>
+<p>This is a Massively Multiplayer Online Jigsaw Puzzle (MMOJP) where everyone
+can work on a puzzle together at the same time.  The puzzles range from 50 to
+5000+ pieces and are all uniquely generated in the classic interlocking piece
+shapes (for now).</p>
 
-<div>
-  <a href="">Continue</a>
-</div>
+<p>This site uses cookies for player logins.  Your information is not shared with third parties.  You may
+  <a href="{{ next.next }}">continue</a> to the original page requested.
+</p>
+
+<h2>New Players</h2>
+<p>Players of Puzzle Massive can select a bit icon to mark their moves and acts
+as an avatar for other areas of the site.  This bit icon is shown in the top
+left corner and acts as a link to the player's profile page.  Players without
+a bit icon are represented with a short generated group of letters on
+a background color.</p>
+
+<p><strong>You are currently represented on Puzzle Massive as:</strong>
+  <span class="u-marginTopSm u-marginBottomSm u-block">
+<pm-profile-bit dots media-path="{{ url_for('send_media_file', filename='') }}" player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
+  </span>
+All new players start off with a set number of dots.  Changing your bit icon or rebuilding puzzles will cost some dots.  Dots can be earned by putting together puzzles.
+</p>
+
+<p class="u-marginBottomLg">
+    <pm-choose-bit message="You can select a bit icon" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
+</p>
+
+
+<h2>No Ads</h2>
+<p>This site does not show advertisements to players.  You're welcome.</p>
+
+</section>
 {% endblock %}
