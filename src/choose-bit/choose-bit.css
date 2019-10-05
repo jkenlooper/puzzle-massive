@@ -1,9 +1,6 @@
 @import "../site/viewport-breakpoints.css";
 
 .pm-ChooseBit {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
   min-width: 300px;
 }
 
@@ -21,8 +18,8 @@
 .pm-ChooseBit-items {
   display: flex;
   flex: 1;
-  flex-wrap: nowrap;
-  justify-content: center;
+  flex-wrap: wrap;
+  justify-content: flex-start;
 }
 
 .pm-ChooseBit-item {

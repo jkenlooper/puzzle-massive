@@ -2,7 +2,7 @@ export class ChooseBitService {
   constructor() {}
 
   getBits(limit: number): Promise<string[]> {
-    return fetch("/newapi/choose-bit/", {
+    return fetch(`/newapi/choose-bit/?limit=${limit}`, {
       method: "GET",
       credentials: "same-origin",
       headers: {

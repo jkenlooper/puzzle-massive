@@ -54,9 +54,20 @@ class ChooseBitView(MethodView):
             offset_seconds = str(randint(1, 900))
         offset_time = '{} seconds'.format(int(offset_seconds))
 
+        limit = request.args.get('limit')
+        if not limit:
+            limit = 10
+        try:
+            limit = int(limit)
+        except ValueError:
+            limit = 10
+        if limit not in (50, 10):
+            limit = 10
+
+
         cur = db.cursor()
         # List of bit icon names that are available
-        result = cur.execute(fetch_query_string('select_random_bit_batch.sql'), {'offset_time': offset_time}).fetchall()
+        result = cur.execute(fetch_query_string('select_random_bit_batch.sql'), {'offset_time': offset_time, 'limit': limit}).fetchall()
         (result, col_names) = rowify(result, cur.description)
         bits = [x['icon'] for x in result]
 

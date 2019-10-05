@@ -9,6 +9,7 @@ import "./profile-bit.css";
 interface TemplateData {
   isExpired: boolean;
   canClaimUser: boolean;
+  isProcessingClaimUser: boolean;
   claimUserHandler: any;
   profileLink: string;
   iconSrc: string;
@@ -37,6 +38,7 @@ customElements.define(
     private showScore: boolean;
     private showDots: boolean;
     private mediaPath: string;
+    private isProcessingClaimUser: boolean = false;
 
     constructor() {
       super();
@@ -109,20 +111,33 @@ customElements.define(
           : html``}
         ${data.canClaimUser
           ? html`
-              <button @click=${data.claimUserHandler}>claim</button>
+              ${data.isProcessingClaimUser
+                ? html`
+                    ...
+                  `
+                : html`
+                    <button @click=${data.claimUserHandler}>claim</button>
+                  `}
             `
           : html``}
       `;
     }
 
     handleClickClaimUser() {
-      // TODO: send POST to /claim-user/
+      this.isProcessingClaimUser = true;
+      this.render();
       fetch("/newapi/claim-user/", {
         method: "POST",
         credentials: "same-origin",
         headers: {
           "Content-Type": "application/json",
         },
+      }).finally(() => {
+        this.isProcessingClaimUser = false;
+        const userDetailsChangeEvent = new Event("userDetailsChange", {
+          bubbles: true,
+        });
+        this.dispatchEvent(userDetailsChangeEvent);
       });
     }
 
@@ -130,7 +145,7 @@ customElements.define(
       return {
         isExpired: !!userDetailsService.userDetails.bit_expired,
         canClaimUser: !!userDetailsService.userDetails.can_claim_user,
-
+        isProcessingClaimUser: this.isProcessingClaimUser,
         claimUserHandler: {
           handleEvent: this.handleClickClaimUser.bind(this),
           capture: true,
@@ -169,19 +184,5 @@ customElements.define(
     adoptedCallback() {
       //console.log("adoptedCallback");
     }
-    /*
-    attributeChangedCallback(
-      name: string,
-      _oldValue: string | null,
-      _newValue: string | null
-    ) {
-      // Need to only render initially if the player has enough dots.
-      if (name === "dots") {
-        if (_newValue) {
-          this.render();
-        }
-      }
-    }
-       */
   }
 );

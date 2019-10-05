@@ -14,7 +14,7 @@
   <h1>Player Profile</h1>
   <div class="u-marginTopMd u-marginBottomMd">
       <pm-profile-bit media-path="{{ url_for('send_media_file', filename='') }}" score dots player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
-      <pm-choose-bit message="Change bit icon" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
+      <pm-choose-bit limit="50" message="Change bit icon" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
   </div>
 
       <pm-account>
