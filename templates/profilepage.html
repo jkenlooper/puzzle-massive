@@ -12,15 +12,11 @@
 {% block main %}
 <section  class="pm-Profilepage">
   <h1>Player Profile</h1>
-  <div class="pm-Profilepage-grid">
-    <div class="pm-Profilepage-gridA">
+  <div class="u-marginTopMd u-marginBottomMd">
       <pm-profile-bit media-path="{{ url_for('send_media_file', filename='') }}" score dots player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
-    </div>
-    <div class="pm-Profilepage-gridB">
       <pm-choose-bit message="Change bit icon" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
-    </div>
+  </div>
 
-    <div class="pm-Profilepage-gridD">
       <pm-account>
         {#
         <form action="register-email">
@@ -43,11 +39,6 @@
         </form>
         #}
       </pm-account>
-    </div>
-  </div>
-
-
-
 </section>
 
 {% endblock %}

@@ -17,6 +17,7 @@ interface UserDetailsResponse {
   id?: number;
   login?: string;
   score: number;
+  can_claim_user?: boolean;
   readonly puzzle_instance_list?: PuzzleInstanceList;
   readonly user_puzzle_count: number;
   readonly puzzle_instance_count: number;

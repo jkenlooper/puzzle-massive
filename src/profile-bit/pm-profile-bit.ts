@@ -8,6 +8,8 @@ import "./profile-bit.css";
 
 interface TemplateData {
   isExpired: boolean;
+  canClaimUser: boolean;
+  claimUserHandler: any;
   profileLink: string;
   iconSrc: string;
   iconAlt: string;
@@ -105,12 +107,34 @@ customElements.define(
               <div>Dots <b>${data.dots}</b></div>
             `
           : html``}
+        ${data.canClaimUser
+          ? html`
+              <button @click=${data.claimUserHandler}>claim</button>
+            `
+          : html``}
       `;
+    }
+
+    handleClickClaimUser() {
+      // TODO: send POST to /claim-user/
+      fetch("/newapi/claim-user/", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
     }
 
     get data(): TemplateData {
       return {
         isExpired: !!userDetailsService.userDetails.bit_expired,
+        canClaimUser: !!userDetailsService.userDetails.can_claim_user,
+
+        claimUserHandler: {
+          handleEvent: this.handleClickClaimUser.bind(this),
+          capture: true,
+        },
         profileLink: `${this.player_profile_url}${
           userDetailsService.userDetails.login
         }/`,

@@ -321,6 +321,12 @@ class UserDetailsView(MethodView):
 
         user_details['puzzle_instance_list'] = puzzle_instance_list
 
+        # Check if shareduser can claim bit icon as user
+        if current_app.secure_cookie.get(u'shareduser'):
+            result = cur.execute("select points from User where id = :id and points >= :startpoints + :cost;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT, 'startpoints': NEW_USER_STARTING_POINTS}).fetchone()
+            if result:
+                user_details['can_claim_user'] = True
+
         cur.close()
 
         # extend the cookie

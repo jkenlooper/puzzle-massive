@@ -7,8 +7,8 @@ from flask.views import MethodView
 
 from api.app import db
 from api.database import rowify, fetch_query_string
-from api.user import generate_password, generate_user_login, user_id_from_ip, NEW_USER_STARTING_POINTS, user_not_banned
-from api.constants import POINT_COST_FOR_CHANGING_BIT
+from api.user import generate_password, generate_user_login, user_id_from_ip, user_not_banned
+from api.constants import POINT_COST_FOR_CHANGING_BIT, NEW_USER_STARTING_POINTS
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
@@ -72,26 +72,6 @@ class ClaimBitView(MethodView):
     """Claim a bit and register new user"""
     decorators = [user_not_banned]
 
-    def register_new_user(self, user_id):
-        """Update initial ip tracked user to now be cookie tracked with a password."""
-        cur = db.cursor()
-
-        login = generate_user_login()
-        (p_string, password) = generate_password()
-
-        query = """
-        update User set
-        password = :password,
-        m_date = datetime('now'),
-        cookie_expires = strftime('%Y-%m-%d', 'now', '+14 days')
-        where ip = :ip and id = :id and password isnull;
-        """
-        cur.execute(query, {'id': user_id, 'password': password, 'ip': request.headers.get('X-Real-IP')})
-        # Other players on the same network that are tracked by shareduser
-        # cookie will have it updated to a new value.
-        db.commit()
-        cur.close()
-
     def post(self):
         """If the bit icon is available; claim it for the user."""
         icon = request.args.get('icon')
@@ -115,27 +95,79 @@ class ClaimBitView(MethodView):
         response = make_response('', 200)
         user = current_app.secure_cookie.get(u'user')
         if not user:
-            user = int(user_id_from_ip(request.headers.get('X-Real-IP')))
-            self.register_new_user(user)
-            # Save as a cookie
-            current_app.secure_cookie.set(u'user', str(user), response, expires_days=365)
-            # Remove shareduser
-            expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
-            current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
+            user = user_id_from_ip(request.headers.get('X-Real-IP'))
+            if user == None:
+                abort(400)
+            user = int(user)
+
         else:
             user = int(user)
 
-        # Update user points for changing bit icon
-        result = cur.execute("select points from User where id = :id and points >= :startpoints - (:cost * 5);", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT, 'startpoints': NEW_USER_STARTING_POINTS}).fetchone()
-        if not result:
-            abort(400)
-        cur.execute("update User set points = points - :cost where id = :id;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT})
 
         # Unclaim any bit icon that the player already has
         cur.execute(fetch_query_string('unclaim_bit_icon.sql'), {'user': user})
 
         # Claim the bit icon
         cur.execute(fetch_query_string('update_bit_icon_user.sql'), {'user': user, 'icon':icon})
+
+        cur.close()
+        db.commit()
+        return response
+
+
+class ClaimUserView(MethodView):
+    """Claim a bit and register new user"""
+    decorators = [user_not_banned]
+
+    def register_new_user(self, user_id):
+        """Update initial ip tracked user to now be cookie tracked with a password."""
+        cur = db.cursor()
+
+        login = generate_user_login()
+        (p_string, password) = generate_password()
+
+        query = """
+        update User set
+        password = :password,
+        m_date = datetime('now'),
+        cookie_expires = strftime('%Y-%m-%d', 'now', '+14 days')
+        where ip = :ip and id = :id and password isnull;
+        """
+        cur.execute(query, {'id': user_id, 'password': password, 'ip': request.headers.get('X-Real-IP')})
+        # Other players on the same network that are tracked by shareduser
+        # cookie will have it updated to a new value.
+        db.commit()
+        cur.close()
+
+    def post(self):
+        """Update shareduser to user"""
+
+        # Prevent creating a new user if no support for cookies. Player should
+        # have 'ot' already set by viewing the page.
+        uses_cookies = current_app.secure_cookie.get(u'ot')
+        if not uses_cookies:
+            abort(400)
+
+        cur = db.cursor()
+
+        response = make_response('', 200)
+
+        user = user_id_from_ip(request.headers.get('X-Real-IP'))
+        if user == None:
+            abort(400)
+        user = int(user)
+
+        # Only set new user if enough dots
+        result = cur.execute("select points from User where id = :id and points >= :startpoints + :cost;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT, 'startpoints': NEW_USER_STARTING_POINTS}).fetchone()
+        if result:
+            self.register_new_user(user)
+            # Save as a cookie
+            current_app.secure_cookie.set(u'user', str(user), response, expires_days=365)
+            # Remove shareduser
+            expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
+            current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
+
+            cur.execute("update User set points = points - :cost where id = :id;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT})
 
         cur.close()
         db.commit()

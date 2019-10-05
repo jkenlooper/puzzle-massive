@@ -16,7 +16,7 @@ interface TemplateData {
   dots: number;
 }
 
-const minimumDotsRequired = 1400 - 500;
+//const minimumDotsRequired = 1400;
 const limitBits = 10;
 
 const tag = "pm-choose-bit";
@@ -74,11 +74,14 @@ customElements.define(
 
       // need to get bits on the subscribe callback
       userDetailsService.subscribe(() => {
-        if (userDetailsService.userDetails.dots > minimumDotsRequired) {
-          PmChooseBit.getBits(this, this.limit);
+        // TODO: check shareddots + user dots > minimumDotsRequired
+        //if (userDetailsService.userDetails.dots > minimumDotsRequired) {
+        PmChooseBit.getBits(this, this.limit);
+        /*
         } else {
           this.render();
         }
+           */
       }, this.instanceId);
 
       this.render();
@@ -108,6 +111,7 @@ customElements.define(
         return html``;
       }
 
+      /*
       if (!(data.dots > minimumDotsRequired)) {
         return html`
           <p>
@@ -117,6 +121,7 @@ customElements.define(
           </p>
         `;
       }
+             */
 
       return html`
         <div class="pm-ChooseBit">
