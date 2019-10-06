@@ -56,13 +56,13 @@ class ChooseBitView(MethodView):
 
         limit = request.args.get('limit')
         if not limit:
-            limit = 10
+            limit = 7
         try:
             limit = int(limit)
         except ValueError:
-            limit = 10
-        if limit not in (50, 10):
-            limit = 10
+            limit = 7
+        if limit not in (49, 7):
+            limit = 7
 
 
         cur = db.cursor()

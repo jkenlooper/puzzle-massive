@@ -90,7 +90,7 @@ customElements.define(
 
       if (!areCookiesEnabled()) {
         return html`
-          <p>
+          <p class="pm-Message">
             <strong
               >Please enable cookies in your browser for this website.</strong
             >

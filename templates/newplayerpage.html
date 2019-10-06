@@ -13,6 +13,8 @@ can work on a puzzle together at the same time.  The puzzles range from 50 to
 5000+ pieces and are all uniquely generated in the classic interlocking piece
 shapes (for now).</p>
 
+{# Only show the relevant information for players that have cookies by reusing pm-dot-require info. #}
+<pm-dot-require min="99999" type="info">
 <p>This site uses cookies for player logins.  Your information is not shared with third parties.  You may
   <a href="{{ next.next }}">continue</a> to the original page requested.
 </p>
@@ -30,6 +32,7 @@ a background color.</p>
   </span>
   All <em>new players</em> on the same network share a single login to begin with.
 </p>
+</pm-dot-require>
 
 <p class="u-marginBottomLg">
     <pm-choose-bit message="You can select a bit icon" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
