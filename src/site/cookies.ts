@@ -8,7 +8,9 @@ function areCookiesEnabled(): boolean {
 }
 
 function hasUserCookie(): boolean {
-  return document.cookie.length >= 1 && document.cookie.indexOf("user=") !== -1;
+  return (
+    document.cookie.length >= 1 && document.cookie.search(/\buser=/) !== -1
+  );
 }
 
 export { areCookiesEnabled, hasUserCookie };

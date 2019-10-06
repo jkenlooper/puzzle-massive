@@ -16,6 +16,11 @@ class HashColorService {
   listeners: Map<string, Callback> = new Map();
   backgroundColor: string | undefined;
   constructor() {
+    if (!window.localStorage) {
+      // User may have blocked the site from storing cookies and using
+      // localStorage.
+      return;
+    }
     // init
     this._onhashchange();
 

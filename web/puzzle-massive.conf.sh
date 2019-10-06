@@ -320,7 +320,12 @@ cat <<HERE
 
     proxy_redirect off;
     proxy_pass http://localhost:${PORTCHILL};
-    rewrite ^/chill/(.*)\$  /\$1 break;
+
+    # Redirect players without a user or shareduser cookie to the new-player page
+    if (\$http_cookie ~* "(user|shareduser)=([^;]+)(?:;|\$)") {
+      rewrite ^/chill/(.*)\$  /\$1 break;
+    }
+    rewrite ^/chill/(.*)\$  /chill/site/new-player/?next=/chill/\$1 redirect;
   }
 
   location /chill/site/internal/ {
@@ -393,11 +398,52 @@ cat <<HERE
     ## Prevent others from skipping cache
     proxy_set_header Chill-Skip-Cache "";
 
-    expires 1m;
-    add_header Cache-Control "public";
+    # no cache on these to prevent issues with redirect on new-player
+    #expires 1m;
+    #add_header Cache-Control "private";
 
     proxy_redirect off;
     proxy_pass http://localhost:${PORTCHILL};
+
+    # Redirect players without a user or shareduser cookie to the new-player page
+    if (\$http_cookie ~* "(user|shareduser)=([^;]+)(?:;|\$)") {
+      rewrite ^/chill/(.*)\$  /\$1 break;
+    }
+    rewrite ^/chill/(.*)\$  /chill/site/new-player/?next=/chill/\$1 redirect;
+  }
+
+  location /chill/site/new-player/ {
+    # At this time all routes on chill/* are GETs
+    limit_except GET {
+      deny all;
+    }
+
+    # Allow robots to index the site as long as they are following the
+    # robots.txt disallow bit.  The burst includes the count of pages and a bit
+    # more. This prevents robots from indexing the whole site which isn't
+    # wanted.
+    limit_req zone=chill_limit_per_ip burst=15 nodelay;
+    limit_req_status 429;
+
+    proxy_pass_header Server;
+    proxy_set_header Host \$http_host;
+    proxy_set_header  X-Real-IP  \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+
+    ## Prevent others from skipping cache
+    proxy_set_header Chill-Skip-Cache "";
+
+    # No cache on new-player page since it is has redirect
+    #expires 1m;
+    #add_header Cache-Control "public";
+
+    proxy_redirect off;
+    proxy_pass http://localhost:${PORTCHILL};
+
+    # Redirect players with a user cookie to the player profile page
+    if (\$http_cookie ~* "user=([^;]+)(?:;|\$)") {
+      rewrite ^/chill/(.*)\$  /chill/site/player/ redirect;
+    }
     rewrite ^/chill/(.*)\$  /\$1 break;
   }
 

@@ -3,6 +3,7 @@ import { repeat } from "lit-html/directives/repeat";
 import { classMap } from "lit-html/directives/class-map.js";
 import { styleMap } from "lit-html/directives/style-map.js";
 
+import { colorForPlayer } from "../player-bit/player-bit-img.service";
 import { puzzleBitsService, PlayerBit } from "./puzzle-bits.service";
 import "./puzzle-bits.css";
 
@@ -62,13 +63,20 @@ customElements.define(
                     ? html`
                         <img
                           src=${`${data.mediaPath}bit-icons/64-${bit.icon}.png`}
+                          class="pm-PlayerBit"
                           width="64"
                           height="64"
                           alt=${bit.icon}
                         />
                       `
                     : html`
-                        <span class="pm-PuzzleBits-playerId">${bit.id}</span>
+                        <span
+                          class="hasNoBit pm-PlayerBit"
+                          style=${`--pm-PlayerBit-color:${colorForPlayer(
+                            bit.id
+                          )}`}
+                          >${bit.id.toString(36)}</span
+                        >
                       `}
                 </div>
               `;

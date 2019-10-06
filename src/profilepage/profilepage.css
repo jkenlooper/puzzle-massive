@@ -1,68 +1,7 @@
 @import "../site/viewport-breakpoints.css";
 
 .pm-Profilepage {
-  margin-right: 20px;
-  margin-left: 20px;
-}
-
-.pm-Profilepage > * + * {
-  margin-top: 13px;
-}
-
-.pm-Profilepage-grid {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-around;
-}
-
-@media (--lg-viewport) {
-  .pm-Profilepage-grid {
-    flex-direction: row;
-  }
-}
-
-.pm-Profilepage-grid > * + * {
-  margin-top: 13px;
-}
-
-.pm-Profilepage-gridA {
-  width: 270px;
-}
-
-.pm-Profilepage-gridB {
-  max-width: 700px;
-}
-
-.pm-Profilepage-gridC {
-  order: 1;
-  border-top: 1px solid var(--color-primary-dark);
-  padding-top: 20px;
-  width: 100%;
-  max-width: 800px;
-}
-
-.pm-Profilepage-gridD {
-  width: 100%;
-  max-width: 60em;
-}
-
-.pm-Profilepage-account {
-}
-
-.pm-Profilepage-account > * {
-  width: 100%;
-  max-width: 600px;
-}
-
-.pm-Profilepage-account > * + * {
-  margin-top: 13px;
-}
-
-.pm-Profilepage-accountMessage {
-}
-
-.pm-Profilepage-accountActions {
-  padding-left: 20px;
+  margin-right: 10px;
+  margin-left: 10px;
+  max-width: 40em;
 }

@@ -1,5 +1,5 @@
 SELECT u.login, b.name AS icon, u.score, u.points as dots, u.id, u.cookie_expires,
-strftime('%s', u.cookie_expires) <= strftime('%s', 'now', '+351 days') as will_expire_cookie,
+strftime('%s', u.cookie_expires) <= strftime('%s', 'now', '+7 days') as will_expire_cookie,
 strftime('%s', b.expiration) <= strftime('%s', 'now') as bit_expired,
 (select count(*) from User_Puzzle where player = :id) as user_puzzle_count,
 (

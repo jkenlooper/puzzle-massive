@@ -1,0 +1,9 @@
+.pm-Message {
+  font-size: 1.3em;
+  font-weight: bold;
+  border: 1px solid var(--color-accent);
+  margin: 1em;
+  padding: 10px;
+  box-shadow: 3px 3px 0px 0px var(--color-dark);
+  background-color: var(--color-light-accent);
+}

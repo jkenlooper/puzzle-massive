@@ -5,6 +5,7 @@ import {
   PlayerStatsData,
   PlayerDetail,
 } from "../site/puzzle-stats.service";
+import { colorForPlayer } from "../player-bit/player-bit-img.service";
 import "./latest-player-list.css";
 
 interface PlayerDetailWithIconSrc extends PlayerDetail {
@@ -144,16 +145,25 @@ customElements.define(
                 role="listitem"
               >
                 <small class="pm-Preview-latestItemCell">
-                  <img
-                    width="32"
-                    height="32"
-                    class=${classMap({
-                      hasNoBit: !item.icon,
-                      "pm-PlayerBit": true,
-                    })}
-                    src=${item.iconSrc}
-                    alt=${item.iconAlt}
-                  />
+                  ${item.icon
+                    ? html`
+                        <img
+                          width="32"
+                          height="32"
+                          class="pm-PlayerBit"
+                          src=${item.iconSrc}
+                          alt=${item.iconAlt}
+                        />
+                      `
+                    : html`
+                        <span
+                          class="hasNoBit pm-PlayerBit"
+                          style=${`--pm-PlayerBit-color:${colorForPlayer(
+                            item.id
+                          )}`}
+                          >${item.id.toString(36)}</span
+                        >
+                      `}
                 </small>
                 <small
                   class="pm-Preview-latestItemCell pm-Preview-latestItemCell--pieces"
@@ -221,16 +231,21 @@ customElements.define(
                 })}
                 role="listitem"
               >
-                <img
-                  width="32"
-                  height="32"
-                  class=${classMap({
-                    hasNoBit: !item.icon,
-                    "pm-Preview-bitIcon": true,
-                  })}
-                  src=${item.iconSrc}
-                  alt=${item.iconAlt}
-                />
+                ${item.icon
+                  ? html`
+                      <img
+                        width="32"
+                        height="32"
+                        class="pm-PlayerBit"
+                        src=${item.iconSrc}
+                        alt=${item.iconAlt}
+                      />
+                    `
+                  : html`
+                      <span class="hasNoBit pm-PlayerBit"
+                        >${item.id.toString(36)}</span
+                      >
+                    `}
                 ${item.score}
               </span>
             `;

@@ -55,58 +55,32 @@ customElements.define(
         return html``;
       }
       return html`
-        <div>
-          <h2>Account Management</h2>
-          <div class="pm-Profilepage-account">
-            <div class="pm-Profilepage-accountMessage">
-              <p>
-                You are currently logged in anonymously for this browser. There
-                is no login or password needed in order to play as your bit
-                icon. This is based on a stored cookie on this browser and will
-                eventually expire. In order to login again when your cookie
-                expires you'll need to generate an
-                <em>Anonymous Login Link</em> which you should save as a
-                bookmark. Following that link will log you back in.
-              </p>
-              <p>
-                Click the <em>Anonymous Login Link</em> button to generate a new
-                login link. Save this link as a bookmark and use it log back in.
-              </p>
-              <p>
-                Note that all new players get a randomly assigned bit icon based
-                on their IP address. After a new player has joined enough pieces
-                they may change their bit icon and thus save a cookie. Then the
-                below anonymous login link will apply.
-              </p>
-            </div>
-            <div class="pm-Profilepage-accountActions">
-              ${data.hasBitLink
-                ? html`
-                    <p>
-                      <strong class="u-textNoWrap">
-                        Anonymous Login Link:
-                      </strong>
-                      <br />
-                      <span>${data.anonymousLoginLink}</span>
-                      <br />
-                      <small>Copy the link or bookmark it.</small>
-                    </p>
-                  `
-                : html`
-                    <button
-                      @click=${data.generateBitLink}
-                      ?disabled=${data.isGeneratingLoginLink}
-                    >
-                      Anonymous Login Link
-                    </button>
-                  `}
-              <p>
-                <em
-                  >Only logout if you have saved your anonymous login link.</em
-                >
-              </p>
-              <pm-logout-link></pm-logout-link>
-            </div>
+        <div class="pm-Profilepage-account">
+          <div class="pm-Profilepage-accountActions">
+            ${data.hasBitLink
+              ? html`
+                  <p>
+                    <strong class="u-textNoWrap">
+                      Anonymous Login Link:
+                    </strong>
+                    <br />
+                    <span>${data.anonymousLoginLink}</span>
+                    <br />
+                    <small>Copy the link or bookmark it.</small>
+                  </p>
+                `
+              : html`
+                  <button
+                    @click=${data.generateBitLink}
+                    ?disabled=${data.isGeneratingLoginLink}
+                  >
+                    Anonymous Login Link
+                  </button>
+                `}
+            <p>
+              <em>Only logout if you have saved your anonymous login link.</em>
+            </p>
+            <pm-logout-link></pm-logout-link>
           </div>
         </div>
       `;

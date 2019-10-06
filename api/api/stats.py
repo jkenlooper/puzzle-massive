@@ -23,7 +23,9 @@ class PlayerRanksView(MethodView):
     def get(self):
         ""
         ip = request.headers.get('X-Real-IP')
-        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
+        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
+        if user != None:
+            user = int(user)
         args = {}
         if request.args:
             args.update(request.args.to_dict(flat=True))
@@ -95,8 +97,6 @@ class PuzzleStatsView(MethodView):
 
     def get(self, puzzle_id):
         ""
-        ip = request.headers.get('X-Real-IP')
-        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
         cur = db.cursor()
         result = cur.execute(fetch_query_string('_select-puzzle-by-puzzle_id.sql'), {
             'puzzle_id': puzzle_id

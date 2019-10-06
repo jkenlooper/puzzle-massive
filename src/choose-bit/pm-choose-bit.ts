@@ -4,6 +4,7 @@ import { repeat } from "lit-html/directives/repeat";
 import userDetailsService from "../site/user-details.service";
 import "./choose-bit.css";
 import { chooseBitService } from "./choose-bit.service";
+import { areCookiesEnabled } from "../site/cookies";
 
 interface TemplateData {
   isLoading: boolean;
@@ -15,7 +16,6 @@ interface TemplateData {
   dots: number;
 }
 
-const minimumDotsRequired = 1400;
 const limitBits = 10;
 
 const tag = "pm-choose-bit";
@@ -73,14 +73,10 @@ customElements.define(
 
       // need to get bits on the subscribe callback
       userDetailsService.subscribe(() => {
-        if (userDetailsService.userDetails.dots > minimumDotsRequired) {
-          PmChooseBit.getBits(this, this.limit);
-        } else {
-          this.render();
-        }
+        PmChooseBit.getBits(this, this.limit);
       }, this.instanceId);
 
-      //this.render();
+      this.render();
     }
 
     handleClickMore() {
@@ -92,17 +88,26 @@ customElements.define(
     template(data: TemplateData) {
       const self = this;
 
-      if (!(data.dots > minimumDotsRequired)) {
+      if (!areCookiesEnabled()) {
         return html`
-          Insufficient dots to pick a different bit.
+          <p class="pm-Message">
+            <strong
+              >Please enable cookies in your browser for this website.</strong
+            >
+            Choosing a bit icon and logging in require browser cookies.
+          </p>
         `;
       }
 
+      if (!data.dots) {
+        return html``;
+      }
+
       return html`
-        <section class="pm-ChooseBit">
-          <h1 class="pm-ChooseBit-message">
-            ${data.message}
-          </h1>
+        <div class="pm-ChooseBit">
+          <p class="pm-ChooseBit-message">
+            <strong>${data.message}</strong>
+          </p>
           <div class="pm-ChooseBit-items">
             ${items()}
           </div>
@@ -112,7 +117,7 @@ customElements.define(
           >
             More
           </button>
-        </section>
+        </div>
       `;
 
       // During and after successfully loading the count of items should be

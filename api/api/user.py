@@ -26,19 +26,18 @@ MAX_BAN_TIME = LITTLE_LESS_THAN_A_WEEK
 HONEY_POT_BAN_TIME = LITTLE_MORE_THAN_A_DAY
 
 # after 14 days reset the expiration date of the cookie by setting will_expire_cookie
-OLD_QUERY_USER_DETAILS = """select login, icon, score, points as dots, id, cookie_expires,
-  strftime('%s', cookie_expires) <= strftime('%s', 'now', '+351 days') as will_expire_cookie
-  from User where id = :id;"""
-
+# In select-user-details.sql the will_expire_cookie is set when it is within 7 days of expire date.
+# --strftime('%s', u.cookie_expires) <= strftime('%s', 'now', '+7 days') as will_expire_cookie,
+# The actual cookie expire date is set for 365 days and is extended every 7 days.
 EXTEND_COOKIE_QUERY = """
-update User set cookie_expires = strftime('%Y-%m-%d', 'now', '+365 days') where id = :id;
+update User set cookie_expires = strftime('%Y-%m-%d', 'now', '+14 days') where id = :id;
 """
 
 QUERY_SET_PASSWORD = """update User set password = :password where id = :id"""
 QUERY_USER_LOGIN = """select login from User where id = :id"""
 
 QUERY_USER_ID_BY_IP = """
-select id from User where ip = :ip and cookie_expires isnull limit 1;
+select id from User where ip = :ip and password isnull limit 1;
 """
 QUERY_USER_ID_BY_LOGIN = """
 select id from User where ip = :ip and login = :login;
@@ -65,9 +64,22 @@ def generate_user_login():
 
     return login
 
-def user_id_from_ip(ip, skip_generate=False):
+def user_id_from_ip(ip, skip_generate=True):
     cur = db.cursor()
 
+    shareduser = current_app.secure_cookie.get(u'shareduser')
+    if shareduser != None:
+        # Check if this shareduser is still valid and another user hasn't chosen
+        # a bit icon.
+        query = """select * from User where password is null and id = :shareduser;"""
+        result = cur.execute(query, {'shareduser':shareduser}).fetchall()
+        if result:
+            cur.close()
+            return int(shareduser)
+
+    # Handle players that had a cookie in their browser, but then deleted it.
+    # Or new players that are from the same ip that existing players are on.
+    # These players are shown the new-player page.
     result = cur.execute(QUERY_USER_ID_BY_IP, {'ip':ip}).fetchall()
     user_id = ANONYMOUS_USER_ID
 
@@ -84,10 +96,6 @@ def user_id_from_ip(ip, skip_generate=False):
         result = cur.execute(QUERY_USER_ID_BY_LOGIN, {'ip':ip, 'login':login}).fetchall()
         (result, col_names) = rowify(result, cur.description)
         user_id = result[0]['id']
-
-        # Claim a random bit icon
-        cur.execute(fetch_query_string('claim_random_bit_icon.sql'), {'user': user_id})
-        db.commit()
     else:
         (result, col_names) = rowify(result, cur.description)
         user_id = result[0]['id']
@@ -99,7 +107,7 @@ def user_not_banned(f):
     """Check if the user is not banned and respond with 429 if so"""
     def decorator(*args, **kwargs):
         ip = request.headers.get('X-Real-IP')
-        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip, skip_generate=True)
+        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
         if not user == None:
             user = int(user)
             banneduser_score = redisConnection.zscore('bannedusers', user)
@@ -142,9 +150,34 @@ class CurrentUserIDView(MethodView):
     decorators = [user_not_banned]
 
     def get(self):
-        "return the user id by secure cookie or by ip."
-        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
-        return str(user)
+        """
+        Return the user ID by secure cookie or by IP.  Sets the shareduser
+        cookie if user is authenticated via their IP.
+        """
+        set_cookie = False
+        user_has_password = False
+        user = current_app.secure_cookie.get(u'user')
+
+        if user is None:
+            shareduser = current_app.secure_cookie.get(u'shareduser')
+            if shareduser:
+                shareduser = int(shareduser)
+                cur = db.cursor()
+                query = """select * from User where password is not null and id = :shareduser;"""
+                result = cur.execute(query, {'shareduser':shareduser}).fetchall()
+                if result:
+                    user_has_password = True
+                cur.close()
+
+            user = user_id_from_ip(request.headers.get('X-Real-IP'), skip_generate=False)
+            if not current_app.secure_cookie.get(u'shareduser') or user_has_password:
+                set_cookie = True
+        user = int(user)
+
+        response = make_response(str(user), 200)
+        if set_cookie:
+            current_app.secure_cookie.set(u'shareduser', str(user), response, expires_days=365)
+        return response
 
 class GenerateAnonymousLogin(MethodView):
     """
@@ -207,13 +240,14 @@ class UserLoginView(MethodView):
         (result, col_names) = rowify(result, cur.description)
         user_data = result[0]
 
+        expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
         if crypt.crypt(password, user_data['password']) == user_data['password']:
+            current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
             current_app.secure_cookie.set(u'user', str(user_data['id']), response, expires_days=365)
             cur.execute(EXTEND_COOKIE_QUERY, {'id': user_data['id']})
             db.commit()
         else:
             # Invalid anon login; delete cookie just in case it's there
-            expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
             current_app.secure_cookie.set(u'user', "", response, expires=expires)
 
         cur.close()
@@ -231,6 +265,7 @@ class UserLogoutView(MethodView):
         response = make_response(redirect('/'))
         expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
         current_app.secure_cookie.set(u'user', "", response, expires=expires)
+        current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
 
         return response
 
@@ -241,8 +276,6 @@ class UserDetailsView(MethodView):
     decorators = [user_not_banned]
 
     def get(self):
-        response = make_response(redirect('/'))
-
         user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
 
         cur = db.cursor()
@@ -259,9 +292,9 @@ class UserDetailsView(MethodView):
         (result, col_names) = rowify(result, cur.description)
         user_details = result[0]
 
-        if user_details['will_expire_cookie'] == 1:
-            # extend the cookie
-            current_app.secure_cookie.set(u'user', str(user_details['id']), response, expires_days=365)
+        extend_cookie = False
+        if user_details['will_expire_cookie'] != 0:
+            extend_cookie = True
             cur.execute(EXTEND_COOKIE_QUERY, {'id': user_details['id']})
             db.commit()
         del user_details['will_expire_cookie']
@@ -288,9 +321,24 @@ class UserDetailsView(MethodView):
 
         user_details['puzzle_instance_list'] = puzzle_instance_list
 
+        # Check if shareduser can claim bit icon as user
+        if current_app.secure_cookie.get(u'shareduser'):
+            result = cur.execute("select points from User where id = :id and points >= :startpoints + :cost;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT, 'startpoints': NEW_USER_STARTING_POINTS}).fetchone()
+            if result:
+                user_details['can_claim_user'] = True
+
         cur.close()
 
-        return encoder.encode(user_details)
+        # extend the cookie
+        response = make_response(encoder.encode(user_details), 200)
+        if extend_cookie:
+            # Only set user cookie if it exists
+            if current_app.secure_cookie.get(u'user'):
+                current_app.secure_cookie.set(u'user', str(user_details['id']), response, expires_days=365)
+            # Only set shareduser cookie if it exists
+            if current_app.secure_cookie.get(u'shareduser'):
+                current_app.secure_cookie.set(u'shareduser', str(user_details['id']), response, expires_days=365)
+        return response
 
 class ClaimRandomBit(MethodView):
     """
@@ -344,7 +392,12 @@ class SplitPlayer(MethodView):
         # Verify user is logged in
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip, skip_generate=True)
         if user is None:
-            return make_response('not logged in', 400)
+            # TODO: remove cookies
+            response = make_response('not logged in', 400)
+            expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
+            current_app.secure_cookie.set(u'user', "", response, expires=expires)
+            current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
+            return response
         user = int(user)
 
         response = make_response('', 200)
@@ -366,7 +419,7 @@ class SplitPlayer(MethodView):
         query = """
         insert into User
         (password, m_date, cookie_expires, points, score, login, ip) values
-        (:password, datetime('now'), strftime('%Y-%m-%d', 'now', '+365 days'), :points, 0, :login, :ip);
+        (:password, datetime('now'), strftime('%Y-%m-%d', 'now', '+14 days'), :points, 0, :login, :ip);
         """
         cur.execute(query, {'password': password, 'ip': ip, 'points': NEW_USER_STARTING_POINTS, 'login': login})
 
@@ -375,6 +428,10 @@ class SplitPlayer(MethodView):
         newuser = result[0]['id']
 
         current_app.secure_cookie.set(u'user', str(newuser), response, expires_days=365)
+
+        # Remove shareduser cookie in case it exists
+        expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
+        current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
 
         # Claim a random bit icon
         cur.execute(fetch_query_string('claim_random_bit_icon.sql'), {'user': newuser})

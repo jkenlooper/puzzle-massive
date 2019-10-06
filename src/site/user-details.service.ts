@@ -17,6 +17,7 @@ interface UserDetailsResponse {
   id?: number;
   login?: string;
   score: number;
+  can_claim_user?: boolean;
   readonly puzzle_instance_list?: PuzzleInstanceList;
   readonly user_puzzle_count: number;
   readonly puzzle_instance_count: number;
@@ -28,20 +29,6 @@ interface UserDetailsData extends UserDetailsResponse {
   hasAvailableUserPuzzleSlot: boolean;
   emptySlotCount: number;
   puzzleInstanceCount: number;
-}
-
-function claimRandomBit(): Promise<void> {
-  return fetch("/newapi/claim-random-bit/", {
-    method: "POST",
-    credentials: "same-origin",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  }).then((response: Response) => {
-    if (!response.ok) {
-      throw new Error(response.statusText);
-    }
-  });
 }
 
 interface AnonymousLoginResponse {
@@ -71,6 +58,11 @@ class UserDetailsService {
   static localUserId = "user-id";
 
   constructor() {
+    if (!window.localStorage) {
+      // User may have blocked the site from storing cookies and using
+      // localStorage.
+      return;
+    }
     this.currentUserId().then((currentUserId) => {
       // verify locally saved bit login with id that comes back.  If it is
       // different then login again.
@@ -84,7 +76,7 @@ class UserDetailsService {
           this.userDetails.loginAgain = true;
         }
       }
-      this.updateUserDetails(false, currentUserId)
+      this.updateUserDetails(currentUserId)
         .then(() => {
           this._broadcast();
         })
@@ -140,7 +132,6 @@ class UserDetailsService {
   }
 
   updateUserDetails(
-    notClaimRandomBit: boolean = false,
     currentUserId: string | undefined = undefined
   ): Promise<void> {
     if (!currentUserId) {
@@ -188,15 +179,7 @@ class UserDetailsService {
               puzzleInstanceCount: userDetails.puzzle_instance_count,
             }
           );
-          if (!hasBit && !notClaimRandomBit) {
-            // Set a random bit icon.
-            return claimRandomBit().then(() => {
-              // Prevent endlessly trying to pick a random bit icon if none are available
-              return this.updateUserDetails(true);
-            });
-          } else {
-            return;
-          }
+          return;
         });
     }
   }

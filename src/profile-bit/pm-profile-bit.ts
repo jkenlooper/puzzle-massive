@@ -2,11 +2,15 @@ import { html, render } from "lit-html";
 import { classMap } from "lit-html/directives/class-map.js";
 
 import userDetailsService from "../site/user-details.service";
+import { colorForPlayer } from "../player-bit/player-bit-img.service";
 
 import "./profile-bit.css";
 
 interface TemplateData {
   isExpired: boolean;
+  canClaimUser: boolean;
+  isProcessingClaimUser: boolean;
+  claimUserHandler: any;
   profileLink: string;
   iconSrc: string;
   iconAlt: string;
@@ -34,6 +38,7 @@ customElements.define(
     private showScore: boolean;
     private showDots: boolean;
     private mediaPath: string;
+    private isProcessingClaimUser: boolean = false;
 
     constructor() {
       super();
@@ -83,7 +88,13 @@ customElements.define(
                         />
                       `
                     : html`
-                        <span>${data.userId}</span>
+                        <span
+                          class="hasNoBit pm-PlayerBit"
+                          style=${`--pm-PlayerBit-color:${colorForPlayer(
+                            data.userId
+                          )}`}
+                          >${data.userId.toString(36)}</span
+                        >
                       `}
                 </a>
               `}
@@ -98,12 +109,47 @@ customElements.define(
               <div>Dots <b>${data.dots}</b></div>
             `
           : html``}
+        ${data.canClaimUser
+          ? html`
+              ${data.isProcessingClaimUser
+                ? html`
+                    ...
+                  `
+                : html`
+                    <button @click=${data.claimUserHandler}>claim</button>
+                  `}
+            `
+          : html``}
       `;
+    }
+
+    handleClickClaimUser() {
+      this.isProcessingClaimUser = true;
+      this.render();
+      fetch("/newapi/claim-user/", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }).finally(() => {
+        this.isProcessingClaimUser = false;
+        const userDetailsChangeEvent = new Event("userDetailsChange", {
+          bubbles: true,
+        });
+        this.dispatchEvent(userDetailsChangeEvent);
+      });
     }
 
     get data(): TemplateData {
       return {
         isExpired: !!userDetailsService.userDetails.bit_expired,
+        canClaimUser: !!userDetailsService.userDetails.can_claim_user,
+        isProcessingClaimUser: this.isProcessingClaimUser,
+        claimUserHandler: {
+          handleEvent: this.handleClickClaimUser.bind(this),
+          capture: true,
+        },
         profileLink: `${this.player_profile_url}${
           userDetailsService.userDetails.login
         }/`,
@@ -138,19 +184,5 @@ customElements.define(
     adoptedCallback() {
       //console.log("adoptedCallback");
     }
-    /*
-    attributeChangedCallback(
-      name: string,
-      _oldValue: string | null,
-      _newValue: string | null
-    ) {
-      // Need to only render initially if the player has enough dots.
-      if (name === "dots") {
-        if (_newValue) {
-          this.render();
-        }
-      }
-    }
-       */
   }
 );

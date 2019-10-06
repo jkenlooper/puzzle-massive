@@ -12,4 +12,11 @@
   --color-light-accent: rgb(249, 249, 249);
   --color-primary-light: rgb(181, 229, 255);
   --color-accent: rgb(202, 109, 16);
+
+  /* For suitcss-utils-spacing */
+  --spaceXs: 8px;
+  --spaceSm: 16px;
+  --spaceMd: 32px;
+  --spaceLg: 64px;
+  --spaceXl: 128px;
 }

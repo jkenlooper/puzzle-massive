@@ -1,9 +1,14 @@
+:root {
+  --pm-PlayerBit-color: var(--color-dark);
+}
 .pm-PlayerBit {
   display: inline-block;
   vertical-align: middle;
 }
 .hasNoBit.pm-PlayerBit {
-  background-color: var(--color-dark);
+  background-color: var(--pm-PlayerBit-color);
+  color: var(--color-light-light);
   border-radius: 37%;
-  border: 2px solid var(--color-dark-dark);
+  border: 1px solid var(--color-dark-dark);
+  padding: 0 4px;
 }

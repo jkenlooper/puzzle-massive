@@ -1,4 +1,4 @@
-import { playerBitImgService } from "./player-bit-img.service";
+import { playerBitImgService, colorForPlayer } from "./player-bit-img.service";
 import "./player-bit.css";
 
 const tag = "pm-player-bit";
@@ -17,7 +17,17 @@ customElements.define(
         playerBitImgService
           .getPlayerBitForPlayer(this.player)
           .then((fragment) => {
-            this.innerHTML = fragment;
+            if (this.player && typeof this.player === "number") {
+              fragment = fragment.replace(
+                `[[${this.player.toString()}]]`,
+                this.player.toString(36)
+              );
+              this.style.setProperty(
+                "--pm-PlayerBit-color",
+                colorForPlayer(this.player)
+              );
+              this.innerHTML = fragment;
+            }
           });
       }
     }

@@ -1,5 +1,6 @@
 import FetchService from "../site/fetch.service";
 import userDetailsService from "../site/user-details.service";
+import { colorForPlayer } from "../player-bit/player-bit-img.service";
 
 import { html, render } from "lit-html";
 import { classMap } from "lit-html/directives/class-map.js";
@@ -240,19 +241,27 @@ customElements.define(
                   "pm-Ranking-listitem--topPlayer": item.topPlayer,
                 })}
               >
-                ${item.icon
-                  ? html`
-                      <img
-                        class="pm-Ranking-img"
-                        src=${item.iconSrc}
-                        width="64"
-                        height="64"
-                        alt=${item.iconAlt}
-                      />
-                    `
-                  : html`
-                      <div class="pm-Ranking-img"></div>
-                    `}
+                <div class="pm-Ranking-img">
+                  ${item.icon
+                    ? html`
+                        <img
+                          width="32"
+                          height="32"
+                          class="pm-PlayerBit"
+                          src=${item.iconSrc}
+                          alt=${item.iconAlt}
+                        />
+                      `
+                    : html`
+                        <span
+                          class="hasNoBit pm-PlayerBit"
+                          style=${`--pm-PlayerBit-color:${colorForPlayer(
+                            item.id
+                          )}`}
+                          >${item.id.toString(36)}</span
+                        >
+                      `}
+                </div>
 
                 <strong class="pm-Ranking-rank">${item.score}</strong>
                 <span class="pm-Ranking-status">

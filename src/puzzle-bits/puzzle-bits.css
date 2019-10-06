@@ -28,12 +28,3 @@
 
 .pm-PuzzleBits-bit:hover {
 }
-
-/* Shows for players without a bit icon */
-.pm-PuzzleBits-playerId {
-  border: 1px solid white;
-  border-radius: 50%;
-  background-color: black;
-  padding: 0.5em;
-}
-
