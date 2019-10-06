@@ -491,7 +491,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         if redisConnection.sadd(pzrate_key, puzzle) == 1:
             # New puzzle that player hasn't moved a piece on in the last hour.
             redisConnection.expire(pzrate_key, HOUR)
-            recent_points = redisConnection.get(points_key) or 0
+            recent_points = int(redisConnection.get(points_key) or '0')
             if recent_points > 0:
                 redisConnection.decr(points_key)
 
