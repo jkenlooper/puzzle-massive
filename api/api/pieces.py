@@ -16,7 +16,7 @@ from .tools import formatPieceMovementString
 from .jobs.convertPiecesToRedis import convert
 from .user import user_id_from_ip, increase_ban_time
 
-from .constants import ACTIVE, IN_QUEUE, COMPLETED
+from .constants import COMPLETED
 #from jobs import pieceMove
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)

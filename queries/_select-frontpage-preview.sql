@@ -1,5 +1,6 @@
 SELECT p.id, pf.name, pf.url, p.puzzle_id, p.pieces, p.table_width, p.table_height, p.link, p.description, p.bg_color, p.m_date, p.status, p.permission, pf.attribution,
 p.owner,
+p.queue,
 p1.puzzle_id as original_puzzle_id,
 pv.name as puzzle_variant_name,
 

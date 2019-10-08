@@ -3,7 +3,7 @@ FROM Puzzle AS pz
 JOIN Piece AS pc ON (pz.id = pc.puzzle)
 WHERE pz.puzzle_id = :puzzle_id
 and pc.id = :piece
-and pz.status in (1, 2, 5) -- ACTIVE, IN_QUEUE, BUGGY_UNLISTED
+and pz.status in (1, 5) -- ACTIVE, BUGGY_UNLISTED
 -- The piece status should be done with redis data
 --and (pc.status isnull or pc.status = '') -- not isimmovable
 limit 1

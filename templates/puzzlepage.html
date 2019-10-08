@@ -130,6 +130,9 @@
 {% elif puzzle.status == FROZEN %}
   {% set msg = "This Puzzle is frozen." %}
   {% set title = "Jigsaw Puzzle Frozen" %}
+{% elif puzzle.status == IN_QUEUE %}
+  {% set msg = "This Puzzle is in the queue and is not currently active.  Pieces can only be moved on active puzzles." %}
+  {% set title = "Jigsaw Puzzle in Queue" %}
 {% elif puzzle.status == BUGGY_UNLISTED %}
   {% set msg = "Sorry, this puzzle may have some issues when moving pieces because of an error.  It is no longer listed on the site, but you may still try to complete it." %}
   {% set title = "Error with Puzzle" %}

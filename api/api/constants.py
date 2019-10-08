@@ -1,5 +1,11 @@
 POINT_COST_FOR_CHANGING_BIT = 100
 NEW_USER_STARTING_POINTS = 1300
+SKILL_LEVEL_RANGES = set([
+    (0,200),
+    (200, 800),
+    (800, 2000),
+    (2000, 60000)
+])
 
 #status
 ACTIVE           = 1   # puzzle is shown on front page if public (points distributed)
@@ -27,3 +33,10 @@ PRIVATE          = -1  # Only shows for the owner of the puzzle, can still be pl
 
 # Puzzle Variant Slug names
 CLASSIC = 'classic' # initial_puzzle_variant.sql
+
+# queue levels for puzzles that have IN_QUEUE status
+QUEUE_WINNING_BID   = 1  # Player has placed this in front of all other puzzles within skill range (winning bid cost is computed from count of puzzles in bumped)
+QUEUE_BUMPED_BID    = 2  # When another puzzle that was the WINNING_BID is bumped out
+QUEUE_REBUILD       = 5  # Set when a puzzle is rebuilt by player
+QUEUE_INACTIVE      = 10 # When a puzzle that was ACTIVE gets retired to IN_QUEUE because of old m_date
+QUEUE_END_OF_LINE   = 99 # Set when a puzzle is completed. Anything beyond this is also considered end of line and should be sorted by m_date

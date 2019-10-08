@@ -1,7 +1,7 @@
 {% from 'preview-unknown.html' import preview_unknown %}
 {% if recent %}
 
-{# puzzle has been assembled #}
+{% set IN_QUEUE         = 2   %}
 {% set COMPLETED        = 3   %}
 {% set DELETED_REQUEST  = -13 %}
 {% set FROZEN           = 4   %}
@@ -91,6 +91,12 @@
   <p class="pm-Preview-statusNote">
   This puzzle instance is currently frozen by the owner.  Pieces can't be moved
   on the puzzle until the owner unfreezes it.
+  </p>
+  {% elif recent.status == IN_QUEUE %}
+  <p class="pm-Preview-statusNote">
+  This puzzle is currently in the queue and is not active.  Pieces can't be moved
+  on the puzzle until then.
+  <strong>{{ recent.queue }}</strong> {# TODO: show current queue order for puzzle #}
   </p>
   {% endif %}
 

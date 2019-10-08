@@ -15,8 +15,8 @@ WHERE pf.name == 'preview_full'
 AND p.puzzle_id != :puzzle_id
 -- PUBLIC
 AND p.permission = 0
--- ACTIVE, IN_QUEUE
-AND p.status IN (1, 2)
+-- ACTIVE
+AND p.status = 1
 GROUP BY p.id
 ORDER BY p.m_date DESC
 LIMIT 8;

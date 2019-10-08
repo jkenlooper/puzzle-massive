@@ -12,7 +12,7 @@ from api.database import rowify, read_query_file
 from api.tools import loadConfig
 from api.tools import deletePieceDataFromRedis
 from api.timeline import archive_and_clear
-from api.constants import REBUILD, COMPLETED, NEW_USER_STARTING_POINTS
+from api.constants import REBUILD, COMPLETED, NEW_USER_STARTING_POINTS, SKILL_LEVEL_RANGES, QUEUE_END_OF_LINE
 
 # Get the args from the janitor and connect to the database
 config_file = sys.argv[1]
@@ -74,7 +74,7 @@ class AutoRebuildCompletedPuzzle(Task):
 
     # The minimum count of incomplete puzzles before the auto rebuild task will
     # find random puzzles to rebuild.
-    minimum_count = 26
+    minimum_count = 6
 
     def __init__(self, id=None):
         super().__init__(id, __class__.__name__)
@@ -84,33 +84,34 @@ class AutoRebuildCompletedPuzzle(Task):
         super().do_task()
 
         cur = db.cursor()
-        active_puzzle_count = cur.execute(read_query_file("get_active_puzzle_count.sql")).fetchone()[0]
-        if active_puzzle_count < self.minimum_count:
-            (result, col_names) = rowify(cur.execute(read_query_file("select_random_puzzle_to_rebuild.sql"), {'status': COMPLETED}).fetchall(), cur.description)
-            if result:
-                for completed_puzzle in result:
-                    puzzle = completed_puzzle['id']
+        for (low, high) in SKILL_LEVEL_RANGES:
+            in_queue_puzzle_count = cur.execute(read_query_file("get_in_queue_puzzle_count.sql"), {'low': low, 'high': high}).fetchone()[0]
+            if in_queue_puzzle_count < self.minimum_count:
+                (result, col_names) = rowify(cur.execute(read_query_file("select_random_puzzle_to_rebuild.sql"), {'status': COMPLETED, 'low': low, 'high': high}).fetchall(), cur.description)
+                if result:
+                    for completed_puzzle in result:
+                        puzzle = completed_puzzle['id']
 
-                    logger.debug("found puzzle {id}".format(**completed_puzzle))
-                    # Update puzzle status to be REBUILD and change the piece count
-                    pieces = random.randint(max(int(config['MINIMUM_PIECE_COUNT']), completed_puzzle['pieces'] - 400), completed_puzzle['pieces'] + 400)
-                    cur.execute(read_query_file("update_status_puzzle_for_puzzle_id.sql"), {'puzzle_id': completed_puzzle['puzzle_id'], 'status': REBUILD, 'pieces': pieces})
-                    completed_puzzle['status'] = REBUILD
-                    completed_puzzle['pieces'] = pieces
+                        logger.debug("found puzzle {id}".format(**completed_puzzle))
+                        # Update puzzle status to be REBUILD and change the piece count
+                        pieces = random.randint(max(int(config['MINIMUM_PIECE_COUNT']), max(completed_puzzle['pieces'] - 400, low)), min(high - 1, completed_puzzle['pieces'] + 400))
+                        cur.execute(read_query_file("update_status_puzzle_for_puzzle_id.sql"), {'puzzle_id': completed_puzzle['puzzle_id'], 'status': REBUILD, 'pieces': pieces, 'queue': QUEUE_END_OF_LINE})
+                        completed_puzzle['status'] = REBUILD
+                        completed_puzzle['pieces'] = pieces
 
-                    db.commit()
+                        db.commit()
 
-                    # Delete any piece data from redis since it is no longer needed.
-                    query_select_all_pieces_for_puzzle = """select * from Piece where (puzzle = :puzzle)"""
-                    (all_pieces, col_names) = rowify(cur.execute(query_select_all_pieces_for_puzzle, {'puzzle': puzzle}).fetchall(), cur.description)
-                    deletePieceDataFromRedis(redisConnection, puzzle, all_pieces)
+                        # Delete any piece data from redis since it is no longer needed.
+                        query_select_all_pieces_for_puzzle = """select * from Piece where (puzzle = :puzzle)"""
+                        (all_pieces, col_names) = rowify(cur.execute(query_select_all_pieces_for_puzzle, {'puzzle': puzzle}).fetchall(), cur.description)
+                        deletePieceDataFromRedis(redisConnection, puzzle, all_pieces)
 
-                    job = self.queue.enqueue_call(
-                        func='api.jobs.pieceRenderer.render', args=([completed_puzzle]), result_ttl=0,
-                        timeout='24h'
-                    )
+                        job = self.queue.enqueue_call(
+                            func='api.jobs.pieceRenderer.render', args=([completed_puzzle]), result_ttl=0,
+                            timeout='24h'
+                        )
 
-                    archive_and_clear(puzzle, db, config.get('PUZZLE_ARCHIVE'))
+                        archive_and_clear(puzzle, db, config.get('PUZZLE_ARCHIVE'))
 
         cur.close()
         db.commit()
@@ -245,6 +246,29 @@ class UpdatePuzzleStats(Task):
         cur.close()
         db.commit()
 
+class UpdatePuzzleQueue(Task):
+    "Update puzzle queue"
+    interval = MINUTE * 5
+
+    def __init__(self, id=None):
+        super().__init__(id, __class__.__name__)
+
+    def do_task(self):
+        super().do_task()
+
+        cur = db.cursor()
+        cur.execute(read_query_file("retire-inactive-puzzles-to-queue.sql"))
+        # select all ACTIVE puzzles within each skill range
+        skill_range_active_count = 2
+        for (low, high) in SKILL_LEVEL_RANGES:
+            result = cur.execute(read_query_file("count-active-puzzles-within-skill-range.sql"), {'low': low, 'high': high}).fetchone()
+            if result == None or result[0] < skill_range_active_count:
+                logger.info("Bump next puzzle in queue to be active for skill level range {low}, {high}".format(low=low, high=high))
+                cur.execute(read_query_file("update-puzzle-next-in-queue-to-be-active.sql"), {'low': low, 'high': high, 'active_count':skill_range_active_count})
+
+        cur.close()
+        db.commit()
+
 def main():
     ""
     # Reset scheduler to start by removing any previous scheduled tasks
@@ -257,6 +281,7 @@ def main():
         UpdateModifiedDateOnPuzzle,
         UpdatePlayer,
         UpdatePuzzleStats,
+        UpdatePuzzleQueue,
     ]
     tasks = {}
     for index in range(len(task_registry)):

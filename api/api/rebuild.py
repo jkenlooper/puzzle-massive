@@ -12,7 +12,7 @@ from PIL import Image
 from .app import db
 
 from .database import rowify, fetch_query_string
-from .constants import REBUILD, COMPLETED
+from .constants import REBUILD, COMPLETED, QUEUE_REBUILD
 from .timeline import archive_and_clear
 from .user import user_id_from_ip, user_not_banned
 from .jobs.convertPiecesToRedis import convert
@@ -84,7 +84,7 @@ class PuzzlePiecesRebuildView(MethodView):
             cur.execute(fetch_query_string("decrease-user-points.sql"), {'user': user, 'points': point_cost})
 
         # Update puzzle status to be REBUILD and change the piece count
-        cur.execute(fetch_query_string("update_status_puzzle_for_puzzle_id.sql"), {'puzzle_id': puzzle_id, 'status': REBUILD, 'pieces': pieces})
+        cur.execute(fetch_query_string("update_status_puzzle_for_puzzle_id.sql"), {'puzzle_id': puzzle_id, 'status': REBUILD, 'pieces': pieces, 'queue': QUEUE_REBUILD})
         puzzleData['status'] = REBUILD
         puzzleData['pieces'] = pieces
 

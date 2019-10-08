@@ -9,7 +9,6 @@ from api.constants import (
     DELETED_REQUEST,
     FROZEN,
     ACTIVE,
-    IN_QUEUE,
     COMPLETED
 )
 
@@ -76,7 +75,7 @@ class PuzzleDetailsView(MethodView):
         if puzzleData['owner'] != user or puzzleData['is_original']:
             abort(400)
 
-        if puzzleData['status'] not in (FROZEN, ACTIVE, IN_QUEUE, COMPLETED):
+        if puzzleData['status'] not in (FROZEN, ACTIVE, COMPLETED):
             abort(400)
 
         response = {}
@@ -159,7 +158,7 @@ class PuzzleDetailsView(MethodView):
         (delete_penalty, can_delete, delete_disabled_message) = self.get_delete_prereq(puzzleData)
         response = {
             'canDelete': can_delete,
-            'hasActions': puzzleData.get('status') in (FROZEN, ACTIVE, IN_QUEUE, COMPLETED),
+            'hasActions': puzzleData.get('status') in (FROZEN, ACTIVE, COMPLETED),
             'deleteDisabledMessage': delete_disabled_message,
             'deletePenalty': delete_penalty,
             'isFrozen': puzzleData.get('status') == FROZEN,

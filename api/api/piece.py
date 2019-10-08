@@ -6,7 +6,6 @@ import redis
 
 from .app import db
 from .database import fetch_query_string, rowify
-from .constants import ACTIVE, IN_QUEUE
 from .user import user_not_banned, user_id_from_ip
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)

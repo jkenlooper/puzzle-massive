@@ -16,7 +16,7 @@ from .app import db
 from .database import fetch_query_string, rowify
 from .tools import formatPieceMovementString, formatBitMovementString, init_karma_key, get_public_karma_points
 
-from .constants import ACTIVE, IN_QUEUE, BUGGY_UNLISTED, POINT_COST_FOR_CHANGING_BIT, NEW_USER_STARTING_POINTS
+from .constants import ACTIVE, BUGGY_UNLISTED, POINT_COST_FOR_CHANGING_BIT, NEW_USER_STARTING_POINTS
 #from jobs import pieceMove
 from .jobs import pieceTranslate
 from .user import user_id_from_ip, user_not_banned, increase_ban_time
@@ -136,10 +136,11 @@ class PuzzlePieceTokenView(MethodView):
             }).fetchall()
         if not result:
             # 400 if puzzle does not exist or piece is not found
+            # Only puzzles in ACTIVE state can be mutated
             err_msg = {
                 'msg': "puzzle pieces can't be moved. Please refresh.",
                 'type': "puzzleimmutable",
-                'timeout': 5
+                'timeout': 300
             }
             cur.close()
             return make_response(encoder.encode(err_msg), 400)
@@ -440,7 +441,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         puzzle_piece = result[0]
 
         # check if puzzle is in mutable state (not frozen)
-        if not puzzle_piece['status'] in (ACTIVE, IN_QUEUE, BUGGY_UNLISTED):
+        if not puzzle_piece['status'] in (ACTIVE, BUGGY_UNLISTED):
             cur.close()
             err_msg = {
                 'msg': "puzzle not in mutable state"
