@@ -22,6 +22,7 @@ redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=T
 
 STATUS_RECENT = 'recent'
 STATUS_ACTIVE = 'active'
+STATUS_IN_QUEUE = 'in_queue'
 STATUS_COMPLETE = 'complete'
 STATUS_NEW = 'new'
 STATUS_FROZEN = 'frozen'
@@ -30,6 +31,7 @@ STATUS_UNAVAILABLE = 'unavailable'
 STATUS = {
     STATUS_RECENT,
     STATUS_ACTIVE,
+    STATUS_IN_QUEUE,
     STATUS_COMPLETE,
     STATUS_NEW,
     STATUS_FROZEN,
@@ -60,11 +62,12 @@ def build_select_available_puzzle_sql(query_file, status, type):
         if name == STATUS_RECENT:
             recent_status.add(1)
             status_ids.add(ACTIVE)
-            status_ids.add(IN_QUEUE)
 
         elif name == STATUS_ACTIVE:
             active_status.add(1)
             status_ids.add(ACTIVE)
+
+        elif name == STATUS_IN_QUEUE:
             status_ids.add(IN_QUEUE)
 
         elif name == STATUS_COMPLETE:
@@ -73,7 +76,6 @@ def build_select_available_puzzle_sql(query_file, status, type):
         elif name == STATUS_NEW:
             new_status.add(1)
             status_ids.add(ACTIVE)
-            status_ids.add(IN_QUEUE)
 
         elif name == STATUS_FROZEN:
             status_ids.add(FROZEN)
@@ -101,7 +103,7 @@ def build_select_available_puzzle_sql(query_file, status, type):
         new_status="({})".format(", ".join(map(str, new_status))),
         original_type="({})".format(", ".join(map(str, original_type))),
     )
-    current_app.logger.debug(query)
+    #current_app.logger.debug(query)
 
     return query
 
@@ -182,6 +184,7 @@ class PuzzleListView(MethodView):
         page = min(page_max, page)
 
         select_available_puzzle_images = ""
+        # TODO: add orderby for queue
         if orderby == 'pieces':
             select_available_puzzle_images = build_select_available_puzzle_sql('select_available_puzzle_images--orderby-pieces.sql', status, type)
         else:

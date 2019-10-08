@@ -143,10 +143,11 @@ class UpdateModifiedDateOnPuzzle(Task):
         super().do_task()
 
         cur = db.cursor()
-        puzzles = map(int, redisConnection.zrangebyscore('pcupdates', self.last_update, '+inf'))
+        puzzles = redisConnection.zrangebyscore('pcupdates', self.last_update, '+inf', withscores=True)
         self.last_update = int(time()) - 2 # allow some overlap
-        for puzzle in puzzles:
-            cur.execute(read_query_file("update_puzzle_m_date_to_now.sql"), {'puzzle': puzzle})
+        for (puzzle, modified) in puzzles:
+            puzzle = int(puzzle)
+            cur.execute(read_query_file("update_puzzle_m_date_to_now.sql"), {'puzzle': puzzle, 'modified': modified})
             logger.info("Updating puzzle m_date {0}".format(puzzle))
         cur.close()
         db.commit()

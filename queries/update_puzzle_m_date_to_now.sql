@@ -1,1 +1,1 @@
-update Puzzle set m_date = datetime('now') where id = :puzzle;
+update Puzzle set m_date = datetime(:modified, 'unixepoch') where id = :puzzle;

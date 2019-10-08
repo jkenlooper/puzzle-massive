@@ -99,10 +99,6 @@ class PuzzlePiecesView(MethodView):
 
             # For now just convert as it doesn't take long
             convert(puzzle)
-        else:
-            # The act of just loading the puzzle should update the pcupdates.
-            # This will prevent the puzzle from being deleted by the janitor.
-            redisConnection.zadd('pcupdates', {puzzle: int(time.time())})
 
         query = """select id from Piece where (puzzle = :puzzle)"""
         (all_pieces, col_names) = rowify(cur.execute(query, {'puzzle': puzzle}).fetchall(), cur.description)

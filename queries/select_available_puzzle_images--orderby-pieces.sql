@@ -4,9 +4,9 @@
 select pf.url as src, p.puzzle_id, p.status, p.pieces,
 
 strftime('%Y-%m-%d %H:%M', p.m_date, '+7 hours') as redo_date,
-p.m_date is not null and strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 hours') as is_recent,
+p.m_date is not null and strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 hours') and p.status in (1, 3, 4) as is_recent, -- ACTIVE, COMPLETED, FROZEN
 strftime('%s','now') - strftime('%s', p.m_date) as seconds_from_now,
-p.m_date is not null and not strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 hours') and p.status in (1, 2) as is_active,
+p.m_date is not null and not strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 hours') and p.status = 1 as is_active, -- ACTIVE
 p.m_date is null and p.status in (1, 2) as is_new, -- ACTIVE, IN_QUEUE
 pi.original == pi.instance as is_original,
 CAST(p.owner as integer) as owner,
