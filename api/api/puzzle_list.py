@@ -44,7 +44,8 @@ TYPE = {TYPE_ORIGINAL, TYPE_INSTANCE}
 
 ORDERBY_M_DATE = 'm_date'
 ORDERBY_PIECES = 'pieces'
-ORDERBY = {ORDERBY_M_DATE, ORDERBY_PIECES}
+ORDERBY_QUEUE = 'queue'
+ORDERBY = {ORDERBY_M_DATE, ORDERBY_PIECES, ORDERBY_QUEUE}
 
 page_size = 44
 
@@ -187,6 +188,8 @@ class PuzzleListView(MethodView):
         # TODO: add orderby for queue
         if orderby == 'pieces':
             select_available_puzzle_images = build_select_available_puzzle_sql('select_available_puzzle_images--orderby-pieces.sql', status, type)
+        elif orderby == 'queue':
+            select_available_puzzle_images = build_select_available_puzzle_sql('select_available_puzzle_images--orderby-queue.sql', status, type)
         else:
             select_available_puzzle_images = build_select_available_puzzle_sql('select_available_puzzle_images--orderby-m_date.sql', status, type)
 

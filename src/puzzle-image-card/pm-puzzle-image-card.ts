@@ -14,6 +14,7 @@ interface TemplateData {
   src: string;
   puzzleId: string;
   pieces: number;
+  queue: number;
   isActive: boolean;
   isRecent: boolean;
   isComplete: boolean;
@@ -45,6 +46,7 @@ customElements.define(
       puzzle_id: "",
       status: 0,
       pieces: 0,
+      queue: 0,
       is_active: 0,
       is_new: 0,
       is_recent: 0,
@@ -149,6 +151,7 @@ customElements.define(
                 </small>
               `
             : ""}
+          q ${data.queue}
         </div>
       `;
     }
@@ -158,6 +161,7 @@ customElements.define(
         src: this.puzzle.src,
         puzzleId: this.puzzle.puzzle_id,
         pieces: this.puzzle.pieces,
+        queue: this.puzzle.queue,
         isOriginal: !!this.puzzle.is_original,
         owner: this.puzzle.owner,
         hideOwner: this.getAttribute("hide-owner") !== null,

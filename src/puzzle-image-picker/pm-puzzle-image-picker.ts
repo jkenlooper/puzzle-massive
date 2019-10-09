@@ -229,8 +229,8 @@ customElements.define(
                 legend="Status"
                 type="checkbox"
                 ?disabled=${data.isLoadingPuzzles}
-                labels="Recent, Active, Queue, New, Complete, Frozen, Unavailable"
-                values="*recent, *active, in_queue, new, complete, frozen, unavailable"
+                labels="Recent, Active, New, Queue, Complete, Frozen, Unavailable"
+                values="*recent, *active, new, in_queue, complete, frozen, unavailable"
               ></pm-filter-group>
 
               <pm-filter-group
@@ -265,8 +265,8 @@ customElements.define(
                 legend="Order by"
                 type="radio"
                 ?disabled=${data.isLoadingPuzzles}
-                labels="Modified date, Piece count"
-                values="*m_date, pieces"
+                labels="Modified date, Piece count, Queue"
+                values="*m_date, pieces, queue"
               ></pm-filter-group>
 
               <pm-filter-group

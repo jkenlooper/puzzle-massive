@@ -1,6 +1,6 @@
 -- should match results from select_available_puzzle_image_count.sql,
 -- select_available_puzzle_images--orderby-pieces.sql
--- select_available_puzzle_images--orderby-queue.sql
+-- select_available_puzzle_images--orderby-m_date.sql
 
 select pf.url as src, p.puzzle_id, p.status, p.pieces, p.queue,
 
@@ -37,7 +37,7 @@ and p.status in {status}
 and p.pieces >= :pieces_min
 and p.pieces <= :pieces_max
 
-order by p.m_date desc
+order by p.queue, p.m_date asc
 
 limit :page_size offset :offset
 ;

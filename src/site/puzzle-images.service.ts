@@ -5,6 +5,7 @@ export interface PuzzleImageData {
   puzzle_id: string;
   status: number;
   pieces: number;
+  queue: number;
   redo_date?: string;
   is_active: number;
   is_new: number;

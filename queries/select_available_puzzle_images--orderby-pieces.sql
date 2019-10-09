@@ -1,7 +1,8 @@
 -- should match results from select_available_puzzle_image_count.sql,
 -- select_available_puzzle_images--orderby-m_date.sql
+-- select_available_puzzle_images--orderby-queue.sql
 
-select pf.url as src, p.puzzle_id, p.status, p.pieces,
+select pf.url as src, p.puzzle_id, p.status, p.pieces, p.queue,
 
 strftime('%Y-%m-%d %H:%M', p.m_date, '+7 hours') as redo_date,
 p.m_date is not null and strftime('%s', p.m_date) >= strftime('%s', 'now', '-7 hours') and p.status in (1, 3, 4) as is_recent, -- ACTIVE, COMPLETED, FROZEN
