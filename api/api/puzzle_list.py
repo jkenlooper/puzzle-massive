@@ -24,7 +24,6 @@ STATUS_RECENT = 'recent'
 STATUS_ACTIVE = 'active'
 STATUS_IN_QUEUE = 'in_queue'
 STATUS_COMPLETE = 'complete'
-STATUS_NEW = 'new'
 STATUS_FROZEN = 'frozen'
 STATUS_UNAVAILABLE = 'unavailable'
 
@@ -33,7 +32,6 @@ STATUS = {
     STATUS_ACTIVE,
     STATUS_IN_QUEUE,
     STATUS_COMPLETE,
-    STATUS_NEW,
     STATUS_FROZEN,
     STATUS_UNAVAILABLE,
 }
@@ -55,9 +53,8 @@ def build_select_available_puzzle_sql(query_file, status, type):
     The sqlite bind params don't support expanding lists, so doing this
     manually.  Careful here to avoid sql injection attacks.
     """
-    recent_status = {0,} # include false values for is_recent
+    recent_status = set() # include false values for is_recent
     active_status = {0,} # include false values for is_active
-    new_status = {0,} # include false values for is_new
     status_ids = set()
     for name in status:
         if name == STATUS_RECENT:
@@ -65,23 +62,25 @@ def build_select_available_puzzle_sql(query_file, status, type):
             status_ids.add(ACTIVE)
 
         elif name == STATUS_ACTIVE:
+            recent_status.add(0)
+            recent_status.add(1)
             active_status.add(1)
             status_ids.add(ACTIVE)
 
         elif name == STATUS_IN_QUEUE:
+            recent_status.add(0)
             status_ids.add(IN_QUEUE)
 
         elif name == STATUS_COMPLETE:
+            recent_status.add(0)
             status_ids.add(COMPLETED)
 
-        elif name == STATUS_NEW:
-            new_status.add(1)
-            status_ids.add(ACTIVE)
-
         elif name == STATUS_FROZEN:
+            recent_status.add(0)
             status_ids.add(FROZEN)
 
         elif name == STATUS_UNAVAILABLE:
+            recent_status.add(0)
             status_ids.add(REBUILD)
             status_ids.add(IN_RENDER_QUEUE)
             status_ids.add(RENDERING)
@@ -101,7 +100,6 @@ def build_select_available_puzzle_sql(query_file, status, type):
         status="({})".format(", ".join(map(str, status_ids))),
         recent_status="({})".format(", ".join(map(str, recent_status))),
         active_status="({})".format(", ".join(map(str, active_status))),
-        new_status="({})".format(", ".join(map(str, new_status))),
         original_type="({})".format(", ".join(map(str, original_type))),
     )
     #current_app.logger.debug(query)
@@ -117,11 +115,11 @@ class PuzzleListView(MethodView):
     def get(self):
         """
         /newapi/puzzle-list/?status=...&status=...&
-        status: recent, active, new, complete, frozen, unavailable
+        status: recent, active, new, queue, complete, frozen, unavailable
         pieces_min: number
         pieces_max: number
         type: original, instance
-        orderby: m_date, pieces
+        orderby: m_date, pieces, queue
         page: number
 
         returns
@@ -146,6 +144,7 @@ class PuzzleListView(MethodView):
         if len(status) > 0 and not status.issubset(STATUS):
             abort(400)
         status = tuple(status)
+        #current_app.logger.debug('status {}'.format(status))
 
         type = set(request.args.getlist('type'))
         if len(type) > 0 and not type.issubset(TYPE):
@@ -173,6 +172,7 @@ class PuzzleListView(MethodView):
 
         puzzle_count = 0
         select_available_puzzle_image_count = build_select_available_puzzle_sql('select_available_puzzle_image_count.sql', status, type)
+        #current_app.logger.debug(select_available_puzzle_image_count)
 
         result = cur.execute(select_available_puzzle_image_count, {
             "pieces_min": pieces_min,
@@ -186,11 +186,11 @@ class PuzzleListView(MethodView):
 
         select_available_puzzle_images = ""
         # TODO: add orderby for queue
-        if orderby == 'pieces':
+        if orderby == ORDERBY_PIECES:
             select_available_puzzle_images = build_select_available_puzzle_sql('select_available_puzzle_images--orderby-pieces.sql', status, type)
-        elif orderby == 'queue':
+        elif orderby == ORDERBY_QUEUE:
             select_available_puzzle_images = build_select_available_puzzle_sql('select_available_puzzle_images--orderby-queue.sql', status, type)
-        else:
+        else: # ORDERBY_M_DATE
             select_available_puzzle_images = build_select_available_puzzle_sql('select_available_puzzle_images--orderby-m_date.sql', status, type)
 
         result = cur.execute(select_available_puzzle_images, {

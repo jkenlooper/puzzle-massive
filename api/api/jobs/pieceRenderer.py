@@ -355,8 +355,12 @@ def render(*args):
                 );""", pc)
 
         # Update Puzzle data
+        puzzleStatus = ACTIVE
+        if original_puzzle_id == puzzle_id:
+            puzzleStatus = IN_QUEUE
+
         cur.execute("update Puzzle set status = :status where id = :id", {
-            'status': IN_QUEUE,
+            'status': puzzleStatus,
             'id': puzzle['id']
             })
         cur.execute(insert_puzzle_file, {

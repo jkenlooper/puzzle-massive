@@ -248,7 +248,7 @@ class UpdatePuzzleStats(Task):
         db.commit()
 
 class UpdatePuzzleQueue(Task):
-    "Update puzzle queue"
+    "Update puzzle queue for original puzzles (not puzzle instances)"
     interval = MINUTE * 5
 
     def __init__(self, id=None):

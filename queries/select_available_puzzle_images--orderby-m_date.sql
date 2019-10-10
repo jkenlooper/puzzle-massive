@@ -31,7 +31,6 @@ where pf.name == 'preview_full'
 and p.permission = 0 -- PUBLIC
 and is_recent in {recent_status}
 and is_active in {active_status}
-and is_new in {new_status}
 and is_original in {original_type}
 and p.status in {status}
 and p.pieces >= :pieces_min

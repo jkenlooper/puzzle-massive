@@ -23,8 +23,8 @@ if __name__ == '__main__':
 
     cur = db.cursor()
 
-    ## Update all existing puzzles that are IN_QUEUE to ACTIVE if they have recent m_date
-    result = cur.execute("update Puzzle set status = 1 where status = 2 and strftime('%s', m_date) >= strftime('%s', 'now', '-7 days');")
+    ## Update all existing puzzles that are IN_QUEUE to ACTIVE
+    result = cur.execute("update Puzzle set status = 1 where status = 2;")
 
     db.commit()
     cur.close()

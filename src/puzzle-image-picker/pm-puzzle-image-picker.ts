@@ -229,8 +229,8 @@ customElements.define(
                 legend="Status"
                 type="checkbox"
                 ?disabled=${data.isLoadingPuzzles}
-                labels="Recent, Active, New, Queue, Complete, Frozen, Unavailable"
-                values="*recent, *active, new, in_queue, complete, frozen, unavailable"
+                labels="Recent, Active, Queue, Complete, Frozen, Unavailable"
+                values="*recent, *active, in_queue, complete, frozen, unavailable"
               ></pm-filter-group>
 
               <pm-filter-group
