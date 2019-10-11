@@ -50,7 +50,7 @@ class Task:
             return
         now = int(time())
         due = now + self.interval
-        logger.info("{format_due} - task {task_name} {task_id} due date".format(**{
+        logger.debug("{format_due} - task {task_name} {task_id} due date".format(**{
             'format_due':ctime(due),
             'task_name':self.task_name,
             'task_id':self.id
@@ -133,7 +133,7 @@ class BumpMinimumDotsForPlayers(Task):
 
 class UpdateModifiedDateOnPuzzle(Task):
     "Update the m_date for all recently updated puzzles based on pcupdates redis sorted set"
-    interval = 58
+    interval = 15
     last_update = int(time())
 
     def __init__(self, id=None):
@@ -148,7 +148,7 @@ class UpdateModifiedDateOnPuzzle(Task):
         for (puzzle, modified) in puzzles:
             puzzle = int(puzzle)
             cur.execute(read_query_file("update_puzzle_m_date_to_now.sql"), {'puzzle': puzzle, 'modified': modified})
-            logger.info("Updating puzzle m_date {0}".format(puzzle))
+            logger.debug("Updating puzzle m_date {0}".format(puzzle))
         cur.close()
         db.commit()
 
@@ -264,7 +264,7 @@ class UpdatePuzzleQueue(Task):
         for (low, high) in SKILL_LEVEL_RANGES:
             result = cur.execute(read_query_file("count-active-puzzles-within-skill-range.sql"), {'low': low, 'high': high}).fetchone()
             if result == None or result[0] < skill_range_active_count:
-                logger.info("Bump next puzzle in queue to be active for skill level range {low}, {high}".format(low=low, high=high))
+                logger.debug("Bump next puzzle in queue to be active for skill level range {low}, {high}".format(low=low, high=high))
                 cur.execute(read_query_file("update-puzzle-next-in-queue-to-be-active.sql"), {'low': low, 'high': high, 'active_count':skill_range_active_count})
 
         cur.close()

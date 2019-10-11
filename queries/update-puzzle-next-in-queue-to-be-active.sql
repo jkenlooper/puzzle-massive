@@ -1,4 +1,5 @@
-update Puzzle set status = 1 -- ACTIVE
+update Puzzle set status = 1, -- ACTIVE
+m_date = datetime('now')
 where status = 2 -- IN_QUEUE
 and pieces >= :low and pieces < :high
 and id in (

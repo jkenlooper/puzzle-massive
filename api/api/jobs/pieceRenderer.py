@@ -25,6 +25,7 @@ from api.constants import (
         RENDERING,
         RENDERING_FAILED,
         IN_QUEUE,
+        ACTIVE,
         )
 
 
