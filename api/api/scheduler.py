@@ -86,7 +86,7 @@ class AutoRebuildCompletedPuzzle(Task):
         cur = db.cursor()
         for (low, high) in SKILL_LEVEL_RANGES:
             in_queue_puzzle_count = cur.execute(read_query_file("get_in_queue_puzzle_count.sql"), {'low': low, 'high': high}).fetchone()[0]
-            if in_queue_puzzle_count < self.minimum_count:
+            if in_queue_puzzle_count <= self.minimum_count:
                 (result, col_names) = rowify(cur.execute(read_query_file("select_random_puzzle_to_rebuild.sql"), {'status': COMPLETED, 'low': low, 'high': high}).fetchall(), cur.description)
                 if result:
                     for completed_puzzle in result:

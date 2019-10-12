@@ -36,7 +36,7 @@ and p.status in {status}
 and p.pieces >= :pieces_min
 and p.pieces <= :pieces_max
 
-order by p.queue, p.m_date asc
+order by p.queue, p.m_date asc nulls last
 
 limit :page_size offset :offset
 ;

@@ -141,8 +141,7 @@ class PuzzleListView(MethodView):
             abort(400)
 
         status = set(request.args.getlist('status'))
-        if len(status) > 0 and not status.issubset(STATUS):
-            abort(400)
+        status = status.intersection(STATUS)
         status = tuple(status)
         #current_app.logger.debug('status {}'.format(status))
 

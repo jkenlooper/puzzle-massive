@@ -67,7 +67,7 @@ customElements.define(
                 <span
                   >${data.linkText}
                   <em class="u-block"
-                    ><small>All puzzle instance slots are filled.</small></em
+                    ><small>All your puzzle instance slots are filled.</small></em
                   ></span
                 >
               `

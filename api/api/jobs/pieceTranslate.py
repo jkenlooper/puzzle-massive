@@ -14,7 +14,7 @@ import redis
 from api.app import db
 from api.database import rowify, fetch_query_string
 from api.tools import formatPieceMovementString, loadConfig, init_karma_key
-from api.constants import COMPLETED
+from api.constants import COMPLETED, QUEUE_END_OF_LINE
 
 KARMA_POINTS_EXPIRE = 3600 # hour in seconds
 RECENT_POINTS_EXPIRE = 7200
@@ -119,6 +119,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         # TODO: Optimize by using redis for puzzle status
         if complete:
             cur.execute(fetch_query_string("update_puzzle_status_for_puzzle.sql"), {'puzzle':puzzle, 'status':COMPLETED})
+            cur.execute(fetch_query_string("update_puzzle_queue_for_puzzle.sql"), {'puzzle':puzzle, 'queue':QUEUE_END_OF_LINE})
             db.commit()
             job = current_app.cleanupqueue.enqueue_call(
                 func='api.jobs.convertPiecesToDB.transfer', args=(puzzle,), result_ttl=0
