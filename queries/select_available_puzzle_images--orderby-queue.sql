@@ -36,7 +36,7 @@ and p.status in {status}
 and p.pieces >= :pieces_min
 and p.pieces <= :pieces_max
 
-order by p.queue, p.m_date asc nulls last
+order by p.queue, p.m_date is not null, strftime('%s','now') - strftime('%s', p.m_date) desc -- FILO for m_date
 
 limit :page_size offset :offset
 ;

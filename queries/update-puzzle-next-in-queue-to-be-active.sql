@@ -7,7 +7,7 @@ and id in (
     from Puzzle as p
     join PuzzleInstance as pi on (p.id = pi.original)
 )
-order by queue, m_date asc nulls last
+order by queue, m_date is not null, strftime('%s','now') - strftime('%s', m_date) desc -- FILO for m_date
 limit :active_count - (
     -- count-active-puzzles-within-skill-range.sql
     select count(distinct p.id) as active_count

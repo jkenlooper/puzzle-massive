@@ -184,7 +184,6 @@ class PuzzleListView(MethodView):
         page = min(page_max, page)
 
         select_available_puzzle_images = ""
-        # TODO: add orderby for queue
         if orderby == ORDERBY_PIECES:
             select_available_puzzle_images = build_select_available_puzzle_sql('select_available_puzzle_images--orderby-pieces.sql', status, type)
         elif orderby == ORDERBY_QUEUE:
