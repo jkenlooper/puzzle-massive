@@ -40,3 +40,5 @@ QUEUE_BUMPED_BID    = 2  # When another puzzle that was the WINNING_BID is bumpe
 QUEUE_REBUILD       = 5  # Set when a puzzle is rebuilt by player
 QUEUE_INACTIVE      = 10 # When a puzzle that was ACTIVE gets retired to IN_QUEUE because of old m_date
 QUEUE_END_OF_LINE   = 99 # Set when a puzzle is completed. Anything beyond this is also considered end of line and should be sorted by m_date
+
+BID_COST_PER_PUZZLE = 100

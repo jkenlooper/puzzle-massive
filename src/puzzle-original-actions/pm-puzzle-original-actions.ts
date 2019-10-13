@@ -1,11 +1,11 @@
 import { html, render } from "lit-html";
 //import { classMap } from "lit-html/directives/class-map.js";
 import userDetailsService from "../site/user-details.service";
-import "./puzzle-instance-actions.css";
+import "./puzzle-original-actions.css";
 
 import {
   puzzleDetailsService,
-  PuzzleInstanceDetails,
+  PuzzleOriginalDetails,
 } from "../site/puzzle-details.service";
 
 interface TemplateData {
@@ -14,36 +14,34 @@ interface TemplateData {
   isReady: boolean;
   hasPuzzleDetails: boolean;
   hasActions: boolean;
-  isFrozen: boolean;
-  canDelete: boolean;
-  deletePenalty: number;
-  deleteDisabledMessage: string;
+  canBump: boolean;
+  highestBid: number;
+  bumpDisabledMessage: string;
   isProcessing: boolean; // the status on the puzzle page is not the same as the status returned.
   actionHandler: any; // event listener object
 }
 
-const tag = "pm-puzzle-instance-actions";
+const tag = "pm-puzzle-original-actions";
 let lastInstanceId = 0;
 
 customElements.define(
   tag,
-  class PmPuzzleInstanceActions extends HTMLElement {
+  class PmPuzzleOriginalActions extends HTMLElement {
     static get _instanceId(): string {
       return `${tag} ${lastInstanceId++}`;
     }
 
     private instanceId: string;
     puzzleId: string = "";
-    owner: number = 0;
     hasError: boolean = false;
     errorMessage: string = "";
     isReady: boolean = false;
-    puzzleDetails: undefined | PuzzleInstanceDetails = undefined;
+    puzzleDetails: undefined | PuzzleOriginalDetails = undefined;
     status: number = -99;
 
     constructor() {
       super();
-      this.instanceId = PmPuzzleInstanceActions._instanceId;
+      this.instanceId = PmPuzzleOriginalActions._instanceId;
 
       // Set the attribute values
       const puzzleId = this.attributes.getNamedItem("puzzle-id");
@@ -52,14 +50,6 @@ customElements.define(
         this.errorMessage = "No puzzle-id has been set.";
       } else {
         this.puzzleId = puzzleId.value;
-      }
-
-      const owner = this.attributes.getNamedItem("owner");
-      if (!owner || !owner.value) {
-        this.hasError = true;
-        this.errorMessage = "No owner has been set.";
-      } else {
-        this.owner = parseInt(owner.value);
       }
 
       const status = this.attributes.getNamedItem("status");
@@ -77,14 +67,9 @@ customElements.define(
     }
 
     _setPuzzleData() {
-      if (userDetailsService.userDetails.id != this.owner) {
-        this.isReady = true;
-        this.render();
-        return;
-      }
       return puzzleDetailsService
-        .getPuzzleInstanceDetails(this.puzzleId)
-        .then((puzzleDetails: PuzzleInstanceDetails) => {
+        .getPuzzleOriginalDetails(this.puzzleId)
+        .then((puzzleDetails: PuzzleOriginalDetails) => {
           this.puzzleDetails = puzzleDetails;
         })
         .catch(() => {
@@ -101,7 +86,7 @@ customElements.define(
       const action = e.target.dataset["action"];
       this.isReady = false;
       puzzleDetailsService
-        .patchPuzzleInstanceDetails(this.puzzleId, action)
+        .patchPuzzleOriginalDetails(this.puzzleId, action)
         .then((data) => {
           if (this.puzzleDetails) {
             this.puzzleDetails.status = data.status;
@@ -139,34 +124,24 @@ customElements.define(
         `;
       }
       return html`
-        ${data.canDelete
+        ${data.canBump
           ? html`
-              <button data-action="delete" @click=${data.actionHandler}>
-                delete
+              <button data-action="bump" @click=${data.actionHandler}>
+                bump
               </button>
             `
           : html`
-              <button disabled>delete</button>
+              <button disabled>bump</button>
             `}
-        ${data.isFrozen
-          ? html`
-              <button data-action="unfreeze" @click=${data.actionHandler}>
-                unfreeze
-              </button>
-            `
-          : html`
-              <button data-action="freeze" @click=${data.actionHandler}>
-                freeze
-              </button>
-            `}
-        ${data.canDelete
+        ${data.canBump
           ? html`
               <p>
-                ${data.deletePenalty > 0
+                ${data.highestBid > 0
                   ? html`
                     <em
-                      >Deleting this puzzle will cost ${data.deletePenalty} dots
-                      because it is not complete.</em
+                      >Bumping this puzzle will cost ${
+                        data.highestBid
+                      } dots.</em
                     >
                   </p>`
                   : html``}
@@ -174,7 +149,7 @@ customElements.define(
             `
           : html`
               <p>
-                <em>${data.deleteDisabledMessage}</em>
+                <em>${data.bumpDisabledMessage}</em>
               </p>
             `}
       `;
@@ -187,13 +162,10 @@ customElements.define(
         errorMessage: this.errorMessage,
         hasPuzzleDetails: !!this.puzzleDetails,
         hasActions: this.puzzleDetails ? this.puzzleDetails.hasActions : false,
-        isFrozen: !!this.puzzleDetails ? this.puzzleDetails.isFrozen : false,
-        canDelete: !!this.puzzleDetails ? this.puzzleDetails.canDelete : false,
-        deletePenalty: !!this.puzzleDetails
-          ? this.puzzleDetails.deletePenalty
-          : -1,
-        deleteDisabledMessage: !!this.puzzleDetails
-          ? this.puzzleDetails.deleteDisabledMessage
+        canBump: !!this.puzzleDetails ? this.puzzleDetails.canBump : false,
+        highestBid: !!this.puzzleDetails ? this.puzzleDetails.highestBid : 0,
+        bumpDisabledMessage: !!this.puzzleDetails
+          ? this.puzzleDetails.bumpDisabledMessage
           : "",
         isProcessing:
           !!this.puzzleDetails && this.status != this.puzzleDetails.status,

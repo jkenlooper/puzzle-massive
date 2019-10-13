@@ -5,6 +5,7 @@
 {% set COMPLETED        = 3   %}
 {% set DELETED_REQUEST  = -13 %}
 {% set FROZEN           = 4   %}
+{% set QUEUE_WINNING_BID= 1   %}
 
 {% set width = recent.long if recent.table_width > recent.table_height else recent.short %}
 {% set height = recent.short if recent.table_width > recent.table_height else recent.long %}
@@ -111,6 +112,11 @@
     <pm-puzzle-instance-actions class="u-block" puzzle-id="{{ recent.puzzle_id }}" owner="{{ recent.owner }}" status="{{ recent.status }}"></pm-puzzle-instance-actions>
     {% endif %}
   </p>
+  {% else %}
+  {% if recent.status == IN_QUEUE and recent.queue > QUEUE_WINNING_BID %}
+    {# At this time this is only used for bumping the queue for puzzles that are in the queue. #}
+    <pm-puzzle-original-actions class="u-block" puzzle-id="{{ recent.puzzle_id }}" status="{{ recent.status }}"></pm-puzzle-original-actions>
+    {% endif %}
   {% endif %}
 
 </div>

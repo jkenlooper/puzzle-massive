@@ -2,6 +2,7 @@ SELECT
 p.id,
 p.puzzle_id,
 p.pieces,
+p.queue,
 p.owner,
 u.points as user_points,
 p.status,
