@@ -38,6 +38,7 @@ CLASSIC = 'classic' # initial_puzzle_variant.sql
 QUEUE_WINNING_BID   = 1  # Player has placed this in front of all other puzzles within skill range (winning bid cost is computed from count of puzzles in bumped)
 QUEUE_BUMPED_BID    = 2  # When another puzzle that was the WINNING_BID is bumped out
 QUEUE_REBUILD       = 5  # Set when a puzzle is rebuilt by player
+QUEUE_NEW           = 6  # Set when a puzzle is created from a new uploaded image
 QUEUE_INACTIVE      = 10 # When a puzzle that was ACTIVE gets retired to IN_QUEUE because of old m_date
 QUEUE_END_OF_LINE   = 99 # Set when a puzzle is completed. Anything beyond this is also considered end of line and should be sorted by m_date
 

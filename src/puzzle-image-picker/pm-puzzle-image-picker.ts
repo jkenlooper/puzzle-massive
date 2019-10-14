@@ -30,17 +30,21 @@ interface TemplateData {
   frontFragmentHref: undefined | string;
 }
 
+// piecesCountList should include ranges from SKILL_LEVEL_RANGES
 const piecesCountList = [
   0,
   50,
   100,
+  199,
   200,
   300,
   450,
   600,
+  799,
   800,
   1000,
   1500,
+  1999,
   2000,
   2500,
   3000,

@@ -44,7 +44,8 @@ from api.constants import (
     NEW_USER_STARTING_POINTS,
     PUBLIC,
     REBUILD,
-    RENDERING
+    RENDERING,
+    QUEUE_NEW,
 )
 from api.database import rowify, PUZZLE_CREATE_TABLE_LIST, read_query_file, generate_new_puzzle_id
 
@@ -125,10 +126,6 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
         os.unlink(file_path)
 
         # Insert puzzle directly to render queue instead of setting status to NEEDS_MODERATION
-        query = """select max(queue)+1 from Puzzle where permission = 0;"""
-        queuecount = cur.execute(query).fetchone()[0]
-        if (not queuecount):
-          queuecount = 1
         d = {'puzzle_id':puzzle_id,
             'pieces':pieces,
             'name':filename,
@@ -136,7 +133,7 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
             'description':description,
             'bg_color':bg_color,
             'owner':user,
-            'queue':queuecount,
+            'queue':QUEUE_NEW,
             'status': IN_RENDER_QUEUE,
             'permission':permission}
         cur.execute("""insert into Puzzle (
@@ -241,11 +238,6 @@ def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
             os.mkdir(puzzle_dir)
 
             # Insert puzzle directly to render queue
-            query = """select max(queue)+1 from Puzzle where permission = 0;"""
-            queuecount = cur.execute(query).fetchone()[0]
-            if (not queuecount):
-              queuecount = 1
-
             d = {'puzzle_id':puzzle_id,
                 'pieces':pieces,
                 'name':originalPuzzleData['name'],
@@ -253,7 +245,7 @@ def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
                 'description':originalPuzzleData['description'],
                 'bg_color':bg_color,
                 'owner':player,
-                'queue':queuecount,
+                'queue':QUEUE_NEW,
                 'status': IN_RENDER_QUEUE,
                 'permission':permission}
             cur.execute("""insert into Puzzle (

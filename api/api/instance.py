@@ -18,7 +18,8 @@ from api.constants import (
     REBUILD,
     IN_RENDER_QUEUE,
     RENDERING,
-    CLASSIC
+    CLASSIC,
+    QUEUE_NEW,
 )
 
 
@@ -97,11 +98,6 @@ class CreatePuzzleInstanceView(MethodView):
         puzzle_dir = os.path.join(current_app.config.get('PUZZLE_RESOURCES'), puzzle_id)
         os.mkdir(puzzle_dir)
 
-        query = """select max(queue)+1 from Puzzle where permission = 0;"""
-        count = cur.execute(query).fetchone()[0]
-        if (not count):
-          count = 1
-
         d = {'puzzle_id':puzzle_id,
             'pieces':pieces,
             'name':originalPuzzleData['name'],
@@ -109,7 +105,7 @@ class CreatePuzzleInstanceView(MethodView):
             'description':originalPuzzleData['description'],
             'bg_color':bg_color,
             'owner':user,
-            'queue':count,
+            'queue':QUEUE_NEW,
             'status': IN_RENDER_QUEUE,
             'permission':permission}
         cur.execute("""insert into Puzzle (

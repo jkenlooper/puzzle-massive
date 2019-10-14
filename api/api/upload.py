@@ -17,7 +17,7 @@ from werkzeug.urls import url_fix
 
 from api.app import db
 from api.database import rowify, fetch_query_string, read_query_file, generate_new_puzzle_id
-from api.constants import COMPLETED, NEEDS_MODERATION, PUBLIC, CLASSIC
+from api.constants import COMPLETED, NEEDS_MODERATION, PUBLIC, CLASSIC, QUEUE_NEW
 from api.user import user_id_from_ip, user_not_banned
 from api.tools import check_bg_color
 
@@ -92,11 +92,6 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
 
         # The preview_full image is only created in the pieceRender process.
 
-    query = """select max(queue)+1 from Puzzle where permission = 0;"""
-    count = cur.execute(query).fetchone()[0]
-    if (not count):
-      count = 1
-
     d = {'puzzle_id':puzzle_id,
         'pieces':pieces,
         'name':filename,
@@ -104,7 +99,7 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
         'description':description,
         'bg_color':bg_color,
         'owner':user,
-        'queue':count,
+        'queue':QUEUE_NEW,
         'status': NEEDS_MODERATION,
         'permission':permission}
     cur.execute("""insert into Puzzle (
