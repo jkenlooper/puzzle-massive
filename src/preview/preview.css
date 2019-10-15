@@ -28,8 +28,8 @@
   align-items: center;
   justify-content: space-around;
   margin: 13px;
-  border: 2px solid var(--color-primary-light);
-  border-radius: 13px;
+  border: 2px solid var(--color-accent);
+  border-radius: 5px;
   background-color: var(--color-light-light);
   padding: 13px;
   overflow: hidden;
@@ -68,6 +68,7 @@ a.pm-Preview-grid {
   height: auto;
 }
 
+a.pm-Preview-grid:focus img.pm-Preview-img,
 a.pm-Preview-grid:hover img.pm-Preview-img,
 a.pm-Preview-grid:active img.pm-Preview-img {
   transform: scale(1.06);

@@ -1,10 +1,10 @@
 @import "../site/viewport-breakpoints.css";
 
 .pm-Header {
-  outline: 2px solid var(--color-light);
+  outline: 2px solid var(--color-primary-light);
   border-bottom: 2px solid var(--color-light-light);
-  background-color: var(--color-light);
-  color: var(--color-primary-dark);
+  background-color: var(--color-primary-light);
+  color: var(--color-dark);
 }
 
 .pm-Header-content {

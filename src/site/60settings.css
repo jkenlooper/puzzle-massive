@@ -2,15 +2,15 @@
  * http://codepen.io/nicetransition/pen/QjwbRg
  */
 :root {
-  --color-dark: rgb(78, 81, 84);
+  --color-dark: rgb(68, 71, 74);
   --color-dark-dark: rgb(0, 0, 0);
   --color-dark-light: rgba(78, 81, 84, 0.13);
   --color-primary: rgb(73, 111, 129);
+  --color-primary-light: #86a7c8;
   --color-primary-dark: rgb(46, 80, 97);
-  --color-light: rgb(224, 244, 255);
+  --color-light: rgb(224, 244, 244);
   --color-light-light: white;
   --color-light-accent: rgb(249, 249, 249);
-  --color-primary-light: rgb(181, 229, 255);
   --color-accent: rgb(202, 109, 16);
 
   /* For suitcss-utils-spacing */

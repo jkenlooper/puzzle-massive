@@ -164,7 +164,7 @@ config.optimization = {
 
 config.performance = {
   hints: 'warning',
-  maxAssetSize: 500000,
+  maxAssetSize: 600000,
   maxEntrypointSize: 800000,
 }
 
