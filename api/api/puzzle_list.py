@@ -15,7 +15,8 @@ from api.constants import (
     IN_RENDER_QUEUE,
     REBUILD,
     RENDERING,
-    RENDERING_FAILED
+    RENDERING_FAILED,
+    SKILL_LEVEL_RANGES
 )
 
 redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
@@ -256,3 +257,45 @@ class PlayerPuzzleListView(MethodView):
 
         return json.jsonify(response)
 
+class GalleryPuzzleListView(MethodView):
+    """
+    """
+
+    decorators = [user_not_banned]
+
+    def get(self):
+        """
+        /newapi/gallery-puzzle-list/
+
+        returns
+        {
+        puzzles: [],
+        }
+
+        """
+
+        # The response is cacheable so need to check for user
+        #ip = request.headers.get('X-Real-IP')
+        #user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
+
+        cur = db.cursor()
+        puzzle_list = []
+
+        for low, high in SKILL_LEVEL_RANGES:
+            result = cur.execute(fetch_query_string('select_available_puzzle_images--gallery.sql'), {
+                'pieces_min': low,
+                'pieces_max': high,
+                'count': 2
+            }).fetchall()
+            if result:
+                (result, col_names) = rowify(result, cur.description)
+                puzzle_list = puzzle_list + result
+
+        puzzle_list.sort(key=lambda x: x.get('seconds_from_now'))
+        response = {
+            "puzzles": puzzle_list,
+        }
+
+        cur.close()
+
+        return json.jsonify(response)

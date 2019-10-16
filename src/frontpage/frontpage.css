@@ -1,6 +1,7 @@
 @import "../site/viewport-breakpoints.css";
 
 .pm-Frontpage {
+  width: calc(100vw - 20px);
 }
 
 .pm-Frontpage > * + * {
@@ -13,9 +14,8 @@
   .pm-Frontpage-grid {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-around;
+    justify-content: center;
     flex-direction: row;
-    min-width: 1024px;
   }
 }
 
@@ -32,8 +32,12 @@
 
 @media (--lg-viewport) {
   .pm-Frontpage-gridA {
-    width: 62%;
     max-width: 900px;
+    padding-right: 40px;
+    min-width: calc(
+      940px - ((var(--pm-PuzzleList-columnWidth) * 3) + (10px * 2))
+    );
+    width: 46%;
   }
 }
 
@@ -44,7 +48,15 @@
 
 @media (--lg-viewport) {
   .pm-Frontpage-gridB {
-    width: 38%;
+    --pm-Frontpage-gridB-columnMaxWidth: 216px;
+    width: 50%;
+    min-width: calc(
+      (var(--pm-PuzzleList-columnWidth) * 3) + (var(--pm-PuzzleList-gap) * 2)
+    );
+    max-width: calc(
+      (var(--pm-Frontpage-gridB-columnMaxWidth) * 3) +
+        (var(--pm-PuzzleList-gap) * 2)
+    );
   }
 }
 .pm-Frontpage-sectionHeader {

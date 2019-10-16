@@ -9,8 +9,8 @@
     </div>
     {% endif %}
     <section class="pm-Frontpage-gridB">
-      <h2 class="pm-Frontpage-sectionHeader u-textRight">Recently active jigsaw puzzles</h2>
-      {{ gallery|safe }}
+      <h2 class="pm-Frontpage-sectionHeader">Recently active jigsaw puzzles</h2>
+      <pm-gallery skip="{{ puzzle_id.puzzle_id }}" front-fragment-href="/chill{{ url_for('.page_uri', uri='front') }}"></pm-gallery>
     </section>
     <div class="pm-Frontpage-gridC">
       {# Should there be content here?

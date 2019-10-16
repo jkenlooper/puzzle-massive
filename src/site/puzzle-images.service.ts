@@ -25,6 +25,9 @@ export interface PuzzleImageData {
 export interface PlayerPuzzleListResponse {
   puzzles: Array<PuzzleImageData>;
 }
+export interface GalleryPuzzleListResponse {
+  puzzles: Array<PuzzleImageData>;
+}
 
 export interface PuzzleListResponse {
   puzzles: Array<PuzzleImageData>;
@@ -104,6 +107,23 @@ class PuzzleImagesService {
           pageSize: puzzleListResponse.pageSize,
           currentPage: puzzleListResponse.currentPage,
           maxPieces: puzzleListResponse.maxPieces,
+        };
+      });
+    return puzzleList;
+  }
+
+  getGalleryPuzzleImages(): Promise<GalleryPuzzleListResponse> {
+    const puzzleImagesService = new FetchService(
+      `/newapi/gallery-puzzle-list/`
+    );
+
+    const puzzleList: Promise<
+      GalleryPuzzleListResponse
+    > = puzzleImagesService
+      .get<GalleryPuzzleListResponse>()
+      .then((puzzleListResponse) => {
+        return {
+          puzzles: puzzleListResponse.puzzles,
         };
       });
     return puzzleList;

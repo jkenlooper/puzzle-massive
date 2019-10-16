@@ -128,7 +128,7 @@ def make_app(config=None, **kw):
     from api.bit import BitIconView, ChooseBitView, ClaimBitView, ClaimUserView
     from api.stats import PuzzleStatsView, PlayerRanksView, PuzzleActiveCountView
     from api.puzzle_details import PuzzleInstanceDetailsView, PuzzleOriginalDetailsView
-    from api.puzzle_list import PuzzleListView, PlayerPuzzleListView
+    from api.puzzle_list import PuzzleListView, PlayerPuzzleListView, GalleryPuzzleListView
 
     # admin views
     from api.puzzle_batch_edit import AdminPuzzleBatchEditView
@@ -192,6 +192,8 @@ def make_app(config=None, **kw):
                      view_func=PuzzleListView.as_view('puzzle-list'))
     app.add_url_rule('/player-puzzle-list/',
                      view_func=PlayerPuzzleListView.as_view('player-puzzle-list'))
+    app.add_url_rule('/gallery-puzzle-list/',
+                     view_func=GalleryPuzzleListView.as_view('gallery-puzzle-list'))
 
 
     # Requires user to press any key to continue

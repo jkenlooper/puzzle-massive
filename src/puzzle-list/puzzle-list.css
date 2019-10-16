@@ -1,8 +1,15 @@
+:root {
+  --pm-PuzzleList-columnWidth: 160px;
+  --pm-PuzzleList-gap: 10px;
+}
 .pm-PuzzleList {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(var(--pm-PuzzleList-columnWidth), 1fr)
+  );
 
-  grid-gap: 10px;
+  grid-gap: var(--pm-PuzzleList-gap);
   justify-content: center;
 }
 
