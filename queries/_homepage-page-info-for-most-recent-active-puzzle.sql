@@ -13,13 +13,13 @@ JOIN PuzzleFile AS pf ON (pf.puzzle = p1.id) -- Get the original
 JOIN PuzzleVariant as pv on (pi.variant = pv.id)
 WHERE pf.name == 'preview_full'
 
--- Get the most active puzzle in last 5 minutes or fall back on most recently updated one.
+-- Get the most active (pieces joined by the most players) puzzle in last 5 minutes or fall back on most recently updated one.
 AND p.puzzle_id = (
     select puzzle_id from Puzzle as p1
     left outer join Timeline as t1 on (t1.puzzle = p1.id and t1.timestamp > datetime('now', '-5 minutes'))
     where p1.permission = 0
-    and p1.status in (1, 2)
-    group by puzzle_id
+    and p1.status = 1 -- ACTIVE
+    group by p1.puzzle_id
     order by count(t1.timestamp) desc, p1.m_date desc
     limit 1
 )

@@ -1,4 +1,4 @@
 import '../preview'
+import '../previewFullImg.css'
 import '../gallery'
-import '../queue'
 import './frontpage.css'

@@ -2,9 +2,11 @@ POINT_COST_FOR_CHANGING_BIT = 100
 NEW_USER_STARTING_POINTS = 1300
 SKILL_LEVEL_RANGES = set([
     (0,200),
-    (200, 800),
-    (800, 2000),
-    (2000, 60000)
+    (200, 600),
+    (600, 1600),
+    (1600, 2200),
+    (2200, 4000),
+    (4000, 60000)
 ])
 
 #status

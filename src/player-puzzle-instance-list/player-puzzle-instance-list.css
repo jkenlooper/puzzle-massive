@@ -54,7 +54,7 @@
   height: var(--PlayerPuzzleInstanceList-size);
   border: 2px solid currentColor;
   border-radius: 5px;
-  background-color: var(--color-dark-light);
+  background-color: var(--color-light-light);
   font-weight: bold;
   text-decoration: none;
 }
