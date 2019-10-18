@@ -98,14 +98,9 @@ name: api_front_for_puzzle_id
 route: /api/front/<puzzle_id>/
 template: frontpage.html
 value:
-  gallery:
-    chill_template: gallery.html
-    chill_value:
-      recent: _select-frontpage-gallery-preview_full.sql
   preview:
     chill_template: preview.html
     chill_value:
-      players: _recent-timeline-for-puzzle.sql
       recent: _select-frontpage-preview.sql
   puzzle_id: _route-pass-puzzle_id.sql
 --- !ChillNode

@@ -135,7 +135,6 @@ class PuzzleStatsView(MethodView):
                 "bitactive": bool(bit_icon.get("active", 0))
             })
 
-        # similar to queries/_recent-timeline-for-puzzle.sql
         puzzle_stats = {
             "now": now,
             "players": players
