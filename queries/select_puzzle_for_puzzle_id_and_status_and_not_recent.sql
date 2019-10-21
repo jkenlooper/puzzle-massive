@@ -4,4 +4,4 @@ from Puzzle as p
 join PuzzleInstance as pi on (p.id = pi.instance)
 join Puzzle as p1 on (p1.id = pi.original)
 where p.puzzle_id = :puzzle_id and p.status = :status
-and strftime('%s', p.m_date) <= strftime('%s', 'now', '-7 hours');
+and (p.m_date is null or strftime('%s', p.m_date) <= strftime('%s', 'now', '-7 hours'));

@@ -65,9 +65,11 @@ customElements.define(
           ${!data.hasAvailableUserPuzzleSlot
             ? html`
                 <span
-                  >${data.linkText}
+                  ><s>${data.linkText}</s>
                   <em class="u-block"
-                    ><small>All your puzzle instance slots are filled.</small></em
+                    ><small
+                      >All your puzzle instance slots are filled.</small
+                    ></em
                   ></span
                 >
               `

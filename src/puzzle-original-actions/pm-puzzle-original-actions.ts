@@ -127,24 +127,19 @@ customElements.define(
         ${data.canBump
           ? html`
               <button data-action="bump" @click=${data.actionHandler}>
-                bump
+                Bump
               </button>
             `
           : html`
-              <button disabled>bump</button>
+              <button disabled>Bump</button>
             `}
         ${data.canBump
           ? html`
               <p>
-                ${data.highestBid > 0
-                  ? html`
-                    <em
-                      >Bumping this puzzle will cost ${
-                        data.highestBid
-                      } dots.</em
-                    >
-                  </p>`
-                  : html``}
+                <em
+                  >Bumping this puzzle forward in the queue will cost
+                  ${data.highestBid} dots.</em
+                >
               </p>
             `
           : html`

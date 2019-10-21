@@ -12,7 +12,8 @@ from api.constants import (
     COMPLETED,
     IN_QUEUE,
     SKILL_LEVEL_RANGES,
-    BID_COST_PER_PUZZLE
+    BID_COST_PER_PUZZLE,
+    QUEUE_WINNING_BID
 )
 
 redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
@@ -189,14 +190,17 @@ class PuzzleOriginalDetailsView(MethodView):
         can_bump = False
         bump_disabled_message = ''
         if puzzleData['status'] == IN_QUEUE:
-            highest_bid = self.get_bid_amount(cur, puzzleData)
+            if puzzleData['queue'] > QUEUE_WINNING_BID:
+                highest_bid = self.get_bid_amount(cur, puzzleData)
 
-            player_points_result = cur.execute(fetch_query_string('select-minimum-points-for-user.sql'), {'points': highest_bid, 'user': user}).fetchone()
-            if player_points_result:
-                can_bump = True
+                player_points_result = cur.execute(fetch_query_string('select-minimum-points-for-user.sql'), {'points': highest_bid, 'user': user}).fetchone()
+                if player_points_result:
+                    can_bump = True
 
-            if not can_bump:
-                bump_disabled_message = 'Not enough dots to bump this puzzle'
+                if not can_bump:
+                    bump_disabled_message = 'Not enough dots to bump this puzzle.'
+            else:
+                bump_disabled_message = 'This puzzle is next in line to be active.'
         return (highest_bid, can_bump, bump_disabled_message)
 
     def get_bid_amount(self, cur, puzzleData):
@@ -302,7 +306,7 @@ class PuzzleOriginalDetailsView(MethodView):
         (highest_bid, can_bump, bump_disabled_message) = self.get_bump_prereq(cur, user, puzzleData)
         response = {
             'canBump': can_bump,
-            'hasActions': puzzleData.get('status') == IN_QUEUE and puzzleData.get('queue', 0) > 1,
+            'hasActions': puzzleData.get('status') == IN_QUEUE,
             'bumpDisabledMessage': bump_disabled_message,
             'highestBid': highest_bid,
             'status': puzzleData.get('status', -99)

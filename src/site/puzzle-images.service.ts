@@ -139,11 +139,13 @@ class PuzzleImagesService {
     }
     switch (status) {
       case Status.ACTIVE:
-      case Status.IN_QUEUE:
         return has_m_date ? "" : "New";
         break;
       case Status.COMPLETED:
         return "Completed";
+        break;
+      case Status.IN_QUEUE:
+        return "In Queue";
         break;
       case Status.FROZEN:
         return "Frozen";

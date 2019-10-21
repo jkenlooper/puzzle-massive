@@ -33,6 +33,9 @@
 .pm-PuzzleImageCard-puzzleLink.isComplete {
   background-color: var(--color-dark);
 }
+.pm-PuzzleImageCard-puzzleLink.isQueue {
+  background-color: var(--color-primary-dark);
+}
 .pm-PuzzleImageCard-puzzleLink.notAvailable {
   background-color: var(--color-dark-dark);
   opacity: 0.6;

@@ -97,7 +97,6 @@
   <p class="pm-Preview-statusNote">
   This puzzle is currently in the queue and is not active.  Pieces can't be moved
   on the puzzle until then.
-  <strong>{{ recent.queue }}</strong> {# TODO: show current queue order for puzzle #}
   </p>
   {% endif %}
 
@@ -113,7 +112,7 @@
     {% endif %}
   </p>
   {% else %}
-  {% if recent.status == IN_QUEUE and recent.queue > QUEUE_WINNING_BID %}
+  {% if recent.status == IN_QUEUE %}
     {# At this time this is only used for bumping the queue for puzzles that are in the queue. #}
     <pm-puzzle-original-actions class="u-block" puzzle-id="{{ recent.puzzle_id }}" status="{{ recent.status }}"></pm-puzzle-original-actions>
     {% endif %}

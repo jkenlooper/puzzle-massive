@@ -18,6 +18,7 @@ interface TemplateData {
   isActive: boolean;
   isRecent: boolean;
   isComplete: boolean;
+  isQueue: boolean;
   isAvailable: boolean;
   isNew: boolean;
   isFrozen: boolean;
@@ -85,6 +86,7 @@ customElements.define(
               isActive: data.isActive,
               isRecent: data.isRecent,
               isComplete: data.isComplete,
+              isQueue: data.isQueue,
               notAvailable: !data.isAvailable,
             })}
             href=${`${data.frontFragmentHref}${data.puzzleId}/`}
@@ -120,7 +122,7 @@ customElements.define(
                 </small>
               `
             : html``}
-          ${data.isAvailable || data.isFrozen
+          ${data.isAvailable || data.isFrozen || data.isQueue
             ? html`
                 ${data.timeSince
                   ? html`
@@ -151,7 +153,6 @@ customElements.define(
                 </small>
               `
             : ""}
-          q ${data.queue}
         </div>
       `;
     }
@@ -177,6 +178,8 @@ customElements.define(
         isActive: !!this.puzzle.is_active,
         isRecent: !!this.puzzle.is_recent,
         isComplete: this.puzzle.status === Status.COMPLETED,
+        isQueue:
+          this.puzzle.status === Status.IN_QUEUE && !!this.puzzle.is_original,
         isAvailable: PuzzleAvailableStatuses.includes(this.puzzle.status),
         isNew: !!this.puzzle.is_new,
         isFrozen: this.puzzle.status == Status.FROZEN,
