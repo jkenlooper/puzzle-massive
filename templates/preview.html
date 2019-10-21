@@ -26,7 +26,11 @@
       </pm-dot-require>
       {% endif %}
 
+      {% if recent.status == IN_QUEUE -%}
+  <span class="pm-Preview-grid">
+      {% else %}
   <a class="pm-Preview-grid" href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(recent.puzzle_id), scale=null) }}" title="Join this jigsaw puzzle">
+      {% endif %}
     <div class="pm-Preview-gridA">
       {% if recent.url == '' %}
         {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
@@ -62,7 +66,11 @@
 
     </div>
     </div>
+      {% if recent.status == IN_QUEUE -%}
+  </span>
+      {% else %}
   </a>
+      {% endif %}
   {% if recent.attribution %}
   <p class="pm-Preview-attribution">{{ '[chill route /internal/attribution/{}/ ]'.format(recent.attribution) }}</p>
   {% endif %}

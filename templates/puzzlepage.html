@@ -51,7 +51,7 @@
 
 
 {# Puzzle is visible if the puzzle is active or if the puzzle has recently been complete. #}
-{% set isPuzzleVisible = puzzle.status in (ACTIVE, IN_QUEUE, COMPLETED, FROZEN, BUGGY_UNLISTED) and not (puzzle.status == COMPLETED and puzzle.is_recent != 1) %}
+{% set isPuzzleVisible = puzzle.status in (ACTIVE, COMPLETED, FROZEN, BUGGY_UNLISTED) and not (puzzle.status == COMPLETED and puzzle.is_recent != 1) %}
 
 
 {% if scale != 0 and isPuzzleVisible %}
@@ -88,7 +88,7 @@
 {% set msg = "" %}
 {% set title = "" %}
 
-{% if puzzle.status not in (ACTIVE, IN_QUEUE, COMPLETED, FROZEN, BUGGY_UNLISTED) %}
+{% if puzzle.status not in (ACTIVE, COMPLETED, FROZEN, BUGGY_UNLISTED) %}
   {% set msg = "This puzzle has some problems." %}
   {% set title = "Problem with puzzle" %}
 
@@ -104,6 +104,9 @@
   {% elif puzzle.status == REBUILD %}
     {% set msg = "The Puzzle is currently in the rebuild queue and will be rendered soon." %}
     {% set title = "In Rebuild Queue" %}
+  {% elif puzzle.status == IN_QUEUE %}
+    {% set msg = "This Puzzle is in the queue and is not currently active.  Pieces can only be moved on active puzzles." %}
+    {% set title = "Jigsaw Puzzle in Queue" %}
   {% elif puzzle.status == IN_RENDER_QUEUE %}
     {% set msg = "The Puzzle is currently in the render queue.  This may take some time if there are other puzzles being rendered." %}
     {% set title = "In Render Queue" %}
@@ -130,9 +133,6 @@
 {% elif puzzle.status == FROZEN %}
   {% set msg = "This Puzzle is frozen." %}
   {% set title = "Jigsaw Puzzle Frozen" %}
-{% elif puzzle.status == IN_QUEUE %}
-  {% set msg = "This Puzzle is in the queue and is not currently active.  Pieces can only be moved on active puzzles." %}
-  {% set title = "Jigsaw Puzzle in Queue" %}
 {% elif puzzle.status == BUGGY_UNLISTED %}
   {% set msg = "Sorry, this puzzle may have some issues when moving pieces because of an error.  It is no longer listed on the site, but you may still try to complete it." %}
   {% set title = "Error with Puzzle" %}
@@ -292,7 +292,7 @@
     {% endif %}
   </div>
 </div>
-    {% if puzzle.status in (ACTIVE, IN_QUEUE, COMPLETED, FROZEN, BUGGY_UNLISTED) %}
+    {% if puzzle.status in (ACTIVE, COMPLETED, FROZEN, BUGGY_UNLISTED) %}
     {% if scale != 0 and isPuzzleVisible %}
     <input class="u-hiddenVisually pm-Puzzlepage-descriptionToggle" type="checkbox" id="puzzlepage-description-toggle">
     {% endif %}

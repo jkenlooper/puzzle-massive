@@ -17,6 +17,16 @@ interface TemplateData {
   frontFragmentHref: undefined | string;
 }
 
+// Copied SKILL_LEVEL_RANGES from api/api/constants.py
+const SKILL_LEVEL_RANGES = [
+  [0, 200],
+  [200, 600],
+  [600, 1600],
+  [1600, 2200],
+  [2200, 4000],
+  [4000, 60000],
+];
+
 const tag = "pm-gallery";
 let lastInstanceId = 0;
 
@@ -58,9 +68,24 @@ customElements.define(
       return puzzleImagesService
         .getGalleryPuzzleImages()
         .then((puzzleList: GalleryPuzzleListResponse) => {
-          this.puzzles = puzzleList.puzzles.filter((puzzle) => {
-            return puzzle.puzzle_id !== this.skipPuzzleId;
-          });
+          // Filter out the skip puzzle and then select one puzzle from each
+          // skill level range.
+          const selected_range = Array(SKILL_LEVEL_RANGES.length);
+          this.puzzles = puzzleList.puzzles
+            .filter((puzzle) => {
+              return puzzle.puzzle_id !== this.skipPuzzleId;
+            })
+            .filter((puzzle) => {
+              const levelIndex = SKILL_LEVEL_RANGES.findIndex((range) => {
+                return range[0] >= puzzle.pieces && puzzle.pieces < range[1];
+              });
+              if (selected_range[levelIndex]) {
+                return false;
+              } else {
+                selected_range[levelIndex] = true;
+                return true;
+              }
+            });
         })
         .catch((err) => {
           console.error(err);
@@ -95,7 +120,6 @@ customElements.define(
                           (puzzle) => html`
                             <pm-puzzle-image-card
                               .puzzle=${puzzle}
-                              hide-owner
                               front-fragment-href=${data.frontFragmentHref}
                             ></pm-puzzle-image-card>
                           `

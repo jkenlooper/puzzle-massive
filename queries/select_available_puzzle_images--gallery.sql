@@ -29,10 +29,19 @@ left outer join Attribution as a on (a.id = pf.attribution)
 left outer join License as l on (l.id = a.license)
 
 where pf.name == 'preview_full'
-and p.permission = 0 -- PUBLIC
-and p.status == 1 -- ACTIVE
-and p.pieces >= :pieces_min
-and p.pieces < :pieces_max
+
+-- Get the most active (pieces joined by the most players) puzzle in last 5 minutes or fall back on most recently updated one.
+AND p.puzzle_id in (
+    select puzzle_id from Puzzle as p
+    left outer join Timeline as t1 on (t1.puzzle = p.id and t1.timestamp > datetime('now', '-5 minutes'))
+    where p.permission = 0 -- PUBLIC
+    and p.status = 1 -- ACTIVE
+    and p.pieces >= :pieces_min
+    and p.pieces < :pieces_max
+    group by p.puzzle_id
+    order by count(t1.timestamp) desc, p.m_date desc
+    limit :count
+)
 
 order by p.m_date desc
 

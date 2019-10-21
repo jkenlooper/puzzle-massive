@@ -285,7 +285,7 @@ class GalleryPuzzleListView(MethodView):
             result = cur.execute(fetch_query_string('select_available_puzzle_images--gallery.sql'), {
                 'pieces_min': low,
                 'pieces_max': high,
-                'count': 1
+                'count': 2
             }).fetchall()
             if result:
                 (result, col_names) = rowify(result, cur.description)

@@ -28,7 +28,7 @@
   align-items: center;
   justify-content: space-around;
   margin: 13px;
-  border: 2px solid var(--color-accent);
+  border: 2px solid var(--color-primary-dark);
   border-radius: 5px;
   background-color: var(--color-light-light);
   padding: 13px;
@@ -37,6 +37,7 @@
 
 a.pm-Preview-grid {
   color: inherit;
+  border-color: var(--color-accent);
   text-decoration: none;
 }
 
