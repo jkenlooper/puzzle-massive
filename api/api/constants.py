@@ -2,9 +2,9 @@ POINT_COST_FOR_CHANGING_BIT = 100
 NEW_USER_STARTING_POINTS = 1300
 # The SKILL_LEVEL_RANGES is also copied in src/gallery/pm-gallery.ts
 SKILL_LEVEL_RANGES = set([
-    (0,200),
-    (200, 600),
-    (600, 1600),
+    (0,400),
+    (400, 800),
+    (800, 1600),
     (1600, 2200),
     (2200, 4000),
     (4000, 60000)

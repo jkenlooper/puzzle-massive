@@ -19,9 +19,9 @@ interface TemplateData {
 
 // Copied SKILL_LEVEL_RANGES from api/api/constants.py
 const SKILL_LEVEL_RANGES = [
-  [0, 200],
-  [200, 600],
-  [600, 1600],
+  [0, 400],
+  [400, 800],
+  [800, 1600],
   [1600, 2200],
   [2200, 4000],
   [4000, 60000],
