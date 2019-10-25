@@ -18,6 +18,7 @@ interface PlayerData {
 export interface PlayerDetail extends PlayerData {
   timeSince: string;
   isRecent: boolean;
+  bitBackground: string;
 }
 
 interface PuzzleStats {
@@ -79,6 +80,7 @@ class PuzzleStatsService {
         {
           timeSince: getTimePassed(item.seconds_from_now),
           isRecent: getIsRecent(item.seconds_from_now),
+          bitBackground: "#ffffff00", // TODO: will be set later
         },
         item
       );

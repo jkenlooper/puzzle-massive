@@ -3,7 +3,7 @@ pm-profile-bit {
 }
 
 .pm-profileBit {
-  --pm-profileBit-color: var(--color-dark);
+  --pm-profileBit-color: var(--color-light-light);
 }
 
 .pm-profileBit.isExpired {
@@ -15,10 +15,9 @@ pm-profile-bit {
 
 .pm-profileBit-background {
   display: inline-block;
-  color: var(--pm-profileBit-color);
-  background-color: currentColor;
-  box-shadow: 0 0 0px 3px currentColor;
-  border-radius: 37%;
+  color: var(--color-dark-dark);
+  background-color: var(--pm-profileBit-color);
+  box-shadow: 0 0 0px 3px var(--pm-profileBit-color);
   text-shadow: 0 0 4px var(--color-light-light), 0 0 1px var(--color-dark-dark);
 }
 

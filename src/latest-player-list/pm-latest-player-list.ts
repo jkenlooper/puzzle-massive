@@ -9,8 +9,6 @@ import {
 import { colorForPlayer } from "../player-bit/player-bit-img.service";
 import "./latest-player-list.css";
 
-import { colorList } from "../site/color-list";
-
 interface PlayerDetailWithIconSrc extends PlayerDetail {
   iconSrc: string;
   iconAlt: string;
@@ -23,8 +21,6 @@ interface TemplateData {
   isReady: boolean;
   players: Array<PlayerDetailWithIconSrc>;
   showTimeSince: boolean;
-  hasPlayersWithLostBit: boolean;
-  lostBitIconSrc: string;
   recentPlayersCount: number;
 }
 
@@ -172,11 +168,14 @@ customElements.define(
                           style=${`--pm-PlayerBit-color:${colorForPlayer(
                             item.id
                           )}`}
-                          >${item.id.toString(36)}</span
                         >
+                          <span class="pm-PlayerBit-id"
+                            >${item.id.toString(36)}</span
+                          >
+                        </span>
                       `}
                   <strong class="pm-PlayerBit-bitName">
-                    ${item.icon ? item.iconAlt.substr(0, 26) : "???"}<!-- TODO: use player assigned name -->
+                    ${item.icon ? item.iconAlt.substr(0, 26) : ""}<!-- TODO: use player assigned name -->
                   </strong>
                 </small>
                 <small
@@ -212,28 +211,6 @@ customElements.define(
                       `
                     : html``}
                 `}
-            ${data.hasPlayersWithLostBit
-              ? html`
-                  <p>
-                    <em>
-                      <span
-                        style="--pm-PlayerBit-bitIcon-color: #e2acbb"
-                        class="pm-PlayerBit-bitIconBackground"
-                      >
-                        <img
-                          style="vertical-align: middle;"
-                          width="20"
-                          height="20"
-                          class="hasNoBit pm-PlayerBit"
-                          src=${data.lostBitIconSrc}
-                          alt="no bit"
-                        />
-                      </span>
-                      represents players without a bit icon.
-                    </em>
-                  </p>
-                `
-              : html``}
           </div>
         `;
       }
@@ -260,9 +237,11 @@ customElements.define(
                       />
                     `
                   : html`
-                      <span class="hasNoBit pm-PlayerBit"
-                        >${item.id.toString(36)}</span
-                      >
+                      <span class="hasNoBit pm-PlayerBit">
+                        <span class="pm-PlayerBit-id"
+                          >${item.id.toString(36)}</span
+                        >
+                      </span>
                     `}
                 ${item.score}
               </span>
@@ -279,10 +258,6 @@ customElements.define(
         errorMessage: this.errorMessage,
         showTimeSince: this.showTimeSince,
         players: this.players,
-        hasPlayersWithLostBit: this.players.some((player) => {
-          return !player.icon;
-        }),
-        lostBitIconSrc: `${this.mediaPath}bit-icons/64-unknown-bit.png`,
         recentPlayersCount: this.players.reduce((acc, player) => {
           if (player.isRecent) {
             acc += 1;
@@ -319,8 +294,6 @@ customElements.define(
             iconSrc: `${mediaPath}bit-icons/64-${item.icon ||
               "unknown-bit"}.png`,
             iconAlt: item.icon || "lost bit",
-            bitBackground:
-              colorList[Math.round(Math.random() * (colorList.length - 1))],
           },
           item
         );

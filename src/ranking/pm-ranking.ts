@@ -222,9 +222,6 @@ customElements.define(
               : html``
           }
           </p>
-        <p>
-          <em>Players shown without bit icons have lost them due to inactivity.</em>
-        </p>
         </section>
       `;
       }
@@ -258,8 +255,11 @@ customElements.define(
                           style=${`--pm-PlayerBit-color:${colorForPlayer(
                             item.id
                           )}`}
-                          >${item.id.toString(36)}</span
                         >
+                          <span class="pm-PlayerBit-id"
+                            >${item.id.toString(36)}</span
+                          >
+                        </span>
                       `}
                 </div>
 

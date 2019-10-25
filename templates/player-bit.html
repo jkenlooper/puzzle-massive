@@ -1,8 +1,11 @@
 {#- The string [[1234]] for the bit.player is replaced in javascript with the base 36 version. -#}
+<span class="{% if not bit.icon %}hasNoBit {% endif %}pm-PlayerBit">
 {%- if not bit.icon -%}
-<span class="hasNoBit pm-PlayerBit">[[{{ bit.player }}]]</span>
+<span class="pm-PlayerBit-id">[[{{ bit.player }}]]</span>
 {%- else -%}
-<span style="--pm-PlayerBit-bitIcon-color: red" class="pm-PlayerBit-bitIconBackground">
-<img width="32" height="32" src="{{ url_for('send_media_file', filename='bit-icons/64-{}.png'.format(bit.icon or 'unknown-bit')) }}" alt="{{bit.icon}}" class="{% if not bit.icon %}hasNoBit {% endif %}pm-PlayerBit">
-<strong class="pm-PlayerBit-bitName">bob Bob</strong>
+<span style="--pm-PlayerBit-bitIcon-color: #ffffff00" class="pm-PlayerBit-bitIconBackground">
+<img width="32" height="32" src="{{ url_for('send_media_file', filename='bit-icons/64-{}.png'.format(bit.icon)) }}" alt="{{bit.icon}}" class="pm-PlayerBit">
+</span>
 {%- endif -%}
+<strong class="pm-PlayerBit-bitName">bob Bob</strong>
+</span>

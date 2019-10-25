@@ -6,6 +6,10 @@
   vertical-align: middle;
 }
 .hasNoBit.pm-PlayerBit {
+}
+
+/* pm-PlayerBit-id is only shown when no bitIcon */
+.pm-PlayerBit-id {
   background-color: var(--pm-PlayerBit-color);
   color: var(--color-light-light);
   border-radius: 37%;
@@ -15,15 +19,16 @@
 
 .pm-PlayerBit-bitIconBackground {
   display: inline-block;
-  color: var(--pm-PlayerBit-bitIcon-color);
-  background-color: currentColor;
-  box-shadow: 0 0 0px 3px currentColor;
+  color: var(--color-dark-dark);
+  background-color: var(--pm-PlayerBit-bitIcon-color);
+  border: 1px solid var(--color-dark-dark);
   border-radius: 37%;
   text-shadow: 0 0 4px var(--color-light-light), 0 0 1px var(--color-dark-dark);
+  padding: 3px;
 }
 
 .pm-PlayerBit-bitName {
+  margin-left: 2px;
   white-space: nowrap;
-  display: block;
-  width: 32px;
+  display: inline-block;
 }

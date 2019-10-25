@@ -1,5 +1,4 @@
 import FetchService from "./fetch.service";
-import { colorList } from "./color-list";
 
 type UserDetailsCallback = () => any;
 
@@ -48,7 +47,7 @@ class UserDetailsService {
     dots: 0,
     score: 0,
     hasBit: false,
-    bitBackground: "",
+    bitBackground: "#ffffff00", // TODO: will be set later
     loginAgain: false,
     user_puzzle_count: 0,
     puzzle_instance_count: 0,
@@ -167,8 +166,6 @@ class UserDetailsService {
           this.userDetails = Object.assign(
             {
               hasBit: hasBit,
-              bitBackground:
-                colorList[Math.round(Math.random() * (colorList.length - 1))],
             },
             userDetails,
             {
