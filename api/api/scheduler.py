@@ -12,7 +12,7 @@ from api.database import rowify, read_query_file
 from api.tools import loadConfig
 from api.tools import deletePieceDataFromRedis
 from api.timeline import archive_and_clear
-from api.constants import REBUILD, COMPLETED, NEW_USER_STARTING_POINTS, SKILL_LEVEL_RANGES, QUEUE_END_OF_LINE
+from api.constants import REBUILD, COMPLETED, NEW_USER_STARTING_POINTS, SKILL_LEVEL_RANGES, QUEUE_END_OF_LINE, POINTS_CAP
 
 # Get the args from the janitor and connect to the database
 config_file = sys.argv[1]
@@ -156,7 +156,6 @@ class UpdatePlayer(Task):
     "Update the User points, score, m_date from what has recently been put on redis"
     interval = 125
     first_run = True
-    POINTS_CAP = 15000
 
     def __init__(self, id=None):
         super().__init__(id, __class__.__name__)

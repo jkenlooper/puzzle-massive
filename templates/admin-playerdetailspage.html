@@ -12,72 +12,134 @@
 
 <section>
   <h1>
-      Players Details
+    Player ({{ player.id }}) Details
   </h1>
 
+  <form action="/newapi/admin/player/details/" method="POST">
+    <input type="hidden" id="player" name="player" value="{{ player.id }}">
 
-    <dl>
-      <dt>Player</dt>
-      <dd>{{ player.id }}</dd>
+    <table>
+      <thead>
+        <tr>
+          <th>Label</th>
+          <th>Value</th>
+          <th>Edit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Player</th>
+          <td>{{ player.id }}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <th>Bit expired</th>
+          <td>
+            {{ player.bit_expired }}
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <th>Bit icon</th>
+          <td>
+            <img width="64" height="64" src="{{ url_for('send_media_file', filename='bit-icons/64-{}.png'.format(player.icon or 'unknown-bit')) }}" alt="{{player.icon}}">
+          </td>
+          <td>
+            {{ player.icon }}
+          </td>
+        </tr>
+        <tr>
+          <th>player name</th>
+          <td>{{ player.name }}</td>
+          <td><label>
+              name
+              <input type="text" id="name" name="name" maxlength="26" value="{{ player.name or '' }}"> <!-- USER_NAME_MAXLENGTH -->
+            </label>
+            <label>
+              Approved
+              <input type="checkbox" name="name_approved" {% if player.name_approved %}checked{% endif %} value="1">
+            </label>
+          </td>
+        </tr>
+        <tr>
+          <th>email</th>
+          <td>{{ player.email }}</td>
+          <td>
+            <label>
+              email
+              <input type="email" id="email" name="email" maxlength="254" value="{{ player.email or '' }}"> <!-- EMAIL_MAXLENGTH -->
+            </label>
+            <label>
+              Verified
+              <input type="checkbox" name="email_verified" {% if player.email_verified %}checked{% endif %} value="1">
+            </label>
+          </td>
+        </tr>
 
-      <dt>Bit expired</dt>
-      <dd>
-      {{ player.bit_expired }}
-      </dd>
+        <tr>
+          <th>Last active date</th>
+          <td>{{ player.m_date }}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <th>Seconds from now</th>
+          <td>{{ player.seconds_from_now }}</td>
+          <td></td>
+        </tr>
 
-      {% if player.icon %}
-      <dt>Bit icon</dt>
-      <dd>
-        <img width="64" height="64" src="{{ url_for('send_media_file', filename='bit-icons/64-{}.png'.format(player.icon or 'unknown-bit')) }}" alt="{{player.icon}}">
-      </dd>
+        <tr>
+          <th>Dots</th>
+          <td>{{ player.dots }}</td>
+          <td>
+            <label>dots
+            <input name="dots" type="number" min="0" max="15000" value="{{ player.dots }}"><!-- POINTS_CAP -->
+            </label>
+          </td>
+        </tr>
 
-      <dt>Bit icon name</dt>
-      <dd>
-      {{ player.icon }}
-      </dd>
-      {% endif %}
+        <tr>
+          <th>Score</th>
+          <td>{{ player.score }}</td>
+          <td></td>
+        </tr>
 
-      <!--
-      <dt>username</dt>
-      <dd></dd>
+      </tbody>
+    </table>
 
-      <dt>email</dt>
-      <dd></dd>
-      -->
+    <div>
+      <input type="submit" value="Update">
+    </div>
+  </form>
 
-      <dt>Last active date</dt>
-      <dd>{{ player.m_date }}
-      </dd>
-
-      <dt>Seconds since last active</dt>
-      <dd>
-        {{ player.seconds_from_now }}
-      </dd>
-
-      <dt>Dots</dt>
-      <dd>{{ player.dots }}</dd>
-
-      <dt>Score</dt>
-      <dd>{{ player.score }}</dd>
-
-      <dt>Empty slots</dt>
-      <dd>{{ player.empty_slots_count }}
-    <form action="/newapi/admin/player/details/slots/" method="POST">
-      <input type="hidden" id="action" name="action" value="add">
-      <input type="hidden" id="player" name="player" value="{{ player.id }}">
-      <input type="submit" value="Add new slot">
-    </form>
-    <form action="/newapi/admin/player/details/slots/" method="POST">
-      <input type="hidden" id="action" name="action" value="delete">
-      <input type="hidden" id="player" name="player" value="{{ player.id }}">
-      <input type="submit" value="Remove an empty slot">
-    </form>
-      </dd>
-
-      <dt>Filled slots</dt>
-      <dd>{{ player.filled_slots_count }}</dd>
-
-    </dl>
+  <h2>Puzzle Instance Slots</h2>
+  <table>
+    <tr>
+      <th>Empty slots</th>
+      <td>
+        {{ player.empty_slots_count }}
+      </td>
+      <td>
+        <form action="/newapi/admin/player/details/slots/" method="POST">
+          <input type="hidden" id="action" name="action" value="add">
+          <input type="hidden" id="player" name="player" value="{{ player.id }}">
+          <input type="submit" value="Add new slot">
+        </form>
+      </td>
+      <td>
+        <form action="/newapi/admin/player/details/slots/" method="POST">
+          <input type="hidden" id="action" name="action" value="delete">
+          <input type="hidden" id="player" name="player" value="{{ player.id }}">
+          <input type="submit" value="Remove an empty slot">
+        </form>
+      </td>
+    </tr>
+    <tr>
+      <th>Filled slots</th>
+      <td>{{ player.filled_slots_count }}</td>
+      <td></td>
+      <td></td>
+    </tr>
+  </table>
 
 </section>
 

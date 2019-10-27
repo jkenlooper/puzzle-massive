@@ -132,7 +132,7 @@ def make_app(config=None, **kw):
 
     # admin views
     from api.puzzle_batch_edit import AdminPuzzleBatchEditView
-    from api.player_details_edit import AdminPlayerDetailsSlotsView
+    from api.player_details_edit import AdminPlayerDetailsEditView, AdminPlayerDetailsSlotsView
 
 
     # register the views
@@ -211,8 +211,10 @@ def make_app(config=None, **kw):
                      view_func=AdminBlockedPlayersList.as_view('admin-player-blocked'))
     app.add_url_rule('/admin/user/banned/',
                      view_func=AdminBannedUserList.as_view('admin-user-banned'))
+    app.add_url_rule('/admin/player/details/',
+                     view_func=AdminPlayerDetailsEditView.as_view('admin-player-details-edit'))
     app.add_url_rule('/admin/player/details/slots/',
-                     view_func=AdminPlayerDetailsSlotsView.as_view('admin-player-details-edit'))
+                     view_func=AdminPlayerDetailsSlotsView.as_view('admin-player-details-slots-edit'))
 
     return app
 
