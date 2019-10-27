@@ -59,23 +59,14 @@ class PlayerRanksView(MethodView):
         stop = start + count
         rank_slice = redisConnection.zrevrange('rank', start, stop, withscores=True)
 
-        result = cur.execute(fetch_query_string('select-bit-icons-for-ranks.sql')).fetchall()
-        (result, col_names) = rowify(result, cur.description)
-        bit_icons = {}
-        for item in result:
-            bit_icons[item['user']] = item
-
         ranks = []
         for index, item in enumerate(rank_slice):
             (user, score) = map(int, item)
-            bit_icon = bit_icons.get(user, {})
             ranks.append({
                 "id": user,
                 "score": score,
                 "rank": start + index,
-                "icon": bit_icon.get("icon", ''),
                 "active": user in active_players,
-                "bitactive": bool(bit_icon.get("active", 0))
             })
 
         player_ranks = {
@@ -109,12 +100,6 @@ class PuzzleStatsView(MethodView):
         puzzle = result[0].get('id')
         now = int(time.time())
 
-        result = cur.execute(fetch_query_string('select-bit-icons-for-ranks.sql')).fetchall()
-        (result, col_names) = rowify(result, cur.description)
-        bit_icons = {}
-        for item in result:
-            bit_icons[item['user']] = item
-
         timeline = redisConnection.zrevrange('timeline:{puzzle}'.format(puzzle=puzzle), 0, -1, withscores=True)
         score_puzzle = redisConnection.zrange('score:{puzzle}'.format(puzzle=puzzle), 0, -1, withscores=True)
         user_score = dict(score_puzzle)
@@ -125,14 +110,11 @@ class PuzzleStatsView(MethodView):
         players = []
         for index, item in enumerate(timeline):
             (user, timestamp) = item
-            bit_icon = bit_icons.get(int(user), {})
             players.append({
                 "id": int(user),
                 "score": int(user_score.get(user, 0)),
                 "rank": user_rank.get(int(user), 0), # a 0 value means the player hasn't joined any pieces
                 "seconds_from_now": int(now - timestamp),
-                "icon": bit_icon.get("icon", ''),
-                "bitactive": bool(bit_icon.get("active", 0))
             })
 
         puzzle_stats = {

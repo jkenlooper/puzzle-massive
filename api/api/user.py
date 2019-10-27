@@ -299,6 +299,15 @@ class UserDetailsView(MethodView):
             db.commit()
         del user_details['will_expire_cookie']
 
+        if not user_details['name']:
+            user_details['name'] = ''
+        if not user_details['email']:
+            user_details['email'] = ''
+        user_details['nameApproved'] = bool(user_details['name_approved'])
+        del user_details['name_approved']
+        user_details['emailVerified'] = bool(user_details['email_verified'])
+        del user_details['email_verified']
+
         puzzle_instance_list = []
 
         if user_details['puzzle_instance_count'] > 0:

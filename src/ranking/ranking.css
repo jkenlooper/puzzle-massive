@@ -29,16 +29,12 @@
 }
 
 .pm-Ranking-img {
-  width: 32px;
-  height: 32px;
 }
 
 .pm-Ranking-listitem--current .pm-Ranking-img {
-  transform: scale(2);
-  transform-origin: 100%;
-}
-
-.pm-Ranking-listitem.isExpired .pm-Ranking-img {
+  background-color: var(--color-dark-light);
+  border-radius: 10px;
+  box-shadow: 0 0 0px 10px var(--color-dark-light);
 }
 
 .pm-Ranking-rank {

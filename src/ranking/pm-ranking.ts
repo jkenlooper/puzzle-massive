@@ -1,6 +1,5 @@
 import FetchService from "../site/fetch.service";
 import userDetailsService from "../site/user-details.service";
-import { colorForPlayer } from "../player-bit/player-bit-img.service";
 
 import { html, render } from "lit-html";
 import { classMap } from "lit-html/directives/class-map.js";
@@ -9,8 +8,6 @@ import "./ranking.css";
 
 interface RankData {
   active: boolean;
-  bitactive: boolean;
-  icon: string;
   id: number;
   rank: number;
   score: number;
@@ -18,8 +15,6 @@ interface RankData {
 
 interface PlayerRankDetail extends RankData {
   topPlayer: boolean;
-  iconSrc: string;
-  iconAlt: string;
 }
 
 interface PlayerStatsData {
@@ -64,7 +59,6 @@ customElements.define(
     hasDown: boolean = false;
     private instanceId: string;
     private offset: number = 0;
-    private mediaPath: string;
 
     static get _instanceId(): string {
       return `${tag} ${lastInstanceId++}`;
@@ -74,9 +68,6 @@ customElements.define(
       super();
       const self = this;
       this.instanceId = PmRanking._instanceId;
-
-      const mediaPath = this.attributes.getNamedItem("media-path");
-      this.mediaPath = mediaPath ? mediaPath.value : "";
 
       // Set the attribute values
       const player_ranks_url = this.attributes.getNamedItem("player-ranks-url");
@@ -119,7 +110,6 @@ customElements.define(
           start === undefined ? "" : `start=${start}&`
         }count=${this.range}`
       );
-      const self = this;
       return rankingService
         .get<PlayerStatsData>()
         .then((playerStats) => {
@@ -150,9 +140,6 @@ customElements.define(
         const playerRank = <PlayerRankDetail>Object.assign(
           {
             topPlayer: item.rank < 15,
-            iconSrc: `${self.mediaPath}bit-icons/64-${item.icon ||
-              "unknown-bit"}.png`,
-            iconAlt: item.icon || "unknown bit",
           },
           item
         );
@@ -233,34 +220,12 @@ customElements.define(
                 role="listitem"
                 class=${classMap({
                   "pm-Ranking-listitem": true,
-                  isExpired: !item.bitactive,
                   "pm-Ranking-listitem--current": item.id === data.playerId,
                   "pm-Ranking-listitem--topPlayer": item.topPlayer,
                 })}
               >
                 <div class="pm-Ranking-img">
-                  ${item.icon
-                    ? html`
-                        <img
-                          width="32"
-                          height="32"
-                          class="pm-PlayerBit"
-                          src=${item.iconSrc}
-                          alt=${item.iconAlt}
-                        />
-                      `
-                    : html`
-                        <span
-                          class="hasNoBit pm-PlayerBit"
-                          style=${`--pm-PlayerBit-color:${colorForPlayer(
-                            item.id
-                          )}`}
-                        >
-                          <span class="pm-PlayerBit-id"
-                            >${item.id.toString(36)}</span
-                          >
-                        </span>
-                      `}
+                  <pm-player-bit player=${item.id}></pm-player-bit>
                 </div>
 
                 <strong class="pm-Ranking-rank">${item.score}</strong>

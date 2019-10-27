@@ -7,5 +7,7 @@
 <img width="32" height="32" src="{{ url_for('send_media_file', filename='bit-icons/64-{}.png'.format(bit.icon)) }}" alt="{{bit.icon}}" class="pm-PlayerBit">
 </span>
 {%- endif -%}
-<strong class="pm-PlayerBit-bitName">bob Bob</strong>
+{%- if bit.name_approved and bit.name -%}
+<strong class="pm-PlayerBit-bitName">{{ bit.name }}</strong>
+{%- endif -%}
 </span>

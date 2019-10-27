@@ -21,6 +21,10 @@ interface UserDetailsResponse {
   readonly puzzle_instance_list?: PuzzleInstanceList;
   readonly user_puzzle_count: number;
   readonly puzzle_instance_count: number;
+  readonly name: string;
+  readonly nameApproved: boolean;
+  readonly email: string;
+  readonly emailVerified: boolean;
 }
 interface UserDetailsData extends UserDetailsResponse {
   hasBit: boolean;
@@ -55,6 +59,10 @@ class UserDetailsService {
     hasAvailableUserPuzzleSlot: false,
     emptySlotCount: 0,
     puzzleInstanceCount: 0,
+    name: "",
+    nameApproved: false,
+    email: "",
+    emailVerified: false,
   };
   static anonymousLoginName = "anonymous-login";
   static localUserId = "user-id";

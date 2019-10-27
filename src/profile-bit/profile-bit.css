@@ -4,6 +4,7 @@ pm-profile-bit {
 
 .pm-profileBit {
   --pm-profileBit-color: var(--color-light-light);
+  text-align: center;
 }
 
 .pm-profileBit.isExpired {

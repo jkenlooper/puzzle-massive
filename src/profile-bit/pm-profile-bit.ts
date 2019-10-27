@@ -18,6 +18,8 @@ interface TemplateData {
   bitBackground: string;
   hasIcon: boolean;
   userId: number;
+  username: string;
+  usernameApproved: boolean;
   showScore: boolean;
   score: number;
   showDots: boolean;
@@ -107,31 +109,35 @@ customElements.define(
                       `}
                 </a>
               `}
-          <strong class="u-textCenter u-block">
-            ${data.iconAlt.substr(0, 26)}<!-- TODO: use player assigned name -->
-          </strong>
+          ${data.username
+            ? html`
+                <strong class="u-textCenter u-block">
+                  ${data.username}
+                </strong>
+              `
+            : ""}
+          ${data.showScore
+            ? html`
+                <div>Score <b>${data.score}</b></div>
+              `
+            : html``}
+          ${data.showDots
+            ? html`
+                <div>Dots <b>${data.dots}</b></div>
+              `
+            : html``}
+          ${data.canClaimUser
+            ? html`
+                ${data.isProcessingClaimUser
+                  ? html`
+                      ...
+                    `
+                  : html`
+                      <button @click=${data.claimUserHandler}>claim</button>
+                    `}
+              `
+            : html``}
         </div>
-        ${data.showScore
-          ? html`
-              <div>Score <b>${data.score}</b></div>
-            `
-          : html``}
-        ${data.showDots
-          ? html`
-              <div>Dots <b>${data.dots}</b></div>
-            `
-          : html``}
-        ${data.canClaimUser
-          ? html`
-              ${data.isProcessingClaimUser
-                ? html`
-                    ...
-                  `
-                : html`
-                    <button @click=${data.claimUserHandler}>claim</button>
-                  `}
-            `
-          : html``}
       `;
     }
 
@@ -172,6 +178,8 @@ customElements.define(
         }.png`,
         bitBackground: userDetailsService.userDetails.bitBackground,
         userId: userDetailsService.userDetails.id || 0,
+        username: userDetailsService.userDetails.name,
+        usernameApproved: userDetailsService.userDetails.nameApproved,
         showScore: this.showScore,
         score: userDetailsService.userDetails.score,
         showDots: this.showDots,

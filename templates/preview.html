@@ -39,7 +39,6 @@
       {% endif %}
 
       <pm-latest-player-list
-        media-path="{{ url_for('send_media_file', filename='') }}"
         puzzle-id="{{recent.puzzle_id}}"
         show-time-since="true"
         limit="9"></pm-latest-player-list>
@@ -60,7 +59,6 @@
       </div>
 
       <pm-latest-player-list
-        media-path="{{ url_for('send_media_file', filename='') }}"
         puzzle-id="{{recent.puzzle_id}}"
         offset="9"></pm-latest-player-list>
 

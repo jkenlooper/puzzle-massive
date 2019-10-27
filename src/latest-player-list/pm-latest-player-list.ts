@@ -1,25 +1,17 @@
 import { html, render } from "lit-html";
 import { classMap } from "lit-html/directives/class-map.js";
-import { styleMap } from "lit-html/directives/style-map.js";
 import {
   puzzleStatsService,
   PlayerStatsData,
   PlayerDetail,
 } from "../site/puzzle-stats.service";
-import { colorForPlayer } from "../player-bit/player-bit-img.service";
 import "./latest-player-list.css";
-
-interface PlayerDetailWithIconSrc extends PlayerDetail {
-  iconSrc: string;
-  iconAlt: string;
-  bitBackground: string;
-}
 
 interface TemplateData {
   errorMessage?: string;
   hasError: boolean;
   isReady: boolean;
-  players: Array<PlayerDetailWithIconSrc>;
+  players: Array<PlayerDetail>;
   showTimeSince: boolean;
   recentPlayersCount: number;
 }
@@ -36,13 +28,9 @@ customElements.define(
     offset: number = 0;
     limit: number = 10;
     showTimeSince: boolean = false;
-    players: Array<PlayerDetailWithIconSrc> = [];
-    private mediaPath: string;
+    players: Array<PlayerDetail> = [];
     constructor() {
       super();
-
-      const mediaPath = this.attributes.getNamedItem("media-path");
-      this.mediaPath = mediaPath ? mediaPath.value : "";
 
       // Set the attribute values
       const puzzleId = this.attributes.getNamedItem("puzzle-id");
@@ -145,38 +133,7 @@ customElements.define(
                 role="listitem"
               >
                 <small class="pm-Preview-latestItemCell">
-                  ${item.icon
-                    ? html`
-                        <span
-                          style=${styleMap({
-                            "--pm-PlayerBit-bitIcon-color": item.bitBackground,
-                          })}
-                          class="pm-PlayerBit-bitIconBackground"
-                        >
-                          <img
-                            width="32"
-                            height="32"
-                            class="pm-PlayerBit"
-                            src=${item.iconSrc}
-                            alt=${item.iconAlt}
-                          />
-                        </span>
-                      `
-                    : html`
-                        <span
-                          class="hasNoBit pm-PlayerBit"
-                          style=${`--pm-PlayerBit-color:${colorForPlayer(
-                            item.id
-                          )}`}
-                        >
-                          <span class="pm-PlayerBit-id"
-                            >${item.id.toString(36)}</span
-                          >
-                        </span>
-                      `}
-                  <strong class="pm-PlayerBit-bitName">
-                    ${item.icon ? item.iconAlt.substr(0, 26) : ""}<!-- TODO: use player assigned name -->
-                  </strong>
+                  <pm-player-bit player=${item.id}></pm-player-bit>
                 </small>
                 <small
                   class="pm-Preview-latestItemCell pm-Preview-latestItemCell--pieces"
@@ -226,23 +183,7 @@ customElements.define(
                 })}
                 role="listitem"
               >
-                ${item.icon
-                  ? html`
-                      <img
-                        width="32"
-                        height="32"
-                        class="pm-PlayerBit"
-                        src=${item.iconSrc}
-                        alt=${item.iconAlt}
-                      />
-                    `
-                  : html`
-                      <span class="hasNoBit pm-PlayerBit">
-                        <span class="pm-PlayerBit-id"
-                          >${item.id.toString(36)}</span
-                        >
-                      </span>
-                    `}
+                <pm-player-bit player=${item.id}></pm-player-bit>
                 ${item.score}
               </span>
             `;
@@ -272,12 +213,10 @@ customElements.define(
     }
 
     _setPlayers() {
-      const setPlayerDetails = _setPlayerDetails.bind(this);
-      const mediaPath = this.mediaPath;
       return puzzleStatsService
         .getPlayerStatsOnPuzzle(this.puzzleId)
         .then((playerStats: PlayerStatsData) => {
-          this.players = playerStats.players.map(setPlayerDetails);
+          this.players = playerStats.players;
         })
         .catch(() => {
           this.hasError = true;
@@ -287,18 +226,6 @@ customElements.define(
           this.isReady = true;
           this.render();
         });
-
-      function _setPlayerDetails(item: PlayerDetail): PlayerDetailWithIconSrc {
-        const playerDetail = <PlayerDetailWithIconSrc>Object.assign(
-          {
-            iconSrc: `${mediaPath}bit-icons/64-${item.icon ||
-              "unknown-bit"}.png`,
-            iconAlt: item.icon || "lost bit",
-          },
-          item
-        );
-        return playerDetail;
-      }
     }
   }
 );

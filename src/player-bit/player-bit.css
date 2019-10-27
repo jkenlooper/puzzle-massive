@@ -4,6 +4,7 @@
 .pm-PlayerBit {
   display: inline-block;
   vertical-align: middle;
+  text-align: center;
 }
 .hasNoBit.pm-PlayerBit {
 }
