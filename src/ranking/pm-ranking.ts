@@ -7,14 +7,9 @@ import { classMap } from "lit-html/directives/class-map.js";
 import "./ranking.css";
 
 interface RankData {
-  active: boolean;
   id: number;
   rank: number;
   score: number;
-}
-
-interface PlayerRankDetail extends RankData {
-  topPlayer: boolean;
 }
 
 interface PlayerStatsData {
@@ -32,11 +27,7 @@ interface TemplateData {
   playerId: number | undefined;
   totalPlayers: number;
   totalActivePlayers: number;
-  hasUp: boolean;
-  hasDown: boolean;
-  playerRanks: Array<PlayerRankDetail>;
-  selectPlayerRanksUp: Function;
-  selectPlayerRanksDown: Function;
+  playerRanks: Array<RankData>;
 }
 
 const tag = "pm-ranking";
@@ -50,15 +41,12 @@ customElements.define(
     hasError: boolean = false;
     errorMessage: string = "";
     range: number = 15;
-    playerRanks: Array<PlayerRankDetail> = [];
+    playerRanks: Array<RankData> = [];
     playerRank: number = 0;
     playerId: number | undefined;
     totalPlayers: number = 0;
     totalActivePlayers: number = 0;
-    hasUp: boolean = false;
-    hasDown: boolean = false;
     private instanceId: string;
-    private offset: number = 0;
 
     static get _instanceId(): string {
       return `${tag} ${lastInstanceId++}`;
@@ -104,29 +92,17 @@ customElements.define(
       this.render();
     }
 
-    _setPlayerRanks(start?: number) {
+    _setPlayerRanks() {
       const rankingService = new FetchService(
-        `${this.player_ranks_url}?${
-          start === undefined ? "" : `start=${start}&`
-        }count=${this.range}`
+        `${this.player_ranks_url}?count=${this.range}`
       );
       return rankingService
         .get<PlayerStatsData>()
         .then((playerStats) => {
           this.playerRank = playerStats.player_rank;
-          const first = playerStats.rank_slice[0];
-          if (first) {
-            this.offset = first.rank;
-          } else {
-            this.offset = 0;
-          }
-
           this.playerRanks = playerStats.rank_slice.map(setPlayerRankDetails);
           this.totalPlayers = playerStats.total_players;
           this.totalActivePlayers = playerStats.total_active_players;
-          this.hasUp = this.offset > 1;
-          const end = this.offset + this.range;
-          this.hasDown = end < this.totalPlayers;
         })
         .catch(() => {
           this.hasError = true;
@@ -136,13 +112,8 @@ customElements.define(
           this.isReady = true;
           this.render();
         });
-      function setPlayerRankDetails(item: RankData): PlayerRankDetail {
-        const playerRank = <PlayerRankDetail>Object.assign(
-          {
-            topPlayer: item.rank < 15,
-          },
-          item
-        );
+      function setPlayerRankDetails(item: RankData): RankData {
+        const playerRank = <RankData>Object.assign(item);
         return playerRank;
       }
     }
@@ -177,38 +148,9 @@ customElements.define(
           <p>
           ${data.totalActivePlayers} active players in the last two weeks.
           </p>
-          <p class="u-textRight">
-          ${
-            data.hasUp
-              ? html`
-                  <button
-                    class="pm-Ranking-pager pm-Ranking-pager--up"
-                    @click=${data.selectPlayerRanksUp}
-                  >
-                    &uarr;
-                  </button>
-                `
-              : html``
-          }
-          </p>
           <div class="pm-Ranking-list" role="list">
           ${items()}
-
           </div>
-          <p class="u-textRight">
-          ${
-            data.hasDown
-              ? html`
-                  <button
-                    class="pm-Ranking-pager pm-Ranking-pager--down"
-                    @click=${data.selectPlayerRanksDown}
-                  >
-                    &darr;
-                  </button>
-                `
-              : html``
-          }
-          </p>
         </section>
       `;
       }
@@ -221,21 +163,12 @@ customElements.define(
                 class=${classMap({
                   "pm-Ranking-listitem": true,
                   "pm-Ranking-listitem--current": item.id === data.playerId,
-                  "pm-Ranking-listitem--topPlayer": item.topPlayer,
                 })}
               >
+                <strong class="pm-Ranking-rank">${item.score}</strong>
                 <div class="pm-Ranking-img">
                   <pm-player-bit player=${item.id}></pm-player-bit>
                 </div>
-
-                <strong class="pm-Ranking-rank">${item.score}</strong>
-                <span class="pm-Ranking-status">
-                  ${item.active
-                    ? html`
-                        <small>Active</small>
-                      `
-                    : html``}
-                </span>
               </div>
             `;
           })}
@@ -252,30 +185,12 @@ customElements.define(
         playerId: this.playerId,
         totalPlayers: this.totalPlayers,
         totalActivePlayers: this.totalActivePlayers,
-        hasUp: this.hasUp,
-        hasDown: this.hasDown,
         playerRanks: this.playerRanks,
-        selectPlayerRanksUp: this.selectPlayerRanksUp.bind(this),
-        selectPlayerRanksDown: this.selectPlayerRanksDown.bind(this),
       };
     }
 
     render() {
       render(this.template(this.data), this);
-    }
-
-    selectPlayerRanksUp() {
-      const start = Math.max(0, this.offset - this.range);
-      this._setPlayerRanks(start).finally(() => {
-        this.render();
-      });
-    }
-
-    selectPlayerRanksDown() {
-      const start = this.offset + this.range;
-      this._setPlayerRanks(start).finally(() => {
-        this.render();
-      });
     }
   }
 );

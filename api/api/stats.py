@@ -29,7 +29,6 @@ class PlayerRanksView(MethodView):
         args = {}
         if request.args:
             args.update(request.args.to_dict(flat=True))
-        start = args.get('start')
         count = args.get('count')
         if count == None:
             return make_response(encoder.encode({
@@ -52,22 +51,17 @@ class PlayerRanksView(MethodView):
         player_rank = player_rank + 1
         active_players = frozenset(map(int, redisConnection.zrevrangebyscore('timeline', '+inf', now - ACTIVE_RANGE)))
 
-        if start == None:
-            start = max(0, player_rank - int(count / 2))
-        else:
-            start = int(start)
-        stop = start + count
-        rank_slice = redisConnection.zrevrange('rank', start, stop, withscores=True)
+        start = max(0, player_rank - int(count / 2))
+        rank_slice = redisConnection.zrevrange('rank', 0, -1, withscores=True)
 
         ranks = []
         for index, item in enumerate(rank_slice):
             (user, score) = map(int, item)
-            ranks.append({
-                "id": user,
-                "score": score,
-                "rank": start + index,
-                "active": user in active_players,
-            })
+            if user in active_players:
+                ranks.append({
+                    "id": user,
+                    "score": score,
+                })
 
         player_ranks = {
             "total_players": total_players,

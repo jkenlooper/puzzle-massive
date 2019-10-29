@@ -7,7 +7,10 @@
   <div class="pm-HighScores-list" role="list">
     {% for item in value %}
       <div class="pm-HighScores-listitem">
+        <!--
         <img class="pm-HighScores-img" width="64" height="64" src="{{ url_for('send_media_file', filename='bit-icons/64-{}.png'.format(item.icon or 'unknown-bit')) }}" alt="{{item.icon}}">
+        -->
+        <pm-player-bit player="{{ item.id }}"></pm-player-bit>
         <strong class="pm-HighScores-score">{{item.score}}</strong>
       </div>
     {% endfor %}

@@ -1,34 +1,18 @@
 .pm-Ranking {
 }
 
-.pm-Ranking-pager {
-  font-size: 1.4em;
-}
-
 .pm-Ranking-list {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-around;
-  height: calc((32px * 16) + 128px);
 }
 
 .pm-Ranking-listitem {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: calc(64px + 5em + 5em);
-  height: 32px;
+  margin-bottom: 10px;
 }
 
 .pm-Ranking-listitem--current {
-  height: 64px;
-}
-
-.pm-Ranking-listitem--topPlayer {
 }
 
 .pm-Ranking-img {
+  display: inline-block;
 }
 
 .pm-Ranking-listitem--current .pm-Ranking-img {
@@ -38,18 +22,8 @@
 }
 
 .pm-Ranking-rank {
-  width: 4em;
+  display: inline-block;
+  margin-right: 10px;
   text-align: right;
-}
-
-.pm-Ranking-listitem--topPlayer .pm-Ranking-rank {
-  color: var(--color-accent);
-  font-size: 2rem;
-}
-
-.pm-Ranking-status {
-  width: calc(2 * 4em);
-  padding-left: 1em;
-  text-align: right;
-  font-size: 50%;
+  min-width: 10em;
 }
