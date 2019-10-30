@@ -104,15 +104,17 @@ customElements.define(
                   </h2>
                   <div class="pm-Preview-latestList" role="list">
                     <div class="pm-Preview-latestItem">
-                      <small class="pm-Preview-latestItemCell"></small>
                       <small
                         class="pm-Preview-latestItemCell pm-Preview-latestItemCell--pieces"
                       >
                         Pieces
                       </small>
-                      <small class="pm-Preview-latestItemCell">
+                      <small
+                        class="pm-Preview-latestItemCell pm-Preview-latestItemCell--time"
+                      >
                         Time since
                       </small>
+                      <small class="pm-Preview-latestItemCell"></small>
                     </div>
                     ${itemsWithTimeSince()}
                   </div>
@@ -132,16 +134,18 @@ customElements.define(
                 })}
                 role="listitem"
               >
-                <small class="pm-Preview-latestItemCell">
-                  <pm-player-bit player=${item.id}></pm-player-bit>
-                </small>
                 <small
                   class="pm-Preview-latestItemCell pm-Preview-latestItemCell--pieces"
                 >
                   ${item.score}
                 </small>
-                <small class="pm-Preview-latestItemCell">
+                <small
+                  class="pm-Preview-latestItemCell pm-Preview-latestItemCell--time"
+                >
                   ${item.timeSince}
+                </small>
+                <small class="pm-Preview-latestItemCell">
+                  <pm-player-bit player=${item.id}></pm-player-bit>
                 </small>
               </div>
             `;

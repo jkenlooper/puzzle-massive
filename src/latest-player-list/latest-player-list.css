@@ -3,7 +3,8 @@
   flex-direction: column;
   align-self: stretch;
   justify-content: space-between;
-  padding: 13px 13px 0;
+  padding: 13px 0px 0;
+  min-width: 280px;
 }
 
 .pm-Preview-latest > h2 {
@@ -30,16 +31,21 @@
 }
 
 .pm-Preview-latestItem > * + * {
-  padding-left: 20px;
+  padding-left: 10px;
+  margin-top: 5px;
 }
 
 .pm-Preview-latestItemCell {
-  min-width: 32px;
+  min-width: calc(280px - (4em + 8em));
+  font-size: smaller;
 }
 
 .pm-Preview-latestItemCell--pieces {
-  /* 6em is width for 'pieces' label */
-  min-width: 6em;
+  min-width: 4em;
+  text-align: right;
+}
+.pm-Preview-latestItemCell--time {
+  min-width: 8em;
   text-align: right;
 }
 

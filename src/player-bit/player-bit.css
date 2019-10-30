@@ -4,7 +4,7 @@
 .pm-PlayerBit {
   display: inline-block;
   vertical-align: middle;
-  text-align: center;
+  text-align: left;
 }
 .hasNoBit.pm-PlayerBit {
 }
@@ -29,7 +29,7 @@
 }
 
 .pm-PlayerBit-bitName {
-  margin-left: 2px;
+  margin-left: 10px;
   white-space: nowrap;
   display: inline-block;
 }
