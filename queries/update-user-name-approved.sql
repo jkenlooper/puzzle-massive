@@ -1,1 +1,1 @@
-update User set name_approved = :name_approved where id = :player_id;
+update NameRegister set approved = :name_approved, approved_date = datetime('now') where user = :player_id;

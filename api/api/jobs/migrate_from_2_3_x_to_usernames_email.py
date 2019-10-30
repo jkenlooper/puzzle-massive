@@ -27,9 +27,8 @@ if __name__ == '__main__':
     ## Create the new tables
     for filename in (
             'cleanup_migrate_from_2_3_x_to_usernames_email.sql',
-            'alter_user_add_name.sql',
-            'alter_user_add_name_approved.sql',
             'create_table_player_account.sql',
+            'create_table_name_register.sql',
             ):
         for statement in read_query_file(filename).split(';'):
             cur.execute(statement)

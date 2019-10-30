@@ -27,11 +27,11 @@ class AdminPlayerDetailsEditView(MethodView):
         player = args.get('player')
         if not player:
             abort(400)
-        email_verified = args.get('email_verified', '0')
-        if not email_verified in ('0', '1'):
+        email_verified = int(args.get('email_verified', '0'))
+        if not email_verified in (0, 1):
             abort(400)
-        name_approved = args.get('name_approved', '0')
-        if not name_approved in ('0', '1'):
+        name_approved = int(args.get('name_approved', '0'))
+        if not name_approved in (0, 1):
             abort(400)
 
         name = escape(args.get('name'))
@@ -55,7 +55,7 @@ class AdminPlayerDetailsEditView(MethodView):
             cur.close()
             abort(400)
         (result, col_names) = rowify(result, cur.description)
-        existingPlayerData = result[0]
+        existing_player_data = result[0]
 
         if email == '':
             cur.execute(fetch_query_string('remove-player-account-email.sql'), {
@@ -69,28 +69,77 @@ class AdminPlayerDetailsEditView(MethodView):
 
         cur.execute(fetch_query_string('update-player-account-email-verified.sql'), {
             'player_id': player,
-            'email_verified': int(email_verified),
+            'email_verified': email_verified,
         })
 
         cur.execute(fetch_query_string('update-user-points.sql'), {
             'player_id': player,
-            'points': int(args.get('dots', existingPlayerData['dots'])),
+            'points': int(args.get('dots', existing_player_data['dots'])),
             'POINTS_CAP': POINTS_CAP
         })
 
         if name == '':
-            cur.execute(fetch_query_string('remove-user-name.sql'), {
+            cur.execute(fetch_query_string('remove-user-name-on-name-register-for-player.sql'), {
                 'player_id': player,
             })
         else:
-            cur.execute(fetch_query_string('update-user-name.sql'), {
+            if existing_player_data['name'] != name:
+                result = cur.execute(fetch_query_string('select-unclaimed-name-on-name-register.sql'), {
+                    'name': name,
+                }).fetchall()
+                if result:
+                    (result, col_names) = rowify(result, cur.description)
+                    unclaimed_name_data = result[0]
+                    if unclaimed_name_data['approved_date'] == None:
+                        # name has been rejected
+                        if name_approved == 1:
+                            # override the rejected name and let player claim it
+                            cur.execute(fetch_query_string('remove-user-name-on-name-register-for-player.sql'), {
+                                'player_id': player,
+                                'name': name,
+                            })
+                            cur.execute(fetch_query_string('claim-rejected-user-name-on-name-register-for-player.sql'), {
+                                'player_id': player,
+                                'name': name,
+                            })
+                    else:
+                        # name can be claimed
+                        cur.execute(fetch_query_string('remove-user-name-on-name-register-for-player.sql'), {
+                            'player_id': player,
+                            'name': name,
+                        })
+                        cur.execute(fetch_query_string('claim-user-name-on-name-register-for-player.sql'), {
+                            'player_id': player,
+                            'name': name,
+                        })
+                else:
+                    # name is new and not in the NameRegister.  Add it and mark
+                    # it for auto-approval as soon as possible (approved_date is
+                    # set to now).
+                    cur.execute(fetch_query_string('remove-user-name-on-name-register-for-player.sql'), {
+                        'player_id': player,
+                        'name': name,
+                    })
+                    cur.execute(fetch_query_string('add-user-name-on-name-register-for-player.sql'), {
+                        'player_id': player,
+                        'name': name,
+                    })
+
+        if existing_player_data['name_approved'] == 1 and name_approved == 0:
+            # Place this name on reject list
+            cur.execute(fetch_query_string('reject-name-on-name-register.sql'), {
+                'name': name,
+            })
+            cur.execute(fetch_query_string('remove-user-name-on-name-register-for-player.sql'), {
                 'player_id': player,
                 'name': name,
             })
-        cur.execute(fetch_query_string('update-user-name-approved.sql'), {
-            'player_id': player,
-            'name_approved': int(name_approved),
-        })
+
+        if existing_player_data['name_approved'] == 0 and name_approved == 1:
+            cur.execute(fetch_query_string('update-user-name-approved.sql'), {
+                'player_id': player,
+                'name_approved': name_approved,
+            })
 
         cur.close()
         db.commit()

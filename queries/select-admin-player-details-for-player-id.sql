@@ -6,11 +6,12 @@ u.m_date,
 strftime('%s','now') - strftime('%s', u.m_date) as seconds_from_now,
 u.points as dots,
 u.score,
-u.name, u.name_approved,
+nr.name, nr.approved as name_approved, nr.approved_date,
 pa.email, pa.email_verified,
 up1.empty_slots_count,
 up2.filled_slots_count
 from User as u
+left outer join NameRegister as nr on (nr.user = u.id)
 left outer join PlayerAccount as pa on (pa.user = u.id)
 left outer join BitIcon as b on (b.user = u.id)
 left outer join (
