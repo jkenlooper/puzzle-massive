@@ -50,10 +50,14 @@
         </tr>
         <tr>
           <th>player name</th>
-          <td>{{ player.name }}</td>
+          <td>{% if player.name %}
+            {{ player.display_name }}<br>
+            <em><small>{{ player.name }}</small></em>
+            {% endif %}
+          </td>
           <td><label>
-              name
-              <input type="text" id="name" name="name" maxlength="26" value="{{ player.name or '' }}"> <!-- USER_NAME_MAXLENGTH -->
+              display name
+              <input type="text" id="name" name="name" maxlength="26" value="{{ player.display_name or '' }}"> <!-- USER_NAME_MAXLENGTH -->
             </label>
             <label>
               Approved

@@ -34,7 +34,10 @@ class AdminPlayerDetailsEditView(MethodView):
         if not name_approved in (0, 1):
             abort(400)
 
-        name = escape(args.get('name'))
+        # name is always converted to lowercase and display_name preserves
+        # original case.
+        name = escape(args.get('name')).lower()
+        display_name = escape(args.get('name'))
         if len(name) > USER_NAME_MAXLENGTH:
             abort(400)
 
@@ -96,7 +99,6 @@ class AdminPlayerDetailsEditView(MethodView):
                             # override the rejected name and let player claim it
                             cur.execute(fetch_query_string('remove-user-name-on-name-register-for-player.sql'), {
                                 'player_id': player,
-                                'name': name,
                             })
                             cur.execute(fetch_query_string('claim-rejected-user-name-on-name-register-for-player.sql'), {
                                 'player_id': player,
@@ -106,7 +108,6 @@ class AdminPlayerDetailsEditView(MethodView):
                         # name can be claimed
                         cur.execute(fetch_query_string('remove-user-name-on-name-register-for-player.sql'), {
                             'player_id': player,
-                            'name': name,
                         })
                         cur.execute(fetch_query_string('claim-user-name-on-name-register-for-player.sql'), {
                             'player_id': player,
@@ -118,11 +119,11 @@ class AdminPlayerDetailsEditView(MethodView):
                     # set to now).
                     cur.execute(fetch_query_string('remove-user-name-on-name-register-for-player.sql'), {
                         'player_id': player,
-                        'name': name,
                     })
                     cur.execute(fetch_query_string('add-user-name-on-name-register-for-player.sql'), {
                         'player_id': player,
                         'name': name,
+                        'display_name': display_name,
                     })
 
         if existing_player_data['name_approved'] == 1 and name_approved == 0:
@@ -132,7 +133,6 @@ class AdminPlayerDetailsEditView(MethodView):
             })
             cur.execute(fetch_query_string('remove-user-name-on-name-register-for-player.sql'), {
                 'player_id': player,
-                'name': name,
             })
 
         if existing_player_data['name_approved'] == 0 and name_approved == 1:

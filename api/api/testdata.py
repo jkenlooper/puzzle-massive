@@ -68,6 +68,10 @@ select id from User where ip = :ip and login = :login;
 """
 
 def generate_users(count):
+    def generate_name(user_id):
+        # TODO: Use generated names from https://www.name-generator.org.uk/
+        return "Random Name for " + str(user_id)
+
     cur = db.cursor()
 
     for index in range(count):
@@ -93,8 +97,22 @@ def generate_users(count):
                 slotcount = randint(50,250)
             for slot in range(slotcount):
                 cur.execute(read_query_file("add-new-user-puzzle-slot.sql"), {'player': user_id})
+
+        # Randomly assign player names
+        chance_for_name = randint(0, 5)
+        if chance_for_name == 5:
+            display_name = generate_name(user_id)
+            name = display_name.lower()
+            cur.execute(read_query_file('add-user-name-on-name-register-for-player.sql'), {
+                'player_id': user_id,
+                'name': name,
+                'display_name': display_name,
+            })
+
+
     cur.close()
     db.commit()
+
 
 def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=3):
     cur = db.cursor()

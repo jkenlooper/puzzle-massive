@@ -173,7 +173,7 @@ class UpdatePlayer(Task):
             redisConnection.expire('batchpoints:{user}'.format(user=user), DAY)
 
             logger.debug("update user {id} with {points} points and score of {score}".format(**{'id':user, 'points':points, 'score':score}))
-            cur.execute(read_query_file("update_user_points_and_m_date.sql"), {'id':user, 'points':points, 'score':score, 'POINTS_CAP':self.POINTS_CAP})
+            cur.execute(read_query_file("update_user_points_and_m_date.sql"), {'id':user, 'points':points, 'score':score, 'POINTS_CAP':POINTS_CAP})
             cur.execute(read_query_file("update_bit_icon_expiration.sql"), {'user':user})
 
             user = redisConnection.spop('batchuser')
@@ -269,6 +269,21 @@ class UpdatePuzzleQueue(Task):
         cur.close()
         db.commit()
 
+class AutoApproveUserNames(Task):
+    "Approve user names that have not been approved and have old approved_date."
+    interval = DAY
+
+    def __init__(self, id=None):
+        super().__init__(id, __class__.__name__)
+
+    def do_task(self):
+        super().do_task()
+
+        cur = db.cursor()
+        cur.execute(read_query_file("update-user-name-approved-for-approved_date-due.sql"))
+        cur.close()
+        db.commit()
+
 def main():
     ""
     # Reset scheduler to start by removing any previous scheduled tasks
@@ -282,6 +297,7 @@ def main():
         UpdatePlayer,
         UpdatePuzzleStats,
         UpdatePuzzleQueue,
+        AutoApproveUserNames,
     ]
     tasks = {}
     for index in range(len(task_registry)):

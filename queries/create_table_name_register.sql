@@ -5,7 +5,8 @@
 create table NameRegister (
     id integer primary key,
     user integer unique default null,
-    name text unique not null,
+    display_name text not null, -- should match name except preserves letter case
+    name text unique not null, -- stored as all lowercase
     approved integer default 0,
     approved_date text default null,
     foreign key ( user ) references User ( id ) on delete set null

@@ -6,7 +6,7 @@ u.m_date,
 strftime('%s','now') - strftime('%s', u.m_date) as seconds_from_now,
 u.points as dots,
 u.score,
-nr.name, nr.approved as name_approved, nr.approved_date,
+nr.name, nr.display_name, nr.approved as name_approved, nr.approved_date,
 pa.email, pa.email_verified,
 up1.empty_slots_count,
 up2.filled_slots_count
