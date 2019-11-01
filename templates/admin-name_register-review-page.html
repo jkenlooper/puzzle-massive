@@ -1,0 +1,33 @@
+{% extends 'admin-base.html' %}
+
+{% block title %}
+ | Name Register Review
+{%- endblock %}
+
+{% block description %}
+Review submitted player names for their bit icons and reject any before they are
+auto approved after the approved date.
+{% endblock %}
+
+{% block main %}
+
+<section>
+  <h1>
+  Name Register Review
+  </h1>
+
+  <form action="/newapi/admin/reject-name/">
+  {% for item in unapproved_names %}
+  <label class="u-inlineBlock u-paddingTopXs u-paddingBottomXs u-paddingLeftSm u-paddingRightSm">
+  <input type="checkbox" name="id" value="{{ item.id }}">
+  {{ item.display_name }}
+  </label>
+  {% endfor %}
+
+  <div>
+  <input type="submit" value="reject">
+  </div>
+  </form>
+</section>
+
+{% endblock %}

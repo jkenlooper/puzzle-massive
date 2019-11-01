@@ -103,10 +103,11 @@ def generate_users(count):
         if chance_for_name == 5:
             display_name = generate_name(user_id)
             name = display_name.lower()
-            cur.execute(read_query_file('add-user-name-on-name-register-for-player.sql'), {
+            cur.execute(read_query_file('add-user-name-on-name-register-for-player-to-be-reviewed.sql'), {
                 'player_id': user_id,
                 'name': name,
                 'display_name': display_name,
+                'time': '+{} hours'.format(randint(1, 24*3)),
             })
 
 

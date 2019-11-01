@@ -1,0 +1,7 @@
+--- !ChillNode
+name: admin_name_register_review_page
+route: /admin/name-register-review/
+template: admin-name_register-review-page.html
+value:
+  unapproved_names: select-name-on-name-register-to-review.sql
+

@@ -20,6 +20,7 @@ interface TemplateData {
   userId: number;
   username: string;
   usernameApproved: boolean;
+  showName: boolean;
   showScore: boolean;
   score: number;
   showDots: boolean;
@@ -41,6 +42,7 @@ customElements.define(
     private instanceId: string;
     private showScore: boolean;
     private showDots: boolean;
+    private showName: boolean;
     private mediaPath: string;
     private isProcessingClaimUser: boolean = false;
 
@@ -61,6 +63,7 @@ customElements.define(
 
       this.showScore = this.hasAttribute("score");
       this.showDots = this.hasAttribute("dots");
+      this.showName = this.hasAttribute("name");
 
       userDetailsService.subscribe(this.render.bind(this), this.instanceId);
     }
@@ -109,7 +112,7 @@ customElements.define(
                       `}
                 </a>
               `}
-          ${data.username
+          ${data.username && data.showName
             ? html`
                 <strong class="u-textCenter u-block">
                   ${data.username}
@@ -180,6 +183,7 @@ customElements.define(
         userId: userDetailsService.userDetails.id || 0,
         username: userDetailsService.userDetails.name,
         usernameApproved: userDetailsService.userDetails.nameApproved,
+        showName: this.showName,
         showScore: this.showScore,
         score: userDetailsService.userDetails.score,
         showDots: this.showDots,

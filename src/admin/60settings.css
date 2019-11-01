@@ -1,0 +1,8 @@
+:root {
+  /* For suitcss-utils-spacing */
+  --spaceXs: 8px;
+  --spaceSm: 16px;
+  --spaceMd: 32px;
+  --spaceLg: 64px;
+  --spaceXl: 128px;
+}
