@@ -55,19 +55,30 @@ class PlayerRanksView(MethodView):
         rank_slice = redisConnection.zrevrange('rank', 0, -1, withscores=True)
 
         ranks = []
+        has_user_in_ranks = False
+        user_in_ranks_index = -1
         for index, item in enumerate(rank_slice):
-            (user, score) = map(int, item)
-            if user in active_players:
+            (player, score) = map(int, item)
+            if not has_user_in_ranks and player == user:
+                has_user_in_ranks = True
+                user_in_ranks_index = len(ranks)
+            if player in active_players or player == user:
                 ranks.append({
-                    "id": user,
+                    "id": player,
                     "score": score,
                 })
+
+        ranks_near_user = []
+        if has_user_in_ranks:
+            start = max(0, user_in_ranks_index - int(count / 2))
+            end = min(len(ranks), user_in_ranks_index + int(count / 2))
+            ranks_near_user = ranks[start:end]
 
         player_ranks = {
             "total_players": total_players,
             "total_active_players": len(active_players),
             "player_rank": player_rank,
-            "rank_slice": ranks,
+            "rank_slice": ranks_near_user,
         }
 
         cur.close()
