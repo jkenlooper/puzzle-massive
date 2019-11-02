@@ -1,4 +1,7 @@
 {% extends 'admin-base.html' %}
+{% if unapproved_names is mapping %}
+{% set unapproved_names = [unapproved_names] %}
+{% endif %}
 
 {% block title %}
  | Name Register Review
@@ -16,10 +19,11 @@ auto approved after the approved date.
   Name Register Review
   </h1>
 
-  <form action="/newapi/admin/reject-name/">
+  <form method="POST" action="/newapi/admin/player/name-register/">
+    <input type="hidden" name="action" value="reject">
   {% for item in unapproved_names %}
   <label class="u-inlineBlock u-paddingTopXs u-paddingBottomXs u-paddingLeftSm u-paddingRightSm">
-  <input type="checkbox" name="id" value="{{ item.id }}">
+  <input type="checkbox" name="name_register_id" value="{{ item.id }}">
   {{ item.display_name }}
   </label>
   {% endfor %}

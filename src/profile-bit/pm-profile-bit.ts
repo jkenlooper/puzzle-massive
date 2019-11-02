@@ -20,6 +20,7 @@ interface TemplateData {
   userId: number;
   username: string;
   usernameApproved: boolean;
+  usernameRejected: boolean;
   showName: boolean;
   showScore: boolean;
   score: number;
@@ -113,11 +114,23 @@ customElements.define(
                 </a>
               `}
           ${data.username && data.showName
-            ? html`
-                <strong class="u-textCenter u-block">
-                  ${data.username}
-                </strong>
-              `
+            ? data.usernameRejected
+              ? html`
+                  <s class="u-textCenter u-block">
+                    ${data.username}
+                  </s>
+                `
+              : data.usernameApproved
+              ? html`
+                  <strong class="u-textCenter u-block">
+                    ${data.username}
+                  </strong>
+                `
+              : html`
+                  <span class="u-textCenter u-block">
+                    ${data.username}
+                  </span>
+                `
             : ""}
           ${data.showScore
             ? html`
@@ -183,6 +196,7 @@ customElements.define(
         userId: userDetailsService.userDetails.id || 0,
         username: userDetailsService.userDetails.name,
         usernameApproved: userDetailsService.userDetails.nameApproved,
+        usernameRejected: userDetailsService.userDetails.nameRejected,
         showName: this.showName,
         showScore: this.showScore,
         score: userDetailsService.userDetails.score,

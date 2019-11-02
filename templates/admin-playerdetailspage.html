@@ -51,7 +51,10 @@
         <tr>
           <th>player name</th>
           <td>{% if player.name %}
-            {{ player.display_name }}<br>
+            {% if player.approved_date == None %}<s>{% endif %}
+            {{ player.display_name }}
+            {% if player.approved_date == None %}</s>{% endif %}
+            <br>
             <em><small>{{ player.name }}</small></em>
             {% endif %}
           </td>

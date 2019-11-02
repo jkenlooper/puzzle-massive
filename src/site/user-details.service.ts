@@ -23,6 +23,7 @@ interface UserDetailsResponse {
   readonly puzzle_instance_count: number;
   readonly name: string;
   readonly nameApproved: boolean;
+  readonly nameRejected: boolean;
   readonly email: string;
   readonly emailVerified: boolean;
 }
@@ -61,6 +62,7 @@ class UserDetailsService {
     puzzleInstanceCount: 0,
     name: "",
     nameApproved: false,
+      nameRejected: false,
     email: "",
     emailVerified: false,
   };

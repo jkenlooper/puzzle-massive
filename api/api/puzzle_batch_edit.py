@@ -131,4 +131,5 @@ class AdminPuzzleBatchEditView(MethodView):
 
         # TODO: if action in ('reject', 'delete'): #Also apply to any puzzle instances
 
+        cur.close()
         return make_response('204', 204)

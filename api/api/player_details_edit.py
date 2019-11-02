@@ -131,9 +131,6 @@ class AdminPlayerDetailsEditView(MethodView):
             cur.execute(fetch_query_string('reject-name-on-name-register.sql'), {
                 'name': name,
             })
-            cur.execute(fetch_query_string('remove-user-name-on-name-register-for-player.sql'), {
-                'player_id': player,
-            })
 
         if existing_player_data['name_approved'] == 0 and name_approved == 1:
             cur.execute(fetch_query_string('update-user-name-approved.sql'), {

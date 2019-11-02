@@ -299,12 +299,14 @@ class UserDetailsView(MethodView):
             db.commit()
         del user_details['will_expire_cookie']
 
-        if not user_details['name']:
+        user_has_name = bool(user_details['name'])
+        if not user_has_name:
             user_details['name'] = ''
         if not user_details['email']:
             user_details['email'] = ''
-        user_details['nameApproved'] = bool(user_details['name_approved'])
+        user_details['nameApproved'] = user_has_name and bool(user_details['name_approved'])
         del user_details['name_approved']
+        user_details['nameRejected'] = user_has_name and user_details['approved_date'] == None
         user_details['emailVerified'] = bool(user_details['email_verified'])
         del user_details['email_verified']
 

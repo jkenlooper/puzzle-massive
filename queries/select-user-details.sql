@@ -1,5 +1,5 @@
 SELECT u.login, b.name AS icon, u.score, u.points as dots, u.id, u.cookie_expires,
-nr.display_name as name, nr.approved as name_approved,
+nr.display_name as name, nr.approved as name_approved, nr.approved_date,
 pa.email, pa.email_verified,
 strftime('%s', u.cookie_expires) <= strftime('%s', 'now', '+7 days') as will_expire_cookie,
 strftime('%s', b.expiration) <= strftime('%s', 'now') as bit_expired,
