@@ -13,6 +13,7 @@ from api.tools import loadConfig
 from api.tools import deletePieceDataFromRedis
 from api.timeline import archive_and_clear
 from api.constants import REBUILD, COMPLETED, NEW_USER_STARTING_POINTS, SKILL_LEVEL_RANGES, QUEUE_END_OF_LINE, POINTS_CAP
+from api.notify import send_message
 
 # Get the args from the janitor and connect to the database
 config_file = sys.argv[1]
@@ -284,6 +285,40 @@ class AutoApproveUserNames(Task):
         cur.close()
         db.commit()
 
+class SendDigestEmailForAdmin(Task):
+    "Let admin know of any items of interest via email"
+    interval = DAY
+
+    def __init__(self, id=None):
+        super().__init__(id, __class__.__name__)
+
+    def do_task(self):
+        super().do_task()
+
+        cur = db.cursor()
+        result = cur.execute(read_query_file("select-user-name-waiting-to-be-approved.sql")).fetchall()
+        if result:
+            names = []
+            (result, col_names) = rowify(result, cur.description)
+            for item in result:
+                names.append("{approved_date} - {display_name}".format(**item))
+
+            message = "\n".join(names)
+
+            # Send a notification email (silent fail if not configured)
+            try:
+                logger.debug(message)
+                if not config.get('DEBUG', True):
+                    send_message(config.get('EMAIL_MODERATOR'),
+                                 'Puzzle Massive - new names', message, config)
+            except Exception as err:
+                logger.warning("Failed to send notification message. {}".format(err))
+                pass
+
+        cur.close()
+        db.commit()
+
+
 def main():
     ""
     # Reset scheduler to start by removing any previous scheduled tasks
@@ -298,6 +333,7 @@ def main():
         UpdatePuzzleStats,
         UpdatePuzzleQueue,
         AutoApproveUserNames,
+        SendDigestEmailForAdmin,
     ]
     tasks = {}
     for index in range(len(task_registry)):

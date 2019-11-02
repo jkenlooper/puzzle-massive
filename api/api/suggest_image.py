@@ -85,7 +85,7 @@ class SuggestImageView(MethodView):
         try:
             send_message(current_app.config.get('EMAIL_MODERATOR'),
                          'Suggested Image',
-                         "http://puzzle.massive.xyz/chill/site/admin/puzzle/suggested/{}/".format(puzzle_id))
+                         "http://puzzle.massive.xyz/chill/site/admin/puzzle/suggested/{}/".format(puzzle_id), current_app.config)
         except Exception as err:
             current_app.logger.warning("Failed to send notification message. {}".format(err))
             pass
