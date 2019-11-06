@@ -30,6 +30,11 @@ pm-dot-require {
   box-shadow: 0 0 9px 10px var(--color-light-accent);
 }
 
+.pm-DotRequire--blur.is-dotted::before {
+  color: var(--color-light);
+  background-color: var(--color-dark);
+  content: "More dots are needed for this.";
+}
 .pm-DotRequire--blur.is-dotted::after {
   display: flex;
   position: absolute;
@@ -43,7 +48,7 @@ pm-dot-require {
   text-align: center;
   text-indent: 0.1em;
   text-shadow: 0 0 5px white, 0 0 2px white;
-  content: "+ ...";
+  content: "";
 }
 
 /* Show info message if is-dotted. */

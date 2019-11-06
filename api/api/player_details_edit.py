@@ -2,11 +2,11 @@
 
 from flask import current_app, redirect, request, make_response, abort
 from flask.views import MethodView
-from werkzeug.utils import escape
 
 from api.app import db
 from api.database import rowify, fetch_query_string, delete_puzzle_resources
 from api.constants import POINTS_CAP, USER_NAME_MAXLENGTH, EMAIL_MAXLENGTH
+from api.tools import normalize_name_from_display_name
 
 SLOT_ACTIONS = (
     'add',
@@ -36,12 +36,12 @@ class AdminPlayerDetailsEditView(MethodView):
 
         # name is always converted to lowercase and display_name preserves
         # original case.
-        name = escape(args.get('name')).lower()
-        display_name = escape(args.get('name'))
-        if len(name) > USER_NAME_MAXLENGTH:
+        display_name = args.get('name', '').strip()
+        name = normalize_name_from_display_name(display_name)
+        if len(display_name) > USER_NAME_MAXLENGTH:
             abort(400)
 
-        email = escape(args.get('email'))
+        email = args.get('email')
         if len(email) > EMAIL_MAXLENGTH:
             abort(400)
 
@@ -111,6 +111,7 @@ class AdminPlayerDetailsEditView(MethodView):
                         })
                         cur.execute(fetch_query_string('claim-user-name-on-name-register-for-player.sql'), {
                             'player_id': player,
+                            'display_name': display_name,
                             'name': name,
                         })
                 else:

@@ -87,3 +87,9 @@ def check_bg_color(bg_color):
     else:
         return "#808080"
 
+strip_chars_regex = re.compile('\s+')
+def normalize_name_from_display_name(display_name):
+    "Strip out any white-space and lowercase the display_name from NameRegister when storing as name."
+    name = display_name.lower()
+    name = re.sub(strip_chars_regex, '', name)
+    return name

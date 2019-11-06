@@ -62,7 +62,7 @@ class UserDetailsService {
     puzzleInstanceCount: 0,
     name: "",
     nameApproved: false,
-      nameRejected: false,
+    nameRejected: false,
     email: "",
     emailVerified: false,
   };
