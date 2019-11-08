@@ -22,6 +22,25 @@ class FetchService {
     });
   }
 
+  postForm<T>(data): Promise<T> {
+    return fetch(this.url, {
+      method: "POST",
+      credentials: "same-origin",
+      body: data,
+    }).then((response: Response) => {
+      if (!response.ok && !response.json) {
+        throw new Error(response.statusText);
+      }
+      return response.json().then((data: T) => {
+        if (!response.ok) {
+          return Promise.reject(data);
+        } else {
+          return data;
+        }
+      });
+    });
+  }
+
   patch<T>(data): Promise<T> {
     return fetch(this.url, {
       method: "PATCH",

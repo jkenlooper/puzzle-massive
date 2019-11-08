@@ -15,14 +15,19 @@
   <div class="u-marginTopMd u-marginBottomMd">
       <pm-profile-bit media-path="{{ url_for('send_media_file', filename='') }}" score dots name player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
       <pm-choose-bit limit="49" message="Change bit icon" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
+  </div>
 
+  <div class="u-marginTopMd u-marginBottomMd">
+      <h2>Player Name</h2>
       <p>Changing the player name will cost 100 dots.</p>
       <pm-dot-require min="100" type="blur">
         <pm-player-name-register></pm-player-name-register>
       </pm-dot-require>
-
   </div>
 
+
+  <div class="u-marginTopMd u-marginBottomMd">
+      <h2>Account</h2>
       <pm-account>
         {#
         <form action="register-email">
@@ -45,6 +50,7 @@
         </form>
         #}
       </pm-account>
+  </div>
 </section>
 
 {% endblock %}

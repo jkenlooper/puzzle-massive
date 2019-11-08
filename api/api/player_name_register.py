@@ -1,6 +1,6 @@
 "Admin Player Name Register"
 
-from flask import current_app, redirect, request, make_response, abort
+from flask import current_app, redirect, request, make_response, abort, json
 from flask.views import MethodView
 
 from api.app import db
@@ -57,10 +57,16 @@ class PlayerNameRegisterView(MethodView):
 
     def post(self):
         ""
+        response = {
+            "message": "",
+            "name": "error"
+        }
 
         user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
         if user == None:
-            abort(400)
+            response["message"] = "User not signed in."
+            response["name"] = "error"
+            return make_response(json.jsonify(response), 400)
         user = int(user)
 
         args = {}
@@ -75,13 +81,18 @@ class PlayerNameRegisterView(MethodView):
         display_name = args.get('name', '').strip()
         name = normalize_name_from_display_name(display_name)
         if len(display_name) > USER_NAME_MAXLENGTH:
-            abort(400)
+            response["message"] = "Submitted name is too long."
+            response["name"] = "error"
+            return make_response(json.jsonify(response), 400)
 
         cur = db.cursor()
 
         result = cur.execute(fetch_query_string("select-minimum-points-for-user.sql"), {'user': user, 'points': POINT_COST_FOR_CHANGING_NAME}).fetchone()
         if not result:
-            abort(400)
+            response["message"] = "Not enough points to change name."
+            response["name"] = "error"
+            cur.close()
+            return make_response(json.jsonify(response), 400)
         else:
             if name == '':
                 cur.execute(fetch_query_string('remove-user-name-on-name-register-for-player.sql'), {
@@ -91,14 +102,16 @@ class PlayerNameRegisterView(MethodView):
                     "points": POINT_COST_FOR_CHANGING_NAME,
                     "user": user,
                 })
+                response["message"] = "Removed name."
+                response["name"] = "success"
             else:
                 result = cur.execute(fetch_query_string("check-status-of-name-on-name-register.sql"), {'name': name}).fetchall()
                 if result:
                     (result, col_names) = rowify(result, cur.description)
                     name_status = result[0]
                     if name_status['rejected'] == 1:
-                        # TODO: respond with name rejected message
-                        pass
+                        response["message"] = "Submitted name has been rejected before."
+                        response["name"] = "rejected"
                     elif name_status['claimed'] == 0 or name_status['user'] == user:
                         # The name is available and can be claimed. If owned by the
                         # user the casing of the letters can be modified.
@@ -116,9 +129,11 @@ class PlayerNameRegisterView(MethodView):
                             "points": POINT_COST_FOR_CHANGING_NAME,
                             "user": user,
                         })
+                        response["message"] = "Submitted name reclaimed."
+                        response["name"] = "success"
                     else:
-                        # TODO: respond with name unavailable message
-                        pass
+                        response["message"] = "Submitted name is currently used by another player.  Please try a different name."
+                        response["name"] = "rejected"
                 else:
                     # name is new
                     cur.execute(fetch_query_string('remove-user-name-on-name-register-for-player.sql'), {
@@ -135,7 +150,9 @@ class PlayerNameRegisterView(MethodView):
                         "points": POINT_COST_FOR_CHANGING_NAME,
                         "user": user,
                     })
+                    response["message"] = "Thank you for submitting a new name."
+                    response["name"] = "success"
 
         db.commit()
         cur.close()
-        return redirect('/chill/site/player/')
+        return make_response(json.jsonify(response), 200)

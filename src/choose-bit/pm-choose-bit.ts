@@ -74,6 +74,7 @@ customElements.define(
       // need to get bits on the subscribe callback
       userDetailsService.subscribe(() => {
         PmChooseBit.getBits(this, this.limit);
+        userDetailsService.unsubscribe(this.instanceId);
       }, this.instanceId);
 
       this.render();
