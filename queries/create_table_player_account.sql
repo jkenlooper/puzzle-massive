@@ -5,7 +5,7 @@ create table PlayerAccount (
   email text unique,
   email_verified integer default 0,
   email_verify_token text,
-  reset_login_token text,
+  reset_login_token text, -- datetime that email_verify_token is invalid?
   foreign key ( user ) references User ( id ) on delete cascade
 );
 

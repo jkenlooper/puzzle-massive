@@ -1,6 +1,6 @@
 import { html, render } from "lit-html";
 import userDetailsService from "../site/user-details.service";
-import { areCookiesEnabled, hasUserCookie } from "../site/cookies";
+import { hasUserCookie } from "../site/cookies";
 
 const baseUrl = `${window.location.protocol}//${window.location.host}`;
 
@@ -51,37 +51,44 @@ customElements.define(
     }
 
     template(data: TemplateData) {
-      if (!(areCookiesEnabled() && hasUserCookie())) {
-        return html``;
-      }
       return html`
-        <div class="pm-Profilepage-account">
-          <div class="pm-Profilepage-accountActions">
-            ${data.hasBitLink
-              ? html`
-                  <p>
-                    <strong class="u-textNoWrap">
-                      Anonymous Login Link:
-                    </strong>
-                    <br />
-                    <span>${data.anonymousLoginLink}</span>
-                    <br />
-                    <small>Copy the link or bookmark it.</small>
-                  </p>
-                `
-              : html`
-                  <button
-                    @click=${data.generateBitLink}
-                    ?disabled=${data.isGeneratingLoginLink}
+        <div class="pm-account">
+          ${hasUserCookie()
+            ? html`
+                ${data.hasBitLink
+                  ? html`
+                      <p>
+                        <strong class="u-textNoWrap">
+                          Anonymous Login Link:
+                        </strong>
+                        <br />
+                        <span>${data.anonymousLoginLink}</span>
+                        <br />
+                        <small>Copy the link or bookmark it.</small>
+                      </p>
+                    `
+                  : html`
+                      <button
+                        @click=${data.generateBitLink}
+                        ?disabled=${data.isGeneratingLoginLink}
+                      >
+                        Anonymous Login Link
+                      </button>
+                    `}
+                <p>
+                  <em
+                    >Only logout if you have saved your anonymous login
+                    link.</em
                   >
-                    Anonymous Login Link
-                  </button>
-                `}
-            <p>
-              <em>Only logout if you have saved your anonymous login link.</em>
-            </p>
-            <pm-logout-link></pm-logout-link>
-          </div>
+                </p>
+                <pm-logout-link></pm-logout-link>
+              `
+            : html`
+                <p>
+                  Anonymous login link only available for players that have
+                  claimed their bit.
+                </p>
+              `}
         </div>
       `;
     }

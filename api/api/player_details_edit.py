@@ -41,7 +41,7 @@ class AdminPlayerDetailsEditView(MethodView):
         if len(display_name) > USER_NAME_MAXLENGTH:
             abort(400)
 
-        email = args.get('email')
+        email = args.get('email', '').strip().lower()
         if len(email) > EMAIL_MAXLENGTH:
             abort(400)
 

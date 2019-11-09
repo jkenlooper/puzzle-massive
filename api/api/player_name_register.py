@@ -1,4 +1,4 @@
-"Admin Player Name Register"
+"Player Name Register"
 
 from flask import current_app, redirect, request, make_response, abort, json
 from flask.views import MethodView
@@ -156,4 +156,4 @@ class PlayerNameRegisterView(MethodView):
 
         db.commit()
         cur.close()
-        return make_response(json.jsonify(response), 200)
+        return make_response(json.jsonify(response), 202)

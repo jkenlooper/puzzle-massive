@@ -130,6 +130,7 @@ def make_app(config=None, **kw):
     from api.puzzle_details import PuzzleInstanceDetailsView, PuzzleOriginalDetailsView
     from api.puzzle_list import PuzzleListView, PlayerPuzzleListView, GalleryPuzzleListView
     from api.player_name_register import AdminPlayerNameRegisterView, PlayerNameRegisterView
+    from api.player_email_register import PlayerEmailRegisterView
 
     # admin views
     from api.puzzle_batch_edit import AdminPuzzleBatchEditView
@@ -197,6 +198,8 @@ def make_app(config=None, **kw):
                      view_func=GalleryPuzzleListView.as_view('gallery-puzzle-list'))
     app.add_url_rule('/player-name-register/',
                      view_func=PlayerNameRegisterView.as_view('player-name-register'))
+    app.add_url_rule('/player-email-register/',
+                     view_func=PlayerEmailRegisterView.as_view('player-email-register'))
 
 
     # Requires user to press any key to continue

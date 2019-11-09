@@ -20,10 +20,7 @@ interface SubmitFormResponse {
 const tag = "pm-player-name-register";
 let lastInstanceId = 0;
 
-// TODO:
-// Validate name to be unique
-// Should show message when it is waiting to be approved
-// Show errors if name is rejected
+// TODO: Validate name to be unique before it is submitted
 
 customElements.define(
   tag,
@@ -68,7 +65,6 @@ customElements.define(
     template(data: TemplateData) {
       // forminput.setCustomValidity(...)
       // TODO: submit button is disabled if name not valid
-      //<input type="submit" value="Submit Name" />
       return html`
         <form
           class="pm-PlayerNameRegister"
@@ -76,7 +72,7 @@ customElements.define(
           method="POST"
           action="/newapi/player-name-register/"
         >
-          <label for="name">
+          <label for="player-name-input">
             Player Name
           </label>
           <input

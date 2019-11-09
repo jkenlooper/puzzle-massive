@@ -1,0 +1,8 @@
+.pm-PlayerEmailRegister {
+}
+
+.pm-PlayerEmailRegister-message {
+  padding: 10px;
+  border: 2px solid var(--color-dark);
+  margin: 10px;
+}

@@ -38,29 +38,37 @@
 
 
   <div class="u-marginTopMd u-marginBottomMd">
+    <div class="pm-Profilepage-account">
       <h2>Account</h2>
-      <pm-account>
-        {#
-        <form action="register-email">
-          <div>
-            <label>
-              E-Mail
-              <input type="text" name="email">
-            </label>
-          </div>
-          <button>Register email</button>
-        </form>
-        #}
+      <div class="pm-Profilepage-accountActions">
+        <div class="pm-Profilepage-emailRegister u-marginTopMd u-marginBottomMd">
+          <h3>E-mail</h3>
+          <p>
+          Add your e-mail address for this player in case you lose your login.
+          Your information and e-mail address are not shared or displayed
+          publicly. This is only used for contacting you about your player
+          account on Puzzle Massive.  Future changes (newsletter, notifications,
+          etc.) that will use your e-mail to contact you will be in an opt-in
+          basis.
+          </p>
+          <pm-player-email-register>
+            {#
+            <!-- TODO: only should show if email is registered -->
+            <form action="subscribe">
+              newsletter
+              upcoming competitions
+              etc.
+            </form>
+            #}
+          </pm-player-email-register>
+        </div>
 
-        {#
-        <!-- only should show if email is registered -->
-        <form action="subscribe">
-          newsletter
-          upcoming competitions
-          etc.
-        </form>
-        #}
-      </pm-account>
+        <div class="pm-Profilepage-anonymousLogin u-marginTopMd u-marginBottomMd">
+          <h3>Anonymous Login</h3>
+          <pm-account></pm-account>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
