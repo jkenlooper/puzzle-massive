@@ -124,15 +124,16 @@ class PlayerNameRegisterView(MethodView):
                             'player_id': user,
                             'name': name,
                             'display_name': display_name,
+                            'time': '+1 hour',
                         })
                         cur.execute(fetch_query_string("decrease-user-points.sql"), {
                             "points": POINT_COST_FOR_CHANGING_NAME,
                             "user": user,
                         })
-                        response["message"] = "Submitted name reclaimed."
+                        response["message"] = "Submitted name ({}) reclaimed.".format(display_name)
                         response["name"] = "success"
                     else:
-                        response["message"] = "Submitted name is currently used by another player.  Please try a different name."
+                        response["message"] = "Submitted name ({}) is currently used by another player.  Please try a different name.".format(display_name)
                         response["name"] = "rejected"
                 else:
                     # name is new
@@ -143,14 +144,14 @@ class PlayerNameRegisterView(MethodView):
                         'player_id': user,
                         'name': name,
                         'display_name': display_name,
-                        'time': '+2 days',
+                        'time': '+1 hour',
                     })
 
                     cur.execute(fetch_query_string("decrease-user-points.sql"), {
                         "points": POINT_COST_FOR_CHANGING_NAME,
                         "user": user,
                     })
-                    response["message"] = "Thank you for submitting a new name."
+                    response["message"] = "Thank you for submitting a new name.  \"{}\" will be shown next to your bit icon.".format(display_name)
                     response["name"] = "success"
 
         db.commit()

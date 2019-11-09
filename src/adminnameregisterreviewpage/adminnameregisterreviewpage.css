@@ -1,1 +1,11 @@
-/* */
+.pma-NameRegisterReview {
+}
+
+.pma-NameRegisterReview-checkbox {
+}
+
+.pma-NameRegisterReview-displayName {
+}
+.pma-NameRegisterReview-checkbox:checked + .pma-NameRegisterReview-displayName {
+  text-decoration: line-through;
+}

@@ -107,7 +107,7 @@ def generate_users(count):
                 'player_id': user_id,
                 'name': name,
                 'display_name': display_name,
-                'time': '+{} hours'.format(randint(1, 24*3)),
+                'time': '+{} minutes'.format(randint(1, 60)),
             })
 
 

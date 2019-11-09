@@ -2,7 +2,7 @@ import { html, render } from "lit-html";
 
 import FetchService from "../site/fetch.service";
 import userDetailsService from "../site/user-details.service";
-//import { playerNameRegisterService } from "./player-name-register.service";
+import "./player-name-register.css";
 
 interface TemplateData {
   username: string;
@@ -71,15 +71,11 @@ customElements.define(
       //<input type="submit" value="Submit Name" />
       return html`
         <form
+          class="pm-PlayerNameRegister"
           id="player-name-register-form"
           method="POST"
           action="/newapi/player-name-register/"
         >
-          <p>
-            The player name is <b>not</b> used when logging into your account
-            and can be anything that you would like. Names are limited to 26
-            characters and must be unique from other player names.
-          </p>
           <label for="name">
             Player Name
           </label>
@@ -101,20 +97,13 @@ customElements.define(
 
           ${data.responseMessage
             ? html`
-                <p>
-                  ${data.responseMessage}<br /><code class="u-block u-textRight"
+                <p class="pm-PlayerNameRegister-message">
+                  ${data.responseMessage}<code class="u-block u-textRight"
                     >${data.responseName}</code
                   >
                 </p>
               `
             : ""}
-
-          <p>
-            The name will be reviewed within a couple of days after submitting.
-            Names that are rejected will be shown as crossed out. Accepted names
-            will be shown next to your bit icon in various places on the site.
-            Thank you for your patience.
-          </p>
         </form>
       `;
     }

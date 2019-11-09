@@ -14,7 +14,7 @@ auto approved after the approved date.
 
 {% block main %}
 
-<section>
+<section class="pma-NameRegisterReview">
   <h1>
   Name Register Review
   </h1>
@@ -22,9 +22,15 @@ auto approved after the approved date.
   <form method="POST" action="/newapi/admin/player/name-register/">
     <input type="hidden" name="action" value="reject">
   {% for item in unapproved_names %}
-  <label class="u-inlineBlock u-paddingTopXs u-paddingBottomXs u-paddingLeftSm u-paddingRightSm">
-  <input type="checkbox" name="name_register_id" value="{{ item.id }}">
+  <label class=" u-inlineBlock u-paddingTopXs u-paddingBottomXs u-paddingLeftSm u-paddingRightSm">
+  <input class="pma-NameRegisterReview-checkbox" type="checkbox" name="name_register_id" value="{{ item.id }}">
+  {% if item.approved == 1 %}
+  <b class="pma-NameRegisterReview-displayName">{{ item.display_name }}</b>
+  {% else %}
+  <span class="pma-NameRegisterReview-displayName">
   {{ item.display_name }}
+  </span>
+  {% endif %}
   </label>
   {% endfor %}
 

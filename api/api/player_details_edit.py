@@ -113,11 +113,11 @@ class AdminPlayerDetailsEditView(MethodView):
                             'player_id': player,
                             'display_name': display_name,
                             'name': name,
+                            'time': '+1 second',
                         })
                 else:
-                    # name is new and not in the NameRegister.  Add it and mark
-                    # it for auto-approval as soon as possible (approved_date is
-                    # set to now).
+                    # The name is new and not in the NameRegister.  Add it and
+                    # mark it for auto-approval.
                     cur.execute(fetch_query_string('remove-user-name-on-name-register-for-player.sql'), {
                         'player_id': player,
                     })
@@ -125,6 +125,7 @@ class AdminPlayerDetailsEditView(MethodView):
                         'player_id': player,
                         'name': name,
                         'display_name': display_name,
+                        'time': '+1 second',
                     })
 
         if existing_player_data['name_approved'] == 1 and name_approved == 0:
