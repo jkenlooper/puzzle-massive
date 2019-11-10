@@ -44,14 +44,8 @@ class PlayerRanksView(MethodView):
 
         cur = db.cursor()
         now = int(time.time())
-        total_players = redisConnection.zcard('rank')
-        player_rank = redisConnection.zrevrank('rank', user)
-        if player_rank == None:
-            player_rank = total_players - 1
-        player_rank = player_rank + 1
         active_players = frozenset(map(int, redisConnection.zrevrangebyscore('timeline', '+inf', now - ACTIVE_RANGE)))
 
-        start = max(0, player_rank - int(count / 2))
         rank_slice = redisConnection.zrevrange('rank', 0, -1, withscores=True)
 
         ranks = []
@@ -75,9 +69,6 @@ class PlayerRanksView(MethodView):
             ranks_near_user = ranks[start:end]
 
         player_ranks = {
-            "total_players": total_players,
-            "total_active_players": len(active_players),
-            "player_rank": player_rank,
             "rank_slice": ranks_near_user,
         }
 
@@ -163,3 +154,15 @@ class PuzzleActiveCountView(MethodView):
 
         cur.close()
         return json.jsonify(player_active_count)
+
+class PlayerStatsView(MethodView):
+    ""
+
+    decorators = [user_not_banned]
+
+    def get(self):
+        ""
+        now = int(time.time())
+        since = now - ACTIVE_RANGE
+        total_active_player_count = redisConnection.zcount('timeline', since, '+inf')
+        return json.jsonify({'totalActivePlayers': total_active_player_count})

@@ -13,9 +13,6 @@ interface RankData {
 }
 
 interface PlayerStatsData {
-  total_players: number;
-  total_active_players: number;
-  player_rank: number;
   rank_slice: Array<RankData>;
 }
 
@@ -23,10 +20,7 @@ interface TemplateData {
   isReady: boolean;
   hasError: boolean;
   errorMessage?: string;
-  playerRank: number;
   playerId: number | undefined;
-  totalPlayers: number;
-  totalActivePlayers: number;
   playerRanks: Array<RankData>;
 }
 
@@ -42,10 +36,7 @@ customElements.define(
     errorMessage: string = "";
     range: number = 15;
     playerRanks: Array<RankData> = [];
-    playerRank: number = 0;
     playerId: number | undefined;
-    totalPlayers: number = 0;
-    totalActivePlayers: number = 0;
     private instanceId: string;
 
     static get _instanceId(): string {
@@ -99,10 +90,7 @@ customElements.define(
       return rankingService
         .get<PlayerStatsData>()
         .then((playerStats) => {
-          this.playerRank = playerStats.player_rank;
           this.playerRanks = playerStats.rank_slice.map(setPlayerRankDetails);
-          this.totalPlayers = playerStats.total_players;
-          this.totalActivePlayers = playerStats.total_active_players;
         })
         .catch(() => {
           this.hasError = true;
@@ -121,7 +109,8 @@ customElements.define(
     template(data: TemplateData) {
       return html`
         <section class="pm-Ranking">
-          <h2 class="u-textCenter">Player Rankings</h2>
+          <h2 class="u-textCenter">Your Direct Competition</h2>
+          <p>Other active players within your range.</p>
           ${contents()}
         </section>
       `;
@@ -138,22 +127,13 @@ customElements.define(
           `;
         }
         return html`
-          <p>
-            <strong>
-              Your Rank is ${data.playerRank} out of ${
-          data.totalPlayers
-        } players.
-            </strong>
-          </p>
-          <p>
-          ${data.totalActivePlayers} active players in the last two weeks.
-          </p>
           <div class="pm-Ranking-list" role="list">
           ${items()}
           </div>
         </section>
       `;
       }
+
       function items() {
         return html`
           ${data.playerRanks.map((item) => {
@@ -181,10 +161,7 @@ customElements.define(
         isReady: this.isReady,
         hasError: this.hasError,
         errorMessage: this.errorMessage,
-        playerRank: this.playerRank,
         playerId: this.playerId,
-        totalPlayers: this.totalPlayers,
-        totalActivePlayers: this.totalActivePlayers,
         playerRanks: this.playerRanks,
       };
     }

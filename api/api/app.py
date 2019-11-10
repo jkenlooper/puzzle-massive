@@ -126,7 +126,7 @@ def make_app(config=None, **kw):
         BanishSelf
         )
     from api.bit import BitIconView, ChooseBitView, ClaimBitView, ClaimUserView
-    from api.stats import PuzzleStatsView, PlayerRanksView, PuzzleActiveCountView
+    from api.stats import PuzzleStatsView, PlayerRanksView, PuzzleActiveCountView, PlayerStatsView
     from api.puzzle_details import PuzzleInstanceDetailsView, PuzzleOriginalDetailsView
     from api.puzzle_list import PuzzleListView, PlayerPuzzleListView, GalleryPuzzleListView
     from api.player_name_register import AdminPlayerNameRegisterView, PlayerNameRegisterView
@@ -184,6 +184,8 @@ def make_app(config=None, **kw):
                      view_func=PuzzleStatsView.as_view('puzzle-stats'))
     app.add_url_rule('/puzzle-stats/<puzzle_id>/active-player-count/',
                      view_func=PuzzleActiveCountView.as_view('puzzle-stats-active-player-count'))
+    app.add_url_rule('/player-stats/',
+                     view_func=PlayerStatsView.as_view('player-stats'))
     app.add_url_rule('/player-ranks/',
                      view_func=PlayerRanksView.as_view('player-ranks'))
     app.add_url_rule('/puzzle-instance-details/<puzzle_id>/',

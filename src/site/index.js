@@ -17,6 +17,7 @@ import './site.css'
 import '../base'
 import '../dot-require'
 import '../puzzle-list'
+import '../total-active-player-count'
 
 import '../frontpage'
 import '../profilepage'
