@@ -15,6 +15,7 @@ interface UserDetailsResponse {
   dots: number;
   icon?: string;
   id?: number;
+  isShareduser: boolean;
   login?: string;
   score: number;
   can_claim_user?: boolean;
@@ -53,6 +54,7 @@ class UserDetailsService {
     score: 0,
     hasBit: false,
     bitBackground: "#ffffff00", // TODO: will be set later
+    isShareduser: true,
     loginAgain: false,
     user_puzzle_count: 0,
     puzzle_instance_count: 0,

@@ -65,8 +65,6 @@ customElements.define(
       this.showScore = this.hasAttribute("score");
       this.showDots = this.hasAttribute("dots");
       this.showName = this.hasAttribute("name");
-
-      userDetailsService.subscribe(this.render.bind(this), this.instanceId);
     }
 
     template(data: TemplateData) {
@@ -215,6 +213,7 @@ customElements.define(
 
     connectedCallback() {
       //console.log("connectedCallback");
+      userDetailsService.subscribe(this.render.bind(this), this.instanceId);
     }
     disconnectedCallback() {
       //console.log("disconnectedCallback", this.instanceId);

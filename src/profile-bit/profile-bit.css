@@ -13,6 +13,11 @@ pm-profile-bit {
 .pm-profileBit-link {
   display: block;
 }
+.pm-profileBit-link:hover,
+.pm-profileBit-link:active,
+.pm-profileBit-link:focus {
+  outline: 1px solid currentColor;
+}
 
 .pm-profileBit-background {
   display: inline-block;

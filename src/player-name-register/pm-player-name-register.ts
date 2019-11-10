@@ -77,7 +77,6 @@ customElements.define(
           </label>
           <input
             id="player-name-input"
-            required
             type="text"
             maxlength="26"
             name="name"

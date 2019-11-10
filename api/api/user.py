@@ -276,7 +276,11 @@ class UserDetailsView(MethodView):
     decorators = [user_not_banned]
 
     def get(self):
-        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
+        is_shareduser = False
+        user = int(current_app.secure_cookie.get(u'user') or '0')
+        if not user:
+            user = int(user_id_from_ip(request.headers.get('X-Real-IP')))
+            is_shareduser = True
 
         cur = db.cursor()
 
@@ -291,6 +295,7 @@ class UserDetailsView(MethodView):
 
         (result, col_names) = rowify(result, cur.description)
         user_details = result[0]
+        user_details['isShareduser'] = is_shareduser
 
         extend_cookie = False
         if user_details['will_expire_cookie'] != 0:
@@ -302,7 +307,8 @@ class UserDetailsView(MethodView):
         user_has_name = bool(user_details['name'])
         if not user_has_name:
             user_details['name'] = ''
-        if not user_details['email']:
+        if is_shareduser or not user_details['email']:
+            # email is not shown to shareduser accounts
             user_details['email'] = ''
         user_details['nameApproved'] = user_has_name and bool(user_details['name_approved'])
         del user_details['name_approved']

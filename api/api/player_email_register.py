@@ -21,11 +21,17 @@ class PlayerEmailRegisterView(MethodView):
             "name": "error"
         }
 
-        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
+        is_shareduser = False
+        user = current_app.secure_cookie.get(u'user')
+        if not user:
+            user = user_id_from_ip(request.headers.get('X-Real-IP'))
+            is_shareduser = True
+
         if user == None:
             response["message"] = "User not signed in."
             response["name"] = "error"
             return make_response(json.jsonify(response), 400)
+
         user = int(user)
 
         args = {}
@@ -55,6 +61,12 @@ class PlayerEmailRegisterView(MethodView):
         (result, col_names) = rowify(result, cur.description)
         existing_player_data = result[0]
 
+        # Prevent shareduser changing the verified email address.
+        if is_shareduser and existing_player_data['is_verifying_email']:
+            response["message"] = "A player on this same network has already submitted an email address. Changing it is not allowed until the account has been claimed or the verify email token expires."
+            response["name"] = "error"
+            return make_response(json.jsonify(response), 400)
+
         if existing_player_data['email'] == email:
             response["message"] = "No changes made to e-mail address ({}).  The e-mail address is stored as lowercase.".format(email)
             response["name"] = "error"
@@ -76,6 +88,12 @@ class PlayerEmailRegisterView(MethodView):
                 })
 
                 #TODO: send verification e-mail
+                cur.execute(fetch_query_string('update-player-account-email-verify-token.sql'), {
+                    'player_id': user,
+                    'email_verify_token': 'asdfasdf', #TODO: generate token
+                    'expire_token_timeout': '+1 hour',
+                })
+
                 response["message"] = "Updated e-mail ({}) for player account.  ".format(email)
                 response["name"] = "success"
 

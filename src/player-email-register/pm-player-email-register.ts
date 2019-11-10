@@ -7,6 +7,7 @@ import "./player-email-register.css";
 interface TemplateData {
   email: string;
   emailVerifed: boolean;
+  isShareduser: boolean;
   submitEmailHandler: any; // event listener object
   responseMessage: string;
   responseName: string;
@@ -73,6 +74,15 @@ customElements.define(
           method="POST"
           action="/newapi/player-email-register/"
         >
+          ${data.isShareduser
+            ? html`
+                <p>
+                  This player account is currently a shared user account with
+                  other users on the same network. The email address for the
+                  shared user account is not shown.
+                </p>
+              `
+            : ""}
           ${data.email
             ? html`
                 <p>
@@ -119,6 +129,7 @@ customElements.define(
       return {
         email: userDetailsService.userDetails.email,
         emailVerifed: userDetailsService.userDetails.emailVerified,
+        isShareduser: userDetailsService.userDetails.isShareduser,
         submitEmailHandler: {
           handleEvent: (e) => {
             // Prevent the form from submitting
