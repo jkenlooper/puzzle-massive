@@ -306,14 +306,14 @@ class SendDigestEmailForAdmin(Task):
             message = "\n".join(names)
 
             # Send a notification email (silent fail if not configured)
-            try:
-                logger.debug(message)
-                if not config.get('DEBUG', True):
+            logger.debug(message)
+            if not config.get('DEBUG', True):
+                try:
                     send_message(config.get('EMAIL_MODERATOR'),
                                  'Puzzle Massive - new names', message, config)
-            except Exception as err:
-                logger.warning("Failed to send notification message. {}".format(err))
-                pass
+                except Exception as err:
+                    logger.warning("Failed to send notification message. {}".format(err))
+                    pass
 
         cur.close()
         db.commit()

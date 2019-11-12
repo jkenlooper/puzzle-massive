@@ -5,3 +5,10 @@ template: admin-name_register-review-page.html
 value:
   unapproved_names: select-name-on-name-register-to-review.sql
 
+--- !ChillNode
+name: claim_player_by_token_page
+route: /claim-player/<token>/
+template: claim-player-by-token.html
+value: _select-token-for-route.sql
+
+

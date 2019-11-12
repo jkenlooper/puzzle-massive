@@ -119,6 +119,7 @@ def make_app(config=None, **kw):
         GenerateAnonymousLogin,
         UserLogoutView,
         UserLoginView,
+        ClaimUserByTokenView,
         ClaimRandomBit,
         SplitPlayer,
         AdminBlockedPlayersList,
@@ -202,6 +203,8 @@ def make_app(config=None, **kw):
                      view_func=PlayerNameRegisterView.as_view('player-name-register'))
     app.add_url_rule('/player-email-register/',
                      view_func=PlayerEmailRegisterView.as_view('player-email-register'))
+    app.add_url_rule('/claim-user-by-token/',
+                     view_func=ClaimUserByTokenView.as_view('claim-user-by-token'))
 
 
     # Requires user to press any key to continue

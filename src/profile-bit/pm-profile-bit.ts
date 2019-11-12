@@ -10,6 +10,7 @@ import "./profile-bit.css";
 interface TemplateData {
   isExpired: boolean;
   canClaimUser: boolean;
+  showClaimButton: boolean;
   isProcessingClaimUser: boolean;
   claimUserHandler: any;
   profileLink: string;
@@ -41,6 +42,7 @@ customElements.define(
 
     private player_profile_url: string;
     private instanceId: string;
+    private showClaimButton: boolean;
     private showScore: boolean;
     private showDots: boolean;
     private showName: boolean;
@@ -62,6 +64,7 @@ customElements.define(
         ? player_profile_url.value
         : "";
 
+      this.showClaimButton = this.hasAttribute("claim");
       this.showScore = this.hasAttribute("score");
       this.showDots = this.hasAttribute("dots");
       this.showName = this.hasAttribute("name");
@@ -140,7 +143,7 @@ customElements.define(
                 <div>Dots <b>${data.dots}</b></div>
               `
             : html``}
-          ${data.canClaimUser
+          ${data.canClaimUser && data.showClaimButton
             ? html`
                 ${data.isProcessingClaimUser
                   ? html`
@@ -177,6 +180,7 @@ customElements.define(
       return {
         isExpired: !!userDetailsService.userDetails.bit_expired,
         canClaimUser: !!userDetailsService.userDetails.can_claim_user,
+        showClaimButton: this.showClaimButton,
         isProcessingClaimUser: this.isProcessingClaimUser,
         claimUserHandler: {
           handleEvent: this.handleClickClaimUser.bind(this),

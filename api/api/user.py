@@ -409,7 +409,7 @@ class SplitPlayer(MethodView):
         # Verify user is logged in
         user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip, skip_generate=True)
         if user is None:
-            # TODO: remove cookies
+            # remove cookies
             response = make_response('not logged in', 400)
             expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
             current_app.secure_cookie.set(u'user', "", response, expires=expires)
@@ -457,6 +457,121 @@ class SplitPlayer(MethodView):
 
         cur.close()
         return response
+
+class ClaimUserByTokenView(MethodView):
+    """
+    Claims the shareduser account to be a user account, but doesn't cost points.
+    It is also used for verifying an email address for the user account.
+    The claim-player-by-token page will show a button that sends a POST to this view.
+    The page is accessed from a link in their e-mail.
+    """
+    decorators = [user_not_banned]
+
+    def post(self):
+        ""
+        data = {}
+
+        # Prevent creating a new user if no support for cookies. Player should
+        # have 'ot' already set by viewing the page.
+        uses_cookies = current_app.secure_cookie.get(u'ot')
+        if not uses_cookies:
+            data["message"] = "No cookies."
+            data["name"] = "error"
+            return make_response(json.jsonify(data), 400)
+
+        # Verify user
+        user = current_app.secure_cookie.get(u'user')
+        is_shareduser = False
+        if user == None:
+            is_shareduser = True
+            user = user_id_from_ip(request.headers.get('X-Real-IP'))
+        if user == None:
+            # remove cookies
+            data["message"] = "Not logged in."
+            data["name"] = "error"
+            response = make_response(json.jsonify(data), 400)
+            expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
+            current_app.secure_cookie.set(u'user', "", response, expires=expires)
+            current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
+            return response
+        user = int(user)
+
+        args = {}
+        if request.form:
+            args.update(request.form.to_dict(flat=True))
+
+        token = args.get('token', '').strip()
+        if not token:
+            data["message"] = "No token."
+            data["name"] = "error"
+            return make_response(json.jsonify(data), 400)
+
+        cur = db.cursor()
+
+        result = cur.execute(fetch_query_string('user-has-player-account.sql'), {'player_id': user}).fetchone()
+        if not result or result[0] == 0:
+            cur.close()
+            data["message"] = "No player account for this user.  Please use the same web browser that was used when submitting the e-mail address."
+            data["name"] = "error"
+            return make_response(json.jsonify(data), 400)
+
+        result = cur.execute(fetch_query_string('select-player-details-for-player-id.sql'), {'player_id': user}).fetchall()
+        if not result:
+            cur.close()
+            data["message"] = "No player account."
+            data["name"] = "error"
+            return make_response(json.jsonify(data), 400)
+        (result, col_names) = rowify(result, cur.description)
+        existing_player_data = result[0]
+
+        if existing_player_data["email_verify_token"] != token:
+            cur.close()
+            data["message"] = "Invalid token for this player."
+            data["name"] = "error"
+            return make_response(json.jsonify(data), 400)
+
+        if existing_player_data["is_verifying_email"] == 0:
+            cur.close()
+            data["message"] = "Token for this player is no longer valid."
+            data["name"] = "error"
+            return make_response(json.jsonify(data), 400)
+
+        # Token is valid
+        data["message"] = "Registered email"
+        data["name"] = "success"
+        response = make_response(json.jsonify(data), 202)
+
+        # Update password when shareduser to convert to regular user.
+        if is_shareduser:
+            (p_string, password) = generate_password()
+            query = """
+            update User set
+            password = :password,
+            m_date = datetime('now'),
+            cookie_expires = strftime('%Y-%m-%d', 'now', '+14 days')
+            where ip = :ip and id = :id and password isnull;
+            """
+            cur.execute(query, {'id': user, 'password': password, 'ip': request.headers.get('X-Real-IP')})
+            # Save as a cookie
+            current_app.secure_cookie.set(u'user', str(user), response, expires_days=365)
+            # Remove shareduser
+            expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
+            current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
+
+        cur.execute(fetch_query_string('update-player-account-email-verified.sql'), {
+            'player_id': user,
+            'email_verified': 1,
+        })
+        cur.execute(fetch_query_string('make-verified-email-unique.sql'), {
+            'player_id': user,
+            'email': existing_player_data['email'],
+        })
+
+        cur.close()
+        db.commit()
+        return response
+
+
 
 class AdminBlockedPlayersList(MethodView):
     """

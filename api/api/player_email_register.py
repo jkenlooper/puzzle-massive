@@ -1,5 +1,7 @@
 "Player Email Register"
 
+import uuid
+
 from flask import current_app, redirect, request, make_response, abort, json
 from flask.views import MethodView
 
@@ -78,6 +80,13 @@ class PlayerEmailRegisterView(MethodView):
                 response["message"] = "Removed e-mail from player account."
                 response["name"] = "success"
             else:
+                # Verify that email is unique
+                result = cur.execute(fetch_query_string('select-player-by-verified-email-address.sql'), {'email': email}).fetchall()
+                if result:
+                    response["message"] = "A player has already registered this e-mail address."
+                    response["name"] = "error"
+                    return make_response(json.jsonify(response), 400)
+
                 cur.execute(fetch_query_string('update-player-account-email.sql'), {
                     'player_id': user,
                     'email': email
@@ -87,10 +96,21 @@ class PlayerEmailRegisterView(MethodView):
                     'email_verified': 0,
                 })
 
-                #TODO: send verification e-mail
+                # Send verification email (silent fail if not configured)
+                token = uuid.uuid4().hex
+                message = """ http://{DOMAIN_NAME}/chill/site/claim-player/{token}/ """.format(token=token, DOMAIN_NAME=current_app.config.get('DOMAIN_NAME'))
+                current_app.logger.debug(message)
+                if not current_app.config.get('DEBUG', True):
+                    try:
+                        send_message(email,
+                                     'Puzzle Massive - verify e-mail address', message, current_app.config)
+                    except Exception as err:
+                        logger.warning("Failed to send verification message. email: {email}\n {message}\n error: {err}".format(err=err, email=email, message=message))
+                        pass
+
                 cur.execute(fetch_query_string('update-player-account-email-verify-token.sql'), {
                     'player_id': user,
-                    'email_verify_token': 'asdfasdf', #TODO: generate token
+                    'email_verify_token': token,
                     'expire_token_timeout': '+1 hour',
                 })
 
