@@ -6,12 +6,6 @@
 {% endblock %}
 
 {% block main %}
-
-{% import 'sprites.html' as sprites %}
-{% for sprite in ['image', 'paint-can', 'full-screen', 'minimize', 'arrow-left-circle', 'info-circle'] %}
-{{ sprites.add([sprite]) }}
-{% endfor %}
-
   <div class="pm-Doc">
   {{ content|readfile|safe|shortcodes }}
   </div>

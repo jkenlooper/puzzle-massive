@@ -15,6 +15,7 @@ require('file-loader?name=[name].[ext]!./modernizr.build.min.js')
 import './site.css'
 
 import '../base'
+import '../icon'
 import '../dot-require'
 import '../puzzle-list'
 import '../total-active-player-count'

@@ -28,6 +28,7 @@
 
     {% block headscript %}
     <script type="module" src="{{ url_for('send_theme_file', filename='modernizr.build.min.js') }}"></script>
+    <script>THEME_STATIC_PATH="{{ config.THEME_STATIC_PATH }}"</script>
     {% endblock %}
 
   </head>

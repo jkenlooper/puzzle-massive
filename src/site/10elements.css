@@ -9,7 +9,7 @@ html {
 body {
   background-color: var(--color-light-accent);
   color: var(--color-dark);
-  font-family: 'Trebuchet MS', sans-serif;
+  font-family: "Trebuchet MS", sans-serif;
   font-size: 1.6rem;
   line-height: 1.4em;
 }
