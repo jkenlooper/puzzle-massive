@@ -1,24 +1,36 @@
-<nav class="pm-Menu">
-  <a href="/chill{{ url_for('.page_uri', uri='puzzle-list') }}">
-      <strong>
-          More Puzzles
-      </strong>
-  </a>
-  <a href="/chill{{ url_for('.page_uri', uri='high-scores') }}">
-    <strong>
+<div class="pm-Menu">
+  <details class="pm-Menu-details">
+    <summary class="pm-Menu-summary">menu</summary>
+  <nav class="pm-Menu-nav">
+      <a href="/newapi/user-logout/" class="pm-Menu-navLink">
+        <pm-icon>exit</pm-icon>
+        Exit
+      </a>
+
+      <a href="/chill{{ url_for('.page_uri', uri='puzzle-list') }}" class="pm-Menu-navLink">
+        <pm-icon>search-images</pm-icon>
+        Search For Puzzles
+      </a>
+
+      <a href="/chill{{ url_for('.page_uri', uri='player') }}" class="pm-Menu-navLink">
+        <pm-icon>happy-lock</pm-icon>
+        Your Player Profile
+      </a>
+
+  <a href="/chill{{ url_for('.page_uri', uri='high-scores') }}" class="pm-Menu-navLink">
+        <pm-icon>search-images</pm-icon>
     High Scores
-    </strong>
   </a>
   {#
   <a href="">
-    <strong>
     Competitions
-    </strong>
   </a>
   #}
-  <a href="/chill{{ url_for('.page_uri', uri='new-puzzle/submit') }}">
-    <strong>
+  <a href="/chill{{ url_for('.page_uri', uri='new-puzzle/submit') }}" class="pm-Menu-navLink">
+        <pm-icon>search-images</pm-icon>
     Suggest Puzzle
-    </strong>
   </a>
-</nav>
+
+  </nav>
+  </details>
+</div>

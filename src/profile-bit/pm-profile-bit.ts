@@ -109,7 +109,9 @@ customElements.define(
                           style=${`--pm-PlayerBit-color:${colorForPlayer(
                             data.userId
                           )}`}
-                          >${data.userId.toString(36)}</span
+                          ><span class="pm-PlayerBit-id"
+                            >${data.userId.toString(36)}</span
+                          ></span
                         >
                       `}
                 </a>

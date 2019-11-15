@@ -3,6 +3,8 @@ pm-icon {
   height: 30px;
   vertical-align: middle;
   display: inline-block;
+  overflow: hidden;
+  font-size: 0;
 }
 pm-icon[size="sm"] {
   width: 20px;

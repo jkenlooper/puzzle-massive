@@ -13,6 +13,8 @@
     {% endblock %}
   </header>
 
+  {% include 'menu.html' %}
+
   <main class="pm-Base-main" role="main">
     {% block main %}
     {% endblock %}
@@ -20,7 +22,6 @@
 
   <footer>
     {% block kneeer %}
-      {% include 'menu.html' %}
     {% endblock %}
     {% block footer %}
     {% include 'player-stats-summary.html' %}
