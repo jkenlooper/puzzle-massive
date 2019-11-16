@@ -1,7 +1,7 @@
 <div class="pm-Menu">
   <details class="pm-Menu-details">
-    <summary class="pm-Menu-summary">menu</summary>
-  <nav class="pm-Menu-nav">
+    <summary class="pm-Menu-summary"><pm-icon>hamburger</pm-icon> Menu</summary>
+    <nav class="pm-Menu-nav">
       <a href="/newapi/user-logout/" class="pm-Menu-navLink">
         <pm-icon>exit</pm-icon>
         Exit
@@ -17,20 +17,20 @@
         Your Player Profile
       </a>
 
-  <a href="/chill{{ url_for('.page_uri', uri='high-scores') }}" class="pm-Menu-navLink">
-        <pm-icon>search-images</pm-icon>
-    High Scores
-  </a>
-  {#
-  <a href="">
-    Competitions
-  </a>
-  #}
-  <a href="/chill{{ url_for('.page_uri', uri='new-puzzle/submit') }}" class="pm-Menu-navLink">
-        <pm-icon>search-images</pm-icon>
-    Suggest Puzzle
-  </a>
+      <a href="/chill{{ url_for('.page_uri', uri='high-scores') }}" class="pm-Menu-navLink">
+        <pm-icon>competition</pm-icon>
+        High Scores
+      </a>
+      {#
+      <a href="">
+        Competitions
+      </a>
+      #}
+      <a href="/chill{{ url_for('.page_uri', uri='new-puzzle/submit') }}" class="pm-Menu-navLink">
+        <pm-icon>new-image</pm-icon>
+        Suggest Puzzle
+      </a>
 
-  </nav>
+    </nav>
   </details>
 </div>

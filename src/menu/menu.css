@@ -6,15 +6,21 @@
 
 .pm-Menu {
   height: 30px;
+  z-index: 4;
+  margin-left: 10px;
 }
 .pm-Menu.pm-Menu {
-  margin-top: 0px;
+  margin-top: 10px;
 }
 
 .pm-Menu-details {
   background-color: var(--color-light-light);
   display: inline-block;
   position: absolute;
+  border: 2px solid var(--color-dark);
+}
+.pm-Menu-details[open] {
+  box-shadow: 2px 2px 4px var(--color-dark);
 }
 
 .pm-Menu-summary {
@@ -34,6 +40,7 @@
   border: 2px solid transparent;
   text-decoration: none;
   display: block;
+  color: var(--color-dark);
 }
 .pm-Menu-navLink:hover,
 .pm-Menu-navLink:active,
