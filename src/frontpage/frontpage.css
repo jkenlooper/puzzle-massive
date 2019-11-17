@@ -33,11 +33,13 @@
 @media (--lg-viewport) {
   .pm-Frontpage-gridA {
     max-width: 900px;
-    padding-right: 40px;
+    padding-right: 20px;
+    margin-right: 19px;
     min-width: calc(
       940px - ((var(--pm-PuzzleList-columnWidth) * 3) + (10px * 2))
     );
     width: 46%;
+    border-right: 1px solid var(--color-dark-light);
   }
 }
 

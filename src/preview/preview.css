@@ -28,17 +28,8 @@
   align-items: center;
   justify-content: space-around;
   margin: 13px;
-  border: 2px solid var(--color-primary-dark);
-  border-radius: 5px;
-  background-color: var(--color-light-light);
   padding: 13px;
   overflow: hidden;
-}
-
-a.pm-Preview-grid {
-  color: inherit;
-  border-color: var(--color-accent);
-  text-decoration: none;
 }
 
 .pm-Preview-grid > * + * {
@@ -69,10 +60,20 @@ a.pm-Preview-grid {
   height: auto;
 }
 
-a.pm-Preview-grid:focus img.pm-Preview-img,
-a.pm-Preview-grid:hover img.pm-Preview-img,
-a.pm-Preview-grid:active img.pm-Preview-img {
+a:focus img.pm-Preview-img,
+a:hover img.pm-Preview-img,
+a:active img.pm-Preview-img {
   transform: scale(1.06);
+}
+
+.pm-Preview-ctaLink {
+  border: 2px solid var(--color-accent);
+  background-color: var(--color-light-light);
+  padding: 5px 10px;
+  color: var(--color-dark);
+  border-radius: 5px;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .pm-Preview-description {
@@ -90,21 +91,9 @@ a.pm-Preview-grid:active img.pm-Preview-img {
   display: flex;
   flex: none;
   justify-content: space-between;
-  padding: 13px;
   overflow: hidden;
 }
 
-.pm-Preview-pieceOutline {
-  flex: none;
-  background-image: url(./piece-silo-black.png);
-  background-position: 50% 100%;
-  background-repeat: no-repeat;
-  background-size: contain;
-  width: 65px;
-  height: 128px;
-}
-
 .pm-Preview-pieceCount {
-  display: block;
   font-size: 1.3em;
 }

@@ -29,14 +29,28 @@
       {% if recent.status == IN_QUEUE -%}
   <span class="pm-Preview-grid">
       {% else %}
-  <a class="pm-Preview-grid" href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(recent.puzzle_id), scale=null) }}" title="Join this jigsaw puzzle">
+  <div class="pm-Preview-grid" >
       {% endif %}
     <div class="pm-Preview-gridA">
+      <p>
+      <a href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(recent.puzzle_id), scale=null) }}">
       {% if recent.url == '' %}
         {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
       {% else %}
         <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{recent.url|safe}}" alt="">
       {% endif %}
+      </a>
+    <span class="u-block u-textRight">
+          <span class="u-inlineBlock u-marginRightMd u-textNoWrap">
+            <strong class="pm-Preview-pieceCount">{{recent.pieces}}</strong>
+            <span>pieces</span>
+          </span>
+      <a class="pm-Preview-ctaLink" href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(recent.puzzle_id), scale=null) }}">
+        <pm-icon size="lg">solution</pm-icon>
+        Join Puzzle
+      </a>
+    </span>
+      </p>
 
       <pm-latest-player-list
         puzzle-id="{{recent.puzzle_id}}"
@@ -52,22 +66,15 @@
 
     <div class="pm-Preview-gridB">
     <div class="pm-Preview-pieceInfo">
-
-      <div class="pm-Preview-pieceOutline">
-        <strong class="pm-Preview-pieceCount">{{recent.pieces}}</strong>
-        <span>pieces</span>
-      </div>
-
       <pm-latest-player-list
         puzzle-id="{{recent.puzzle_id}}"
         offset="9"></pm-latest-player-list>
-
     </div>
     </div>
       {% if recent.status == IN_QUEUE -%}
   </span>
       {% else %}
-  </a>
+  </div>
       {% endif %}
   {% if recent.attribution %}
   <p class="pm-Preview-attribution">{{ '[chill route /internal/attribution/{}/ ]'.format(recent.attribution) }}</p>

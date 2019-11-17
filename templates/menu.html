@@ -2,11 +2,6 @@
   <details class="pm-Menu-details">
     <summary class="pm-Menu-summary"><pm-icon>hamburger</pm-icon> Menu</summary>
     <nav class="pm-Menu-nav">
-      <a href="/newapi/user-logout/" class="pm-Menu-navLink">
-        <pm-icon>exit</pm-icon>
-        Exit
-      </a>
-
       <a href="/chill{{ url_for('.page_uri', uri='puzzle-list') }}" class="pm-Menu-navLink">
         <pm-icon>search-images</pm-icon>
         Search For Puzzles
@@ -29,6 +24,14 @@
       <a href="/chill{{ url_for('.page_uri', uri='new-puzzle/submit') }}" class="pm-Menu-navLink">
         <pm-icon>new-image</pm-icon>
         Suggest Puzzle
+      </a>
+      <a href="/chill{{ url_for('.page_uri', uri='help') }}" class="pm-Menu-navLink">
+        <pm-icon>help</pm-icon>
+        Help
+      </a>
+      <a href="/newapi/user-logout/" class="pm-Menu-navLink">
+        <pm-icon>exit</pm-icon>
+        Exit
       </a>
 
     </nav>
