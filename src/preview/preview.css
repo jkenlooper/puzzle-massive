@@ -66,16 +66,6 @@ a:active img.pm-Preview-img {
   transform: scale(1.06);
 }
 
-.pm-Preview-ctaLink {
-  border: 2px solid var(--color-accent);
-  background-color: var(--color-light-light);
-  padding: 5px 10px;
-  color: var(--color-dark);
-  border-radius: 5px;
-  text-decoration: none;
-  display: inline-block;
-}
-
 .pm-Preview-description {
   align-self: flex-end;
   margin: 13px 0 0 0;

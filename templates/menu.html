@@ -7,11 +7,6 @@
         Search For Puzzles
       </a>
 
-      <a href="/chill{{ url_for('.page_uri', uri='player') }}" class="pm-Menu-navLink">
-        <pm-icon>happy-lock</pm-icon>
-        Your Player Profile
-      </a>
-
       <a href="/chill{{ url_for('.page_uri', uri='high-scores') }}" class="pm-Menu-navLink">
         <pm-icon>competition</pm-icon>
         High Scores
@@ -29,9 +24,10 @@
         <pm-icon>help</pm-icon>
         Help
       </a>
-      <a href="/newapi/user-logout/" class="pm-Menu-navLink">
-        <pm-icon>exit</pm-icon>
-        Exit
+
+      <a href="/chill{{ url_for('.page_uri', uri='player') }}" class="pm-Menu-navLink">
+        <pm-icon>happy-lock</pm-icon>
+        Your Player Profile
       </a>
 
     </nav>

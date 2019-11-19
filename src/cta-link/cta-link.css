@@ -1,0 +1,10 @@
+/* Call To Action Link */
+.pm-CtaLink {
+  border: 2px solid var(--color-accent);
+  background-color: var(--color-light-light);
+  padding: 5px 10px;
+  color: var(--color-dark);
+  border-radius: 5px;
+  text-decoration: none;
+  display: inline-block;
+}

@@ -19,6 +19,7 @@ import '../icon'
 import '../dot-require'
 import '../puzzle-list'
 import '../total-active-player-count'
+import '../cta-link'
 
 import '../frontpage'
 import '../profilepage'
