@@ -56,6 +56,7 @@ class PlayerEmailRegisterView(MethodView):
 
         result = cur.execute(fetch_query_string('select-player-details-for-player-id.sql'), {'player_id': user}).fetchall()
         if not result:
+            # This shouldn't happen if user-has-player-account.sql
             cur.close()
             response["message"] = "No player account."
             response["name"] = "error"

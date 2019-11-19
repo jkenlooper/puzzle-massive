@@ -51,6 +51,7 @@ customElements.define(
     }
 
     template(data: TemplateData) {
+      // Login by email form here if shareduser?
       return html`
         <div class="pm-account">
           ${hasUserCookie()
@@ -84,10 +85,7 @@ customElements.define(
                 <pm-logout-link></pm-logout-link>
               `
             : html`
-                <p>
-                  Anonymous login link only available for players that have
-                  claimed their bit.
-                </p>
+                [login by email]
               `}
         </div>
       `;

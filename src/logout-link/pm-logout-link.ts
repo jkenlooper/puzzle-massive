@@ -25,7 +25,10 @@ customElements.define(
 
     template(data: TemplateData) {
       return html`
-        <a @click=${data.handleClick} href="/newapi/user-logout/">Logout</a>
+        <a @click=${data.handleClick} href="/newapi/user-logout/">
+          <pm-icon>exit</pm-icon>
+          Logout</a
+        >
       `;
     }
 

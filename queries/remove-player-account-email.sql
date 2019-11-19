@@ -1,1 +1,1 @@
-update PlayerAccount set email = null, email_verify_token = null, reset_login_token = null where user = :player_id;
+update PlayerAccount set email = null, email_verify_token = null, email_verify_token_expire = null where user = :player_id;
