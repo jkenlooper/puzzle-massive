@@ -9,6 +9,11 @@ value:
 name: claim_player_by_token_page
 route: /claim-player/<token>/
 template: claim-player-by-token.html
-value: _select-token-for-route.sql
+value: _select-email-verify-token-for-route.sql
 
+--- !ChillNode
+name: reset_login_by_token_page
+route: /reset-login/<token>/
+template: reset-login-by-token.html
+value: _select-reset-login-token-for-route.sql
 

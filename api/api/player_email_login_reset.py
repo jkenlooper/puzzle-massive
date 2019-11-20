@@ -79,5 +79,37 @@ class PlayerEmailLoginResetView(MethodView):
             response["name"] = "error"
             return make_response(json.jsonify(response), 400)
 
-        #TODO: Send a link to reset the login
+        #TODO: Send a link to reset the login (silent fail if not configured)
+        token = uuid.uuid4().hex
+        message = """ http://{DOMAIN_NAME}/chill/site/reset-login/{token}/ """.format(token=token, DOMAIN_NAME=current_app.config.get('DOMAIN_NAME'))
+        current_app.logger.debug(message)
+        email_sent = False
+        if not current_app.config.get('DEBUG', True):
+            try:
+                send_message(email,
+                             'Puzzle Massive - reset login', message, current_app.config)
+                email_sent = True
+            except Exception as err:
+                logger.warning("Failed to send reset login message. email: {email}\n {message}\n error: {err}".format(err=err, email=email, message=message))
+                email_sent = False
+
+        cur.execute(fetch_query_string('update-player-account-login-token.sql'), {
+            'player_id': user,
+            'reset_login_token': token,
+            'expire_token_timeout': '+1 day',
+        })
+
+        if current_app.config.get('DEBUG', True):
+            response["message"] = "A reset login link has been sent to your e-mail. DEBUG is True, so did not really send the email. Check the logs for the login link."
+            response["name"] = "success"
+        elif not email_sent:
+            response["message"] = "Failed to send reset login link to your e-mail.".format(email)
+            response["name"] = "error"
+        else:
+            response["message"] = "A reset login link has been sent to your e-mail.".format(email)
+            response["name"] = "success"
+
+        db.commit()
+        cur.close()
+        return make_response(json.jsonify(response), 202)
 
