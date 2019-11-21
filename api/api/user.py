@@ -218,6 +218,72 @@ class GenerateAnonymousLogin(MethodView):
         data = {'bit':"".join(["", "/puzzle-api/bit/", user_data['login'], p_string])}
         return encoder.encode(data)
 
+class GenerateAnonymousLoginByToken(MethodView):
+    "Similar to GenerateAnonymousLogin except uses a valid reset_login_token"
+    def post(self):
+        "Return an object to be used by the generateBitLink js call"
+        data = {"link": ""}
+
+        args = {}
+        if request.form:
+            args.update(request.form.to_dict(flat=True))
+
+        # check the token
+        token = args.get('token', '').strip()
+        if not token:
+            data["message"] = "No token."
+            data["name"] = "error"
+            return make_response(json.jsonify(data), 400)
+
+        (p_string, password) = generate_password()
+
+        cur = db.cursor()
+
+        # get user for that token
+        result = cur.execute(fetch_query_string("select-user-by-reset-login-token.sql"), {'token': token}).fetchall()
+        (result, col_names) = rowify(result, cur.description)
+        if not result or not result[0]:
+            cur.close()
+            data["message"] = "This token is no longer valid"
+            data["name"] = "error"
+            return make_response(json.jsonify(data), 400)
+
+        user_data = result[0]
+        user = int(user_data['user'])
+
+        # Store encrypted password in db
+        try:
+            result = cur.execute(QUERY_USER_LOGIN, {'id':user}).fetchall()
+        except IndexError:
+            cur.close()
+            # user may have been added after a db rollback
+            data["message"] = "No user found."
+            data["name"] = "error"
+            return make_response(json.jsonify(data), 400)
+
+        if not result:
+            cur.close()
+            data["message"] = "No user found."
+            data["name"] = "error"
+            return make_response(json.jsonify(data), 400)
+
+        (result, col_names) = rowify(result, cur.description)
+        user_data = result[0]
+
+        cur.execute(QUERY_SET_PASSWORD, {'id':user, 'password':password})
+
+        # null out the reset login token
+        cur.execute(fetch_query_string('delete-player-reset-login-token.sql'), {'user':user})
+
+        db.commit()
+
+        cur.close()
+
+        data["link"] = "".join(["", "/puzzle-api/bit/", user_data['login'], p_string])
+        data["message"] = "Login has been reset. Please follow the link shown and save it to login in again."
+        data["name"] = "success"
+        return make_response(json.jsonify(data), 200)
+
 class UserLoginView(MethodView):
     """
     To maintain backwards compatibility this is rewritten in nginx from /puzzle-api/bit/<bitLink>

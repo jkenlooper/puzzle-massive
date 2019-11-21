@@ -117,6 +117,7 @@ def make_app(config=None, **kw):
         CurrentUserIDView,
         UserDetailsView,
         GenerateAnonymousLogin,
+        GenerateAnonymousLoginByToken,
         UserLogoutView,
         UserLoginView,
         ClaimUserByTokenView,
@@ -132,6 +133,7 @@ def make_app(config=None, **kw):
     from api.puzzle_list import PuzzleListView, PlayerPuzzleListView, GalleryPuzzleListView
     from api.player_name_register import AdminPlayerNameRegisterView, PlayerNameRegisterView
     from api.player_email_register import PlayerEmailRegisterView
+    from api.player_email_login_reset import PlayerEmailLoginResetView
 
     # admin views
     from api.puzzle_batch_edit import AdminPuzzleBatchEditView
@@ -165,6 +167,9 @@ def make_app(config=None, **kw):
     app.add_url_rule('/user-details/', view_func=UserDetailsView.as_view('user-details'))
     app.add_url_rule('/generate-anonymous-login/',
                      view_func=GenerateAnonymousLogin.as_view('generate-anonymous-login'))
+    app.add_url_rule('/generate-anonymous-login-by-token/',
+                     view_func=GenerateAnonymousLoginByToken.as_view('generate-anonymous-login-by-token'))
+
     app.add_url_rule('/split-player/',
                      view_func=SplitPlayer.as_view('split-player'))
     app.add_url_rule('/user-logout/', view_func=UserLogoutView.as_view('user-logout'))
@@ -205,6 +210,8 @@ def make_app(config=None, **kw):
                      view_func=PlayerEmailRegisterView.as_view('player-email-register'))
     app.add_url_rule('/claim-user-by-token/',
                      view_func=ClaimUserByTokenView.as_view('claim-user-by-token'))
+    app.add_url_rule('/player-email-login-reset/',
+                     view_func=PlayerEmailLoginResetView.as_view('player-email-login-reset'))
 
 
     # Requires user to press any key to continue

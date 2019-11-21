@@ -1,5 +1,7 @@
 "Player Email Login Reset"
 
+import uuid
+
 from flask import current_app, redirect, request, make_response, abort, json
 from flask.views import MethodView
 
@@ -29,13 +31,10 @@ class PlayerEmailLoginResetView(MethodView):
             return make_response(json.jsonify(response), 400)
 
         user = user_id_from_ip(request.headers.get('X-Real-IP'))
-
         if user == None:
             response["message"] = "Shared user not currently logged in."
             response["name"] = "error"
             return make_response(json.jsonify(response), 400)
-
-        user = int(user)
 
         args = {}
         if request.form:
@@ -49,10 +48,15 @@ class PlayerEmailLoginResetView(MethodView):
 
         cur = db.cursor()
 
-        has_valid_email = True
-        result = cur.execute(fetch_query_string('user-has-player-account.sql'), {'player_id': user}).fetchone()
+        # Get user by their verified email address
+        result = cur.execute(fetch_query_string('get-user-by-verified-email-address.sql'), {'email': email}).fetchone()
         if not result or result[0] == 0:
-            has_valid_email = False
+            cur.close()
+            response["message"] = "Sorry, that e-mail address has not been verified."
+            response["name"] = "error"
+            return make_response(json.jsonify(response), 400)
+        else:
+            user = result[0]
 
         result = cur.execute(fetch_query_string('select-player-details-for-player-id.sql'), {'player_id': user}).fetchall()
         if not result:
@@ -64,14 +68,6 @@ class PlayerEmailLoginResetView(MethodView):
         (result, col_names) = rowify(result, cur.description)
         existing_player_data = result[0]
 
-        if not existing_player_data["email"] or not existing_player_data["email_verified"] or existing_player_data["is_verifying_email"]:
-            has_valid_email = False
-
-        if not has_valid_email:
-            cur.close()
-            response["message"] = "Sorry, that e-mail address has not been verified."
-            response["name"] = "error"
-            return make_response(json.jsonify(response), 400)
 
         if existing_player_data["has_active_reset_login_token"]:
             cur.close()
@@ -79,7 +75,7 @@ class PlayerEmailLoginResetView(MethodView):
             response["name"] = "error"
             return make_response(json.jsonify(response), 400)
 
-        #TODO: Send a link to reset the login (silent fail if not configured)
+        # Send a link to reset the login (silent fail if not configured)
         token = uuid.uuid4().hex
         message = """ http://{DOMAIN_NAME}/chill/site/reset-login/{token}/ """.format(token=token, DOMAIN_NAME=current_app.config.get('DOMAIN_NAME'))
         current_app.logger.debug(message)

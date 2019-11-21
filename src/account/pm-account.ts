@@ -51,7 +51,6 @@ customElements.define(
     }
 
     template(data: TemplateData) {
-      // Login by email form here if shareduser?
       return html`
         <div class="pm-account">
           ${hasUserCookie()
@@ -85,7 +84,10 @@ customElements.define(
                 <pm-logout-link></pm-logout-link>
               `
             : html`
-                [login by email]
+                <p>
+                  Login by e-mail
+                  <pm-login-by-email></pm-login-by-email>
+                </p>
               `}
         </div>
       `;

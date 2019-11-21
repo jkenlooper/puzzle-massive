@@ -2,42 +2,31 @@ import { html, render } from "lit-html";
 
 import FetchService from "../site/fetch.service";
 
-const baseUrl = `${window.location.protocol}//${window.location.host}`;
-
 interface TemplateData {
-  token: string;
   submitHandler: any; // event listener object
-  showResponseLink: boolean;
-  anonymousLoginLink: string;
   responseMessage: string;
   responseName: string;
 }
 interface SubmitFormResponse {
-  link: string;
   message: string;
   name: string;
 }
 
-const tag = "pm-reset-login-by-token";
+const tag = "pm-login-by-email";
 
 customElements.define(
   tag,
-  class PmResetLoginByToken extends HTMLElement {
-    private token: string;
-    private responseLink: string = "";
+  class PmLoginByEmail extends HTMLElement {
     private responseMessage: string = "";
     private responseName: string = "";
 
     constructor() {
       super();
-      const tokenAttr = this.attributes.getNamedItem("token");
-      this.token = tokenAttr ? tokenAttr.value : "";
     }
 
     submit(form: HTMLFormElement) {
       const fetchService = new FetchService(form.action);
       const data = new FormData(form);
-      this.responseLink = "";
       if (!form.reportValidity()) {
         this.responseMessage = "Form is not valid.";
         this.responseName = "invalid";
@@ -46,7 +35,6 @@ customElements.define(
         fetchService
           .postForm<SubmitFormResponse>(data)
           .then((response) => {
-            this.responseLink = response.link;
             this.responseMessage = response.message;
             this.responseName = response.name;
           })
@@ -65,28 +53,29 @@ customElements.define(
     template(data: TemplateData) {
       return html`
         <form
-          class="pm-ResetLoginByToken"
-          id="reset-login-by-token-form"
+          class="pm-LoginByEmail"
+          id="login-by-email-form"
           method="POST"
-          action="/newapi/generate-anonymous-login-by-token/"
+          action="/newapi/player-email-login-reset/"
         >
-          <input type="hidden" name="token" value=${data.token} />
-          <button form="reset-login-by-token-form" @click=${data.submitHandler}>
-            Reset Login
+          <label for="login-by-email-input">
+            E-mail
+          </label>
+          <input
+            id="login-by-email-input"
+            type="email"
+            maxlength="254"
+            name="email"
+            value=""
+          />
+
+          <button form="login-by-email-form" @click=${data.submitHandler}>
+            Login by E-mail
           </button>
 
           ${data.responseMessage
             ? html`
-                <p class="pm-ResetLoginByToken-message">
-                  ${data.showResponseLink
-                    ? html`
-                        <strong class="u-block">
-                          <a href=${data.anonymousLoginLink}
-                            >${data.anonymousLoginLink}</a
-                          >
-                        </strong>
-                      `
-                    : ""}
+                <p class="pm-LoginByEmail-message">
                   ${data.responseMessage}<code class="u-block u-textRight"
                     >${data.responseName}</code
                   >
@@ -99,7 +88,6 @@ customElements.define(
 
     get data(): TemplateData {
       return {
-        token: this.token,
         submitHandler: {
           handleEvent: (e) => {
             // Prevent the form from submitting
@@ -109,8 +97,6 @@ customElements.define(
           },
           capture: true,
         },
-        showResponseLink: !!this.responseLink,
-        anonymousLoginLink: `${baseUrl}${this.responseLink}/`,
         responseMessage: this.responseMessage,
         responseName: this.responseName,
       };
