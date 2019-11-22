@@ -41,6 +41,7 @@ dt {
 dd {
   display: block;
   margin-left: 40px;
+  margin-bottom: 1em;
 }
 
 article {
