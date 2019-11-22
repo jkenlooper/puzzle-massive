@@ -85,7 +85,7 @@ customElements.define(
               `
             : html`
                 <p>
-                  Login by e-mail
+                  Existing players can login by e-mail:
                   <pm-login-by-email></pm-login-by-email>
                 </p>
               `}

@@ -77,7 +77,17 @@ class PlayerEmailLoginResetView(MethodView):
 
         # Send a link to reset the login (silent fail if not configured)
         token = uuid.uuid4().hex
-        message = """ http://{DOMAIN_NAME}/chill/site/reset-login/{token}/ """.format(token=token, DOMAIN_NAME=current_app.config.get('DOMAIN_NAME'))
+        message = """
+The link below is only valid for a short time.  Use it to reset your login link
+for Puzzle Massive.
+
+http://{DOMAIN_NAME}/chill/site/reset-login/{token}/
+
+After visiting that web page and clicking the reset login button; a new login
+link will be created. Any older ones will no longer be valid.
+
+You can ignore this message if you didn't initiate the request.
+        """.format(token=token, DOMAIN_NAME=current_app.config.get('DOMAIN_NAME'))
         current_app.logger.debug(message)
         email_sent = False
         if not current_app.config.get('DEBUG', True):

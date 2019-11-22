@@ -70,11 +70,22 @@ customElements.define(
           method="POST"
           action="/newapi/generate-anonymous-login-by-token/"
         >
-          <input type="hidden" name="token" value=${data.token} />
-          <button form="reset-login-by-token-form" @click=${data.submitHandler}>
-            Reset Login
-          </button>
-
+          ${!data.showResponseLink
+            ? html`
+                <p>
+                  Click the button below to reset your login link.
+                  <span class="u-block">
+                    <input type="hidden" name="token" value=${data.token} />
+                    <button
+                      form="reset-login-by-token-form"
+                      @click=${data.submitHandler}
+                    >
+                      Reset Login
+                    </button>
+                  </span>
+                </p>
+              `
+            : ""}
           ${data.responseMessage
             ? html`
                 <p class="pm-ResetLoginByToken-message">

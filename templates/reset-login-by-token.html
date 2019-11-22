@@ -10,17 +10,12 @@
 
 {% block main %}
 <section  class="pm-Doc">
-  <h1>Reset Login by Token</h1>
+  <h1>Reset Login</h1>
 
   {% if not token %}
   <p>This token is no longer valid.</p>
   {% else %}
 
-  <span class="u-marginTopSm u-marginBottomSm u-block">
-    <pm-profile-bit media-path="{{ url_for('send_media_file', filename='') }}" score dots name player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
-  </span>
-
-  <p>Click the button below to reset your login for this player account.</p>
   <pm-reset-login-by-token token="{{ token }}"></pm-reset-login-by-token>
 
   {% endif %}
