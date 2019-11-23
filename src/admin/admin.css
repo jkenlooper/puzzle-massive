@@ -6,4 +6,5 @@
  * 40theme
  */
 @import "./50utilities.css";
+@import "../site/60settings.css";
 @import "./60settings.css";

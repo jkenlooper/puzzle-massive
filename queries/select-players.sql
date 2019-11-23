@@ -21,5 +21,7 @@ left outer join (
 select count(*) as filled_slots_count, player from User_Puzzle where puzzle is not null group by player
 ) as up2 on (up2.player = u.id)
 where u.m_date is not null
+and (:email = '' or pa.email like :email)
 order by seconds_from_now asc
+limit 100 offset :index * 100
 ;

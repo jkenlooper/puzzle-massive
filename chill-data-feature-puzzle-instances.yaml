@@ -32,6 +32,8 @@ route: /admin/player/
 template: admin-playerpage.html
 value:
   players: select-players.sql
+  index: route-pass-index.sql
+  email: route-pass-email.sql
 
 
 --- !ChillNode

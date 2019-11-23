@@ -20,6 +20,7 @@ import '../dot-require'
 import '../puzzle-list'
 import '../total-active-player-count'
 import '../cta-link'
+import '../player-bit'
 
 import '../frontpage'
 import '../profilepage'
