@@ -88,6 +88,11 @@ class PlayerEmailRegisterView(MethodView):
                     response["name"] = "error"
                     return make_response(json.jsonify(response), 400)
 
+                if existing_player_data['is_verifying_email']:
+                    response["message"] = "An e-mail address is already in the process of verification for this player.  Please wait."
+                    response["name"] = "error"
+                    return make_response(json.jsonify(response), 400)
+
                 cur.execute(fetch_query_string('update-player-account-email.sql'), {
                     'player_id': user,
                     'email': email

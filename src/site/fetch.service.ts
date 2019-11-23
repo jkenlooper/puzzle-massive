@@ -28,12 +28,22 @@ class FetchService {
       credentials: "same-origin",
       body: data,
     }).then((response: Response) => {
-      if (!response.ok && !response.json) {
-        throw new Error(response.statusText);
+      if (!response.ok && response.status >= 500) {
+        return Promise.reject({
+          message: response.statusText,
+          name: response.status + "",
+        });
       }
       return response.json().then((data: T) => {
         if (!response.ok) {
-          return Promise.reject(data);
+          if (!data["message"]) {
+            return Promise.reject({
+              message: response.statusText,
+              name: response.status + "",
+            });
+          } else {
+            return Promise.reject(data);
+          }
         } else {
           return data;
         }
