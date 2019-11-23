@@ -61,7 +61,7 @@ class ChooseBitView(MethodView):
             limit = int(limit)
         except ValueError:
             limit = 7
-        if limit not in (49, 7):
+        if limit not in (48, 7):
             limit = 7
 
 
