@@ -21,6 +21,7 @@ import '../puzzle-list'
 import '../total-active-player-count'
 import '../cta-link'
 import '../player-bit'
+import '../response-message'
 
 import '../frontpage'
 import '../profilepage'

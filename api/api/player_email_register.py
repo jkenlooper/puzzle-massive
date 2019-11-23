@@ -99,7 +99,16 @@ class PlayerEmailRegisterView(MethodView):
 
                 # Send verification email (silent fail if not configured)
                 token = uuid.uuid4().hex
-                message = """ http://{DOMAIN_NAME}/chill/site/claim-player/{token}/ """.format(token=token, DOMAIN_NAME=current_app.config.get('DOMAIN_NAME'))
+                message = """
+Please verify your e-mail address with Puzzle Massive by following the link below.
+
+http://{DOMAIN_NAME}/chill/site/claim-player/{token}/
+
+Complete registering your e-mail address by visiting that web page and clicking
+the "verify player" button.
+
+You can ignore this message if you didn't initiate the request.
+                """.format(token=token, DOMAIN_NAME=current_app.config.get('DOMAIN_NAME'))
                 current_app.logger.debug(message)
                 if not current_app.config.get('DEBUG', True):
                     try:

@@ -75,11 +75,10 @@ customElements.define(
 
           ${data.responseMessage
             ? html`
-                <p class="pm-LoginByEmail-message">
-                  ${data.responseMessage}<code class="u-block u-textRight"
-                    >${data.responseName}</code
-                  >
-                </p>
+                <pm-response-message
+                  name=${data.responseName}
+                  message=${data.responseMessage}
+                ></pm-response-message>
               `
             : ""}
         </form>

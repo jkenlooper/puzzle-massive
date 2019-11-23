@@ -88,20 +88,11 @@ customElements.define(
             : ""}
           ${data.responseMessage
             ? html`
-                <p class="pm-ResetLoginByToken-message">
-                  ${data.showResponseLink
-                    ? html`
-                        <strong class="u-block">
-                          <a href=${data.anonymousLoginLink}
-                            >${data.anonymousLoginLink}</a
-                          >
-                        </strong>
-                      `
-                    : ""}
-                  ${data.responseMessage}<code class="u-block u-textRight"
-                    >${data.responseName}</code
-                  >
-                </p>
+                <pm-response-message
+                  name=${data.responseName}
+                  link=${data.showResponseLink ? data.anonymousLoginLink : ""}
+                  message=${data.responseMessage}
+                ></pm-response-message>
               `
             : ""}
         </form>
