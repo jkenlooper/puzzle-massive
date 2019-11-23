@@ -2,4 +2,5 @@
   margin-right: 10px;
   margin-left: 10px;
   max-width: 40em;
+  width: calc(100vw - 40px);
 }
