@@ -27,6 +27,9 @@ h6 {
 a {
   color: var(--color-accent);
 }
+.pm-Header a {
+  color: currentColor;
+}
 
 dl {
   margin: 1em 0;
