@@ -1,3 +1,4 @@
+-- Only used when generating test data with the testdata script.
 update BitIcon set user = :user,
 expiration = datetime('now', '+20 minutes'),
 last_viewed = datetime('now', '-50 minutes')

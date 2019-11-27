@@ -423,38 +423,6 @@ class UserDetailsView(MethodView):
                 current_app.secure_cookie.set(u'shareduser', str(user_details['id']), response, expires_days=365)
         return response
 
-class ClaimRandomBit(MethodView):
-    """
-    Claim a random bit icon only when a user doesn't have an icon.
-    """
-    decorators = [user_not_banned]
-
-    def post(self):
-        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
-
-        cur = db.cursor()
-
-        try:
-            result = cur.execute(fetch_query_string("select-user-details.sql"), {'id':user}).fetchall()
-        except IndexError:
-            # user may have been added after a db rollback
-            return make_response('no user', 404)
-
-        if not result:
-            return make_response('no user', 404)
-
-        (result, col_names) = rowify(result, cur.description)
-        user_details = result[0]
-
-        if user_details['icon']:
-            return make_response('icon', 400)
-
-        cur.execute(fetch_query_string('claim_random_bit_icon.sql'), {'user': user})
-        db.commit()
-
-        cur.close()
-
-        return ''
 
 class SplitPlayer(MethodView):
     """
@@ -515,9 +483,6 @@ class SplitPlayer(MethodView):
         # Remove shareduser cookie in case it exists
         expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
         current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
-
-        # Claim a random bit icon
-        cur.execute(fetch_query_string('claim_random_bit_icon.sql'), {'user': newuser})
 
         db.commit()
 

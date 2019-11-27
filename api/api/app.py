@@ -121,7 +121,6 @@ def make_app(config=None, **kw):
         UserLogoutView,
         UserLoginView,
         ClaimUserByTokenView,
-        ClaimRandomBit,
         SplitPlayer,
         AdminBlockedPlayersList,
         AdminBannedUserList,
@@ -176,8 +175,6 @@ def make_app(config=None, **kw):
     # NGINX rewritten from /puzzle-api/bit/<bitLink>/
     app.add_url_rule('/user-login/<anonymous_login>/',
                      view_func=UserLoginView.as_view('user-login'))
-    app.add_url_rule('/claim-random-bit/',
-                     view_func=ClaimRandomBit.as_view('claim-random-bit'))
     app.add_url_rule('/bit-icon/<int:user_id>/',
                      view_func=BitIconView.as_view('bit-icon'))
     app.add_url_rule('/choose-bit/',

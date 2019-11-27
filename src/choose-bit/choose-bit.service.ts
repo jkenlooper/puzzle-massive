@@ -1,3 +1,7 @@
+export interface ClaimBitResponse {
+  message: string;
+  name: string;
+}
 export class ChooseBitService {
   constructor() {}
 
@@ -18,7 +22,7 @@ export class ChooseBitService {
     });
   }
 
-  claimBit(bit: string): Promise<string | null> {
+  claimBit(bit: string): Promise<ClaimBitResponse> {
     const params = new URLSearchParams();
     params.append("icon", bit);
     const request = new Request(`/newapi/claim-bit/?${params}`, {
@@ -30,10 +34,29 @@ export class ChooseBitService {
     });
 
     return fetch(request).then((response: Response) => {
-      if (!response.ok) {
-        throw new Error(response.statusText);
+      if (!response.ok && response.status >= 500) {
+        return Promise.reject({
+          message: response.statusText,
+          name: response.status + "",
+        });
       }
-      return response.text();
+
+      return response.json().then((data: ClaimBitResponse) => {
+        if (!response.ok) {
+          if (!data["message"]) {
+            return Promise.reject({
+              message: response.statusText,
+              name: response.status + "",
+            });
+          } else {
+            return Promise.reject(data);
+          }
+        } else {
+          return data;
+        }
+      });
+
+      //return response.text();
     });
   }
 }

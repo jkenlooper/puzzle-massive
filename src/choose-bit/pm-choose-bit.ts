@@ -3,7 +3,7 @@ import { repeat } from "lit-html/directives/repeat";
 
 import userDetailsService from "../site/user-details.service";
 import "./choose-bit.css";
-import { chooseBitService } from "./choose-bit.service";
+import { chooseBitService, ClaimBitResponse } from "./choose-bit.service";
 import { areCookiesEnabled } from "../site/cookies";
 
 interface TemplateData {
@@ -14,6 +14,9 @@ interface TemplateData {
   limit: number;
   bits: string[];
   dots: number;
+  hasResponseMessage: boolean;
+  responseMessage: string;
+  responseName: string;
 }
 
 const limitBits = 10;
@@ -55,6 +58,8 @@ customElements.define(
     private isLoading: boolean = true;
     private isReloading: boolean = false;
     private hasError: boolean = false;
+    private responseMessage = "";
+    private responseName = "";
 
     constructor() {
       super();
@@ -118,6 +123,14 @@ customElements.define(
           >
             More
           </button>
+          ${data.hasResponseMessage
+            ? html`
+                <pm-response-message
+                  message=${data.responseMessage}
+                  name=${data.responseName}
+                ></pm-response-message>
+              `
+            : ""}
         </div>
       `;
 
@@ -167,15 +180,26 @@ customElements.define(
                   `;
 
                   function claimBit() {
-                    chooseBitService.claimBit(item).then(() => {
-                      const userDetailsChangeEvent = new Event(
-                        "userDetailsChange",
-                        {
-                          bubbles: true,
-                        }
-                      );
-                      self.dispatchEvent(userDetailsChangeEvent);
-                    });
+                    chooseBitService
+                      .claimBit(item)
+                      .then((data: ClaimBitResponse) => {
+                        const userDetailsChangeEvent = new Event(
+                          "userDetailsChange",
+                          {
+                            bubbles: true,
+                          }
+                        );
+                        self.responseMessage = data.message || "";
+                        self.responseName = data.name || "";
+                        self.dispatchEvent(userDetailsChangeEvent);
+                      })
+                      .catch((err) => {
+                        self.responseMessage = err.message || "";
+                        self.responseName = err.name || "";
+                      })
+                      .finally(() => {
+                        self.render();
+                      });
                   }
                 }
               )}
@@ -194,6 +218,9 @@ customElements.define(
         message: this.message,
         limit: this.limit,
         bits: this.bits,
+        hasResponseMessage: !!this.responseMessage,
+        responseMessage: this.responseMessage,
+        responseName: this.responseName,
       };
     }
 

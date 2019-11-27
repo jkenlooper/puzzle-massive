@@ -85,15 +85,25 @@ class ClaimBitView(MethodView):
 
     def post(self):
         """If the bit icon is available; claim it for the user."""
+
+        data = {
+            "message": "",
+            "name": "error"
+        }
+
         icon = request.args.get('icon')
         if not icon:
-            abort(400)
+            data["message"] = "No icon param passed"
+            data["name"] = "error"
+            return make_response(json.jsonify(data), 400)
 
         # Prevent creating a new user if no support for cookies. Player should
         # have 'ot' already set by viewing the page.
         uses_cookies = current_app.secure_cookie.get(u'ot')
         if not uses_cookies:
-            abort(400)
+            data["message"] = "No ot cookie present"
+            data["name"] = "error"
+            return make_response(json.jsonify(data), 400)
 
         cur = db.cursor()
 
@@ -101,19 +111,25 @@ class ClaimBitView(MethodView):
         result = cur.execute(fetch_query_string('select_available_bit_icon.sql'), {'icon': icon}).fetchone()
         if not result:
             cur.close()
-            abort(400)
+            data["message"] = "That bit icon is no longer available."
+            data["name"] = "error"
+            return make_response(json.jsonify(data), 400)
 
-        response = make_response('', 200)
         user = current_app.secure_cookie.get(u'user')
         if not user:
             user = user_id_from_ip(request.headers.get('X-Real-IP'))
             if user == None:
-                abort(400)
+                data["message"] = "Not logged in."
+                data["name"] = "error"
+                return make_response(json.jsonify(data), 400)
             user = int(user)
 
         else:
             user = int(user)
 
+        data["message"] = "Bit icon claimed."
+        data["name"] = "success"
+        response = make_response(json.jsonify(data), 200)
 
         # Unclaim any bit icon that the player already has
         cur.execute(fetch_query_string('unclaim_bit_icon.sql'), {'user': user})
