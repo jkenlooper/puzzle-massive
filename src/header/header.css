@@ -36,9 +36,8 @@
 }
 
 .pm-Header-logo {
-  flex: none;
-  display: flex;
   width: calc(122px + (4px * 2));
+  height: 64px;
 }
 @media (--md-viewport) {
   .pm-Header-logo {

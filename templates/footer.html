@@ -1,7 +1,11 @@
 <div class="pm-Footer">
   <div class="pm-Footer-grid">
     <div class="pm-Footer-gridA">
-      {% include './logo.html' %}
+      {% include './logo.html' %}{% if title and title == "About" %}
+      <div class="pm-Logo-eggShell">
+        <a class="pm-Logo-eggLink" href="http://puzzle.massive.xyz/chill/site/front/5512016996c09/" title="Polar Bear in a Snowstorm"></a>
+        <svg class="pm-Logo-egg" width="100%" height="100%" fit="" preserveAspectRatio="xMidYMid meet" focusable="false"><use xlink:href="{{ url_for('send_theme_file', filename='puzzle-massive-logo.svg') }}#egg"/></svg>
+      </div>{% endif %}
     </div>
 
     <div class="pm-Footer-gridB">

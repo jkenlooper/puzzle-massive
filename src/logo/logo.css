@@ -1,9 +1,72 @@
 .pm-Logo {
+  font-size: 2.6em;
+  line-height: 0.6em;
+  color: var(--color-dark);
+  font-weight: bold;
+  text-decoration: none;
+}
+.pm-Footer .pm-Logo {
+  color: var(--color-dark);
+}
+
+.pm-Logo-svg {
   max-width: 731px;
   max-height: 192px;
   width: 100%;
   height: 100%;
-  font-size: 2.6em;
-  line-height: 0.6em;
   object-fit: contain;
+}
+
+.pm-Logo-text {
+  visibility: hidden;
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+
+/* in case svg symbol failed. TODO: verify with MS Edge? */
+.pm-Logo-svg:empty + .pm-Logo-text {
+  visibility: visible;
+}
+
+.pm-Logo-eggShell {
+  max-width: 731px;
+  max-height: 192px;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  visibility: hidden;
+}
+.pm-Logo-eggLink {
+  position: absolute;
+  left: 65%;
+  top: 20%;
+  width: 7%;
+  height: 23%;
+  display: block;
+  outline: none;
+  z-index: 2;
+  visibility: visible;
+}
+.pm-Logo-eggLink:active,
+.pm-Logo-eggLink:focus {
+  outline: none;
+}
+.pm-Logo-egg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  color: var(--color-dark-dark);
+  transition: color 3s 300ms linear;
+  visibility: visible;
+  pointer-events: none;
+}
+.pm-Logo-eggLink:focus + .pm-Logo-egg,
+.pm-Logo-eggLink:hover + .pm-Logo-egg,
+.pm-Logo-eggLink:active + .pm-Logo-egg {
+  color: var(--color-dark);
 }
