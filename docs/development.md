@@ -313,9 +313,8 @@ a `chill-data-feature-[feature-name].yaml` file using the `chill dump` command.
 Then when the feature branch is being merged into the develop branch, 
 the chill feature yaml can also be merged into the `chill-data.yaml`
 
-The `chill-data-feature-[feature-name].yaml` dump file should also be edited to
-*only* include changes that are being added for the feature branch.  Usually any
-new ChillNode objects that are added will be at the bottom of this file.
+The `chill-data-feature-[feature-name].yaml` file should also be edited to
+*only* include changes that are being added for that feature branch.
 
 On updates to any chill-data*.yaml files; run the below commands to reload the chill database.
 ```bash
