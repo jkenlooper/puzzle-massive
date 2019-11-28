@@ -161,6 +161,11 @@ sudo su dev;
 cd /home/dev/puzzle-massive/;
 ```
 
+Some git commit hooks are installed and rely on commands to be installed to
+format the python code (black) and format other code (prettier).  Committing
+before following the below setup will result in an error if these commands
+haven't been installed on the development machine.
+
 If `nvm` isn't available on the dev machine then install it.  See
 [github.com/creationix/nvm](https://github.com/creationix/nvm) for more
 information.
@@ -187,6 +192,9 @@ When first installing on a development machine (not production) run:
 # Setup to use a virtual python environment
 virtualenv . -p python3;
 source bin/activate;
+
+# Install black to format python code when developing
+pip install black;
 
 # Build the dist files for local development
 nvm use

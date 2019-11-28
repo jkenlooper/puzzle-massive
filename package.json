@@ -27,7 +27,9 @@
     "eslint-plugin-promise": "^4.2.1",
     "fetch-mock": "^7.7.3",
     "file-loader": "^2.0.0",
+    "husky": "^3.1.0",
     "jsdom": "^13.2.0",
+    "lint-staged": "^9.5.0",
     "mini-css-extract-plugin": "^0.4.5",
     "node-fetch": "^2.6.0",
     "optimize-css-assets-webpack-plugin": "^5.0.3",
@@ -77,5 +79,28 @@
     "suitcss-utils-image": "~0.1.0",
     "suitcss-utils-spacing": "^1.1.1",
     "suitcss-utils-text": "~1.0.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,css,json,md}": [
+      "prettier --write",
+      "git add"
+    ],
+    "*.py": [
+      "black",
+      "git add"
+    ],
+    "*.js": [
+      "eslint --fix",
+      "git add"
+    ],
+    "*.css": [
+      "stylelint --fix",
+      "git add"
+    ]
   }
 }

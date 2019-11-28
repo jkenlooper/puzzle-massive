@@ -1,4 +1,6 @@
 /aws*
+/black
+/blackd
 /pyrsa*
 /activate*
 /chill
