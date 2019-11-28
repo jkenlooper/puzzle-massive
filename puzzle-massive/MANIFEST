@@ -1,3 +1,5 @@
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
 LICENSE
 Makefile
 README.md
@@ -10,6 +12,7 @@ api/puzzle-massive-scheduler.service.sh
 api/requirements.txt
 api/setup.py
 bin/backup-db.sh
+bin/create-db-dump-sql.sh
 bin/freeze.sh
 bin/init.sh
 bin/install.sh
@@ -27,7 +30,9 @@ certbot
 chill/README.md
 chill/puzzle-massive-chill.service.sh
 chill/requirements.txt
-db.dump.sql
+chill-data-content-jake-hickenlooper.yaml
+chill-data.sql
+chill-data.yaml
 dist
 divulger/README.md
 divulger/divulger
