@@ -13,24 +13,24 @@ from api.tools import loadConfig
 config_file = sys.argv[1]
 config = loadConfig(config_file)
 
-db_file = config['SQLITE_DATABASE_URI']
+db_file = config["SQLITE_DATABASE_URI"]
 db = sqlite3.connect(db_file)
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG if config['DEBUG'] else logging.INFO)
+logger.setLevel(logging.DEBUG if config["DEBUG"] else logging.INFO)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     cur = db.cursor()
 
     ## Create the new tables
     for filename in (
-            'cleanup_migrate_from_2_3_x_to_usernames_email.sql',
-            'create_table_player_account.sql',
-            'create_table_name_register.sql',
-            ):
-        for statement in read_query_file(filename).split(';'):
+        "cleanup_migrate_from_2_3_x_to_usernames_email.sql",
+        "create_table_player_account.sql",
+        "create_table_name_register.sql",
+    ):
+        for statement in read_query_file(filename).split(";"):
             cur.execute(statement)
             db.commit()
 
