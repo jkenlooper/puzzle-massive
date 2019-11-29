@@ -1,4 +1,4 @@
-"Migrates 2.3.x to usernames and email support"
+"Migrates 2.3.2 to usernames and email support"
 ## Refer to docs/deployment.md
 
 import sys

@@ -1,4 +1,4 @@
-"Migrates 2.3.x to new-player support"
+"Migrates 2.3.2 to new-player support"
 ## Refer to docs/deployment.md
 
 import sqlite3
@@ -12,14 +12,14 @@ from api.tools import loadConfig
 config_file = sys.argv[1]
 config = loadConfig(config_file)
 
-db_file = config['SQLITE_DATABASE_URI']
+db_file = config["SQLITE_DATABASE_URI"]
 db = sqlite3.connect(db_file)
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG if config['DEBUG'] else logging.INFO)
+logger.setLevel(logging.DEBUG if config["DEBUG"] else logging.INFO)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     cur = db.cursor()
 
