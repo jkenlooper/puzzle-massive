@@ -59,6 +59,10 @@ config.module = {
       exclude: /node_modules/,
       use: {
         loader: 'ts-loader',
+        // Only care about transpiling typescript and not doing all the type
+        // checking which is slower.  TODO: could do type checking by using
+        // fork-ts-checker-webpack-plugin
+        options: { transpileOnly: true },
       },
     },
     {
@@ -80,10 +84,6 @@ config.module = {
         },
       ],
       exclude: /node_modules/,
-    },
-    {
-      test: /.*sprite\.svg$/,
-      loader: 'svg-sprite-loader',
     },
     {
       test: /\.css$/,
