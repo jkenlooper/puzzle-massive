@@ -8,13 +8,14 @@ export default class PmIcon extends HTMLElement {
   constructor() {
     super();
     this.iconName = this.textContent || "";
-    this.render();
   }
   render() {
     const iconHref = `${THEME_STATIC_PATH}icons.svg#${this.iconName}`;
     this.innerHTML = `<svg class="pm-Icon" width="100%" height="100%" fit="" preserveAspectRatio="xMidYMid meet" focusable="false"><use xlink:href="${iconHref}"/></svg>`;
   }
-  connectedCallback() {}
+  connectedCallback() {
+    this.render();
+  }
 }
 
 customElements.define(tag, PmIcon);

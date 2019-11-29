@@ -38,7 +38,6 @@ customElements.define(
         : "#404";
 
       hashColorService.subscribe(this.render.bind(this), this.instanceId);
-      this.render();
     }
 
     template(data: TemplateData) {
@@ -51,9 +50,11 @@ customElements.define(
           style=${styleMap({ "background-color": data.backgroundColor })}
         >
           <label for="hash-color-background-color">
-            <svg class="pm-Puzzlepage-icon">
-              <use xlink:href="#paint-can-sprite" />
-            </svg>
+            <pm-icon
+              size="${data.vertical ? "sm" : "lg"}"
+              class="pm-Puzzlepage-icon"
+              >paint-can-sprite</pm-icon
+            >
           </label>
           <span class="pm-HashColor-field">
             ${data.hasInputtypesColor
@@ -101,6 +102,10 @@ customElements.define(
 
     render() {
       render(this.template(this.data), this);
+    }
+
+    connectedCallback() {
+      this.render();
     }
   }
 );
