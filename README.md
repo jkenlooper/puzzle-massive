@@ -17,6 +17,8 @@ previous git commit history is available upon request. I've chosen to make
 Puzzle Massive an open source project under the GNU Affero General Public
 License.
 
+**[Changelog since 2.0.0](CHANGELOG.md)**
+
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
 [![code style: prettier](https://img.shields.io/badge/code%20style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
