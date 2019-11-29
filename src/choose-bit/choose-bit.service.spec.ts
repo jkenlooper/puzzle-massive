@@ -9,7 +9,7 @@ import { ChooseBitService } from "./choose-bit.service";
 //const { document } = new JSDOM(`...`).window;
 
 tape("getBits", (t) => {
-  fetchMock.mock("/newapi/choose-bit/", { data: ["test", "frog"] });
+  fetchMock.mock("/newapi/choose-bit/?limit=2", { data: ["test", "frog"] });
   /*
   function mockFetch(url: any) {
     console.log(url);
@@ -25,9 +25,9 @@ tape("getBits", (t) => {
   t.equal(typeof chooseBitService.getBits, "function");
 
   chooseBitService
-    .getBits(10)
+    .getBits(2)
     .then((bits) => {
-      t.deepEqual(bits, { data: ["test", "frog"] });
+      t.deepEqual(bits, ["test", "frog"]);
     })
     .finally(() => {
       t.end();

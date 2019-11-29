@@ -3,3 +3,7 @@ extends:
   - "stylelint-config-prettier"
 rules:
   block-no-empty: null
+  selector-type-no-unknown:
+    - true
+    - ignoreTypes:
+        - /^pm-/

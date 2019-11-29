@@ -40,9 +40,9 @@
     "prettier": "1.16.4",
     "raw-loader": "^0.5.1",
     "style-loader": "^0.23.1",
-    "stylelint": "^9.10.1",
-    "stylelint-config-prettier": "^4.0.0",
-    "stylelint-config-recommended": "^2.2.0",
+    "stylelint": "^12.0.0",
+    "stylelint-config-prettier": "^7.0.0",
+    "stylelint-config-recommended": "^3.0.0",
     "svg-sprite-loader": "4.1.1",
     "svgo": "^1.3.2",
     "svgo-loader": "^2.2.1",
@@ -54,8 +54,8 @@
     "webpack-cli": "^3.3.10"
   },
   "scripts": {
-    "offpretest": "stylelint \"src/**/*.css\"",
-    "offtest": "tsc --project . --outDir tests --module commonjs && tape \"tests/**/*.spec.js\"",
+    "pretest": "stylelint \"src/**/*.css\"",
+    "test": "tsc --project . --outDir tests --module commonjs && tape \"tests/**/*.spec.js\"",
     "prebuild": "rm -rf dist",
     "build": "webpack --mode=production",
     "debug": "webpack --mode=development --debug --devtool source-map --output-pathinfo",
