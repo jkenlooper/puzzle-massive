@@ -5,6 +5,30 @@
 {{ description }}
 {% endblock %}
 
+{% block secondarymenu %}
+<nav class="pm-Doc-menu">
+
+  {%- if slug == 'faq' -%}
+  <span class="pm-Doc-menuLink is-active">FAQs</span>
+  {%- else -%}
+  <a href="/chill{{ url_for('.page_uri', uri='faq') }}" class="pm-Doc-menuLink">FAQs</a>
+  {%- endif -%}
+
+  {%- if slug == 'about' -%}
+  <span class="pm-Doc-menuLink is-active">About</span>
+  {%- else -%}
+  <a href="/chill{{ url_for('.page_uri', uri='about') }}" class="pm-Doc-menuLink">About</a>
+  {%- endif -%}
+
+  {%- if slug == 'help' -%}
+  <span class="pm-Doc-menuLink is-active">Help</span>
+  {%- else -%}
+  <a href="/chill{{ url_for('.page_uri', uri='help') }}" class="pm-Doc-menuLink">Help</a>
+  {%- endif -%}
+
+</nav>
+{% endblock %}
+
 {% block main %}
   <div class="pm-Doc">
   {{ content|readfile|safe|shortcodes }}
