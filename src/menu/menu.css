@@ -1,21 +1,12 @@
-@import "../site/viewport-breakpoints.css";
-/*
-@media (--lg-viewport) {
-}
-*/
-
 .pm-Menu {
-  height: 30px;
+  position: relative;
   z-index: 100;
-  margin-left: 10px;
-}
-.pm-Menu.pm-Menu {
-  margin-top: 10px;
+  width: calc(60px + 5em + 8em);
+  height: calc(30px + 4px + 1em);
 }
 
 .pm-Menu-details {
   background-color: var(--color-light-light);
-  display: inline-block;
   position: absolute;
   border: 2px solid var(--color-dark);
 }

@@ -4,3 +4,26 @@
   max-width: 40em;
   width: calc(100vw - 40px);
 }
+
+.pm-Doc-menu {
+}
+
+.pm-Doc-menuLink {
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: 2px solid currentColor;
+  text-decoration: none;
+  display: inline-block;
+  color: var(--color-dark);
+  margin: 0 10px;
+}
+.pm-Doc-menuLink:hover,
+.pm-Doc-menuLink:active,
+.pm-Doc-menuLink:focus {
+  text-decoration: underline;
+}
+.pm-Doc-menuLink.is-active {
+  background-color: var(--color-accent);
+  color: var(--color-light-light);
+  text-decoration: none;
+}

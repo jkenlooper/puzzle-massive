@@ -150,6 +150,37 @@
   {%- endif %}
 {%- endblock %}
 
+  {% block secondarymenu %}
+        <a href="/chill{{ url_for('.page_uri', uri='front/{}'.format(puzzle.puzzle_id)) }}" title="View puzzle front page.">
+          <pm-icon size="{{ icon_size }}" class="u-block">arrow-left-circle-sprite</pm-icon>
+        </a>
+
+        {% if preview_full.url != '' %}
+          <label>
+            <input class="u-hidden" type="checkbox" id="puzzle-preview-button">
+            <pm-icon size="{{ icon_size }}" class="u-block">image-sprite</pm-icon>
+          </label>
+        {% endif %}
+
+        {% if scale != 0 %}
+        <a href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(puzzle.puzzle_id), scale=null) }}" title="View puzzle as actual size.">
+          <pm-icon size="{{ icon_size }}" class="u-block">minimize-sprite</pm-icon>
+        </a>
+          <label for="puzzlepage-description-toggle" title="Toggle puzzle information and credit at bottom of page.">
+            <pm-icon size="{{ icon_size }}" class="u-block">info-circle-sprite</pm-icon>
+          </label>
+        {% else %}
+        <a href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(puzzle.puzzle_id), scale=1) }}" title="View the whole puzzle scaled to fit your screen.">
+          <pm-icon size="{{ icon_size }}" class="u-block">full-screen-sprite</pm-icon>
+        </a>
+        {% endif %}
+
+        <pm-karma-status></pm-karma-status>
+
+        <pm-hash-color background-color="{{ puzzle.bg_color }}" name="{{ puzzle.puzzle_id }}">
+        </pm-hash-color>
+  {% endblock %}
+
 {% block main %}
 
 <div class="pm-Puzzlepage">
@@ -206,41 +237,6 @@
       {% set icon_size = 'lg' %}
       {% endif %}
       <div class="pm-Puzzlepage-gridB1 {{Puzzlepage_gridB1_modifier}}">
-
-        <a href="/chill{{ url_for('.page_uri', uri='front/{}'.format(puzzle.puzzle_id)) }}" title="View puzzle front page.">
-          <pm-icon size="{{ icon_size }}" class="u-block">arrow-left-circle-sprite</pm-icon>
-        </a>
-
-        {% if preview_full.url != '' %}
-          <label>
-            <input class="u-hidden" type="checkbox" id="puzzle-preview-button">
-            <pm-icon size="{{ icon_size }}" class="u-block">image-sprite</pm-icon>
-          </label>
-        {% endif %}
-
-        {% if scale != 0 %}
-        <a href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(puzzle.puzzle_id), scale=null) }}" title="View puzzle as actual size.">
-          <pm-icon size="{{ icon_size }}" class="u-block">minimize-sprite</pm-icon>
-        </a>
-          <label for="puzzlepage-description-toggle" title="Toggle puzzle information and credit at bottom of page.">
-            <pm-icon size="{{ icon_size }}" class="u-block">info-circle-sprite</pm-icon>
-          </label>
-          {#
-        <a href="#puzzlepage-description" pm-toggle-target title="View puzzle information and credit.">
-          down arrow? that only shows if description is checked
-        </a>
-        #}
-        {% else %}
-        <a href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(puzzle.puzzle_id), scale=1) }}" title="View the whole puzzle scaled to fit your screen.">
-          <pm-icon size="{{ icon_size }}" class="u-block">full-screen-sprite</pm-icon>
-        </a>
-        {% endif %}
-
-        <pm-karma-status></pm-karma-status>
-
-        <pm-hash-color background-color="{{ puzzle.bg_color }}" {% if scale != 0 %}vertical{% endif %} name="{{ puzzle.puzzle_id }}">
-        </pm-hash-color>
-
       </div>
       <div class="pm-Puzzlepage-gridB2 {{Puzzlepage_gridB2_modifier}}">
         <div id="puzzlepage-main" class="pm-Puzzlepage-main" style="background-color: {{ puzzle.bg_color }};">

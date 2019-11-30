@@ -1,11 +1,38 @@
 .pm-Base {
+  --pm-Base-menu-height: calc(30px + 4px + 1em);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   min-height: 100vh;
 }
+.pm-Base > * + * {
+  margin-top: 26px;
+}
+.pm-Base--mainFocus > * + * {
+  margin-top: 0;
+}
 .pm-Base--mainFocus > * {
   display: none;
+}
+
+.pm-Base-menu {
+  margin-left: 10px;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  height: var(--pm-Base-menu-height);
+}
+
+.pm-Base-menuPrimary {
+}
+
+.pm-Base-menuSecondary {
+  margin-left: 20px;
+  display: flex;
+  align-items: center;
+}
+.pm-Base-menuSecondary > * {
+  margin-left: 10px;
 }
 
 /* Sets it at the top and center */
@@ -16,11 +43,3 @@
 .pm-Base--mainFocus .pm-Base-main {
   display: block;
 }
-
-.pm-Base > * + * {
-  margin-top: 26px;
-}
-.pm-Base--mainFocus > * + * {
-  margin-top: 0;
-}
-
