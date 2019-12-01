@@ -6,7 +6,6 @@
 {% endblock %}
 
 {% block secondarymenu %}
-<nav class="pm-Doc-menu">
 
   {%- if slug == 'faq' -%}
   <span class="pm-Doc-menuLink is-active">FAQs</span>
@@ -26,7 +25,6 @@
   <a href="/chill{{ url_for('.page_uri', uri='help') }}" class="pm-Doc-menuLink">Help</a>
   {%- endif -%}
 
-</nav>
 {% endblock %}
 
 {% block main %}

@@ -1,7 +1,5 @@
 import * as Modernizr from "modernizr";
 import { html, render } from "lit-html";
-import { classMap } from "lit-html/directives/class-map.js";
-import { styleMap } from "lit-html/directives/style-map.js";
 
 import hashColorService from "./hash-color.service";
 import "./hash-color.css";
@@ -9,7 +7,6 @@ import "./hash-color.css";
 interface TemplateData {
   hasInputtypesColor: boolean;
   backgroundColor: string;
-  vertical: boolean;
   handleChange: Function;
 }
 
@@ -23,14 +20,11 @@ customElements.define(
       return `${tag} ${lastInstanceId++}`;
     }
     private instanceId: string;
-    private vertical: boolean = false;
     private defaultBackgroundColor: string;
 
     constructor() {
       super();
       this.instanceId = PmHashColor._instanceId;
-
-      this.vertical = !!this.attributes.getNamedItem("vertical");
 
       const backgroundColor = this.attributes.getNamedItem("background-color");
       this.defaultBackgroundColor = backgroundColor
@@ -42,17 +36,9 @@ customElements.define(
 
     template(data: TemplateData) {
       return html`
-        <span
-          class=${classMap({
-            "pm-HashColor": true,
-            "pm-HashColor--vertical": data.vertical,
-          })}
-          style=${styleMap({ "background-color": data.backgroundColor })}
-        >
+        <span class="pm-HashColor">
           <label for="hash-color-background-color">
-            <pm-icon
-              size="${data.vertical ? "sm" : "lg"}"
-              class="pm-Puzzlepage-icon"
+            <pm-icon size="sm" class="pm-Puzzlepage-icon"
               >paint-can-sprite</pm-icon
             >
           </label>
@@ -95,7 +81,6 @@ customElements.define(
         hasInputtypesColor: Modernizr.inputtypes.color,
         backgroundColor:
           hashColorService.backgroundColor || this.defaultBackgroundColor,
-        vertical: this.vertical,
         handleChange: this.handleChange.bind(this),
       };
     }

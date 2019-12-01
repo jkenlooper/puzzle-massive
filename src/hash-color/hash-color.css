@@ -2,25 +2,7 @@
   display: block;
 }
 
-.pm-HashColor--vertical {
-  overflow: hidden;
-  position: relative;
-}
-
 .pm-HashColor-field {
-}
-.pm-HashColor--vertical .pm-HashColor-field {
-  transform: translateX(100%) rotate(90deg);
-  transform-origin: top left;
-  display: inline-block;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  opacity: 0;
-}
-.pm-HashColor--vertical .pm-HashColor-field:focus {
-  overflow: visible;
-  opacity: 1;
 }
 
 .pm-HashColor-inputColor {
