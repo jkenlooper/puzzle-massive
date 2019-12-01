@@ -72,9 +72,28 @@ class UserDetailsService {
   static localUserId = "user-id";
 
   constructor() {
-    if (!window.localStorage) {
+    let hasLocalStorage = true;
+    try {
+      hasLocalStorage = !!window.localStorage;
+    } catch (err) {
+      hasLocalStorage = false;
+    }
+    if (!hasLocalStorage) {
       // User may have blocked the site from storing cookies and using
       // localStorage.
+      // TODO: implement better system of showing alerts to the user.
+      var message =
+        "Cookies and localStorage are needed for this site.  Please enable them in your browser in order to continue.";
+      var el = document.createElement("p");
+      var body = <Element>document.querySelector("body");
+      el.setAttribute(
+        "style",
+        "font-size: 1.3em; font-weight: bold; border: 1px solid var(--color-accent); margin: 1em; padding: 10px; box-shadow: 3px 3px 0px 0px var(--color-dark); background-color: var(--color-light-accent);"
+      );
+      el.style.maxWidth = Math.round(message.length * 0.765) + "em";
+      el.classList.add("u-block");
+      el.innerText = message;
+      body.insertBefore(el, body.childNodes[0]);
       return;
     }
     this.currentUserId().then((currentUserId) => {
