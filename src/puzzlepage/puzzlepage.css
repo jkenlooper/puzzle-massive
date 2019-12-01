@@ -1,15 +1,7 @@
 .pm-Puzzlepage {
-  background-color: var(--color-primary-dark);
-  color: var(--color-light);
 }
 
 .pm-Puzzlepage-grid {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  outline: 4px solid var(--color-primary-dark);
-  min-width: 100vw;
-  min-height: calc(100vh - var(--pm-Base-menu-height));
 }
 
 .pm-Puzzlepage-gridA {
@@ -18,68 +10,11 @@
 }
 
 .pm-Puzzlepage-gridB {
-  display: flex;
-  flex: 1 0 auto;
-  flex-wrap: wrap;
-}
-
-.pm-Puzzlepage-icon {
-  fill: currentColor;
-  stroke: black;
-  stroke-width: 1px;
-  opacity: 1;
-  z-index: 2;
-  cursor: pointer;
-  width: 20px;
-  height: 20px;
-}
-.pm-Puzzlepage-gridB1--top .pm-Puzzlepage-icon {
-}
-
-.pm-Puzzlepage-icon--small {
-}
-
-.pm-Puzzlepage-icon--background {
-  stroke: var(--color-primary-dark);
-  stroke-width: 2px;
-  stroke-linejoin: round;
-  position: absolute;
-  z-index: 1;
-}
-
-input:checked + .pm-Puzzlepage-icon {
-  opacity: 0.5;
-}
-
-.pm-Puzzlepage-actionButton {
-  position: relative;
-  outline: 0;
-  border: 0;
-  background: transparent;
-}
-
-.pm-Puzzlepage-gridB2 {
-  display: flex;
-  flex: 1 0 auto;
-  flex-direction: column;
-  align-items: stretch;
-  order: 1;
-  width: 100vw;
-  height: calc(100vh - var(--pm-Base-menu-height));
-}
-
-/* puzzle at full size */
-.pm-Puzzlepage-gridB2--full {
-  width: 100%;
-  height: auto;
 }
 
 .pm-Puzzlepage-main {
-  flex: 1 0 auto;
-  height: calc(100vh - var(--pm-Base-menu-height));
-}
-.pm-Puzzlepage-gridB2--full .pm-Puzzlepage-main {
-  height: auto;
+  min-width: 100vw;
+  min-height: 100vh;
 }
 
 .pm-Puzzlepage-previewBox {

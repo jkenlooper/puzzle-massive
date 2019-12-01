@@ -70,10 +70,6 @@ customElements.define(
       this.puzzleId = puzzleId ? puzzleId.value : "";
 
       if (!withinSlabMassive) {
-        // Not using slab-massive so we need to set the width of all parent
-        // elements so the browser can properly zoom out.
-        setParentWidth(this.$slabMassive.parentNode);
-
         // Patch in these properties from the attrs
         Object.defineProperty(this.$slabMassive, "scale", {
           get: function() {
@@ -116,16 +112,6 @@ customElements.define(
         this.onMoveBlocked.bind(this),
         this.instanceId
       );
-
-      // For all parent elements set the width
-      function setParentWidth(node) {
-        if (node.style) {
-          node.style.width = self.$slabMassive.offsetWidth + "px";
-        }
-        if (node.parentNode) {
-          setParentWidth(node.parentNode);
-        }
-      }
 
       this.$dropZone.addEventListener(
         "mousedown",
@@ -218,6 +204,8 @@ customElements.define(
 
     dropTap(ev) {
       ev.preventDefault();
+      this.slabMassiveOffsetTop = this.$slabMassive.offsetTop;
+      this.slabMassiveOffsetLeft = this.$slabMassive.offsetLeft;
       if (typeof this.draggedPieceID === "number") {
         puzzleService.unsubscribe(
           "piece/move/rejected",
@@ -237,6 +225,8 @@ customElements.define(
     }
 
     onTap(ev) {
+      this.slabMassiveOffsetTop = this.$slabMassive.offsetTop;
+      this.slabMassiveOffsetLeft = this.$slabMassive.offsetLeft;
       if (ev.target.classList.contains("p")) {
         this.draggedPiece = <HTMLElement>ev.target;
         this.draggedPieceID = parseInt(this.draggedPiece.id.substr(2));
@@ -398,9 +388,7 @@ customElements.define(
 
       if (RGBmatch) {
         let hsl = rgbToHsl(RGBmatch[1], RGBmatch[2], RGBmatch[3]);
-        this.$container.style.backgroundColor = `hsla(${hsl[0]},${hsl[1]}%,${
-          hsl[2]
-        }%,1)`;
+        this.$container.style.backgroundColor = `hsla(${hsl[0]},${hsl[1]}%,${hsl[2]}%,1)`;
 
         // let hue = hsl[0]
         // let sat = hsl[1]
