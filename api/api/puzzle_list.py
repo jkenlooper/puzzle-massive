@@ -16,17 +16,17 @@ from api.constants import (
     REBUILD,
     RENDERING,
     RENDERING_FAILED,
-    SKILL_LEVEL_RANGES
+    SKILL_LEVEL_RANGES,
 )
 
-redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
+redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
 
-STATUS_RECENT = 'recent'
-STATUS_ACTIVE = 'active'
-STATUS_IN_QUEUE = 'in_queue'
-STATUS_COMPLETE = 'complete'
-STATUS_FROZEN = 'frozen'
-STATUS_UNAVAILABLE = 'unavailable'
+STATUS_RECENT = "recent"
+STATUS_ACTIVE = "active"
+STATUS_IN_QUEUE = "in_queue"
+STATUS_COMPLETE = "complete"
+STATUS_FROZEN = "frozen"
+STATUS_UNAVAILABLE = "unavailable"
 
 STATUS = {
     STATUS_RECENT,
@@ -37,13 +37,13 @@ STATUS = {
     STATUS_UNAVAILABLE,
 }
 
-TYPE_ORIGINAL = 'original'
-TYPE_INSTANCE = 'instance'
+TYPE_ORIGINAL = "original"
+TYPE_INSTANCE = "instance"
 TYPE = {TYPE_ORIGINAL, TYPE_INSTANCE}
 
-ORDERBY_M_DATE = 'm_date'
-ORDERBY_PIECES = 'pieces'
-ORDERBY_QUEUE = 'queue'
+ORDERBY_M_DATE = "m_date"
+ORDERBY_PIECES = "pieces"
+ORDERBY_QUEUE = "queue"
 ORDERBY = {ORDERBY_M_DATE, ORDERBY_PIECES, ORDERBY_QUEUE}
 
 page_size = 44
@@ -54,8 +54,10 @@ def build_select_available_puzzle_sql(query_file, status, type):
     The sqlite bind params don't support expanding lists, so doing this
     manually.  Careful here to avoid sql injection attacks.
     """
-    recent_status = set() # include false values for is_recent
-    active_status = {0,} # include false values for is_active
+    recent_status = set()  # include false values for is_recent
+    active_status = {
+        0,
+    }  # include false values for is_active
     status_ids = set()
     for name in status:
         if name == STATUS_RECENT:
@@ -94,7 +96,6 @@ def build_select_available_puzzle_sql(query_file, status, type):
         elif name == TYPE_INSTANCE:
             original_type.add(0)
 
-
     query = fetch_query_string(query_file)
 
     query = query.format(
@@ -103,9 +104,10 @@ def build_select_available_puzzle_sql(query_file, status, type):
         active_status="({})".format(", ".join(map(str, active_status))),
         original_type="({})".format(", ".join(map(str, original_type))),
     )
-    #current_app.logger.debug(query)
+    # current_app.logger.debug(query)
 
     return query
+
 
 class PuzzleListView(MethodView):
     """
@@ -135,49 +137,53 @@ class PuzzleListView(MethodView):
 
         """
         try:
-            page = int(request.args.get('page', '1'))
-            pieces_min = int(request.args.get('pieces_min', '0'))
-            pieces_max = int(request.args.get('pieces_max', '60000'))
+            page = int(request.args.get("page", "1"))
+            pieces_min = int(request.args.get("pieces_min", "0"))
+            pieces_max = int(request.args.get("pieces_max", "60000"))
         except ValueError as err:
             abort(400)
 
-        status = set(request.args.getlist('status'))
+        status = set(request.args.getlist("status"))
         status = status.intersection(STATUS)
         status = tuple(status)
-        #current_app.logger.debug('status {}'.format(status))
+        # current_app.logger.debug('status {}'.format(status))
 
-        type = set(request.args.getlist('type'))
+        type = set(request.args.getlist("type"))
         if len(type) > 0 and not type.issubset(TYPE):
             abort(400)
         type = tuple(type)
 
-        orderby = request.args.get('orderby', ORDERBY_M_DATE)
+        orderby = request.args.get("orderby", ORDERBY_M_DATE)
         if orderby not in ORDERBY:
             abort(400)
 
         # TODO: this request is cacheable so need to check for user
-        #ip = request.headers.get('X-Real-IP')
-        #user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
+        # ip = request.headers.get('X-Real-IP')
+        # user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
 
         cur = db.cursor()
 
         total_puzzle_count = 0
         max_pieces = 0
-        result = cur.execute(fetch_query_string('select_total_available_puzzle_images.sql')).fetchall()
+        result = cur.execute(
+            fetch_query_string("select_total_available_puzzle_images.sql")
+        ).fetchall()
         if result:
             (result, col_names) = rowify(result, cur.description)
             result = result[0]
-            total_puzzle_count = result['total_puzzle_count']
-            max_pieces = result['max_pieces']
+            total_puzzle_count = result["total_puzzle_count"]
+            max_pieces = result["max_pieces"]
 
         puzzle_count = 0
-        select_available_puzzle_image_count = build_select_available_puzzle_sql('select_available_puzzle_image_count.sql', status, type)
-        #current_app.logger.debug(select_available_puzzle_image_count)
+        select_available_puzzle_image_count = build_select_available_puzzle_sql(
+            "select_available_puzzle_image_count.sql", status, type
+        )
+        # current_app.logger.debug(select_available_puzzle_image_count)
 
-        result = cur.execute(select_available_puzzle_image_count, {
-            "pieces_min": pieces_min,
-            "pieces_max": pieces_max,
-            }).fetchall()
+        result = cur.execute(
+            select_available_puzzle_image_count,
+            {"pieces_min": pieces_min, "pieces_max": pieces_max,},
+        ).fetchall()
         if result:
             puzzle_count = result[0][0]
 
@@ -186,24 +192,32 @@ class PuzzleListView(MethodView):
 
         select_available_puzzle_images = ""
         if orderby == ORDERBY_PIECES:
-            select_available_puzzle_images = build_select_available_puzzle_sql('select_available_puzzle_images--orderby-pieces.sql', status, type)
+            select_available_puzzle_images = build_select_available_puzzle_sql(
+                "select_available_puzzle_images--orderby-pieces.sql", status, type
+            )
         elif orderby == ORDERBY_QUEUE:
-            select_available_puzzle_images = build_select_available_puzzle_sql('select_available_puzzle_images--orderby-queue.sql', status, type)
-        else: # ORDERBY_M_DATE
-            select_available_puzzle_images = build_select_available_puzzle_sql('select_available_puzzle_images--orderby-m_date.sql', status, type)
+            select_available_puzzle_images = build_select_available_puzzle_sql(
+                "select_available_puzzle_images--orderby-queue.sql", status, type
+            )
+        else:  # ORDERBY_M_DATE
+            select_available_puzzle_images = build_select_available_puzzle_sql(
+                "select_available_puzzle_images--orderby-m_date.sql", status, type
+            )
 
-        result = cur.execute(select_available_puzzle_images, {
-            "pieces_min": pieces_min,
-            "pieces_max": pieces_max,
-            "page_size": page_size,
-            "offset": (page - 1) * page_size
-            }).fetchall()
+        result = cur.execute(
+            select_available_puzzle_images,
+            {
+                "pieces_min": pieces_min,
+                "pieces_max": pieces_max,
+                "page_size": page_size,
+                "offset": (page - 1) * page_size,
+            },
+        ).fetchall()
         if not result:
             puzzle_list = []
         else:
             (result, col_names) = rowify(result, cur.description)
             puzzle_list = result
-
 
         response = {
             "puzzles": puzzle_list,
@@ -236,18 +250,21 @@ class PlayerPuzzleListView(MethodView):
 
         """
 
-        ip = request.headers.get('X-Real-IP')
-        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
+        ip = request.headers.get("X-Real-IP")
+        user = int(current_app.secure_cookie.get(u"user") or user_id_from_ip(ip))
 
         cur = db.cursor()
 
         puzzle_list = []
-        result = cur.execute(fetch_query_string('select_available_player_puzzle_images.sql'), {
-            "player": user
-            }).fetchall()
+        result = cur.execute(
+            fetch_query_string("select_available_player_puzzle_images.sql"),
+            {"player": user},
+        ).fetchall()
         if result:
             (result, col_names) = rowify(result, cur.description)
-            puzzle_list = list(filter(lambda puzzle: puzzle['puzzle_id'], result)) + list(filter(lambda puzzle: not puzzle['puzzle_id'], result))
+            puzzle_list = list(
+                filter(lambda puzzle: puzzle["puzzle_id"], result)
+            ) + list(filter(lambda puzzle: not puzzle["puzzle_id"], result))
 
         response = {
             "puzzles": puzzle_list,
@@ -256,6 +273,7 @@ class PlayerPuzzleListView(MethodView):
         cur.close()
 
         return json.jsonify(response)
+
 
 class GalleryPuzzleListView(MethodView):
     """
@@ -275,23 +293,22 @@ class GalleryPuzzleListView(MethodView):
         """
 
         # The response is cacheable so need to check for user
-        #ip = request.headers.get('X-Real-IP')
-        #user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
+        # ip = request.headers.get('X-Real-IP')
+        # user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
 
         cur = db.cursor()
         puzzle_list = []
 
         for low, high in SKILL_LEVEL_RANGES:
-            result = cur.execute(fetch_query_string('select_available_puzzle_images--gallery.sql'), {
-                'pieces_min': low,
-                'pieces_max': high,
-                'count': 2
-            }).fetchall()
+            result = cur.execute(
+                fetch_query_string("select_available_puzzle_images--gallery.sql"),
+                {"pieces_min": low, "pieces_max": high, "count": 2},
+            ).fetchall()
             if result:
                 (result, col_names) = rowify(result, cur.description)
                 puzzle_list = puzzle_list + result
 
-        puzzle_list.sort(key=lambda x: x.get('seconds_from_now'))
+        puzzle_list.sort(key=lambda x: x.get("seconds_from_now") or 1)
         response = {
             "puzzles": puzzle_list,
         }

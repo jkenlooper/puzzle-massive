@@ -29,6 +29,10 @@ left outer join Attribution as a on (a.id = pf.attribution)
 left outer join License as l on (l.id = a.license)
 
 where pf.name == 'preview_full'
+    and p.permission = 0 -- PUBLIC
+    and p.status = 1 -- ACTIVE
+    and p.pieces >= :pieces_min
+    and p.pieces < :pieces_max
 
 -- Get the most active (pieces joined by the most players) puzzle in last 5 minutes or fall back on most recently updated one.
 AND p.puzzle_id in (
