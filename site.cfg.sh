@@ -137,6 +137,7 @@ THEME_SQL_FOLDER = "queries"
 # Helpful to have this set to True if you want to fix stuff.
 DEBUG=$DEBUG
 
+# Set CACHE_TYPE to "null" and DEBUG to True when developing.
 # Caching with Flask-Cache
 CACHE_NO_NULL_WARNING = True
 #CACHE_TYPE = "null"
