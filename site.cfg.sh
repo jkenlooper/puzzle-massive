@@ -137,15 +137,15 @@ THEME_SQL_FOLDER = "queries"
 # Helpful to have this set to True if you want to fix stuff.
 DEBUG=$DEBUG
 
-# Set CACHE_TYPE to "null" and DEBUG to True when developing.
-# Caching with Flask-Cache
+# Chill is set to use Flask-Cache by default.  Puzzle Massive is using a NGINX
+# cache server, so disabling Flask-Cache here by setting cache type to null.
 CACHE_NO_NULL_WARNING = True
-#CACHE_TYPE = "null"
+CACHE_TYPE = "null"
 #CACHE_TYPE = "simple"
-CACHE_TYPE = "filesystem"
-CACHE_DEFAULT_TIMEOUT = 50
-CACHE_THRESHOLD = 300
-CACHE_DIR = "${CACHEDIR}"
+#CACHE_TYPE = "filesystem"
+#CACHE_DEFAULT_TIMEOUT = 50
+#CACHE_THRESHOLD = 300
+#CACHE_DIR = "${CACHEDIR}"
 
 # For creating a stand-alone static website that you can upload without
 # requiring an app to run it. This will use Frozen-Flask.

@@ -114,7 +114,7 @@ site.cfg: site.cfg.sh $(PORTREGISTRY) $(ENV_FILE)
 	./$< $(ENVIRONMENT) $(SRVDIR) $(DATABASEDIR) $(PORTREGISTRY) $(ARCHIVEDIR) $(CACHEDIR) > $@
 
 web/puzzle-massive.conf: web/puzzle-massive.conf.sh $(PORTREGISTRY)
-	./$< $(ENVIRONMENT) $(SRVDIR) $(NGINXLOGDIR) $(PORTREGISTRY) $(INTERNALIP) > $@
+	./$< $(ENVIRONMENT) $(SRVDIR) $(NGINXLOGDIR) $(PORTREGISTRY) $(INTERNALIP) $(CACHEDIR) > $@
 
 #ifeq ($(ENVIRONMENT),production)
 ## Only create the dhparam.pem if needed.

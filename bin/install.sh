@@ -147,7 +147,7 @@ chown -R dev:dev "${ARCHIVEDIR}"
 chmod -R 770 "${ARCHIVEDIR}"
 
 mkdir -p "${CACHEDIR}"
-chown -R dev:dev "${CACHEDIR}"
+chown -R www-data:www-data "${CACHEDIR}"
 chmod -R 770 "${CACHEDIR}"
 
 mkdir -p "${SYSTEMDDIR}"
