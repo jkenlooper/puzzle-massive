@@ -16,7 +16,7 @@ from api.app import db
 from api.database import rowify, fetch_query_string
 from api.constants import POINT_COST_FOR_CHANGING_BIT, NEW_USER_STARTING_POINTS
 
-LETTERS = '%s%s' % (string.ascii_letters, string.digits)
+LETTERS = "%s%s" % (string.ascii_letters, string.digits)
 
 ANONYMOUS_USER_ID = 2
 
@@ -43,36 +43,43 @@ QUERY_USER_ID_BY_LOGIN = """
 select id from User where ip = :ip and login = :login;
 """
 
-redisConnection = redis.from_url('redis://localhost:6379/0/', decode_responses=True)
+redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
+
 
 def generate_password():
     "Create a random string for use as password. Return as cleartext and encrypted."
     timestamp = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
     random_int = random.randint(1, 99999)
-    p_string = hashlib.sha224(bytes("%s%i" % (timestamp, int(old_div(random_int,2))), 'utf-8')).hexdigest()[:13]
-    salt = '%s%s' % (random.choice(LETTERS), random.choice(LETTERS))
+    p_string = hashlib.sha224(
+        bytes("%s%i" % (timestamp, int(old_div(random_int, 2))), "utf-8")
+    ).hexdigest()[:13]
+    salt = "%s%s" % (random.choice(LETTERS), random.choice(LETTERS))
     password = crypt.crypt(p_string, salt)
 
     return (p_string, password)
+
 
 def generate_user_login():
     "Create a unique login"
     timestamp = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
     random_int = random.randint(1, 99999)
-    login = hashlib.sha224(bytes("%s%i" % (timestamp, random_int), 'utf-8')).hexdigest()[:13]
+    login = hashlib.sha224(
+        bytes("%s%i" % (timestamp, random_int), "utf-8")
+    ).hexdigest()[:13]
 
     return login
+
 
 def user_id_from_ip(ip, skip_generate=True):
     cur = db.cursor()
 
-    shareduser = current_app.secure_cookie.get(u'shareduser')
+    shareduser = current_app.secure_cookie.get(u"shareduser")
     if shareduser != None:
         # Check if this shareduser is still valid and another user hasn't chosen
         # a bit icon.
         query = """select * from User where password is null and id = :shareduser;"""
-        result = cur.execute(query, {'shareduser':shareduser}).fetchall()
+        result = cur.execute(query, {"shareduser": shareduser}).fetchall()
         if result:
             cur.close()
             return int(shareduser)
@@ -80,7 +87,7 @@ def user_id_from_ip(ip, skip_generate=True):
     # Handle players that had a cookie in their browser, but then deleted it.
     # Or new players that are from the same ip that existing players are on.
     # These players are shown the new-player page.
-    result = cur.execute(QUERY_USER_ID_BY_IP, {'ip':ip}).fetchall()
+    result = cur.execute(QUERY_USER_ID_BY_IP, {"ip": ip}).fetchall()
     user_id = ANONYMOUS_USER_ID
 
     # No ip in db so create it except if the skip_generate flag is set
@@ -90,27 +97,33 @@ def user_id_from_ip(ip, skip_generate=True):
         login = generate_user_login()
         query = """insert into User (points, score, login, m_date, ip) values
                 (:points, 0, :login, datetime('now'), :ip)"""
-        cur.execute(query, {'ip': ip, 'login': login, 'points': NEW_USER_STARTING_POINTS})
+        cur.execute(
+            query, {"ip": ip, "login": login, "points": NEW_USER_STARTING_POINTS}
+        )
         db.commit()
 
-        result = cur.execute(QUERY_USER_ID_BY_LOGIN, {'ip':ip, 'login':login}).fetchall()
+        result = cur.execute(
+            QUERY_USER_ID_BY_LOGIN, {"ip": ip, "login": login}
+        ).fetchall()
         (result, col_names) = rowify(result, cur.description)
-        user_id = result[0]['id']
+        user_id = result[0]["id"]
     else:
         (result, col_names) = rowify(result, cur.description)
-        user_id = result[0]['id']
+        user_id = result[0]["id"]
 
     cur.close()
     return user_id
 
+
 def user_not_banned(f):
     """Check if the user is not banned and respond with 429 if so"""
+
     def decorator(*args, **kwargs):
-        ip = request.headers.get('X-Real-IP')
-        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip)
+        ip = request.headers.get("X-Real-IP")
+        user = current_app.secure_cookie.get(u"user") or user_id_from_ip(ip)
         if not user == None:
             user = int(user)
-            banneduser_score = redisConnection.zscore('bannedusers', user)
+            banneduser_score = redisConnection.zscore("bannedusers", user)
             if banneduser_score:
                 now = int(time.time())
                 if banneduser_score > now:
@@ -118,35 +131,43 @@ def user_not_banned(f):
                     # bans only last for a few seconds because of recent piece
                     # movements.
                     response = ". . . please wait . . ."
-                    if 'application/json' in request.headers.get('Accept'):
-                        response = encoder.encode({
-                            'msg': response,
-                            'expires': banneduser_score,
-                            'timeout': banneduser_score - now
-                        })
+                    if "application/json" in request.headers.get("Accept"):
+                        response = encoder.encode(
+                            {
+                                "msg": response,
+                                "expires": banneduser_score,
+                                "timeout": banneduser_score - now,
+                            }
+                        )
                     return make_response(response, 429)
 
         return f(*args, **kwargs)
+
     return decorator
+
 
 def increase_ban_time(user, seconds):
     now = int(time.time())
-    current = int(redisConnection.zscore('bannedusers', user) or now)
+    current = int(redisConnection.zscore("bannedusers", user) or now)
     current = max(current, now)
     ban_timestamp = min(current + seconds, now + MAX_BAN_TIME)
-    redisConnection.zadd('bannedusers', {user: ban_timestamp})
+    redisConnection.zadd("bannedusers", {user: ban_timestamp})
     return {
-        'msg': "Temporarily banned. Ban time has increased by {} seconds".format(seconds),
-        'type': "bannedusers",
-        'user': user,
-        'expires': ban_timestamp,
-        'timeout': ban_timestamp - now
+        "msg": "Temporarily banned. Ban time has increased by {} seconds".format(
+            seconds
+        ),
+        "type": "bannedusers",
+        "user": user,
+        "expires": ban_timestamp,
+        "timeout": ban_timestamp - now,
     }
+
 
 class CurrentUserIDView(MethodView):
     """
     Current user based on secure user cookie.
     """
+
     decorators = [user_not_banned]
 
     def get(self):
@@ -156,28 +177,33 @@ class CurrentUserIDView(MethodView):
         """
         set_cookie = False
         user_has_password = False
-        user = current_app.secure_cookie.get(u'user')
+        user = current_app.secure_cookie.get(u"user")
 
         if user is None:
-            shareduser = current_app.secure_cookie.get(u'shareduser')
+            shareduser = current_app.secure_cookie.get(u"shareduser")
             if shareduser:
                 shareduser = int(shareduser)
                 cur = db.cursor()
                 query = """select * from User where password is not null and id = :shareduser;"""
-                result = cur.execute(query, {'shareduser':shareduser}).fetchall()
+                result = cur.execute(query, {"shareduser": shareduser}).fetchall()
                 if result:
                     user_has_password = True
                 cur.close()
 
-            user = user_id_from_ip(request.headers.get('X-Real-IP'), skip_generate=False)
-            if not current_app.secure_cookie.get(u'shareduser') or user_has_password:
+            user = user_id_from_ip(
+                request.headers.get("X-Real-IP"), skip_generate=False
+            )
+            if not current_app.secure_cookie.get(u"shareduser") or user_has_password:
                 set_cookie = True
         user = int(user)
 
         response = make_response(str(user), 200)
         if set_cookie:
-            current_app.secure_cookie.set(u'shareduser', str(user), response, expires_days=365)
+            current_app.secure_cookie.set(
+                u"shareduser", str(user), response, expires_days=365
+            )
         return response
+
 
 class GenerateAnonymousLogin(MethodView):
     """
@@ -185,14 +211,15 @@ class GenerateAnonymousLogin(MethodView):
     login link which the player will need to copy in order to login after the
     cookie expires.
     """
+
     decorators = [user_not_banned]
 
     def get(self):
         "Return an object to be used by the generateBitLink js call"
 
-        user = current_app.secure_cookie.get(u'user')
+        user = current_app.secure_cookie.get(u"user")
         if user is None:
-            return make_response('no user', 403)
+            return make_response("no user", 403)
         user = int(user)
 
         (p_string, password) = generate_password()
@@ -200,26 +227,28 @@ class GenerateAnonymousLogin(MethodView):
         # Store encrypted password in db
         cur = db.cursor()
         try:
-            result = cur.execute(QUERY_USER_LOGIN, {'id':user}).fetchall()
+            result = cur.execute(QUERY_USER_LOGIN, {"id": user}).fetchall()
         except IndexError:
             # user may have been added after a db rollback
-            return make_response('no user', 404)
+            return make_response("no user", 404)
 
         if not result:
-            return make_response('no user', 404)
+            return make_response("no user", 404)
 
         (result, col_names) = rowify(result, cur.description)
         user_data = result[0]
 
-        cur.execute(QUERY_SET_PASSWORD, {'id':user, 'password':password})
+        cur.execute(QUERY_SET_PASSWORD, {"id": user, "password": password})
         db.commit()
 
         cur.close()
-        data = {'bit':"".join(["", "/puzzle-api/bit/", user_data['login'], p_string])}
+        data = {"bit": "".join(["", "/puzzle-api/bit/", user_data["login"], p_string])}
         return encoder.encode(data)
+
 
 class GenerateAnonymousLoginByToken(MethodView):
     "Similar to GenerateAnonymousLogin except uses a valid reset_login_token"
+
     def post(self):
         "Return an object to be used by the generateBitLink js call"
         data = {"link": ""}
@@ -229,7 +258,7 @@ class GenerateAnonymousLoginByToken(MethodView):
             args.update(request.form.to_dict(flat=True))
 
         # check the token
-        token = args.get('token', '').strip()
+        token = args.get("token", "").strip()
         if not token:
             data["message"] = "No token."
             data["name"] = "error"
@@ -240,7 +269,9 @@ class GenerateAnonymousLoginByToken(MethodView):
         cur = db.cursor()
 
         # get user for that token
-        result = cur.execute(fetch_query_string("select-user-by-reset-login-token.sql"), {'token': token}).fetchall()
+        result = cur.execute(
+            fetch_query_string("select-user-by-reset-login-token.sql"), {"token": token}
+        ).fetchall()
         (result, col_names) = rowify(result, cur.description)
         if not result or not result[0]:
             cur.close()
@@ -249,11 +280,11 @@ class GenerateAnonymousLoginByToken(MethodView):
             return make_response(json.jsonify(data), 400)
 
         user_data = result[0]
-        user = int(user_data['user'])
+        user = int(user_data["user"])
 
         # Store encrypted password in db
         try:
-            result = cur.execute(QUERY_USER_LOGIN, {'id':user}).fetchall()
+            result = cur.execute(QUERY_USER_LOGIN, {"id": user}).fetchall()
         except IndexError:
             cur.close()
             # user may have been added after a db rollback
@@ -270,19 +301,24 @@ class GenerateAnonymousLoginByToken(MethodView):
         (result, col_names) = rowify(result, cur.description)
         user_data = result[0]
 
-        cur.execute(QUERY_SET_PASSWORD, {'id':user, 'password':password})
+        cur.execute(QUERY_SET_PASSWORD, {"id": user, "password": password})
 
         # null out the reset login token
-        cur.execute(fetch_query_string('delete-player-reset-login-token.sql'), {'user':user})
+        cur.execute(
+            fetch_query_string("delete-player-reset-login-token.sql"), {"user": user}
+        )
 
         db.commit()
 
         cur.close()
 
-        data["link"] = "".join(["", "/puzzle-api/bit/", user_data['login'], p_string])
-        data["message"] = "Login has been reset. Please follow the link shown and save it to login in again."
+        data["link"] = "".join(["", "/puzzle-api/bit/", user_data["login"], p_string])
+        data[
+            "message"
+        ] = "Login has been reset. Please follow the link shown and save it to login in again."
         data["name"] = "success"
         return make_response(json.jsonify(data), 200)
+
 
 class UserLoginView(MethodView):
     """
@@ -295,43 +331,48 @@ class UserLoginView(MethodView):
         password = anonymous_login[13:]
         cur = db.cursor()
 
-        response = make_response(redirect('/'))
+        response = make_response(redirect("/"))
 
         query = """select * from User where login = :user"""
-        result = cur.execute(query, {'user':user}).fetchall()
+        result = cur.execute(query, {"user": user}).fetchall()
 
         if not result:
-            return make_response('no user', 404)
+            return make_response("no user", 404)
 
         (result, col_names) = rowify(result, cur.description)
         user_data = result[0]
 
         expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
-        if crypt.crypt(password, user_data['password']) == user_data['password']:
-            current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
-            current_app.secure_cookie.set(u'user', str(user_data['id']), response, expires_days=365)
-            cur.execute(EXTEND_COOKIE_QUERY, {'id': user_data['id']})
+        if crypt.crypt(password, user_data["password"]) == user_data["password"]:
+            current_app.secure_cookie.set(u"shareduser", "", response, expires=expires)
+            current_app.secure_cookie.set(
+                u"user", str(user_data["id"]), response, expires_days=365
+            )
+            cur.execute(EXTEND_COOKIE_QUERY, {"id": user_data["id"]})
             db.commit()
         else:
             # Invalid anon login; delete cookie just in case it's there
-            current_app.secure_cookie.set(u'user', "", response, expires=expires)
+            current_app.secure_cookie.set(u"user", "", response, expires=expires)
 
         cur.close()
 
         return response
 
+
 class UserLogoutView(MethodView):
     """
     Deleting the user cookie will logout the user
     """
+
     decorators = [user_not_banned]
 
     def get(self):
         "Delete the cookie by setting the expires to the past."
-        response = make_response(redirect('/'))
+        # TODO: needs to proxy pass redirect up or something?
+        response = make_response(redirect("/"))
         expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
-        current_app.secure_cookie.set(u'user', "", response, expires=expires)
-        current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
+        current_app.secure_cookie.set(u"user", "", response, expires=expires)
+        current_app.secure_cookie.set(u"shareduser", "", response, expires=expires)
 
         return response
 
@@ -339,76 +380,94 @@ class UserLogoutView(MethodView):
 class UserDetailsView(MethodView):
     """
     """
+
     decorators = [user_not_banned]
 
     def get(self):
         is_shareduser = False
-        user = int(current_app.secure_cookie.get(u'user') or '0')
+        user = int(current_app.secure_cookie.get(u"user") or "0")
         if not user:
-            user = int(user_id_from_ip(request.headers.get('X-Real-IP')))
+            user = int(user_id_from_ip(request.headers.get("X-Real-IP")))
             is_shareduser = True
 
         cur = db.cursor()
 
         try:
-            result = cur.execute(fetch_query_string("select-user-details.sql"), {'id':user}).fetchall()
+            result = cur.execute(
+                fetch_query_string("select-user-details.sql"), {"id": user}
+            ).fetchall()
         except IndexError:
             # user may have been added after a db rollback
-            return make_response('no user', 404)
+            return make_response("no user", 404)
 
         if not result:
-            return make_response('no user', 404)
+            return make_response("no user", 404)
 
         (result, col_names) = rowify(result, cur.description)
         user_details = result[0]
-        user_details['isShareduser'] = is_shareduser
+        user_details["isShareduser"] = is_shareduser
 
         extend_cookie = False
-        if user_details['will_expire_cookie'] != 0:
+        if user_details["will_expire_cookie"] != 0:
             extend_cookie = True
-            cur.execute(EXTEND_COOKIE_QUERY, {'id': user_details['id']})
+            cur.execute(EXTEND_COOKIE_QUERY, {"id": user_details["id"]})
             db.commit()
-        del user_details['will_expire_cookie']
+        del user_details["will_expire_cookie"]
 
-        user_has_name = bool(user_details['name'])
+        user_has_name = bool(user_details["name"])
         if not user_has_name:
-            user_details['name'] = ''
-        if is_shareduser or not user_details['email']:
+            user_details["name"] = ""
+        if is_shareduser or not user_details["email"]:
             # email is not shown to shareduser accounts
-            user_details['email'] = ''
-        user_details['nameApproved'] = user_has_name and bool(user_details['name_approved'])
-        del user_details['name_approved']
-        user_details['nameRejected'] = user_has_name and user_details['approved_date'] == None
-        user_details['emailVerified'] = bool(user_details['email_verified'])
-        del user_details['email_verified']
+            user_details["email"] = ""
+        user_details["nameApproved"] = user_has_name and bool(
+            user_details["name_approved"]
+        )
+        del user_details["name_approved"]
+        user_details["nameRejected"] = (
+            user_has_name and user_details["approved_date"] == None
+        )
+        user_details["emailVerified"] = bool(user_details["email_verified"])
+        del user_details["email_verified"]
 
         puzzle_instance_list = []
 
-        if user_details['puzzle_instance_count'] > 0:
-            result = cur.execute(fetch_query_string("select-user-puzzle-slot-for-player.sql"), {'player':user}).fetchall()
+        if user_details["puzzle_instance_count"] > 0:
+            result = cur.execute(
+                fetch_query_string("select-user-puzzle-slot-for-player.sql"),
+                {"player": user},
+            ).fetchall()
             if result:
                 (result, col_names) = rowify(result, cur.description)
+
                 def set_urls(puzzle_instance):
-                    puzzle_id = puzzle_instance.get('puzzle_id')
+                    puzzle_id = puzzle_instance.get("puzzle_id")
                     front_url = None
                     if puzzle_id:
                         front_url = "/chill/site/front/{}/".format(puzzle_id)
 
                     return {
-                        'front_url': front_url,
-                        'src': puzzle_instance.get('src'),
+                        "front_url": front_url,
+                        "src": puzzle_instance.get("src"),
                     }
 
                 if isinstance(puzzle_instance_list, list):
                     puzzle_instance_list = list(map(set_urls, result))
 
-        user_details['puzzle_instance_list'] = puzzle_instance_list
+        user_details["puzzle_instance_list"] = puzzle_instance_list
 
         # Check if shareduser can claim bit icon as user
-        if current_app.secure_cookie.get(u'shareduser'):
-            result = cur.execute("select points from User where id = :id and points >= :startpoints + :cost;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT, 'startpoints': NEW_USER_STARTING_POINTS}).fetchone()
+        if current_app.secure_cookie.get(u"shareduser"):
+            result = cur.execute(
+                "select points from User where id = :id and points >= :startpoints + :cost;",
+                {
+                    "id": user,
+                    "cost": POINT_COST_FOR_CHANGING_BIT,
+                    "startpoints": NEW_USER_STARTING_POINTS,
+                },
+            ).fetchone()
             if result:
-                user_details['can_claim_user'] = True
+                user_details["can_claim_user"] = True
 
         cur.close()
 
@@ -416,11 +475,15 @@ class UserDetailsView(MethodView):
         response = make_response(encoder.encode(user_details), 200)
         if extend_cookie:
             # Only set user cookie if it exists
-            if current_app.secure_cookie.get(u'user'):
-                current_app.secure_cookie.set(u'user', str(user_details['id']), response, expires_days=365)
+            if current_app.secure_cookie.get(u"user"):
+                current_app.secure_cookie.set(
+                    u"user", str(user_details["id"]), response, expires_days=365
+                )
             # Only set shareduser cookie if it exists
-            if current_app.secure_cookie.get(u'shareduser'):
-                current_app.secure_cookie.set(u'shareduser', str(user_details['id']), response, expires_days=365)
+            if current_app.secure_cookie.get(u"shareduser"):
+                current_app.secure_cookie.set(
+                    u"shareduser", str(user_details["id"]), response, expires_days=365
+                )
         return response
 
 
@@ -430,37 +493,50 @@ class SplitPlayer(MethodView):
     player.  This will split that player login into another new one which the
     user calling it will then own.
     """
+
     decorators = [user_not_banned]
 
     def post(self):
         # Prevent creating a new user if no support for cookies. Player should
         # have 'ot' already set by viewing the page.
-        uses_cookies = current_app.secure_cookie.get(u'ot')
+        uses_cookies = current_app.secure_cookie.get(u"ot")
         if not uses_cookies:
-            return make_response('no cookies', 400)
+            return make_response("no cookies", 400)
 
-        ip = request.headers.get('X-Real-IP')
+        ip = request.headers.get("X-Real-IP")
         # Verify user is logged in
-        user = current_app.secure_cookie.get(u'user') or user_id_from_ip(ip, skip_generate=True)
+        user = current_app.secure_cookie.get(u"user") or user_id_from_ip(
+            ip, skip_generate=True
+        )
         if user is None:
             # remove cookies
-            response = make_response('not logged in', 400)
+            response = make_response("not logged in", 400)
             expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
-            current_app.secure_cookie.set(u'user', "", response, expires=expires)
-            current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
+            current_app.secure_cookie.set(u"user", "", response, expires=expires)
+            current_app.secure_cookie.set(u"shareduser", "", response, expires=expires)
             return response
         user = int(user)
 
-        response = make_response('', 200)
+        response = make_response("", 200)
 
         cur = db.cursor()
 
         # Update user points for changing bit icon
         # TODO: what prevents a player from creating a lot of splits?
-        result = cur.execute("select points from User where id = :id and points >= :cost + :startpoints;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT, 'startpoints': NEW_USER_STARTING_POINTS}).fetchone()
+        result = cur.execute(
+            "select points from User where id = :id and points >= :cost + :startpoints;",
+            {
+                "id": user,
+                "cost": POINT_COST_FOR_CHANGING_BIT,
+                "startpoints": NEW_USER_STARTING_POINTS,
+            },
+        ).fetchone()
         if not result:
-            return make_response('not enough dots', 400)
-        cur.execute("update User set points = points - :cost where id = :id;", {'id': user, 'cost': POINT_COST_FOR_CHANGING_BIT})
+            return make_response("not enough dots", 400)
+        cur.execute(
+            "update User set points = points - :cost where id = :id;",
+            {"id": user, "cost": POINT_COST_FOR_CHANGING_BIT},
+        )
 
         # Create new user
 
@@ -472,22 +548,33 @@ class SplitPlayer(MethodView):
         (password, m_date, cookie_expires, points, score, login, ip) values
         (:password, datetime('now'), strftime('%Y-%m-%d', 'now', '+14 days'), :points, 0, :login, :ip);
         """
-        cur.execute(query, {'password': password, 'ip': ip, 'points': NEW_USER_STARTING_POINTS, 'login': login})
+        cur.execute(
+            query,
+            {
+                "password": password,
+                "ip": ip,
+                "points": NEW_USER_STARTING_POINTS,
+                "login": login,
+            },
+        )
 
-        result = cur.execute(QUERY_USER_ID_BY_LOGIN, {'ip':ip, 'login':login}).fetchall()
+        result = cur.execute(
+            QUERY_USER_ID_BY_LOGIN, {"ip": ip, "login": login}
+        ).fetchall()
         (result, col_names) = rowify(result, cur.description)
-        newuser = result[0]['id']
+        newuser = result[0]["id"]
 
-        current_app.secure_cookie.set(u'user', str(newuser), response, expires_days=365)
+        current_app.secure_cookie.set(u"user", str(newuser), response, expires_days=365)
 
         # Remove shareduser cookie in case it exists
         expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
-        current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
+        current_app.secure_cookie.set(u"shareduser", "", response, expires=expires)
 
         db.commit()
 
         cur.close()
         return response
+
 
 class ClaimUserByTokenView(MethodView):
     """
@@ -496,6 +583,7 @@ class ClaimUserByTokenView(MethodView):
     The claim-player-by-token page will show a button that sends a POST to this view.
     The page is accessed from a link in their e-mail.
     """
+
     decorators = [user_not_banned]
 
     def post(self):
@@ -504,26 +592,26 @@ class ClaimUserByTokenView(MethodView):
 
         # Prevent creating a new user if no support for cookies. Player should
         # have 'ot' already set by viewing the page.
-        uses_cookies = current_app.secure_cookie.get(u'ot')
+        uses_cookies = current_app.secure_cookie.get(u"ot")
         if not uses_cookies:
             data["message"] = "No cookies."
             data["name"] = "error"
             return make_response(json.jsonify(data), 400)
 
         # Verify user
-        user = current_app.secure_cookie.get(u'user')
+        user = current_app.secure_cookie.get(u"user")
         is_shareduser = False
         if user == None:
             is_shareduser = True
-            user = user_id_from_ip(request.headers.get('X-Real-IP'))
+            user = user_id_from_ip(request.headers.get("X-Real-IP"))
         if user == None:
             # remove cookies
             data["message"] = "Not logged in."
             data["name"] = "error"
             response = make_response(json.jsonify(data), 400)
             expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
-            current_app.secure_cookie.set(u'user', "", response, expires=expires)
-            current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
+            current_app.secure_cookie.set(u"user", "", response, expires=expires)
+            current_app.secure_cookie.set(u"shareduser", "", response, expires=expires)
             return response
         user = int(user)
 
@@ -531,7 +619,7 @@ class ClaimUserByTokenView(MethodView):
         if request.form:
             args.update(request.form.to_dict(flat=True))
 
-        token = args.get('token', '').strip()
+        token = args.get("token", "").strip()
         if not token:
             data["message"] = "No token."
             data["name"] = "error"
@@ -539,14 +627,21 @@ class ClaimUserByTokenView(MethodView):
 
         cur = db.cursor()
 
-        result = cur.execute(fetch_query_string('user-has-player-account.sql'), {'player_id': user}).fetchone()
+        result = cur.execute(
+            fetch_query_string("user-has-player-account.sql"), {"player_id": user}
+        ).fetchone()
         if not result or result[0] == 0:
             cur.close()
-            data["message"] = "No player account for this user.  Please use the same web browser that was used when submitting the e-mail address."
+            data[
+                "message"
+            ] = "No player account for this user.  Please use the same web browser that was used when submitting the e-mail address."
             data["name"] = "error"
             return make_response(json.jsonify(data), 400)
 
-        result = cur.execute(fetch_query_string('select-player-details-for-player-id.sql'), {'player_id': user}).fetchall()
+        result = cur.execute(
+            fetch_query_string("select-player-details-for-player-id.sql"),
+            {"player_id": user},
+        ).fetchall()
         if not result:
             cur.close()
             data["message"] = "No player account."
@@ -582,26 +677,34 @@ class ClaimUserByTokenView(MethodView):
             cookie_expires = strftime('%Y-%m-%d', 'now', '+14 days')
             where ip = :ip and id = :id and password isnull;
             """
-            cur.execute(query, {'id': user, 'password': password, 'ip': request.headers.get('X-Real-IP')})
+            cur.execute(
+                query,
+                {
+                    "id": user,
+                    "password": password,
+                    "ip": request.headers.get("X-Real-IP"),
+                },
+            )
             # Save as a cookie
-            current_app.secure_cookie.set(u'user', str(user), response, expires_days=365)
+            current_app.secure_cookie.set(
+                u"user", str(user), response, expires_days=365
+            )
             # Remove shareduser
             expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
-            current_app.secure_cookie.set(u'shareduser', "", response, expires=expires)
+            current_app.secure_cookie.set(u"shareduser", "", response, expires=expires)
 
-        cur.execute(fetch_query_string('update-player-account-email-verified.sql'), {
-            'player_id': user,
-            'email_verified': 1,
-        })
-        cur.execute(fetch_query_string('make-verified-email-unique.sql'), {
-            'player_id': user,
-            'email': existing_player_data['email'],
-        })
+        cur.execute(
+            fetch_query_string("update-player-account-email-verified.sql"),
+            {"player_id": user, "email_verified": 1,},
+        )
+        cur.execute(
+            fetch_query_string("make-verified-email-unique.sql"),
+            {"player_id": user, "email": existing_player_data["email"],},
+        )
 
         cur.close()
         db.commit()
         return response
-
 
 
 class AdminBlockedPlayersList(MethodView):
@@ -612,30 +715,34 @@ class AdminBlockedPlayersList(MethodView):
             recent_points:
             puzzles: []
     """
-    def get(self):
-        blocked = {
-        }
 
-        blockedplayers = redisConnection.zrevrange('blockedplayers', 0, -1, withscores=True)
-        blockedplayers_puzzle = redisConnection.zrange('blockedplayers:puzzle', 0, -1, withscores=True)
+    def get(self):
+        blocked = {}
+
+        blockedplayers = redisConnection.zrevrange(
+            "blockedplayers", 0, -1, withscores=True
+        )
+        blockedplayers_puzzle = redisConnection.zrange(
+            "blockedplayers:puzzle", 0, -1, withscores=True
+        )
 
         # Add ip -> user -> timestamp
         for (ip_user, timestamp) in blockedplayers:
-            (ip, user) = ip_user.split('-')
+            (ip, user) = ip_user.split("-")
             if not blocked.get(ip):
                 blocked[ip] = {}
-            blocked[ip][user] = {
-                'timestamp': timestamp
-            }
+            blocked[ip][user] = {"timestamp": timestamp}
 
         # Set puzzles and recent points
         for (ip_user_puzzle, recent_points) in blockedplayers_puzzle:
-            (ip, user, puzzle) = ip_user_puzzle.split('-')
-            if not blocked[ip][user].get('puzzles'):
-                blocked[ip][user]['puzzles'] = []
-            blocked[ip][user]['puzzles'].append({'puzzle': puzzle, 'points': recent_points})
+            (ip, user, puzzle) = ip_user_puzzle.split("-")
+            if not blocked[ip][user].get("puzzles"):
+                blocked[ip][user]["puzzles"] = []
+            blocked[ip][user]["puzzles"].append(
+                {"puzzle": puzzle, "points": recent_points}
+            )
             # sorted by asc so the last will be the highest
-            blocked[ip][user]['recent_points'] = recent_points
+            blocked[ip][user]["recent_points"] = recent_points
 
         return encoder.encode(blocked)
 
@@ -645,16 +752,17 @@ class AdminBannedUserList(MethodView):
     user:
         timestamp:
     """
+
     def get(self):
         banned = {}
 
-        bannedusers = redisConnection.zrevrangebyscore('bannedusers', '+inf', int(time.time()), withscores=True)
+        bannedusers = redisConnection.zrevrangebyscore(
+            "bannedusers", "+inf", int(time.time()), withscores=True
+        )
 
         # Add user -> timestamp
         for (user, timestamp) in bannedusers:
-            banned[user] = {
-                'timestamp': timestamp
-            }
+            banned[user] = {"timestamp": timestamp}
 
         return encoder.encode(banned)
 
@@ -662,29 +770,31 @@ class AdminBannedUserList(MethodView):
         "Cleanup banned users"
 
         # clean up old banned users if any
-        old_bannedusers_count = redisConnection.zremrangebyscore('bannedusers', 0, now)
+        old_bannedusers_count = redisConnection.zremrangebyscore("bannedusers", 0, now)
         return old_bannedusers_count
+
 
 class BanishSelf(MethodView):
     """
     Adds the ip and user id for the user calling it to the bannedusers list with
     the timestamp of when the ban will be lifted.
     """
+
     decorators = [user_not_banned]
     response_text = "Press any key to continue . . ."
 
     def get(self):
         "The url for this is listed in robots.txt under a Disallow"
-        ip = request.headers.get('X-Real-IP')
-        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
+        ip = request.headers.get("X-Real-IP")
+        user = int(current_app.secure_cookie.get(u"user") or user_id_from_ip(ip))
         increase_ban_time(user, HONEY_POT_BAN_TIME)
 
         return make_response(self.response_text, 201)
 
     def post(self):
         "User filled out and submitted the hidden form.  Most likely a spam bot."
-        ip = request.headers.get('X-Real-IP')
-        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(ip))
+        ip = request.headers.get("X-Real-IP")
+        user = int(current_app.secure_cookie.get(u"user") or user_id_from_ip(ip))
 
         increase_ban_time(user, HONEY_POT_BAN_TIME)
         return make_response(self.response_text, 201)
