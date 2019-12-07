@@ -22,6 +22,7 @@ import '../total-active-player-count'
 import '../cta-link'
 import '../player-bit'
 import '../response-message'
+import '../site-wide-message'
 
 import '../frontpage'
 import '../profilepage'
