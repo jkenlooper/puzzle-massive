@@ -78,6 +78,9 @@ map \$request_uri \$cache_expire {
   ~/theme/.*?/.* 1y;
   ~/media/.* 1M;
   ~/resources/.* 1M;
+  /humans.txt 1d;
+  /robots.txt 1d;
+  /puzzle-massive-logo-600.png 1M;
   /newapi/gallery-puzzle-list/ 1m;
   /newapi/puzzle-list/ 1m;
 }
@@ -108,6 +111,19 @@ server {
 
   # temporary redirect player profile page
   rewrite ^/chill/site/player/[^/]+/\$ /chill/site/player/ redirect;
+
+  # Ignore query params so they are not part of the cache.
+  rewrite ^/(media/.*)\$ /\$1? last;
+  rewrite ^/(resources/.*)\$ /\$1? last;
+  # Matches root files: /humans.txt, /robots.txt, /puzzle-massive-logo-600.png
+  rewrite ^/([^/]+)(\.txt|\.png)\$ /\$1\$2? last;
+HERE
+if test "${ENVIRONMENT}" != 'development'; then
+cat <<HERE
+  rewrite ^/(theme/.*)\$ /\$1? last;
+HERE
+fi
+cat <<HERE
 
   location / {
     rewrite ^/\$ /chill/site/front/ last;
@@ -273,6 +289,8 @@ cat <<HERE
 
   # Serve any static files at ${SRVDIR}root/*
   location / {
+    expires \$cache_expire;
+    add_header Cache-Control "public";
     try_files \$uri \$uri =404;
   }
 
@@ -292,7 +310,7 @@ cat <<HERE
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     proxy_pass http://localhost:${PORTAPI};
-    proxy_redirect http://localhost:${PORTAPI}/ /;
+    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
 
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
@@ -305,7 +323,7 @@ cat <<HERE
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTAPI}/ /;
+    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
     proxy_pass http://localhost:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
@@ -317,7 +335,7 @@ cat <<HERE
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTAPI}/ /;
+    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
     proxy_pass http://localhost:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
@@ -329,7 +347,7 @@ cat <<HERE
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTAPI}/ /;
+    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
     proxy_pass http://localhost:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
@@ -346,7 +364,7 @@ cat <<HERE
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTAPI}/ /;
+    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
     proxy_pass http://localhost:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
@@ -382,7 +400,7 @@ cat <<HERE
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTAPI}/ /;
+    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
     proxy_pass http://localhost:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
@@ -402,7 +420,7 @@ cat <<HERE
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTAPI}/ /;
+    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
     proxy_pass http://localhost:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
@@ -443,9 +461,14 @@ cat <<HERE
 
 
   location /chill/ {
+    # Location for /chill/theme/* /chill/media/* and others
+    # Note that in development the /chill/theme/ and /chill/media/ are used, but
+    # in production they are
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    expires \$cache_expire;
+    add_header Cache-Control "public";
 
     proxy_pass http://localhost:${PORTCHILL};
     rewrite ^/chill/(.*)\$  /\$1 break;
@@ -530,8 +553,6 @@ cat <<HEREBEDEVELOPMENT
   }
 
   location /media/ {
-    expires \$cache_expire;
-    add_header Cache-Control "public";
     rewrite ^/media/(.*)\$  /chill/media/\$1;
   }
 HEREBEDEVELOPMENT
