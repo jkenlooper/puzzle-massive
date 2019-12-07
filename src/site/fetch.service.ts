@@ -5,6 +5,21 @@ class FetchService {
     this.url = url;
   }
 
+  getText(): Promise<string> {
+    return fetch(this.url, {
+      method: "GET",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "text/html",
+      },
+    }).then((response: Response) => {
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+      return response.text();
+    });
+  }
+
   get<T>(): Promise<T> {
     return fetch(this.url, {
       method: "GET",

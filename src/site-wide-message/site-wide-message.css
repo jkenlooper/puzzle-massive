@@ -1,8 +1,8 @@
 /* site wide message */
 .pm-SiteWideMessage {
   max-width: 40em;
-  font-size: 1.3em;
-  font-weight: bold;
+  max-height: 100px;
+  overflow: auto;
   border: 1px solid var(--color-accent);
   margin: 1em;
   padding: 10px;

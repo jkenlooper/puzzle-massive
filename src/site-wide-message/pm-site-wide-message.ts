@@ -1,4 +1,7 @@
 import { html, render } from "lit-html";
+import { unsafeHTML } from "lit-html/directives/unsafe-html.js";
+
+import FetchService from "../site/fetch.service";
 
 import "./site-wide-message.css";
 
@@ -13,9 +16,18 @@ customElements.define(
   tag,
   class PmSiteWideMessage extends HTMLElement {
     // TODO: get message from /newapi/message/
-    private message = "This is a test.";
+    private message = "";
     constructor() {
       super();
+      const messageService = new FetchService("/newapi/message/");
+      messageService
+        .getText()
+        .then((message) => {
+          this.message = message;
+        })
+        .finally(() => {
+          this.render();
+        });
     }
 
     template(data: TemplateData) {
@@ -24,7 +36,7 @@ customElements.define(
       }
       return html`
         <p class="pm-SiteWideMessage">
-          ${data.message}
+          ${unsafeHTML(data.message)}
         </p>
       `;
     }
