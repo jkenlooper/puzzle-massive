@@ -20,11 +20,6 @@ value:
       chill_value: _select-high-scores.sql
 
 --- !ChillNode
-name: player_ranks
-route: /api/player-ranks/
-value: _select-player-ranks.sql
-
---- !ChillNode
 name: puzzleuploadpage
 route: /new-puzzle/<contributor>/
 template: puzzleuploadpage.html
@@ -50,16 +45,6 @@ value:
 name: profilepage
 route: /player/
 template: profilepage.html
-value:
-  puzzles: _select-puzzles-for-profile.sql
-
-# TODO: drop /player/<login>/ route
---- !ChillNode
-name: profilepage
-route: /player/<login>/
-template: profilepage.html
-value:
-  puzzles: _select-puzzles-for-profile.sql
 
 --- !ChillNode
 name: biticonspartial

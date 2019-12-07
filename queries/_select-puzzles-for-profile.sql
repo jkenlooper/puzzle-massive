@@ -1,2 +1,0 @@
--- Deprecated.
-select 0;
