@@ -88,8 +88,8 @@ mkdir -p "${NGINXDIR}sites-available"
 rsync --inplace \
   --checksum \
   --itemize-changes \
-  web/default.conf web/puzzle-massive.conf "${NGINXDIR}sites-available/";
-echo rsynced web/default.conf web/puzzle-massive.conf to "${NGINXDIR}sites-available/";
+  web/default.conf web/puzzle-massive.conf web/puzzle-massive--down.conf "${NGINXDIR}sites-available/";
+echo rsynced web/default.conf web/puzzle-massive.conf web/puzzle-massive--down.conf to "${NGINXDIR}sites-available/";
 
 mkdir -p "${NGINXDIR}sites-enabled";
 ln -sf "${NGINXDIR}sites-available/default.conf" "${NGINXDIR}sites-enabled/default.conf";

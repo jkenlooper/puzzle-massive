@@ -176,6 +176,10 @@ cat <<HERE
     proxy_pass http://localhost:${PORTORIGIN};
   }
 
+  location /newapi/message/ {
+    rewrite ^/.* /puzzle-massive-message.html break;
+  }
+
   location /divulge/ {
     proxy_pass_header Server;
     proxy_set_header X-Real-IP  \$remote_addr;

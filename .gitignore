@@ -5,6 +5,7 @@
 /site.cfg
 /frozen.tar.gz
 /web/puzzle-massive.conf
+/web/puzzle-massive--down.conf
 /stats/awstats.puzzle.massive.xyz.conf
 /stats/awstats-puzzle-massive-crontab
 /chill/puzzle-massive-chill.service

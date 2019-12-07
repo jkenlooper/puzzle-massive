@@ -54,3 +54,4 @@ stats/awstats.puzzle.massive.xyz.conf.sh
 templates
 web/default.conf
 web/puzzle-massive.conf.sh
+web/puzzle-massive--down.conf.sh

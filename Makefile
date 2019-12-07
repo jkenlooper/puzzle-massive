@@ -53,7 +53,7 @@ endif
 # Use $* to get the stem
 FORCE:
 
-objects := site.cfg web/puzzle-massive.conf stats/awstats.puzzle.massive.xyz.conf stats/awstats-puzzle-massive-crontab
+objects := site.cfg web/puzzle-massive.conf web/puzzle-massive--down.conf stats/awstats.puzzle.massive.xyz.conf stats/awstats-puzzle-massive-crontab
 
 
 #####
@@ -114,6 +114,8 @@ site.cfg: site.cfg.sh $(PORTREGISTRY) $(ENV_FILE)
 	./$< $(ENVIRONMENT) $(SRVDIR) $(DATABASEDIR) $(PORTREGISTRY) $(ARCHIVEDIR) $(CACHEDIR) > $@
 
 web/puzzle-massive.conf: web/puzzle-massive.conf.sh $(PORTREGISTRY)
+	./$< $(ENVIRONMENT) $(SRVDIR) $(NGINXLOGDIR) $(PORTREGISTRY) $(INTERNALIP) $(CACHEDIR) > $@
+web/puzzle-massive--down.conf: web/puzzle-massive--down.conf.sh $(PORTREGISTRY)
 	./$< $(ENVIRONMENT) $(SRVDIR) $(NGINXLOGDIR) $(PORTREGISTRY) $(INTERNALIP) $(CACHEDIR) > $@
 
 #ifeq ($(ENVIRONMENT),production)
