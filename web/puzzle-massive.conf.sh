@@ -30,6 +30,7 @@ limit_req_zone \$binary_remote_addr zone=chill_puzzle_limit_per_ip:1m rate=30r/m
 # 10 requests a second = 100ms
 limit_req_zone \$binary_remote_addr zone=chill_site_internal_limit:1m rate=10r/s;
 
+proxy_headers_hash_bucket_size 2048;
 
 server {
   # Redirect for old hosts
@@ -64,6 +65,23 @@ map \$request_uri \$hotlinking_policy {
   default \$invalid_referer;
 }
 
+map \$request_uri \$cache_expire {
+  default off;
+  ~/chill/site/internal/.* 60m;
+  ~/chill/site/claim-player/.* off;
+  ~/chill/site/reset-login/.* off;
+  ~/chill/site/bit-icons/.* 1y;
+  ~/chill/site/puzzle/.* off;
+  ~/chill/site/front/.* 1m;
+  ~/chill/site/api/.* 1m;
+  ~/chill/site/.* 60m;
+  ~/theme/.*?/.* 1y;
+  ~/media/.* 1M;
+  ~/resources/.* 1M;
+  /newapi/gallery-puzzle-list/ 1m;
+  /newapi/puzzle-list/ 1m;
+}
+
 # Cache server
 proxy_cache_path ${CACHEDIR} keys_zone=pm_cache_zone:10m inactive=600m;
 server {
@@ -88,6 +106,8 @@ server {
   # redirect old puzzle queues
   rewrite ^/chill/site/queue/(.*)\$ /chill/site/puzzle-list/ permanent;
 
+  # temporary redirect player profile page
+  rewrite ^/chill/site/player/[^/]+/\$ /chill/site/player/ redirect;
 
   location / {
     rewrite ^/\$ /chill/site/front/ last;
@@ -272,6 +292,8 @@ cat <<HERE
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     proxy_pass http://localhost:${PORTAPI};
+    proxy_redirect http://localhost:${PORTAPI}/ /;
+
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
@@ -283,6 +305,7 @@ cat <<HERE
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_redirect http://localhost:${PORTAPI}/ /;
     proxy_pass http://localhost:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
@@ -294,23 +317,25 @@ cat <<HERE
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_redirect http://localhost:${PORTAPI}/ /;
     proxy_pass http://localhost:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
   location /newapi/gallery-puzzle-list/ {
-    expires 1m;
+    expires \$cache_expire;
     add_header Cache-Control "public";
 
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_redirect http://localhost:${PORTAPI}/ /;
     proxy_pass http://localhost:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
   location /newapi/puzzle-list/ {
-    expires 1m;
+    expires \$cache_expire;
     add_header Cache-Control "public";
 
     # Prevent too many puzzle list queries at once.
@@ -321,6 +346,7 @@ cat <<HERE
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_redirect http://localhost:${PORTAPI}/ /;
     proxy_pass http://localhost:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
@@ -356,6 +382,7 @@ cat <<HERE
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_redirect http://localhost:${PORTAPI}/ /;
     proxy_pass http://localhost:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
@@ -375,25 +402,13 @@ cat <<HERE
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_redirect http://localhost:${PORTAPI}/ /;
     proxy_pass http://localhost:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
-  #TODO: verify anonymous bit login works
-  #location ~* ^/newapi/user-login/.*/ {
-  #  # For just this url; don't restrict by referrers
-  #  proxy_pass_header Server;
-  #  proxy_set_header Host \$http_host;
-  #  proxy_set_header  X-Real-IP  \$remote_addr;
-  #  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-  #  proxy_redirect off;
-  #  proxy_pass http://localhost:${PORTAPI};
-
-  #  rewrite ^/newapi/(.*)\$  /\$1 break;
-  #}
-
-
   location ~* ^/chill/site/puzzle/.*\$ {
+    expires \$cache_expire;
 
     # Allow loading up to 15 puzzles with each request being delayed by
     # 2 seconds.
@@ -405,11 +420,7 @@ cat <<HERE
 
     proxy_pass http://localhost:${PORTCHILL};
 
-    # Redirect players without a user or shareduser cookie to the new-player page
-    if (\$http_cookie ~* "(user|shareduser)=([^;]+)(?:;|\$)") {
-      rewrite ^/chill/(.*)\$  /\$1 break;
-    }
-    rewrite ^/chill/(.*)\$  /chill/site/new-player/?next=/chill/\$1 redirect;
+    rewrite ^/chill/(.*)\$  /\$1 break;
   }
 
   location /chill/site/internal/ {
@@ -425,7 +436,7 @@ cat <<HERE
 
     proxy_pass http://localhost:${PORTCHILL};
 
-    expires 60m;
+    expires \$cache_expire;
     add_header Cache-Control "public";
     rewrite ^/chill/(.*)\$  /\$1 break;
   }
@@ -448,7 +459,7 @@ cat <<HERE
     ## Prevent others from skipping cache
     #proxy_set_header Chill-Skip-Cache "";
 
-    expires 1m;
+    expires \$cache_expire;
     add_header Cache-Control "public";
 
     proxy_pass http://localhost:${PORTCHILL};
@@ -461,7 +472,7 @@ cat <<HERE
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
 
-    expires 10m;
+    expires \$cache_expire;
     add_header Cache-Control "public";
 
     proxy_pass http://localhost:${PORTCHILL};
@@ -499,13 +510,13 @@ HERE
 if test "${ENVIRONMENT}" != 'development'; then
 cat <<HEREBEPRODUCTION
   location ~* ^/theme/.*?/(.*)\$ {
-    expires 1y;
+    expires \$cache_expire;
     add_header Cache-Control "public";
     alias ${SRVDIR}dist/\$1;
   }
 
   location /media/ {
-    expires 1y;
+    expires \$cache_expire;
     add_header Cache-Control "public";
     root ${SRVDIR};
   }
@@ -519,7 +530,7 @@ cat <<HEREBEDEVELOPMENT
   }
 
   location /media/ {
-    expires 1y;
+    expires \$cache_expire;
     add_header Cache-Control "public";
     rewrite ^/media/(.*)\$  /chill/media/\$1;
   }
@@ -528,18 +539,18 @@ fi
 cat <<HERE
 
   location /media/bit-icons/ {
-    expires 1M;
+    expires \$cache_expire;
     add_header Cache-Control "public";
     root ${SRVDIR};
   }
 
   location ~* ^/resources/.*/(scale-100/raster.png|scale-100/raster.css|pzz.css|pieces.png)\$ {
-    expires 1M;
+    expires \$cache_expire;
     add_header Cache-Control "public";
     root ${SRVDIR};
   }
   location ~* ^/resources/.*/(preview_full.jpg)\$ {
-    expires 1M;
+    expires \$cache_expire;
     add_header Cache-Control "public";
     root ${SRVDIR};
   }
