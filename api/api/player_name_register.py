@@ -7,7 +7,7 @@ from api.app import db
 from api.database import rowify, fetch_query_string, delete_puzzle_resources
 from api.user import user_id_from_ip, user_not_banned
 from api.constants import USER_NAME_MAXLENGTH
-from api.tools import normalize_name_from_display_name
+from api.tools import normalize_name_from_display_name, purge_route_from_nginx_cache
 
 POINT_COST_FOR_CHANGING_NAME = 100
 
@@ -36,6 +36,12 @@ class AdminPlayerNameRegisterView(MethodView):
         if not isinstance(name_register_ids, list):
             name_register_ids = [name_register_ids]
 
+        name_register_users = request.form.getlist("name_register_user")
+        if len(name_register_users) == 0:
+            abort(400)
+        if not isinstance(name_register_users, list):
+            name_register_users = [name_register_users]
+
         cur = db.cursor()
 
         if action == "reject":
@@ -51,6 +57,14 @@ class AdminPlayerNameRegisterView(MethodView):
 
         db.commit()
         cur.close()
+
+        routes_to_purge = []
+        for user in name_register_users:
+            routes_to_purge.append("/chill/site/internal/player-bit/{}/".format(user))
+        purge_route_from_nginx_cache(
+            "\n".join(routes_to_purge), current_app.config.get("PURGEURLLIST"),
+        )
+
         return redirect("/chill/site/admin/name-register-review/")
 
 
@@ -197,5 +211,10 @@ class PlayerNameRegisterView(MethodView):
 
         db.commit()
         cur.close()
-        # TODO: purge the player-bit from cache
+
+        purge_route_from_nginx_cache(
+            "/chill/site/internal/player-bit/{}/".format(user),
+            current_app.config.get("PURGEURLLIST"),
+        )
+
         return make_response(json.jsonify(response), 202)

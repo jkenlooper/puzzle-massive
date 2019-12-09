@@ -28,6 +28,7 @@ NGINXLOGDIR := $(PREFIXDIR)/var/log/nginx/puzzle-massive/
 AWSTATSLOGDIR := $(PREFIXDIR)/var/log/awstats/puzzle-massive/
 ARCHIVEDIR := $(PREFIXDIR)/var/lib/puzzle-massive/archive/
 CACHEDIR := $(PREFIXDIR)/var/lib/puzzle-massive/cache/
+PURGEURLLIST := $(PREFIXDIR)/var/lib/puzzle-massive/nginx/urls-to-purge.txt
 
 # Set the internal ip which is used to secure access to admin/ pages.
 INTERNALIP := $(shell hostname -I | cut -d' ' -f1)
@@ -110,8 +111,15 @@ objects += divulger/puzzle-massive-divulger.service
 divulger/puzzle-massive-divulger.service: divulger/puzzle-massive-divulger.service.sh
 	./$< $(project_dir) > $@
 
+objects += api/puzzle-massive-cache-purge.path
+api/puzzle-massive-cache-purge.path: api/puzzle-massive-cache-purge.path.sh
+	./$< $(PURGEURLLIST) > $@
+objects += api/puzzle-massive-cache-purge.service
+api/puzzle-massive-cache-purge.service: api/puzzle-massive-cache-purge.service.sh
+	./$< $(PORTREGISTRY) $(CACHEDIR) $(project_dir) $(PURGEURLLIST) > $@
+
 site.cfg: site.cfg.sh $(PORTREGISTRY) $(ENV_FILE)
-	./$< $(ENVIRONMENT) $(SRVDIR) $(DATABASEDIR) $(PORTREGISTRY) $(ARCHIVEDIR) $(CACHEDIR) > $@
+	./$< $(ENVIRONMENT) $(SRVDIR) $(DATABASEDIR) $(PORTREGISTRY) $(ARCHIVEDIR) $(CACHEDIR) $(PURGEURLLIST) > $@
 
 web/puzzle-massive.conf: web/puzzle-massive.conf.sh $(PORTREGISTRY)
 	./$< $(ENVIRONMENT) $(SRVDIR) $(NGINXLOGDIR) $(PORTREGISTRY) $(INTERNALIP) $(CACHEDIR) > $@
@@ -141,7 +149,7 @@ all: bin/chill bin/puzzle-massive-api bin/puzzle-massive-divulger $(objects)
 
 .PHONY: install
 install:
-	./bin/install.sh $(ENVIRONMENT) $(SRVDIR) $(NGINXDIR) $(NGINXLOGDIR) $(AWSTATSLOGDIR) $(SYSTEMDDIR) $(DATABASEDIR) $(ARCHIVEDIR) $(CACHEDIR)
+	./bin/install.sh $(ENVIRONMENT) $(SRVDIR) $(NGINXDIR) $(NGINXLOGDIR) $(AWSTATSLOGDIR) $(SYSTEMDDIR) $(DATABASEDIR) $(ARCHIVEDIR) $(CACHEDIR) $(PURGEURLLIST)
 
 # Remove any created files in the src directory which were created by the
 # `make all` recipe.
@@ -156,7 +164,7 @@ clean:
 # Will also remove the sqlite database file.
 .PHONY: uninstall
 uninstall:
-	./bin/uninstall.sh $(SRVDIR) $(NGINXDIR) $(SYSTEMDDIR) $(DATABASEDIR) $(ARCHIVEDIR) $(CACHEDIR)
+	./bin/uninstall.sh $(SRVDIR) $(NGINXDIR) $(SYSTEMDDIR) $(DATABASEDIR) $(ARCHIVEDIR) $(CACHEDIR) $(PURGEURLLIST)
 
 .PHONY: dist
 dist: puzzle-massive-$(TAG).tar.gz

@@ -8,6 +8,7 @@ DATABASEDIR=$3
 PORTREGISTRY=$4
 ARCHIVEDIR=$5
 CACHEDIR=$6
+PURGEURLLIST=$7
 
 # shellcheck source=/dev/null
 source "$PORTREGISTRY"
@@ -18,6 +19,8 @@ source .env
 # requires them. Uncomment this line as well as the EXAMPLE_PUBLIC_KEY below.
 #source ".env"
 
+DATE=$(date)
+
 if test "$ENVIRONMENT" == 'development'; then
   DEBUG=True
 else
@@ -25,6 +28,8 @@ else
 fi
 
 cat <<HERE
+# File generated from $0
+# on ${DATE}
 
 # The site.cfg file is used to configure a flask app.  Refer to the flask
 # documentation for other configurations.  The below are used specifically by
@@ -146,6 +151,8 @@ CACHE_TYPE = "null"
 #CACHE_DEFAULT_TIMEOUT = 50
 #CACHE_THRESHOLD = 300
 #CACHE_DIR = "${CACHEDIR}"
+
+PURGEURLLIST = "${PURGEURLLIST}"
 
 # For creating a stand-alone static website that you can upload without
 # requiring an app to run it. This will use Frozen-Flask.

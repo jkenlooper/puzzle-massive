@@ -30,6 +30,9 @@ ARCHIVEDIR=$8
 # /var/lib/puzzle-massive/cache/
 CACHEDIR=$9
 
+# /var/lib/puzzle-massive/urls-to-purge.txt
+PURGEURLLIST=${10}
+
 mkdir -p "${SRVDIR}root/";
 chown -R dev:dev "${SRVDIR}root/";
 rsync --archive \
@@ -150,6 +153,11 @@ mkdir -p "${CACHEDIR}"
 chown -R www-data:www-data "${CACHEDIR}"
 chmod -R 770 "${CACHEDIR}"
 
+mkdir -p $(dirname ${PURGEURLLIST})
+chown dev:www-data -R $(dirname ${PURGEURLLIST})
+chmod 0770 $(dirname ${PURGEURLLIST})
+touch ${PURGEURLLIST}
+
 mkdir -p "${SYSTEMDDIR}"
 cp chill/puzzle-massive-chill.service "${SYSTEMDDIR}"
 systemctl start puzzle-massive-chill || echo "can't start service"
@@ -174,3 +182,10 @@ systemctl enable puzzle-massive-divulger || echo "can't enable service"
 cp api/puzzle-massive-scheduler.service "${SYSTEMDDIR}"
 systemctl start puzzle-massive-scheduler || echo "can't start service"
 systemctl enable puzzle-massive-scheduler || echo "can't enable service"
+
+cp api/puzzle-massive-cache-purge.path "${SYSTEMDDIR}"
+cp api/puzzle-massive-cache-purge.service "${SYSTEMDDIR}"
+systemctl start puzzle-massive-cache-purge.path || echo "can't start service"
+systemctl enable puzzle-massive-cache-purge.path || echo "can't enable service"
+systemctl start puzzle-massive-cache-purge.service || echo "can't start service"
+systemctl enable puzzle-massive-cache-purge.service || echo "can't enable service"

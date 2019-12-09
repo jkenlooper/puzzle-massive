@@ -15,7 +15,13 @@ source "$PORTREGISTRY"
 # shellcheck source=/dev/null
 source .env
 
+DATE=$(date)
+
+DEBUG=$(./bin/site-cfg.py site.cfg DEBUG || echo 'False')
+
 cat <<HERE
+# File generated from $0
+# on ${DATE}
 
 limit_conn_zone \$binary_remote_addr zone=addr:1m;
 limit_req_zone \$binary_remote_addr zone=piece_move_limit_per_ip:1m rate=60r/m;
@@ -67,6 +73,16 @@ map \$request_uri \$hotlinking_policy {
 
 map \$request_uri \$cache_expire {
   default off;
+HERE
+if test "${DEBUG}" = 'True'; then
+cat <<HERE
+  # DEBUG=True means that cache on /chill/site/* is off.
+  ~/chill/site/.* -1;
+  ~/theme/.*?/.* -1;
+  # Any below matches for chill/site/ and theme/ are ignored.
+HERE
+fi
+cat <<HERE
   ~/chill/site/internal/.* 60m;
   ~/chill/site/claim-player/.* off;
   ~/chill/site/reset-login/.* off;
@@ -86,7 +102,8 @@ map \$request_uri \$cache_expire {
 }
 
 # Cache server
-proxy_cache_path ${CACHEDIR} keys_zone=pm_cache_zone:10m inactive=600m;
+# Manually purge files in cache with the script ./bin/purge_nginx_cache_file.sh
+proxy_cache_path ${CACHEDIR} levels=1:2 keys_zone=pm_cache_zone:10m inactive=600m use_temp_path=off;
 server {
   listen      80;
   root ${SRVDIR}root;
@@ -467,7 +484,7 @@ cat <<HERE
   location /chill/ {
     # Location for /chill/theme/* /chill/media/* and others
     # Note that in development the /chill/theme/ and /chill/media/ are used, but
-    # in production they are
+    # in production they argghhhhgghhhihfhghffhgghh.
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;

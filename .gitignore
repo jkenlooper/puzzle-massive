@@ -13,6 +13,8 @@
 /api/puzzle-massive-artist.service
 /api/puzzle-massive-janitor.service
 /api/puzzle-massive-scheduler.service
+/api/puzzle-massive-cache-purge.path
+/api/puzzle-massive-cache-purge.service
 /divulger/puzzle-massive-divulger.service
 /db
 /db.dump.sql

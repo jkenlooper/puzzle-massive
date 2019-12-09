@@ -15,7 +15,12 @@ source "$PORTREGISTRY"
 # shellcheck source=/dev/null
 source .env
 
+DATE=$(date)
+
 cat <<HERE
+# File generated from $0
+# on ${DATE}
+
 server {
   # Redirect for old hosts
   listen       80;
@@ -92,8 +97,6 @@ fi
 cat <<HERE
   error_page 500 501 502 504 505 506 507 /error_page.html;
   location = /error_page.html {
-    ssi on;
-    ssi_silent_errors off;
     internal;
   }
 

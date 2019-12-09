@@ -23,6 +23,9 @@ ARCHIVEDIR=$5
 # /var/lib/puzzle-massive/cache/
 CACHEDIR=$6
 
+# /var/lib/puzzle-massive/urls-to-purge.txt
+PURGEURLLIST=${10}
+
 rm -rf ${SRVDIR}root/!(.well-known|.|..)
 
 rm -rf "${SRVDIR}frozen/"
@@ -60,6 +63,13 @@ systemctl stop puzzle-massive-scheduler
 systemctl disable puzzle-massive-scheduler
 rm -f "${SYSTEMDDIR}puzzle-massive-scheduler.service";
 
+rm -f "${SYSTEMDDIR}puzzle-massive-cache-purge.service";
+rm -f "${SYSTEMDDIR}puzzle-massive-cache-purge.path";
+systemctl stop puzzle-massive-cache-purge.service
+systemctl disable puzzle-massive-cache-purge.service
+systemctl stop puzzle-massive-cache-purge.path
+systemctl disable puzzle-massive-cache-purge.path
+
 # TODO: Should it remove the database file in an uninstall?
 echo "Skipping removal of sqlite database file ${DATABASEDIR}db"
 #rm -f "${DATABASEDIR}db"
@@ -67,5 +77,7 @@ echo "Skipping removal of sqlite database file ${DATABASEDIR}db"
 rm -rf "${ARCHIVEDIR}"
 
 rm -rf "${CACHEDIR}"
+
+rm -f "${PURGEURLLIST}"
 
 exit

@@ -9,6 +9,8 @@ api/puzzle-massive-api.service.sh
 api/puzzle-massive-artist.service.sh
 api/puzzle-massive-janitor.service.sh
 api/puzzle-massive-scheduler.service.sh
+api/puzzle-massive-cache-purge.path.sh
+api/puzzle-massive-cache-purge.service.sh
 api/requirements.txt
 api/setup.py
 bin/backup-db.sh
@@ -20,6 +22,7 @@ bin/log.sh
 bin/provision-build.sh
 bin/provision-certbot.sh
 bin/provision-local.sh
+bin/purge_nginx_cache_file.sh
 bin/puzzlectl.sh*
 bin/resize-bit-icons.sh
 bin/setup.sh
