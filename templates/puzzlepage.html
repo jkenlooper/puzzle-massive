@@ -163,16 +163,9 @@
         {% endif %}
 
         {% if scale != 0 %}
-        <a href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(puzzle.puzzle_id), scale=null) }}" title="View puzzle as actual size.">
-          <pm-icon size="sm" class="u-block">minimize-sprite</pm-icon>
-        </a>
           <label for="puzzlepage-description-toggle" title="Toggle puzzle information and credit at bottom of page.">
             <pm-icon size="sm" class="u-block">info-circle-sprite</pm-icon>
           </label>
-        {% else %}
-        <a href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(puzzle.puzzle_id), scale=1) }}" title="View the whole puzzle scaled to fit your screen.">
-          <pm-icon size="sm" class="u-block">full-screen-sprite</pm-icon>
-        </a>
         {% endif %}
 
         <pm-karma-status></pm-karma-status>
