@@ -409,6 +409,7 @@ cat <<HERE
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     proxy_pass http://localhost:${PORTAPI};
+    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
@@ -456,6 +457,7 @@ cat <<HERE
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_redirect http://localhost:${PORTCHILL}/ http://\$host/;
 
     proxy_pass http://localhost:${PORTCHILL};
 
@@ -472,6 +474,7 @@ cat <<HERE
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_redirect http://localhost:${PORTCHILL}/ http://\$host/;
 
     proxy_pass http://localhost:${PORTCHILL};
 
@@ -490,6 +493,7 @@ cat <<HERE
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     expires \$cache_expire;
     add_header Cache-Control "public";
+    proxy_redirect http://localhost:${PORTCHILL}/ http://\$host/;
 
     proxy_pass http://localhost:${PORTCHILL};
     rewrite ^/chill/(.*)\$  /\$1 break;
@@ -499,9 +503,7 @@ cat <<HERE
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-
-    ## Prevent others from skipping cache
-    #proxy_set_header Chill-Skip-Cache "";
+    proxy_redirect http://localhost:${PORTCHILL}/ http://\$host/;
 
     expires \$cache_expire;
     add_header Cache-Control "public";
@@ -515,6 +517,7 @@ cat <<HERE
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_redirect http://localhost:${PORTCHILL}/ http://\$host/;
 
     expires \$cache_expire;
     add_header Cache-Control "public";
@@ -541,6 +544,7 @@ cat <<HERE
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_redirect http://localhost:${PORTCHILL}/ http://\$host/;
 
     proxy_pass http://localhost:${PORTCHILL};
 

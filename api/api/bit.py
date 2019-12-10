@@ -14,6 +14,7 @@ from api.user import (
     user_not_banned,
 )
 from api.constants import POINT_COST_FOR_CHANGING_BIT, NEW_USER_STARTING_POINTS
+from api.tools import purge_route_from_nginx_cache
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
@@ -154,6 +155,12 @@ class ClaimBitView(MethodView):
 
         cur.close()
         db.commit()
+
+        purge_route_from_nginx_cache(
+            "/chill/site/internal/player-bit/{}/".format(user),
+            current_app.config.get("PURGEURLLIST"),
+        )
+
         return response
 
 
