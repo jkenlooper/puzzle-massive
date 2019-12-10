@@ -83,7 +83,7 @@ cat <<HERE
 HERE
 fi
 cat <<HERE
-  ~/chill/site/internal/.* 60m;
+  ~/chill/site/internal/player-bit/.* 1d;
   ~/chill/site/claim-player/.* off;
   ~/chill/site/reset-login/.* off;
   ~/chill/site/bit-icons/.* 1y;
