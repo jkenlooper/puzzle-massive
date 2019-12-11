@@ -49,6 +49,10 @@
   }
 }
 
+/* Using selectors like this here because these child elements should be styled
+ * like this because of their location in the secondary menu.  These elements
+ * are commonly outside of the base template, however.
+ */
 .pm-Base-menuSecondary > * {
   padding: 5px 10px;
   border-radius: 5px;
