@@ -1,5 +1,4 @@
 import { html, render } from "lit-html";
-import { styleMap } from "lit-html/directives/style-map.js";
 
 import { puzzleService, KarmaData } from "../puzzle-pieces/puzzle.service";
 
@@ -17,7 +16,7 @@ customElements.define(
   class PmKarmaStatus extends HTMLElement {
     private instanceId: string;
     static max: number = 25;
-    private amount: number = 0;
+    private amount: number = -1;
     static get _instanceId(): string {
       return `${tag} ${lastInstanceId++}`;
     }
@@ -39,8 +38,7 @@ customElements.define(
     }
 
     _onKarmaUpdate(data: KarmaData) {
-      this.amount =
-        (Math.min(data.karma, PmKarmaStatus.max) / PmKarmaStatus.max) * 100;
+      this.amount = Math.min(data.karma, PmKarmaStatus.max);
       this.render();
     }
 
@@ -55,10 +53,9 @@ customElements.define(
           class="pm-KarmaStatus"
           title="Your puzzle karma.  Changes based on your recent piece movements on this puzzle.  Your piece movements will be blocked temporarily if this reaches 0."
         >
-          <span
-            class="pm-KarmaStatus-bar"
-            style=${styleMap({ height: data.amount + "%" })}
-          >
+          <pm-icon size="sm">solution</pm-icon>
+          <span class="pm-KarmaStatus-amount">
+            ${data.amount === -1 ? "--" : data.amount}
           </span>
         </div>
       `;

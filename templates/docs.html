@@ -8,21 +8,21 @@
 {% block secondarymenu %}
 
   {%- if slug == 'faq' -%}
-  <span class="pm-Doc-menuLink is-active">FAQs</span>
+  <span class="is-active">FAQs</span>
   {%- else -%}
-  <a href="/chill{{ url_for('.page_uri', uri='faq') }}" class="pm-Doc-menuLink">FAQs</a>
+  <a href="/chill{{ url_for('.page_uri', uri='faq') }}">FAQs</a>
   {%- endif -%}
 
   {%- if slug == 'about' -%}
-  <span class="pm-Doc-menuLink is-active">About</span>
+  <span class="is-active">About</span>
   {%- else -%}
-  <a href="/chill{{ url_for('.page_uri', uri='about') }}" class="pm-Doc-menuLink">About</a>
+  <a href="/chill{{ url_for('.page_uri', uri='about') }}">About</a>
   {%- endif -%}
 
   {%- if slug == 'help' -%}
-  <span class="pm-Doc-menuLink is-active">Help</span>
+  <span class="is-active">Help</span>
   {%- else -%}
-  <a href="/chill{{ url_for('.page_uri', uri='help') }}" class="pm-Doc-menuLink">Help</a>
+  <a href="/chill{{ url_for('.page_uri', uri='help') }}">Help</a>
   {%- endif -%}
 
 {% endblock %}

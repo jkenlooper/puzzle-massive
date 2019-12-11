@@ -33,7 +33,7 @@
       {% endif %}
     <div class="pm-Preview-gridA">
       <p>
-      <a href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(recent.puzzle_id), scale=null) }}">
+      <a href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(recent.puzzle_id), scale=1) }}">
       {% if recent.url == '' %}
         {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
       {% else %}
@@ -45,8 +45,7 @@
             <strong class="pm-Preview-pieceCount">{{recent.pieces}}</strong>
             <span>pieces</span>
           </span>
-      <a class="pm-CtaLink" href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(recent.puzzle_id), scale=null) }}">
-        <pm-icon size="lg">solution</pm-icon>
+      <a class="pm-CtaLink" href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(recent.puzzle_id), scale=1) }}">
         Join Puzzle
       </a>
     </span>

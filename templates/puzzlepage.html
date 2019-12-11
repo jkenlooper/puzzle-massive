@@ -151,27 +151,36 @@
 {%- endblock %}
 
   {% block secondarymenu %}
-        <a href="/chill{{ url_for('.page_uri', uri='front/{}'.format(puzzle.puzzle_id)) }}" title="View puzzle front page.">
-          <pm-icon size="sm" class="u-block">arrow-left-circle-sprite</pm-icon>
+        <a href="/chill{{ url_for('.page_uri', uri='front/{}'.format(puzzle.puzzle_id)) }}">
+          <pm-icon size="sm">arrow-left-circle-sprite</pm-icon>
         </a>
 
         {% if preview_full.url != '' %}
           <label>
             <input class="u-hidden" type="checkbox" id="puzzle-preview-button">
-            <pm-icon size="sm" class="u-block">image-sprite</pm-icon>
+            <pm-icon size="sm">image-sprite</pm-icon>
           </label>
         {% endif %}
 
+        {# TODO: Move this button somewhere else.
         {% if scale != 0 %}
-          <label for="puzzlepage-description-toggle" title="Toggle puzzle information and credit at bottom of page.">
-            <pm-icon size="sm" class="u-block">info-circle-sprite</pm-icon>
+          <label for="puzzlepage-description-toggle">
+            <pm-icon size="sm">info-circle-sprite</pm-icon>
           </label>
         {% endif %}
-
-        <pm-karma-status></pm-karma-status>
+        #}
 
         <pm-hash-color background-color="{{ puzzle.bg_color }}" name="{{ puzzle.puzzle_id }}">
         </pm-hash-color>
+
+        <div>
+          <!-- TODO: button should toggle a small movable window that list more
+            stuff like karma status, player list, etc.
+          -->
+          <!-- TODO: add player list -->
+          <pm-karma-status></pm-karma-status>
+        </div>
+
   {% endblock %}
 
 {% block main %}

@@ -82,11 +82,11 @@ Jigsaw puzzle not available.
 
 {% block secondarymenu %}
 {% if page.info.pieces and page.info.status == ACTIVE %}
-      <a class="pm-Doc-menuLink" href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(page.info.puzzle_id), scale=null) }}">
+      <a href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(page.info.puzzle_id), scale=null) }}">
           <pm-icon>minimize-sprite</pm-icon>
           Full
       </a>
-      <a class="pm-Doc-menuLink" href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(page.info.puzzle_id), scale=1) }}">
+      <a href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(page.info.puzzle_id), scale=1) }}">
           <pm-icon>full-screen-sprite</pm-icon>
           Fit
       </a>
