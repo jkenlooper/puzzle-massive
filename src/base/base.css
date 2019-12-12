@@ -71,7 +71,7 @@
 .pm-Base-menuSecondary > a:focus {
   text-decoration: underline;
 }
-.pm-Base-menuSecondary > a.is-active {
+.pm-Base-menuSecondary > .is-active {
   background-color: var(--color-accent);
   color: var(--color-light-light);
   text-decoration: none;

@@ -99,7 +99,7 @@
 
 @media (--lg-viewport) {
   .pm-Footer-nav a {
-    padding: 1em;
+    padding: 0.4em 1em;
   }
 }
 
