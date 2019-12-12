@@ -51,7 +51,7 @@
     {% endblock %}
 
 {% if config.DEBUG == True %}
-config.DEBUG: True; chill_now: {{ chill_now }}
+config.DEBUG: True; chill_now: {{ chill_now|datetime }}
 {% endif %}
 
   </body>

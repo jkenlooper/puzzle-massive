@@ -84,13 +84,17 @@ HERE
 fi
 cat <<HERE
   ~/chill/site/internal/player-bit/.* 1d;
+  ~/chill/site/internal/attribution/.* 1d;
   ~/chill/site/claim-player/.* off;
   ~/chill/site/reset-login/.* off;
   ~/chill/site/bit-icons/.* 1y;
   ~/chill/site/puzzle/.* off;
   ~/chill/site/front/.* 1m;
   ~/chill/site/api/.* 1m;
-  ~/chill/site/.* 60m;
+  ~/chill/site/puzzle-list/.* 60m;
+  ~/chill/site/high-scores/ 60m;
+  ~/chill/site/admin/.* off;
+  ~/chill/site/.* 1d;
   ~/theme/.*?/.* 1y;
   ~/media/.* 1M;
   ~/resources/.* 1M;
