@@ -133,6 +133,9 @@ server {
   # temporary redirect player profile page
   rewrite ^/chill/site/player/[^/]+/\$ /chill/site/player/ redirect;
 
+  # Temporary redirect document pages to allow robots to index them.
+  rewrite ^/chill/site/(about|faq|help|credits|buy-stuff)/\$ /\$1/ redirect;
+
   # Ignore query params so they are not part of the cache.
   rewrite ^/(media/.*)\$ /\$1? last;
   rewrite ^/(resources/.*)\$ /\$1? last;
@@ -152,6 +155,19 @@ cat <<HERE
     #if (\$hotlinking_policy) {
     #  return 444;
     #}
+
+    proxy_set_header X-Real-IP \$remote_addr;
+    proxy_set_header X-Forwarded-For \$remote_addr;
+    proxy_set_header X-Forwarded-Host \$remote_addr;
+    proxy_cache pm_cache_zone;
+    add_header X-Proxy-Cache \$upstream_cache_status;
+    include proxy_params;
+    proxy_pass http://localhost:${PORTORIGIN};
+  }
+
+  location ~* ^/(about|faq|help|credits|buy-stuff)/ {
+    # Allow document pages to be accessed without a cookie login.
+    rewrite ^/(.*)\$ /chill/site/\$1 break;
 
     proxy_set_header X-Real-IP \$remote_addr;
     proxy_set_header X-Forwarded-For \$remote_addr;

@@ -85,8 +85,12 @@ customElements.define(
               `
             : html`
                 <p>
-                  Existing players can login by e-mail:
+                  Existing players can reset their login link by e-mail:
                   <pm-login-by-email></pm-login-by-email>
+                  <em
+                    >Requires the player to register their e-mail with the site
+                    first.</em
+                  >
                 </p>
               `}
         </div>

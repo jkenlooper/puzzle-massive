@@ -10,19 +10,19 @@
   {%- if slug == 'faq' -%}
   <span class="is-active">FAQs</span>
   {%- else -%}
-  <a href="/chill{{ url_for('.page_uri', uri='faq') }}">FAQs</a>
+  <a href="/faq/">FAQs</a>
   {%- endif -%}
 
   {%- if slug == 'about' -%}
   <span class="is-active">About</span>
   {%- else -%}
-  <a href="/chill{{ url_for('.page_uri', uri='about') }}">About</a>
+  <a href="/about/">About</a>
   {%- endif -%}
 
   {%- if slug == 'help' -%}
   <span class="is-active">Help</span>
   {%- else -%}
-  <a href="/chill{{ url_for('.page_uri', uri='help') }}">Help</a>
+  <a href="/help/">Help</a>
   {%- endif -%}
 
 {% endblock %}

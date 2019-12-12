@@ -1,22 +1,26 @@
 {% extends 'base.html' %}
 
-{% block title %}
-| {{ page.title }}
+{# Description here is the same for all puzzle pages.  Indexing robots are not meant to index the whole site, just the home page. #}
+{% block description -%}
+{{ 'sitewide-description.txt'|readfile }}
 {%- endblock %}
 
 {% block main %}
 <section  class="pm-Doc">
 
-<h1>Welcome New Player</h1>
-<p>Puzzle Massive is a Massively Multiplayer Online Jigsaw Puzzle (MMOJP) where everyone
-can work on a puzzle together at the same time.  The puzzles range from 50 to
-5000+ pieces and are all uniquely generated in the classic interlocking piece
-shapes (for now).</p>
+<h1>Puzzle Massive</h1>
+<p>
+{{ 'sitewide-description.txt'|readfile }}
+</p>
+
+<h2>New Players</h2>
+<p>
+  {{ page.description }}
+</p>
 
 {# Only show the relevant information for players that have cookies by reusing pm-dot-require info. #}
 <pm-dot-require min="99999" type="info">
   <a class="pm-CtaLink" href="{{ next.next }}">Continue</a>
-</p>
 
 <p><strong>You are currently represented on Puzzle Massive as:</strong>
   <span class="u-marginTopSm u-marginBottomSm u-block">
@@ -28,8 +32,9 @@ shapes (for now).</p>
 <hr>
 
 <p>
-  Existing players can login by e-mail:
+  Existing players can reset their login link by e-mail:
   <pm-login-by-email></pm-login-by-email>
+  <em>Requires the player to register their e-mail with the site first.</em>
 </p>
 </pm-dot-require>
 

@@ -42,14 +42,10 @@
 {# deleted on request from the owner. Can be deleted automatically after completion or date or? #}
 {% set DELETED_REQUEST  = -13 %}
 
-{% block description %}
-{% if page.info.pieces %}
-Preview of jigsaw puzzle with {{ page.info.pieces }} puzzle pieces.  This {{ page.info.puzzle_variant_name }} puzzle can be assembled by anyone and piece movements are shown in real time. The most recent players to move pieces on this puzzle are displayed.
-{% else %}
-Jigsaw puzzle not available.
-{% endif %}
-{{ page.info.description }}
-{% endblock %}
+{# Description here is the same for all puzzle pages.  Indexing robots are not meant to index the whole site, just the home page. #}
+{% block description -%}
+{{ 'sitewide-description.txt'|readfile }}
+{%- endblock %}
 
 {% block title %}
 {%- if page.info.puzzle_id %} | {% if page.info.pieces %}{{ page.info.pieces }} Piece{% endif %} Jigsaw Puzzle {% if page.info.status in (ACTIVE, IN_QUEUE) -%}
