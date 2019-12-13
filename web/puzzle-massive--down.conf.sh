@@ -62,6 +62,15 @@ server {
   # temporary redirect player profile page
   rewrite ^/chill/site/player/[^/]+/\$ /chill/site/player/ redirect;
 
+  # Temporary redirect document pages to allow robots to index them.
+  location ~* ^/(about|faq|help|credits|buy-stuff)/ {
+    # stop caching
+    expires -1;
+    add_header Cache-Control "public";
+
+    rewrite ^/.* /error_page.html break;
+  }
+
   rewrite ^/\$ /chill/site/front/ last;
   location / {
     try_files \$uri \$uri =404;
