@@ -98,9 +98,11 @@ cat <<HERE
   ~/theme/.*?/.* 1y;
   ~/media/.* 1M;
   ~/resources/.* 1M;
+  ~/.*?.png 1M;
+  /favicon.ico 1M;
   /humans.txt 1d;
   /robots.txt 1d;
-  /puzzle-massive-logo-600.png 1M;
+  /site.webmanifest 1d;
   /newapi/gallery-puzzle-list/ 1m;
   /newapi/puzzle-list/ 1m;
 }
@@ -139,8 +141,9 @@ server {
   # Ignore query params so they are not part of the cache.
   rewrite ^/(media/.*)\$ /\$1? last;
   rewrite ^/(resources/.*)\$ /\$1? last;
-  # Matches root files: /humans.txt, /robots.txt, /puzzle-massive-logo-600.png
-  rewrite ^/([^/]+)(\.txt|\.png)\$ /\$1\$2? last;
+  rewrite ^/(site.webmanifest)\$ /\$1? last;
+  # Matches root files: /humans.txt, /robots.txt, /puzzle-massive-logo-600.png, /favicon.ico
+  rewrite ^/([^/]+)(\.txt|\.png|\.ico)\$ /\$1\$2? last;
 HERE
 if test "${ENVIRONMENT}" != 'development'; then
 cat <<HERE
