@@ -3,8 +3,8 @@ Pillow == 6.0.0
 git+https://github.com/jkenlooper/glue#egg=glue
 pixsaw==0.2.0
 docopt==0.6.2
-#piecemaker==0.3.0
-git+https://github.com/jkenlooper/piecemaker.git@develop#egg=piecemaker
+piecemaker==0.3.1
+#git+https://github.com/jkenlooper/piecemaker.git@develop#egg=piecemaker
 #pycurl==7.43.0.2
 
 requests==2.21
