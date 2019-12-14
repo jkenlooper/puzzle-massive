@@ -9,6 +9,7 @@ from api.app import db
 from api.database import rowify, fetch_query_string
 from api.user import user_id_from_ip, user_not_banned
 from api.constants import EMAIL_MAXLENGTH
+from api.notify import send_message
 
 
 class PlayerEmailRegisterView(MethodView):
@@ -144,7 +145,7 @@ You can ignore this message if you didn't initiate the request.
                             current_app.config,
                         )
                     except Exception as err:
-                        logger.warning(
+                        current_app.logger.warning(
                             "Failed to send verification message. email: {email}\n {message}\n error: {err}".format(
                                 err=err, email=email, message=message
                             )
