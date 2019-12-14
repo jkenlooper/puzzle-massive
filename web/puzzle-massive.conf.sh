@@ -105,6 +105,8 @@ cat <<HERE
   /site.webmanifest 1d;
   /newapi/gallery-puzzle-list/ 1m;
   /newapi/puzzle-list/ 1m;
+  # Safeguard for no cache on player-puzzle-list
+  /newapi/player-puzzle-list/ off;
 }
 
 # Cache server
@@ -161,9 +163,9 @@ cat <<HERE
   location / {
     rewrite ^/\$ /chill/site/front/ last;
 
-    #if (\$hotlinking_policy) {
-    #  return 444;
-    #}
+    if (\$hotlinking_policy) {
+      return 444;
+    }
 
     proxy_set_header X-Real-IP \$remote_addr;
     proxy_set_header X-Forwarded-For \$remote_addr;
