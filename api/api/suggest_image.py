@@ -92,20 +92,36 @@ class SuggestImageView(MethodView):
         cur.close()
 
         # Send a notification email (silent fail if not configured)
-        try:
-            send_message(
-                current_app.config.get("EMAIL_MODERATOR"),
-                "Suggested Image",
-                "http://puzzle.massive.xyz/chill/site/admin/puzzle/suggested/{}/".format(
-                    puzzle_id
-                ),
-                current_app.config,
-            )
-        except Exception as err:
-            current_app.logger.warning(
-                "Failed to send notification message. {}".format(err)
-            )
-            pass
+        message = """
+http://{DOMAIN_NAME}/chill/site/admin/puzzle/suggested/{puzzle_id}/
+
+pieces: {pieces}
+bg_color: {bg_color}
+owner: {owner}
+
+link: {link}
+description: {description}
+        """.format(
+            DOMAIN_NAME=current_app.config.get("DOMAIN_NAME"), **d
+        )
+        current_app.logger.debug(message)
+        if not current_app.config.get("DEBUG", True):
+            try:
+                send_message(
+                    current_app.config.get("EMAIL_MODERATOR"),
+                    "Suggested Image",
+                    message,
+                    current_app.config,
+                )
+            except Exception as err:
+                current_app.logger.warning(
+                    "Failed to send notification message for suggested image. email: {email}\n {message}\n error: {err}".format(
+                        err=err,
+                        email=current_app.config.get("EMAIL_MODERATOR"),
+                        message=message,
+                    )
+                )
+                pass
 
         # Redirect to a thank you page (not revealing the puzzle_id)
         return redirect("/chill/site/suggested-puzzle-thank-you/", code=303)

@@ -96,6 +96,8 @@ echo rsynced web/default.conf web/puzzle-massive.conf web/puzzle-massive--down.c
 
 mkdir -p "${NGINXDIR}sites-enabled";
 ln -sf "${NGINXDIR}sites-available/default.conf" "${NGINXDIR}sites-enabled/default.conf";
+
+rm -f /etc/nginx/sites-enabled/puzzle-massive--down.conf;
 ln -sf "${NGINXDIR}sites-available/puzzle-massive.conf"  "${NGINXDIR}sites-enabled/puzzle-massive.conf";
 
 rsync --inplace \
