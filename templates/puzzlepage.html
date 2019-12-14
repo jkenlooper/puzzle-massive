@@ -155,6 +155,7 @@
           <pm-icon size="sm">arrow-left-circle-sprite</pm-icon>
         </a>
 
+        {% if isPuzzleVisible %}
         {% if preview_full.url != '' %}
           <label>
             <input class="u-hidden" type="checkbox" id="puzzle-preview-button">
@@ -180,6 +181,7 @@
           <!-- TODO: add player list -->
           <pm-karma-status></pm-karma-status>
         </div>
+        {% endif %}
 
   {% endblock %}
 

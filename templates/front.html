@@ -77,7 +77,7 @@
 {% endblock %}
 
 {% block secondarymenu %}
-{% if page.info.pieces and page.info.status == ACTIVE %}
+{% if page.info.pieces and page.info.status in (ACTIVE, IN_QUEUE, COMPLETED, FROZEN) %}
       <a href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(page.info.puzzle_id), scale=null) }}">
           <pm-icon>minimize-sprite</pm-icon>
           Full

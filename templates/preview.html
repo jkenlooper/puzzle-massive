@@ -1,6 +1,7 @@
 {% from 'preview-unknown.html' import preview_unknown %}
 {% if recent %}
 
+{% set ACTIVE           = 1   %}
 {% set IN_QUEUE         = 2   %}
 {% set COMPLETED        = 3   %}
 {% set DELETED_REQUEST  = -13 %}
@@ -26,13 +27,10 @@
       </pm-dot-require>
       {% endif %}
 
-      {% if recent.status == IN_QUEUE -%}
-  <span class="pm-Preview-grid">
-      {% else %}
   <div class="pm-Preview-grid" >
-      {% endif %}
     <div class="pm-Preview-gridA">
       <p>
+
       <a href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(recent.puzzle_id), scale=1) }}">
       {% if recent.url == '' %}
         {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
@@ -45,6 +43,7 @@
             <strong class="pm-Preview-pieceCount">{{recent.pieces}}</strong>
             <span>pieces</span>
           </span>
+
       <a class="pm-CtaLink" href="/chill{{ url_for('.page_uri', uri='puzzle/{}'.format(recent.puzzle_id), scale=1) }}">
         Join Puzzle
       </a>
@@ -70,11 +69,7 @@
         offset="9"></pm-latest-player-list>
     </div>
     </div>
-      {% if recent.status == IN_QUEUE -%}
-  </span>
-      {% else %}
   </div>
-      {% endif %}
   {% if recent.attribution %}
   <p class="pm-Preview-attribution">{{ '[chill route /internal/attribution/{}/ ]'.format(recent.attribution) }}</p>
   {% endif %}
