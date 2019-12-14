@@ -15,10 +15,12 @@ from api.user import user_id_from_ip
 from api.notify import send_message
 from .user import user_not_banned
 
+
 class SuggestImageView(MethodView):
     """
     Handle suggest image form uploads
     """
+
     decorators = [user_not_banned]
 
     def post(self):
@@ -28,39 +30,45 @@ class SuggestImageView(MethodView):
 
         # Check pieces arg
         try:
-            pieces = int(args.get('pieces', current_app.config['MINIMUM_PIECE_COUNT']))
+            pieces = int(args.get("pieces", current_app.config["MINIMUM_PIECE_COUNT"]))
         except ValueError as err:
             abort(400)
-        if pieces < current_app.config['MINIMUM_PIECE_COUNT']:
+        if pieces < current_app.config["MINIMUM_PIECE_COUNT"]:
             abort(400)
 
-        bg_color = check_bg_color(args.get('bg_color', '#808080')[:50])
+        bg_color = check_bg_color(args.get("bg_color", "#808080")[:50])
 
-        user = int(current_app.secure_cookie.get(u'user') or user_id_from_ip(request.headers.get('X-Real-IP')))
+        user = int(
+            current_app.secure_cookie.get(u"user")
+            or user_id_from_ip(request.headers.get("X-Real-IP"))
+        )
 
         # All puzzles are public
         permission = PUBLIC
-        #permission = int(args.get('permission', PUBLIC))
-        #if permission != PUBLIC:
+        # permission = int(args.get('permission', PUBLIC))
+        # if permission != PUBLIC:
         #    permission = PUBLIC
 
-        description = escape(args.get('description', ''))[:1000]
+        description = escape(args.get("description", ""))[:1000]
 
         # Check link and validate
-        link = url_fix(args.get('link', ''))[:1000]
+        link = url_fix(args.get("link", ""))[:1000]
 
         puzzle_id = uuid.uuid1().hex
 
         cur = db.cursor()
-        d = {'puzzle_id':puzzle_id,
-            'pieces':pieces,
-            'link':link,
-            'description':description,
-            'bg_color':bg_color,
-            'owner':user,
-            'status': SUGGESTED,
-            'permission':permission}
-        cur.execute("""insert into Puzzle (
+        d = {
+            "puzzle_id": puzzle_id,
+            "pieces": pieces,
+            "link": link,
+            "description": description,
+            "bg_color": bg_color,
+            "owner": user,
+            "status": SUGGESTED,
+            "permission": permission,
+        }
+        cur.execute(
+            """insert into Puzzle (
         puzzle_id,
         pieces,
         link,
@@ -77,19 +85,27 @@ class SuggestImageView(MethodView):
         :owner,
         :status,
         :permission);
-        """, d)
+        """,
+            d,
+        )
         db.commit()
         cur.close()
 
         # Send a notification email (silent fail if not configured)
         try:
-            send_message(current_app.config.get('EMAIL_MODERATOR'),
-                         'Suggested Image',
-                         "http://puzzle.massive.xyz/chill/site/admin/puzzle/suggested/{}/".format(puzzle_id), current_app.config)
+            send_message(
+                current_app.config.get("EMAIL_MODERATOR"),
+                "Suggested Image",
+                "http://puzzle.massive.xyz/chill/site/admin/puzzle/suggested/{}/".format(
+                    puzzle_id
+                ),
+                current_app.config,
+            )
         except Exception as err:
-            current_app.logger.warning("Failed to send notification message. {}".format(err))
+            current_app.logger.warning(
+                "Failed to send notification message. {}".format(err)
+            )
             pass
 
         # Redirect to a thank you page (not revealing the puzzle_id)
-        return redirect('/chill/site/suggested-puzzle-thank-you/', code=303)
-
+        return redirect("/chill/site/suggested-puzzle-thank-you/", code=303)
