@@ -115,6 +115,12 @@ server {
   root ${SRVDIR}root;
   valid_referers server_names;
 
+  # Limit the max simultaneous connections per ip address (10 per browser * 4 if within LAN)
+  limit_conn   addr 40;
+
+  client_max_body_size  20m;
+  keepalive_disable  none;
+
   # Rewrite the homepage url
   rewrite ^/index.html\$ / permanent;
 
