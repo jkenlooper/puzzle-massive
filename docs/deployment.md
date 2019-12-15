@@ -1,8 +1,8 @@
 # Deployment Guide
 
-There are two kinds of deployments outlined here.  The first one is for in-place
+There are two kinds of deployments outlined here. The first one is for in-place
 deployments where only minor changes are needed and don't require any services
-to be restarted.  These are usually updates to the client-side resources like
+to be restarted. These are usually updates to the client-side resources like
 Javascript, CSS, and HTML or other graphic files. The other type of deployment
 is commonly called a blue-green deployment where a new server is created and
 then when everything has been deployed and ready; traffic is directed to the new
@@ -11,8 +11,7 @@ server.
 ## Create a new version for the deployment
 
 Deployments should use a versioned distribution file that is uploaded to the
-server.  This file can be made after a new version has been created with `npm
-version`.  On the **development machine** build the versioned distribution file.
+server. This file can be made after a new version has been created with `npm version`. On the **development machine** build the versioned distribution file.
 Please follow these _super awesome instructions_ in the [Local development
 guide](development.md) in order to build a dist file.
 
@@ -21,13 +20,12 @@ make dist;
 ```
 
 The distribution file will be at the top level of the project and named after
-the version found in package.json.  For example, with version 2.0.0 the file is
+the version found in package.json. For example, with version 2.0.0 the file is
 `puzzle-massive-2.0.0.tar.gz`.
 
-That tar file can then be uploaded to the server.  The next step varies
+That tar file can then be uploaded to the server. The next step varies
 depending if the deployment will be an in-place deployment or if a new server
 is being created.
-
 
 ## In-place Deployments
 
@@ -41,9 +39,9 @@ been uploaded to the home directory.
 
 ### Steps
 
-1)  Stop the running apps and backup the db.  The deactivate command is done to
-    deactivate the python virtualenv.  A backup of the database is made just as
-    a cautionary measure and is left in the folder.  The backup-db.sh script
+1.  Stop the running apps and backup the db. The deactivate command is done to
+    deactivate the python virtualenv. A backup of the database is made just as
+    a cautionary measure and is left in the folder. The backup-db.sh script
     also moves data out of redis and into the database.
 
     ```bash
@@ -54,8 +52,8 @@ been uploaded to the home directory.
     deactivate;
     ```
 
-2)  Replace the current source code with the new version.  Example shows the
-    puzzle-massive-2.0.0.tar.gz which should be in the dev home directory.  The
+2.  Replace the current source code with the new version. Example shows the
+    puzzle-massive-2.0.0.tar.gz which should be in the dev home directory. The
     current source code is moved to the home directory under a date label in
     case it needs to revert back. The `.env` and `.htpasswd` files are copied
     over since they are not included in the distribution.
@@ -69,8 +67,8 @@ been uploaded to the home directory.
     cp puzzle-massive-$(date +%F)/.htpasswd /usr/local/src/puzzle-massive/;
     ```
 
-3)  Make the new apps and install the source code.  The install will also start
-    everything back up.  The last command to test and reload nginx is optional
+3.  Make the new apps and install the source code. The install will also start
+    everything back up. The last command to test and reload nginx is optional
     and is only needed if the nginx conf changed.
 
     ```bash
@@ -83,24 +81,23 @@ been uploaded to the home directory.
     sudo systemctl reload nginx;
     ```
 
-4)  Verify that stuff is working by monitoring the logs.
+4.  Verify that stuff is working by monitoring the logs.
 
     ```bash
     ./bin/log.sh;
     ```
 
-
 ## Blue-Green Deployments
 
-Create a new server and transfer data over from the old one.  This is a good
+Create a new server and transfer data over from the old one. This is a good
 choice of deployment when the changes are more significant and would benefit
 from being able to test things a bit more thoroughly before having it accessible
 by the public.
 
 ### Steps
 
-1)  After the tar file has been uploaded to the server; SSH in and expand it to
-    the `/usr/local/src/` directory.  This is assuming that only root can SSH in
+1.  After the tar file has been uploaded to the server; SSH in and expand it to
+    the `/usr/local/src/` directory. This is assuming that only root can SSH in
     to the server and the distribution was uploaded to the /root/ directory.
 
     ```bash
@@ -108,9 +105,9 @@ by the public.
     tar --directory=/usr/local/src/ --extract --gunzip -f puzzle-massive-2.0.0.tar.gz
     ```
 
-2)  Now setup the new server by running the `init.sh` and `setup.sh` scripts.
+2.  Now setup the new server by running the `init.sh` and `setup.sh` scripts.
     These should be run with root privileges (prepend these commands with 'sudo'
-    if not root user).  The init.sh script will ask for the id_rsa.pub key which
+    if not root user). The init.sh script will ask for the id_rsa.pub key which
     can just be pasted in. The ownership of the source code files are switched
     to dev since it was initially added via root user.
 
@@ -121,12 +118,12 @@ by the public.
     chown -R dev:dev /usr/local/src/puzzle-massive
     ```
 
-3)  SSH in as the dev user and upload or create the `.env` and `.htpasswd` files
-    in the `/usr/local/src/puzzle-massive/` directory.  See the README on how to
-    create these.  At this point there is no need to SSH in to the server as the
+3.  SSH in as the dev user and upload or create the `.env` and `.htpasswd` files
+    in the `/usr/local/src/puzzle-massive/` directory. See the README on how to
+    create these. At this point there is no need to SSH in to the server as the
     root user.
 
-4)  Now create the initial bare-bones version without any data as the dev user.
+4.  Now create the initial bare-bones version without any data as the dev user.
 
     ```bash
     cd /usr/local/src/puzzle-massive/;
@@ -145,9 +142,8 @@ by the public.
     sudo ./bin/puzzlectl.sh start;
     ```
 
-
 5)  The logs for all the apps for Puzzle Massive can be followed with the
-    `./bin/log.sh` command.  It is just a shortcut to doing the same with
+    `./bin/log.sh` command. It is just a shortcut to doing the same with
     `journalctrl`.
 
     Check the status of the apps with this convenience command to `systemctl`.
@@ -178,17 +174,17 @@ by the public.
 
 Note that by default the production version of the nginx conf for Puzzle Massive
 is hosted at http://puzzle.massive.xyz/ as well as http://puzzle-blue/ and
-http://puzzle-green/ .  You can edit your `/etc/hosts` to point to the old
+http://puzzle-green/ . You can edit your `/etc/hosts` to point to the old
 (puzzle-blue) and new (puzzle-green) servers.
 
 ### Transferring data from the old server to the new server
 
 At this point two servers should be running Puzzle Massive with only the older
-one having traffic.  The new one should be verified that everything is working
-correctly by doing some integration testing.  The next step is to stop the apps
+one having traffic. The new one should be verified that everything is working
+correctly by doing some integration testing. The next step is to stop the apps
 on the old server and copy all the data over to the new puzzle-green server.
 
-1)  On the **old server** stop the apps and migrate the data out of redis.  The old
+1.  On the **old server** stop the apps and migrate the data out of redis. The old
     server is left untouched in case something fails on the new server.
 
     ```bash
@@ -198,23 +194,25 @@ on the old server and copy all the data over to the new puzzle-green server.
     ./bin/backup-db.sh;
     ```
 
-2)  On the **new server** the files from the old server will be copied over with
-    rsync.  First step here is to stop the apps on the new server and remove the
+2.  On the **new server** the files from the old server will be copied over with
+    rsync. First step here is to stop the apps on the new server and remove the
     initial db and any generated test puzzles.
 
     ```bash
     cd /usr/local/src/puzzle-massive/;
     source bin/activate;
     sudo ./bin/puzzlectl.sh stop;
-    rm /var/lib/puzzle-massive/sqlite3/db;
+    rm /var/lib/puzzle-massive/sqlite3/db*;
+    rm -rf /var/lib/puzzle-massive/archive/*
     rm -rf /srv/puzzle-massive/resources/*;
-    
+    sudo ./bin/clear_nginx_cache.sh;
+
     # do a `flushall` on the new server redis to clean out stuff
     redis-cli
     ```
 
-3)  Copy the backup db (db-YYYY-MM-DD.dump.gz) to the new server and replace the
-    other one (SQLITE_DATABASE_URI).  This is assuming that ssh agent forwarding
+3.  Copy the backup db (db-YYYY-MM-DD.dump.gz) to the new server and replace the
+    other one (SQLITE_DATABASE_URI). This is assuming that ssh agent forwarding
     is enabled for the puzzle-blue host.
 
     ```bash
@@ -228,7 +226,7 @@ on the old server and copy all the data over to the new puzzle-green server.
     echo 'pragma journal_mode=wal' | sqlite3 /var/lib/puzzle-massive/sqlite3/db
     ```
 
-4)  Copy the nginx logs (NGINXLOGDIR) found at: `/var/log/nginx/puzzle-massive/`
+4.  Copy the nginx logs (NGINXLOGDIR) found at: `/var/log/nginx/puzzle-massive/`
 
     ```bash
     rsync --archive --progress --itemize-changes \
@@ -236,7 +234,7 @@ on the old server and copy all the data over to the new puzzle-green server.
       /var/log/nginx/
     ```
 
-5)  Copy the archive directory (ARCHIVEDIR): `/var/lib/puzzle-massive/archive/`
+5.  Copy the archive directory (ARCHIVEDIR): `/var/lib/puzzle-massive/archive/`
 
     ```bash
     rsync --archive --progress --itemize-changes \
@@ -244,7 +242,7 @@ on the old server and copy all the data over to the new puzzle-green server.
       /var/lib/puzzle-massive/
     ```
 
-6)  Copy the resources directory (SRVDIR/resources) that contains the generated
+6.  Copy the resources directory (SRVDIR/resources) that contains the generated
     puzzles:
 
     ```bash
@@ -253,26 +251,26 @@ on the old server and copy all the data over to the new puzzle-green server.
       /srv/puzzle-massive/
     ```
 
-7)  Run any migrate scripts if required for this version bump.  Follow any other
+7.  Run any migrate scripts if required for this version bump. Follow any other
     instructions for the migrate script if needed.
 
     ```bash
     python api/api/jobs/migrate_from_2_x.py site.cfg
     ```
 
-8)  Start the new server and switch traffic over to it.
+8.  Start the new server and switch traffic over to it.
 
     After the old server data has been copied over, then start up the new server
-    apps with the 'puzzlectl.sh' script.  It is also good to monitor the logs to see
+    apps with the 'puzzlectl.sh' script. It is also good to monitor the logs to see
     if anything is throwing errors.
 
     ```
     cd /usr/local/src/puzzle-massive/;
     source bin/activate;
     sudo ./bin/puzzlectl.sh start;
-    ./bin/log.sh;
+    sudo ./bin/log.sh;
     ```
 
     Verify that the new version of Puzzle Massive is running correctly on
     puzzle-green/. If everything checks out, then switch the traffic over to
-    puzzle.massive.xyz/. 
+    puzzle.massive.xyz/.
