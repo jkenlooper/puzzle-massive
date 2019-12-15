@@ -10,7 +10,7 @@ Not every commit is added to this list, but many items listed are taken from the
 git commit messages (`git shortlog 2.3.2..origin/develop`).
 -->
 
-## [Unreleased]
+## [2.4.0] - 2019-12-14
 
 Redesign with a new puzzle search page. Old queue page has been replaced.
 
