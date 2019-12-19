@@ -148,7 +148,10 @@ server {
 
   # Ignore query params so they are not part of the cache.
   rewrite ^/(media/.*)\$ /\$1? last;
-  rewrite ^/(resources/.*)\$ /\$1? last;
+
+  # Keep the query params on /resources/.*; they are for cache-busting.
+  #rewrite ^/(resources/.*)\$ /\$1? last;
+
   rewrite ^/(site.webmanifest)\$ /\$1? last;
   # Matches root files: /humans.txt, /robots.txt, /puzzle-massive-logo-600.png, /favicon.ico
   rewrite ^/([^/]+)(\.txt|\.png|\.ico)\$ /\$1\$2? last;
