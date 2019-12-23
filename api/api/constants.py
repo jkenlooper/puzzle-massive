@@ -29,6 +29,9 @@ DELETED_REQUEST = (
 )  # deleted on request from the owner. Can be deleted automatically after completion or date or?
 SUGGESTED = -20  # No image has been set; only a link to source image
 SUGGESTED_DONE = -21  # Suggested image has been processed
+MAINTENANCE = (
+    -30
+)  # Doing some maintenance on the puzzle. Will return it to previous status shortly.
 
 # permission
 PUBLIC = 0  # Is listed on the site

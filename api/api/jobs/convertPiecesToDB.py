@@ -14,6 +14,8 @@ import redis
 from api.app import db
 from api.database import rowify
 from api.tools import loadConfig, deletePieceDataFromRedis
+from api.database import read_query_file
+from api.constants import MAINTENANCE
 
 
 # Get the args from the janitor and connect to the database
@@ -26,7 +28,7 @@ db = sqlite3.connect(db_file)
 redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
 
 
-def transfer(puzzle):
+def transfer(puzzle, cleanup=True):
     print("transferring puzzle: {0}".format(puzzle))
     cur = db.cursor()
 
@@ -41,6 +43,12 @@ def transfer(puzzle):
         return
 
     puzzle_data = result[0]
+
+    puzzle_previous_status = puzzle_data["status"]
+    cur.execute(
+        read_query_file("update_puzzle_status_for_puzzle.sql"),
+        {"status": MAINTENANCE, "puzzle": puzzle},
+    )
 
     query = """select * from Piece where (puzzle = :puzzle)"""
     (all_pieces, col_names) = rowify(
@@ -64,10 +72,15 @@ def transfer(puzzle):
         piece["status"] = pieceFromRedis.get("s", None)
         cur.execute(query_update_piece, piece)
 
+    if cleanup:
+        deletePieceDataFromRedis(redisConnection, puzzle, all_pieces)
+
+    cur.execute(
+        read_query_file("update_puzzle_status_for_puzzle.sql"),
+        {"status": puzzle_previous_status, "puzzle": puzzle},
+    )
+
     db.commit()
-
-    deletePieceDataFromRedis(redisConnection, puzzle, all_pieces)
-
     cur.close()
 
 
@@ -99,9 +112,10 @@ def transferAll():
     print("transferring puzzles: {0}".format(puzzles))
     for puzzle in puzzles:
         print("transfer puzzle: {0}".format(puzzle))
-        transfer(puzzle)
+        transfer(puzzle, cleanup=False)
         memory = redisConnection.info(section="memory")
-        print("used_memory: {used_memory_human}".format(**memory))
+        # Not running cleanup so the used memory will persist in redis
+        # print("used_memory: {used_memory_human}".format(**memory))
 
 
 def handle_fail(job, exception, exception_func, traceback):
