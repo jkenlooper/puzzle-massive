@@ -103,6 +103,7 @@ cat <<HERE
   /humans.txt 1d;
   /robots.txt 1d;
   /site.webmanifest 1d;
+  /newapi/message/ off;
   /newapi/gallery-puzzle-list/ 1m;
   /newapi/puzzle-list/ 1m;
   # Safeguard for no cache on player-puzzle-list

@@ -21,7 +21,7 @@ python api/api/scheduler.py site.cfg UpdatePuzzleStats || exit 1;
 if [ -n "${1-}" ]; then
 DBDUMPFILE="$1";
 else
-DBDUMPFILE="db-$(date +%F).dump.gz";
+DBDUMPFILE="db-$(date --iso-8601 --utc).dump.gz";
 fi;
 
 echo "";

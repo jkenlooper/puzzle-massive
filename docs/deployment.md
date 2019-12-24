@@ -47,6 +47,7 @@ been uploaded to the home directory.
     ```bash
     cd /usr/local/src/puzzle-massive;
     source bin/activate;
+    printf 'Updating...' > /srv/puzzle-massive/root/puzzle-massive-message.html;
     sudo ./bin/puzzlectl.sh stop;
     ./bin/backup-db.sh;
     deactivate;
@@ -59,12 +60,13 @@ been uploaded to the home directory.
     over since they are not included in the distribution.
 
     ```bash
+    PM_DATE="$(date --iso-8601 --utc)";
     cd /home/dev/;
-    sudo mv /usr/local/src/puzzle-massive puzzle-massive-$(date +%F);
+    sudo mv /usr/local/src/puzzle-massive "puzzle-massive-${PM_DATE}";
     sudo tar --directory=/usr/local/src/ --extract --gunzip -f puzzle-massive-2.0.0.tar.gz
     sudo chown -R dev:dev /usr/local/src/puzzle-massive
-    cp puzzle-massive-$(date +%F)/.env /usr/local/src/puzzle-massive/;
-    cp puzzle-massive-$(date +%F)/.htpasswd /usr/local/src/puzzle-massive/;
+    cp "puzzle-massive-${PM_DATE}/.env" /usr/local/src/puzzle-massive/;
+    cp "puzzle-massive-${PM_DATE}/.htpasswd" /usr/local/src/puzzle-massive/;
     ```
 
 3.  Make the new apps and install the source code. The install will also start
@@ -79,6 +81,7 @@ been uploaded to the home directory.
     sudo make ENVIRONMENT=production install;
     sudo nginx -t && \
     sudo systemctl reload nginx;
+    printf '' > /srv/puzzle-massive/root/puzzle-massive-message.html;
     ```
 
 4.  Verify that stuff is working by monitoring the logs.
@@ -190,6 +193,7 @@ on the old server and copy all the data over to the new puzzle-green server.
     ```bash
     cd /usr/local/src/puzzle-massive/;
     source bin/activate;
+    printf 'Updating...' > /srv/puzzle-massive/root/puzzle-massive-message.html;
     sudo ./bin/puzzlectl.sh stop;
     ./bin/backup-db.sh;
     ```
@@ -217,7 +221,7 @@ on the old server and copy all the data over to the new puzzle-green server.
 
     ```bash
     cd /usr/local/src/puzzle-massive/;
-    DBDUMPFILE="db-$(date +%F).dump.gz";
+    DBDUMPFILE="db-$(date --iso-8601 --utc).dump.gz";
     rsync --archive --progress --itemize-changes \
       dev@puzzle-blue:/usr/local/src/puzzle-massive/$DBDUMPFILE \
       /usr/local/src/puzzle-massive/;
@@ -268,6 +272,7 @@ on the old server and copy all the data over to the new puzzle-green server.
     cd /usr/local/src/puzzle-massive/;
     source bin/activate;
     sudo ./bin/puzzlectl.sh start;
+    printf '' > /srv/puzzle-massive/root/puzzle-massive-message.html;
     sudo ./bin/log.sh;
     ```
 
