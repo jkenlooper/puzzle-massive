@@ -161,9 +161,9 @@ class PuzzlePieceTokenView(MethodView):
             # 400 if puzzle does not exist or piece is not found
             # Only puzzles in ACTIVE state can be mutated
             err_msg = {
-                "msg": "puzzle pieces can't be moved. Please refresh.",
+                "msg": "puzzle pieces can't be moved at this time. Please wait or reload the page.",
                 "type": "puzzleimmutable",
-                "timeout": 300,
+                "timeout": 5,
             }
             cur.close()
             return make_response(encoder.encode(err_msg), 400)
