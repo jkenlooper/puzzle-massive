@@ -28,4 +28,3 @@ do
   echo "----------------------------------------";
   systemctl "$COMMAND" "$app" | cat;
 done;
-

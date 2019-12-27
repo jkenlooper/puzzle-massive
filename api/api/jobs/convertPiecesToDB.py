@@ -1,3 +1,12 @@
+"""convertPiecesToDB.py
+
+Usage: convertPiecesToDB.py <site.cfg> [--cleanup]
+       convertPiecesToDB.py --help
+
+Options:
+  -h --help         Show this screen.
+  --cleanup         Clear redis data after transferring it to DB
+"""
 from __future__ import print_function
 
 # This job should be ran by a janitor worker.  It should find all puzzles in
@@ -10,22 +19,13 @@ import time
 
 import sqlite3
 import redis
+from docopt import docopt
 
 from api.app import db
 from api.database import rowify
 from api.tools import loadConfig, deletePieceDataFromRedis
 from api.database import read_query_file
 from api.constants import MAINTENANCE
-
-
-# Get the args from the janitor and connect to the database
-config_file = sys.argv[1]
-config = loadConfig(config_file)
-
-db_file = config["SQLITE_DATABASE_URI"]
-db = sqlite3.connect(db_file)
-
-redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
 
 
 def transfer(puzzle, cleanup=True):
@@ -106,16 +106,16 @@ def transferOldest(target_memory):
                 break
 
 
-def transferAll():
+def transferAll(cleanup=False):
     # Get all puzzles
     puzzles = redisConnection.zrange("pcupdates", 0, -1)
     print("transferring puzzles: {0}".format(puzzles))
     for puzzle in puzzles:
         print("transfer puzzle: {0}".format(puzzle))
-        transfer(puzzle, cleanup=False)
+        transfer(puzzle, cleanup=cleanup)
         memory = redisConnection.info(section="memory")
-        # Not running cleanup so the used memory will persist in redis
-        # print("used_memory: {used_memory_human}".format(**memory))
+        if cleanup:
+            print("used_memory: {used_memory_human}".format(**memory))
 
 
 def handle_fail(job, exception, exception_func, traceback):
@@ -123,5 +123,20 @@ def handle_fail(job, exception, exception_func, traceback):
     print("Handle janitor fail {0}".format(job.args[0]))
 
 
+redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
+
+
 if __name__ == "__main__":
-    transferAll()
+    # Get the args from the janitor and connect to the database
+    args = docopt(__doc__)
+    # config_file = sys.argv[1]
+    config_file = args["<site.cfg>"]
+    config = loadConfig(config_file)
+
+    db_file = config["SQLITE_DATABASE_URI"]
+    db = sqlite3.connect(db_file)
+
+    transferAll(args["--cleanup"])
+
+else:
+    from api.app import db

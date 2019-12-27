@@ -54,7 +54,8 @@ def run(config, cookie_secret):
 
 
 def serve(config, cookie_secret):
-    from gevent import pywsgi
+    from gevent import pywsgi, signal
+    from api.jobs.convertPiecesToDB import transferAll
 
     app = make_app(config=config, cookie_secret=cookie_secret)
 
@@ -64,4 +65,15 @@ def serve(config, cookie_secret):
     print(u"serving on {host}:{port}".format(**locals()))
     server = pywsgi.WSGIServer((host, port), app)
 
+    def shutdown():
+        server.stop(timeout=10)
+
+        # Transfer all piece data out of Redis and into the database when
+        # shutting down.
+        transferAll(True)
+
+        exit(signal.SIGTERM)
+
+    signal(signal.SIGTERM, shutdown)
+    signal(signal.SIGINT, shutdown)
     server.serve_forever(stop_timeout=10)
