@@ -75,9 +75,9 @@
   {% endif %}
 
 
-  {% if recent.permission == -1 -%}
+  {% if recent.permission == -1 -%} {# PRIVATE #}
   <p class="pm-Preview-statusNote">
-  This jigsaw puzzle is not publicly listed on the site.
+    This jigsaw puzzle {% if not recent.is_original %}instance{% endif %} is not publicly listed on the site.
   </p>
   {% endif %}
   {% if recent.status == COMPLETED and recent.is_recent -%}
@@ -107,7 +107,9 @@
   </p>
   {% endif %}
 
+  {% if not recent.is_original or recent.permission == 0 -%} {# instance or original PUBLIC #}
   <pm-player-create-puzzle-instance-link create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}"></pm-player-create-puzzle-instance-link>
+  {% endif %}
 
   {% if not recent.is_original %}
   <p class="pm-Preview-statusNote">

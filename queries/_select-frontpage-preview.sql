@@ -2,6 +2,7 @@ SELECT p.id, pf.name, pf.url, p.puzzle_id, p.pieces, p.table_width, p.table_heig
 p.owner,
 p.queue,
 p1.puzzle_id as original_puzzle_id,
+p1.permission as original_permission,
 pv.name as puzzle_variant_name,
 
 -- Find the short and long dimensions of the preview img by checking the table_width

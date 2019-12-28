@@ -26,6 +26,7 @@ from api.constants import (
     RENDERING_FAILED,
     IN_QUEUE,
     ACTIVE,
+    PUBLIC,
 )
 
 
@@ -138,15 +139,16 @@ def render(*args):
         puzzle_dir = os.path.join(config["PUZZLE_RESOURCES"], puzzle_id)
 
         # If it is being rebuilt then delete all the other resources.
-        cleanup(puzzle_id, ["original.jpg"])
+        cleanup(puzzle_id, ["original.jpg", "preview_full.jpg"])
 
         scaled_sizes = [
             100,
         ]
 
-        # Create the preview full
+        # Create the preview full if it is a new original puzzle. A puzzle is
+        # considered to be 'new' if status was IN_RENDER_QUEUE and not REBUILD.
         # TODO: use requests.get to get original.jpg and run in another thread
-        if original_puzzle_id == puzzle_id:
+        if original_puzzle_id == puzzle_id and puzzle["status"] == IN_RENDER_QUEUE:
             im = Image.open(os.path.join(original_puzzle_dir, "original.jpg")).copy()
             im.thumbnail(size=(384, 384))
             im.save(os.path.join(puzzle_dir, "preview_full.jpg"))
@@ -433,7 +435,7 @@ def render(*args):
 
         # Update Puzzle data
         puzzleStatus = ACTIVE
-        if original_puzzle_id == puzzle_id:
+        if original_puzzle_id == puzzle_id and puzzle["permission"] == PUBLIC:
             puzzleStatus = IN_QUEUE
 
         cur.execute(

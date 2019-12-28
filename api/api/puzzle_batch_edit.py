@@ -26,6 +26,7 @@ from api.constants import (
 
 redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
 
+# TODO: add another action for "rebuild"
 ACTIONS = ("approve", "reject", "delete", "tag")
 
 
@@ -73,6 +74,9 @@ class AdminPuzzleBatchEditView(MethodView):
         status = None
 
         if action == "approve":
+            # TODO: May need to be set to REBUILD if it is an existing puzzle,
+            # otherwise the preview_full.jpg will be recreated.  Use new
+            # "rebuild" action instead of just "approve".
             status = IN_RENDER_QUEUE
 
         if action == "reject":

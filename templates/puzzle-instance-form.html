@@ -3,6 +3,12 @@
 {% set width = puzzle.long if puzzle.table_width > puzzle.table_height else puzzle.short %}
 {% set height = puzzle.short if puzzle.table_width > puzzle.table_height else puzzle.long %}
 
+{% if puzzle.original_permission == -1 -%} {# PRIVATE #}
+<p>
+  This original puzzle is not public on the site.  Creating an instance of it is not allowed.
+</p>
+{% else %}
+
 <form enctype="multipart/form-data" id="puzzle-instance-form" method="post" action="/newapi/puzzle-instance/">
   <input type="hidden" name="puzzle_id" value="{{puzzle.puzzle_id}}">
 
@@ -87,3 +93,4 @@
   </div>
 </form>
 
+{% endif %}

@@ -1,6 +1,7 @@
 update Puzzle set status = 2, -- IN_QUEUE
 queue = 10 -- QUEUE_INACTIVE
 where status = 1 -- ACTIVE
+and permission = 0 -- PUBLIC
 and id in (
     select distinct p.id
     from Puzzle as p
