@@ -15,6 +15,8 @@
 /api/puzzle-massive-scheduler.service
 /api/puzzle-massive-cache-purge.path
 /api/puzzle-massive-cache-purge.service
+/api/puzzle-massive-backup-db.timer
+/api/puzzle-massive-backup-db.service
 /divulger/puzzle-massive-divulger.service
 /db
 /db.dump.sql

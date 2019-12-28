@@ -21,6 +21,7 @@ for app in puzzle-massive-chill \
   puzzle-massive-divulger \
   puzzle-massive-artist \
   puzzle-massive-scheduler \
+  puzzle-massive-backup-db.timer \
   puzzle-massive-janitor;
 do
   echo "";

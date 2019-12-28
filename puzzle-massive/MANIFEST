@@ -11,6 +11,8 @@ api/puzzle-massive-janitor.service.sh
 api/puzzle-massive-scheduler.service.sh
 api/puzzle-massive-cache-purge.path.sh
 api/puzzle-massive-cache-purge.service.sh
+api/puzzle-massive-backup-db.timer.sh
+api/puzzle-massive-backup-db.service.sh
 api/requirements.txt
 api/setup.py
 bin/backup-db.sh

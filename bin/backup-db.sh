@@ -32,7 +32,7 @@ while getopts ":hd:" opt; do
 done;
 shift "$((OPTIND-1))";
 
-SQLITE_DATABASE_URI=$(./bin/site-cfg.py site.cfg SQLITE_DATABASE_URI);
+SQLITE_DATABASE_URI=$(./bin/python bin/site-cfg.py site.cfg SQLITE_DATABASE_URI);
 
 DBOWNER=$(stat -c '%U' "${SQLITE_DATABASE_URI}")
 if test "${USER}" \!= "${DBOWNER}"; then

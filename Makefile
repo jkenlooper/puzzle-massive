@@ -118,6 +118,13 @@ objects += api/puzzle-massive-cache-purge.service
 api/puzzle-massive-cache-purge.service: api/puzzle-massive-cache-purge.service.sh
 	./$< $(PORTREGISTRY) $(CACHEDIR) $(project_dir) $(PURGEURLLIST) > $@
 
+objects += api/puzzle-massive-backup-db.service
+api/puzzle-massive-backup-db.service: api/puzzle-massive-backup-db.service.sh
+	./$< $(ENVIRONMENT) $(project_dir) > $@
+objects += api/puzzle-massive-backup-db.timer
+api/puzzle-massive-backup-db.timer: api/puzzle-massive-backup-db.timer.sh
+	./$< $(ENVIRONMENT) > $@
+
 site.cfg: site.cfg.sh $(PORTREGISTRY) $(ENV_FILE)
 	./$< $(ENVIRONMENT) $(SRVDIR) $(DATABASEDIR) $(PORTREGISTRY) $(ARCHIVEDIR) $(CACHEDIR) $(PURGEURLLIST) > $@
 
