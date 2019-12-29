@@ -31,34 +31,7 @@ interface TemplateData {
 }
 
 // piecesCountList should include ranges from SKILL_LEVEL_RANGES
-const piecesCountList = [
-  0,
-  50,
-  100,
-  200,
-  300,
-  450,
-  600,
-  800,
-  1000,
-  1500,
-  2000,
-  2500,
-  3000,
-  4000,
-  5000,
-  6000,
-  7000,
-  8000,
-  9000,
-  10000,
-  15000,
-  20000,
-  30000,
-  40000,
-  50000,
-  60000,
-];
+const piecesCountList = [0, 400, 800, 1600, 2200, 4000, 10000, 60000];
 // Set a minimum delay to prevent getting a too many requests error (429).  The
 // puzzle-list endpoint is rate-limited per ip at one request every 2 seconds
 // with a burst/bucket of 20. The burst here is set to half of that limit and is
@@ -134,22 +107,19 @@ customElements.define(
             const piecesCount = parseInt(item);
             return isNaN(piecesCount) ? 0 : piecesCount;
           })
-          .reduce(
-            (acc, pieceCount) => {
-              if (acc.min === undefined) {
-                acc.min = pieceCount;
-              } else {
-                acc.min = Math.min(pieceCount, acc.min);
-              }
-              if (acc.max === undefined) {
-                acc.max = pieceCount;
-              } else {
-                acc.max = Math.max(pieceCount, acc.max);
-              }
-              return acc;
-            },
-            <MinMax>{}
-          );
+          .reduce((acc, pieceCount) => {
+            if (acc.min === undefined) {
+              acc.min = pieceCount;
+            } else {
+              acc.min = Math.min(pieceCount, acc.min);
+            }
+            if (acc.max === undefined) {
+              acc.max = pieceCount;
+            } else {
+              acc.max = Math.max(pieceCount, acc.max);
+            }
+            return acc;
+          }, <MinMax>{});
       }
       const piecesMin = minmax.min || 0;
       const piecesMax = minmax.max || 0;
