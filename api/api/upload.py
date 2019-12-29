@@ -39,13 +39,13 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
     puzzle_id = None
     cur = db.cursor()
 
-    unsplash_match = re.search(r"unsplash.com/photos/([^/]+)", link)
+    unsplash_match = re.search(r"^(http://|https://)?unsplash.com/photos/([^/]+)", link)
     if link and unsplash_match:
         if not current_app.config.get("UNSPLASH_APPLICATION_ID"):
             abort(400)
 
         d = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
-        filename = unsplash_match.group(1)
+        filename = unsplash_match.group(2)
         u_id = "%s" % (
             hashlib.sha224(bytes("%s%s" % (filename, d), "utf-8")).hexdigest()[0:9]
         )
