@@ -61,6 +61,7 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
         unsplash_image_thread = UnsplashPuzzleThread(
             puzzle_id,
             filename,
+            description,
             current_app.config.get("UNSPLASH_APPLICATION_ID"),
             current_app.config.get("SQLITE_DATABASE_URI"),
         )
@@ -329,10 +330,11 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
 
 
 class UnsplashPuzzleThread(threading.Thread):
-    def __init__(self, puzzle_id, photo, application_id, db_file):
+    def __init__(self, puzzle_id, photo, description, application_id, db_file):
         threading.Thread.__init__(self)
         self.puzzle_id = puzzle_id
         self.photo = photo
+        self.description = description
         self.application_id = application_id
         self.db_file = db_file
         self.puzzle_resources = current_app.config.get("PUZZLE_RESOURCES")
@@ -351,7 +353,13 @@ class UnsplashPuzzleThread(threading.Thread):
     def add_puzzle(self, data):
         db = sqlite3.connect(self.db_file)
         cur = db.cursor()
-        description = escape(data.get("description", None))
+
+        # Don't use unsplash description if puzzle already has one
+        description = (
+            self.description
+            if self.description
+            else escape(data.get("description", None))
+        )
 
         puzzle_dir = os.path.join(self.puzzle_resources, self.puzzle_id)
         filename = os.path.join(puzzle_dir, "original.jpg")

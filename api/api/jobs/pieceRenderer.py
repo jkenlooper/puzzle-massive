@@ -438,6 +438,10 @@ def render(*args):
         if original_puzzle_id == puzzle_id and puzzle["permission"] == PUBLIC:
             puzzleStatus = IN_QUEUE
 
+        # TODO: if puzzle is unsplash photo then check if preview_full is still
+        # reachable.  If it isn't; then run the set_lost_unsplash_photo from
+        # migratePuzzleFile.
+
         cur.execute(
             "update Puzzle set status = :status where id = :id",
             {"status": puzzleStatus, "id": puzzle["id"]},
