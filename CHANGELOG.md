@@ -12,6 +12,19 @@ git commit messages (`git shortlog 2.3.2..origin/develop`).
 
 ## [Unreleased] - ...
 
+### Fixed
+
+- Cache on message, and puzzle resources has been corrected
+
+### Changed
+
+- The piece count list on search page now matches the skill level range for
+  queued puzzles. Players will still see their previous selection since it is
+  stored in localStorage.
+- Use the submitted description for Unsplash photos and fallback to description
+  from Unsplash if missing. Sometimes Unsplash photos have strange
+  descriptions for their photos.
+
 ## [2.4.0] - 2019-12-14
 
 Redesign with a new puzzle search page. Old queue page has been replaced.
