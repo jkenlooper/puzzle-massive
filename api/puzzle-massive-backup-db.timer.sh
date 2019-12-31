@@ -16,7 +16,7 @@ Requires=puzzle-massive-backup-db.service
 
 [Timer]
 Unit=puzzle-massive-backup-db.service
-echo "OnActiveSec=1min"
+OnActiveSec=1min
 HERE
 if test "${ENVIRONMENT}" == 'development'; then
 echo "OnUnitActiveSec=1hour"

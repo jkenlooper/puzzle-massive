@@ -8,6 +8,7 @@ Usage: ${0} [-h] [-d <backup-directory-path>] [<backup-filename>]
 Options:
   -h            Show help
   -d directory  Set the directory to store backup files in [default: ./]
+  -w            Name backup file with the day of week
 
 Creates a backup file of the database.  It first converts the redis piece data
 to the database and runs any necessary scheduler tasks for batched redis data.
@@ -16,14 +17,18 @@ USAGE
   exit 0;
 }
 
+WEEKDAY_BACKUP=;
 BACKUP_DIRECTORY=$(pwd)
-while getopts ":hd:" opt; do
+while getopts ":hd:w" opt; do
   case ${opt} in
     h )
       usage;
       ;;
     d )
       BACKUP_DIRECTORY=${OPTARG};
+      ;;
+    w )
+      WEEKDAY_BACKUP=1;
       ;;
     \? )
       usage;
@@ -54,7 +59,11 @@ echo "Running one-off scheduler tasks to clean up any batched data";
 if [ -n "${1-}" ]; then
 DBDUMPFILE="$1";
 else
-DBDUMPFILE="db-$(date --iso-8601 --utc).dump.gz";
+    if [ -n "${WEEKDAY_BACKUP-}" ]; then
+        DBDUMPFILE="db-$(date --utc '+%a').dump.gz";
+    else
+        DBDUMPFILE="db-$(date --iso-8601 --utc).dump.gz";
+    fi;
 fi;
 
 echo "";

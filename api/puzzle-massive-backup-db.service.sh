@@ -23,7 +23,7 @@ HERE
 if test "${ENVIRONMENT}" == 'development'; then
 echo "ExecStart=${SRCDIR}bin/backup-db.sh -d /home/dev db-development.dump.gz"
 else
-echo "ExecStart=${SRCDIR}bin/backup-db.sh -d /home/dev"
+echo "ExecStart=${SRCDIR}bin/backup-db.sh -d /home/dev -w"
 fi
 cat <<HERE
 
