@@ -781,20 +781,34 @@ class BanishSelf(MethodView):
     """
 
     decorators = [user_not_banned]
-    response_text = "Press any key to continue . . ."
+
+    def process_any_key(self):
+        ip = request.headers.get("X-Real-IP")
+        user = int(
+            current_app.secure_cookie.get(u"user")
+            or user_id_from_ip(ip, skip_generate=False)
+        )
+        message = ""
+
+        # Check if player has at least joined one piece before.
+        cur = db.cursor()
+        result = cur.execute(
+            fetch_query_string("select-minimum-score-for-player.sql"),
+            {"player": user, "score": 1},
+        ).fetchall()
+        if not result:
+            message = "Press any key to continue . . ."
+            increase_ban_time(user, HONEY_POT_BAN_TIME)
+        else:
+            message = "Any key is disabled.  Honey pot averted."
+
+        cur.close()
+        return make_response(message, 201)
 
     def get(self):
         "The url for this is listed in robots.txt under a Disallow"
-        ip = request.headers.get("X-Real-IP")
-        user = int(current_app.secure_cookie.get(u"user") or user_id_from_ip(ip))
-        increase_ban_time(user, HONEY_POT_BAN_TIME)
-
-        return make_response(self.response_text, 201)
+        return self.process_any_key()
 
     def post(self):
         "User filled out and submitted the hidden form.  Most likely a spam bot."
-        ip = request.headers.get("X-Real-IP")
-        user = int(current_app.secure_cookie.get(u"user") or user_id_from_ip(ip))
-
-        increase_ban_time(user, HONEY_POT_BAN_TIME)
-        return make_response(self.response_text, 201)
+        return self.process_any_key()

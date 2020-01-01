@@ -303,7 +303,7 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
 
         upload_file = request.files.get("upload_file", None)
 
-        # TODO: get the owner of the suggested puzzle
+        # Get the owner of the suggested puzzle
         cur = db.cursor()
         result = cur.execute(
             fetch_query_string("_select-owner-for-suggested-puzzle.sql"),
