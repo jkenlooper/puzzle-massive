@@ -113,6 +113,12 @@ customElements.define(
         this.instanceId
       );
 
+      puzzleService.subscribe(
+        "pieces/info/toggle-movable",
+        this.onToggleMovable.bind(this),
+        this.instanceId
+      );
+
       this.$dropZone.addEventListener(
         "mousedown",
         this.dropTap.bind(this),
@@ -376,6 +382,10 @@ customElements.define(
       }
       //const endTime = new Date();
       //console.log("render pieces", endTime.getTime() - startTime.getTime());
+    }
+
+    onToggleMovable(showMovable:boolean) {
+      this.$container.classList.toggle("show-movable", showMovable);
     }
 
     updateForegroundAndBackgroundColors() {

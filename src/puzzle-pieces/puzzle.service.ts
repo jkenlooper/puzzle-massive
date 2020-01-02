@@ -78,16 +78,19 @@ type PiecesUpdateCallback = (data: Array<PieceData>) => any;
 type KarmaUpdatedCallback = (data: KarmaData) => any;
 type PieceMoveRejectedCallback = (data: PieceData) => any;
 type PieceMoveBlockedCallback = (data: PieceMoveError) => any;
+type PiecesInfoToggleMovableCallback = () => any;
 const piecesMutate = Symbol("pieces/mutate");
 const karmaUpdated = Symbol("karma/updated");
 const pieceMoveRejected = Symbol("piece/move/rejected");
 const pieceMoveBlocked = Symbol("piece/move/blocked");
+const piecesInfoToggleMovable = Symbol("pieces/info/toggle-movable");
 
 const topics = {
   "pieces/mutate": piecesMutate,
   "karma/updated": karmaUpdated,
   "piece/move/rejected": pieceMoveRejected,
   "piece/move/blocked": pieceMoveBlocked,
+  "pieces/info/toggle-movable": piecesInfoToggleMovable,
 };
 
 interface MoveRequestData {
@@ -112,11 +115,16 @@ class PuzzleService {
   private mark: string = "";
   private selectedPieces: Array<number> = [];
   private instanceId = "puzzleService";
+  private _showMovable = false;
 
   [piecesMutate]: Map<string, PiecesUpdateCallback> = new Map();
   [karmaUpdated]: Map<string, KarmaUpdatedCallback> = new Map();
   [pieceMoveRejected]: Map<string, PieceMoveRejectedCallback> = new Map();
   [pieceMoveBlocked]: Map<string, PieceMoveBlockedCallback> = new Map();
+  [piecesInfoToggleMovable]: Map<
+    string,
+    PiecesInfoToggleMovableCallback
+  > = new Map();
   constructor() {
     divulgerService.subscribe(
       "piece/update",
@@ -505,6 +513,15 @@ class PuzzleService {
 
     // Reset the selectedPieces
     this.selectedPieces = [];
+  }
+
+  get showMovable() {
+    return this._showMovable;
+  }
+
+  toggleMovable() {
+    this._showMovable = !this._showMovable;
+    this._broadcast(piecesInfoToggleMovable, this._showMovable);
   }
 
   private onPieceUpdate(data: PieceMovementData) {

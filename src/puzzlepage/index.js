@@ -9,7 +9,8 @@ import '../puzzle-bits'
 import '../puzzle-karma-alert'
 import '../puzzle-alert'
 import '../hash-color'
-import '../karma-status'
+//import '../karma-status'
+import '../toggle-movable-pieces'
 import './puzzlepage.css'
 
 // Patch in the old PuzzlePreviewBox
