@@ -32,7 +32,8 @@
   transition-duration: 0s;
 }
 
-.p.is-active .pm-PuzzlePieces.show-movable .p.is-active,
+.p.is-active,
+.pm-PuzzlePieces.show-movable .p.is-active,
 .pm-PuzzlePieces.show-movable .p.is-dragging {
   z-index: 13;
   box-shadow: 0px 0px 100px 0px currentColor;

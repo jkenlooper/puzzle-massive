@@ -157,10 +157,13 @@
 
         {% if isPuzzleVisible %}
         {% if preview_full.url != '' %}
+        {# TODO: Convert to web component #}
+        <span>
           <label>
             <input class="u-hidden" type="checkbox" id="puzzle-preview-button">
             <pm-icon size="sm">image-sprite</pm-icon>
           </label>
+        </span>
         {% endif %}
 
         {# TODO: Move this button somewhere else.
@@ -171,19 +174,17 @@
         {% endif %}
         #}
 
+        <span>
         <pm-hash-color background-color="{{ puzzle.bg_color }}" name="{{ puzzle.puzzle_id }}">
         </pm-hash-color>
+        </span>
 
-        <div>
-          <!-- TODO: button should toggle a small movable window that list more
-            stuff like karma status, player list, etc.
-          -->
-          <!-- TODO: add player list -->
-          <!--
-          <pm-karma-status></pm-karma-status>
-          -->
-          <pm-toggle-movable-pieces></pm-toggle-movable-pieces>
-        </div>
+        <pm-toggle-movable-pieces></pm-toggle-movable-pieces>
+
+        <!-- TODO: button should toggle a small movable window that list more
+          stuff like karma status, player list, etc.
+        -->
+        <!-- TODO: add player list -->
         {% endif %}
 
   {% endblock %}

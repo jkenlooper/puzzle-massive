@@ -1,5 +1,24 @@
+@import "../site/viewport-breakpoints.css";
 .pm-ToggleMovablePieces {
+  display: block;
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: 2px solid currentColor;
+  text-decoration: none;
+  color: var(--color-dark);
+  cursor: pointer;
+}
+@media (--sm-viewport) {
+  .pm-ToggleMovablePieces {
+    padding: 5px 5px;
+    border: 1px solid currentColor;
+  }
+}
+.pm-ToggleMovablePieces.isActive {
+  background-color: var(--color-accent);
+  color: var(--color-light-light);
+  text-decoration: none;
 }
 
-.pm-ToggleMovablePieces-something {
+.pm-ToggleMovablePieces-icon {
 }

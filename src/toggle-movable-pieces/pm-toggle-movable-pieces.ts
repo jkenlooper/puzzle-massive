@@ -1,4 +1,5 @@
 import { html, render } from "lit-html";
+import { classMap } from "lit-html/directives/class-map.js";
 
 import { puzzleService } from "../puzzle-pieces/puzzle.service";
 
@@ -43,19 +44,29 @@ customElements.define(
       this.render();
     }
 
-    clickedButton() {
+    clickedButton(e) {
+      e.preventDefault();
       puzzleService.toggleMovable();
     }
 
     template(data: TemplateData) {
-      console.log(data.status);
       return html`
-        <button
-          class="pm-ToggleMovablePieces"
+        <label
+          class=${classMap({
+            "pm-ToggleMovablePieces": true,
+            isActive: data.status === State.On,
+          })}
           @click=${data.clickedButtonHandler}
         >
-          <pm-icon size="sm">solution</pm-icon>
-        </div>
+          <input
+            type="checkbox"
+            class="u-hidden"
+            ?checked=${data.status === State.On}
+          />
+          <pm-icon class="pm-ToggleMovablePieces-icon" size="sm"
+            >solution</pm-icon
+          >
+        </label>
       `;
     }
 

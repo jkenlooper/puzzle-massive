@@ -53,7 +53,8 @@
  * like this because of their location in the secondary menu.  These elements
  * are commonly outside of the base template, however.
  */
-.pm-Base-menuSecondary > * {
+.pm-Base-menuSecondary > span,
+.pm-Base-menuSecondary > a {
   padding: 5px 10px;
   border-radius: 5px;
   border: 2px solid currentColor;
@@ -61,7 +62,8 @@
   color: var(--color-dark);
 }
 @media (--sm-viewport) {
-  .pm-Base-menuSecondary > * {
+  .pm-Base-menuSecondary > span,
+  .pm-Base-menuSecondary > a {
     padding: 5px 5px;
     border: 1px solid currentColor;
   }
@@ -71,7 +73,8 @@
 .pm-Base-menuSecondary > a:focus {
   text-decoration: underline;
 }
-.pm-Base-menuSecondary > .is-active {
+.pm-Base-menuSecondary > span.is-active,
+.pm-Base-menuSecondary > a.is-active {
   background-color: var(--color-accent);
   color: var(--color-light-light);
   text-decoration: none;
