@@ -135,7 +135,7 @@ def make_app(config=None, **kw):
         AdminBannedUserList,
         BanishSelf,
     )
-    from api.bit import BitIconView, ChooseBitView, ClaimBitView, ClaimUserView
+    from api.bit import ChooseBitView, ClaimBitView, ClaimUserView
     from api.stats import (
         PuzzleStatsView,
         PlayerRanksView,
@@ -223,12 +223,6 @@ def make_app(config=None, **kw):
     app.add_url_rule(
         "/user-login/<anonymous_login>/", view_func=UserLoginView.as_view("user-login")
     )
-
-    # TODO: deprecate /bit-icon/<int:user_id>/
-    app.add_url_rule(
-        "/bit-icon/<int:user_id>/", view_func=BitIconView.as_view("bit-icon")
-    )
-
     app.add_url_rule("/choose-bit/", view_func=ChooseBitView.as_view("choose-bit"))
     app.add_url_rule("/claim-bit/", view_func=ClaimBitView.as_view("claim-bit"))
     app.add_url_rule("/claim-user/", view_func=ClaimUserView.as_view("claim-user"))

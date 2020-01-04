@@ -18,36 +18,6 @@ from api.tools import purge_route_from_nginx_cache
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
-QUERY_BITICON_BY_USER = """
-SELECT u.id, b.name AS icon
-  FROM BitIcon AS b
-  JOIN User AS u ON u.id = b.user
-WHERE u.id = :user;
-"""
-
-
-class BitIconView(MethodView):
-    """user id to bit icon name"""
-
-    decorators = [user_not_banned]
-
-    def get(self, user_id):
-        "JSON object with icon"
-
-        # Set the default to show no icon
-        user_data = {
-            "id": int(user_id),
-            "icon": False,
-        }
-        cur = db.cursor()
-        result = cur.execute(QUERY_BITICON_BY_USER, {"user": int(user_id)}).fetchall()
-        if result:
-            (result, col_names) = rowify(result, cur.description)
-            user_data = result[0]
-
-        cur.close()
-        return encoder.encode(user_data)
-
 
 class ChooseBitView(MethodView):
     """Choose a bit"""

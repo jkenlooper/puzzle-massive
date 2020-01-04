@@ -258,7 +258,7 @@
                 resources="{{ puzzle_files.url }}"
                 puzzle-id="{{ puzzle.puzzle_id }}"
                 status="{{ puzzle.status }}"></pm-puzzle-pieces>
-              <pm-puzzle-bits media-path="{{ url_for('send_media_file', filename='') }}"></pm-puzzle-bits>
+              <pm-puzzle-bits></pm-puzzle-bits>
             {%- endmacro %}
 
             {% if scale != 0 %}

@@ -2,19 +2,21 @@
 }
 
 .pm-PuzzleBits-bit {
-  display: flex;
+  display: block;
   position: absolute;
-  top: 0;
-  left: -64px;
-  align-items: start;
-  justify-content: space-around;
+  top: calc(-1em - 42px);
+  left: 0px;
   transform: translate(0, 0);
   opacity: 0;
   z-index: 13;
   transition: opacity 0.5s linear;
-  width: 64px;
-  height: 64px;
+  width: 40px;
+  height: 40px;
   pointer-events: none;
+  color: black;
+  background-color: white;
+  border-radius: 37%;
+  text-shadow: white 0px 0px 2px, white 0px 0px 2px;
 }
 
 .pm-PuzzleBits-bit.is-active {

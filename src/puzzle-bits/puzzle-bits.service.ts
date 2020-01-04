@@ -1,14 +1,8 @@
 import userDetailsService from "../site/user-details.service";
 import { BitMovementData } from "../puzzle-pieces/divulger.service";
 
-interface PlayerBitIconResponse {
-  id: number;
-  icon: boolean | string; // icon is false if none assigned to player
-}
-
 export interface PlayerBit {
   id: number;
-  icon: boolean | string;
   x: number;
   y: number;
   lastUpdate: Date;
@@ -67,7 +61,6 @@ class PuzzleBitsService {
     function setOwnBit(playerId: number) {
       const bit: PlayerBit = {
         id: playerId,
-        icon: userDetailsService.userDetails.icon || false,
         x: 0,
         y: 0,
         lastUpdate: new Date(),
@@ -91,7 +84,6 @@ class PuzzleBitsService {
     const bitId = data.id;
     const bit: PlayerBit = Object.assign(
       {
-        icon: "unknown-bit",
         ownBit: false,
       },
       this.bits[bitId] || {},
@@ -101,21 +93,6 @@ class PuzzleBitsService {
         active: true,
       }
     );
-    if (bit.icon === "unknown-bit") {
-      // fetch player icon and add it to bits
-      bit.icon = false;
-      this.getPlayerBitIcon(bitId)
-        .then((newBit) => {
-          self.bits[bitId].icon = newBit.icon;
-        })
-        .catch(() => {
-          self.bits[bitId].icon = false;
-        })
-        .finally(() => {
-          self._updateCollection();
-          self._broadcast();
-        });
-    }
     this.moveTimeouts[bitId] = setInactive(bitId);
 
     this.bits[bitId] = bit;
@@ -131,23 +108,6 @@ class PuzzleBitsService {
         self._broadcast();
       }, BitActiveTimeout);
     }
-  }
-
-  getPlayerBitIcon(playerId: number): Promise<PlayerBitIconResponse> {
-    return fetch(`/newapi/bit-icon/${playerId}/`, {
-      method: "GET",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }).then((response: Response) => {
-      if (!response.ok) {
-        throw new Error(response.statusText);
-      }
-      return response.json().then((response: PlayerBitIconResponse) => {
-        return response;
-      });
-    });
   }
 
   _updateCollection() {
