@@ -49,6 +49,7 @@ been uploaded to the home directory.
     source bin/activate;
     printf 'Updating...' > /srv/puzzle-massive/root/puzzle-massive-message.html;
     sudo ./bin/puzzlectl.sh stop;
+    sudo ./bin/clear_nginx_cache.sh;
     ./bin/backup-db.sh;
     deactivate;
     ```
