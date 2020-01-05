@@ -63,12 +63,19 @@ systemctl stop puzzle-massive-scheduler
 systemctl disable puzzle-massive-scheduler
 rm -f "${SYSTEMDDIR}puzzle-massive-scheduler.service";
 
-rm -f "${SYSTEMDDIR}puzzle-massive-cache-purge.service";
-rm -f "${SYSTEMDDIR}puzzle-massive-cache-purge.path";
 systemctl stop puzzle-massive-cache-purge.service
 systemctl disable puzzle-massive-cache-purge.service
 systemctl stop puzzle-massive-cache-purge.path
 systemctl disable puzzle-massive-cache-purge.path
+rm -f "${SYSTEMDDIR}puzzle-massive-cache-purge.service";
+rm -f "${SYSTEMDDIR}puzzle-massive-cache-purge.path";
+
+systemctl stop puzzle-massive-backup-db.service
+systemctl disable puzzle-massive-backup-db.service
+systemctl stop puzzle-massive-backup-db.timer
+systemctl disable puzzle-massive-backup-db.timer
+rm -f "${SYSTEMDDIR}puzzle-massive-backup-db.service";
+rm -f "${SYSTEMDDIR}puzzle-massive-backup-db.timer";
 
 # TODO: Should it remove the database file in an uninstall?
 echo "Skipping removal of sqlite database file ${DATABASEDIR}db"

@@ -16,6 +16,7 @@ elif test "${COMMAND}" == 'stop'; then
 fi
 systemctl reload nginx;
 
+# Skipping the puzzle-massive-cache-purge.service since it is activated by path
 for app in puzzle-massive-chill \
   puzzle-massive-api \
   puzzle-massive-divulger \
