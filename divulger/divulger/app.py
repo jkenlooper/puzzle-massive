@@ -13,8 +13,6 @@ from gevent import sleep
 from geventwebsocket import WebSocketApplication
 from geventwebsocket.exceptions import WebSocketError
 
-redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
-
 
 # Prevent too many files open errors by limiting the number of possible
 # connections that can be open.
@@ -22,6 +20,13 @@ MAX_CONNECTIONS = 300
 
 
 class DivulgeApplication(WebSocketApplication):
+    @property
+    def redis(self):
+        redis_url = current_app.config.get("REDIS_URL")
+        if not redis_url:
+            raise KeyError("Must set REDIS_URL in site.cfg file.")
+        return redis.from_url(redis_url, decode_responses=True)
+
     def kill_connection(self, reason):
         # print("kill connection {0}".format(self.ws.handler.client_address))
         self.ws.send(reason)
@@ -71,7 +76,7 @@ class DivulgeApplication(WebSocketApplication):
             return
 
         # subscribe so
-        pubsub = redisConnection.pubsub(ignore_subscribe_messages=True)
+        pubsub = self.redis.pubsub(ignore_subscribe_messages=True)
         channel = u"move:{0}".format(self.ws.handler.environ["puzzle"])
         pubsub.subscribe(channel)
 

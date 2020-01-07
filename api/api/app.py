@@ -42,6 +42,16 @@ def get_db():
 db = LocalProxy(get_db)
 
 
+def get_redis_connection():
+    redis_url = current_app.config.get("REDIS_URL")
+    if not redis_url:
+        raise KeyError("Must set REDIS_URL in site.cfg file.")
+    return redis.from_url(redis_url, decode_responses=True)
+
+
+redis_connection = LocalProxy(get_redis_connection)
+
+
 def files_loader(*args):
     """
     Loads all the files in each directory as values in a dict with the key
@@ -83,7 +93,7 @@ def make_app(config=None, **kw):
     app.secure_cookie = SecureCookie(app, cookie_secret=kw["cookie_secret"])
 
     redisConnection = redis.from_url(
-        app.config.get("REDIS_URI", "redis://localhost:6379/0/"), decode_responses=True
+        app.config.get("REDIS_URL", "redis://localhost:6379/0/"), decode_responses=True
     )
 
     app.queries = files_loader("queries")

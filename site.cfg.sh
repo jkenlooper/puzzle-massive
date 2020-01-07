@@ -48,7 +48,8 @@ PORTDIVULGER = $PORTDIVULGER
 
 HOSTREDIS = '127.0.0.1'
 PORTREDIS = $PORTREDIS
-REDIS_URI = 'redis://127.0.0.1:${PORTREDIS}/0/'
+REDIS_DB = 0
+REDIS_URL = 'redis://${HOSTREDIS}:${PORTREDIS}/${REDIS_DB}/'
 
 # Valid SQLite URL forms are:
 #   sqlite:///:memory: (or, sqlite://)
