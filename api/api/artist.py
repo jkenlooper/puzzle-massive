@@ -4,13 +4,14 @@ import os
 import redis
 from rq import Worker, Queue, Connection
 
-#Preload libs
+# Preload libs
 from api.jobs import pieceRenderer
 
-listen = ['puzzle_create']
+listen = ["puzzle_create"]
 
-# TODO: use app config REDIS_URI
-redisConnection = redis.from_url('redis://localhost:6379/0/')
+# TODO: use app config REDIS_URL
+redisConnection = redis.from_url("redis://localhost:6379/0/")
+
 
 def main():
     ""
@@ -22,6 +23,6 @@ def main():
 
         artist.work()
 
-if __name__ == '__main__':
-    main()
 
+if __name__ == "__main__":
+    main()
