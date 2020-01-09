@@ -2,7 +2,6 @@ import math
 
 from flask import current_app, request, abort, json, make_response
 from flask.views import MethodView
-import redis
 
 from api.app import db
 from api.user import user_id_from_ip, user_not_banned
@@ -18,8 +17,6 @@ from api.constants import (
     RENDERING_FAILED,
     SKILL_LEVEL_RANGES,
 )
-
-redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
 
 STATUS_RECENT = "recent"
 STATUS_ACTIVE = "active"

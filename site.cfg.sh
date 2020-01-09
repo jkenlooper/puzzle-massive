@@ -19,6 +19,12 @@ source .env
 # requires them. Uncomment this line as well as the EXAMPLE_PUBLIC_KEY below.
 #source ".env"
 
+HOST='127.0.0.1'
+HOSTAPI='127.0.0.1'
+HOSTDIVULGER='127.0.0.1'
+HOSTREDIS='127.0.0.1'
+REDIS_DB=0
+
 DATE=$(date)
 
 if test "$ENVIRONMENT" == 'development'; then
@@ -36,19 +42,19 @@ cat <<HERE
 # Chill.
 
 # Set the HOST to 0.0.0.0 for being an externally visible server.
-HOST = '127.0.0.1'
+HOST = '$HOST'
 PORT = $PORTCHILL
 
-HOSTAPI = '127.0.0.1'
+HOSTAPI = '$HOSTAPI'
 PORTAPI = $PORTAPI
 
 # The other app for divulging piece movements
-HOSTDIVULGER = '127.0.0.1'
+HOSTDIVULGER = '$HOSTDIVULGER'
 PORTDIVULGER = $PORTDIVULGER
 
-HOSTREDIS = '127.0.0.1'
+HOSTREDIS = '$HOSTREDIS'
 PORTREDIS = $PORTREDIS
-REDIS_DB = 0
+REDIS_DB = $REDIS_DB
 REDIS_URL = 'redis://${HOSTREDIS}:${PORTREDIS}/${REDIS_DB}/'
 
 # Valid SQLite URL forms are:

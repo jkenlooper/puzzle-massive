@@ -9,9 +9,7 @@ import time
 import sys
 
 from flask import current_app
-import sqlite3
-import redis
-from api.app import db
+from api.app import db, redis_connection
 from api.database import rowify, fetch_query_string
 from api.tools import formatPieceMovementString, loadConfig, init_karma_key
 from api.constants import COMPLETED, QUEUE_END_OF_LINE
@@ -24,19 +22,6 @@ MAX_KARMA = 25
 MIN_KARMA = int(old_div(MAX_KARMA, 2)) * -1  # -12
 
 # POINTS_CAP = 15000
-
-# Get the args from the worker and connect to the database
-# try:
-#    config_file = sys.argv[1]
-#    config = loadConfig(config_file)
-#
-#    db_file = config['SQLITE_DATABASE_URI']
-#    db = sqlite3.connect(db_file)
-# except (IOError, IndexError):
-#    # Most likely being run from a test setup
-#    pass
-
-redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
 
 
 def get_earned_points(pieces):
@@ -59,13 +44,10 @@ def get_earned_points(pieces):
 
 
 def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
-    # if db_file:
-    #    db = sqlite3.connect(db_file)
-
     def publishMessage(topic, msg, karma_change, points=0, complete=False):
         # print(topic)
         # print(msg)
-        redisConnection.publish(topic, msg)
+        redis_connection.publish(topic, msg)
         # time.sleep(1)
 
         # return (topic, msg)
@@ -73,55 +55,55 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
 
         now = int(time.time())
 
-        redisConnection.zadd("pcupdates", {puzzle: now})
+        redis_connection.zadd("pcupdates", {puzzle: now})
 
         # TODO:
         # return (topic, msg)
 
         # bump the m_date for this player on the puzzle and timeline
-        redisConnection.zadd("timeline:{puzzle}".format(puzzle=puzzle), {user: now})
-        redisConnection.zadd("timeline", {user: now})
+        redis_connection.zadd("timeline:{puzzle}".format(puzzle=puzzle), {user: now})
+        redis_connection.zadd("timeline", {user: now})
 
         # Update player points
         if points != 0 and user != None:
-            redisConnection.zincrby(
+            redis_connection.zincrby(
                 "score:{puzzle}".format(puzzle=puzzle), amount=1, value=user
             )
-            redisConnection.sadd("batchuser", user)
-            redisConnection.sadd("batchpuzzle", puzzle)
-            redisConnection.incr("batchscore:{user}".format(user=user), amount=1)
-            redisConnection.incr(
+            redis_connection.sadd("batchuser", user)
+            redis_connection.sadd("batchpuzzle", puzzle)
+            redis_connection.incr("batchscore:{user}".format(user=user), amount=1)
+            redis_connection.incr(
                 "batchpoints:{puzzle}:{user}".format(puzzle=puzzle, user=user),
                 amount=points,
             )
-            redisConnection.zincrby("rank", amount=1, value=user)
+            redis_connection.zincrby("rank", amount=1, value=user)
             points_key = "points:{user}".format(user=user)
             pieces = int(puzzleData["pieces"])
             earns = get_earned_points(pieces)
 
-            karma = int(redisConnection.get(karma_key))
+            karma = int(redis_connection.get(karma_key))
             ## Max out recent points
             # if earns != 0:
-            #    recent_points = int(redisConnection.get(points_key) or 0)
+            #    recent_points = int(redis_connection.get(points_key) or 0)
             #    if karma + 1 + recent_points + earns < MAX_KARMA:
-            #        redisConnection.incr(points_key, amount=earns)
+            #        redis_connection.incr(points_key, amount=earns)
             # Doing small puzzles doesn't increase recent points, just extends points expiration.
-            redisConnection.expire(points_key, RECENT_POINTS_EXPIRE)
+            redis_connection.expire(points_key, RECENT_POINTS_EXPIRE)
 
             karma_change += 1
             # Extend the karma points expiration since it has increased
-            redisConnection.expire(karma_key, KARMA_POINTS_EXPIRE)
+            redis_connection.expire(karma_key, KARMA_POINTS_EXPIRE)
             # Max out karma
             if karma < MAX_KARMA:
-                redisConnection.incr(karma_key)
+                redis_connection.incr(karma_key)
             else:
                 # Max out points
                 if earns != 0:
-                    recent_points = int(redisConnection.get(points_key) or 0)
+                    recent_points = int(redis_connection.get(points_key) or 0)
                     if recent_points + earns <= MAX_RECENT_POINTS:
-                        redisConnection.incr(points_key, amount=earns)
+                        redis_connection.incr(points_key, amount=earns)
 
-            redisConnection.incr("batchpoints:{user}".format(user=user), amount=earns)
+            redis_connection.incr("batchpoints:{user}".format(user=user), amount=earns)
 
         # TODO: Optimize by using redis for puzzle status
         if complete:
@@ -146,23 +128,23 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
 
     def savePiecePosition(puzzle, piece, x, y):
         # Move the piece
-        redisConnection.hmset(
+        redis_connection.hmset(
             "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), {"x": x, "y": y}
         )
-        redisConnection.zadd("pcx:{puzzle}".format(puzzle=puzzle), {piece: x})
-        redisConnection.zadd("pcy:{puzzle}".format(puzzle=puzzle), {piece: y})
+        redis_connection.zadd("pcx:{puzzle}".format(puzzle=puzzle), {piece: x})
+        redis_connection.zadd("pcy:{puzzle}".format(puzzle=puzzle), {piece: y})
 
     def updateGroupedPiecesPositions(
         puzzle, piece, pieceGroup, offsetX, offsetY, newGroup=None, status=None
     ):
         "Update all other pieces x,y in group to the offset, if newGroup then assign them to the newGroup"
-        allOtherPiecesInPieceGroup = redisConnection.smembers(
+        allOtherPiecesInPieceGroup = redis_connection.smembers(
             "pcg:{puzzle}:{pieceGroup}".format(puzzle=puzzle, pieceGroup=pieceGroup)
         )
         allOtherPiecesInPieceGroup.remove(str(piece))
         allOtherPiecesInPieceGroup = list(allOtherPiecesInPieceGroup)
         # print 'allOtherPiecesInPieceGroup = {0}'.format(allOtherPiecesInPieceGroup)
-        pipe = redisConnection.pipeline(transaction=True)
+        pipe = redis_connection.pipeline(transaction=True)
         for groupedPiece in allOtherPiecesInPieceGroup:
             pipe.hmget(
                 "pc:{puzzle}:{groupedPiece}".format(
@@ -174,7 +156,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         # print 'groupedPiecesXY'
         # print groupedPiecesXY
 
-        pipe = redisConnection.pipeline(transaction=True)
+        pipe = redis_connection.pipeline(transaction=True)
         lines = []
         for groupedPiece in allOtherPiecesInPieceGroup:
             newX = int(groupedPiecesXY[groupedPiece][0]) + offsetX
@@ -229,8 +211,8 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     points = 0
     puzzle = puzzleData["puzzle"]
 
-    karma_key = init_karma_key(redisConnection, puzzle, ip)
-    karma = int(redisConnection.get(karma_key))
+    karma_key = init_karma_key(redis_connection, puzzle, ip)
+    karma = int(redis_connection.get(karma_key))
 
     # Restrict piece to within table boundaries
     if x < 0:
@@ -246,13 +228,13 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     (originX, originY) = list(
         map(
             int,
-            redisConnection.hmget(
+            redis_connection.hmget(
                 "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), ["x", "y"]
             ),
         )
     )
 
-    pieceGroup = redisConnection.hget(
+    pieceGroup = redis_connection.hget(
         "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), "g"
     )
 
@@ -262,7 +244,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     proximityX = set(
         map(
             int,
-            redisConnection.zrangebyscore(
+            redis_connection.zrangebyscore(
                 "pcx:{puzzle}".format(puzzle=puzzle), x - tolerance, x + tolerance
             ),
         )
@@ -270,7 +252,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     proximityY = set(
         map(
             int,
-            redisConnection.zrangebyscore(
+            redis_connection.zrangebyscore(
                 "pcy:{puzzle}".format(puzzle=puzzle), y - tolerance, y + tolerance
             ),
         )
@@ -280,7 +262,9 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     # Remove immovable pieces from the pieces in proximity
     if len(piecesInProximity) > 0:
         immovablePieces = set(
-            map(int, redisConnection.smembers("pcfixed:{puzzle}".format(puzzle=puzzle)))
+            map(
+                int, redis_connection.smembers("pcfixed:{puzzle}".format(puzzle=puzzle))
+            )
         )
         # print("immovablePieces {0}".format(immovablePieces))
         piecesInProximity = piecesInProximity.difference(immovablePieces)
@@ -291,7 +275,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         groupedPieces = set(
             map(
                 int,
-                redisConnection.smembers(
+                redis_connection.smembers(
                     "pcg:{puzzle}:{pieceGroup}".format(
                         puzzle=puzzle, pieceGroup=pieceGroup
                     )
@@ -304,7 +288,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     # print(piecesInProximity)
     lines = []
     if len(piecesInProximity) >= 4:
-        pipe = redisConnection.pipeline(transaction=False)
+        pipe = redis_connection.pipeline(transaction=False)
         pipe.sadd("pcstacked:{puzzle}".format(puzzle=puzzle), *piecesInProximity)
         for pieceInProximity in piecesInProximity:
             pipe.hset(
@@ -327,7 +311,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
 
         # No further processing needed since piece is stacked
         # print p
-        pieceProperties = redisConnection.hgetall(
+        pieceProperties = redis_connection.hgetall(
             "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
         )
 
@@ -347,7 +331,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
 
         # Decrease karma since stacking
         if karma > MIN_KARMA:
-            redisConnection.decr(karma_key)
+            redis_connection.decr(karma_key)
         karma_change -= 1
 
         return publishMessage(
@@ -358,7 +342,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
 
     elif len(piecesInProximity) > 1:
         # print piecesInProximity
-        pipe = redisConnection.pipeline(transaction=False)
+        pipe = redis_connection.pipeline(transaction=False)
         pipe.srem("pcstacked:{puzzle}".format(puzzle=puzzle), *piecesInProximity)
         for pieceInProximity in piecesInProximity:
             pipe.hdel(
@@ -378,11 +362,11 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     savePiecePosition(puzzle, piece, x, y)
 
     # Reset Piece Status for stacked (It's assumed that the piece being moved can't be a immovable piece)
-    redisConnection.srem("pcstacked:{puzzle}".format(puzzle=puzzle), piece)
-    redisConnection.hdel("pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), "s")
+    redis_connection.srem("pcstacked:{puzzle}".format(puzzle=puzzle), piece)
+    redis_connection.hdel("pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), "s")
 
     # Get Piece Properties
-    pieceProperties = redisConnection.hgetall(
+    pieceProperties = redis_connection.hgetall(
         "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
     )
     # print(pieceProperties)
@@ -399,7 +383,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
             ],
         )
     )
-    pipe = redisConnection.pipeline(transaction=False)
+    pipe = redis_connection.pipeline(transaction=False)
     for adjacentPiece in adjacentPiecesList:
         pipe.hgetall(
             "pc:{puzzle}:{adjacentPiece}".format(
@@ -416,7 +400,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     for adjacentPiece in adjacentPiecesList:
         # Skip if adjacent piece in same group
         if pieceGroup:
-            if redisConnection.sismember(
+            if redis_connection.sismember(
                 "pcg:{puzzle}:{pieceGroup}".format(
                     puzzle=puzzle, pieceGroup=pieceGroup
                 ),
@@ -468,24 +452,24 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         savePiecePosition(puzzle, piece, x=pieceProperties["x"], y=pieceProperties["y"])
 
         # Update Piece group
-        countOfPiecesInPieceGroup = redisConnection.scard(
+        countOfPiecesInPieceGroup = redis_connection.scard(
             "pcg:{puzzle}:{g}".format(puzzle=puzzle, g=pieceProperties.get("g", piece))
         )
         adjacentPieceGroup = adjacentPieceProps.get("g", adjacentPiece)
         if countOfPiecesInPieceGroup == 0:
             # Update Piece group to that of the adjacent piece since it may already be in a group
             # print('add {piece} to adjacent pieces group {g}'.format(piece=piece, g=adjacentPieceGroup))
-            redisConnection.sadd(
+            redis_connection.sadd(
                 "pcg:{puzzle}:{g}".format(puzzle=puzzle, g=adjacentPieceGroup),
                 piece,
                 adjacentPiece,
             )
-            redisConnection.hset(
+            redis_connection.hset(
                 "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece),
                 "g",
                 adjacentPieceGroup,
             )
-            redisConnection.hset(
+            redis_connection.hset(
                 "pc:{puzzle}:{adjacentPiece}".format(
                     puzzle=puzzle, adjacentPiece=adjacentPiece
                 ),
@@ -495,10 +479,10 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
 
             # Save the piece immovable status
             if pieceProperties.get("s") == "1":
-                redisConnection.hset(
+                redis_connection.hset(
                     "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), "s", "1"
                 )
-                redisConnection.sadd("pcfixed:{puzzle}".format(puzzle=puzzle), piece)
+                redis_connection.sadd("pcfixed:{puzzle}".format(puzzle=puzzle), piece)
 
             pieceProperties["g"] = adjacentPieceGroup
             p += "\n" + formatPieceMovementString(piece, **pieceProperties)
@@ -507,7 +491,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         else:
             # Decide which group should be merged into the other
             # print('decide group for {piece}'.format(piece=piece))
-            countOfPiecesInAdjacentPieceGroup = redisConnection.scard(
+            countOfPiecesInAdjacentPieceGroup = redis_connection.scard(
                 "pcg:{puzzle}:{g}".format(puzzle=puzzle, g=adjacentPieceGroup)
             )
             # print('adjacentPieceGroup count: {0}'.format(countOfPiecesInAdjacentPieceGroup))
@@ -555,7 +539,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
                     )
                 )
 
-                pipe = redisConnection.pipeline(transaction=True)
+                pipe = redis_connection.pipeline(transaction=True)
                 pipe.sadd(
                     "pcg:{puzzle}:{g}".format(puzzle=puzzle, g=pieceProperties["g"]),
                     adjacentPiece,
@@ -586,12 +570,12 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
 
                 # Add the adjacent pieces to the group
                 # TODO: unless the adjacent piece is immovable
-                piecesInAdjacentPieceGroup = redisConnection.smembers(
+                piecesInAdjacentPieceGroup = redis_connection.smembers(
                     "pcg:{puzzle}:{adjacentPieceGroup}".format(
                         puzzle=puzzle, adjacentPieceGroup=adjacentPieceGroup
                     )
                 )
-                pipe = redisConnection.pipeline(transaction=True)
+                pipe = redis_connection.pipeline(transaction=True)
                 for groupedAdjacentPiece in piecesInAdjacentPieceGroup:
                     pipe.sadd(
                         "pcg:{puzzle}:{g}".format(
@@ -628,13 +612,13 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     # Update other piece positions that are in the group if they haven't already been moved from the group merge
     if pieceGroup != None and not hasProcessedPieceGroupMovement:
         # Decrement karma since moving a piece that is in a group
-        pieceGroupCount = redisConnection.scard(
+        pieceGroupCount = redis_connection.scard(
             "pcg:{puzzle}:{pieceGroup}".format(puzzle=puzzle, pieceGroup=pieceGroup)
         )
         if pieceGroupCount > PIECE_GROUP_MOVE_MAX_BEFORE_PENALTY:
             # print 'decr karma since moving piec in group'
             if karma > MIN_KARMA:
-                redisConnection.decr(karma_key)
+                redis_connection.decr(karma_key)
             karma_change -= 1
 
         lines = updateGroupedPiecesPositions(
@@ -649,7 +633,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     # Check if the puzzle is complete
     complete = False
     if pieceProperties.get("s") == "1":
-        immovableGroupCount = redisConnection.scard(
+        immovableGroupCount = redis_connection.scard(
             "pcfixed:{puzzle}".format(puzzle=puzzle)
         )
         if int(immovableGroupCount) == int(puzzleData.get("pieces")):

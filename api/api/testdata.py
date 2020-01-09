@@ -25,13 +25,11 @@ from uuid import uuid4
 import hashlib
 import subprocess
 from random import randint
-import sqlite3
 
-import redis
 from rq import Queue
 from docopt import docopt
 
-from api.tools import loadConfig
+from api.tools import loadConfig, get_db, get_redis_connection
 from api.user import generate_user_login
 from api.constants import (
     ACTIVE,
@@ -60,13 +58,10 @@ args = docopt(__doc__, version="0.0")
 config_file = "site.cfg"
 config = loadConfig(config_file)
 
-db_file = config["SQLITE_DATABASE_URI"]
-db = sqlite3.connect(db_file)
+db = get_db(config)
+redis_connection = get_redis_connection(config)
 
-redisConnection = redis.from_url(
-    config.get("REDIS_URL", "redis://localhost:6379/0/"), decode_responses=True
-)
-createqueue = Queue("puzzle_create", connection=redisConnection)
+createqueue = Queue("puzzle_create", connection=redis_connection)
 
 
 QUERY_USER_ID_BY_LOGIN = """

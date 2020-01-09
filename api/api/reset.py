@@ -5,16 +5,13 @@ from random import randint
 
 from flask import current_app, redirect, request, make_response, abort, request
 from flask.views import MethodView
-import redis
 
-from .app import db
+from .app import db, redis_connection
 from .database import rowify
 from .constants import ACTIVE, COMPLETED
 from .timeline import archive_and_clear
 from .user import user_id_from_ip, user_not_banned
 from .jobs.convertPiecesToRedis import convert
-
-redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
 
 query_select_puzzle_for_puzzle_id_and_status = """
 select * from Puzzle where puzzle_id = :puzzle_id and status = :status
@@ -89,9 +86,9 @@ class PuzzlePiecesResetView(MethodView):
         )
 
         # Load the piece data from sqlite on demand
-        if not redisConnection.zscore("pcupdates", puzzle):
+        if not redis_connection.zscore("pcupdates", puzzle):
             # TODO: check redis memory usage and create cleanup job if it's past a threshold
-            memory = redisConnection.info(section="memory")
+            memory = redis_connection.info(section="memory")
             print("used_memory: {used_memory_human}".format(**memory))
             maxmemory = memory.get("maxmemory")
             # maxmemory = 1024 * 2000
@@ -110,7 +107,9 @@ class PuzzlePiecesResetView(MethodView):
 
         # TODO: archive the timeline
         # timeline ui should only show when the puzzle is in 'complete' status.
-        archive_and_clear(puzzle, db, current_app.config.get("PUZZLE_ARCHIVE"))
+        archive_and_clear(
+            puzzle, db, redis_connection, current_app.config.get("PUZZLE_ARCHIVE")
+        )
 
         (x1, y1, x2, y2) = (0, 0, puzzleData["table_width"], puzzleData["table_height"])
 
@@ -125,7 +124,7 @@ class PuzzlePiecesResetView(MethodView):
         allPiecesExceptTopLeft.remove(topLeftPiece["id"])
 
         # Create a pipe for buffering commands and disable atomic transactions
-        pipe = redisConnection.pipeline(transaction=False)
+        pipe = redis_connection.pipeline(transaction=False)
 
         # Reset the pcfixed
         pipe.delete("pcfixed:{puzzle}".format(puzzle=puzzle))

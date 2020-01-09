@@ -8,9 +8,8 @@ from flask import current_app, make_response, request, abort, json
 
 from flask.views import MethodView
 from werkzeug.exceptions import HTTPException
-import redis
 
-from .app import db
+from .app import db, redis_connection
 from .database import fetch_query_string, rowify
 from .tools import formatPieceMovementString
 from .jobs.convertPiecesToRedis import convert
@@ -21,8 +20,6 @@ from .constants import COMPLETED
 # from jobs import pieceMove
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
-
-redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
 
 # TODO: create a puzzle status web socket that will update when the status of
 # the puzzle changes from converting, done, active, etc.
@@ -55,10 +52,10 @@ class PuzzlePiecesView(MethodView):
         puzzle_view_rate_key = "pvrate:{user}:{timestamp}".format(
             user=user, timestamp=rounded_timestamp
         )
-        if redisConnection.setnx(puzzle_view_rate_key, 1):
-            redisConnection.expire(puzzle_view_rate_key, PUZZLE_VIEW_RATE_TIMEOUT)
+        if redis_connection.setnx(puzzle_view_rate_key, 1):
+            redis_connection.expire(puzzle_view_rate_key, PUZZLE_VIEW_RATE_TIMEOUT)
         else:
-            count = redisConnection.incr(puzzle_view_rate_key)
+            count = redis_connection.incr(puzzle_view_rate_key)
             if count > PUZZLE_VIEW_MAX_COUNT:
                 increase_ban_time(user, BAN_TIME_INCR_FOR_EACH)
 
@@ -85,13 +82,13 @@ class PuzzlePiecesView(MethodView):
         # if job is already active for this request respond with 202 Accepted
 
         # Load the piece data from sqlite on demand
-        if not redisConnection.zscore("pcupdates", puzzle):
-            # if not redisConnection.exists('pc:{puzzle}:0'.format(puzzle=puzzle)):
+        if not redis_connection.zscore("pcupdates", puzzle):
+            # if not redis_connection.exists('pc:{puzzle}:0'.format(puzzle=puzzle)):
             # TODO: publish the job to the worker queue
             # Respond with 202
 
             # Check redis memory usage and create cleanup job if it's past a threshold
-            memory = redisConnection.info(section="memory")
+            memory = redis_connection.info(section="memory")
             print("used_memory: {used_memory_human}".format(**memory))
             maxmemory = memory.get("maxmemory")
             if maxmemory != 0:
@@ -113,7 +110,7 @@ class PuzzlePiecesView(MethodView):
         )
 
         # Create a pipe for buffering commands and disable atomic transactions
-        pipe = redisConnection.pipeline(transaction=False)
+        pipe = redis_connection.pipeline(transaction=False)
 
         # The 'rotate' field is not public. It is for the true orientation of the piece.
         # The 'r' field is the mutable rotation of the piece.
@@ -154,3 +151,5 @@ class PuzzlePiecesView(MethodView):
             )
 
         return encoder.encode(pieceData)
+        # TODO: update js code to properly handle json mimetype
+        # return make_response(json.jsonify(pieceData), 200)

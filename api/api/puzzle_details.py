@@ -1,8 +1,7 @@
 from flask import current_app, request, abort, json, make_response
 from flask.views import MethodView
-import redis
 
-from api.app import db
+from api.app import db, redis_connection
 from api.user import user_id_from_ip, user_not_banned
 from api.database import fetch_query_string, rowify, delete_puzzle_resources
 from api.constants import (
@@ -15,8 +14,6 @@ from api.constants import (
     BID_COST_PER_PUZZLE,
     QUEUE_WINNING_BID,
 )
-
-redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
@@ -116,8 +113,8 @@ class PuzzleInstanceDetailsView(MethodView):
                 fetch_query_string("delete_puzzle_timeline.sql"),
                 {"puzzle": puzzleData["id"]},
             )
-            redisConnection.delete("timeline:{puzzle}".format(puzzle=puzzleData["id"]))
-            redisConnection.delete("score:{puzzle}".format(puzzle=puzzleData["id"]))
+            redis_connection.delete("timeline:{puzzle}".format(puzzle=puzzleData["id"]))
+            redis_connection.delete("score:{puzzle}".format(puzzle=puzzleData["id"]))
             cur.execute(
                 fetch_query_string("update_puzzle_status_for_puzzle.sql"),
                 {"status": DELETED_REQUEST, "puzzle": puzzleData["id"]},

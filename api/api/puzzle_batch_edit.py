@@ -3,9 +3,8 @@ import os
 
 from flask import current_app, redirect, request, make_response, abort
 from flask.views import MethodView
-import redis
 
-from api.app import db
+from api.app import db, redis_connection
 from api.database import rowify, fetch_query_string, delete_puzzle_resources
 from api.constants import (
     ACTIVE,
@@ -24,7 +23,6 @@ from api.constants import (
     DELETED_REQUEST,
 )
 
-redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
 
 # TODO: add another action for "rebuild"
 ACTIONS = ("approve", "reject", "delete", "tag")
@@ -112,8 +110,8 @@ class AdminPuzzleBatchEditView(MethodView):
                 cur.execute(
                     fetch_query_string("delete_puzzle_timeline.sql"), {"puzzle": id}
                 )
-                redisConnection.delete("timeline:{puzzle}".format(puzzle=id))
-                redisConnection.delete("score:{puzzle}".format(puzzle=id))
+                redis_connection.delete("timeline:{puzzle}".format(puzzle=id))
+                redis_connection.delete("score:{puzzle}".format(puzzle=id))
             db.commit()
 
         def each(puzzle_ids):

@@ -2,33 +2,39 @@ from __future__ import print_function
 import json
 import time
 import re
+import sys
+import logging
 
 from gevent import monkey
 
 monkey.patch_all()
 
 from socket import SHUT_RDWR
-import redis
 from gevent import sleep
 from geventwebsocket import WebSocketApplication
 from geventwebsocket.exceptions import WebSocketError
 
+from api.tools import loadConfig, get_redis_connection
 
 # Prevent too many files open errors by limiting the number of possible
 # connections that can be open.
 MAX_CONNECTIONS = 300
 
+config_file = sys.argv[1]
+config = loadConfig(config_file)
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG if config["DEBUG"] else logging.INFO)
+
 
 class DivulgeApplication(WebSocketApplication):
     @property
     def redis(self):
-        redis_url = current_app.config.get("REDIS_URL")
-        if not redis_url:
-            raise KeyError("Must set REDIS_URL in site.cfg file.")
-        return redis.from_url(redis_url, decode_responses=True)
+        return get_redis_connection(config)
 
     def kill_connection(self, reason):
-        # print("kill connection {0}".format(self.ws.handler.client_address))
+        logger.debug("kill connection {0}".format(self.ws.handler.client_address))
         self.ws.send(reason)
 
         # prevent this connection
@@ -44,14 +50,14 @@ class DivulgeApplication(WebSocketApplication):
         # self.puzzle = path_match.group(1)
         self.ws.handler.environ["puzzle"] = path_match.group(1)
 
-        # print("puzzle: {0}".format(self.ws.handler.environ['puzzle']))
+        logger.debug("puzzle: {0}".format(self.ws.handler.environ["puzzle"]))
         client_count = len(self.ws.handler.server.clients)
-        # print("clients {0}".format(client_count))
+        logger.debug("clients {0}".format(client_count))
         # print "Some client connected!"
 
         if client_count > MAX_CONNECTIONS:
             # TODO: Unable to get the IP so can't do this: or len(filter(lambda x: x[0] == ws.handler.client_address[0], ws.handler.server.clients.keys())) > MAX_CONNECTIONS_PER_IP:
-            # print("Max connections")
+            logger.info("Max connections")
             self.kill_connection("MAX")
 
     def poll_messages(self, pubsub):
@@ -61,7 +67,11 @@ class DivulgeApplication(WebSocketApplication):
             move_message = pubsub.get_message()
             if move_message:
                 puzzle_channel = move_message.get("channel")[len("move:") :]
-                # print("puzzle_channel: {0}, puzzle: {1}".format(puzzle_channel, self.ws.handler.environ['puzzle']))
+                logger.debug(
+                    "puzzle_channel: {0}, puzzle: {1}".format(
+                        puzzle_channel, self.ws.handler.environ["puzzle"]
+                    )
+                )
                 self.broadcast(puzzle_channel, move_message)
             elif (timestamp + 5.0) < time.time():
                 break
@@ -72,7 +82,7 @@ class DivulgeApplication(WebSocketApplication):
         parse the message to determine what puzzle and then broadcast that message
         """
         if message is None or message != self.ws.handler.environ["puzzle"]:
-            # print("message ignored: {0}".format(message))
+            logger.info("message ignored: {0}".format(message))
             return
 
         # subscribe so
@@ -86,13 +96,13 @@ class DivulgeApplication(WebSocketApplication):
         pubsub.close()
 
     def broadcast(self, puzzle, message):
-        # print('clients: {0}'.format(len(self.ws.handler.server.clients)))
+        logger.debug("clients: {0}".format(len(self.ws.handler.server.clients)))
         # TODO: With redis set the count of total players on the site as well as for each puzzle.
 
         for (key, client) in list(self.ws.handler.server.clients.items()):
             if client.ws.closed:
                 # TODO: I don't think this happens.  This code block hasn't been tested.
-                print("remove closed client {0}".format(key))
+                logger.debug("remove closed client {0}".format(key))
                 # client.ws.stream.handler.socket.shutdown(SHUT_RDWR)
                 # client.ws.stream.handler.socket.close()
                 # ws.handler.server.clients.pop(key)
@@ -101,14 +111,14 @@ class DivulgeApplication(WebSocketApplication):
             # Filter for just the clients for the puzzle
             if client.ws.path.find(puzzle) != -1:
                 try:
-                    # print("sending message to client: {0}".format(key))
+                    logger.debug("sending message to client: {0}".format(key))
                     client.ws.send(message.get("data"))
-                    # print("new activity {0} {1}".format(key, puzzle))
+                    logger.debug("new activity {0} {1}".format(key, puzzle))
                     # self.ws.handler.environ['last_activity'] = int(time.time())
                 except WebSocketError:
                     # Remove dead client
 
-                    print("remove dead client {0}".format(key))
+                    logger.info("remove dead client {0}".format(key))
                     ## Don't use the below commented out methods:
                     # client.ws.stream.handler.socket.shutdown(SHUT_RDWR)
                     # client.ws.stream.handler.socket.close()
@@ -118,7 +128,7 @@ class DivulgeApplication(WebSocketApplication):
                     # self.ws.handler.server.clients.pop(key)
 
     def on_close(self, reason):
-        print(
+        logger.info(
             "Connection closed! {0} {1}".format(
                 self.ws.handler.environ["puzzle"], self.ws.handler.client_address
             )

@@ -16,6 +16,7 @@ Subcommands:
 from __future__ import print_function
 from __future__ import absolute_import
 from docopt import docopt
+import subprocess
 
 # from ConfigParser import RawConfigParser
 
@@ -55,7 +56,6 @@ def run(config, cookie_secret):
 
 def serve(config, cookie_secret):
     from gevent import pywsgi, signal
-    from api.jobs.convertPiecesToDB import transferAll
 
     app = make_app(config=config, cookie_secret=cookie_secret)
 
@@ -70,7 +70,9 @@ def serve(config, cookie_secret):
 
         # Transfer all piece data out of Redis and into the database when
         # shutting down.
-        transferAll(True)
+        subprocess.call(
+            ["python", "api/api/jobs/convertPiecesToDB.py", config, "--cleanup"]
+        )
 
         exit(signal.SIGTERM)
 

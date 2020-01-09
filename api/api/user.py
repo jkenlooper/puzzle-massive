@@ -10,9 +10,8 @@ import hashlib
 
 from flask import current_app, json, redirect, make_response, request, url_for
 from flask.views import MethodView
-import redis
 
-from api.app import db
+from api.app import db, redis_connection
 from api.database import rowify, fetch_query_string
 from api.constants import POINT_COST_FOR_CHANGING_BIT, NEW_USER_STARTING_POINTS
 
@@ -43,7 +42,6 @@ QUERY_USER_ID_BY_LOGIN = """
 select id from User where ip = :ip and login = :login;
 """
 
-redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
 
@@ -123,7 +121,7 @@ def user_not_banned(f):
         user = current_app.secure_cookie.get(u"user") or user_id_from_ip(ip)
         if not user == None:
             user = int(user)
-            banneduser_score = redisConnection.zscore("bannedusers", user)
+            banneduser_score = redis_connection.zscore("bannedusers", user)
             if banneduser_score:
                 now = int(time.time())
                 if banneduser_score > now:
@@ -148,10 +146,10 @@ def user_not_banned(f):
 
 def increase_ban_time(user, seconds):
     now = int(time.time())
-    current = int(redisConnection.zscore("bannedusers", user) or now)
+    current = int(redis_connection.zscore("bannedusers", user) or now)
     current = max(current, now)
     ban_timestamp = min(current + seconds, now + MAX_BAN_TIME)
-    redisConnection.zadd("bannedusers", {user: ban_timestamp})
+    redis_connection.zadd("bannedusers", {user: ban_timestamp})
     return {
         "msg": "Temporarily banned. Ban time has increased by {} seconds".format(
             seconds
@@ -719,10 +717,10 @@ class AdminBlockedPlayersList(MethodView):
     def get(self):
         blocked = {}
 
-        blockedplayers = redisConnection.zrevrange(
+        blockedplayers = redis_connection.zrevrange(
             "blockedplayers", 0, -1, withscores=True
         )
-        blockedplayers_puzzle = redisConnection.zrange(
+        blockedplayers_puzzle = redis_connection.zrange(
             "blockedplayers:puzzle", 0, -1, withscores=True
         )
 
@@ -756,7 +754,7 @@ class AdminBannedUserList(MethodView):
     def get(self):
         banned = {}
 
-        bannedusers = redisConnection.zrevrangebyscore(
+        bannedusers = redis_connection.zrevrangebyscore(
             "bannedusers", "+inf", int(time.time()), withscores=True
         )
 
@@ -770,7 +768,7 @@ class AdminBannedUserList(MethodView):
         "Cleanup banned users"
 
         # clean up old banned users if any
-        old_bannedusers_count = redisConnection.zremrangebyscore("bannedusers", 0, now)
+        old_bannedusers_count = redis_connection.zremrangebyscore("bannedusers", 0, now)
         return old_bannedusers_count
 
 

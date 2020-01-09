@@ -18,7 +18,7 @@ from piecemaker.base import JigsawPieceClipsSVG, Pieces
 from piecemaker.adjacent import Adjacent
 
 from api.database import read_query_file
-from api.tools import loadConfig
+from api.tools import loadConfig, get_db
 from api.constants import (
     IN_RENDER_QUEUE,
     REBUILD,
@@ -51,15 +51,10 @@ insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);
 """
 
 # Get the args from the worker and connect to the database
-try:
-    config_file = sys.argv[1]
-    config = loadConfig(config_file)
+config_file = sys.argv[1]
+config = loadConfig(config_file)
 
-    db_file = config["SQLITE_DATABASE_URI"]
-    db = sqlite3.connect(db_file)
-except (IOError, IndexError):
-    # Most likely being run from a test setup
-    pass
+db = get_db(config)
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -487,7 +482,3 @@ def cleanup(puzzle_id, whitelist):
         for dirname in dirnames:
             if dirname not in whitelist:
                 os.rmdir(os.path.join(dirpath, dirname))
-
-
-if __name__ == "__main__":
-    render()

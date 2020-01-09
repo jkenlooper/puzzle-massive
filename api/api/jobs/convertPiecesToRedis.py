@@ -3,22 +3,17 @@ import os.path
 import math
 import time
 
-import sqlite3
-import redis
-from api.app import db as appdb
 from api.database import rowify
-from api.tools import formatPieceMovementString
+from api.tools import (
+    loadConfig,
+    get_db,
+    get_redis_connection,
+    formatPieceMovementString,
+)
 from api.constants import COMPLETED
 
-redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
 
-
-def convert(puzzle, db_file=None):
-    if db_file:
-        db = sqlite3.connect(db_file)
-    else:
-        db = appdb
-
+def convert(puzzle):
     cur = db.cursor()
 
     query = """select * from Puzzle where (id = :puzzle)"""
@@ -33,7 +28,7 @@ def convert(puzzle, db_file=None):
     )
 
     # Create a pipe for buffering commands and disable atomic transactions
-    pipe = redisConnection.pipeline(transaction=False)
+    pipe = redis_connection.pipeline(transaction=False)
 
     for piece in all_pieces:
         # print('convert piece {id} for puzzle: {puzzle}'.format(**piece))
@@ -95,8 +90,11 @@ if __name__ == "__main__":
     config_file = sys.argv[1]
     config = loadConfig(config_file)
 
-    db_file = config["SQLITE_DATABASE_URI"]
-    db = sqlite3.connect(db_file)
+    db = get_db(config)
+    redis_connection = get_redis_connection(config)
 
-    convert(db, 264)
-    convert(db, 255)
+    # convert(db, 264)
+    # convert(db, 255)
+
+else:
+    from api.app import db, redis_connection

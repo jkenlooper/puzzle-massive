@@ -4,7 +4,9 @@ import os
 import re
 import logging
 
+import sqlite3
 from flask import Config
+import redis
 
 INITIAL_KARMA = 10
 HOUR = 3600  # hour in seconds
@@ -24,6 +26,32 @@ def loadConfig(argconfig):
     return config
 
 
+def get_db(config):
+    db = sqlite3.connect(config.get("SQLITE_DATABASE_URI"))
+
+    # Enable foreign key support so 'on update' and 'on delete' actions
+    # will apply. This needs to be set for each db connection.
+    cur = db.cursor()
+    cur.execute("pragma foreign_keys = ON;")
+    db.commit()
+
+    # Check that journal_mode is set to wal
+    result = cur.execute("pragma journal_mode;").fetchone()
+    if result[0] != "wal":
+        raise sqlite3.IntegrityError("The pragma journal_mode is not set to wal.")
+
+    cur.close()
+
+    return db
+
+
+def get_redis_connection(config):
+    redis_url = config.get("REDIS_URL")
+    if not redis_url:
+        raise KeyError("Must set REDIS_URL in site.cfg file.")
+    return redis.from_url(redis_url, decode_responses=True)
+
+
 def formatPieceMovementString(piece_id, x="", y="", r="", g="", s="", **args):
     if s == None:
         s = ""
@@ -36,34 +64,34 @@ def formatBitMovementString(user_id, x="", y=""):
     return u":{user_id}:{x}:{y}".format(**locals())
 
 
-def init_karma_key(redisConnection, puzzle, ip):
+def init_karma_key(redis_connection, puzzle, ip):
     """
     Initialize the karma value and expiration if not set.
     """
     karma_key = "karma:{puzzle}:{ip}".format(puzzle=puzzle, ip=ip)
-    if redisConnection.setnx(karma_key, INITIAL_KARMA):
-        redisConnection.expire(karma_key, HOUR)
+    if redis_connection.setnx(karma_key, INITIAL_KARMA):
+        redis_connection.expire(karma_key, HOUR)
     return karma_key
 
 
-def get_public_karma_points(redisConnection, ip, user, puzzle):
-    karma_key = init_karma_key(redisConnection, puzzle, ip)
+def get_public_karma_points(redis_connection, ip, user, puzzle):
+    karma_key = init_karma_key(redis_connection, puzzle, ip)
     points_key = "points:{user}".format(user=user)
-    recent_points = min(old_div(100, 2), int(redisConnection.get(points_key) or 0))
-    karma = min(old_div(100, 2), int(redisConnection.get(karma_key)))
+    recent_points = min(old_div(100, 2), int(redis_connection.get(points_key) or 0))
+    karma = min(old_div(100, 2), int(redis_connection.get(karma_key)))
     karma = max(0, min(old_div(100, 2), karma + recent_points))
     return karma
 
 
-def deletePieceDataFromRedis(redisConnection, puzzle, all_pieces):
+def deletePieceDataFromRedis(redis_connection, puzzle, all_pieces):
     groups = set()
     for piece in all_pieces:
-        pieceFromRedis = redisConnection.hgetall("pc:{puzzle}:{id}".format(**piece))
+        pieceFromRedis = redis_connection.hgetall("pc:{puzzle}:{id}".format(**piece))
         # Find all the groups for each piece
         groups.add(pieceFromRedis.get("g"))
 
     # Create a pipe for buffering commands and disable atomic transactions
-    pipe = redisConnection.pipeline(transaction=False)
+    pipe = redis_connection.pipeline(transaction=False)
 
     # Delete all piece data
     for piece in all_pieces:

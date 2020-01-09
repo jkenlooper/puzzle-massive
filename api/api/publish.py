@@ -10,9 +10,8 @@ import uuid
 from flask import current_app, make_response, request, json, url_for, redirect
 from flask.views import MethodView
 from werkzeug.exceptions import HTTPException
-import redis
 
-from .app import db
+from .app import db, redis_connection
 from .database import fetch_query_string, rowify
 from .tools import (
     formatPieceMovementString,
@@ -32,7 +31,6 @@ from .constants import (
 from .jobs import pieceTranslate
 from .user import user_id_from_ip, user_not_banned, increase_ban_time
 
-redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
 HOUR = 3600  # hour in seconds
@@ -78,9 +76,9 @@ def bump_count(user):
     piece_translate_rate_key = "ptrate:{user}:{timestamp}".format(
         user=user, timestamp=rounded_timestamp
     )
-    if redisConnection.setnx(piece_translate_rate_key, 1):
-        redisConnection.expire(piece_translate_rate_key, PIECE_TRANSLATE_RATE_TIMEOUT)
-    count = redisConnection.incr(piece_translate_rate_key)
+    if redis_connection.setnx(piece_translate_rate_key, 1):
+        redis_connection.expire(piece_translate_rate_key, PIECE_TRANSLATE_RATE_TIMEOUT)
+    count = redis_connection.incr(piece_translate_rate_key)
     if count > PIECE_TRANSLATE_MAX_COUNT:
         err_msg = increase_ban_time(user, PIECE_TRANSLATE_BAN_TIME_INCR)
         err_msg["reason"] = PIECE_TRANSLATE_EXCEEDED_REASON
@@ -170,7 +168,7 @@ class PuzzlePieceTokenView(MethodView):
         (result, col_names) = rowify(result, cur.description)
         puzzle = result[0]["puzzle"]
 
-        piece_status = redisConnection.hget(
+        piece_status = redis_connection.hget(
             "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), "s"
         )
         # print("ps {}".format(piece_status))
@@ -186,7 +184,7 @@ class PuzzlePieceTokenView(MethodView):
             return make_response(encoder.encode(err_msg), 400)
 
         blockedplayers_for_puzzle_key = "blockedplayers:{puzzle}".format(puzzle=puzzle)
-        blockedplayers_expires = redisConnection.zscore(
+        blockedplayers_expires = redis_connection.zscore(
             blockedplayers_for_puzzle_key, user
         )
         if blockedplayers_expires and blockedplayers_expires > now:
@@ -201,7 +199,7 @@ class PuzzlePieceTokenView(MethodView):
         # Check if player already has a token for this puzzle. This would mean
         # that the player tried moving another piece before the locked piece
         # finished moving.
-        existing_token = redisConnection.get("token:{}".format(user))
+        existing_token = redis_connection.get("token:{}".format(user))
         if existing_token:
             (player_puzzle, player_piece, player_mark) = existing_token.split(":")
             player_puzzle = int(player_puzzle)
@@ -249,15 +247,15 @@ class PuzzlePieceTokenView(MethodView):
                     return make_response(encoder.encode(err_msg), 409)
 
         piece_token_queue_key = get_puzzle_piece_token_queue_key(puzzle, piece)
-        queue_rank = redisConnection.zrank(piece_token_queue_key, user)
+        queue_rank = redis_connection.zrank(piece_token_queue_key, user)
 
         if queue_rank == None:
             # Append this player to a queue for getting the next token. This
             # will prevent the player with the lock from continually locking the
             # same piece.
-            redisConnection.zadd(piece_token_queue_key, {user: now})
-            queue_rank = redisConnection.zrank(piece_token_queue_key, user)
-        redisConnection.expire(piece_token_queue_key, TOKEN_LOCK_TIMEOUT + 5)
+            redis_connection.zadd(piece_token_queue_key, {user: now})
+            queue_rank = redis_connection.zrank(piece_token_queue_key, user)
+        redis_connection.expire(piece_token_queue_key, TOKEN_LOCK_TIMEOUT + 5)
 
         # Check if token on piece is in a queue and if the player requesting it
         # is the player that is next. Show an error message if not.
@@ -273,11 +271,11 @@ class PuzzlePieceTokenView(MethodView):
             return make_response(encoder.encode(err_msg), 409)
 
         # Check if token on piece is still owned by another player
-        existing_token_and_player = redisConnection.get(puzzle_piece_token_key)
+        existing_token_and_player = redis_connection.get(puzzle_piece_token_key)
         if existing_token_and_player:
             (other_token, other_player) = existing_token_and_player.split(":")
             other_player = int(other_player)
-            puzzle_and_piece = redisConnection.get("token:{}".format(other_player))
+            puzzle_and_piece = redis_connection.get("token:{}".format(other_player))
             # Check if there is a lock on this piece by other player
             if puzzle_and_piece:
                 (other_puzzle, other_piece, other_mark) = puzzle_and_piece.split(":")
@@ -300,17 +298,17 @@ class PuzzlePieceTokenView(MethodView):
                     return make_response(encoder.encode(err_msg), 409)
 
         # Remove player from the piece token queue
-        redisConnection.zrem(piece_token_queue_key, user)
+        redis_connection.zrem(piece_token_queue_key, user)
 
         # This piece is up for grabs since it has been more then 5 seconds since
         # another player has grabbed it.
         token = uuid.uuid4().hex
-        redisConnection.set(
+        redis_connection.set(
             puzzle_piece_token_key,
             "{token}:{user}".format(token=token, user=user),
             ex=TOKEN_EXPIRE_TIMEOUT,
         )
-        redisConnection.set(
+        redis_connection.set(
             "token:{}".format(user),
             "{puzzle}:{piece}:{mark}".format(puzzle=puzzle, piece=piece, mark=mark),
             ex=TOKEN_LOCK_TIMEOUT,
@@ -320,13 +318,13 @@ class PuzzlePieceTokenView(MethodView):
         (x, y) = list(
             map(
                 int,
-                redisConnection.hmget(
+                redis_connection.hmget(
                     "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), ["x", "y"]
                 ),
             )
         )
         msg = formatBitMovementString(user, x, y)
-        redisConnection.publish(u"move:{0}".format(puzzle_id), msg)
+        redis_connection.publish(u"move:{0}".format(puzzle_id), msg)
 
         response = {
             "token": token,
@@ -447,7 +445,7 @@ class PuzzlePiecesMovePublishView(MethodView):
             return make_response(encoder.encode(err_msg), 400)
         puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
         # print("token key: {}".format(puzzle_piece_token_key))
-        token_and_player = redisConnection.get(puzzle_piece_token_key)
+        token_and_player = redis_connection.get(puzzle_piece_token_key)
         if token_and_player:
             player = user
             (valid_token, other_player) = token_and_player.split(":")
@@ -472,8 +470,8 @@ class PuzzlePiecesMovePublishView(MethodView):
             return make_response(encoder.encode(err_msg), 409)
 
         # Expire the token at the lock timeout since it shouldn't be used again
-        redisConnection.delete(puzzle_piece_token_key)
-        redisConnection.delete("token:{}".format(user))
+        redis_connection.delete(puzzle_piece_token_key)
+        redis_connection.delete("token:{}".format(user))
 
         err_msg = bump_count(user)
         if err_msg.get("type") == "bannedusers":
@@ -500,7 +498,7 @@ class PuzzlePiecesMovePublishView(MethodView):
             return make_response(encoder.encode(err_msg), 400)
 
         # check if piece can be moved
-        pieceStatus = redisConnection.hget(
+        pieceStatus = redis_connection.hget(
             "pc:{puzzle}:{id}".format(**puzzle_piece), "s"
         )
         if pieceStatus == "1":
@@ -550,9 +548,9 @@ class PuzzlePiecesMovePublishView(MethodView):
         )
 
         # Update karma
-        karma_key = init_karma_key(redisConnection, puzzle, ip)
+        karma_key = init_karma_key(redis_connection, puzzle, ip)
         # Set a limit to minimum karma so other players on the network can still play
-        karma = max(MIN_KARMA, int(redisConnection.get(karma_key)))
+        karma = max(MIN_KARMA, int(redis_connection.get(karma_key)))
         # initial_karma = max(0, min(100/2, karma))
         karma_change = 0
 
@@ -562,26 +560,26 @@ class PuzzlePiecesMovePublishView(MethodView):
         pzrate_key = "pzrate:{user}:{today}".format(
             user=user, today=datetime.date.today().isoformat()
         )
-        if redisConnection.sadd(pzrate_key, puzzle) == 1:
+        if redis_connection.sadd(pzrate_key, puzzle) == 1:
             # New puzzle that player hasn't moved a piece on in the last hour.
-            redisConnection.expire(pzrate_key, HOUR)
-            recent_points = int(redisConnection.get(points_key) or "0")
+            redis_connection.expire(pzrate_key, HOUR)
+            recent_points = int(redis_connection.get(points_key) or "0")
             if recent_points > 0:
-                redisConnection.decr(points_key)
+                redis_connection.decr(points_key)
 
         # Decrease karma if piece movement rate has passed threshold
         # TODO: remove timestamp from key and depend on expire setting
         pcrate_key = "pcrate:{puzzle}:{user}:{timestamp}".format(
             puzzle=puzzle, user=user, timestamp=rounded_timestamp
         )
-        if redisConnection.setnx(pcrate_key, 1):
-            redisConnection.expire(pcrate_key, PIECE_MOVEMENT_RATE_TIMEOUT)
+        if redis_connection.setnx(pcrate_key, 1):
+            redis_connection.expire(pcrate_key, PIECE_MOVEMENT_RATE_TIMEOUT)
         else:
-            moves = redisConnection.incr(pcrate_key)
+            moves = redis_connection.incr(pcrate_key)
             if moves > PIECE_MOVEMENT_RATE_LIMIT:
                 # print 'decrease because piece movement rate limit reached.'
                 if karma > MIN_KARMA:
-                    karma = redisConnection.decr(karma_key)
+                    karma = redis_connection.decr(karma_key)
                 karma_change -= 1
 
         # Decrease karma when moving the same piece again within a minute
@@ -589,23 +587,23 @@ class PuzzlePiecesMovePublishView(MethodView):
         hotpc_key = "hotpc:{puzzle}:{user}:{piece}:{timestamp}".format(
             puzzle=puzzle, user=user, piece=piece, timestamp=rounded_timestamp
         )
-        recent_move_count = redisConnection.incr(hotpc_key)
+        recent_move_count = redis_connection.incr(hotpc_key)
         if recent_move_count == 1:
-            redisConnection.expire(hotpc_key, PIECE_MOVEMENT_RATE_TIMEOUT)
+            redis_connection.expire(hotpc_key, PIECE_MOVEMENT_RATE_TIMEOUT)
 
         if recent_move_count > MOVES_BEFORE_PENALTY:
             if karma > MIN_KARMA:
-                karma = redisConnection.decr(karma_key)
+                karma = redis_connection.decr(karma_key)
             karma_change -= 1
 
         if int(karma) <= 0:
             # Decrease recent points for a piece move that decreased karma
             recent_points = (
-                redisConnection.decr(points_key, amount=abs(karma_change))
+                redis_connection.decr(points_key, amount=abs(karma_change))
                 if karma_change < 0
-                else int(redisConnection.get(points_key) or 0)
+                else int(redis_connection.get(points_key) or 0)
             )
-            redisConnection.set(points_key, max(0, recent_points))
+            redis_connection.set(points_key, max(0, recent_points))
             if int(karma) + recent_points <= 0:
                 expires = now + BLOCKEDPLAYER_EXPIRE_TIMEOUT
                 blockedplayers_for_puzzle_key = "blockedplayers:{puzzle}".format(
@@ -613,20 +611,20 @@ class PuzzlePiecesMovePublishView(MethodView):
                 )
                 # Add the player to the blocked players list for the puzzle and
                 # extend the expiration of the key.
-                redisConnection.zadd(blockedplayers_for_puzzle_key, {user: expires})
-                redisConnection.expire(
+                redis_connection.zadd(blockedplayers_for_puzzle_key, {user: expires})
+                redis_connection.expire(
                     blockedplayers_for_puzzle_key, BLOCKEDPLAYER_EXPIRE_TIMEOUT
                 )
 
                 # Reset the karma for the player
-                redisConnection.delete(karma_key)
+                redis_connection.delete(karma_key)
 
                 # TODO: drop these keys
-                redisConnection.zadd(
+                redis_connection.zadd(
                     "blockedplayers",
                     {"{ip}-{user}".format(ip=ip, user=user): int(time.time())},
                 )
-                redisConnection.zadd(
+                redis_connection.zadd(
                     "blockedplayers:puzzle",
                     {
                         "{ip}-{user}-{puzzle}".format(
@@ -637,7 +635,7 @@ class PuzzlePiecesMovePublishView(MethodView):
 
                 err_msg = get_blockedplayers_err_msg(expires, expires - now)
                 err_msg["karma"] = get_public_karma_points(
-                    redisConnection, ip, user, puzzle
+                    redis_connection, ip, user, puzzle
                 )
                 cur.close()
                 return make_response(encoder.encode(err_msg), 429)
@@ -649,7 +647,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         (pieceWidth, pieceHeight) = list(
             map(
                 int,
-                redisConnection.hmget(
+                redis_connection.hmget(
                     "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), ["w", "h"]
                 ),
             )
@@ -659,7 +657,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         proximityX = set(
             map(
                 int,
-                redisConnection.zrangebyscore(
+                redis_connection.zrangebyscore(
                     "pcx:{puzzle}".format(puzzle=puzzle),
                     int(x) - toleranceX,
                     int(x) + toleranceX,
@@ -669,7 +667,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         proximityY = set(
             map(
                 int,
-                redisConnection.zrangebyscore(
+                redis_connection.zrangebyscore(
                     "pcy:{puzzle}".format(puzzle=puzzle),
                     int(y) - toleranceY,
                     int(y) + toleranceY,
@@ -680,12 +678,12 @@ class PuzzlePiecesMovePublishView(MethodView):
         # print("{0} {1} {2}".format(len(piecesInProximity), x, y))
         if len(piecesInProximity) >= 13:
             if karma > MIN_KARMA:
-                karma = redisConnection.decr(karma_key, amount=STACK_PENALTY)
+                karma = redis_connection.decr(karma_key, amount=STACK_PENALTY)
             err_msg = get_too_many_pieces_in_proximity_err_msg(
                 piece, list(piecesInProximity)
             )
             err_msg["karma"] = get_public_karma_points(
-                redisConnection, ip, user, puzzle
+                redis_connection, ip, user, puzzle
             )
 
             cur.close()
@@ -701,12 +699,12 @@ class PuzzlePiecesMovePublishView(MethodView):
             x=int(x) - (int(x) % 200),
             y=int(y) - (int(y) % 200),
         )
-        hotspot_count = redisConnection.incr(hotspot_area_key)
+        hotspot_count = redis_connection.incr(hotspot_area_key)
         if hotspot_count == 1:
-            redisConnection.expire(hotspot_area_key, HOTSPOT_EXPIRE)
+            redis_connection.expire(hotspot_area_key, HOTSPOT_EXPIRE)
         if hotspot_count > HOTSPOT_LIMIT:
             if karma > MIN_KARMA:
-                karma = redisConnection.decr(karma_key)
+                karma = redis_connection.decr(karma_key)
             karma_change -= 1
 
         # publish just the bit movement so it matches what this player did
@@ -714,7 +712,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         if user != None:
             # msg = msg + '\n' + formatBitMovementString(user, x, y)
             msg = formatBitMovementString(user, x, y)
-        redisConnection.publish(u"move:{0}".format(puzzle_id), msg)
+        redis_connection.publish(u"move:{0}".format(puzzle_id), msg)
 
         # push to queue for further processing
         # job = current_app.queue.enqueue_call(
@@ -733,7 +731,7 @@ class PuzzlePiecesMovePublishView(MethodView):
 
         karma_change = False if karma_change == 0 else karma_change
 
-        karma = get_public_karma_points(redisConnection, ip, user, puzzle)
+        karma = get_public_karma_points(redis_connection, ip, user, puzzle)
         response = {"karma": karma, "karmaChange": karma_change, "id": piece}
         cur.close()
         return encoder.encode(response)

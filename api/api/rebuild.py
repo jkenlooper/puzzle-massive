@@ -6,10 +6,9 @@ from random import randint
 
 from flask import current_app, redirect, make_response, abort, request
 from flask.views import MethodView
-import redis
 from PIL import Image
 
-from .app import db
+from .app import db, redis_connection
 
 from .database import rowify, fetch_query_string
 from .constants import REBUILD, COMPLETED, QUEUE_REBUILD
@@ -17,8 +16,6 @@ from .timeline import archive_and_clear
 from .user import user_id_from_ip, user_not_banned
 from .jobs.convertPiecesToRedis import convert
 from .tools import deletePieceDataFromRedis
-
-redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
 
 # From pieceRenderer
 MIN_PIECE_SIZE = 64
@@ -140,7 +137,7 @@ class PuzzlePiecesRebuildView(MethodView):
             ).fetchall(),
             cur.description,
         )
-        deletePieceDataFromRedis(redisConnection, puzzle, all_pieces)
+        deletePieceDataFromRedis(redis_connection, puzzle, all_pieces)
 
         job = current_app.createqueue.enqueue_call(
             func="api.jobs.pieceRenderer.render",
@@ -149,7 +146,9 @@ class PuzzlePiecesRebuildView(MethodView):
             timeout="24h",
         )
 
-        archive_and_clear(puzzle, db, current_app.config.get("PUZZLE_ARCHIVE"))
+        archive_and_clear(
+            puzzle, db, redis_connection, current_app.config.get("PUZZLE_ARCHIVE")
+        )
 
         cur.close()
         db.commit()

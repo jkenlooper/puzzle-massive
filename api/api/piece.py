@@ -1,16 +1,13 @@
 from __future__ import absolute_import
 from builtins import zip
-from flask import abort, json, current_app, request
+from flask import abort, json, current_app, request, make_response
 from flask.views import MethodView
-import redis
 
-from .app import db
+from .app import db, redis_connection
 from .database import fetch_query_string, rowify
 from .user import user_not_banned, user_id_from_ip
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
-
-redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
 
 
 class PuzzlePieceView(MethodView):
@@ -38,20 +35,22 @@ class PuzzlePieceView(MethodView):
         cur.close()
 
         # Only allow if there is data in redis
-        if not redisConnection.zscore("pcupdates", puzzle):
+        if not redis_connection.zscore("pcupdates", puzzle):
             abort(400)
 
         # Expire the token at the lock timeout since it shouldn't be used again
-        redisConnection.delete(
+        redis_connection.delete(
             "pctoken:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
         )
-        redisConnection.delete("token:{}".format(user))
+        redis_connection.delete("token:{}".format(user))
 
         # Fetch just the piece properties
         publicPieceProperties = ("x", "y", "rotate", "s", "w", "h", "b")
-        pieceProperties = redisConnection.hmget(
+        pieceProperties = redis_connection.hmget(
             "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece),
             *publicPieceProperties
         )
         pieceData = dict(list(zip(publicPieceProperties, pieceProperties)))
         return encoder.encode(pieceData)
+        # TODO: update js code to properly handle json mimetype
+        # return make_response(json.jsonify(pieceData), 200)

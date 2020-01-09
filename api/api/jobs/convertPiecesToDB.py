@@ -17,13 +17,10 @@ import os.path
 import math
 import time
 
-import sqlite3
-import redis
 from docopt import docopt
 
-from api.app import db
 from api.database import rowify
-from api.tools import loadConfig, deletePieceDataFromRedis
+from api.tools import loadConfig, get_db, get_redis_connection, deletePieceDataFromRedis
 from api.database import read_query_file
 from api.constants import MAINTENANCE
 
@@ -61,7 +58,7 @@ def transfer(puzzle, cleanup=True):
 
     # Save the redis data to the db
     for piece in all_pieces:
-        pieceFromRedis = redisConnection.hgetall("pc:{puzzle}:{id}".format(**piece))
+        pieceFromRedis = redis_connection.hgetall("pc:{puzzle}:{id}".format(**piece))
 
         # The redis data may be empty so fall back on what is in db.
         piece["x"] = pieceFromRedis.get("x", piece["x"])
@@ -73,7 +70,7 @@ def transfer(puzzle, cleanup=True):
         cur.execute(query_update_piece, piece)
 
     if cleanup:
-        deletePieceDataFromRedis(redisConnection, puzzle, all_pieces)
+        deletePieceDataFromRedis(redis_connection, puzzle, all_pieces)
 
     cur.execute(
         read_query_file("update_puzzle_status_for_puzzle.sql"),
@@ -90,17 +87,17 @@ def transferOldest(target_memory):
     newest = int(time.time()) - (30 * 60)
 
     # Get the 10 oldest puzzles
-    puzzles = redisConnection.zrange("pcupdates", 0, 10, withscores=True)
+    puzzles = redis_connection.zrange("pcupdates", 0, 10, withscores=True)
     # print('cycle over old puzzles: {0}'.format(puzzles))
     for (puzzle, timestamp) in puzzles:
         # There may be a chance that since this process has started that
         # a puzzle could have been updated.
-        latest_timestamp = redisConnection.zscore("pcupdates", puzzle)
+        latest_timestamp = redis_connection.zscore("pcupdates", puzzle)
 
         if latest_timestamp < newest:
             # print('transfer: {0}'.format(puzzle))
             transfer(puzzle)
-            memory = redisConnection.info(section="memory")
+            memory = redis_connection.info(section="memory")
             # print('used_memory: {used_memory_human}'.format(**memory))
             if memory.get("used_memory") < target_memory:
                 break
@@ -108,12 +105,12 @@ def transferOldest(target_memory):
 
 def transferAll(cleanup=False):
     # Get all puzzles
-    puzzles = redisConnection.zrange("pcupdates", 0, -1)
+    puzzles = redis_connection.zrange("pcupdates", 0, -1)
     print("transferring puzzles: {0}".format(puzzles))
     for puzzle in puzzles:
         print("transfer puzzle: {0}".format(puzzle))
         transfer(puzzle, cleanup=cleanup)
-        memory = redisConnection.info(section="memory")
+        memory = redis_connection.info(section="memory")
         if cleanup:
             print("used_memory: {used_memory_human}".format(**memory))
 
@@ -123,9 +120,6 @@ def handle_fail(job, exception, exception_func, traceback):
     print("Handle janitor fail {0}".format(job.args[0]))
 
 
-redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
-
-
 if __name__ == "__main__":
     # Get the args from the janitor and connect to the database
     args = docopt(__doc__)
@@ -133,10 +127,10 @@ if __name__ == "__main__":
     config_file = args["<site.cfg>"]
     config = loadConfig(config_file)
 
-    db_file = config["SQLITE_DATABASE_URI"]
-    db = sqlite3.connect(db_file)
+    db = get_db(config)
+    redis_connection = get_redis_connection(config)
 
     transferAll(args["--cleanup"])
 
 else:
-    from api.app import db
+    from api.app import db, redis_connection

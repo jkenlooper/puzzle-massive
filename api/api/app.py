@@ -4,12 +4,12 @@ from werkzeug.local import LocalProxy
 from flask import Flask
 from flask import Flask, g, current_app
 import sqlite3
-import redis
 
 from rq import Queue
 from rq.job import Job
 
 from api.flask_secure_cookie import SecureCookie
+from api.tools import get_db, get_redis_connection
 
 
 class API(Flask):
@@ -20,36 +20,27 @@ def connect_to_database():
     return sqlite3.connect(current_app.config.get("SQLITE_DATABASE_URI"))
 
 
-def get_db():
+def set_db():
     db = getattr(g, "_database", None)
     if db is None:
-        db = g._database = connect_to_database()
-        # Enable foreign key support so 'on update' and 'on delete' actions
-        # will apply. This needs to be set for each db connection.
-        cur = db.cursor()
-        cur.execute("pragma foreign_keys = ON;")
-        db.commit()
-
-        # Check that journal_mode is set to wal
-        result = cur.execute("pragma journal_mode;").fetchone()
-        if result[0] != "wal":
-            raise sqlite3.IntegrityError("The pragma journal_mode is not set to wal.")
-
-        cur.close()
+        db = g._database = get_db(current_app.config)
     return db
 
 
-db = LocalProxy(get_db)
+db = LocalProxy(set_db)
 
 
-def get_redis_connection():
-    redis_url = current_app.config.get("REDIS_URL")
-    if not redis_url:
-        raise KeyError("Must set REDIS_URL in site.cfg file.")
-    return redis.from_url(redis_url, decode_responses=True)
+def set_redis_connection():
+    get_redis_connection(current_app.config)
+    redis_connection = getattr(g, "_redis_connection", None)
+    if redis_connection is None:
+        redis_connection = g._redis_connection = get_redis_connection(
+            current_app.config
+        )
+    return redis_connection
 
 
-redis_connection = LocalProxy(get_redis_connection)
+redis_connection = LocalProxy(set_redis_connection)
 
 
 def files_loader(*args):
@@ -92,14 +83,10 @@ def make_app(config=None, **kw):
     #
     app.secure_cookie = SecureCookie(app, cookie_secret=kw["cookie_secret"])
 
-    redisConnection = redis.from_url(
-        app.config.get("REDIS_URL", "redis://localhost:6379/0/"), decode_responses=True
-    )
-
     app.queries = files_loader("queries")
 
-    app.cleanupqueue = Queue("puzzle_cleanup", connection=redisConnection)
-    app.createqueue = Queue("puzzle_create", connection=redisConnection)
+    app.cleanupqueue = Queue("puzzle_cleanup", connection=redis_connection)
+    app.createqueue = Queue("puzzle_create", connection=redis_connection)
 
     @app.teardown_appcontext
     def teardown_db(exception):

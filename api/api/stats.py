@@ -1,15 +1,12 @@
 from flask import current_app, request, abort, json, make_response
 from flask.views import MethodView
-import redis
 import time
 
-from api.app import db
+from api.app import db, redis_connection
 from api.user import user_id_from_ip, user_not_banned
 from api.database import fetch_query_string, rowify
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
-
-redisConnection = redis.from_url("redis://localhost:6379/0/", decode_responses=True)
 
 DAY = 24 * 60 * 60
 ACTIVE_RANGE = 14 * DAY
@@ -43,13 +40,13 @@ class PlayerRanksView(MethodView):
         active_players = frozenset(
             map(
                 int,
-                redisConnection.zrevrangebyscore(
+                redis_connection.zrevrangebyscore(
                     "timeline", "+inf", now - ACTIVE_RANGE
                 ),
             )
         )
 
-        rank_slice = redisConnection.zrevrange("rank", 0, -1, withscores=True)
+        rank_slice = redis_connection.zrevrange("rank", 0, -1, withscores=True)
 
         ranks = []
         has_user_in_ranks = False
@@ -100,10 +97,10 @@ class PuzzleStatsView(MethodView):
         puzzle = result[0].get("id")
         now = int(time.time())
 
-        timeline = redisConnection.zrevrange(
+        timeline = redis_connection.zrevrange(
             "timeline:{puzzle}".format(puzzle=puzzle), 0, -1, withscores=True
         )
-        score_puzzle = redisConnection.zrange(
+        score_puzzle = redis_connection.zrange(
             "score:{puzzle}".format(puzzle=puzzle), 0, -1, withscores=True
         )
         user_score = dict(score_puzzle)
@@ -157,7 +154,7 @@ class PuzzleActiveCountView(MethodView):
         now = int(time.time())
 
         count = (
-            redisConnection.zcount(
+            redis_connection.zcount(
                 "timeline:{puzzle}".format(puzzle=puzzle), now - 5 * 60, "+inf"
             )
             or 0
@@ -178,5 +175,5 @@ class PlayerStatsView(MethodView):
         ""
         now = int(time.time())
         since = now - ACTIVE_RANGE
-        total_active_player_count = redisConnection.zcount("timeline", since, "+inf")
+        total_active_player_count = redis_connection.zcount("timeline", since, "+inf")
         return json.jsonify({"totalActivePlayers": total_active_player_count})
