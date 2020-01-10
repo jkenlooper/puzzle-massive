@@ -1,5 +1,6 @@
 from builtins import map
 import os
+import sys
 
 from rq import Worker, Queue, Connection
 
@@ -14,7 +15,7 @@ config = loadConfig(config_file)
 
 listen = ["puzzle_updates"]
 
-redis_connection = get_redis_connection(config)
+redis_connection = get_redis_connection(config, decode_responses=False)
 
 if __name__ == "__main__":
     with Connection(redis_connection):

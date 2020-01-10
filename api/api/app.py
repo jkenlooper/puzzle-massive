@@ -6,7 +6,6 @@ from flask import Flask, g, current_app
 import sqlite3
 
 from rq import Queue
-from rq.job import Job
 
 from api.flask_secure_cookie import SecureCookie
 from api.tools import get_db, get_redis_connection

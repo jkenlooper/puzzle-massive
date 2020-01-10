@@ -45,11 +45,11 @@ def get_db(config):
     return db
 
 
-def get_redis_connection(config):
+def get_redis_connection(config, decode_responses=True):
     redis_url = config.get("REDIS_URL")
     if not redis_url:
         raise KeyError("Must set REDIS_URL in site.cfg file.")
-    return redis.from_url(redis_url, decode_responses=True)
+    return redis.from_url(redis_url, decode_responses=decode_responses)
 
 
 def formatPieceMovementString(piece_id, x="", y="", r="", g="", s="", **args):
