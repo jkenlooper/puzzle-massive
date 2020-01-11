@@ -10,6 +10,7 @@ import uuid
 from flask import current_app, make_response, request, json, url_for, redirect
 from flask.views import MethodView
 from werkzeug.exceptions import HTTPException
+from flask_sse import sse
 
 from .app import db, redis_connection
 from .database import fetch_query_string, rowify
@@ -324,6 +325,9 @@ class PuzzlePieceTokenView(MethodView):
             )
         )
         msg = formatBitMovementString(user, x, y)
+        # TODO: switch to sse.publish()
+        # sse.publish(msg, channel=u"move:{0}".format(puzzle_id), type="greeting")
+        sse.publish(msg, type="greeting")
         redis_connection.publish(u"move:{0}".format(puzzle_id), msg)
 
         response = {
@@ -712,6 +716,9 @@ class PuzzlePiecesMovePublishView(MethodView):
         if user != None:
             # msg = msg + '\n' + formatBitMovementString(user, x, y)
             msg = formatBitMovementString(user, x, y)
+        # TODO: switch to sse.publish()
+        # sse.publish(msg, channel=u"move:{0}".format(puzzle_id), type="greeting")
+        sse.publish(msg, type="greeting")
         redis_connection.publish(u"move:{0}".format(puzzle_id), msg)
 
         # push to queue for further processing

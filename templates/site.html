@@ -58,6 +58,18 @@
 {% if config.DEBUG == True %}
 config.DEBUG: True; chill_now: {{ chill_now|datetime }}
 {% endif %}
+    <script>
+ //var source = new EventSource("http://localhost:6321/stream");
+ var source = new EventSource("/newapi/stream/");
+    source.addEventListener('greeting', function(event) {
+        //var data = JSON.parse(event.data);
+        //alert("The server says " + data.message);
+      console.log("The event is:", event)
+    }, false);
+    source.addEventListener('error', function(event) {
+        console.log("Failed to connect to event stream. Is Redis running?");
+    }, false);
+    </script>
 
   </body>
 </html>

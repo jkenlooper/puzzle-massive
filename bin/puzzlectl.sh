@@ -22,6 +22,7 @@ systemctl reload nginx;
 for app in puzzle-massive-chill \
   puzzle-massive-api \
   puzzle-massive-divulger \
+  puzzle-massive-stream \
   puzzle-massive-artist \
   puzzle-massive-scheduler \
   puzzle-massive-janitor;

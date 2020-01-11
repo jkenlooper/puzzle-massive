@@ -24,6 +24,7 @@
 /explode.py
 /gifmaker.py
 /glue
+/gunicorn
 /painter.py
 /piecemaker
 /pilconvert.py

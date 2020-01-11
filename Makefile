@@ -90,6 +90,10 @@ bin/puzzle-massive-divulger: divulger/requirements.txt requirements.txt divulger
 	pip install --upgrade --upgrade-strategy eager -r $<
 	touch $@;
 
+bin/puzzle-massive-stream: stream/requirements.txt requirements.txt stream/setup.py
+	pip install --upgrade --upgrade-strategy eager -r $<
+	touch $@;
+
 
 objects += api/puzzle-massive-api.service
 api/puzzle-massive-api.service: api/puzzle-massive-api.service.sh
@@ -110,6 +114,11 @@ api/puzzle-massive-scheduler.service: api/puzzle-massive-scheduler.service.sh
 objects += divulger/puzzle-massive-divulger.service
 divulger/puzzle-massive-divulger.service: divulger/puzzle-massive-divulger.service.sh
 	./$< $(project_dir) > $@
+
+objects += stream/puzzle-massive-stream.service
+stream/puzzle-massive-stream.service: stream/puzzle-massive-stream.service.sh
+	./$< $(project_dir) > $@
+
 
 objects += api/puzzle-massive-cache-purge.path
 api/puzzle-massive-cache-purge.path: api/puzzle-massive-cache-purge.path.sh
@@ -154,7 +163,7 @@ puzzle-massive-$(TAG).tar.gz: bin/dist.sh
 ######
 
 .PHONY: all
-all: bin/chill bin/puzzle-massive-api bin/puzzle-massive-divulger $(objects)
+all: bin/chill bin/puzzle-massive-api bin/puzzle-massive-divulger bin/puzzle-massive-stream $(objects)
 
 .PHONY: install
 install:
@@ -168,6 +177,7 @@ clean:
 	pip uninstall --yes -r chill/requirements.txt
 	pip uninstall --yes -r api/requirements.txt
 	pip uninstall --yes -r divulger/requirements.txt
+	pip uninstall --yes -r stream/requirements.txt
 
 # Remove files placed outside of src directory and uninstall app.
 # Will also remove the sqlite database file.

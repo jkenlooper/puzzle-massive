@@ -247,6 +247,26 @@ cat <<HERE
     proxy_read_timeout 500s;
   }
 
+  location /newapi/stream/ {
+    proxy_pass_header Server;
+    proxy_set_header  X-Real-IP  \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+    proxy_set_header Host \$http_host;
+    proxy_redirect off;
+
+    # Set timeout for connections to be 5 minutes
+    proxy_read_timeout 300s;
+
+    # Required in order to WebSockets or Streaming (sse). Async workers are
+    # needed then.
+    proxy_buffering off;
+
+    proxy_pass http://localhost:${PORTSTREAM};
+
+    rewrite ^/newapi/(.*)\$ /stream break;
+  }
+
 HERE
 
 if test "${ENVIRONMENT}" == 'development'; then

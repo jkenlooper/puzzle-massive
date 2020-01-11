@@ -45,6 +45,11 @@ divulger/divulger
 divulger/puzzle-massive-divulger.service.sh
 divulger/requirements.txt
 divulger/setup.py
+stream/README.md
+stream/stream
+stream/puzzle-massive-stream.service.sh
+stream/requirements.txt
+stream/setup.py
 documents
 media
 package.json

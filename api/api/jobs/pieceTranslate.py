@@ -9,6 +9,7 @@ import time
 import sys
 
 from flask import current_app
+from flask_sse import sse
 from api.app import db, redis_connection
 from api.database import rowify, fetch_query_string
 from api.tools import formatPieceMovementString, loadConfig, init_karma_key
@@ -47,6 +48,10 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     def publishMessage(topic, msg, karma_change, points=0, complete=False):
         # print(topic)
         # print(msg)
+        # TODO: instead of publishing directly to redis for divulger to pick up;
+        # use sse.publish()
+        # sse.publish(msg, channel=topic, type="greeting")
+        sse.publish(msg, type="greeting")
         redis_connection.publish(topic, msg)
         # time.sleep(1)
 

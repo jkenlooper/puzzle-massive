@@ -181,6 +181,10 @@ cp divulger/puzzle-massive-divulger.service "${SYSTEMDDIR}"
 systemctl start puzzle-massive-divulger || echo "can't start service"
 systemctl enable puzzle-massive-divulger || echo "can't enable service"
 
+cp stream/puzzle-massive-stream.service "${SYSTEMDDIR}"
+systemctl start puzzle-massive-stream || echo "can't start service"
+systemctl enable puzzle-massive-stream || echo "can't enable service"
+
 cp api/puzzle-massive-scheduler.service "${SYSTEMDDIR}"
 systemctl start puzzle-massive-scheduler || echo "can't start service"
 systemctl enable puzzle-massive-scheduler || echo "can't enable service"
