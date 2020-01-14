@@ -114,6 +114,11 @@ cat <<HERE
     internal;
   }
 
+  error_page 400 /invalid_page.html;
+  location = /invalid_page.html {
+    internal;
+  }
+
   error_page 401 403 /unauthorized_page.html;
   location = /unauthorized_page.html {
     internal;

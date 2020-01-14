@@ -1,22 +1,17 @@
 import os
 
 from werkzeug.local import LocalProxy
-from flask import Flask
 from flask import Flask, g, current_app
 import sqlite3
 
 from rq import Queue
 
 from api.flask_secure_cookie import SecureCookie
-from api.tools import get_db, get_redis_connection
+from api.tools import get_db, get_redis_connection, files_loader
 
 
 class API(Flask):
     "API App"
-
-
-def connect_to_database():
-    return sqlite3.connect(current_app.config.get("SQLITE_DATABASE_URI"))
 
 
 def set_db():
@@ -40,27 +35,6 @@ def set_redis_connection():
 
 
 redis_connection = LocalProxy(set_redis_connection)
-
-
-def files_loader(*args):
-    """
-    Loads all the files in each directory as values in a dict with the key
-    being the relative file path of the directory.  Updates the value if
-    subsequent file paths are the same.
-    """
-    d = dict()
-
-    def load_files(folder):
-        for (dirpath, dirnames, filenames) in os.walk(folder):
-            for f in filenames:
-                filepath = os.path.join(dirpath, f)
-                with open(filepath, "r") as f:
-                    key = filepath[len(os.path.commonprefix([root, filepath])) + 1 :]
-                    d[key] = f.read()
-
-    for root in args:
-        load_files(root)
-    return d
 
 
 def make_app(config=None, **kw):
@@ -150,6 +124,7 @@ def make_app(config=None, **kw):
     )
     from api.player_email_register import PlayerEmailRegisterView
     from api.player_email_login_reset import PlayerEmailLoginResetView
+    from api.ping import PingPuzzleView
 
     # admin views
     from api.puzzle_batch_edit import AdminPuzzleBatchEditView
@@ -267,6 +242,9 @@ def make_app(config=None, **kw):
     app.add_url_rule(
         "/player-email-login-reset/",
         view_func=PlayerEmailLoginResetView.as_view("player-email-login-reset"),
+    )
+    app.add_url_rule(
+        "/ping/puzzle/<puzzle_id>/", view_func=PingPuzzleView.as_view("ping-puzzle"),
     )
 
     # Requires user to press any key to continue

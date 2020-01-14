@@ -1,14 +1,29 @@
 import os
 import logging
 
-from flask import Flask
+from werkzeug.local import LocalProxy
+from flask import Flask, g, request, current_app, make_response, abort, json
 from flask_sse import sse
 
-from stream.ping import PingView
+from api.flask_secure_cookie import SecureCookie
+from api.database import fetch_query_string, rowify
+from api.constants import ACTIVE
+from api.user import user_id_from_ip
+from api.tools import get_db, files_loader
 
 
 class StreamApp(Flask):
     "Stream App"
+
+
+def set_db():
+    db = getattr(g, "_database", None)
+    if db is None:
+        db = g._database = get_db(current_app.config)
+    return db
+
+
+db = LocalProxy(set_db)
 
 
 def make_app(config=None, **kw):
@@ -22,15 +37,62 @@ def make_app(config=None, **kw):
 
     app.config.update(kw)
 
-    app.register_blueprint(sse, url_prefix="/stream")
-
-    app.add_url_rule(
-        "/ping/<puzzle_id>/", view_func=PingView.as_view("ping"),
+    app.secure_cookie = SecureCookie(
+        app, cookie_secret=app.config.get("SECURE_COOKIE_SECRET")
     )
+    app.queries = files_loader("queries")
 
-    @app.route("/send")
-    def send_message():
-        sse.publish("message", type="greeting", retry=5000)
-        return "Message sent! {}".format(sse.redis)
+    @app.teardown_appcontext
+    def teardown_db(exception):
+        db = getattr(g, "_database", None)
+        if db is not None:
+            db.close()
+
+    @app.errorhandler(400)
+    def invalid_request(error):
+        return "Not valid", 400
+
+    @app.errorhandler(403)
+    def invalid_request(error):
+        return "No access", 403
+
+    @sse.before_request
+    def check_puzzle_status():
+        response = {"message": "", "name": "error"}
+        channel_name = request.args.get("channel")
+        if channel_name == None:
+            abort(400)
+        elif channel_name.startswith("puzzle:"):
+            puzzle_id = channel_name[len("puzzle:") :]
+
+            # check if player is logged in
+            user = current_app.secure_cookie.get(
+                u"user"
+            ) or current_app.secure_cookie.get(u"shareduser")
+            if user == None:
+                abort(403)
+            user = int(user)
+
+            cur = db.cursor()
+
+            # Validate the puzzle_id
+            result = cur.execute(
+                fetch_query_string("select_viewable_puzzle_id.sql"),
+                {"puzzle_id": puzzle_id},
+            ).fetchall()
+            if not result:
+                abort(400)
+            else:
+                (result, col_names) = rowify(result, cur.description)
+                puzzle = result[0].get("puzzle")
+                status = result[0].get("status")
+                if status != ACTIVE:
+                    response["message"] = "Puzzle not active"
+                    response["name"] = "invalid"
+                    abort(make_response(json.jsonify(response), 200))
+        else:
+            abort(400)
+
+    app.register_blueprint(sse, url_prefix="/stream")
 
     return app
