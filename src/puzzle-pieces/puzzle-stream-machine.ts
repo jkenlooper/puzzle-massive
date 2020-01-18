@@ -9,10 +9,13 @@ export const puzzleStreamMachine = createMachine({
   states: {
     connecting: {
       on: {
-        ERROR: "disconnected",
+        ERROR: {
+          target: "disconnected",
+          actions: ["destroyEventSource", "startReconnectTimeout"],
+        },
         SUCCESS: {
           target: "connected",
-          actions: ["startPing"],
+          actions: ["startPingInterval"],
         },
         PUZZLE_NOT_ACTIVE: "inactive",
         INVALID: "invalid",
@@ -20,12 +23,22 @@ export const puzzleStreamMachine = createMachine({
     },
     disconnected: {
       on: {
-        RECONNECT: "connecting",
+        RECONNECT: {
+          target: "connecting",
+          actions: ["setEventSource"],
+        },
       },
     },
     connected: {
       on: {
-        ERROR: "disconnected",
+        ERROR: {
+          target: "disconnected",
+          actions: ["destroyEventSource", "startReconnectTimeout"],
+        },
+        PONG: {
+          target: "connected",
+          actions: ["broadcastPlayerLatency"],
+        },
         PUZZLE_NOT_ACTIVE: "inactive",
         CLOSE: "disconnected",
       },

@@ -3,8 +3,10 @@ import { interpret } from "@xstate/fsm";
 import FetchService from "../site/fetch.service";
 import { puzzleBitsService } from "../puzzle-bits/puzzle-bits.service";
 import { puzzleStreamMachine } from "./puzzle-stream-machine";
+import userDetailsService from "../site/user-details.service";
 
-const PING_INTERVAL = 5 * 60 * 1000;
+// Set ping interval to be one less minute then 5.
+const PING_INTERVAL = 4 * 60 * 1000;
 //const PING_INTERVAL = 10 * 1000;
 
 export interface PieceMovementData {
@@ -38,6 +40,7 @@ enum EventType {
 type Broadcaster = (topic: symbol, data?: any) => void;
 
 type PuzzleId = string;
+type PlayerId = number;
 interface PuzzleStreamMap {
   [index: string]: PuzzleStream;
 }
@@ -59,94 +62,159 @@ const topics = {
 };
 
 class PuzzleStream {
-  private readonly eventSource: EventSource;
+  private eventSource: EventSource;
   private readonly puzzleId: PuzzleId;
+  private readonly playerId: PlayerId;
   private broadcast: Broadcaster;
   private pingIntervalId: number | undefined;
+  private reconnectIntervalId: number | undefined;
   private puzzleStreamService: any;
 
-  constructor(puzzleId: PuzzleId, broadcast: Broadcaster) {
+  constructor(puzzleId: PuzzleId, playerId: PlayerId, broadcast: Broadcaster) {
     this.puzzleId = puzzleId;
-    this.puzzleStreamService = interpret(puzzleStreamMachine).start();
-    this.puzzleStreamService.subscribe((state) => {
-      console.log(`state: ${state}`, state);
-      switch (state.value) {
-        case "connecting":
-          this.pollReadyState();
-          break;
-        case "connected":
-          state.actions.forEach((action) => {
-            if (action.type === "startPing") {
-              this.sendPing();
-            }
-          });
-          break;
-        default:
-          break;
-      }
-    });
+    this.playerId = playerId;
     this.broadcast = broadcast;
 
-    // TODO: does the CORS withCredentials mean it passes the cookies or not?
-    this.eventSource = new EventSource(`/stream/puzzle/${puzzleId}/`, {
+    this.eventSource = this.getEventSource(this.puzzleId);
+
+    this.puzzleStreamService = interpret(puzzleStreamMachine).start();
+    this.puzzleStreamService.subscribe(this.handleStateChange.bind(this));
+  }
+
+  private getEventSource(puzzleId: PuzzleId) {
+    const eventSource = new EventSource(`/stream/puzzle/${puzzleId}/`, {
       withCredentials: false,
     });
-
-    this.eventSource.addEventListener(
+    eventSource.addEventListener(
       EventType.ping,
       this.handlePingEvent.bind(this),
       false
     );
-
-    this.eventSource.addEventListener(
+    eventSource.addEventListener(
       EventType.move,
       this.handleMoveEvent.bind(this),
       false
     );
-
-    this.eventSource.addEventListener(
+    eventSource.addEventListener(
       EventType.message,
       this.handleMessageEvent.bind(this),
       false
     );
-    this.eventSource.addEventListener(
+    eventSource.addEventListener(
       EventType.open,
       this.handleOpenEvent.bind(this),
       false
     );
-    this.eventSource.addEventListener(
+    eventSource.addEventListener(
       EventType.error,
       this.handleErrorEvent.bind(this),
       false
     );
-    console.log("readyState", this.readyState);
+    return eventSource;
   }
 
   get readyState() {
-    console.log("get readyState", this, this.eventSource);
-    if (!this.eventSource) {
-      return EventSource.CONNECTING;
-    }
     return this.eventSource.readyState;
   }
 
   disconnect() {
     console.log("disconnect", this.puzzleId);
+    this.destroyEventSource();
+    this.puzzleStreamService.stop();
+  }
+
+  private destroyEventSource() {
     window.clearTimeout(this.pingIntervalId);
+
     this.eventSource.removeEventListener(
       EventType.ping,
       this.handlePingEvent,
       false
     );
+    this.eventSource.removeEventListener(
+      EventType.move,
+      this.handleMoveEvent,
+      false
+    );
+    this.eventSource.removeEventListener(
+      EventType.message,
+      this.handleMessageEvent,
+      false
+    );
+    this.eventSource.removeEventListener(
+      EventType.open,
+      this.handleOpenEvent,
+      false
+    );
+    this.eventSource.removeEventListener(
+      EventType.error,
+      this.handleErrorEvent,
+      false
+    );
+
     this.eventSource.close();
-    this.puzzleStreamService.stop();
   }
 
-  private handlePingEvent(message: Event) {
-    console.log("The ping is:", message);
-    this.broadcast(pingTopic, message);
+  private handleStateChange(state) {
+    console.log(`puzzle-stream: ${state.value}`);
+    console.log(state.actions);
+    switch (state.value) {
+      case "connecting":
+        // Send a ping to the server every second while connecting.
+        state.actions.forEach((action) => {
+          if (action.type === "setEventSource") {
+            this.eventSource = this.getEventSource(this.puzzleId);
+          }
+        });
+        this.sendPing(1000);
+        break;
+      case "connected":
+        state.actions.forEach((action) => {
+          switch (action.type) {
+            case "startPingInterval":
+              // Start sending a ping to server with the default PING_INTERVAL.
+              this.sendPing();
+              break;
+            case "broadcastPlayerLatency":
+              this.broadcastPlayerLatency();
+              break;
+          }
+        });
+        break;
+      case "disconnected":
+        state.actions.forEach((action) => {
+          switch (action.type) {
+            case "destroyEventSource":
+              this.destroyEventSource();
+              break;
+            case "startReconnectTimeout":
+              this.reconnectTimeout();
+              break;
+          }
+        });
+        break;
+      case "inactive":
+        break;
+      case "invalid":
+        break;
+      default:
+        break;
+    }
+  }
+
+  private handlePingEvent(messageEvent: any) {
+    // any = MessageEvent
+    console.log("The ping is:", messageEvent);
+    if (messageEvent && messageEvent.data.startsWith(this.playerId)) {
+      this.pingToken = messageEvent.data.substr(this.playerId.length + 1)
+      this.puzzleStreamService.send( "PONG");
+    }
+  }
+  private broadcastPlayerLatency(message: string) {
     // TODO: parse the message and find matching ping from the user if there
     // is one.  Send a pong request.
+    //this.broadcast(pingTopic, messageEvent);
+    console.log("broadcastPlayerLatency", message);
   }
 
   private handleMoveEvent(message: Event) {
@@ -196,45 +264,40 @@ class PuzzleStream {
   private handleOpenEvent(message: Event) {
     // connection to the event source has opened
     console.log("open event", message);
-    //this.sendPing();
+    this.puzzleStreamService.send("SUCCESS");
   }
   private handleErrorEvent(message: Event) {
     console.log(
       "Failed to connect to event stream. Is Redis running?",
       message
     );
-    window.clearTimeout(this.pingIntervalId);
+    this.puzzleStreamService.send("ERROR");
   }
-  private sendPing() {
+
+  private reconnectTimeout() {
+    console.log("reconnecting");
+    window.clearTimeout(this.reconnectIntervalId);
+    this.reconnectIntervalId = window.setTimeout(() => {
+      this.puzzleStreamService.send("RECONNECT");
+    }, 5000);
+  }
+
+  private sendPing(interval = PING_INTERVAL) {
     console.log("pinging", this.puzzleId);
+    window.clearTimeout(this.pingIntervalId);
     const ping = new FetchService(`/newapi/ping/puzzle/${this.puzzleId}/`);
     ping
       .postForm({})
       .then(() => {
         this.pingIntervalId = window.setTimeout(
           this.sendPing.bind(this),
-          PING_INTERVAL
+          interval
         );
       })
       .catch((err) => {
         console.error("error sending ping", err);
         // TODO: ignore error with sending ping?
       });
-  }
-  private pollReadyState() {
-    console.log("pollReadyState");
-    switch (this.readyState) {
-      case EventSource.CONNECTING:
-        window.setTimeout(this.pollReadyState.bind(this), 100);
-        break;
-      case EventSource.OPEN:
-        this.puzzleStreamService.send("SUCCESS");
-        break;
-      case EventSource.CLOSED:
-        break;
-    }
-    const ping = new FetchService(`/newapi/ping/puzzle/${this.puzzleId}/`);
-    ping.postForm({});
   }
 }
 
@@ -252,7 +315,7 @@ class StreamService {
 
   constructor() {}
 
-  connect(puzzleId: PuzzleId): void {
+  connect(puzzleId: PuzzleId, playerId: PlayerId): void {
     const existingPuzzleStream = this.puzzleStreams[puzzleId];
     if (existingPuzzleStream) {
       switch (existingPuzzleStream.readyState) {
@@ -271,7 +334,7 @@ class StreamService {
           break;
       }
     }
-    const puzzleStream = new PuzzleStream(puzzleId, this._broadcast.bind(this));
+    const puzzleStream = new PuzzleStream(puzzleId, playerId, this._broadcast.bind(this));
     this.puzzleStreams[puzzleId] = puzzleStream;
   }
 

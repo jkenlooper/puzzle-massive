@@ -95,7 +95,11 @@ customElements.define(
       } else {
         this.$container.classList.add("pm-PuzzlePieces--withinSlabMassive");
       }
-      streamService.connect(this.puzzleId);
+        // TODO: get playerId and pass to connect()?
+        //userDetailsService.subscribe(() => {
+        //
+        const playerId = 7549; // TODO:
+      streamService.connect(this.puzzleId, playerId);
       streamService.subscribe(
         "ping",
         (data) => {
