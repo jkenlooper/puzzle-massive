@@ -12,6 +12,7 @@ import { rgbToHsl } from "../site/utilities";
 import hashColorService from "../hash-color/hash-color.service";
 import { puzzleService, PieceData } from "./puzzle.service";
 import { divulgerService } from "./divulger.service";
+import { streamService } from "./stream.service";
 
 import template from "./puzzle-pieces.html";
 import style from "./puzzle-pieces.css";
@@ -94,6 +95,14 @@ customElements.define(
       } else {
         this.$container.classList.add("pm-PuzzlePieces--withinSlabMassive");
       }
+      streamService.connect(this.puzzleId);
+      streamService.subscribe(
+        "ping",
+        (data) => {
+          console.log("subscribe ping", data);
+        },
+        this.instanceId
+      );
 
       this.slabMassiveOffsetTop = this.$slabMassive.offsetTop;
       this.slabMassiveOffsetLeft = this.$slabMassive.offsetLeft;
@@ -384,7 +393,7 @@ customElements.define(
       //console.log("render pieces", endTime.getTime() - startTime.getTime());
     }
 
-    onToggleMovable(showMovable:boolean) {
+    onToggleMovable(showMovable: boolean) {
       this.$container.classList.toggle("show-movable", showMovable);
     }
 

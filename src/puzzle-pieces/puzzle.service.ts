@@ -78,7 +78,7 @@ type PiecesUpdateCallback = (data: Array<PieceData>) => any;
 type KarmaUpdatedCallback = (data: KarmaData) => any;
 type PieceMoveRejectedCallback = (data: PieceData) => any;
 type PieceMoveBlockedCallback = (data: PieceMoveError) => any;
-type PiecesInfoToggleMovableCallback = () => any;
+type PiecesInfoToggleMovableCallback = (toggle: any) => any;
 const piecesMutate = Symbol("pieces/mutate");
 const karmaUpdated = Symbol("karma/updated");
 const pieceMoveRejected = Symbol("piece/move/rejected");

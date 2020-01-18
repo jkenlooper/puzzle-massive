@@ -247,6 +247,28 @@ cat <<HERE
     proxy_read_timeout 500s;
   }
 
+  # /stream/puzzle/<channel>/
+  location ~* ^/stream/puzzle/([^/]+)/\$ {
+    proxy_pass_header Server;
+    proxy_set_header  X-Real-IP  \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+    proxy_set_header Host \$http_host;
+    proxy_redirect off;
+
+    # Set timeout for connections to be 5 minutes
+    proxy_read_timeout 300s;
+
+    # Required in order to WebSockets or Streaming (sse). Async workers are
+    # needed then.
+    proxy_buffering off;
+
+    proxy_pass http://localhost:${PORTSTREAM};
+
+    # Channel is in the route, so /stream/puzzle/puzzle_id/ will go to: /stream?channel=puzzle:puzzle_id
+    rewrite ^/stream/puzzle/([^/]+)/\$ /stream?channel=puzzle:\$1? break;
+  }
+
 HERE
 
 if test "${ENVIRONMENT}" == 'development'; then
@@ -480,28 +502,6 @@ cat <<HERE
     proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
     proxy_pass http://localhost:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
-  }
-
-  # /stream/puzzle/<channel>/
-  location ~* ^/stream/puzzle/([^/]+)/\$ {
-    proxy_pass_header Server;
-    proxy_set_header  X-Real-IP  \$remote_addr;
-    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto \$scheme;
-    proxy_set_header Host \$http_host;
-    proxy_redirect off;
-
-    # Set timeout for connections to be 5 minutes
-    proxy_read_timeout 300s;
-
-    # Required in order to WebSockets or Streaming (sse). Async workers are
-    # needed then.
-    proxy_buffering off;
-
-    proxy_pass http://localhost:${PORTSTREAM};
-
-    # Channel is in the route, so /stream/a-channel-name/ will go to: /stream?channel=a-channel-name
-    rewrite ^/stream/puzzle/([^/]+)/\$ /stream?channel=puzzle:\$1 break;
   }
 
   location ~* ^/chill/site/puzzle/.*\$ {
