@@ -5,9 +5,11 @@ import { puzzleBitsService } from "../puzzle-bits/puzzle-bits.service";
 import { puzzleStreamMachine } from "./puzzle-stream-machine";
 import userDetailsService from "../site/user-details.service";
 
-// Set ping interval to be one less minute then 5.
+// Set ping interval to be one less minute than 5.
 const PING_INTERVAL = 4 * 60 * 1000;
-//const PING_INTERVAL = 10 * 1000;
+
+// Set the reconnect interval to be 5 seconds.
+const RECONNECT_INTERVAL = 5 * 1000;
 
 export interface PieceMovementData {
   id: number;
@@ -80,7 +82,6 @@ class PuzzleStream {
 
   constructor(puzzleId: PuzzleId, broadcast: Broadcaster) {
     this.puzzleId = puzzleId;
-    //this.playerId = playerId;
     this.broadcast = broadcast;
 
     this.eventSource = this.getEventSource(this.puzzleId);
@@ -91,11 +92,6 @@ class PuzzleStream {
   get playerId(): PlayerId | undefined {
     return userDetailsService.userDetails.id;
   }
-  /*
-  private handleUserDetailChange() {
-    const playerId = userDetailsService.userDetails.id;
-  }
-     */
 
   private getEventSource(puzzleId: PuzzleId) {
     const eventSource = new EventSource(`/stream/puzzle/${puzzleId}/`, {
@@ -134,8 +130,7 @@ class PuzzleStream {
   }
 
   disconnect() {
-    console.log("disconnect", this.puzzleId);
-    this.destroyEventSource();
+    this.puzzleStreamService.send("CLOSE");
     this.puzzleStreamService.stop();
   }
 
@@ -173,13 +168,17 @@ class PuzzleStream {
 
   private handleStateChange(state) {
     console.log(`puzzle-stream: ${state.value}`);
-    console.log(state.actions);
     switch (state.value) {
       case "connecting":
         // Send a ping to the server every second while connecting.
         state.actions.forEach((action) => {
-          if (action.type === "setEventSource") {
-            this.eventSource = this.getEventSource(this.puzzleId);
+          switch (action.type) {
+            case "setEventSource":
+              this.eventSource = this.getEventSource(this.puzzleId);
+              break;
+            case "broadcastReconnecting":
+              this.broadcast(socketReconnecting);
+              break;
           }
         });
         this.sendPing(1000);
@@ -194,6 +193,9 @@ class PuzzleStream {
             case "broadcastPlayerLatency":
               this.broadcastPlayerLatency();
               break;
+            case "broadcastConnected":
+              this.broadcast(socketConnected);
+              break;
           }
         });
         break;
@@ -205,6 +207,9 @@ class PuzzleStream {
               break;
             case "startReconnectTimeout":
               this.reconnectTimeout();
+              break;
+            case "broadcastDisconnected":
+              this.broadcast(socketDisconnected);
               break;
           }
         });
@@ -220,8 +225,8 @@ class PuzzleStream {
 
   private handlePingEvent(messageEvent: any) {
     // any = MessageEvent
-    console.log("The ping is:", messageEvent);
     if (!this.playerId) {
+      // Skip sending a pong when no playerId has been set yet from userDetailsService.
       return;
     }
     const playerIdPart = `${this.playerId}:`;
@@ -231,15 +236,10 @@ class PuzzleStream {
     }
   }
   private broadcastPlayerLatency() {
-    // TODO: parse the message and find matching ping from the user if there
-    // is one.  Send a pong request.
-    console.log("broadcastPlayerLatency", this.pingToken);
     const pong = new FetchService(`/newapi/ping/puzzle/${this.puzzleId}/`);
     pong
       .patch<PongResponse>({ token: this.pingToken })
       .then((response) => {
-        // TODO: broadcast latency
-        //this.broadcast(pingTopic, messageEvent);
         if (response && response.name === "success" && response.data) {
           this.broadcast(pingTopic, response.data.latency);
         }
@@ -253,8 +253,6 @@ class PuzzleStream {
   private handleMoveEvent(messageEvent: any) {
     // any = MessageEvent
     const textline = messageEvent.data;
-    console.log("The move is:", textline);
-
     const lines = textline.split("\n");
     lines.forEach((line) => {
       const items = line.split(",");
@@ -295,13 +293,12 @@ class PuzzleStream {
   private handleMessageEvent(message: Event) {
     console.log("generic message from event source", message);
   }
-  private handleOpenEvent(message: Event) {
+  private handleOpenEvent() {
     // connection to the event source has opened
-    console.log("open event", message);
     this.puzzleStreamService.send("SUCCESS");
   }
   private handleErrorEvent(message: Event) {
-    console.log(
+    console.error(
       "Failed to connect to event stream. Is Redis running?",
       message
     );
@@ -309,15 +306,14 @@ class PuzzleStream {
   }
 
   private reconnectTimeout() {
-    console.log("reconnecting");
+    this.broadcast(socketReconnecting);
     window.clearTimeout(this.reconnectIntervalId);
     this.reconnectIntervalId = window.setTimeout(() => {
       this.puzzleStreamService.send("RECONNECT");
-    }, 5000);
+    }, RECONNECT_INTERVAL);
   }
 
   private sendPing(interval = PING_INTERVAL) {
-    console.log("pinging", this.puzzleId);
     window.clearTimeout(this.pingIntervalId);
     const ping = new FetchService(`/newapi/ping/puzzle/${this.puzzleId}/`);
     ping
@@ -342,8 +338,6 @@ class StreamService {
   }
   private instanceId: string;
   private puzzleStreams: PuzzleStreamMap = {};
-
-  //private pingServerIntervalID: number = 0;
 
   // topics
   [socketDisconnected]: Map<string, SocketStatusCallback> = new Map();
@@ -376,17 +370,13 @@ class StreamService {
       }
     }
 
-    // TODO: get playerId and pass to connect()?
+    // The puzzleStream uses the playerId when pinging the server.
     userDetailsService.subscribe(() => {
-      //PmChooseBit.getBits(this, this.limit);
-      //const playerId = userDetailsService.userDetails.id
-      const puzzleStream = new PuzzleStream(
-        puzzleId,
-        this._broadcast.bind(this)
-      );
-      this.puzzleStreams[puzzleId] = puzzleStream;
+      // The puzzleStream doesn't need to act on any updates to the user/player.
       userDetailsService.unsubscribe(this.instanceId);
     }, this.instanceId);
+    const puzzleStream = new PuzzleStream(puzzleId, this._broadcast.bind(this));
+    this.puzzleStreams[puzzleId] = puzzleStream;
   }
 
   _broadcast(topic: symbol, data?: any) {

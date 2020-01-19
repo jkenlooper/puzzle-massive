@@ -1,4 +1,3 @@
-//import { divulgerService } from "../puzzle-pieces/divulger.service";
 import { streamService } from "../puzzle-pieces/stream.service";
 import { puzzleService } from "../puzzle-pieces/puzzle.service";
 
@@ -77,36 +76,16 @@ customElements.define(
         this.onMoveBlocked.bind(this),
         this.instanceId
       );
-      //divulgerService.subscribe(
-      //  "socket/max",
-      //  this.onMax.bind(this),
-      //  this.instanceId
-      //);
-      //divulgerService.subscribe(
-      //  "socket/disconnected",
-      //  this.onDisconnected.bind(this),
-      //  this.instanceId
-      //);
       streamService.subscribe(
         "socket/disconnected",
         this.onDisconnected.bind(this),
         this.instanceId
       );
-      //divulgerService.subscribe(
-      //  "socket/reconnecting",
-      //  this.onReconnecting.bind(this),
-      //  this.instanceId
-      //);
       streamService.subscribe(
         "socket/reconnecting",
         this.onReconnecting.bind(this),
         this.instanceId
       );
-      //divulgerService.subscribe(
-      //  "socket/connected",
-      //  this.onConnected.bind(this),
-      //  this.instanceId
-      //);
       streamService.subscribe(
         "socket/connected",
         this.onConnected.bind(this),
@@ -114,7 +93,6 @@ customElements.define(
       );
 
       streamService.connect(this.puzzleId);
-      //divulgerService.ping(this.puzzleId);
     }
 
     onMoveBlocked(data) {
@@ -198,7 +176,6 @@ customElements.define(
         "socket/reconnecting",
       ];
       topics.forEach((topic) => {
-        //divulgerService.unsubscribe(topic, this.instanceId);
         streamService.unsubscribe(topic, this.instanceId);
       });
     }

@@ -15,7 +15,7 @@ export const puzzleStreamMachine = createMachine({
         },
         SUCCESS: {
           target: "connected",
-          actions: ["startPingInterval"],
+          actions: ["broadcastConnected", "startPingInterval"],
         },
         PUZZLE_NOT_ACTIVE: "inactive",
         INVALID: "invalid",
@@ -25,7 +25,7 @@ export const puzzleStreamMachine = createMachine({
       on: {
         RECONNECT: {
           target: "connecting",
-          actions: ["setEventSource"],
+          actions: ["setEventSource", "broadcastReconnecting"],
         },
       },
     },
@@ -40,7 +40,10 @@ export const puzzleStreamMachine = createMachine({
           actions: ["broadcastPlayerLatency"],
         },
         PUZZLE_NOT_ACTIVE: "inactive",
-        CLOSE: "disconnected",
+        CLOSE: {
+          target: "disconnected",
+          actions: ["destroyEventSource", "broadcastDisconnected"],
+        },
       },
     },
     inactive: {},

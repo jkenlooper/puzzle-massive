@@ -11,7 +11,6 @@ import * as Hammer from "hammerjs";
 import { rgbToHsl } from "../site/utilities";
 import hashColorService from "../hash-color/hash-color.service";
 import { puzzleService, PieceData } from "./puzzle.service";
-//import { divulgerService } from "./divulger.service";
 import { streamService } from "./stream.service";
 
 import template from "./puzzle-pieces.html";
@@ -100,7 +99,8 @@ customElements.define(
       streamService.subscribe(
         "ping",
         (data) => {
-          console.log("subscribe ping", data);
+          // TODO: display the player's latency, but not as part of pm-puzzle-pieces.
+          console.log("latency", data);
         },
         this.instanceId
       );
@@ -206,10 +206,6 @@ customElements.define(
 
     stopFollowing(data) {
       if (data.id === this.draggedPieceID) {
-        //divulgerService.unsubscribe(
-        //  "piece/update",
-        //  `pieceFollow ${this.instanceId}`
-        //);
         streamService.unsubscribe(
           "piece/update",
           `pieceFollow ${this.instanceId}`
@@ -284,11 +280,6 @@ customElements.define(
             false
           );
           // subscribe to piece/update to unfollow if active piece is updated
-          //divulgerService.subscribe(
-          //  "piece/update",
-          //  this.stopFollowing.bind(this),
-          //  `pieceFollow ${this.instanceId}`
-          //);
           streamService.subscribe(
             "piece/update",
             this.stopFollowing.bind(this),
@@ -441,7 +432,6 @@ customElements.define(
     }
 
     disconnectedCallback() {
-      //divulgerService.unsubscribe("piece/update", this.instanceId);
       streamService.unsubscribe("piece/update", this.instanceId);
       puzzleService.unsubscribe("pieces/mutate", this.instanceId);
       puzzleService.unsubscribe(
