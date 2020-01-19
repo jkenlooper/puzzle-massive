@@ -1,4 +1,5 @@
-import { divulgerService } from "../puzzle-pieces/divulger.service";
+//import { divulgerService } from "../puzzle-pieces/divulger.service";
+import { streamService } from "../puzzle-pieces/stream.service";
 import { puzzleService } from "../puzzle-pieces/puzzle.service";
 
 import "./puzzle-alert.css";
@@ -76,27 +77,44 @@ customElements.define(
         this.onMoveBlocked.bind(this),
         this.instanceId
       );
-      divulgerService.subscribe(
-        "socket/max",
-        this.onMax.bind(this),
-        this.instanceId
-      );
-      divulgerService.subscribe(
+      //divulgerService.subscribe(
+      //  "socket/max",
+      //  this.onMax.bind(this),
+      //  this.instanceId
+      //);
+      //divulgerService.subscribe(
+      //  "socket/disconnected",
+      //  this.onDisconnected.bind(this),
+      //  this.instanceId
+      //);
+      streamService.subscribe(
         "socket/disconnected",
         this.onDisconnected.bind(this),
         this.instanceId
       );
-      divulgerService.subscribe(
+      //divulgerService.subscribe(
+      //  "socket/reconnecting",
+      //  this.onReconnecting.bind(this),
+      //  this.instanceId
+      //);
+      streamService.subscribe(
         "socket/reconnecting",
         this.onReconnecting.bind(this),
         this.instanceId
       );
-      divulgerService.subscribe(
+      //divulgerService.subscribe(
+      //  "socket/connected",
+      //  this.onConnected.bind(this),
+      //  this.instanceId
+      //);
+      streamService.subscribe(
         "socket/connected",
         this.onConnected.bind(this),
         this.instanceId
       );
-      divulgerService.ping(this.puzzleId);
+
+      streamService.connect(this.puzzleId);
+      //divulgerService.ping(this.puzzleId);
     }
 
     onMoveBlocked(data) {
@@ -148,10 +166,10 @@ customElements.define(
       }
     }
 
-    onMax() {
-      this.alerts.container.classList.add("is-active");
-      this.alerts.max.classList.add("is-active");
-    }
+    //onMax() {
+    //  this.alerts.container.classList.add("is-active");
+    //  this.alerts.max.classList.add("is-active");
+    //}
 
     onDisconnected() {
       this.alerts.container.classList.add("is-active");
@@ -174,13 +192,14 @@ customElements.define(
 
     disconnectedCallback() {
       const topics = [
-        "socket/max",
+        //"socket/max",
         "socket/disconnected",
         "socket/connected",
         "socket/reconnecting",
       ];
       topics.forEach((topic) => {
-        divulgerService.unsubscribe(topic, this.instanceId);
+        //divulgerService.unsubscribe(topic, this.instanceId);
+        streamService.unsubscribe(topic, this.instanceId);
       });
     }
   }

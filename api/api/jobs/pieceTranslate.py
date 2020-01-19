@@ -45,15 +45,16 @@ def get_earned_points(pieces):
 
 
 def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
-    def publishMessage(topic, msg, karma_change, points=0, complete=False):
+    def publishMessage(msg, karma_change, points=0, complete=False):
         # print(topic)
         # print(msg)
-        # TODO: instead of publishing directly to redis for divulger to pick up;
-        # use sse.publish()
-        # sse.publish(msg, channel=topic, type="greeting")
-        sse.publish(msg, type="greeting")
-        redis_connection.publish(topic, msg)
-        # time.sleep(1)
+        # TODO: switch to only sse.publish()
+        sse.publish(
+            msg,
+            type="move",
+            channel="puzzle:{puzzle_id}".format(puzzle_id=puzzleData["puzzle_id"]),
+        )
+        # redis_connection.publish(topic, msg)
 
         # return (topic, msg)
         cur = db.cursor()
@@ -129,7 +130,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         cur.close()
 
         # return topic and msg mostly for testing
-        return (topic, msg, karma_change)
+        return (msg, karma_change)
 
     def savePiecePosition(puzzle, piece, x, y):
         # Move the piece
@@ -339,11 +340,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
             redis_connection.decr(karma_key)
         karma_change -= 1
 
-        return publishMessage(
-            u"move:{puzzle_id}".format(puzzle_id=puzzleData["puzzle_id"]),
-            p,
-            karma_change,
-        )
+        return publishMessage(p, karma_change,)
 
     elif len(piecesInProximity) > 1:
         # print piecesInProximity
@@ -645,10 +642,4 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
             # print("Puzzle is complete: {0} == {1}".format(immovableGroupCount, puzzleData.get('pieces')))
             complete = True
 
-    return publishMessage(
-        u"move:{puzzle_id}".format(puzzle_id=puzzleData["puzzle_id"]),
-        p,
-        karma_change,
-        points=points,
-        complete=complete,
-    )
+    return publishMessage(p, karma_change, points=points, complete=complete,)

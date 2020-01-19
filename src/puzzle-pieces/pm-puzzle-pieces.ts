@@ -11,7 +11,7 @@ import * as Hammer from "hammerjs";
 import { rgbToHsl } from "../site/utilities";
 import hashColorService from "../hash-color/hash-color.service";
 import { puzzleService, PieceData } from "./puzzle.service";
-import { divulgerService } from "./divulger.service";
+//import { divulgerService } from "./divulger.service";
 import { streamService } from "./stream.service";
 
 import template from "./puzzle-pieces.html";
@@ -95,11 +95,8 @@ customElements.define(
       } else {
         this.$container.classList.add("pm-PuzzlePieces--withinSlabMassive");
       }
-        // TODO: get playerId and pass to connect()?
-        //userDetailsService.subscribe(() => {
-        //
-        const playerId = 7549; // TODO:
-      streamService.connect(this.puzzleId, playerId);
+
+      streamService.connect(this.puzzleId);
       streamService.subscribe(
         "ping",
         (data) => {
@@ -209,10 +206,15 @@ customElements.define(
 
     stopFollowing(data) {
       if (data.id === this.draggedPieceID) {
-        divulgerService.unsubscribe(
+        //divulgerService.unsubscribe(
+        //  "piece/update",
+        //  `pieceFollow ${this.instanceId}`
+        //);
+        streamService.unsubscribe(
           "piece/update",
           `pieceFollow ${this.instanceId}`
         );
+
         this.$slabMassive.removeEventListener(
           "mousemove",
           this.pieceFollow,
@@ -282,7 +284,12 @@ customElements.define(
             false
           );
           // subscribe to piece/update to unfollow if active piece is updated
-          divulgerService.subscribe(
+          //divulgerService.subscribe(
+          //  "piece/update",
+          //  this.stopFollowing.bind(this),
+          //  `pieceFollow ${this.instanceId}`
+          //);
+          streamService.subscribe(
             "piece/update",
             this.stopFollowing.bind(this),
             `pieceFollow ${this.instanceId}`
@@ -434,7 +441,8 @@ customElements.define(
     }
 
     disconnectedCallback() {
-      divulgerService.unsubscribe("piece/update", this.instanceId);
+      //divulgerService.unsubscribe("piece/update", this.instanceId);
+      streamService.unsubscribe("piece/update", this.instanceId);
       puzzleService.unsubscribe("pieces/mutate", this.instanceId);
       puzzleService.unsubscribe(
         "piece/move/rejected",

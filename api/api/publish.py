@@ -325,10 +325,12 @@ class PuzzlePieceTokenView(MethodView):
             )
         )
         msg = formatBitMovementString(user, x, y)
-        # TODO: switch to sse.publish()
-        # sse.publish(msg, channel=u"move:{0}".format(puzzle_id), type="greeting")
-        sse.publish(msg, type="greeting")
-        redis_connection.publish(u"move:{0}".format(puzzle_id), msg)
+
+        # TODO: switch to only sse.publish()
+        sse.publish(
+            msg, type="move", channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id)
+        )
+        # redis_connection.publish(u"move:{0}".format(puzzle_id), msg)
 
         response = {
             "token": token,
@@ -716,16 +718,17 @@ class PuzzlePiecesMovePublishView(MethodView):
         if user != None:
             # msg = msg + '\n' + formatBitMovementString(user, x, y)
             msg = formatBitMovementString(user, x, y)
-        # TODO: switch to sse.publish()
-        # sse.publish(msg, channel=u"move:{0}".format(puzzle_id), type="greeting")
-        sse.publish(msg, type="greeting")
-        redis_connection.publish(u"move:{0}".format(puzzle_id), msg)
+        # TODO: switch to only sse.publish()
+        sse.publish(
+            msg, type="move", channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id)
+        )
+        # redis_connection.publish(u"move:{0}".format(puzzle_id), msg)
 
         # push to queue for further processing
         # job = current_app.queue.enqueue_call(
         #    func='api.jobs.pieceTranslate.translate', args=(ip, user, puzzle_piece, piece, args.get('x'), args.get('y'), args.get('r'), karma_change), result_ttl=0, timeout=2, ttl=3
         # )
-        (topic, msg, karma_change) = pieceTranslate.translate(
+        (msg, karma_change) = pieceTranslate.translate(
             ip,
             user,
             puzzle_piece,

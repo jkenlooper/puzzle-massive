@@ -1,5 +1,6 @@
 import reqwest from "reqwest";
-import { divulgerService, PieceMovementData } from "./divulger.service";
+//import { divulgerService, PieceMovementData } from "./divulger.service";
+import { streamService, PieceMovementData } from "./stream.service";
 
 type PieceMovementId = number;
 
@@ -126,7 +127,12 @@ class PuzzleService {
     PiecesInfoToggleMovableCallback
   > = new Map();
   constructor() {
-    divulgerService.subscribe(
+    //divulgerService.subscribe(
+    //    "piece/update",
+    //    this.onPieceUpdate.bind(this),
+    //    this.instanceId
+    //);
+    streamService.subscribe(
       "piece/update",
       this.onPieceUpdate.bind(this),
       this.instanceId
@@ -159,7 +165,8 @@ class PuzzleService {
         this.pieces[piece.id] = Object.assign(defaultPiece, piece);
       });
       this.piecesTimestamp = pieceData.timestamp.timestamp;
-      divulgerService.ping(this.puzzleId);
+      //divulgerService.ping(this.puzzleId);
+      streamService.connect(this.puzzleId);
       this._broadcast(piecesMutate, Object.values(this.pieces));
     });
 
@@ -348,7 +355,7 @@ class PuzzleService {
         data.r = r;
       }
 
-      divulgerService.ping(puzzleId);
+      //divulgerService.ping(puzzleId);
       return reqwest({
         url: `/newapi/puzzle/${puzzleId}/piece/${id}/move/`,
         method: "PATCH",
@@ -411,7 +418,7 @@ class PuzzleService {
         },
         success: function(d) {
           self.onKarmaUpdate(d);
-          divulgerService.ping(puzzleId);
+          //divulgerService.ping(puzzleId);
         },
       });
     };
