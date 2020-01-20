@@ -3,6 +3,7 @@
 Usage: puzzle-massive-testdata players [--count=<n>]
        puzzle-massive-testdata puzzles [--count=<n>] [--pieces=<n>] [--min-pieces=<n>] [--size=<s>]
        puzzle-massive-testdata instances [--count=<n>] [--pieces=<n>] [--min-pieces=<n>]
+       puzzle-massive-testdata activity
        puzzle-massive-testdata --help
 
 Options:
@@ -16,6 +17,7 @@ Subcommands:
     players     - Generate some random player data
     puzzles     - Create random images and create puzzles
     instances   - Create instances of existing puzzles for random players
+    activity    - Simulate puzzle activity
 """
 
 import sys
@@ -419,6 +421,130 @@ def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
     cur.close()
 
 
+import random
+
+import requests
+
+PORTAPI = config.get("PORTAPI")
+api_host = "http://localhost:{PORTAPI}".format(**locals())
+
+
+class UserSession:
+    def __init__(self, ip):
+        self.headers = {"X-Real-IP": ip}
+
+        # get test user
+        current_user_id = requests.get(
+            "{0}/current-user-id/".format(api_host), headers=self.headers
+        )
+        self.shareduser_cookie = current_user_id.cookies["shareduser"]
+        self.shareduser = int(current_user_id.content)
+
+    def get_data(self, route):
+        # with the test user, get recent puzzles
+        r = requests.get(
+            "".join([api_host, route]),
+            cookies={"shareduser": self.shareduser_cookie},
+            headers=self.headers,
+        )
+        try:
+            data = r.json()
+        except ValueError as err:
+            print("ERROR reading json: {}".format(err))
+            return
+        if r.status_code >= 400:
+            print(
+                "ERROR: {status_code} {url}".format(
+                    status_code=r.status_code, url=r.url
+                )
+            )
+            return
+            print(data)
+        return data
+
+    def patch_data(self, route, payload={}, headers={}):
+        my_headers = self.headers.copy()
+        my_headers.update(headers)
+        r = requests.patch(
+            "".join([api_host, route]),
+            data=payload,
+            cookies={"shareduser": self.shareduser_cookie},
+            headers=my_headers,
+        )
+        try:
+            data = r.json()
+        except ValueError as err:
+            print("ERROR reading json: {}".format(err))
+            return
+        if r.status_code >= 400:
+            print(
+                "ERROR: {status_code} {url}".format(
+                    status_code=r.status_code, url=r.url
+                )
+            )
+            print(data)
+            return
+        return data
+
+
+class PuzzlePieces:
+    def __init__(self, user_session, puzzle_id):
+        self.user_session = user_session
+        self.puzzle_id = puzzle_id
+        self.puzzle_pieces = self.user_session.get_data(
+            "/puzzle-pieces/{0}/".format(self.puzzle_id)
+        )
+        self.movable_pieces = [
+            x["id"] for x in self.puzzle_pieces["positions"] if x["s"] is not "1"
+        ]
+        print(self.movable_pieces)
+        print(len(self.movable_pieces))
+        # TODO: connect to the stream and update movable_pieces
+        # TODO: get puzzle information by querying db
+
+    def move_random_piece(self):
+        piece_id = random.choice(self.movable_pieces)
+        x = random.randint(100, 800)
+        y = random.randint(100, 800)
+        piece_token = self.user_session.get_data(
+            "/puzzle/{puzzle_id}/piece/{piece_id}/token/?mark={mark}".format(
+                puzzle_id=self.puzzle_id,
+                piece_id=piece_id,
+                mark=self.puzzle_pieces["mark"],
+            )
+        )
+        print(piece_token)
+        puzzle_pieces_move = self.user_session.patch_data(
+            "/puzzle/{puzzle_id}/piece/{piece_id}/move/".format(
+                puzzle_id=self.puzzle_id, piece_id=piece_id
+            ),
+            payload={"x": x, "y": y},
+            headers={"Token": piece_token["token"]},
+        )
+        print(puzzle_pieces_move)
+
+
+def simulate_puzzle_activity():
+    """
+
+    """
+    user_session = UserSession(ip="10.111.11.1")
+
+    gallery_puzzle_list = user_session.get_data("/gallery-puzzle-list/")
+
+    puzzle_ids = [x["puzzle_id"] for x in gallery_puzzle_list["puzzles"]]
+    print(puzzle_ids)
+
+    # grab some random player ids with cookies
+
+    # For each recent puzzle; move pieces around
+    for puzzle_id in puzzle_ids:
+        puzzle_pieces = PuzzlePieces(user_session, puzzle_id)
+        for p in range(0, 40):
+            puzzle_pieces.move_random_piece()
+            time.sleep(1)
+
+
 def main():
     count = int(args.get("--count"))
     size = args.get("--size")
@@ -448,6 +574,10 @@ def main():
         generate_puzzle_instances(
             count=count, min_pieces=min_pieces, max_pieces=max_pieces
         )
+
+    elif args.get("activity"):
+        print("Simulating puzzle activity")
+        simulate_puzzle_activity()
 
 
 if __name__ == "__main__":
