@@ -3,7 +3,7 @@
 Usage: puzzle-massive-testdata players [--count=<n>]
        puzzle-massive-testdata puzzles [--count=<n>] [--pieces=<n>] [--min-pieces=<n>] [--size=<s>]
        puzzle-massive-testdata instances [--count=<n>] [--pieces=<n>] [--min-pieces=<n>]
-       puzzle-massive-testdata activity
+       puzzle-massive-testdata activity [--puzzles=<list>] [--count=<n>]
        puzzle-massive-testdata --help
 
 Options:
@@ -12,6 +12,7 @@ Options:
     --size=<s>        Random image size (passed to imagemagick resize opt) [default: 180x180!]
     --pieces=<n>      Piece count max [default: 9]
     --min-pieces=<n>  Piece count min [default: 0]
+    --puzzles=<list>  Comma separated list of puzzle ids
 
 Subcommands:
     players     - Generate some random player data
@@ -26,8 +27,10 @@ import time
 from uuid import uuid4
 import hashlib
 import subprocess
-from random import randint
+from random import randint, choice
+import threading
 
+import requests
 from rq import Queue
 from docopt import docopt
 
@@ -69,6 +72,9 @@ createqueue = Queue("puzzle_create", connection=redis_connection)
 QUERY_USER_ID_BY_LOGIN = """
 select id from User where ip = :ip and login = :login;
 """
+
+PORTAPI = config.get("PORTAPI")
+api_host = "http://localhost:{PORTAPI}".format(**locals())
 
 
 def generate_users(count):
@@ -421,14 +427,6 @@ def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
     cur.close()
 
 
-import random
-
-import requests
-
-PORTAPI = config.get("PORTAPI")
-api_host = "http://localhost:{PORTAPI}".format(**locals())
-
-
 class UserSession:
     def __init__(self, ip):
         self.headers = {"X-Real-IP": ip}
@@ -459,7 +457,7 @@ class UserSession:
                 )
             )
             return
-            print(data)
+            # print(data)
         return data
 
     def patch_data(self, route, payload={}, headers={}):
@@ -482,30 +480,35 @@ class UserSession:
                     status_code=r.status_code, url=r.url
                 )
             )
-            print(data)
+            # print(data)
             return
         return data
 
 
 class PuzzlePieces:
-    def __init__(self, user_session, puzzle_id):
+    def __init__(self, user_session, puzzle_id, table_width, table_height):
         self.user_session = user_session
         self.puzzle_id = puzzle_id
         self.puzzle_pieces = self.user_session.get_data(
             "/puzzle-pieces/{0}/".format(self.puzzle_id)
         )
+        self.table_width = table_width
+        self.table_height = table_height
         self.movable_pieces = [
             x["id"] for x in self.puzzle_pieces["positions"] if x["s"] is not "1"
         ]
-        print(self.movable_pieces)
-        print(len(self.movable_pieces))
         # TODO: connect to the stream and update movable_pieces
-        # TODO: get puzzle information by querying db
+        # TODO: reset karma:puzzle:ip redis key when it gets low
+
+    def move_random_pieces_with_delay(self, delay):
+        for i in range(0, len(self.movable_pieces)):
+            self.move_random_piece()
+            time.sleep(delay)
 
     def move_random_piece(self):
-        piece_id = random.choice(self.movable_pieces)
-        x = random.randint(100, 800)
-        y = random.randint(100, 800)
+        piece_id = choice(self.movable_pieces)
+        x = randint(0, self.table_width - 100)
+        y = randint(0, self.table_height - 100)
         piece_token = self.user_session.get_data(
             "/puzzle/{puzzle_id}/piece/{piece_id}/token/?mark={mark}".format(
                 puzzle_id=self.puzzle_id,
@@ -513,36 +516,71 @@ class PuzzlePieces:
                 mark=self.puzzle_pieces["mark"],
             )
         )
-        print(piece_token)
-        puzzle_pieces_move = self.user_session.patch_data(
-            "/puzzle/{puzzle_id}/piece/{piece_id}/move/".format(
-                puzzle_id=self.puzzle_id, piece_id=piece_id
-            ),
-            payload={"x": x, "y": y},
-            headers={"Token": piece_token["token"]},
+        if piece_token:
+            puzzle_pieces_move = self.user_session.patch_data(
+                "/puzzle/{puzzle_id}/piece/{piece_id}/move/".format(
+                    puzzle_id=self.puzzle_id, piece_id=piece_id
+                ),
+                payload={"x": x, "y": y},
+                headers={"Token": piece_token["token"]},
+            )
+            # if puzzle_pieces_move:
+            #    print("{id} karma:{karma}".format(**puzzle_pieces_move))
+
+
+class PuzzleActivityThread(threading.Thread):
+    def __init__(self, puzzle_id, ip):
+        threading.Thread.__init__(self)
+        self.puzzle_id = puzzle_id
+        self.ip = ip
+        cur = db.cursor()
+        result = cur.execute(
+            "select table_width, table_height from Puzzle where puzzle_id = :puzzle_id;",
+            {"puzzle_id": self.puzzle_id},
+        ).fetchall()
+        (result, col_names) = rowify(result, cur.description)
+        self.puzzle_details = result[0]
+        cur.close()
+
+    def run(self):
+        user_session = UserSession(ip=self.ip)
+        puzzle_pieces = PuzzlePieces(
+            user_session,
+            self.puzzle_id,
+            self.puzzle_details["table_width"],
+            self.puzzle_details["table_height"],
         )
-        print(puzzle_pieces_move)
+        puzzle_pieces.move_random_pieces_with_delay(1)
 
 
-def simulate_puzzle_activity():
+def simulate_puzzle_activity(puzzle_ids, count=1):
     """
 
     """
-    user_session = UserSession(ip="10.111.11.1")
+    cur = db.cursor()
+    result = cur.execute(
+        "select distinct ip from User order by random() limit :count;", {"count": count}
+    ).fetchall()
+    if not result:
+        print("Add players first")
+        return
+    players = [x[0] for x in result]
+    cur.close()
+    # (result, col_names) = rowify(result, cur.description)
+
+    user_session = UserSession(ip=players[0])
 
     gallery_puzzle_list = user_session.get_data("/gallery-puzzle-list/")
 
-    puzzle_ids = [x["puzzle_id"] for x in gallery_puzzle_list["puzzles"]]
-    print(puzzle_ids)
+    listed_puzzle_ids = [x["puzzle_id"] for x in gallery_puzzle_list["puzzles"]]
 
     # grab some random player ids with cookies
 
     # For each recent puzzle; move pieces around
-    for puzzle_id in puzzle_ids:
-        puzzle_pieces = PuzzlePieces(user_session, puzzle_id)
-        for p in range(0, 40):
-            puzzle_pieces.move_random_piece()
-            time.sleep(1)
+    for ip in players:
+        for puzzle_id in puzzle_ids or listed_puzzle_ids:
+            puzzle_activity_thread = PuzzleActivityThread(puzzle_id, ip)
+            puzzle_activity_thread.start()
 
 
 def main():
@@ -550,6 +588,7 @@ def main():
     size = args.get("--size")
     max_pieces = int(args.get("--pieces"))
     min_pieces = int(args.get("--min-pieces"))
+    puzzles = args.get("--puzzles")
 
     if args.get("players"):
         print("Creating {} players".format(count))
@@ -577,7 +616,10 @@ def main():
 
     elif args.get("activity"):
         print("Simulating puzzle activity")
-        simulate_puzzle_activity()
+        puzzle_ids = []
+        if puzzles:
+            puzzle_ids = puzzles.split(",")
+        simulate_puzzle_activity(puzzle_ids, count=count)
 
 
 if __name__ == "__main__":
