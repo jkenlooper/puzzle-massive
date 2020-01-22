@@ -28,13 +28,13 @@ from uuid import uuid4
 import hashlib
 import subprocess
 from random import randint, choice
-import threading
+import multiprocessing
 
 import requests
 from rq import Queue
 from docopt import docopt
 
-from api.tools import loadConfig, get_db, get_redis_connection
+from api.tools import loadConfig, get_db, get_redis_connection, init_karma_key
 from api.user import generate_user_login
 from api.constants import (
     ACTIVE,
@@ -429,6 +429,7 @@ def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
 
 class UserSession:
     def __init__(self, ip):
+        self.ip = ip
         self.headers = {"X-Real-IP": ip}
 
         # get test user
@@ -439,16 +440,19 @@ class UserSession:
         self.shareduser = int(current_user_id.content)
 
     def get_data(self, route):
-        # with the test user, get recent puzzles
         r = requests.get(
             "".join([api_host, route]),
             cookies={"shareduser": self.shareduser_cookie},
             headers=self.headers,
         )
+        if r.status_code in (429, 409):
+            time.sleep(1)
+            return
         try:
             data = r.json()
         except ValueError as err:
             print("ERROR reading json: {}".format(err))
+            print(r.text)
             return
         if r.status_code >= 400:
             print(
@@ -457,7 +461,6 @@ class UserSession:
                 )
             )
             return
-            # print(data)
         return data
 
     def patch_data(self, route, payload={}, headers={}):
@@ -473,6 +476,7 @@ class UserSession:
             data = r.json()
         except ValueError as err:
             print("ERROR reading json: {}".format(err))
+            print(r.text)
             return
         if r.status_code >= 400:
             print(
@@ -480,14 +484,20 @@ class UserSession:
                     status_code=r.status_code, url=r.url
                 )
             )
-            # print(data)
+            if r.status_code == 429:
+                timeout = data.get("timeout")
+                if timeout:
+                    print("timeout {}".format(timeout))
+                    time.sleep(timeout)
+                return
             return
         return data
 
 
 class PuzzlePieces:
-    def __init__(self, user_session, puzzle_id, table_width, table_height):
+    def __init__(self, user_session, puzzle, puzzle_id, table_width, table_height):
         self.user_session = user_session
+        self.puzzle = puzzle
         self.puzzle_id = puzzle_id
         self.puzzle_pieces = self.user_session.get_data(
             "/puzzle-pieces/{0}/".format(self.puzzle_id)
@@ -498,10 +508,9 @@ class PuzzlePieces:
             x["id"] for x in self.puzzle_pieces["positions"] if x["s"] is not "1"
         ]
         # TODO: connect to the stream and update movable_pieces
-        # TODO: reset karma:puzzle:ip redis key when it gets low
 
     def move_random_pieces_with_delay(self, delay):
-        for i in range(0, len(self.movable_pieces)):
+        while True:
             self.move_random_piece()
             time.sleep(delay)
 
@@ -516,7 +525,7 @@ class PuzzlePieces:
                 mark=self.puzzle_pieces["mark"],
             )
         )
-        if piece_token:
+        if piece_token and piece_token.get("token"):
             puzzle_pieces_move = self.user_session.patch_data(
                 "/puzzle/{puzzle_id}/piece/{piece_id}/move/".format(
                     puzzle_id=self.puzzle_id, piece_id=piece_id
@@ -524,18 +533,23 @@ class PuzzlePieces:
                 payload={"x": x, "y": y},
                 headers={"Token": piece_token["token"]},
             )
-            # if puzzle_pieces_move:
-            #    print("{id} karma:{karma}".format(**puzzle_pieces_move))
+            if puzzle_pieces_move:
+                # Reset karma:puzzle:ip redis key when it gets low
+                if puzzle_pieces_move["karma"] < 2:
+                    print("resetting karma for {ip}".format(ip=self.user_session.ip))
+                    karma_key = init_karma_key(
+                        redis_connection, self.puzzle, self.user_session.ip
+                    )
+                    redis_connection.delete(karma_key)
 
 
-class PuzzleActivityThread(threading.Thread):
+class PuzzleActivityJob:
     def __init__(self, puzzle_id, ip):
-        threading.Thread.__init__(self)
         self.puzzle_id = puzzle_id
         self.ip = ip
         cur = db.cursor()
         result = cur.execute(
-            "select table_width, table_height from Puzzle where puzzle_id = :puzzle_id;",
+            "select id, table_width, table_height from Puzzle where puzzle_id = :puzzle_id;",
             {"puzzle_id": self.puzzle_id},
         ).fetchall()
         (result, col_names) = rowify(result, cur.description)
@@ -546,6 +560,7 @@ class PuzzleActivityThread(threading.Thread):
         user_session = UserSession(ip=self.ip)
         puzzle_pieces = PuzzlePieces(
             user_session,
+            self.puzzle_details["id"],
             self.puzzle_id,
             self.puzzle_details["table_width"],
             self.puzzle_details["table_height"],
@@ -557,30 +572,38 @@ def simulate_puzzle_activity(puzzle_ids, count=1):
     """
 
     """
+
+    user_session = UserSession(ip="127.0.0.1")
+
+    gallery_puzzle_list = user_session.get_data("/gallery-puzzle-list/")
+
+    listed_puzzle_ids = [x["puzzle_id"] for x in gallery_puzzle_list["puzzles"]]
+    _puzzle_ids = puzzle_ids or listed_puzzle_ids
     cur = db.cursor()
     result = cur.execute(
-        "select distinct ip from User order by random() limit :count;", {"count": count}
+        "select distinct ip from User order by score desc limit :count;",
+        {"count": int(count * len(_puzzle_ids))},
     ).fetchall()
     if not result:
         print("Add players first")
         return
     players = [x[0] for x in result]
     cur.close()
-    # (result, col_names) = rowify(result, cur.description)
 
-    user_session = UserSession(ip=players[0])
-
-    gallery_puzzle_list = user_session.get_data("/gallery-puzzle-list/")
-
-    listed_puzzle_ids = [x["puzzle_id"] for x in gallery_puzzle_list["puzzles"]]
-
-    # grab some random player ids with cookies
-
-    # For each recent puzzle; move pieces around
-    for ip in players:
+    jobs = []
+    while players:
         for puzzle_id in puzzle_ids or listed_puzzle_ids:
-            puzzle_activity_thread = PuzzleActivityThread(puzzle_id, ip)
-            puzzle_activity_thread.start()
+            ip = players.pop()
+            puzzle_activity_job = PuzzleActivityJob(puzzle_id, ip)
+            jobs.append(multiprocessing.Process(target=puzzle_activity_job.run))
+            if not players:
+                break
+
+    for job in jobs:
+        job.start()
+
+    for job in jobs:
+        job.join()
 
 
 def main():
