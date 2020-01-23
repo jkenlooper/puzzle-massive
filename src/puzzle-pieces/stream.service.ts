@@ -173,6 +173,9 @@ class PuzzleStream {
         // Send a ping to the server every second while connecting.
         state.actions.forEach((action) => {
           switch (action.type) {
+            case "sendPing":
+              this.sendPing(1000);
+              break;
             case "setEventSource":
               this.eventSource = this.getEventSource(this.puzzleId);
               break;
@@ -181,12 +184,11 @@ class PuzzleStream {
               break;
           }
         });
-        this.sendPing(1000);
         break;
       case "connected":
         state.actions.forEach((action) => {
           switch (action.type) {
-            case "startPingInterval":
+            case "sendPing":
               // Start sending a ping to server with the default PING_INTERVAL.
               this.sendPing();
               break;
@@ -297,11 +299,18 @@ class PuzzleStream {
     // connection to the event source has opened
     this.puzzleStreamService.send("SUCCESS");
   }
-  private handleErrorEvent(message: Event) {
-    console.error(
-      "Failed to connect to event stream. Is Redis running?",
-      message
-    );
+  private handleErrorEvent(error: Event | any) {
+    switch (this.readyState) {
+      case EventSource.CONNECTING:
+        console.error("Failed to connect to puzzle stream.", error);
+        break;
+      case EventSource.OPEN:
+        console.error("puzzle stream error.", error);
+        break;
+      case EventSource.CLOSED:
+        console.error("puzzle stream closed.", error);
+        break;
+    }
     this.puzzleStreamService.send("ERROR");
   }
 
@@ -319,10 +328,9 @@ class PuzzleStream {
     ping
       .postForm({})
       .then(() => {
-        this.pingIntervalId = window.setTimeout(
-          this.sendPing.bind(this),
-          interval
-        );
+        this.pingIntervalId = window.setTimeout(() => {
+          this.puzzleStreamService.send("PING");
+        }, interval);
       })
       .catch((err) => {
         console.error("error sending ping", err);
