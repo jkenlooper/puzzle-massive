@@ -1,4 +1,32 @@
 <pm-puzzle-alert puzzle-id="{{ puzzle.puzzle_id }}">
+  <template id="puzzle-pieces-alert-template--reconnecting">
+    <div>
+        <h2>Reconnecting&hellip;</h2>
+        <p>
+          Puzzle piece movement updates are disabled while reconnecting.
+        </p>
+    </div>
+  </template>
+  <template id="puzzle-pieces-alert-template--disconnected">
+    <div>
+        <h2>Disconnected</h2>
+        <p>
+          Puzzle piece movement updates are disabled. Try reloading the page.
+        </p>
+    </div>
+  </template>
+  <template id="puzzle-pieces-alert-template--blocked">
+    <div>
+        <h2>Piece movement blocked</h2>
+    </div>
+  </template>
+  <template id="puzzle-pieces-alert-template--statusCompleted">
+    <div>
+        <h2>Puzzle Completed</h2>
+    </div>
+  </template>
+
+  {#
   <template id="puzzle-pieces-alert-template">
     <section id="puzzle-pieces-alert" class="pm-PuzzleAlert-section">
       <h1><small>Alerts</small></h1>
@@ -32,6 +60,11 @@
         <p id="puzzle-pieces-alert-blocked-msg"></p>
         <p id="puzzle-pieces-alert-blocked-reason"></p>
       </div>
+      <div id="puzzle-alert-status-completed" class="pm-PuzzleAlert-message pm-PuzzleAlert-message--statusCompleted">
+        <h2>Puzzle Completed</h2>
+        <p></p>
+      </div>
     </section>
   </template>
+  #}
 </pm-puzzle-alerts>

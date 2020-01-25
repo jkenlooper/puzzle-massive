@@ -2,14 +2,15 @@ import { interpret } from "@xstate/fsm";
 
 import FetchService from "../site/fetch.service";
 import { puzzleBitsService } from "../puzzle-bits/puzzle-bits.service";
-import { puzzleStreamMachine } from "./puzzle-stream-machine";
+import {
+  puzzleStreamMachine,
+  RECONNECT_INTERVAL,
+} from "./puzzle-stream-machine";
 import userDetailsService from "../site/user-details.service";
+import { Status } from "../site/puzzle-images.service";
 
 // Set ping interval to be one less minute than 5.
 const PING_INTERVAL = 4 * 60 * 1000;
-
-// Set the reconnect interval to be 5 seconds.
-const RECONNECT_INTERVAL = 5 * 1000;
 
 export interface PieceMovementData {
   id: number;
@@ -55,26 +56,30 @@ interface PuzzleStreamMap {
   [index: string]: PuzzleStream;
 }
 
-type SocketStatusCallback = () => any;
+type SocketStatusCallback = (data: any) => any;
 type PieceUpdateCallback = (data: PieceMovementData) => any;
 type PingCallback = (data: string) => any;
+type PuzzleStatusCallback = (status: Status) => any;
 const socketDisconnected = Symbol("socket/disconnected");
 const socketConnected = Symbol("socket/connected");
 const socketReconnecting = Symbol("socket/reconnecting");
 const pieceUpdate = Symbol("piece/update");
-const pingTopic = Symbol("ping");
+const puzzlePingTopic = Symbol("puzzle/ping");
+const puzzleStatusTopic = Symbol("puzzle/status");
 const topics = {
   "socket/disconnected": socketDisconnected,
   "socket/connected": socketConnected,
   "socket/reconnecting": socketReconnecting,
   "piece/update": pieceUpdate,
-  ping: pingTopic,
+  "puzzle/ping": puzzlePingTopic,
+  "puzzle/status": puzzleStatusTopic,
 };
 
 class PuzzleStream {
   private eventSource: EventSource;
   private readonly puzzleId: PuzzleId;
   private pingToken: string = "";
+  private puzzleStatus: Status | undefined;
   private broadcast: Broadcaster;
   private pingIntervalId: number | undefined;
   private reconnectIntervalId: number | undefined;
@@ -168,6 +173,7 @@ class PuzzleStream {
 
   private handleStateChange(state) {
     console.log(`puzzle-stream: ${state.value}`);
+    console.log(state.context);
     switch (state.value) {
       case "connecting":
         // Send a ping to the server every second while connecting.
@@ -178,9 +184,6 @@ class PuzzleStream {
               break;
             case "setEventSource":
               this.eventSource = this.getEventSource(this.puzzleId);
-              break;
-            case "broadcastReconnecting":
-              this.broadcast(socketReconnecting);
               break;
           }
         });
@@ -210,6 +213,9 @@ class PuzzleStream {
             case "startReconnectTimeout":
               this.reconnectTimeout();
               break;
+            case "broadcastReconnecting":
+              this.broadcast(socketReconnecting, state.context.reconnectCount);
+              break;
             case "broadcastDisconnected":
               this.broadcast(socketDisconnected);
               break;
@@ -217,6 +223,16 @@ class PuzzleStream {
         });
         break;
       case "inactive":
+        state.actions.forEach((action) => {
+          switch (action.type) {
+            case "destroyEventSource":
+              this.destroyEventSource();
+              break;
+            case "broadcastPuzzleStatus":
+              this.broadcastPuzzleStatus();
+              break;
+          }
+        });
         break;
       case "invalid":
         break;
@@ -243,13 +259,18 @@ class PuzzleStream {
       .patch<PongResponse>({ token: this.pingToken })
       .then((response) => {
         if (response && response.name === "success" && response.data) {
-          this.broadcast(pingTopic, response.data.latency);
+          this.broadcast(puzzlePingTopic, response.data.latency);
         }
       })
       .catch((err) => {
         console.error("error sending pong", err);
         // TODO: ignore error with sending ping?
       });
+  }
+  private broadcastPuzzleStatus() {
+    if (this.puzzleStatus !== undefined) {
+      this.broadcast(puzzleStatusTopic, this.puzzleStatus);
+    }
   }
 
   private handleMoveEvent(messageEvent: any) {
@@ -292,8 +313,18 @@ class PuzzleStream {
     });
   }
 
-  private handleMessageEvent(message: Event) {
+  private handleMessageEvent(message: any) {
     console.log("generic message from event source", message);
+    if (message.data && message.data.startsWith("status:")) {
+      this.puzzleStatus = parseInt(message.data.substr("status:".length));
+      switch (this.puzzleStatus) {
+        case Status.COMPLETED:
+          this.puzzleStreamService.send("PUZZLE_COMPLETED");
+          break;
+        default:
+          break;
+      }
+    }
   }
   private handleOpenEvent() {
     // connection to the event source has opened
@@ -315,10 +346,11 @@ class PuzzleStream {
   }
 
   private reconnectTimeout() {
-    this.broadcast(socketReconnecting);
     window.clearTimeout(this.reconnectIntervalId);
+    this.puzzleStreamService.send("WAITING_TO_RECONNECT");
     this.reconnectIntervalId = window.setTimeout(() => {
       this.puzzleStreamService.send("RECONNECT");
+      this.puzzleStreamService.send("RECONNECT_TIMEOUT");
     }, RECONNECT_INTERVAL);
   }
 
@@ -352,7 +384,8 @@ class StreamService {
   [socketConnected]: Map<string, SocketStatusCallback> = new Map();
   [socketReconnecting]: Map<string, SocketStatusCallback> = new Map();
   [pieceUpdate]: Map<string, PieceUpdateCallback> = new Map();
-  [pingTopic]: Map<string, PingCallback> = new Map();
+  [puzzlePingTopic]: Map<string, PingCallback> = new Map();
+  [puzzleStatusTopic]: Map<string, PuzzleStatusCallback> = new Map();
 
   constructor() {
     this.instanceId = StreamService._instanceId;
@@ -395,7 +428,11 @@ class StreamService {
 
   subscribe(
     topicString: string,
-    fn: SocketStatusCallback | PieceUpdateCallback,
+    fn:
+      | SocketStatusCallback
+      | PieceUpdateCallback
+      | PingCallback
+      | PuzzleStatusCallback,
     id: string
   ) {
     const topic = topics[topicString];

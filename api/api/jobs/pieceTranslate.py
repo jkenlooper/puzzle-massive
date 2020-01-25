@@ -122,6 +122,10 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
                 {"puzzle": puzzle, "queue": QUEUE_END_OF_LINE},
             )
             db.commit()
+            sse.publish(
+                "status:{}".format(COMPLETED),
+                channel="puzzle:{puzzle_id}".format(puzzle_id=puzzleData["puzzle_id"]),
+            )
             job = current_app.cleanupqueue.enqueue_call(
                 func="api.jobs.convertPiecesToDB.transfer", args=(puzzle,), result_ttl=0
             )

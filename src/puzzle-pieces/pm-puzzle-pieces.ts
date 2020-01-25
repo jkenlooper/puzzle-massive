@@ -96,14 +96,6 @@ customElements.define(
       }
 
       streamService.connect(this.puzzleId);
-      streamService.subscribe(
-        "ping",
-        (data) => {
-          // TODO: display the player's latency, but not as part of pm-puzzle-pieces.
-          console.log("latency", data);
-        },
-        this.instanceId
-      );
 
       this.slabMassiveOffsetTop = this.$slabMassive.offsetTop;
       this.slabMassiveOffsetLeft = this.$slabMassive.offsetLeft;
@@ -438,6 +430,9 @@ customElements.define(
         "piece/move/rejected",
         `pieceFollow ${this.draggedPieceID} ${this.instanceId}`
       );
+      puzzleService.unsubscribe("piece/move/blocked", this.instanceId);
+      puzzleService.unsubscribe("pieces/info/toggle-movable", this.instanceId);
+      hashColorService.unsubscribe(this.instanceId);
     }
 
     static get observedAttributes() {
