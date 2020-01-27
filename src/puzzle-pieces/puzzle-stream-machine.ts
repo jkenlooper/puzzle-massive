@@ -51,8 +51,14 @@ export const puzzleStreamMachine = createMachine<Context>({
           target: "connected",
           actions: ["sendPing", "broadcastConnected"],
         },
-        PUZZLE_NOT_ACTIVE: "inactive",
-        INVALID: "invalid",
+        PUZZLE_NOT_ACTIVE: {
+          target: "inactive",
+          actions: ["destroyEventSource", "broadcastPuzzleStatus"],
+        },
+        INVALID: {
+          target: "invalid",
+          actions: ["destroyEventSource", "broadcastPuzzleStatus"],
+        },
       },
     },
     disconnected: {
@@ -68,7 +74,7 @@ export const puzzleStreamMachine = createMachine<Context>({
         },
         RECONNECT_TIMEOUT: {
           target: "disconnected",
-          actions: ["broadcastDisconnected"]
+          actions: ["broadcastDisconnected"],
         },
         RECONNECT: {
           target: "connecting",

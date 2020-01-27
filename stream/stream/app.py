@@ -89,7 +89,7 @@ def make_app(config=None, **kw):
                 if status != ACTIVE:
                     response["message"] = "Puzzle not active"
                     response["name"] = "invalid"
-                    abort(make_response(json.jsonify(response), 200))
+                    abort(make_response(json.jsonify(response), 400))
 
                 return None
         else:

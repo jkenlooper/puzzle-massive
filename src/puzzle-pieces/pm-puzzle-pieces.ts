@@ -12,6 +12,7 @@ import { rgbToHsl } from "../site/utilities";
 import hashColorService from "../hash-color/hash-color.service";
 import { puzzleService, PieceData } from "./puzzle.service";
 import { streamService } from "./stream.service";
+import { Status } from "../site/puzzle-images.service";
 
 import template from "./puzzle-pieces.html";
 import style from "./puzzle-pieces.css";
@@ -31,6 +32,7 @@ customElements.define(
     }
     private instanceId: string;
     private puzzleId: string;
+    private puzzleStatus: Status | undefined;
     $collection: HTMLElement;
     $dropZone: HTMLElement;
     $container: HTMLElement;
@@ -69,6 +71,11 @@ customElements.define(
       const puzzleId = this.attributes.getNamedItem("puzzle-id");
       this.puzzleId = puzzleId ? puzzleId.value : "";
 
+      const puzzleStatus = this.attributes.getNamedItem("status");
+      this.puzzleStatus = puzzleStatus
+        ? <Status>(<unknown>parseInt(puzzleStatus.value))
+        : undefined;
+
       if (!withinSlabMassive) {
         // Patch in these properties from the attrs
         Object.defineProperty(this.$slabMassive, "scale", {
@@ -95,31 +102,39 @@ customElements.define(
         this.$container.classList.add("pm-PuzzlePieces--withinSlabMassive");
       }
 
-      streamService.connect(this.puzzleId);
+      // Should only connect to puzzle stream and puzzle service if the status
+      // of the puzzle is active.
+      puzzleService.init(this.puzzleId).then((pieceData) => {
+        this.renderPieces(pieceData);
+      });
+      console.log("puzzleStatus", this.puzzleStatus);
+      if (this.puzzleStatus && this.puzzleStatus === Status.ACTIVE) {
+        streamService.connect(this.puzzleId);
+
+        puzzleService.connect();
+        puzzleService.subscribe(
+          "pieces/mutate",
+          this.renderPieces.bind(this),
+          this.instanceId
+        );
+
+        puzzleService.subscribe(
+          "piece/move/blocked",
+          this.onMoveBlocked.bind(this),
+          this.instanceId
+        );
+
+        puzzleService.subscribe(
+          "pieces/info/toggle-movable",
+          this.onToggleMovable.bind(this),
+          this.instanceId
+        );
+      }
 
       this.slabMassiveOffsetTop = this.$slabMassive.offsetTop;
       this.slabMassiveOffsetLeft = this.$slabMassive.offsetLeft;
 
-      puzzleService.init(this.puzzleId);
-      puzzleService.subscribe(
-        "pieces/mutate",
-        this.renderPieces.bind(this),
-        this.instanceId
-      );
-
       this.pieceFollow = this._pieceFollow.bind(this);
-
-      puzzleService.subscribe(
-        "piece/move/blocked",
-        this.onMoveBlocked.bind(this),
-        this.instanceId
-      );
-
-      puzzleService.subscribe(
-        "pieces/info/toggle-movable",
-        this.onToggleMovable.bind(this),
-        this.instanceId
-      );
 
       this.$dropZone.addEventListener(
         "mousedown",

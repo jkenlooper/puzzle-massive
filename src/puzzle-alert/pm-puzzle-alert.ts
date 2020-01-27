@@ -17,6 +17,7 @@ enum AlertStatus {
   completed = "completed",
   frozen = "frozen",
   in_queue = "in_queue",
+  invalid = "invalid",
 }
 
 interface TemplateData {
@@ -41,6 +42,7 @@ customElements.define(
     }
     private instanceId: string;
     private puzzleId: string;
+    private puzzleStatus: Status | undefined;
     private status: AlertStatus = AlertStatus.connecting;
     private message: string | undefined;
     private reason: string | undefined;
@@ -55,6 +57,14 @@ customElements.define(
 
       const puzzleId = this.attributes.getNamedItem("puzzle-id");
       this.puzzleId = puzzleId ? puzzleId.value : "";
+
+      const puzzleStatus = this.attributes.getNamedItem("status");
+      this.puzzleStatus = puzzleStatus
+        ? <Status>(<unknown>parseInt(puzzleStatus.value))
+        : undefined;
+      if (!this.puzzleStatus || this.puzzleStatus !== Status.ACTIVE) {
+        return;
+      }
 
       puzzleService.subscribe(
         "piece/move/blocked",
@@ -132,9 +142,6 @@ customElements.define(
         case "inactive":
           state.actions.forEach((action) => {
             switch (action.type) {
-              case "setStatusDisconnected":
-                this.status = AlertStatus.disconnected;
-                break;
               case "setStatusCompleted":
                 this.status = AlertStatus.completed;
                 break;
@@ -143,6 +150,18 @@ customElements.define(
                 break;
               case "setStatusFrozen":
                 this.status = AlertStatus.frozen;
+                break;
+              case "setInvalid":
+                this.status = AlertStatus.invalid;
+                break;
+            }
+          });
+          break;
+        case "disconnected":
+          state.actions.forEach((action) => {
+            switch (action.type) {
+              case "setStatusDisconnected":
+                this.status = AlertStatus.disconnected;
                 break;
             }
           });
@@ -247,6 +266,19 @@ customElements.define(
                   class="pm-PuzzleAlert-message pm-PuzzleAlert-message--statusInQueue is-active"
                 >
                   <h2>Puzzle In Queue</h2>
+                  ${getDetails()}
+                </div>
+              `;
+              break;
+            case AlertStatus.invalid:
+              return html`
+                <div
+                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--invalid is-active"
+                >
+                  <h2>Invalid</h2>
+                  <p>
+                    Connection to puzzle piece updates is invalid.
+                  </p>
                   ${getDetails()}
                 </div>
               `;
@@ -393,6 +425,9 @@ customElements.define(
           break;
         case Status.FROZEN:
           this.puzzleAlertService.send("PUZZLE_FROZEN");
+          break;
+        default:
+          this.puzzleAlertService.send("PUZZLE_INVALID");
           break;
       }
     }

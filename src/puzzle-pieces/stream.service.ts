@@ -270,6 +270,8 @@ class PuzzleStream {
   private broadcastPuzzleStatus() {
     if (this.puzzleStatus !== undefined) {
       this.broadcast(puzzleStatusTopic, this.puzzleStatus);
+    } else {
+      this.broadcast(puzzleStatusTopic, this.puzzleStatus);
     }
   }
 
@@ -314,7 +316,6 @@ class PuzzleStream {
   }
 
   private handleMessageEvent(message: any) {
-    console.log("generic message from event source", message);
     if (message.data && message.data.startsWith("status:")) {
       this.puzzleStatus = parseInt(message.data.substr("status:".length));
       switch (this.puzzleStatus) {
@@ -324,25 +325,34 @@ class PuzzleStream {
         default:
           break;
       }
+    } else {
+      console.log("generic message from event source", message);
     }
   }
   private handleOpenEvent() {
+    console.log("handleOpenEvent");
     // connection to the event source has opened
     this.puzzleStreamService.send("SUCCESS");
   }
   private handleErrorEvent(error: Event | any) {
+    console.log("handleErrorEvent", error);
     switch (this.readyState) {
       case EventSource.CONNECTING:
         console.error("Failed to connect to puzzle stream.", error);
+        this.puzzleStreamService.send("ERROR");
         break;
       case EventSource.OPEN:
         console.error("puzzle stream error.", error);
+        this.puzzleStreamService.send("ERROR");
         break;
       case EventSource.CLOSED:
         console.error("puzzle stream closed.", error);
+        this.puzzleStreamService.send("PUZZLE_NOT_ACTIVE");
+        break;
+      default:
+        this.puzzleStreamService.send("ERROR");
         break;
     }
-    this.puzzleStreamService.send("ERROR");
   }
 
   private reconnectTimeout() {

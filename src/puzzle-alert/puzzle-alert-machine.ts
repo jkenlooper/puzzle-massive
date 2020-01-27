@@ -16,8 +16,12 @@ export const puzzleAlertMachine = createMachine({
           actions: ["setStatusReconnecting"],
         },
         DISCONNECTED: {
-          target: "inactive",
+          target: "disconnected",
           actions: ["setStatusDisconnected"],
+        },
+        PUZZLE_INVALID: {
+          target: "inactive",
+          actions: ["setInvalid"],
         },
       },
     },
@@ -32,7 +36,7 @@ export const puzzleAlertMachine = createMachine({
           actions: ["showPieceMoveBlocked"],
         },
         DISCONNECTED: {
-          target: "inactive",
+          target: "disconnected",
           actions: ["setStatusDisconnected"],
         },
         PUZZLE_COMPLETED: {
@@ -57,14 +61,15 @@ export const puzzleAlertMachine = createMachine({
         },
       },
     },
-    inactive: {
+    inactive: {},
+    disconnected: {
       on: {
         RECONNECTING: {
           target: "connecting",
           actions: ["setStatusReconnecting"],
         },
         DISCONNECTED: {
-          target: "inactive",
+          target: "disconnected",
           actions: ["setStatusDisconnected"],
         },
       },

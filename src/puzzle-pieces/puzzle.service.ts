@@ -135,7 +135,7 @@ class PuzzleService {
 
   init(puzzleId) {
     this.puzzleId = puzzleId;
-    fetchPieces(this.puzzleId).then((data) => {
+    return fetchPieces(this.puzzleId).then((data) => {
       let pieceData = JSON.parse(data);
       this.mark = pieceData.mark;
       pieceData.positions.forEach((piece) => {
@@ -159,8 +159,8 @@ class PuzzleService {
         this.pieces[piece.id] = Object.assign(defaultPiece, piece);
       });
       this.piecesTimestamp = pieceData.timestamp.timestamp;
-      streamService.connect(this.puzzleId);
-      this._broadcast(piecesMutate, Object.values(this.pieces));
+      //this._broadcast(piecesMutate, Object.values(this.pieces));
+      return Object.values(this.pieces);
     });
 
     function fetchPieces(puzzleId) {
@@ -169,6 +169,9 @@ class PuzzleService {
         method: "get",
       });
     }
+  }
+  connect() {
+    streamService.connect(this.puzzleId);
   }
 
   static get nextPieceMovementId() {
@@ -202,7 +205,11 @@ class PuzzleService {
 
   subscribe(
     topicString: string,
-    fn: PiecesUpdateCallback | KarmaUpdatedCallback | PieceMoveRejectedCallback,
+    fn:
+      | PiecesUpdateCallback
+      | KarmaUpdatedCallback
+      | PieceMoveRejectedCallback
+      | PiecesInfoToggleMovableCallback,
     id: string
   ) {
     const topic = topics[topicString];
