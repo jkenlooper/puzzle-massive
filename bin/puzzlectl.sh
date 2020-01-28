@@ -17,12 +17,13 @@ fi
 systemctl reload nginx;
 
 # Skipping the puzzle-massive-cache-purge.service since it is activated by path
+# Skipping puzzle-massive-backup-db.timer since it may cause database locked
+# issues with the puzzle-massive-scheduler.
 for app in puzzle-massive-chill \
   puzzle-massive-api \
   puzzle-massive-divulger \
   puzzle-massive-artist \
   puzzle-massive-scheduler \
-  puzzle-massive-backup-db.timer \
   puzzle-massive-janitor;
 do
   echo "";
