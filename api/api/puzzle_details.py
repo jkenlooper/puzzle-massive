@@ -1,5 +1,6 @@
 from flask import current_app, request, abort, json, make_response
 from flask.views import MethodView
+from flask_sse import sse
 
 from api.app import db, redis_connection
 from api.user import user_id_from_ip, user_not_banned
@@ -125,6 +126,10 @@ class PuzzleInstanceDetailsView(MethodView):
             )
 
             db.commit()
+            sse.publish(
+                "status:{}".format(DELETED_REQUEST),
+                channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id),
+            )
 
             response = {
                 "status": DELETED_REQUEST,
@@ -136,6 +141,10 @@ class PuzzleInstanceDetailsView(MethodView):
                 {"status": FROZEN, "puzzle": puzzleData["id"]},
             )
             db.commit()
+            sse.publish(
+                "status:{}".format(FROZEN),
+                channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id),
+            )
 
             response = {
                 "status": FROZEN,
@@ -149,6 +158,10 @@ class PuzzleInstanceDetailsView(MethodView):
             )
             db.commit()
 
+            sse.publish(
+                "status:{}".format(ACTIVE),
+                channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id),
+            )
             response = {
                 "status": ACTIVE,
             }

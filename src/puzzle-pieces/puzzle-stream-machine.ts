@@ -116,6 +116,14 @@ export const puzzleStreamMachine = createMachine<Context>({
           target: "inactive",
           actions: ["destroyEventSource", "broadcastPuzzleStatus"],
         },
+        PUZZLE_FROZEN: {
+          target: "inactive",
+          actions: ["destroyEventSource", "broadcastPuzzleStatus"],
+        },
+        PUZZLE_DELETED: {
+          target: "inactive",
+          actions: ["destroyEventSource", "broadcastPuzzleStatus"],
+        },
         PUZZLE_NOT_ACTIVE: "inactive",
         CLOSE: {
           target: "disconnected",

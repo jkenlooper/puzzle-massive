@@ -322,6 +322,12 @@ class PuzzleStream {
         case Status.COMPLETED:
           this.puzzleStreamService.send("PUZZLE_COMPLETED");
           break;
+        case Status.FROZEN:
+          this.puzzleStreamService.send("PUZZLE_FROZEN");
+          break;
+        case Status.DELETED_REQUEST:
+          this.puzzleStreamService.send("PUZZLE_DELETED");
+          break;
         default:
           break;
       }

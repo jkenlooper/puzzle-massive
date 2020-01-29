@@ -107,9 +107,14 @@ customElements.define(
       puzzleService.init(this.puzzleId).then((pieceData) => {
         this.renderPieces(pieceData);
       });
-      console.log("puzzleStatus", this.puzzleStatus);
       if (this.puzzleStatus && this.puzzleStatus === Status.ACTIVE) {
         streamService.connect(this.puzzleId);
+
+        streamService.subscribe(
+          "puzzle/status",
+          this.onPuzzleStatus.bind(this),
+          this.instanceId
+        );
 
         puzzleService.connect();
         puzzleService.subscribe(
@@ -182,6 +187,21 @@ customElements.define(
         this.updateForegroundAndBackgroundColors.bind(this),
         this.instanceId
       );
+    }
+
+    onPuzzleStatus(status: Status) {
+      switch (status) {
+        case Status.ACTIVE:
+          this.blocked = false;
+          break;
+        case Status.COMPLETED:
+        case Status.IN_QUEUE:
+        case Status.FROZEN:
+        case Status.DELETED_REQUEST:
+        default:
+          this.blocked = true;
+          break;
+      }
     }
 
     onMoveBlocked(data) {
@@ -440,6 +460,7 @@ customElements.define(
 
     disconnectedCallback() {
       streamService.unsubscribe("piece/update", this.instanceId);
+      streamService.unsubscribe("puzzle/status", this.instanceId);
       puzzleService.unsubscribe("pieces/mutate", this.instanceId);
       puzzleService.unsubscribe(
         "piece/move/rejected",

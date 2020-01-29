@@ -43,6 +43,7 @@ export enum Status {
   IN_QUEUE = 2,
   COMPLETED = 3,
   FROZEN = 4,
+  DELETED_REQUEST = -13,
 }
 export const PuzzleAvailableStatuses = [
   Status.ACTIVE,
@@ -58,9 +59,7 @@ class PuzzleImagesService {
       "/newapi/player-puzzle-list/"
     );
 
-    const puzzleList: Promise<
-      PlayerPuzzleListResponse
-    > = playerPuzzleImagesService
+    const puzzleList: Promise<PlayerPuzzleListResponse> = playerPuzzleImagesService
       .get<PlayerPuzzleListResponse>()
       .then((playerPuzzleListResponse) => {
         return {
@@ -117,9 +116,7 @@ class PuzzleImagesService {
       `/newapi/gallery-puzzle-list/`
     );
 
-    const puzzleList: Promise<
-      GalleryPuzzleListResponse
-    > = puzzleImagesService
+    const puzzleList: Promise<GalleryPuzzleListResponse> = puzzleImagesService
       .get<GalleryPuzzleListResponse>()
       .then((puzzleListResponse) => {
         return {

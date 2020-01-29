@@ -47,6 +47,10 @@ export const puzzleAlertMachine = createMachine({
           target: "inactive",
           actions: ["setStatusFrozen"],
         },
+        PUZZLE_DELETED: {
+          target: "inactive",
+          actions: ["setStatusDeleted"],
+        },
         PUZZLE_IN_QUEUE: {
           target: "inactive",
           actions: ["setStatusInQueue"],

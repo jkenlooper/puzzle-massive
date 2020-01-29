@@ -16,6 +16,7 @@ enum AlertStatus {
   blocked = "blocked",
   completed = "completed",
   frozen = "frozen",
+  deleted = "deleted",
   in_queue = "in_queue",
   invalid = "invalid",
 }
@@ -151,6 +152,9 @@ customElements.define(
               case "setStatusFrozen":
                 this.status = AlertStatus.frozen;
                 break;
+              case "setStatusDeleted":
+                this.status = AlertStatus.deleted;
+                break;
               case "setInvalid":
                 this.status = AlertStatus.invalid;
                 break;
@@ -256,6 +260,16 @@ customElements.define(
                   class="pm-PuzzleAlert-message pm-PuzzleAlert-message--statusFrozen is-active"
                 >
                   <h2>Puzzle Frozen</h2>
+                  ${getDetails()}
+                </div>
+              `;
+              break;
+            case AlertStatus.deleted:
+              return html`
+                <div
+                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--statusDeleted is-active"
+                >
+                  <h2>Puzzle Deleted</h2>
                   ${getDetails()}
                 </div>
               `;
@@ -425,6 +439,9 @@ customElements.define(
           break;
         case Status.FROZEN:
           this.puzzleAlertService.send("PUZZLE_FROZEN");
+          break;
+        case Status.DELETED_REQUEST:
+          this.puzzleAlertService.send("PUZZLE_DELETED");
           break;
         default:
           this.puzzleAlertService.send("PUZZLE_INVALID");
