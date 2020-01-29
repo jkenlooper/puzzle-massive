@@ -7,7 +7,7 @@
   {% set baseModifierClass = 'pm-Base--mainFocus' %}
 {% endif %}
 <div class="pm-Base {{ baseModifierClass }}">
-  <header>
+  <header class="pm-Base-header">
     {% block header %}
       {% include 'header.html' %}
     {% endblock %}
@@ -29,7 +29,7 @@
     {% endblock %}
   </main>
 
-  <footer>
+  <footer class="pm-Base-footer">
     {% block kneeer %}
     {% endblock %}
     {% block footer %}

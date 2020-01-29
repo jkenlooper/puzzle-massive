@@ -129,11 +129,12 @@ customElements.define(
               case "updateLatency":
                 // Only need to render.
                 break;
-              case "showDisconnectedAlert":
-                this.status = AlertStatus.disconnected;
+              case "showPieceMoveBlocked":
+                this.status = AlertStatus.blocked;
                 break;
-              case "showReconnectingAlert":
-                this.status = AlertStatus.reconnecting;
+              case "hidePieceMoveBlocked":
+                // Reset back to connected state.
+                this.status = AlertStatus.connected;
                 break;
               default:
                 break;
@@ -186,7 +187,7 @@ customElements.define(
       `;
       function showAlert(status: AlertStatus) {
         return html`
-          <section class="pm-PuzzleAlert-section is-active">
+          <section class="pm-PuzzleAlert-section">
             <h1><small>Alerts</small></h1>
             ${getAlert(status)}
           </section>
@@ -196,7 +197,7 @@ customElements.define(
             case AlertStatus.connecting:
               return html`
                 <div
-                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--connecting is-active"
+                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--connecting"
                 >
                   <h2>Connecting&hellip;</h2>
                   <p>
@@ -209,7 +210,7 @@ customElements.define(
             case AlertStatus.reconnecting:
               return html`
                 <div
-                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--reconnecting is-active"
+                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--reconnecting"
                 >
                   <h2>Reconnecting&hellip;</h2>
                   <p>
@@ -223,7 +224,7 @@ customElements.define(
             case AlertStatus.disconnected:
               return html`
                 <div
-                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--disconnected is-active"
+                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--disconnected"
                 >
                   <h2>Disconnected</h2>
                   <p>
@@ -237,7 +238,7 @@ customElements.define(
             case AlertStatus.blocked:
               return html`
                 <div
-                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--blocked is-active"
+                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--blocked"
                 >
                   <h2>Piece movement blocked</h2>
                   ${getDetails()}
@@ -247,7 +248,7 @@ customElements.define(
             case AlertStatus.completed:
               return html`
                 <div
-                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--statusCompleted is-active"
+                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--statusCompleted"
                 >
                   <h2>Puzzle Completed</h2>
                   ${getDetails()}
@@ -257,7 +258,7 @@ customElements.define(
             case AlertStatus.frozen:
               return html`
                 <div
-                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--statusFrozen is-active"
+                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--statusFrozen"
                 >
                   <h2>Puzzle Frozen</h2>
                   ${getDetails()}
@@ -267,7 +268,7 @@ customElements.define(
             case AlertStatus.deleted:
               return html`
                 <div
-                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--statusDeleted is-active"
+                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--statusDeleted"
                 >
                   <h2>Puzzle Deleted</h2>
                   ${getDetails()}
@@ -277,7 +278,7 @@ customElements.define(
             case AlertStatus.in_queue:
               return html`
                 <div
-                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--statusInQueue is-active"
+                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--statusInQueue"
                 >
                   <h2>Puzzle In Queue</h2>
                   ${getDetails()}
@@ -287,7 +288,7 @@ customElements.define(
             case AlertStatus.invalid:
               return html`
                 <div
-                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--invalid is-active"
+                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--invalid"
                 >
                   <h2>Invalid</h2>
                   <p>
@@ -335,7 +336,6 @@ customElements.define(
     }
 
     onMoveBlocked(data) {
-      this.status = AlertStatus.blocked;
       if (data.msg) {
         this.message = data.msg;
       } else {
@@ -358,10 +358,11 @@ customElements.define(
         this.blockedTimeout = window.setTimeout(() => {
           //this.alerts.container.classList.remove("is-active");
           //this.alerts.blocked.classList.remove("is-active");
+          this.puzzleAlertService.send("PIECE_MOVE_BLOCKED_TIMER");
         }, timeout);
       }
 
-      //this.puzzleAlertService.send("PIECE_MOVE_BLOCKED");
+      this.puzzleAlertService.send("PIECE_MOVE_BLOCKED");
       console.log(data);
       // TODO: Wire up blocked message.
       /*

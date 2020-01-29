@@ -6,24 +6,34 @@
   justify-content: space-between;
 }
 .pm-Base > * + * {
-  margin-top: 26px;
+  padding-top: 26px;
 }
 .pm-Base--mainFocus {
   display: block;
 }
 .pm-Base--mainFocus > * + * {
-  margin-top: 0;
+  padding-top: 0;
 }
 .pm-Base--mainFocus > * {
   display: none;
 }
 
+.pm-Base-header {
+  z-index: 100;
+}
+
 .pm-Base-menu {
-  margin-left: 10px;
-  margin-right: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
   display: flex;
   align-items: center;
   height: var(--pm-Base-menu-height);
+  background-color: var(--color-light-accent);
+  z-index: 100;
+  padding-top: calc(13px - 2px);
+  padding-bottom: 13px;
+  box-sizing: content-box;
+  position: relative;
 }
 
 .pm-Base-menuPrimary {
@@ -95,9 +105,15 @@
   margin-left: auto;
   margin-right: auto;
   min-height: 40vh;
+  /* Position needs to be static so piece movements are not offset. */
+  position: static;
 }
 .pm-Base--mainFocus .pm-Base-main {
   display: block;
   width: 100vw;
   height: 100vh;
+}
+
+.pm-Base-footer {
+  z-index: 90;
 }

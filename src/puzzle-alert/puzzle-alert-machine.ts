@@ -32,8 +32,12 @@ export const puzzleAlertMachine = createMachine({
           actions: ["updateLatency"],
         },
         PIECE_MOVE_BLOCKED: {
-          target: "blocked",
+          target: "active",
           actions: ["showPieceMoveBlocked"],
+        },
+        PIECE_MOVE_BLOCKED_TIMER: {
+          target: "active",
+          actions: ["hidePieceMoveBlocked"],
         },
         DISCONNECTED: {
           target: "disconnected",
@@ -54,14 +58,6 @@ export const puzzleAlertMachine = createMachine({
         PUZZLE_IN_QUEUE: {
           target: "inactive",
           actions: ["setStatusInQueue"],
-        },
-      },
-    },
-    blocked: {
-      on: {
-        PIECE_MOVE_BLOCKED_TIMER: {
-          target: "active",
-          actions: ["hidePieceMoveBlocked"],
         },
       },
     },

@@ -1,9 +1,8 @@
 .pm-PuzzleAlert-section {
-  display: none;
+  display: flex;
   position: fixed;
-  top: calc(50% - ((200px + (10px * 2) / 2)));
-  left: 50%;
-  transform: translateX(calc((300px / 2) * -1));
+  top: 240px;
+  left: calc(100vw - 320px);
   flex-direction: column;
   justify-content: center;
   z-index: 20;
@@ -18,15 +17,9 @@
   overflow: auto;
   color: black;
 }
-
-.pm-PuzzleAlert-section.is-active {
-  display: flex;
+.pm-Base--mainFocus .pm-PuzzleAlert-section {
+  top: 100px;
 }
 
 .pm-PuzzleAlert-message {
-  display: none;
-}
-
-.pm-PuzzleAlert-message.is-active {
-  display: block;
 }

@@ -15,18 +15,22 @@
 .pm-Puzzlepage-main {
   min-width: 100vw;
   min-height: 100vh;
+  overflow: hidden;
 }
 
 .pm-Puzzlepage-previewBox {
   user-select: none;
   display: none;
   position: fixed;
-  top: 30px;
+  top: 240px;
   left: 30px;
-  z-index: 500;
+  z-index: 15;
   border: 1px solid black;
   background-color: white;
   width: auto;
+}
+.pm-Base--mainFocus .pm-Puzzlepage-previewBox {
+  top: 100px;
 }
 
 .pm-Puzzlepage-previewImg {
