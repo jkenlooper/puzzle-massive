@@ -23,6 +23,10 @@ export const puzzleAlertMachine = createMachine({
           target: "inactive",
           actions: ["setInvalid"],
         },
+        PING_ERROR: {
+          target: "connecting",
+          actions: ["setStatusError"],
+        }
       },
     },
     active: {

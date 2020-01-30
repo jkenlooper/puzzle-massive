@@ -65,6 +65,7 @@ const socketConnected = Symbol("socket/connected");
 const socketReconnecting = Symbol("socket/reconnecting");
 const pieceUpdate = Symbol("piece/update");
 const puzzlePingTopic = Symbol("puzzle/ping");
+const puzzlePingErrorTopic = Symbol("puzzle/ping/error");
 const puzzleStatusTopic = Symbol("puzzle/status");
 const topics = {
   "socket/disconnected": socketDisconnected,
@@ -72,6 +73,7 @@ const topics = {
   "socket/reconnecting": socketReconnecting,
   "piece/update": pieceUpdate,
   "puzzle/ping": puzzlePingTopic,
+  "puzzle/ping/error": puzzlePingErrorTopic,
   "puzzle/status": puzzleStatusTopic,
 };
 
@@ -185,6 +187,9 @@ class PuzzleStream {
             case "setEventSource":
               this.eventSource = this.getEventSource(this.puzzleId);
               break;
+            case "broadcastPingError":
+              this.broadcastPingError();
+              break;
           }
         });
         break;
@@ -253,6 +258,10 @@ class PuzzleStream {
       this.puzzleStreamService.send("PONG");
     }
   }
+  private broadcastPingError() {
+    this.broadcast(puzzlePingErrorTopic);
+  }
+
   private broadcastPlayerLatency() {
     const pong = new FetchService(`/newapi/ping/puzzle/${this.puzzleId}/`);
     pong
@@ -271,6 +280,7 @@ class PuzzleStream {
     if (this.puzzleStatus !== undefined) {
       this.broadcast(puzzleStatusTopic, this.puzzleStatus);
     } else {
+      // TODO:
       this.broadcast(puzzleStatusTopic, this.puzzleStatus);
     }
   }
@@ -353,7 +363,19 @@ class PuzzleStream {
         break;
       case EventSource.CLOSED:
         console.error("puzzle stream closed.", error);
-        this.puzzleStreamService.send("PUZZLE_NOT_ACTIVE");
+        if (this.puzzleStatus === undefined) {
+          // The connection could have been closed because of a failure to
+          // connect.
+          this.puzzleStreamService.send("ERROR");
+        } else if (this.puzzleStatus === Status.ACTIVE) {
+          // The last set puzzleStatus was active.  The connection may have been
+          // closed because of a connection error.
+          this.puzzleStreamService.send("ERROR");
+        } else {
+          // Don't need to send this since the puzzleStatus was probably already
+          // sent.
+          //this.puzzleStreamService.send("PUZZLE_NOT_ACTIVE");
+        }
         break;
       default:
         this.puzzleStreamService.send("ERROR");
@@ -365,7 +387,11 @@ class PuzzleStream {
     window.clearTimeout(this.reconnectIntervalId);
     this.puzzleStreamService.send("WAITING_TO_RECONNECT");
     this.reconnectIntervalId = window.setTimeout(() => {
+      // RECONNECT is sent first since it is behind a cond in the machine.
       this.puzzleStreamService.send("RECONNECT");
+      // RECONNECT_TIMEOUT is sent next in case no actions happen for the
+      // RECONNECT.  This way the alert message for disconnected is not shown
+      // between each attempt at reconnecting.
       this.puzzleStreamService.send("RECONNECT_TIMEOUT");
     }, RECONNECT_INTERVAL);
   }
@@ -375,14 +401,14 @@ class PuzzleStream {
     const ping = new FetchService(`/newapi/ping/puzzle/${this.puzzleId}/`);
     ping
       .postForm({})
-      .then(() => {
+      .catch((err) => {
+        console.error("error sending ping", err);
+        this.puzzleStreamService.send("PING_ERROR");
+      })
+      .finally(() => {
         this.pingIntervalId = window.setTimeout(() => {
           this.puzzleStreamService.send("PING");
         }, interval);
-      })
-      .catch((err) => {
-        console.error("error sending ping", err);
-        // TODO: ignore error with sending ping?
       });
   }
 }
@@ -401,6 +427,7 @@ class StreamService {
   [socketReconnecting]: Map<string, SocketStatusCallback> = new Map();
   [pieceUpdate]: Map<string, PieceUpdateCallback> = new Map();
   [puzzlePingTopic]: Map<string, PingCallback> = new Map();
+  [puzzlePingErrorTopic]: Map<string, SocketStatusCallback> = new Map();
   [puzzleStatusTopic]: Map<string, PuzzleStatusCallback> = new Map();
 
   constructor() {

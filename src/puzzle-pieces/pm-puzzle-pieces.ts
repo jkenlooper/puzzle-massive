@@ -104,9 +104,15 @@ customElements.define(
 
       // Should only connect to puzzle stream and puzzle service if the status
       // of the puzzle is active.
-      puzzleService.init(this.puzzleId).then((pieceData) => {
-        this.renderPieces(pieceData);
-      });
+      puzzleService
+        .init(this.puzzleId)
+        .then((pieceData) => {
+          this.renderPieces(pieceData);
+        })
+        .catch((err) => {
+          console.error(err);
+          this.$container.innerHTML = "Failed to get puzzle pieces.";
+        });
       if (this.puzzleStatus && this.puzzleStatus === Status.ACTIVE) {
         streamService.connect(this.puzzleId);
 

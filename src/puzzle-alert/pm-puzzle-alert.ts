@@ -10,6 +10,7 @@ import "./puzzle-alert.css";
 
 enum AlertStatus {
   connecting = "connecting",
+  error = "error",
   connected = "connected",
   reconnecting = "reconnecting",
   disconnected = "disconnected",
@@ -97,6 +98,11 @@ customElements.define(
         this.onPuzzlePing.bind(this),
         this.instanceId
       );
+      streamService.subscribe(
+        "puzzle/ping/error",
+        this.onPuzzlePingError.bind(this),
+        this.instanceId
+      );
 
       streamService.connect(this.puzzleId);
 
@@ -114,6 +120,9 @@ customElements.define(
             switch (action.type) {
               case "setStatusReconnecting":
                 this.status = AlertStatus.reconnecting;
+                break;
+              case "setStatusError":
+                this.status = AlertStatus.error;
                 break;
               default:
                 break;
@@ -202,6 +211,19 @@ customElements.define(
                   <h2>Connecting&hellip;</h2>
                   <p>
                     Puzzle piece movement updates are disabled while connecting.
+                  </p>
+                  ${getDetails()}
+                </div>
+              `;
+              break;
+            case AlertStatus.error:
+              return html`
+                <div
+                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--error"
+                >
+                  <h2>Error</h2>
+                  <p>
+                    Please reload.
                   </p>
                   ${getDetails()}
                 </div>
@@ -430,7 +452,7 @@ customElements.define(
     }
 
     onPuzzleStatus(status: Status) {
-      console.log("onPuzzleStatus");
+      console.log("onPuzzleStatus", status);
       switch (status) {
         case Status.COMPLETED:
           this.puzzleAlertService.send("PUZZLE_COMPLETED");
@@ -453,6 +475,10 @@ customElements.define(
       this.latency = latency;
       this.puzzleAlertService.send("LATENCY_UPDATED");
     }
+    onPuzzlePingError() {
+      this.message = "Failed to get a response when pinging the puzzle API.";
+      this.puzzleAlertService.send("PING_ERROR");
+    }
 
     disconnectedCallback() {
       const topics = [
@@ -462,6 +488,7 @@ customElements.define(
         "socket/reconnecting",
         "puzzle/status",
         "puzzle/ping",
+        "puzzle/ping/error",
       ];
       topics.forEach((topic) => {
         streamService.unsubscribe(topic, this.instanceId);

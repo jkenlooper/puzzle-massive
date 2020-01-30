@@ -159,7 +159,6 @@ class PuzzleService {
         this.pieces[piece.id] = Object.assign(defaultPiece, piece);
       });
       this.piecesTimestamp = pieceData.timestamp.timestamp;
-      //this._broadcast(piecesMutate, Object.values(this.pieces));
       return Object.values(this.pieces);
     });
 

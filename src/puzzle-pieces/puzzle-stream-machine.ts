@@ -11,6 +11,8 @@ export const RECONNECT_INTERVAL = 5 * 1000;
 // Stop trying to reconnect after 2 minutes.
 export const RECONNECT_TIMEOUT = 2 * 60 * 1000;
 
+const MAX_PING_COUNT = 15;
+
 export const puzzleStreamMachine = createMachine<Context>({
   id: "puzzle-stream",
   initial: "connecting",
@@ -36,7 +38,14 @@ export const puzzleStreamMachine = createMachine<Context>({
           target: "connecting",
           actions: ["sendPing"],
           cond: (context: Context) => {
-            return context.pingCount <= 15;
+            return context.pingCount <= MAX_PING_COUNT;
+          },
+        },
+        PING_ERROR: {
+          target: "connecting",
+          actions: ["broadcastPingError"],
+          cond: (context: Context) => {
+            return context.pingCount > MAX_PING_COUNT;
           },
         },
         ERROR: {
@@ -51,10 +60,10 @@ export const puzzleStreamMachine = createMachine<Context>({
           target: "connected",
           actions: ["sendPing", "broadcastConnected"],
         },
-        PUZZLE_NOT_ACTIVE: {
-          target: "inactive",
-          actions: ["destroyEventSource", "broadcastPuzzleStatus"],
-        },
+        //PUZZLE_NOT_ACTIVE: {
+        //  target: "inactive",
+        //  actions: ["destroyEventSource", "broadcastPuzzleStatus"],
+        //},
         INVALID: {
           target: "invalid",
           actions: ["destroyEventSource", "broadcastPuzzleStatus"],
@@ -124,7 +133,7 @@ export const puzzleStreamMachine = createMachine<Context>({
           target: "inactive",
           actions: ["destroyEventSource", "broadcastPuzzleStatus"],
         },
-        PUZZLE_NOT_ACTIVE: "inactive",
+        //PUZZLE_NOT_ACTIVE: "inactive",
         CLOSE: {
           target: "disconnected",
           actions: ["destroyEventSource", "broadcastDisconnected"],
