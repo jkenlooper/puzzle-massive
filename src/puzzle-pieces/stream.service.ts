@@ -280,7 +280,7 @@ class PuzzleStream {
     if (this.puzzleStatus !== undefined) {
       this.broadcast(puzzleStatusTopic, this.puzzleStatus);
     } else {
-      // TODO:
+      // TODO: An undefined puzzleStatus will show the invalid alert.
       this.broadcast(puzzleStatusTopic, this.puzzleStatus);
     }
   }
@@ -346,7 +346,6 @@ class PuzzleStream {
     }
   }
   private handleOpenEvent() {
-    console.log("handleOpenEvent");
     // connection to the event source has opened
     this.puzzleStreamService.send("SUCCESS");
   }

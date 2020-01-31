@@ -96,12 +96,37 @@
   z-index: 2;
 }
 
+/* The width, height, left, and top is set by puzzle CSS. */
+/* [id=puzzle-outline] */
 .pm-PuzzlePieces-outline {
   position: absolute;
-  z-index: 1;
+  z-index: 11;
   outline: 1px solid black;
   border: 1px solid white;
-  background-color: rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+}
+.pm-PuzzlePieces-outlineTop {
+  position: absolute;
+  top: -50%;
+  left: 0;
+  height: 50%;
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  overflow: hidden;
+}
+.pm-PuzzlePieces-outlineTopContent {
+  flex: 1 1;
+}
+.pm-PuzzlePieces-outlineBottom {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  height: 50%;
+  overflow: hidden;
+  width: 100%;
+}
+.pm-PuzzlePieces-outlineBottomContent {
 }
 
 .pm-PuzzlePieces-selected {

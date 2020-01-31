@@ -278,7 +278,7 @@
             {% endif %}
 
             <pm-puzzle-karma-alert puzzle-id="{{ puzzle.puzzle_id }}"></pm-puzzle-karma-alert>
-            {% include 'puzzle-alert.html' %}
+            <pm-puzzle-alert puzzle-id="{{ puzzle.puzzle_id }}" status="{{ puzzle.status }}"></pm-puzzle-alerts>
 
         </div>
     </div>
