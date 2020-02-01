@@ -160,7 +160,7 @@ class PuzzlePieceTokenView(MethodView):
             # 400 if puzzle does not exist or piece is not found
             # Only puzzles in ACTIVE state can be mutated
             err_msg = {
-                "msg": "puzzle pieces can't be moved at this time. Please wait or reload the page.",
+                "msg": "puzzle is not ready at this time. Please wait or reload the page.",
                 "type": "puzzleimmutable",
                 "timeout": 5,
             }
@@ -169,10 +169,21 @@ class PuzzlePieceTokenView(MethodView):
         (result, col_names) = rowify(result, cur.description)
         puzzle = result[0]["puzzle"]
 
-        piece_status = redis_connection.hget(
-            "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), "s"
+        (piece_status, has_y) = redis_connection.hmget(
+            "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), ["s", "y"]
         )
-        # print("ps {}".format(piece_status))
+
+        if has_y == None:
+            # 400 if puzzle does not exist or piece is not found
+            # Only puzzles in ACTIVE state can be mutated
+            err_msg = {
+                "msg": "puzzle pieces can't be moved at this time. Please wait or reload the page.",
+                "type": "puzzleimmutable",
+                "timeout": 5,
+            }
+            cur.close()
+            return make_response(encoder.encode(err_msg), 400)
+
         if piece_status == "1":
             # immovable
             cur.close()
@@ -326,11 +337,9 @@ class PuzzlePieceTokenView(MethodView):
         )
         msg = formatBitMovementString(user, x, y)
 
-        # TODO: switch to only sse.publish()
         sse.publish(
             msg, type="move", channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id)
         )
-        # redis_connection.publish(u"move:{0}".format(puzzle_id), msg)
 
         response = {
             "token": token,
@@ -485,28 +494,27 @@ class PuzzlePiecesMovePublishView(MethodView):
             return make_response(encoder.encode(err_msg), 429)
 
         result = cur.execute(
-            fetch_query_string("select_puzzle_and_piece.sql"),
-            {"puzzle_id": puzzle_id, "piece": piece},
+            fetch_query_string("select_puzzle_and_piece.sql"), {"puzzle_id": puzzle_id},
         ).fetchall()
         if not result:
             # 404 if puzzle or piece does not exist
             cur.close()
-            err_msg = {"msg": "puzzle or piece not available", "type": "missing"}
+            err_msg = {"msg": "puzzle not available", "type": "missing"}
             return make_response(encoder.encode(err_msg), 404)
 
         (result, col_names) = rowify(result, cur.description)
         puzzle_piece = result[0]
 
-        # check if puzzle is in mutable state (not frozen)
-        if not puzzle_piece["status"] in (ACTIVE, BUGGY_UNLISTED):
-            cur.close()
-            err_msg = {"msg": "puzzle not in mutable state"}
-            return make_response(encoder.encode(err_msg), 400)
-
         # check if piece can be moved
-        pieceStatus = redis_connection.hget(
-            "pc:{puzzle}:{id}".format(**puzzle_piece), "s"
+        (pieceStatus, has_y) = redis_connection.hmget(
+            "pc:{puzzle}:{piece}".format(puzzle=puzzle_piece["puzzle"], piece=piece),
+            ["s", "y"],
         )
+        if has_y == None:
+            cur.close()
+            err_msg = {"msg": "piece not available", "type": "missing"}
+            return make_response(encoder.encode(err_msg), 404)
+
         if pieceStatus == "1":
             # immovable
             cur.close()
@@ -520,7 +528,6 @@ class PuzzlePiecesMovePublishView(MethodView):
 
         # check if piece will be moved to within boundaries
         if args.get("x") and (args["x"] < 0 or args["x"] > puzzle_piece["table_width"]):
-            # print("invalid move x: {0}".format(puzzle_piece.get('id')))
             cur.close()
             err_msg = {
                 "msg": "Piece movement out of bounds",
@@ -532,7 +539,6 @@ class PuzzlePiecesMovePublishView(MethodView):
         if args.get("y") and (
             args["y"] < 0 or args["y"] > puzzle_piece["table_height"]
         ):
-            # print("invalid move y: {0}".format(puzzle_piece.get('id')))
             cur.close()
             err_msg = {
                 "msg": "Piece movement out of bounds",
@@ -718,11 +724,9 @@ class PuzzlePiecesMovePublishView(MethodView):
         if user != None:
             # msg = msg + '\n' + formatBitMovementString(user, x, y)
             msg = formatBitMovementString(user, x, y)
-        # TODO: switch to only sse.publish()
         sse.publish(
             msg, type="move", channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id)
         )
-        # redis_connection.publish(u"move:{0}".format(puzzle_id), msg)
 
         # push to queue for further processing
         # job = current_app.queue.enqueue_call(

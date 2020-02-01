@@ -48,16 +48,11 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     def publishMessage(msg, karma_change, points=0, complete=False):
         # print(topic)
         # print(msg)
-        # TODO: switch to only sse.publish()
         sse.publish(
             msg,
             type="move",
             channel="puzzle:{puzzle_id}".format(puzzle_id=puzzleData["puzzle_id"]),
         )
-        # redis_connection.publish(topic, msg)
-
-        # return (topic, msg)
-        cur = db.cursor()
 
         now = int(time.time())
 
@@ -113,6 +108,8 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
 
         # TODO: Optimize by using redis for puzzle status
         if complete:
+            cur = db.cursor()
+
             cur.execute(
                 fetch_query_string("update_puzzle_status_for_puzzle.sql"),
                 {"puzzle": puzzle, "status": COMPLETED},
@@ -130,8 +127,8 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
                 func="api.jobs.convertPiecesToDB.transfer", args=(puzzle,), result_ttl=0
             )
 
-        db.commit()
-        cur.close()
+            db.commit()
+            cur.close()
 
         # return topic and msg mostly for testing
         return (msg, karma_change)
