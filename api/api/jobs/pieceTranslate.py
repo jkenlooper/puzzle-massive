@@ -10,9 +10,15 @@ import sys
 
 from flask import current_app
 from flask_sse import sse
-from api.app import db, redis_connection
+
 from api.database import rowify, fetch_query_string
-from api.tools import formatPieceMovementString, loadConfig, init_karma_key
+from api.tools import (
+    formatPieceMovementString,
+    loadConfig,
+    init_karma_key,
+    get_db,
+    get_redis_connection,
+)
 from api.constants import COMPLETED, QUEUE_END_OF_LINE
 from api.piece_mutate import PieceMutateProcess
 
@@ -614,3 +620,14 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
             complete = True
 
     return publishMessage(p, karma_change, points=points, complete=complete,)
+
+
+if __name__ == "__main__":
+    config_file = sys.argv[1]
+    config = loadConfig(config_file)
+
+    db = get_db(config)
+    redis_connection = get_redis_connection(config)
+
+else:
+    from api.app import db, redis_connection

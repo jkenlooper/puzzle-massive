@@ -81,7 +81,7 @@ objects += db.dump.sql
 db.dump.sql: site.cfg chill-data.sql $(wildcard chill-*.yaml)
 	bin/create-db-dump-sql.sh
 
-# Also installs janitor, scheduler and artist
+# Also installs janitor, worker, scheduler and artist
 bin/puzzle-massive-api: api/requirements.txt requirements.txt api/setup.py
 	pip install --upgrade --upgrade-strategy eager -r $<
 	touch $@;
@@ -105,6 +105,10 @@ api/puzzle-massive-artist.service: api/puzzle-massive-artist.service.sh
 
 objects += api/puzzle-massive-janitor.service
 api/puzzle-massive-janitor.service: api/puzzle-massive-janitor.service.sh
+	./$< $(project_dir) > $@
+
+objects += api/puzzle-massive-worker.service
+api/puzzle-massive-worker.service: api/puzzle-massive-worker.service.sh
 	./$< $(project_dir) > $@
 
 objects += api/puzzle-massive-scheduler.service

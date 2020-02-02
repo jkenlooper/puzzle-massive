@@ -25,6 +25,7 @@ for app in puzzle-massive-chill \
   puzzle-massive-stream \
   puzzle-massive-artist \
   puzzle-massive-scheduler \
+  puzzle-massive-worker \
   puzzle-massive-janitor;
 do
   echo "";

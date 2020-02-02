@@ -8,6 +8,7 @@ api/api
 api/puzzle-massive-api.service.sh
 api/puzzle-massive-artist.service.sh
 api/puzzle-massive-janitor.service.sh
+api/puzzle-massive-worker.service.sh
 api/puzzle-massive-scheduler.service.sh
 api/puzzle-massive-cache-purge.path.sh
 api/puzzle-massive-cache-purge.service.sh

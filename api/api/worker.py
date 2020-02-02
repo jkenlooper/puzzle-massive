@@ -17,7 +17,14 @@ listen = ["puzzle_updates"]
 
 redis_connection = get_redis_connection(config, decode_responses=False)
 
-if __name__ == "__main__":
+
+def main():
+    ""
     with Connection(redis_connection):
         worker = Worker(list(map(Queue, listen)))
+        # TODO: handle exceptions
         worker.work()
+
+
+if __name__ == "__main__":
+    main()
