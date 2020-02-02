@@ -5,6 +5,7 @@ from builtins import map
 from past.utils import old_div
 import datetime
 import time
+import random
 import uuid
 
 from flask import current_app, make_response, request, json, url_for, redirect
@@ -728,20 +729,53 @@ class PuzzlePiecesMovePublishView(MethodView):
             msg, type="move", channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id)
         )
 
-        # push to queue for further processing
-        # job = current_app.queue.enqueue_call(
-        #    func='api.jobs.pieceTranslate.translate', args=(ip, user, puzzle_piece, piece, args.get('x'), args.get('y'), args.get('r'), karma_change), result_ttl=0, timeout=2, ttl=3
+        # Push to queue for further processing by a single worker since mutating
+        # pieces in groups is not yet safe to do concurrently.
+        # job = current_app.singleworkerqueue.enqueue_call(
+        #    func="api.jobs.pieceTranslate.translate",
+        #    args=(
+        #        ip,
+        #        user,
+        #        puzzle_piece,
+        #        piece,
+        #        args.get("x"),
+        #        args.get("y"),
+        #        args.get("r"),
+        #        karma_change,
+        #    ),
+        #    result_ttl=0,
+        #    timeout=2,
+        #    ttl=None,
         # )
-        (msg, karma_change) = pieceTranslate.translate(
-            ip,
-            user,
-            puzzle_piece,
-            piece,
-            args.get("x"),
-            args.get("y"),
-            args.get("r"),
-            karma_change,
-        )
+
+        attemptPieceMovement = 0
+        while attemptPieceMovement < 13:
+            try:
+                (msg, karma_change) = pieceTranslate.translate(
+                    ip,
+                    user,
+                    puzzle_piece,
+                    piece,
+                    args.get("x"),
+                    args.get("y"),
+                    args.get("r"),
+                    karma_change,
+                )
+                break
+            except pieceTranslate.PieceGroupConflictError:
+                attemptPieceMovement = attemptPieceMovement + 1
+                time.sleep(random.randint(1, 100) / 100)
+                # Another player has moved a piece in the same group while the
+                # pieceTranslate was processing.
+        if attemptPieceMovement >= 13:
+            err_msg = {
+                "msg": "Try again",
+                "type": "piecegrouperror",
+                "reason": "Conflict with piece group",
+                "timeout": 3,
+            }
+            cur.close()
+            return make_response(encoder.encode(err_msg), 409)
 
         karma_change = False if karma_change == 0 else karma_change
 
