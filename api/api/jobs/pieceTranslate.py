@@ -156,35 +156,38 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         redis_connection.zadd("pcy:{puzzle}".format(puzzle=puzzle), {piece: y})
 
     def updateGroupedPiecesPositions(
-        puzzle, piece, pieceGroup, offsetX, offsetY, newGroup=None, status=None
+        puzzle,
+        piece,
+        pieceGroup,
+        offsetX,
+        offsetY,
+        groupedPiecesXY=None,
+        newGroup=None,
+        status=None,
     ):
         "Update all other pieces x,y in group to the offset, if newGroup then assign them to the newGroup"
-        # TODO: can the offestX and offsetY be computed by getting the originX
-        # and originY? No.  The pc_puzzle_piece_key needs to be watched.
-        allOtherPiecesInPieceGroup = redis_connection.smembers(
-            "pcg:{puzzle}:{pieceGroup}".format(puzzle=puzzle, pieceGroup=pieceGroup)
-        )
-        allOtherPiecesInPieceGroup.remove(str(piece))
-        allOtherPiecesInPieceGroup = list(allOtherPiecesInPieceGroup)
-        # print 'allOtherPiecesInPieceGroup = {0}'.format(allOtherPiecesInPieceGroup)
-        pipe = redis_connection.pipeline(transaction=True)
-        for groupedPiece in allOtherPiecesInPieceGroup:
-            pipe.hmget(
-                "pc:{puzzle}:{groupedPiece}".format(
-                    puzzle=puzzle, groupedPiece=groupedPiece
-                ),
-                ["x", "y"],
+        # TODO: pass in the pcg:{puzzle}:{pieceGroup} members as list of dict with properties.
+        if groupedPiecesXY == None:
+            allOtherPiecesInPieceGroup = redis_connection.smembers(
+                "pcg:{puzzle}:{pieceGroup}".format(puzzle=puzzle, pieceGroup=pieceGroup)
             )
-        # raise PieceGroupConflictError()
-        # TODO: Need to combine these two pipes into one transaction. It is possible that the pc:{puzzle}:{groupedPiece} could be changed between them.
-        # TODO: Or need to watch the pc:{puzzle}:{groupedPiece} and retry the updateGroupedPiecesPositions if changed?
-        groupedPiecesXY = dict(list(zip(allOtherPiecesInPieceGroup, pipe.execute())))
-        # print 'groupedPiecesXY'
-        # print groupedPiecesXY
+            allOtherPiecesInPieceGroup.remove(str(piece))
+            allOtherPiecesInPieceGroup = list(allOtherPiecesInPieceGroup)
+            pipe = redis_connection.pipeline(transaction=True)
+            for groupedPiece in allOtherPiecesInPieceGroup:
+                pipe.hmget(
+                    "pc:{puzzle}:{groupedPiece}".format(
+                        puzzle=puzzle, groupedPiece=groupedPiece
+                    ),
+                    ["x", "y"],
+                )
+            groupedPiecesXY = dict(
+                list(zip(allOtherPiecesInPieceGroup, pipe.execute()))
+            )
 
         pipe = redis_connection.pipeline(transaction=True)
         lines = []
-        for groupedPiece in allOtherPiecesInPieceGroup:
+        for groupedPiece in groupedPiecesXY.keys():
             newX = int(groupedPiecesXY[groupedPiece][0]) + offsetX
             newY = int(groupedPiecesXY[groupedPiece][1]) + offsetY
             newPC = {"x": newX, "y": newY}
@@ -268,7 +271,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         # TODO: get originX, originY here before the piece xy is changed.
         pipe = redis_connection.pipeline(transaction=False)
         # Get the originX, and originY
-        pipe.hmget(pc_puzzle_piece_key, ["x", "y"])
+        # pipe.hmget(pc_puzzle_piece_key, ["x", "y"])
         pipe.sadd("pcstacked:{puzzle}".format(puzzle=puzzle), *piecesInProximity)
         for pieceInProximity in piecesInProximity:
             pipe.hset(
@@ -307,6 +310,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
                 pieceGroup,
                 int(pieceProperties["x"]) - originX,
                 int(pieceProperties["y"]) - originY,
+                groupedPiecesXY=piece_mutate_process.grouped_pieces_x_y,
             )
             p += "\n" + "\n".join(lines)
 
