@@ -25,6 +25,10 @@ class PieceMutateProcess:
 
         self.watched_keys = set()
 
+        self.pzm_puzzle_key = "pzm:{puzzle}".format(puzzle=puzzle)
+        self.puzzle_mutation_id = self.redis_connection.incr(self.pzm_puzzle_key)
+        self.watched_keys.add(self.pzm_puzzle_key)
+
         self.pc_puzzle_piece_key = "pc:{puzzle}:{piece}".format(
             puzzle=puzzle, piece=piece
         )
@@ -52,14 +56,17 @@ class PieceMutateProcess:
         add to watched keys
         """
         self.watched_keys.add(self.pc_puzzle_piece_key)
-        ## pipeline phase 0
-        with self.redis_connection.pipeline(transaction=True) as pipe:
-            pipe.hgetall(self.pc_puzzle_piece_key)
-            (self.piece_properties,) = pipe.execute()
 
         ## pipeline phase 1
         with self.redis_connection.pipeline(transaction=True) as pipe:
             pipe.watch(*self.watched_keys)
+
+            # Raise an error if the puzzle pieces have changed since phase 1 started.
+            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key))
+            if current_puzzle_mutation_id != self.puzzle_mutation_id:
+                raise PieceMutateError
+
+            self.piece_properties = pipe.hgetall(self.pc_puzzle_piece_key)
 
             # Put back to buffered mode since the watch was called.
             pipe.multi()
@@ -93,6 +100,12 @@ class PieceMutateProcess:
         self.watched_keys.add(pcg_puzzle_g_key)
         with self.redis_connection.pipeline(transaction=True) as pipe:
             pipe.watch(*self.watched_keys)
+
+            # Raise an error if the puzzle pieces have changed since phase 1 started.
+            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key))
+            if current_puzzle_mutation_id != self.puzzle_mutation_id:
+                raise PieceMutateError
+
             # Put back to buffered mode since the watch was called.
             pipe.multi()
 
@@ -117,8 +130,9 @@ class PieceMutateProcess:
             # updateGroupedPiecesPositions groupedPiecesXY
             # allOtherPiecesInPieceGroup is same as pcg_puzzle_g
             all_other_pieces_in_piece_group = pcg_puzzle_g.copy()
-            print(all_other_pieces_in_piece_group)
+            # print(all_other_pieces_in_piece_group)
             if len(all_other_pieces_in_piece_group) > 0:
+                # TODO: why piece is str here?
                 all_other_pieces_in_piece_group.remove(str(self.piece))
                 for grouped_piece in all_other_pieces_in_piece_group:
                     pc_puzzle_grouped_piece_key = "pc:{puzzle}:{grouped_piece}".format(

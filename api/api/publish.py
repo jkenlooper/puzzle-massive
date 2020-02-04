@@ -426,6 +426,9 @@ class PuzzlePiecesMovePublishView(MethodView):
                         "timeout": 5,
                     }
                     return make_response(encoder.encode(err_msg), 400)
+        x = args.get("x")
+        y = args.get("y")
+        r = args.get("r")
 
         # Start db operations
         cur = db.cursor()
@@ -528,7 +531,7 @@ class PuzzlePiecesMovePublishView(MethodView):
             return make_response(encoder.encode(err_msg), 400)
 
         # check if piece will be moved to within boundaries
-        if args.get("x") and (args["x"] < 0 or args["x"] > puzzle_piece["table_width"]):
+        if x and (x < 0 or x > puzzle_piece["table_width"]):
             cur.close()
             err_msg = {
                 "msg": "Piece movement out of bounds",
@@ -537,9 +540,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                 "timeout": 5,
             }
             return make_response(encoder.encode(err_msg), 400)
-        if args.get("y") and (
-            args["y"] < 0 or args["y"] > puzzle_piece["table_height"]
-        ):
+        if y and (y < 0 or y > puzzle_piece["table_height"]):
             cur.close()
             err_msg = {
                 "msg": "Piece movement out of bounds",
@@ -549,9 +550,6 @@ class PuzzlePiecesMovePublishView(MethodView):
             }
             return make_response(encoder.encode(err_msg), 400)
 
-        x = str(args.get("x", ""))
-        y = str(args.get("y", ""))
-        r = str(args.get("r", ""))
         puzzle = puzzle_piece["puzzle"]
 
         # Set the rounded timestamp
@@ -672,8 +670,8 @@ class PuzzlePiecesMovePublishView(MethodView):
                 int,
                 redis_connection.zrangebyscore(
                     "pcx:{puzzle}".format(puzzle=puzzle),
-                    int(x) - toleranceX,
-                    int(x) + toleranceX,
+                    x - toleranceX,
+                    x + toleranceX,
                 ),
             )
         )
@@ -682,8 +680,8 @@ class PuzzlePiecesMovePublishView(MethodView):
                 int,
                 redis_connection.zrangebyscore(
                     "pcy:{puzzle}".format(puzzle=puzzle),
-                    int(y) - toleranceY,
-                    int(y) + toleranceY,
+                    y - toleranceY,
+                    y + toleranceY,
                 ),
             )
         )
@@ -709,8 +707,8 @@ class PuzzlePiecesMovePublishView(MethodView):
             puzzle=puzzle,
             user=user,
             timestamp=rounded_timestamp_hotspot,
-            x=int(x) - (int(x) % 200),
-            y=int(y) - (int(y) % 200),
+            x=x - (x % 200),
+            y=y - (y % 200),
         )
         hotspot_count = redis_connection.incr(hotspot_area_key)
         if hotspot_count == 1:
@@ -738,9 +736,9 @@ class PuzzlePiecesMovePublishView(MethodView):
         #        user,
         #        puzzle_piece,
         #        piece,
-        #        args.get("x"),
-        #        args.get("y"),
-        #        args.get("r"),
+        #        x,
+        #        y,
+        #        r,
         #        karma_change,
         #    ),
         #    result_ttl=0,
@@ -752,14 +750,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         while attemptPieceMovement < 13:
             try:
                 (msg, karma_change) = pieceTranslate.translate(
-                    ip,
-                    user,
-                    puzzle_piece,
-                    piece,
-                    args.get("x"),
-                    args.get("y"),
-                    args.get("r"),
-                    karma_change,
+                    ip, user, puzzle_piece, piece, x, y, r, karma_change,
                 )
                 break
             except pieceTranslate.PieceGroupConflictError:
