@@ -1,3 +1,6 @@
+from api.tools import formatPieceMovementString
+
+
 class PieceMutateError(Exception):
     """
     Error with piece mutatation.
@@ -38,6 +41,8 @@ class PieceMutateProcess:
         self.origin_x = None
         self.origin_y = None
         self.origin_r = None
+        self.offset_x = None
+        self.offset_y = None
 
         self.piece_properties = None
         self.adjacent_piece_properties = None
@@ -48,15 +53,49 @@ class PieceMutateProcess:
         self.pieces_in_proximity_to_target = set()
         self.grouped_piece_properties = None
 
+        self.can_join = False
+
     def start(self):
         ""
 
         self._load_related_pieces()
-        if len(self.pieces_in_proximity_to_target) >= 4:
-            self._stack_pieces()
 
-        else:
-            self._join_pieces()
+        # TODO: Determine if the piece joins any other pieces
+
+        msg = ""
+        status = ""
+        with self.redis_connection.pipeline(transaction=True) as pipe:
+            pipe.watch(*self.watched_keys)
+
+            # Raise an error if the puzzle pieces have changed since phase 1 started.
+            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key) or "0")
+            if current_puzzle_mutation_id != self.puzzle_mutation_id:
+                raise PieceMutateError
+
+            # Put back to buffered mode since the watch was called.
+            pipe.multi()
+
+            # TODO: update the piece and it's piece group
+            if len(self.pieces_in_proximity_to_target) >= 4:
+                msg = self._stack_pieces(pipe)
+                status = "stacked"
+            else:
+                msg = self._reset_pieces_in_proximity_stacked_status(pipe)
+                if not self.can_join:
+                    msg += self._move_pieces(pipe)
+                    status = "moved"
+                else:
+                    msg += self._join_pieces(pipe)
+                    status = "joined"
+
+            # Bump the pzm id when done mutating the puzzle on the last phase.
+            pipe.incr(self.pzm_puzzle_key)
+
+            result = pipe.execute()
+            if not result:
+                # TODO:
+                status = "failed"
+        return (msg, status)
 
     def _load_related_pieces(self):
         """
@@ -88,6 +127,8 @@ class PieceMutateProcess:
             self.origin_x = self.piece_properties.get("x")
             self.origin_y = self.piece_properties.get("y")
             self.origin_r = self.piece_properties.get("r")
+            self.offset_x = self.target_x - self.origin_x
+            self.offset_y = self.target_y - self.origin_y
 
             tolerance = int(100 / 2)
 
@@ -224,34 +265,59 @@ class PieceMutateProcess:
                     zip(self.all_other_pieces_in_piece_group, pc_puzzle_grouped_pieces)
                 )
             )
-            print(self.grouped_piece_properties)
 
-    def _stack_pieces(self):
+    def _stack_pieces(self, pipe):
         "When too many pieces are within proximity to each other, skip trying to join any of them and mark them as stacked"
+        lines = []
+        msg = ""
+        pipe.sadd(
+            "pcstacked:{puzzle}".format(puzzle=self.puzzle),
+            *self.pieces_in_proximity_to_target
+        )
+        for piece_in_proximity in self.pieces_in_proximity_to_target:
+            pipe.hset(
+                "pc:{puzzle}:{piece_in_proximity}".format(
+                    puzzle=self.puzzle, piece_in_proximity=piece_in_proximity
+                ),
+                "s",
+                "2",
+            )
+            lines.append(formatPieceMovementString(piece_in_proximity, s="2"))
 
-    def _join_pieces(self):
-        # reset pcstacked and pc s status to not stacked for all pieces in
-        # proximity
+        # Move the piece
+        pipe.hmset(
+            self.pc_puzzle_piece_key, {"x": self.target_x, "y": self.target_y},
+        )
+        pipe.zadd(
+            "pcx:{puzzle}".format(puzzle=self.puzzle), {self.piece: self.target_x}
+        )
+        pipe.zadd(
+            "pcy:{puzzle}".format(puzzle=self.puzzle), {self.piece: self.target_y}
+        )
+        lines.append(
+            formatPieceMovementString(
+                self.piece, x=self.target_x, y=self.target_y, s="2"
+            )
+        )
 
-        # TODO: Determine if the piece joins any other pieces
+        msg += "\n".join(lines)
+        msg += "\n"
 
-        with self.redis_connection.pipeline(transaction=True) as pipe:
-            pipe.watch(*self.watched_keys)
+        # If the piece is grouped move the other pieces in group
+        if self.piece_properties.get("g") != None:
+            lines = self._update_grouped_pieces_positions(pipe)
+            msg += "\n" + "\n".join(lines)
+        return msg
 
-            # Raise an error if the puzzle pieces have changed since phase 1 started.
-            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key) or "0")
-            if current_puzzle_mutation_id != self.puzzle_mutation_id:
-                raise PieceMutateError
+    def _move_pieces(self, pipe):
+        "Only move the piece and the other pieces in the group to the target position"
+        msg = ""
+        return msg
 
-            # Put back to buffered mode since the watch was called.
-            pipe.multi()
-
-            # TODO: update the piece and it's piece group
-
-            # Bump the pzm id when done mutating the puzzle on the last phase.
-            pipe.incr(self.pzm_puzzle_key)
-
-            pipe.execute()
+    def _join_pieces(self, pipe):
+        "Join the piece and the pieces group to the adjacent piece merging the two piece groups together."
+        msg = ""
+        return msg
 
     def _get_pieces_in_proximity_to_target(
         self, pcx_puzzle, pcy_puzzle, pcfixed_puzzle, pcg_puzzle_g
@@ -305,3 +371,93 @@ class PieceMutateProcess:
             if prop.get("g") != None:
                 adjacent_piece_group_ids[piece_id] = prop.get("g")
         return adjacent_piece_group_ids
+
+    def _update_grouped_pieces_positions(
+        pipe, new_group=None, status=None,
+    ):
+        "Update all other pieces x,y in group to the offset, if new_group then assign them to the new_group"
+
+        lines = []
+        for grouped_piece in self.grouped_piece_properties.keys():
+            new_x = self.grouped_piece_properties[grouped_piece]["x"] + self.offset_x
+            new_y = self.grouped_piece_properties[grouped_piece]["y"] + self.offset_y
+            new_pc = {"x": new_x, "y": new_y}
+            if new_group != None:
+                # Remove from the old group and place in new_group
+                new_pc["g"] = new_group
+                pipe.sadd(
+                    "pcg:{puzzle}:{g}".format(puzzle=self.puzzle, g=new_group),
+                    grouped_piece,
+                )
+                pipe.srem(
+                    "pcg:{puzzle}:{g}".format(
+                        puzzle=self.puzzle, g=self.piece_properties.get("g")
+                    ),
+                    grouped_piece,
+                )
+            if status == "1":
+                new_pc["s"] = "1"
+                pipe.sadd("pcfixed:{puzzle}".format(puzzle=self.puzzle), grouped_piece)
+                pipe.srem(
+                    "pcstacked:{puzzle}".format(puzzle=self.puzzle), grouped_piece
+                )
+            pipe.hmset(
+                "pc:{puzzle}:{grouped_piece}".format(
+                    puzzle=self.puzzle, grouped_piece=grouped_piece
+                ),
+                new_pc,
+            )
+            pipe.zadd("pcx:{puzzle}".format(puzzle=self.puzzle), {grouped_piece: new_x})
+            pipe.zadd("pcy:{puzzle}".format(puzzle=self.puzzle), {grouped_piece: new_y})
+            lines.append(
+                formatPieceMovementString(
+                    grouped_piece, x=new_x, y=new_y, g=new_group, s=status
+                )
+            )
+        if status == "1":
+            pipe.sadd("pcfixed:{puzzle}".format(puzzle=self.puzzle), self.piece)
+            pipe.srem("pcstacked:{puzzle}".format(puzzle=self.puzzle), self.piece)
+            pipe.hset(
+                "pc:{puzzle}:{piece}".format(puzzle=self.puzzle, piece=self.piece),
+                "s",
+                "1",
+            )
+        if new_group != None:
+            # For the piece that doesn't need x,y updated remove from the old group and place in new_group
+            pipe.sadd(
+                "pcg:{puzzle}:{g}".format(puzzle=self.puzzle, g=new_group), self.piece
+            )
+            pipe.srem(
+                "pcg:{puzzle}:{g}".format(
+                    puzzle=self.puzzle, g=self.piece_properties.get("g")
+                ),
+                self.piece,
+            )
+            pipe.hset(
+                "pc:{puzzle}:{piece}".format(puzzle=self.puzzle, piece=self.piece),
+                "g",
+                new_group,
+            )
+            lines.append(formatPieceMovementString(self.piece, g=new_group))
+        return lines
+
+    def _reset_pieces_in_proximity_stacked_status(self, pipe):
+        msg = ""
+        lines = []
+        pipe.srem(
+            "pcstacked:{puzzle}".format(puzzle=self.puzzle),
+            *self.pieces_in_proximity_to_target
+        )
+        for piece_in_proximity in self.pieces_in_proximity_to_target:
+            # TODO: double check that the pcfixed pieces are not in the
+            # pieces_in_proximity_to_target group.
+            pipe.hdel(
+                "pc:{puzzle}:{piece_in_proximity}".format(
+                    puzzle=self.puzzle, piece_in_proximity=piece_in_proximity
+                ),
+                "s",
+            )
+            lines.append(formatPieceMovementString(piece_in_proximity, s=None))
+        msg = "\n".join(lines)
+        msg += "\n"
+        return msg

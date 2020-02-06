@@ -269,84 +269,31 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         map(int, redis_connection.hmget(pc_puzzle_piece_key, ["x", "y"]),)
     )
     piece_mutate_process = PieceMutateProcess(redis_connection, puzzle, piece, x, y, r)
-    piece_mutate_process.start()
+    (msg, status) = piece_mutate_process.start()
 
-    piecesInProximity = piece_mutate_process.pieces_in_proximity_to_target
-
-    # print(piecesInProximity)
-    lines = []
-    if len(piecesInProximity) >= 4:
-        # TODO: why transaction False?
-        # TODO: get originX, originY here before the piece xy is changed.
-        pipe = redis_connection.pipeline(transaction=False)
-        # Get the originX, and originY
-        # pipe.hmget(pc_puzzle_piece_key, ["x", "y"])
-        pipe.sadd("pcstacked:{puzzle}".format(puzzle=puzzle), *piecesInProximity)
-        for pieceInProximity in piecesInProximity:
-            pipe.hset(
-                "pc:{puzzle}:{pieceInProximity}".format(
-                    puzzle=puzzle, pieceInProximity=pieceInProximity
-                ),
-                "s",
-                2,
-            )
-            lines.append(formatPieceMovementString(pieceInProximity, s=2))
-        pipe.hmset(
-            pc_puzzle_piece_key, {"x": x, "y": y, "s": 2},
-        )
-        pipe.zadd("pcx:{puzzle}".format(puzzle=puzzle), {piece: x})
-        pipe.zadd("pcy:{puzzle}".format(puzzle=puzzle), {piece: y})
-        pipe.execute()
-        # Get the puzzle piece origin position
-        # (originX, originY) = list(
-        #     map(int, redis_connection.hmget(pc_puzzle_piece_key, ["x", "y"]),)
-        # )
-        p = "\n".join(lines)
-        p += "\n"
-
-        # No further processing needed since piece is stacked
-        # print p
-        pieceProperties = redis_connection.hgetall(pc_puzzle_piece_key)
-
-        p += formatPieceMovementString(piece, **pieceProperties)
-
-        # If the piece is grouped move the other pieces in group
-        pieceGroup = pieceProperties.get("g")
-        if pieceGroup != None:
-            lines = updateGroupedPiecesPositions(
-                puzzle,
-                piece,
-                pieceGroup,
-                int(pieceProperties["x"]) - originX,
-                int(pieceProperties["y"]) - originY,
-                groupedPiecesXY=piece_mutate_process.grouped_piece_properties,
-            )
-            p += "\n" + "\n".join(lines)
-
+    if status == "stacked":
         # Decrease karma since stacking
         if karma > MIN_KARMA:
             redis_connection.decr(karma_key)
         karma_change -= 1
 
-        return publishMessage(p, karma_change,)
+        return publishMessage(msg, karma_change,)
+    elif status == "moved":
+        # TODO
+        pass
+    elif status == "joined":
+        # TODO
+        pass
+    else:
+        # failed?
+        # TODO
+        pass
 
-    elif len(piecesInProximity) > 1:
-        # print piecesInProximity
-        pipe = redis_connection.pipeline(transaction=False)
-        pipe.srem("pcstacked:{puzzle}".format(puzzle=puzzle), *piecesInProximity)
-        for pieceInProximity in piecesInProximity:
-            pipe.hdel(
-                "pc:{puzzle}:{pieceInProximity}".format(
-                    puzzle=puzzle, pieceInProximity=pieceInProximity
-                ),
-                "s",
-            )
-            lines.append(formatPieceMovementString(pieceInProximity, s=None))
-        pipe.execute()
-        p = "\n".join(lines)
-        p += "\n"
+    piecesInProximity = piece_mutate_process.pieces_in_proximity_to_target
 
-    # print 'pc:{puzzle}:{piece}'.format(puzzle=puzzle, piece=piece)
+    lines = []
+
+    p = msg
 
     # Set Piece Properties
     # originX, and originY are needed before calling savePiecePosition
