@@ -174,22 +174,31 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
             allOtherPiecesInPieceGroup.remove(str(piece))
             allOtherPiecesInPieceGroup = list(allOtherPiecesInPieceGroup)
             pipe = redis_connection.pipeline(transaction=True)
+            grouped_piece_property_list_x_y = ["x", "y"]
             for groupedPiece in allOtherPiecesInPieceGroup:
                 pipe.hmget(
                     "pc:{puzzle}:{groupedPiece}".format(
                         puzzle=puzzle, groupedPiece=groupedPiece
                     ),
-                    ["x", "y"],
+                    grouped_piece_property_list_x_y,
                 )
+            pc_puzzle_grouped_pieces = list(
+                map(
+                    lambda x: dict(
+                        list(zip(grouped_piece_property_list_x_y, map(int, x)))
+                    ),
+                    pipe.execute(),
+                ),
+            )
             groupedPiecesXY = dict(
-                list(zip(allOtherPiecesInPieceGroup, pipe.execute()))
+                list(zip(allOtherPiecesInPieceGroup, pc_puzzle_grouped_pieces))
             )
 
         pipe = redis_connection.pipeline(transaction=True)
         lines = []
         for groupedPiece in groupedPiecesXY.keys():
-            newX = int(groupedPiecesXY[groupedPiece][0]) + offsetX
-            newY = int(groupedPiecesXY[groupedPiece][1]) + offsetY
+            newX = groupedPiecesXY[groupedPiece]["x"] + offsetX
+            newY = groupedPiecesXY[groupedPiece]["y"] + offsetY
             newPC = {"x": newX, "y": newY}
             if newGroup != None:
                 # Remove from the old group and place in newGroup
@@ -310,7 +319,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
                 pieceGroup,
                 int(pieceProperties["x"]) - originX,
                 int(pieceProperties["y"]) - originY,
-                groupedPiecesXY=piece_mutate_process.grouped_pieces_x_y,
+                groupedPiecesXY=piece_mutate_process.grouped_piece_properties,
             )
             p += "\n" + "\n".join(lines)
 

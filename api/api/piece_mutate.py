@@ -46,13 +46,17 @@ class PieceMutateProcess:
         self.adjacent_piece_group_counts = {}
 
         self.pieces_in_proximity_to_target = set()
-        self.grouped_pieces_x_y = None
+        self.grouped_piece_properties = None
 
     def start(self):
         ""
 
         self._load_related_pieces()
-        self._mutate_pieces()
+        if len(self.pieces_in_proximity_to_target) >= 4:
+            self._stack_pieces()
+
+        else:
+            self._join_pieces()
 
     def _load_related_pieces(self):
         """
@@ -66,7 +70,7 @@ class PieceMutateProcess:
             pipe.watch(*self.watched_keys)
 
             # Raise an error if the puzzle pieces have changed since phase 1 started.
-            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key))
+            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key) or "0")
             if current_puzzle_mutation_id != self.puzzle_mutation_id:
                 raise PieceMutateError
 
@@ -135,6 +139,8 @@ class PieceMutateProcess:
                 phase_1_response[4 : 4 + len(adjacent_pieces_list)],
                 phase_1_response[4 + len(adjacent_pieces_list)],
             )
+            pcx_puzzle = set(map(int, pcx_puzzle))
+            pcy_puzzle = set(map(int, pcy_puzzle))
             pcfixed_puzzle = set(map(int, pcfixed_puzzle))
             pcg_puzzle_g = set(map(int, pcg_puzzle_g))
             self.all_other_pieces_in_piece_group = pcg_puzzle_g.copy()
@@ -161,7 +167,7 @@ class PieceMutateProcess:
             pipe.watch(*self.watched_keys)
 
             # Raise an error if the puzzle pieces have changed since phase 1 started.
-            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key))
+            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key) or "0")
             if current_puzzle_mutation_id != self.puzzle_mutation_id:
                 raise PieceMutateError
 
@@ -170,12 +176,13 @@ class PieceMutateProcess:
 
             # updateGroupedPiecesPositions groupedPiecesXY
             # pc_puzzle_grouped_pieces
+            grouped_piece_property_list = ["x", "y", "r", "g", "s"]
             for grouped_piece in self.all_other_pieces_in_piece_group:
                 pc_puzzle_grouped_piece_key = "pc:{puzzle}:{grouped_piece}".format(
                     puzzle=self.puzzle, grouped_piece=grouped_piece
                 )
                 pipe.hmget(
-                    pc_puzzle_grouped_piece_key, ["x", "y", "r", "g", "s"],
+                    pc_puzzle_grouped_piece_key, grouped_piece_property_list,
                 )
                 self.watched_keys.add(pc_puzzle_grouped_piece_key)
 
@@ -198,6 +205,15 @@ class PieceMutateProcess:
                     + len(adjacent_group_list)
                 ],
             )
+            pc_puzzle_grouped_pieces = list(
+                map(
+                    self._int_piece_properties,
+                    map(
+                        lambda x: dict(list(zip(grouped_piece_property_list, x))),
+                        pc_puzzle_grouped_pieces,
+                    ),
+                )
+            )
             self.adjacent_piece_group_counts = dict(
                 list(zip(adjacent_group_list, pcg_puzzle_piece_adjacent_group_counts))
             )
@@ -208,8 +224,14 @@ class PieceMutateProcess:
                     zip(self.all_other_pieces_in_piece_group, pc_puzzle_grouped_pieces)
                 )
             )
+            print(self.grouped_piece_properties)
 
-    def _mutate_pieces(self):
+    def _stack_pieces(self):
+        "When too many pieces are within proximity to each other, skip trying to join any of them and mark them as stacked"
+
+    def _join_pieces(self):
+        # reset pcstacked and pc s status to not stacked for all pieces in
+        # proximity
 
         # TODO: Determine if the piece joins any other pieces
 
@@ -217,7 +239,7 @@ class PieceMutateProcess:
             pipe.watch(*self.watched_keys)
 
             # Raise an error if the puzzle pieces have changed since phase 1 started.
-            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key))
+            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key) or "0")
             if current_puzzle_mutation_id != self.puzzle_mutation_id:
                 raise PieceMutateError
 
@@ -235,14 +257,16 @@ class PieceMutateProcess:
         self, pcx_puzzle, pcy_puzzle, pcfixed_puzzle, pcg_puzzle_g
     ):
         "Pieces in proximity to target"
+        # TODO:  This is only using the x and y coordinates and not the actual
+        # piece footprint. If custom piece shapes are used that have different
+        # widths and heights, then a different method will need to be used.
         pieces_in_proximity_to_target = set.intersection(
             set(pcx_puzzle), set(pcy_puzzle)
         )
         # Remove immovable pieces from the pieces in proximity
         if len(pieces_in_proximity_to_target) > 0:
-            immovable_pieces = set(map(int, pcfixed_puzzle))
             pieces_in_proximity_to_target = pieces_in_proximity_to_target.difference(
-                immovable_pieces
+                pcfixed_puzzle
             )
         # Remove pieces own group from the pieces in proximity
         if len(pieces_in_proximity_to_target) > 0:
