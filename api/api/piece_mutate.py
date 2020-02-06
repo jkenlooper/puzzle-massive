@@ -26,7 +26,9 @@ class PieceMutateProcess:
         self.watched_keys = set()
 
         self.pzm_puzzle_key = "pzm:{puzzle}".format(puzzle=puzzle)
-        self.puzzle_mutation_id = self.redis_connection.incr(self.pzm_puzzle_key)
+        self.puzzle_mutation_id = int(
+            self.redis_connection.get(self.pzm_puzzle_key) or "0"
+        )
         self.watched_keys.add(self.pzm_puzzle_key)
 
         self.pc_puzzle_piece_key = "pc:{puzzle}:{piece}".format(
@@ -38,6 +40,11 @@ class PieceMutateProcess:
         self.origin_r = None
 
         self.piece_properties = None
+        self.adjacent_piece_properties = None
+
+        # group_id: count of pieces in that group
+        self.adjacent_piece_group_counts = {}
+
         self.pieces_in_proximity_to_target = set()
         self.grouped_pieces_x_y = None
 
@@ -45,10 +52,7 @@ class PieceMutateProcess:
         ""
 
         self._load_related_pieces()
-
-        # create pipeline
-        # watch the watched keys
-        # set new piece mutations in a single transaction.
+        self._mutate_pieces()
 
     def _load_related_pieces(self):
         """
@@ -66,7 +70,10 @@ class PieceMutateProcess:
             if current_puzzle_mutation_id != self.puzzle_mutation_id:
                 raise PieceMutateError
 
-            self.piece_properties = pipe.hgetall(self.pc_puzzle_piece_key)
+            self.piece_properties = self._int_piece_properties(
+                pipe.hgetall(self.pc_puzzle_piece_key)
+            )
+            adjacent_pieces_list = self._get_adjacent_pieces_list(self.piece_properties)
 
             # Put back to buffered mode since the watch was called.
             pipe.multi()
@@ -74,26 +81,78 @@ class PieceMutateProcess:
             pcg_puzzle_g_key = "pcg:{puzzle}:{piece_group}".format(
                 puzzle=self.puzzle, piece_group=self.piece_properties.get("g")
             )
-            self.origin_x = int(self.piece_properties.get("x"))
-            self.origin_y = int(self.piece_properties.get("y"))
-            self.origin_r = int(self.piece_properties.get("r"))
+            self.origin_x = self.piece_properties.get("x")
+            self.origin_y = self.piece_properties.get("y")
+            self.origin_r = self.piece_properties.get("r")
 
             tolerance = int(100 / 2)
+
+            # pcx_puzzle
             pipe.zrangebyscore(
                 "pcx:{puzzle}".format(puzzle=self.puzzle),
                 self.target_x - tolerance,
                 self.target_x + tolerance,
             )
+            # pcy_puzzle
             pipe.zrangebyscore(
                 "pcy:{puzzle}".format(puzzle=self.puzzle),
                 self.target_y - tolerance,
                 self.target_y + tolerance,
             )
+            # pcfixed_puzzle
             pipe.smembers("pcfixed:{puzzle}".format(puzzle=self.puzzle))
-
+            # pcg_puzzle_g
             pipe.smembers(pcg_puzzle_g_key)
 
-            (pcx_puzzle, pcy_puzzle, pcfixed_puzzle, pcg_puzzle_g) = pipe.execute()
+            # pc_puzzle_adjacent_piece_properties
+            for adjacent_piece in adjacent_pieces_list:
+                pc_puzzle_adjacent_piece_key = "pc:{puzzle}:{adjacent_piece}".format(
+                    puzzle=self.puzzle, adjacent_piece=adjacent_piece
+                )
+                pipe.hgetall(pc_puzzle_adjacent_piece_key)
+                self.watched_keys.add(pc_puzzle_adjacent_piece_key)
+
+            # pcg_puzzle_piece_group_count =countOfPiecesInPieceGroup
+            pipe.scard(
+                "pcg:{puzzle}:{g}".format(
+                    puzzle=self.puzzle, g=self.piece_properties.get("g", self.piece)
+                )
+            )
+
+            phase_1_response = pipe.execute()
+            (
+                pcx_puzzle,
+                pcy_puzzle,
+                pcfixed_puzzle,
+                pcg_puzzle_g,
+                pc_puzzle_adjacent_piece_properties,
+                pcg_puzzle_piece_group_count,
+            ) = (
+                phase_1_response[0],
+                phase_1_response[1],
+                phase_1_response[2],
+                phase_1_response[3],
+                phase_1_response[4 : 4 + len(adjacent_pieces_list)],
+                phase_1_response[4 + len(adjacent_pieces_list)],
+            )
+            pcfixed_puzzle = set(map(int, pcfixed_puzzle))
+            pcg_puzzle_g = set(map(int, pcg_puzzle_g))
+            self.all_other_pieces_in_piece_group = pcg_puzzle_g.copy()
+            self.all_other_pieces_in_piece_group.discard(self.piece)
+            pc_puzzle_adjacent_piece_properties = map(
+                self._int_piece_properties, pc_puzzle_adjacent_piece_properties
+            )
+
+            self.pieces_in_proximity_to_target = self._get_pieces_in_proximity_to_target(
+                pcx_puzzle, pcy_puzzle, pcfixed_puzzle, pcg_puzzle_g
+            )
+            # Get Adjacent Piece Properties
+            self.adjacent_piece_properties = dict(
+                list(zip(adjacent_pieces_list, pc_puzzle_adjacent_piece_properties))
+            )
+            self.adjacent_piece_group_ids = self._get_adjacent_piece_group_ids(
+                self.adjacent_piece_properties
+            )
 
         ## pipeline phase 2
         # grouped pieces
@@ -109,52 +168,116 @@ class PieceMutateProcess:
             # Put back to buffered mode since the watch was called.
             pipe.multi()
 
-            # Pieces in proximity to target
-            self.pieces_in_proximity_to_target = set.intersection(
-                set(pcx_puzzle), set(pcy_puzzle)
-            )
-            # Remove immovable pieces from the pieces in proximity
-            if len(self.pieces_in_proximity_to_target) > 0:
-                immovable_pieces = set(map(int, pcfixed_puzzle))
-                self.pieces_in_proximity_to_target = self.pieces_in_proximity_to_target.difference(
-                    immovable_pieces
-                )
-            # Remove pieces own group from the pieces in proximity
-            if len(self.pieces_in_proximity_to_target) > 0:
-                grouped_pieces = set(map(int, pcg_puzzle_g))
-                self.pieces_in_proximity_to_target = self.pieces_in_proximity_to_target.difference(
-                    grouped_pieces
-                )
-            self.pieces_in_proximity_to_target.add(self.piece)
-
             # updateGroupedPiecesPositions groupedPiecesXY
-            # allOtherPiecesInPieceGroup is same as pcg_puzzle_g
-            all_other_pieces_in_piece_group = pcg_puzzle_g.copy()
-            # print(all_other_pieces_in_piece_group)
-            if len(all_other_pieces_in_piece_group) > 0:
-                # TODO: why piece is str here?
-                all_other_pieces_in_piece_group.remove(str(self.piece))
-                for grouped_piece in all_other_pieces_in_piece_group:
-                    pc_puzzle_grouped_piece_key = "pc:{puzzle}:{grouped_piece}".format(
-                        puzzle=self.puzzle, grouped_piece=grouped_piece
-                    )
-                    pipe.hmget(
-                        pc_puzzle_grouped_piece_key, ["x", "y"],
-                    )
-                    self.watched_keys.add(pc_puzzle_grouped_piece_key)
+            # pc_puzzle_grouped_pieces
+            for grouped_piece in self.all_other_pieces_in_piece_group:
+                pc_puzzle_grouped_piece_key = "pc:{puzzle}:{grouped_piece}".format(
+                    puzzle=self.puzzle, grouped_piece=grouped_piece
+                )
+                pipe.hmget(
+                    pc_puzzle_grouped_piece_key, ["x", "y", "r", "g", "s"],
+                )
+                self.watched_keys.add(pc_puzzle_grouped_piece_key)
+
+            # pcg_puzzle_piece_adjacent_group_counts
+            # for adjacent_piece_group
+            adjacent_group_list = list(set(self.adjacent_piece_group_ids.values()))
+            for adjacent_group in adjacent_group_list:
+                pcg_puzzle_adjacent_group_count_key = "pcg:{puzzle}:{g}".format(
+                    puzzle=self.puzzle, g=adjacent_group
+                )
+                pipe.scard(pcg_puzzle_adjacent_group_count_key)
 
             phase_2_response = pipe.execute()
-            (pc_puzzle_grouped_pieces,) = (
-                phase_2_response[: len(all_other_pieces_in_piece_group)],
+            (pc_puzzle_grouped_pieces, pcg_puzzle_piece_adjacent_group_counts) = (
+                phase_2_response[: len(self.all_other_pieces_in_piece_group)],
+                phase_2_response[
+                    len(self.all_other_pieces_in_piece_group) : len(
+                        self.all_other_pieces_in_piece_group
+                    )
+                    + len(adjacent_group_list)
+                ],
             )
-            # groupedPiecesXY
-            self.grouped_pieces_x_y = dict(
-                list(zip(all_other_pieces_in_piece_group, pc_puzzle_grouped_pieces))
+            self.adjacent_piece_group_counts = dict(
+                list(zip(adjacent_group_list, pcg_puzzle_piece_adjacent_group_counts))
             )
 
-        # adjacent pieces
+            # groupedPiecesXY plus g and s
+            self.grouped_piece_properties = dict(
+                list(
+                    zip(self.all_other_pieces_in_piece_group, pc_puzzle_grouped_pieces)
+                )
+            )
 
-        # Get the puzzle piece origin position
-        # (originX, originY) = list(
-        #    map(int, redis_connection.hmget(pc_puzzle_piece_key, ["x", "y"]),)
-        # )
+    def _mutate_pieces(self):
+
+        # TODO: Determine if the piece joins any other pieces
+
+        with self.redis_connection.pipeline(transaction=True) as pipe:
+            pipe.watch(*self.watched_keys)
+
+            # Raise an error if the puzzle pieces have changed since phase 1 started.
+            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key))
+            if current_puzzle_mutation_id != self.puzzle_mutation_id:
+                raise PieceMutateError
+
+            # Put back to buffered mode since the watch was called.
+            pipe.multi()
+
+            # TODO: update the piece and it's piece group
+
+            # Bump the pzm id when done mutating the puzzle on the last phase.
+            pipe.incr(self.pzm_puzzle_key)
+
+            pipe.execute()
+
+    def _get_pieces_in_proximity_to_target(
+        self, pcx_puzzle, pcy_puzzle, pcfixed_puzzle, pcg_puzzle_g
+    ):
+        "Pieces in proximity to target"
+        pieces_in_proximity_to_target = set.intersection(
+            set(pcx_puzzle), set(pcy_puzzle)
+        )
+        # Remove immovable pieces from the pieces in proximity
+        if len(pieces_in_proximity_to_target) > 0:
+            immovable_pieces = set(map(int, pcfixed_puzzle))
+            pieces_in_proximity_to_target = pieces_in_proximity_to_target.difference(
+                immovable_pieces
+            )
+        # Remove pieces own group from the pieces in proximity
+        if len(pieces_in_proximity_to_target) > 0:
+            pieces_in_proximity_to_target = pieces_in_proximity_to_target.difference(
+                pcg_puzzle_g
+            )
+        pieces_in_proximity_to_target.add(self.piece)
+        return pieces_in_proximity_to_target
+
+    def _get_adjacent_pieces_list(self, piece_properties):
+        "Get adjacent pieces list"
+        return list(
+            map(
+                int,
+                [
+                    x
+                    for x in list(piece_properties.keys())
+                    if x not in ("x", "y", "r", "w", "h", "b", "rotate", "g", "s")
+                ],
+            )
+        )
+
+    def _int_piece_properties(self, piece_properties):
+        ""
+        int_props = ("x", "y", "r", "w", "h", "rotate", "g")
+        for (k, v) in piece_properties.items():
+            if k in int_props:
+                piece_properties[k] = int(v)
+
+        return piece_properties
+
+    def _get_adjacent_piece_group_ids(self, adjacent_piece_properties):
+        "Return a dict of adjacent piece id to the group id when group id is not None."
+        adjacent_piece_group_ids = dict()
+        for (piece_id, prop) in adjacent_piece_properties.items():
+            if prop.get("g") != None:
+                adjacent_piece_group_ids[piece_id] = prop.get("g")
+        return adjacent_piece_group_ids
