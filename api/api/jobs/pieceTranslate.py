@@ -147,104 +147,6 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
         # return topic and msg mostly for testing
         return (msg, karma_change)
 
-    def savePiecePosition(puzzle, piece, x, y):
-        # Move the piece
-        redis_connection.hmset(
-            "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), {"x": x, "y": y}
-        )
-        redis_connection.zadd("pcx:{puzzle}".format(puzzle=puzzle), {piece: x})
-        redis_connection.zadd("pcy:{puzzle}".format(puzzle=puzzle), {piece: y})
-
-    def updateGroupedPiecesPositions(
-        puzzle,
-        piece,
-        pieceGroup,
-        offsetX,
-        offsetY,
-        groupedPiecesXY=None,
-        newGroup=None,
-        status=None,
-    ):
-        "Update all other pieces x,y in group to the offset, if newGroup then assign them to the newGroup"
-        # TODO: pass in the pcg:{puzzle}:{pieceGroup} members as list of dict with properties.
-        if groupedPiecesXY == None:
-            allOtherPiecesInPieceGroup = redis_connection.smembers(
-                "pcg:{puzzle}:{pieceGroup}".format(puzzle=puzzle, pieceGroup=pieceGroup)
-            )
-            allOtherPiecesInPieceGroup.remove(str(piece))
-            allOtherPiecesInPieceGroup = list(allOtherPiecesInPieceGroup)
-            pipe = redis_connection.pipeline(transaction=True)
-            grouped_piece_property_list_x_y = ["x", "y"]
-            for groupedPiece in allOtherPiecesInPieceGroup:
-                pipe.hmget(
-                    "pc:{puzzle}:{groupedPiece}".format(
-                        puzzle=puzzle, groupedPiece=groupedPiece
-                    ),
-                    grouped_piece_property_list_x_y,
-                )
-            pc_puzzle_grouped_pieces = list(
-                map(
-                    lambda x: dict(
-                        list(zip(grouped_piece_property_list_x_y, map(int, x)))
-                    ),
-                    pipe.execute(),
-                ),
-            )
-            groupedPiecesXY = dict(
-                list(zip(allOtherPiecesInPieceGroup, pc_puzzle_grouped_pieces))
-            )
-
-        pipe = redis_connection.pipeline(transaction=True)
-        lines = []
-        for groupedPiece in groupedPiecesXY.keys():
-            newX = groupedPiecesXY[groupedPiece]["x"] + offsetX
-            newY = groupedPiecesXY[groupedPiece]["y"] + offsetY
-            newPC = {"x": newX, "y": newY}
-            if newGroup != None:
-                # Remove from the old group and place in newGroup
-                newPC["g"] = newGroup
-                pipe.sadd(
-                    "pcg:{puzzle}:{g}".format(puzzle=puzzle, g=newGroup), groupedPiece
-                )
-                pipe.srem(
-                    "pcg:{puzzle}:{g}".format(puzzle=puzzle, g=pieceGroup), groupedPiece
-                )
-            if status == "1":
-                newPC["s"] = "1"
-                pipe.sadd("pcfixed:{puzzle}".format(puzzle=puzzle), groupedPiece)
-                pipe.srem("pcstacked:{puzzle}".format(puzzle=puzzle), groupedPiece)
-            pipe.hmset(
-                "pc:{puzzle}:{groupedPiece}".format(
-                    puzzle=puzzle, groupedPiece=groupedPiece
-                ),
-                newPC,
-            )
-            pipe.zadd("pcx:{puzzle}".format(puzzle=puzzle), {groupedPiece: newX})
-            pipe.zadd("pcy:{puzzle}".format(puzzle=puzzle), {groupedPiece: newY})
-            lines.append(
-                formatPieceMovementString(
-                    groupedPiece, x=newX, y=newY, g=newGroup, s=status
-                )
-            )
-        if status == "1":
-            pipe.sadd("pcfixed:{puzzle}".format(puzzle=puzzle), piece)
-            pipe.srem("pcstacked:{puzzle}".format(puzzle=puzzle), piece)
-            pipe.hset(
-                "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), "s", "1"
-            )
-        if newGroup != None:
-            # For the piece that doesn't need x,y updated remove from the old group and place in newGroup
-            pipe.sadd("pcg:{puzzle}:{g}".format(puzzle=puzzle, g=newGroup), piece)
-            pipe.srem("pcg:{puzzle}:{g}".format(puzzle=puzzle, g=pieceGroup), piece)
-            pipe.hset(
-                "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), "g", newGroup
-            )
-            lines.append(formatPieceMovementString(piece, g=newGroup))
-        pipe.execute()
-        return lines
-
-    # print('translate piece {piece} for puzzle: {puzzle_id}'.format(piece=piece, puzzle_id=puzzleData['puzzle_id']))
-
     p = ""
     points = 0
     puzzle = puzzleData["puzzle"]
@@ -268,7 +170,9 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     (originX, originY) = list(
         map(int, redis_connection.hmget(pc_puzzle_piece_key, ["x", "y"]),)
     )
-    piece_mutate_process = PieceMutateProcess(redis_connection, puzzle, piece, x, y, r)
+    piece_mutate_process = PieceMutateProcess(
+        redis_connection, puzzle, piece, x, y, r, piece_count=puzzleData.get("pieces")
+    )
     (msg, status) = piece_mutate_process.start()
 
     if status == "stacked":
@@ -279,307 +183,26 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
 
         return publishMessage(msg, karma_change,)
     elif status == "moved":
-        # TODO
-        pass
+        if (
+            len(piece_mutate_process.all_other_pieces_in_piece_group)
+            > PIECE_GROUP_MOVE_MAX_BEFORE_PENALTY
+        ):
+            if karma > MIN_KARMA:
+                redis_connection.decr(karma_key)
+            karma_change -= 1
+        return publishMessage(msg, karma_change,)
     elif status == "joined":
-        # TODO
-        pass
+        return publishMessage(msg, karma_change, points=4, complete=False,)
+
+    elif status == "completed":
+        return publishMessage(msg, karma_change, points=4, complete=True,)
     else:
         # failed?
         # TODO
         pass
 
-    piecesInProximity = piece_mutate_process.pieces_in_proximity_to_target
-
-    lines = []
-
-    p = msg
-
-    # Set Piece Properties
-    # originX, and originY are needed before calling savePiecePosition
-    savePiecePosition(puzzle, piece, x, y)
-
-    # Reset Piece Status for stacked (It's assumed that the piece being moved can't be a immovable piece)
-    redis_connection.srem("pcstacked:{puzzle}".format(puzzle=puzzle), piece)
-    redis_connection.hdel("pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), "s")
-
-    # Get Piece Properties
-    pieceProperties = redis_connection.hgetall(pc_puzzle_piece_key)
-    # print(pieceProperties)
-    p += formatPieceMovementString(piece, **pieceProperties)
-
-    # Get Adjacent Piece Properties
-    adjacentPiecesList = list(
-        map(
-            int,
-            [
-                x
-                for x in list(pieceProperties.keys())
-                if x not in ("x", "y", "r", "w", "h", "b", "rotate", "g", "s")
-            ],
-        )
-    )
-    # TODO: why transaction False?
-    pipe = redis_connection.pipeline(transaction=False)
-    for adjacentPiece in adjacentPiecesList:
-        pipe.hgetall(
-            "pc:{puzzle}:{adjacentPiece}".format(
-                puzzle=puzzle, adjacentPiece=adjacentPiece
-            )
-        )
-    adjacentPieceProperties = dict(list(zip(adjacentPiecesList, pipe.execute())))
-    # print adjacentPieceProperties
-
-    tolerance = int(old_div(100, 2))
-
-    # Check if piece is close enough to any adjacent piece
-    pieceGroup = pieceProperties.get("g", None)
-    # print 'pieceGroup = {0} {1}'.format(pieceGroup, isinstance(pieceGroup, str))
-    hasProcessedPieceGroupMovement = False
-    for adjacentPiece in adjacentPiecesList:
-        # Skip if adjacent piece in same group
-        if pieceGroup:
-            if redis_connection.sismember(
-                "pcg:{puzzle}:{pieceGroup}".format(
-                    puzzle=puzzle, pieceGroup=pieceGroup
-                ),
-                adjacentPiece,
-            ):
-                # print('Skipping since adjacent piece in same group')
-                continue
-
-        (offsetFromPieceX, offsetFromPieceY) = list(
-            map(int, pieceProperties.get(str(adjacentPiece)).split(","))
-        )
-        targetX = offsetFromPieceX + int(pieceProperties["x"])
-        targetY = offsetFromPieceY + int(pieceProperties["y"])
-        adjacentPieceProps = adjacentPieceProperties.get(adjacentPiece)
-
-        xlow = targetX - tolerance
-        xhigh = targetX + tolerance
-        # print('check proximity for x {x} > {xlow} and {x} < {xhigh}'.format(x=adjacentPieceProps['x'], xlow=xlow, xhigh=xhigh))
-
-        # Skip If the adjacent piece is not within range of the targetX and targetY
-        if not (
-            (int(adjacentPieceProps["x"]) > (targetX - tolerance))
-            and (int(adjacentPieceProps["x"]) < (targetX + tolerance))
-        ):
-            # print('{adjacentPiece} not within x range'.format(adjacentPiece=adjacentPiece))
-            continue
-
-        ylow = targetY - tolerance
-        yhigh = targetY + tolerance
-        # print('check proximity for y {y} > {ylow} and {y} < {yhigh}'.format(y=adjacentPieceProps['y'], ylow=ylow, yhigh=yhigh))
-        if not (
-            (int(adjacentPieceProps["y"]) > (targetY - tolerance))
-            and (int(adjacentPieceProps["y"]) < (targetY + tolerance))
-        ):
-            # print('{adjacentPiece} not within y range'.format(adjacentPiece=adjacentPiece))
-            continue
-
-        # print('{adjacentPiece} within range {x}, {y}'.format(adjacentPiece=adjacentPiece, x=adjacentPieceProps['x'], y=adjacentPieceProps['y']))
-
-        # The piece can be joined to the adjacent piece
-        points = 4
-        pieceProperties["x"] = int(adjacentPieceProps["x"]) - offsetFromPieceX
-        pieceProperties["y"] = int(adjacentPieceProps["y"]) - offsetFromPieceY
-
-        # Set immovable status if adjacent piece is immovable (Will save and update other grouped pieces later)
-        if adjacentPieceProps.get("s") == "1":
-            pieceProperties["s"] = "1"
-
-        savePiecePosition(puzzle, piece, x=pieceProperties["x"], y=pieceProperties["y"])
-
-        # Update Piece group
-        countOfPiecesInPieceGroup = redis_connection.scard(
-            "pcg:{puzzle}:{g}".format(puzzle=puzzle, g=pieceProperties.get("g", piece))
-        )
-        adjacentPieceGroup = adjacentPieceProps.get("g", adjacentPiece)
-        if countOfPiecesInPieceGroup == 0:
-            # Update Piece group to that of the adjacent piece since it may already be in a group
-            # print('add {piece} to adjacent pieces group {g}'.format(piece=piece, g=adjacentPieceGroup))
-            redis_connection.sadd(
-                "pcg:{puzzle}:{g}".format(puzzle=puzzle, g=adjacentPieceGroup),
-                piece,
-                adjacentPiece,
-            )
-            redis_connection.hset(
-                "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece),
-                "g",
-                adjacentPieceGroup,
-            )
-            redis_connection.hset(
-                "pc:{puzzle}:{adjacentPiece}".format(
-                    puzzle=puzzle, adjacentPiece=adjacentPiece
-                ),
-                "g",
-                adjacentPieceGroup,
-            )
-
-            # Save the piece immovable status
-            if pieceProperties.get("s") == "1":
-                redis_connection.hset(
-                    "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), "s", "1"
-                )
-                redis_connection.sadd("pcfixed:{puzzle}".format(puzzle=puzzle), piece)
-
-            pieceProperties["g"] = adjacentPieceGroup
-            p += "\n" + formatPieceMovementString(piece, **pieceProperties)
-            p += "\n" + formatPieceMovementString(adjacentPiece, g=adjacentPieceGroup)
-
-        else:
-            # Decide which group should be merged into the other
-            # print('decide group for {piece}'.format(piece=piece))
-            countOfPiecesInAdjacentPieceGroup = redis_connection.scard(
-                "pcg:{puzzle}:{g}".format(puzzle=puzzle, g=adjacentPieceGroup)
-            )
-            # print('adjacentPieceGroup count: {0}'.format(countOfPiecesInAdjacentPieceGroup))
-            # print('pieceGroup count: {0}'.format(countOfPiecesInPieceGroup))
-            if adjacentPieceProps.get("s") == "1":
-                # The adjacent piece is immovable so update all pieces that are joining to also be immovable
-                # print('updating pieces in group to be in adjacent piece group and setting them to be immovable')
-                lines = updateGroupedPiecesPositions(
-                    puzzle,
-                    piece,
-                    pieceGroup,
-                    int(pieceProperties["x"]) - originX,
-                    int(pieceProperties["y"]) - originY,
-                    newGroup=adjacentPieceGroup,
-                    status="1",
-                )
-                pieceProperties["g"] = adjacentPieceGroup
-            elif countOfPiecesInPieceGroup <= countOfPiecesInAdjacentPieceGroup:
-                # print('updating pieces in group to be in adjacent piece group')
-                lines = updateGroupedPiecesPositions(
-                    puzzle,
-                    piece,
-                    pieceGroup,
-                    int(pieceProperties["x"]) - originX,
-                    int(pieceProperties["y"]) - originY,
-                    newGroup=adjacentPieceGroup,
-                )
-                pieceProperties["g"] = adjacentPieceGroup
-
-            elif countOfPiecesInAdjacentPieceGroup == 0:
-                # The adjacent piece is not in a group
-                # print('adjacent piece not in group')
-                lines = [
-                    formatPieceMovementString(adjacentPiece, g=pieceProperties["g"])
-                ]
-
-                # Update positions except the piece since its group is not changing either
-                lines.extend(
-                    updateGroupedPiecesPositions(
-                        puzzle,
-                        piece,
-                        pieceGroup,
-                        int(pieceProperties["x"]) - originX,
-                        int(pieceProperties["y"]) - originY,
-                    )
-                )
-
-                pipe = redis_connection.pipeline(transaction=True)
-                pipe.sadd(
-                    "pcg:{puzzle}:{g}".format(puzzle=puzzle, g=pieceProperties["g"]),
-                    adjacentPiece,
-                )
-                pipe.hset(
-                    "pc:{puzzle}:{adjacentPiece}".format(
-                        puzzle=puzzle, adjacentPiece=adjacentPiece
-                    ),
-                    "g",
-                    pieceProperties["g"],
-                )
-                pipe.execute()
-            else:
-                # Adjacent group is smaller so update just the group in adjacent pieces
-                # print('updating adjacent piece group to be in moved piece group')
-                lines = []
-
-                # Update the positions of the moved group first
-                lines.extend(
-                    updateGroupedPiecesPositions(
-                        puzzle,
-                        piece,
-                        pieceGroup,
-                        int(pieceProperties["x"]) - originX,
-                        int(pieceProperties["y"]) - originY,
-                    )
-                )
-
-                # Add the adjacent pieces to the group
-                # TODO: unless the adjacent piece is immovable
-                piecesInAdjacentPieceGroup = redis_connection.smembers(
-                    "pcg:{puzzle}:{adjacentPieceGroup}".format(
-                        puzzle=puzzle, adjacentPieceGroup=adjacentPieceGroup
-                    )
-                )
-                pipe = redis_connection.pipeline(transaction=True)
-                for groupedAdjacentPiece in piecesInAdjacentPieceGroup:
-                    pipe.sadd(
-                        "pcg:{puzzle}:{g}".format(
-                            puzzle=puzzle, g=pieceProperties["g"]
-                        ),
-                        groupedAdjacentPiece,
-                    )
-                    pipe.srem(
-                        "pcg:{puzzle}:{g}".format(puzzle=puzzle, g=adjacentPieceGroup),
-                        groupedAdjacentPiece,
-                    )
-                    pipe.hset(
-                        "pc:{puzzle}:{groupedAdjacentPiece}".format(
-                            puzzle=puzzle, groupedAdjacentPiece=groupedAdjacentPiece
-                        ),
-                        "g",
-                        pieceProperties["g"],
-                    )
-                    lines.append(
-                        formatPieceMovementString(
-                            groupedAdjacentPiece, g=pieceProperties["g"]
-                        )
-                    )
-                pipe.execute()
-
-            # print lines
-            p += "\n" + "\n".join(lines)
-            p += "\n" + formatPieceMovementString(piece, **pieceProperties)
-            hasProcessedPieceGroupMovement = True
-
-        # No need to check other adjacent pieces
-        break
-
-    # Update other piece positions that are in the group if they haven't already been moved from the group merge
-    if pieceGroup != None and not hasProcessedPieceGroupMovement:
-        # Decrement karma since moving a piece that is in a group
-        pieceGroupCount = redis_connection.scard(
-            "pcg:{puzzle}:{pieceGroup}".format(puzzle=puzzle, pieceGroup=pieceGroup)
-        )
-        if pieceGroupCount > PIECE_GROUP_MOVE_MAX_BEFORE_PENALTY:
-            # print 'decr karma since moving piec in group'
-            if karma > MIN_KARMA:
-                redis_connection.decr(karma_key)
-            karma_change -= 1
-
-        lines = updateGroupedPiecesPositions(
-            puzzle,
-            piece,
-            pieceGroup,
-            int(pieceProperties["x"]) - originX,
-            int(pieceProperties["y"]) - originY,
-        )
-        p += "\n" + "\n".join(lines)
-
-    # Check if the puzzle is complete
-    complete = False
-    if pieceProperties.get("s") == "1":
-        immovableGroupCount = redis_connection.scard(
-            "pcfixed:{puzzle}".format(puzzle=puzzle)
-        )
-        if int(immovableGroupCount) == int(puzzleData.get("pieces")):
-            # print("Puzzle is complete: {0} == {1}".format(immovableGroupCount, puzzleData.get('pieces')))
-            complete = True
-
-    return publishMessage(p, karma_change, points=points, complete=complete,)
+    # TODO:
+    print("Fall through")
 
 
 if __name__ == "__main__":
