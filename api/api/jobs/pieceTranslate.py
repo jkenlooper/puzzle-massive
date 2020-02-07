@@ -32,13 +32,6 @@ MIN_KARMA = int(old_div(MAX_KARMA, 2)) * -1  # -12
 # POINTS_CAP = 15000
 
 
-class PieceGroupConflictError(Exception):
-    """
-    When some piece data from redis has changed after the process to update
-    piece groups has happened.
-    """
-
-
 def get_earned_points(pieces):
     earns = 7
     if pieces < 200:
@@ -197,12 +190,10 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     elif status == "completed":
         return publishMessage(msg, karma_change, points=4, complete=True,)
     else:
-        # failed?
-        # TODO
         pass
 
-    # TODO:
-    print("Fall through")
+    # TODO: handle failed status
+    return publishMessage(msg, karma_change,)
 
 
 if __name__ == "__main__":

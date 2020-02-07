@@ -31,6 +31,7 @@ from .constants import (
 
 # from jobs import pieceMove
 from .jobs import pieceTranslate
+from .piece_mutate import PieceMutateError
 from .user import user_id_from_ip, user_not_banned, increase_ban_time
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
@@ -753,7 +754,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                     ip, user, puzzle_piece, piece, x, y, r, karma_change,
                 )
                 break
-            except pieceTranslate.PieceGroupConflictError:
+            except PieceMutateError:
                 attemptPieceMovement = attemptPieceMovement + 1
                 time.sleep(random.randint(1, 100) / 100)
                 # Another player has moved a piece in the same group while the

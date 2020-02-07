@@ -446,31 +446,27 @@ class PieceMutateProcess:
                 lines.append(formatPieceMovementString(grouped_piece, s="1"))
 
         new_piece_group = adjacent_piece_props.get("g", self.can_join_adjacent_piece)
-        if len(self.all_other_pieces_in_piece_group) == 0:
-            # Update Piece group to that of the adjacent piece since it may already be in a group
-            pipe.sadd(
-                "pcg:{puzzle}:{g}".format(puzzle=self.puzzle, g=new_piece_group),
-                self.piece,
-                self.can_join_adjacent_piece,
-            )
-            pipe.hset(
-                self.pc_puzzle_piece_key, "g", self.can_join_adjacent_piece,
-            )
-            pipe.hset(
-                "pc:{puzzle}:{adjacent_piece}".format(
-                    puzzle=self.puzzle, adjacent_piece=self.can_join_adjacent_piece
-                ),
-                "g",
-                self.can_join_adjacent_piece,
-            )
-            lines.append(formatPieceMovementString(self.piece, g=new_piece_group))
-            lines.append(
-                formatPieceMovementString(
-                    self.can_join_adjacent_piece, g=new_piece_group
-                )
-            )
-        else:
-            # TODO: Fix bug when joining a group to the initial single immovable piece
+        # Update Piece group to that of the adjacent piece since it may already be in a group
+        pipe.sadd(
+            "pcg:{puzzle}:{g}".format(puzzle=self.puzzle, g=new_piece_group),
+            self.piece,
+            self.can_join_adjacent_piece,
+        )
+        pipe.hset(
+            self.pc_puzzle_piece_key, "g", new_piece_group,
+        )
+        pipe.hset(
+            "pc:{puzzle}:{adjacent_piece}".format(
+                puzzle=self.puzzle, adjacent_piece=self.can_join_adjacent_piece
+            ),
+            "g",
+            new_piece_group,
+        )
+        lines.append(formatPieceMovementString(self.piece, g=new_piece_group))
+        lines.append(
+            formatPieceMovementString(self.can_join_adjacent_piece, g=new_piece_group)
+        )
+        if len(self.all_other_pieces_in_piece_group) != 0:
             lines.extend(
                 self._update_grouped_pieces_positions(pipe, new_group=new_piece_group)
             )
