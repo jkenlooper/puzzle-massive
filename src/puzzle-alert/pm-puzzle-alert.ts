@@ -24,7 +24,6 @@ enum AlertStatus {
 
 interface TemplateData {
   status: AlertStatus;
-  latency: number | undefined;
   message: string | undefined;
   reason: string | undefined;
 }
@@ -48,7 +47,6 @@ customElements.define(
     private status: AlertStatus = AlertStatus.connecting;
     private message: string | undefined;
     private reason: string | undefined;
-    private latency: number | undefined;
     private puzzleAlertService: any;
     private blockedTimer: number = 0;
     private blockedTimeout: number | undefined;
@@ -94,11 +92,6 @@ customElements.define(
         this.instanceId
       );
       streamService.subscribe(
-        "puzzle/ping",
-        this.onPuzzlePing.bind(this),
-        this.instanceId
-      );
-      streamService.subscribe(
         "puzzle/ping/error",
         this.onPuzzlePingError.bind(this),
         this.instanceId
@@ -134,9 +127,6 @@ customElements.define(
             switch (action.type) {
               case "setStatusConnected":
                 this.status = AlertStatus.connected;
-                break;
-              case "updateLatency":
-                // Only need to render.
                 break;
               case "showPieceMoveBlocked":
                 this.status = AlertStatus.blocked;
@@ -186,10 +176,6 @@ customElements.define(
 
     template(data: TemplateData) {
       return html`
-        ${data.status}
-        <div>
-          latency: ${data.latency}
-        </div>
         ${data.status && data.status !== AlertStatus.connected
           ? showAlert(data.status)
           : ""}
@@ -347,7 +333,6 @@ customElements.define(
     get data(): TemplateData {
       return {
         status: this.status,
-        latency: this.latency,
         message: this.message,
         reason: this.reason,
       };
@@ -471,10 +456,6 @@ customElements.define(
           break;
       }
     }
-    onPuzzlePing(latency: number) {
-      this.latency = latency;
-      this.puzzleAlertService.send("LATENCY_UPDATED");
-    }
     onPuzzlePingError() {
       this.message = "Failed to get a response when pinging the puzzle API.";
       this.puzzleAlertService.send("PING_ERROR");
@@ -487,7 +468,6 @@ customElements.define(
         "socket/connected",
         "socket/reconnecting",
         "puzzle/status",
-        "puzzle/ping",
         "puzzle/ping/error",
       ];
       topics.forEach((topic) => {

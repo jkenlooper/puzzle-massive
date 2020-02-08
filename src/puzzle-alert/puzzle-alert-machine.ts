@@ -31,10 +31,6 @@ export const puzzleAlertMachine = createMachine({
     },
     active: {
       on: {
-        LATENCY_UPDATED: {
-          target: "active",
-          actions: ["updateLatency"],
-        },
         PIECE_MOVE_BLOCKED: {
           target: "active",
           actions: ["showPieceMoveBlocked"],
