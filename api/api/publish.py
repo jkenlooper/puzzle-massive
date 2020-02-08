@@ -13,16 +13,16 @@ from flask.views import MethodView
 from werkzeug.exceptions import HTTPException
 from flask_sse import sse
 
-from .app import db, redis_connection
-from .database import fetch_query_string, rowify
-from .tools import (
+from api.app import db, redis_connection
+from api.database import fetch_query_string, rowify
+from api.tools import (
     formatPieceMovementString,
     formatBitMovementString,
     init_karma_key,
     get_public_karma_points,
 )
 
-from .constants import (
+from api.constants import (
     ACTIVE,
     BUGGY_UNLISTED,
     POINT_COST_FOR_CHANGING_BIT,
@@ -30,9 +30,9 @@ from .constants import (
 )
 
 # from jobs import pieceMove
-from .jobs import pieceTranslate
-from .piece_mutate import PieceMutateError
-from .user import user_id_from_ip, user_not_banned, increase_ban_time
+from api.jobs import pieceTranslate
+from api.piece_mutate import PieceMutateError
+from api.user import user_id_from_ip, user_not_banned, increase_ban_time
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
@@ -687,7 +687,6 @@ class PuzzlePiecesMovePublishView(MethodView):
             )
         )
         piecesInProximity = set.intersection(proximityX, proximityY)
-        # print("{0} {1} {2}".format(len(piecesInProximity), x, y))
         if len(piecesInProximity) >= 13:
             if karma > MIN_KARMA:
                 karma = redis_connection.decr(karma_key, amount=STACK_PENALTY)
@@ -722,14 +721,12 @@ class PuzzlePiecesMovePublishView(MethodView):
         # publish just the bit movement so it matches what this player did
         msg = formatPieceMovementString(piece, x, y, r, "", "")
         if user != None:
-            # msg = msg + '\n' + formatBitMovementString(user, x, y)
             msg = formatBitMovementString(user, x, y)
         sse.publish(
             msg, type="move", channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id)
         )
 
-        # Push to queue for further processing by a single worker since mutating
-        # pieces in groups is not yet safe to do concurrently.
+        # Push to queue for further processing by a single worker.
         # job = current_app.singleworkerqueue.enqueue_call(
         #    func="api.jobs.pieceTranslate.translate",
         #    args=(
@@ -756,7 +753,8 @@ class PuzzlePiecesMovePublishView(MethodView):
                 break
             except PieceMutateError:
                 attemptPieceMovement = attemptPieceMovement + 1
-                time.sleep(random.randint(1, 100) / 100)
+                # The app isn't configured to handle this at the moment.
+                # time.sleep(random.randint(1, 100) / 100)
                 # Another player has moved a piece in the same group while the
                 # pieceTranslate was processing.
         if attemptPieceMovement >= 13:
