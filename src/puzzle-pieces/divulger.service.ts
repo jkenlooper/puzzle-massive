@@ -1,3 +1,5 @@
+/* Deprecated.  Use stream.service instead. */
+
 import { puzzleBitsService } from "../puzzle-bits/puzzle-bits.service";
 
 // proxy_read_timeout should match the config from nginx and should be greater than 10

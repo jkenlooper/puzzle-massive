@@ -59,13 +59,14 @@ systemctl stop puzzle-massive-janitor
 systemctl disable puzzle-massive-janitor
 rm -f "${SYSTEMDDIR}puzzle-massive-janitor.service";
 
-systemctl stop puzzle-massive-worker
-systemctl disable puzzle-massive-worker
-rm -f "${SYSTEMDDIR}puzzle-massive-worker.service";
-
-systemctl stop puzzle-massive-divulger
-systemctl disable puzzle-massive-divulger
-rm -f "${SYSTEMDDIR}puzzle-massive-divulger.service";
+# Skipping divulger and worker since they are not needed at the moment.
+#systemctl stop puzzle-massive-worker
+#systemctl disable puzzle-massive-worker
+#rm -f "${SYSTEMDDIR}puzzle-massive-worker.service";
+#
+#systemctl stop puzzle-massive-divulger
+#systemctl disable puzzle-massive-divulger
+#rm -f "${SYSTEMDDIR}puzzle-massive-divulger.service";
 
 systemctl stop puzzle-massive-stream
 systemctl disable puzzle-massive-stream

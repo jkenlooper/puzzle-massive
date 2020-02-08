@@ -1,5 +1,5 @@
 import userDetailsService from "../site/user-details.service";
-import { BitMovementData } from "../puzzle-pieces/divulger.service";
+import { BitMovementData } from "../puzzle-pieces/stream.service";
 
 export interface PlayerBit {
   id: number;
