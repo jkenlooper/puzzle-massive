@@ -4,6 +4,7 @@ from builtins import str
 from builtins import map
 from past.utils import old_div
 import datetime
+import sys
 import time
 import random
 import uuid
@@ -12,6 +13,7 @@ from flask import current_app, make_response, request, json, url_for, redirect
 from flask.views import MethodView
 from werkzeug.exceptions import HTTPException
 from flask_sse import sse
+from redis.exceptions import WatchError
 
 from api.app import db, redis_connection
 from api.database import fetch_query_string, rowify
@@ -751,8 +753,9 @@ class PuzzlePiecesMovePublishView(MethodView):
                     ip, user, puzzle_piece, piece, x, y, r, karma_change,
                 )
                 break
-            except PieceMutateError:
+            except (PieceMutateError, WatchError):
                 attemptPieceMovement = attemptPieceMovement + 1
+                print(sys.exc_info()[0])
                 print("piece mutate error {}".format(attemptPieceMovement))
                 time.sleep(random.randint(1, 100) / 100)
                 # The app isn't configured to handle this at the moment.
@@ -760,9 +763,10 @@ class PuzzlePiecesMovePublishView(MethodView):
                 # Another player has moved a piece in the same group while the
                 # pieceTranslate was processing.
             except:
-                print("other error")
-                time.sleep(1)
-                return make_response(encoder.encode({"msg": "boing"}), 200)
+                print("other error", sys.exc_info()[0])
+                raise
+                # time.sleep(1)
+                # return make_response(encoder.encode({"msg": "boing"}), 200)
         if attemptPieceMovement >= 13:
             err_msg = {
                 "msg": "Try again",
