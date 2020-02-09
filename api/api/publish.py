@@ -753,10 +753,16 @@ class PuzzlePiecesMovePublishView(MethodView):
                 break
             except PieceMutateError:
                 attemptPieceMovement = attemptPieceMovement + 1
+                print("piece mutate error {}".format(attemptPieceMovement))
+                time.sleep(random.randint(1, 100) / 100)
                 # The app isn't configured to handle this at the moment.
                 # time.sleep(random.randint(1, 100) / 100)
                 # Another player has moved a piece in the same group while the
                 # pieceTranslate was processing.
+            except:
+                print("other error")
+                time.sleep(1)
+                return make_response(encoder.encode({"msg": "boing"}), 200)
         if attemptPieceMovement >= 13:
             err_msg = {
                 "msg": "Try again",

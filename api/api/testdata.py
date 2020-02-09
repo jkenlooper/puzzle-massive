@@ -534,6 +534,8 @@ class PuzzlePieces:
                 headers={"Token": piece_token["token"]},
             )
             if puzzle_pieces_move:
+                if puzzle_pieces_move.get("msg") == "boing":
+                    raise Exception("boing")
                 # Reset karma:puzzle:ip redis key when it gets low
                 if puzzle_pieces_move["karma"] < 2:
                     print("resetting karma for {ip}".format(ip=self.user_session.ip))

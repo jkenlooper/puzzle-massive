@@ -81,7 +81,7 @@ class PieceMutateProcess:
             # Raise an error if the puzzle pieces have changed since phase 1 started.
             current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key) or "0")
             if current_puzzle_mutation_id != self.puzzle_mutation_id:
-                raise PieceMutateError
+                raise PieceMutateError("start pzm")
 
             # Put back to buffered mode since the watch was called.
             pipe.multi()
@@ -107,8 +107,7 @@ class PieceMutateProcess:
 
             result = pipe.execute()
             if not result:
-                # TODO:
-                status = "failed"
+                raise PieceMutateError("end conflict")
         return (msg, status)
 
     def _load_related_pieces(self):
@@ -125,7 +124,7 @@ class PieceMutateProcess:
             # Raise an error if the puzzle pieces have changed since phase 1 started.
             current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key) or "0")
             if current_puzzle_mutation_id != self.puzzle_mutation_id:
-                raise PieceMutateError
+                raise PieceMutateError("phase 1 pzm")
 
             self.piece_properties = self._int_piece_properties(
                 pipe.hgetall(self.pc_puzzle_piece_key)
@@ -178,6 +177,8 @@ class PieceMutateProcess:
             )
 
             phase_1_response = pipe.execute()
+            if not phase_1_response:
+                raise PieceMutateError("phase 1 conflict")
             (
                 pcx_puzzle,
                 pcy_puzzle,
@@ -223,7 +224,7 @@ class PieceMutateProcess:
             # Raise an error if the puzzle pieces have changed since phase 1 started.
             current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key) or "0")
             if current_puzzle_mutation_id != self.puzzle_mutation_id:
-                raise PieceMutateError
+                raise PieceMutateError("phase 2 pzm")
 
             # Put back to buffered mode since the watch was called.
             pipe.multi()
@@ -250,6 +251,10 @@ class PieceMutateProcess:
                 pipe.scard(pcg_puzzle_adjacent_group_count_key)
 
             phase_2_response = pipe.execute()
+            if (
+                len(self.all_other_pieces_in_piece_group) or len(adjacent_group_list)
+            ) and not phase_2_response:
+                raise PieceMutateError("phase 2 conflict")
             (pc_puzzle_grouped_pieces, pcg_puzzle_piece_adjacent_group_counts) = (
                 phase_2_response[: len(self.all_other_pieces_in_piece_group)],
                 phase_2_response[
