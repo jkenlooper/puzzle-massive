@@ -39,9 +39,9 @@ class PieceMutateProcess:
         self.watched_keys = set()
 
         self.pzm_puzzle_key = "pzm:{puzzle}".format(puzzle=puzzle)
-        self.puzzle_mutation_id = int(
-            self.redis_connection.get(self.pzm_puzzle_key) or "0"
-        )
+        # Bump the pzm id when preparing to mutate the puzzle.
+        self.puzzle_mutation_id = self.redis_connection.incr(self.pzm_puzzle_key)
+        self.redis_connection.expire(self.pzm_puzzle_key, 60)
         self.watched_keys.add(self.pzm_puzzle_key)
 
         self.pc_puzzle_piece_key = "pc:{puzzle}:{piece}".format(
@@ -79,7 +79,7 @@ class PieceMutateProcess:
             pipe.watch(*self.watched_keys)
 
             # Raise an error if the puzzle pieces have changed since phase 1 started.
-            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key) or "0")
+            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key))
             if current_puzzle_mutation_id != self.puzzle_mutation_id:
                 raise PieceMutateError("start pzm")
 
@@ -122,7 +122,7 @@ class PieceMutateProcess:
             pipe.watch(*self.watched_keys)
 
             # Raise an error if the puzzle pieces have changed since phase 1 started.
-            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key) or "0")
+            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key))
             if current_puzzle_mutation_id != self.puzzle_mutation_id:
                 raise PieceMutateError("phase 1 pzm")
 
@@ -222,7 +222,7 @@ class PieceMutateProcess:
             pipe.watch(*self.watched_keys)
 
             # Raise an error if the puzzle pieces have changed since phase 1 started.
-            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key) or "0")
+            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key))
             if current_puzzle_mutation_id != self.puzzle_mutation_id:
                 raise PieceMutateError("phase 2 pzm")
 
@@ -609,8 +609,6 @@ class PieceMutateProcess:
             *self.pieces_in_proximity_to_target
         )
         for piece_in_proximity in self.pieces_in_proximity_to_target:
-            # TODO: double check that the pcfixed pieces are not in the
-            # pieces_in_proximity_to_target group.
             pipe.hdel(
                 "pc:{puzzle}:{piece_in_proximity}".format(
                     puzzle=self.puzzle, piece_in_proximity=piece_in_proximity

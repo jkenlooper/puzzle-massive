@@ -513,7 +513,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         puzzle_piece = result[0]
 
         # check if piece can be moved
-        (pieceStatus, has_y) = redis_connection.hmget(
+        (piece_status, has_y) = redis_connection.hmget(
             "pc:{puzzle}:{piece}".format(puzzle=puzzle_piece["puzzle"], piece=piece),
             ["s", "y"],
         )
@@ -522,7 +522,7 @@ class PuzzlePiecesMovePublishView(MethodView):
             err_msg = {"msg": "piece not available", "type": "missing"}
             return make_response(encoder.encode(err_msg), 404)
 
-        if pieceStatus == "1":
+        if piece_status == "1":
             # immovable
             cur.close()
             err_msg = {
@@ -720,14 +720,6 @@ class PuzzlePiecesMovePublishView(MethodView):
                 karma = redis_connection.decr(karma_key)
             karma_change -= 1
 
-        # publish just the bit movement so it matches what this player did
-        msg = formatPieceMovementString(piece, x, y, r, "", "")
-        if user != None:
-            msg = formatBitMovementString(user, x, y)
-        sse.publish(
-            msg, type="move", channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id)
-        )
-
         # Push to queue for further processing by a single worker.
         # job = current_app.singleworkerqueue.enqueue_call(
         #    func="api.jobs.pieceTranslate.translate",
@@ -776,6 +768,12 @@ class PuzzlePiecesMovePublishView(MethodView):
             }
             cur.close()
             return make_response(encoder.encode(err_msg), 409)
+
+        # publish just the bit movement so it matches what this player did
+        msg = formatBitMovementString(user, x, y)
+        sse.publish(
+            msg, type="move", channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id)
+        )
 
         karma_change = False if karma_change == 0 else karma_change
 
