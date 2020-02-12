@@ -268,7 +268,8 @@ class PuzzleService {
             responseObj = JSON.parse(data.response);
           } catch (err) {
             responseObj = {
-              reason: data.response,
+              msg: "Unable to move that piece at this time.",
+              reason: data.status,
             };
           }
           if (!responseObj.timeout) {

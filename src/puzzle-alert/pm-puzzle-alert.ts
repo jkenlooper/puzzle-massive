@@ -28,10 +28,6 @@ interface TemplateData {
   reason: string | undefined;
 }
 
-// TODO: Rewrite this blocked message.
-const BLOCKED_MSG_NOT_SPECIFIED =
-  "It would seem that recent piece moves from you were flagged as unhelpful on this puzzle.";
-
 const tag = "pm-puzzle-alert";
 let lastInstanceId = 0;
 
@@ -346,7 +342,8 @@ customElements.define(
       if (data.msg) {
         this.message = data.msg;
       } else {
-        this.message = BLOCKED_MSG_NOT_SPECIFIED;
+        this.message =
+          "Your puzzle piece movements on this puzzle have been blocked. Please wait.";
       }
 
       this.reason = data.reason;
@@ -363,81 +360,35 @@ customElements.define(
         window.clearTimeout(this.blockedTimeout);
         this.blockedTimer = now + timeout;
         this.blockedTimeout = window.setTimeout(() => {
-          //this.alerts.container.classList.remove("is-active");
-          //this.alerts.blocked.classList.remove("is-active");
           this.puzzleAlertService.send("PIECE_MOVE_BLOCKED_TIMER");
         }, timeout);
       }
 
       this.puzzleAlertService.send("PIECE_MOVE_BLOCKED");
-      console.log(data);
-      // TODO: Wire up blocked message.
-      /*
-      const msgEl = this.alerts.blocked.querySelector(
-        "#puzzle-pieces-alert-blocked-msg"
-      );
-      const reasonEl = this.alerts.blocked.querySelector(
-        "#puzzle-pieces-alert-blocked-reason"
-      );
-      if (!msgEl) {
-        throw new Error(
-          `Missing child element '#puzzle-pieces-alert-blocked-msg' needed for ${tag}`
-        );
-      }
-      if (!reasonEl) {
-        throw new Error(
-          `Missing child element '#puzzle-pieces-alert-blocked-reason' needed for ${tag}`
-        );
-      }
-
-      if (data.msg) {
-        msgEl.innerHTML = data.msg;
-      } else {
-        msgEl.innerHTML = BLOCKED_MSG_NOT_SPECIFIED;
-      }
-      if (data.reason) {
-        reasonEl.innerHTML = data.reason;
-      } else {
-        reasonEl.innerHTML = "";
-      }
-      if (data.expires && typeof data.expires === "number") {
-        const expireDate = new Date(data.expires * 1000);
-        reasonEl.innerHTML =
-          reasonEl.innerHTML + ` Expires: ${expireDate.toLocaleTimeString()}`;
-      }
-
-      if (data.timeout && typeof data.timeout === "number") {
-        const now = new Date().getTime();
-        const remainingTime = Math.max(0, this.blockedTimer - now);
-        const timeout = data.timeout * 1000 + remainingTime;
-        window.clearTimeout(this.blockedTimeout);
-        this.blockedTimer = now + timeout;
-        this.blockedTimeout = window.setTimeout(() => {
-          this.alerts.container.classList.remove("is-active");
-          this.alerts.blocked.classList.remove("is-active");
-        }, timeout);
-      }
-       */
       this.render();
     }
 
     onDisconnected() {
       this.message = "";
+      this.reason = "";
       this.puzzleAlertService.send("DISCONNECTED");
     }
 
     onReconnecting(data) {
       this.message = `Reconnect attempt: ${data}`;
+      this.reason = "";
       this.puzzleAlertService.send("RECONNECTING");
     }
 
     onConnected() {
       this.message = "";
+      this.reason = "";
       this.puzzleAlertService.send("SUCCESS");
     }
 
     onPuzzleStatus(status: Status) {
-      console.log("onPuzzleStatus", status);
+      this.message = "";
+      this.reason = "";
       switch (status) {
         case Status.COMPLETED:
           this.puzzleAlertService.send("PUZZLE_COMPLETED");
@@ -458,6 +409,7 @@ customElements.define(
     }
     onPuzzlePingError() {
       this.message = "Failed to get a response when pinging the puzzle API.";
+      this.reason = "";
       this.puzzleAlertService.send("PING_ERROR");
     }
 
