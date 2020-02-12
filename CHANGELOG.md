@@ -12,7 +12,19 @@ git commit messages (`git shortlog 2.3.2..origin/develop`).
 
 ## [Unreleased] - ...
 
-New updates for the next release will be listed here.
+Cleaned up _some_ of the code around puzzle piece movements.
+
+### Changed
+
+- Switch from websockets to server-sent events for piece movement updates
+- Show puzzle outline on top layer
+- Refactor piece moving, joining, and stacked logic
+- Allow selected piece to stay selected even when the group it is in moves
+
+### Added
+
+- Show latency in bottom right of outline
+- Show message when puzzle is completed, frozen, or deleted
 
 ## [2.4.1] - 2020-01-05
 
