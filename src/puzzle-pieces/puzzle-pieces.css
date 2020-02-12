@@ -27,11 +27,14 @@
 .p--light.is-active {
 }
 
+.p.is-pending,
 .p.is-active,
 .p.is-dragging {
   transition-duration: 0s;
 }
 
+.p.is-pending,
+.pm-PuzzlePieces.show-movable .p.is-pending,
 .p.is-active,
 .pm-PuzzlePieces.show-movable .p.is-active,
 .pm-PuzzlePieces.show-movable .p.is-dragging {

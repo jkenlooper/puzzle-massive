@@ -238,7 +238,13 @@ customElements.define(
     }
 
     stopFollowing(data) {
-      if (data.id === this.draggedPieceID) {
+      // TODO: clean this up when a state machine is used. Checking the
+      // classList for is-pending is not ideal.
+      if (
+        data.id === this.draggedPieceID &&
+        this.draggedPiece &&
+        this.draggedPiece.classList.contains("is-pending")
+      ) {
         streamService.unsubscribe(
           "piece/update",
           `pieceFollow ${this.instanceId}`
@@ -404,6 +410,12 @@ customElements.define(
           $piece.classList.add("is-active");
         } else {
           $piece.classList.remove("is-active");
+        }
+        // Toggle the is-pending class
+        if (piece.pending) {
+          $piece.classList.add("is-pending");
+        } else {
+          $piece.classList.remove("is-pending");
         }
 
         // Toggle the is-up, is-down class when karma has changed

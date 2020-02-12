@@ -1,5 +1,7 @@
 import reqwest from "reqwest";
+//import { interpret } from "@xstate/fsm";
 import { streamService, PieceMovementData } from "./stream.service";
+//import { puzzlePieceMachine } from "./puzzle-piece-machine";
 
 type PieceMovementId = number;
 
@@ -32,6 +34,8 @@ interface DefaultPiece {
 export interface PieceData extends DefaultPiece {
   id: number;
   active?: boolean;
+  pending?: boolean;
+  status: string; // TODO: use when move to a state machine
   karma?: number | boolean; // response from move request
   karmaChange?: number | boolean; // response from move request
   origin?: any; // updated after piece movements
@@ -132,6 +136,12 @@ class PuzzleService {
       this.instanceId
     );
   }
+  //private handlePieceStateChange(state) {
+  //  console.log(`puzzle-piece: ${state.value}`);
+  //  if (state.matches("unknown")) {
+  //    console.log(state.context);
+  //  }
+  //}
 
   init(puzzleId) {
     this.puzzleId = puzzleId;
@@ -156,6 +166,10 @@ class PuzzleService {
           w: 1,
           h: 1,
         };
+        // TODO:
+        //puzzlePieceService = interpret(puzzlePieceMachine).start();
+        // TODO: the pm-puzzle-pieces would subscribe?
+        //puzzlePieceService.subscribe(this.handlePieceStateChange.bind(this));
         this.pieces[piece.id] = Object.assign(defaultPiece, piece);
       });
       this.piecesTimestamp = pieceData.timestamp.timestamp;
@@ -417,6 +431,11 @@ class PuzzleService {
         success: function(d) {
           self.onKarmaUpdate(d);
         },
+        complete: () => {
+          let piece = self.pieces[id];
+          piece.pending = false;
+          self._broadcast(piecesMutate, [piece]);
+        },
       });
     };
   }
@@ -449,6 +468,7 @@ class PuzzleService {
       // add the pieceID to the end of the array
       this.selectedPieces.push(pieceID);
       this.pieces[pieceID].karma = false; // TODO: why set to false?
+      // TODO: status is set to active
       this.pieces[pieceID].active = true;
       this.pieces[pieceID].origin = {
         x: this.pieces[pieceID].x,
@@ -494,6 +514,8 @@ class PuzzleService {
       let piece = this.pieces[pieceID];
       piece.x = x / scale - piece.w / 2;
       piece.y = y / scale - piece.h / 2;
+      piece.pending = true;
+      piece.active = false;
     });
 
     // Display the updates
@@ -530,11 +552,11 @@ class PuzzleService {
 
   private onPieceUpdate(data: PieceMovementData) {
     let piece = this.pieces[data.id];
-    if (piece.active) {
+    if (piece.pending) {
       this.unSelectPiece(data.id);
     }
     piece = Object.assign(piece, data);
-    piece.active = false;
+    piece.pending = false;
     this._broadcast(piecesMutate, [piece]);
   }
 
