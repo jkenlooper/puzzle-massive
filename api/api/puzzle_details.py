@@ -77,9 +77,11 @@ class PuzzleInstanceDetailsView(MethodView):
         puzzleData = result[0]
 
         if puzzleData["owner"] != user or puzzleData["is_original"]:
+            cur.close()
             abort(400)
 
         if puzzleData["status"] not in (FROZEN, ACTIVE, COMPLETED):
+            cur.close()
             abort(400)
 
         response = {}
@@ -93,6 +95,7 @@ class PuzzleInstanceDetailsView(MethodView):
             ) = self.get_delete_prereq(puzzleData)
             if not can_delete:
                 response = {"msg": delete_disabled_message}
+                cur.close()
                 return make_response(encoder.encode(response), 400)
 
             if delete_penalty > 0:
@@ -292,6 +295,7 @@ class PuzzleOriginalDetailsView(MethodView):
         puzzleData = result[0]
 
         if not puzzleData["is_original"]:
+            cur.close()
             abort(400)
 
         response = {}

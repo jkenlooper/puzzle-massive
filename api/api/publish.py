@@ -229,6 +229,7 @@ class PuzzlePieceTokenView(MethodView):
                     err_msg[
                         "reason"
                     ] = "Concurrent piece movements on this puzzle from the same player are not allowed."
+                    cur.close()
                     return make_response(encoder.encode(err_msg), 429)
 
                 else:
@@ -259,7 +260,7 @@ class PuzzlePieceTokenView(MethodView):
                                 "msg": "Create a new player?",
                                 "url": "/newapi{}".format(url_for("split-player")),
                             }
-                        cur.close()
+                    cur.close()
                     return make_response(encoder.encode(err_msg), 409)
 
         piece_token_queue_key = get_puzzle_piece_token_queue_key(puzzle, piece)
@@ -442,13 +443,13 @@ class PuzzlePiecesMovePublishView(MethodView):
         ).fetchall()
         if not result:
             # 404 if puzzle does not exist
-            cur.close()
             err_msg = {
                 "msg": "Puzzle does not exist",
                 "type": "missing",
                 "expires": now + 5,
                 "timeout": 5,
             }
+            cur.close()
             return make_response(encoder.encode(err_msg), 404)
         (result, col_names) = rowify(result, cur.description)
         puzzle = result[0]["puzzle"]
@@ -457,13 +458,13 @@ class PuzzlePiecesMovePublishView(MethodView):
         # validate the token
         token = request.headers.get("Token")
         if not token:
-            cur.close()
             err_msg = {
                 "msg": "Missing token",
                 "type": "missing",
                 "expires": now + 5,
                 "timeout": 5,
             }
+            cur.close()
             return make_response(encoder.encode(err_msg), 400)
         puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
         # print("token key: {}".format(puzzle_piece_token_key))
@@ -505,8 +506,8 @@ class PuzzlePiecesMovePublishView(MethodView):
         ).fetchall()
         if not result:
             # 404 if puzzle or piece does not exist
-            cur.close()
             err_msg = {"msg": "puzzle not available", "type": "missing"}
+            cur.close()
             return make_response(encoder.encode(err_msg), 404)
 
         (result, col_names) = rowify(result, cur.description)
@@ -518,39 +519,39 @@ class PuzzlePiecesMovePublishView(MethodView):
             ["s", "y"],
         )
         if has_y == None:
-            cur.close()
             err_msg = {"msg": "piece not available", "type": "missing"}
+            cur.close()
             return make_response(encoder.encode(err_msg), 404)
 
         if piece_status == "1":
             # immovable
-            cur.close()
             err_msg = {
                 "msg": "piece can't be moved",
                 "type": "immovable",
                 "expires": now + 5,
                 "timeout": 5,
             }
+            cur.close()
             return make_response(encoder.encode(err_msg), 400)
 
         # check if piece will be moved to within boundaries
         if x and (x < 0 or x > puzzle_piece["table_width"]):
-            cur.close()
             err_msg = {
                 "msg": "Piece movement out of bounds",
                 "type": "invalidpiecemove",
                 "expires": now + 5,
                 "timeout": 5,
             }
+            cur.close()
             return make_response(encoder.encode(err_msg), 400)
         if y and (y < 0 or y > puzzle_piece["table_height"]):
-            cur.close()
             err_msg = {
                 "msg": "Piece movement out of bounds",
                 "type": "invalidpiecemove",
                 "expires": now + 5,
                 "timeout": 5,
             }
+            cur.close()
             return make_response(encoder.encode(err_msg), 400)
 
         puzzle = puzzle_piece["puzzle"]

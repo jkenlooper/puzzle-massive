@@ -100,6 +100,7 @@ def generate_new_puzzle_id(name):
         hashlib.sha224(bytes("%s%s" % (name, d), "utf-8")).hexdigest()[0:9],
     )
     cur.close()
+    db.commit()
     return puzzle_id
 
 

@@ -62,9 +62,10 @@ class PlayerEmailRegisterView(MethodView):
         ).fetchall()
         if not result:
             # This shouldn't happen if user-has-player-account.sql
-            cur.close()
             response["message"] = "No player account."
             response["name"] = "error"
+            cur.close()
+            db.commit()
             return make_response(json.jsonify(response), 400)
         (result, col_names) = rowify(result, cur.description)
         existing_player_data = result[0]
@@ -103,6 +104,8 @@ class PlayerEmailRegisterView(MethodView):
                         "message"
                     ] = "A player has already registered this e-mail address."
                     response["name"] = "error"
+                    cur.close()
+                    db.commit()
                     return make_response(json.jsonify(response), 400)
 
                 if existing_player_data["is_verifying_email"]:
@@ -110,6 +113,8 @@ class PlayerEmailRegisterView(MethodView):
                         "message"
                     ] = "An e-mail address is already in the process of verification for this player.  Please wait."
                     response["name"] = "error"
+                    cur.close()
+                    db.commit()
                     return make_response(json.jsonify(response), 400)
 
                 cur.execute(

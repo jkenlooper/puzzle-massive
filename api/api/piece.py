@@ -28,11 +28,14 @@ class PuzzlePieceView(MethodView):
         ).fetchall()
         if not result:
             # 404 if puzzle or piece does not exist
+            cur.close()
+            db.commit()
             abort(404)
 
         (result, col_names) = rowify(result, cur.description)
         puzzle = result[0].get("puzzle")
         cur.close()
+        db.commit()
 
         # Only allow if there is data in redis
         if not redis_connection.zscore("pcupdates", puzzle):

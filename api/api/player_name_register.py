@@ -115,6 +115,7 @@ class PlayerNameRegisterView(MethodView):
             response["message"] = "Not enough points to change name."
             response["name"] = "error"
             cur.close()
+            db.commit()
             return make_response(json.jsonify(response), 400)
         else:
             if name == "":

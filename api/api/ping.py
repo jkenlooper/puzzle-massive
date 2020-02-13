@@ -56,6 +56,8 @@ class PingPuzzleView(MethodView):
         if not result:
             response["message"] = "Invalid puzzle id."
             response["name"] = "error"
+            cur.close()
+            db.commit()
             return make_response(json.jsonify(response), 400)
         else:
             (result, col_names) = rowify(result, cur.description)
@@ -64,6 +66,8 @@ class PingPuzzleView(MethodView):
             if status != ACTIVE:
                 response["message"] = "Puzzle not active"
                 response["name"] = "invalid"
+                cur.close()
+                db.commit()
                 return make_response(json.jsonify(response), 200)
 
         # publish to the puzzle channel the ping with the user id.  This will
@@ -81,6 +85,8 @@ class PingPuzzleView(MethodView):
         response["message"] = "ping accepted"
         response["name"] = "accepted"
         response = make_response(json.jsonify(response), 202)
+        cur.close()
+        db.commit()
         return response
 
     def patch(self, puzzle_id):
@@ -121,6 +127,8 @@ class PingPuzzleView(MethodView):
         if not result:
             response["message"] = "Invalid puzzle id."
             response["name"] = "error"
+            cur.close()
+            db.commit()
             return make_response(json.jsonify(response), 400)
         else:
             (result, col_names) = rowify(result, cur.description)
@@ -129,6 +137,8 @@ class PingPuzzleView(MethodView):
             if status != ACTIVE:
                 response["message"] = "Puzzle not active"
                 response["name"] = "invalid"
+                cur.close()
+                db.commit()
                 return make_response(json.jsonify(response), 200)
 
         # Determine latency for the player and record timestamp in sorted set.

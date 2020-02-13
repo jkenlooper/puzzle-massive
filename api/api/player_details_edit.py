@@ -53,6 +53,7 @@ class AdminPlayerDetailsEditView(MethodView):
                 fetch_query_string("init-player-account-for-user.sql"),
                 {"player_id": player},
             )
+            db.commit()
 
         result = cur.execute(
             fetch_query_string("select-admin-player-details-for-player-id.sql"),
@@ -60,6 +61,7 @@ class AdminPlayerDetailsEditView(MethodView):
         ).fetchall()
         if not result:
             cur.close()
+            db.commit()
             abort(400)
         (result, col_names) = rowify(result, cur.description)
         existing_player_data = result[0]

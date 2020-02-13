@@ -43,6 +43,7 @@ def archive_and_clear(puzzle, db, redis_connection, archive_directory):
     ).fetchall()
     if not result:
         # No timeline?
+        cur.close()
         return
 
     (result, col_names) = rowify(result, cur.description)

@@ -72,6 +72,8 @@ class PuzzlePiecesView(MethodView):
         ).fetchall()
         if not result:
             # 404 if puzzle or piece does not exist
+            cur.close()
+            db.commit()
             abort(404)
 
         (result, col_names) = rowify(result, cur.description)
@@ -104,9 +106,12 @@ class PuzzlePiecesView(MethodView):
             # For now just convert as it doesn't take long
             convert(puzzle)
 
-        query = """select id from Piece where (puzzle = :puzzle)"""
         (all_pieces, col_names) = rowify(
-            cur.execute(query, {"puzzle": puzzle}).fetchall(), cur.description
+            cur.execute(
+                fetch_query_string("select-id-from-piece-for-puzzle.sql"),
+                {"puzzle": puzzle},
+            ).fetchall(),
+            cur.description,
         )
 
         # Create a pipe for buffering commands and disable atomic transactions

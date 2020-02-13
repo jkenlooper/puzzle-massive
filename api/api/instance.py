@@ -78,6 +78,8 @@ class CreatePuzzleInstanceView(MethodView):
         ).fetchone()[0]
         userHasAvailablePuzzleInstanceSlot = bool(result)
         if not userHasAvailablePuzzleInstanceSlot:
+            cur.close()
+            db.commit()
             abort(400)
 
         # Check if puzzle is valid to be a new puzzle instance
@@ -97,6 +99,8 @@ class CreatePuzzleInstanceView(MethodView):
         ).fetchall()
         if not result:
             # Puzzle does not exist or is not a valid puzzle to create instance from.
+            cur.close()
+            db.commit()
             abort(400)
 
         (result, col_names) = rowify(result, cur.description)
@@ -121,37 +125,18 @@ class CreatePuzzleInstanceView(MethodView):
             "permission": permission,
         }
         cur.execute(
-            """insert into Puzzle (
-        puzzle_id,
-        pieces,
-        name,
-        link,
-        description,
-        bg_color,
-        owner,
-        queue,
-        status,
-        permission) values
-        (:puzzle_id,
-        :pieces,
-        :name,
-        :link,
-        :description,
-        :bg_color,
-        :owner,
-        :queue,
-        :status,
-        :permission);
-        """,
-            d,
+            fetch_query_string("insert_puzzle.sql"), d,
         )
         db.commit()
 
+        # TODO:
         result = cur.execute(
-            "select * from Puzzle where puzzle_id = :puzzle_id;",
+            fetch_query_string("select-all-from-puzzle-by-puzzle_id.sql"),
             {"puzzle_id": puzzle_id},
         ).fetchall()
         if not result:
+            cur.close()
+            db.commit()
             abort(500)
 
         (result, col_names) = rowify(result, cur.description)

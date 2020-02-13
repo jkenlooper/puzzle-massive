@@ -24,24 +24,6 @@ LITTLE_MORE_THAN_A_DAY = (60 * 60 * 24) + random.randint(3023, 3600 * 14)
 MAX_BAN_TIME = LITTLE_LESS_THAN_A_WEEK
 HONEY_POT_BAN_TIME = LITTLE_MORE_THAN_A_DAY
 
-# after 14 days reset the expiration date of the cookie by setting will_expire_cookie
-# In select-user-details.sql the will_expire_cookie is set when it is within 7 days of expire date.
-# --strftime('%s', u.cookie_expires) <= strftime('%s', 'now', '+7 days') as will_expire_cookie,
-# The actual cookie expire date is set for 365 days and is extended every 7 days.
-EXTEND_COOKIE_QUERY = """
-update User set cookie_expires = strftime('%Y-%m-%d', 'now', '+14 days') where id = :id;
-"""
-
-QUERY_SET_PASSWORD = """update User set password = :password where id = :id"""
-QUERY_USER_LOGIN = """select login from User where id = :id"""
-
-QUERY_USER_ID_BY_IP = """
-select id from User where ip = :ip and password isnull limit 1;
-"""
-QUERY_USER_ID_BY_LOGIN = """
-select id from User where ip = :ip and login = :login;
-"""
-
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
 
@@ -76,8 +58,10 @@ def user_id_from_ip(ip, skip_generate=True):
     if shareduser != None:
         # Check if this shareduser is still valid and another user hasn't chosen
         # a bit icon.
-        query = """select * from User where password is null and id = :shareduser;"""
-        result = cur.execute(query, {"shareduser": shareduser}).fetchall()
+        result = cur.execute(
+            fetch_query_string("select-user-by-id-and-no-password.sql"),
+            {"id": shareduser},
+        ).fetchall()
         if result:
             cur.close()
             return int(shareduser)
@@ -85,23 +69,26 @@ def user_id_from_ip(ip, skip_generate=True):
     # Handle players that had a cookie in their browser, but then deleted it.
     # Or new players that are from the same ip that existing players are on.
     # These players are shown the new-player page.
-    result = cur.execute(QUERY_USER_ID_BY_IP, {"ip": ip}).fetchall()
+    result = cur.execute(
+        fetch_query_string("select-user-id-by-ip-and-no-password.sql"), {"ip": ip}
+    ).fetchall()
     user_id = ANONYMOUS_USER_ID
 
     # No ip in db so create it except if the skip_generate flag is set
     if not result:
         if skip_generate:
+            cur.close()
             return None
         login = generate_user_login()
-        query = """insert into User (points, score, login, m_date, ip) values
-                (:points, 0, :login, datetime('now'), :ip)"""
         cur.execute(
-            query, {"ip": ip, "login": login, "points": NEW_USER_STARTING_POINTS}
+            fetch_query_string("add-new-user-for-ip.sql"),
+            {"ip": ip, "login": login, "points": NEW_USER_STARTING_POINTS},
         )
         db.commit()
 
         result = cur.execute(
-            QUERY_USER_ID_BY_LOGIN, {"ip": ip, "login": login}
+            fetch_query_string("select-user-id-by-ip-and-login.sql"),
+            {"ip": ip, "login": login},
         ).fetchall()
         (result, col_names) = rowify(result, cur.description)
         user_id = result[0]["id"]
@@ -182,8 +169,10 @@ class CurrentUserIDView(MethodView):
             if shareduser:
                 shareduser = int(shareduser)
                 cur = db.cursor()
-                query = """select * from User where password is not null and id = :shareduser;"""
-                result = cur.execute(query, {"shareduser": shareduser}).fetchall()
+                result = cur.execute(
+                    fetch_query_string("select-user-by-id-and-has-password.sql"),
+                    {"id": shareduser},
+                ).fetchall()
                 if result:
                     user_has_password = True
                 cur.close()
@@ -225,18 +214,25 @@ class GenerateAnonymousLogin(MethodView):
         # Store encrypted password in db
         cur = db.cursor()
         try:
-            result = cur.execute(QUERY_USER_LOGIN, {"id": user}).fetchall()
+            result = cur.execute(
+                fetch_query_string("select-login-from-user.sql"), {"id": user}
+            ).fetchall()
         except IndexError:
             # user may have been added after a db rollback
+            cur.close()
             return make_response("no user", 404)
 
         if not result:
+            cur.close()
             return make_response("no user", 404)
 
         (result, col_names) = rowify(result, cur.description)
         user_data = result[0]
 
-        cur.execute(QUERY_SET_PASSWORD, {"id": user, "password": password})
+        cur.execute(
+            fetch_query_string("update-password-for-user.sql"),
+            {"id": user, "password": password},
+        )
         db.commit()
 
         cur.close()
@@ -272,9 +268,9 @@ class GenerateAnonymousLoginByToken(MethodView):
         ).fetchall()
         (result, col_names) = rowify(result, cur.description)
         if not result or not result[0]:
-            cur.close()
             data["message"] = "This token is no longer valid"
             data["name"] = "error"
+            cur.close()
             return make_response(json.jsonify(data), 400)
 
         user_data = result[0]
@@ -282,24 +278,29 @@ class GenerateAnonymousLoginByToken(MethodView):
 
         # Store encrypted password in db
         try:
-            result = cur.execute(QUERY_USER_LOGIN, {"id": user}).fetchall()
+            result = cur.execute(
+                fetch_query_string("select-login-from-user.sql"), {"id": user}
+            ).fetchall()
         except IndexError:
-            cur.close()
             # user may have been added after a db rollback
             data["message"] = "No user found."
             data["name"] = "error"
+            cur.close()
             return make_response(json.jsonify(data), 400)
 
         if not result:
-            cur.close()
             data["message"] = "No user found."
             data["name"] = "error"
+            cur.close()
             return make_response(json.jsonify(data), 400)
 
         (result, col_names) = rowify(result, cur.description)
         user_data = result[0]
 
-        cur.execute(QUERY_SET_PASSWORD, {"id": user, "password": password})
+        cur.execute(
+            fetch_query_string("update-password-for-user.sql"),
+            {"id": user, "password": password},
+        )
 
         # null out the reset login token
         cur.execute(
@@ -325,16 +326,18 @@ class UserLoginView(MethodView):
 
     def get(self, anonymous_login):
         "Set the user cookie if correct anon bit link."
-        user = anonymous_login[:13]
+        login = anonymous_login[:13]
         password = anonymous_login[13:]
         cur = db.cursor()
 
         response = make_response(redirect("/"))
 
-        query = """select * from User where login = :user"""
-        result = cur.execute(query, {"user": user}).fetchall()
+        result = cur.execute(
+            fetch_query_string("select-user-by-login.sql"), {"login": login}
+        ).fetchall()
 
         if not result:
+            cur.close()
             return make_response("no user", 404)
 
         (result, col_names) = rowify(result, cur.description)
@@ -346,7 +349,10 @@ class UserLoginView(MethodView):
             current_app.secure_cookie.set(
                 u"user", str(user_data["id"]), response, expires_days=365
             )
-            cur.execute(EXTEND_COOKIE_QUERY, {"id": user_data["id"]})
+            cur.execute(
+                fetch_query_string("extend-cookie_expires-for-user.sql"),
+                {"id": user_data["id"]},
+            )
             db.commit()
         else:
             # Invalid anon login; delete cookie just in case it's there
@@ -379,6 +385,11 @@ class UserDetailsView(MethodView):
     """
     """
 
+    # after 14 days reset the expiration date of the cookie by setting will_expire_cookie
+    # In select-user-details.sql the will_expire_cookie is set when it is within 7 days of expire date.
+    # --strftime('%s', u.cookie_expires) <= strftime('%s', 'now', '+7 days') as will_expire_cookie,
+    # The actual cookie expire date is set for 365 days and is extended every 7 days.
+
     decorators = [user_not_banned]
 
     def get(self):
@@ -396,9 +407,11 @@ class UserDetailsView(MethodView):
             ).fetchall()
         except IndexError:
             # user may have been added after a db rollback
+            cur.close()
             return make_response("no user", 404)
 
         if not result:
+            cur.close()
             return make_response("no user", 404)
 
         (result, col_names) = rowify(result, cur.description)
@@ -408,7 +421,10 @@ class UserDetailsView(MethodView):
         extend_cookie = False
         if user_details["will_expire_cookie"] != 0:
             extend_cookie = True
-            cur.execute(EXTEND_COOKIE_QUERY, {"id": user_details["id"]})
+            cur.execute(
+                fetch_query_string("extend-cookie_expires-for-user.sql"),
+                {"id": user_details["id"]},
+            )
             db.commit()
         del user_details["will_expire_cookie"]
 
@@ -444,6 +460,7 @@ class UserDetailsView(MethodView):
                     if puzzle_id:
                         front_url = "/chill/site/front/{}/".format(puzzle_id)
 
+                    cur.close()
                     return {
                         "front_url": front_url,
                         "src": puzzle_instance.get("src"),
@@ -457,11 +474,10 @@ class UserDetailsView(MethodView):
         # Check if shareduser can claim bit icon as user
         if current_app.secure_cookie.get(u"shareduser"):
             result = cur.execute(
-                "select points from User where id = :id and points >= :startpoints + :cost;",
+                fetch_query_string("select-minimum-points-for-user.sql"),
                 {
-                    "id": user,
-                    "cost": POINT_COST_FOR_CHANGING_BIT,
-                    "startpoints": NEW_USER_STARTING_POINTS,
+                    "user": user,
+                    "points": NEW_USER_STARTING_POINTS + POINT_COST_FOR_CHANGING_BIT,
                 },
             ).fetchone()
             if result:
@@ -522,18 +538,18 @@ class SplitPlayer(MethodView):
         # Update user points for changing bit icon
         # TODO: what prevents a player from creating a lot of splits?
         result = cur.execute(
-            "select points from User where id = :id and points >= :cost + :startpoints;",
+            fetch_query_string("select-minimum-points-for-user.sql"),
             {
-                "id": user,
-                "cost": POINT_COST_FOR_CHANGING_BIT,
-                "startpoints": NEW_USER_STARTING_POINTS,
+                "user": user,
+                "points": NEW_USER_STARTING_POINTS + POINT_COST_FOR_CHANGING_BIT,
             },
         ).fetchone()
         if not result:
+            cur.close()
             return make_response("not enough dots", 400)
         cur.execute(
-            "update User set points = points - :cost where id = :id;",
-            {"id": user, "cost": POINT_COST_FOR_CHANGING_BIT},
+            fetch_query_string("decrease-user-points.sql"),
+            {"user": user, "points": POINT_COST_FOR_CHANGING_BIT},
         )
 
         # Create new user
@@ -541,13 +557,8 @@ class SplitPlayer(MethodView):
         login = generate_user_login()
         (p_string, password) = generate_password()
 
-        query = """
-        insert into User
-        (password, m_date, cookie_expires, points, score, login, ip) values
-        (:password, datetime('now'), strftime('%Y-%m-%d', 'now', '+14 days'), :points, 0, :login, :ip);
-        """
         cur.execute(
-            query,
+            fetch_query_string("add-new-user.sql"),
             {
                 "password": password,
                 "ip": ip,
@@ -555,9 +566,11 @@ class SplitPlayer(MethodView):
                 "login": login,
             },
         )
+        db.commit()
 
         result = cur.execute(
-            QUERY_USER_ID_BY_LOGIN, {"ip": ip, "login": login}
+            fetch_query_string("select-user-id-by-ip-and-login.sql"),
+            {"ip": ip, "login": login},
         ).fetchall()
         (result, col_names) = rowify(result, cur.description)
         newuser = result[0]["id"]
@@ -629,11 +642,11 @@ class ClaimUserByTokenView(MethodView):
             fetch_query_string("user-has-player-account.sql"), {"player_id": user}
         ).fetchone()
         if not result or result[0] == 0:
-            cur.close()
             data[
                 "message"
             ] = "No player account for this user.  Please use the same web browser that was used when submitting the e-mail address."
             data["name"] = "error"
+            cur.close()
             return make_response(json.jsonify(data), 400)
 
         result = cur.execute(
@@ -641,23 +654,23 @@ class ClaimUserByTokenView(MethodView):
             {"player_id": user},
         ).fetchall()
         if not result:
-            cur.close()
             data["message"] = "No player account."
             data["name"] = "error"
+            cur.close()
             return make_response(json.jsonify(data), 400)
         (result, col_names) = rowify(result, cur.description)
         existing_player_data = result[0]
 
         if existing_player_data["email_verify_token"] != token:
-            cur.close()
             data["message"] = "Invalid token for this player."
             data["name"] = "error"
+            cur.close()
             return make_response(json.jsonify(data), 400)
 
         if existing_player_data["is_verifying_email"] == 0:
-            cur.close()
             data["message"] = "Token for this player is no longer valid."
             data["name"] = "error"
+            cur.close()
             return make_response(json.jsonify(data), 400)
 
         # Token is valid
@@ -668,15 +681,8 @@ class ClaimUserByTokenView(MethodView):
         # Update password when shareduser to convert to regular user.
         if is_shareduser:
             (p_string, password) = generate_password()
-            query = """
-            update User set
-            password = :password,
-            m_date = datetime('now'),
-            cookie_expires = strftime('%Y-%m-%d', 'now', '+14 days')
-            where ip = :ip and id = :id and password isnull;
-            """
             cur.execute(
-                query,
+                fetch_query_string("update-user-from-shareduser.sql"),
                 {
                     "id": user,
                     "password": password,

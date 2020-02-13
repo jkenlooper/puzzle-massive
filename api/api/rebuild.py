@@ -60,6 +60,7 @@ class PuzzlePiecesRebuildView(MethodView):
         if not result:
             # Puzzle does not exist or is not completed status.
             # Reload the page as the status may have been changed.
+            cur.close()
             return redirect(
                 "/chill/site/puzzle/{puzzle_id}/".format(puzzle_id=puzzle_id)
             )
@@ -73,6 +74,7 @@ class PuzzlePiecesRebuildView(MethodView):
             {"user": user, "puzzle": puzzle, "pieces": pieces},
         ).fetchall()
         if not userCanRebuildPuzzle:
+            cur.close()
             abort(400)
 
         original_puzzle_id = puzzleData["original_puzzle_id"]
@@ -128,12 +130,10 @@ class PuzzlePiecesRebuildView(MethodView):
         db.commit()
 
         # Delete any piece data from redis since it is no longer needed.
-        query_select_all_pieces_for_puzzle = (
-            """select * from Piece where (puzzle = :puzzle)"""
-        )
         (all_pieces, col_names) = rowify(
             cur.execute(
-                query_select_all_pieces_for_puzzle, {"puzzle": puzzle}
+                fetch_query_string("select-all-from-puzzle-by-puzzle.sql"),
+                {"puzzle": puzzle},
             ).fetchall(),
             cur.description,
         )

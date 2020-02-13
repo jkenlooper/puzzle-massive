@@ -250,6 +250,7 @@ class UpdatePlayer(Task):
             )
 
             user = redis_connection.spop("batchuser")
+            db.commit()
 
         if self.first_run:
             result = cur.execute(
@@ -325,11 +326,13 @@ class UpdatePuzzleStats(Task):
                             "timestamp": timestamp,
                         },
                     )
+                    db.commit()
             puzzle = redis_connection.spop("batchpuzzle")
 
         if self.first_run:
             cur.execute(read_query_file("create_timeline_puzzle_index.sql"))
             cur.execute(read_query_file("create_timeline_timestamp_index.sql"))
+            db.commit()
             result = cur.execute(
                 read_query_file("get_list_of_puzzles_in_timeline.sql")
             ).fetchall()
@@ -376,6 +379,7 @@ class UpdatePuzzleQueue(Task):
 
         cur = db.cursor()
         cur.execute(read_query_file("retire-inactive-puzzles-to-queue.sql"))
+        db.commit()
         # select all ACTIVE puzzles within each skill range
         skill_range_active_count = 2
         for (low, high) in SKILL_LEVEL_RANGES:
@@ -397,6 +401,7 @@ class UpdatePuzzleQueue(Task):
                         "active_count": skill_range_active_count,
                     },
                 )
+                db.commit()
 
         cur.close()
         db.commit()

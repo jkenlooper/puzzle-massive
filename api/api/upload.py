@@ -42,6 +42,7 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
     unsplash_match = re.search(r"^(http://|https://)?unsplash.com/photos/([^/]+)", link)
     if link and unsplash_match:
         if not current_app.config.get("UNSPLASH_APPLICATION_ID"):
+            cur.close()
             abort(400)
 
         d = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
@@ -114,6 +115,7 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
         except subprocess.CalledProcessError:
             os.unlink(upload_file_path)
             os.rmdir(puzzle_dir)
+            cur.close()
             abort(400)
         os.unlink(upload_file_path)
 
@@ -132,47 +134,21 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
         "permission": permission,
     }
     cur.execute(
-        """insert into Puzzle (
-    puzzle_id,
-    pieces,
-    name,
-    link,
-    description,
-    bg_color,
-    owner,
-    queue,
-    status,
-    permission) values
-    (:puzzle_id,
-    :pieces,
-    :name,
-    :link,
-    :description,
-    :bg_color,
-    :owner,
-    :queue,
-    :status,
-    :permission);
-    """,
-        d,
+        fetch_query_string("insert_puzzle.sql"), d,
     )
     db.commit()
 
     puzzle = rowify(
         cur.execute(
-            "select id from Puzzle where puzzle_id = :puzzle_id;",
+            fetch_query_string("select_puzzle_id_by_puzzle_id.sql"),
             {"puzzle_id": puzzle_id},
         ).fetchall(),
         cur.description,
     )[0][0]
-    print(puzzle)
-    puzzle = puzzle["id"]
+    puzzle = puzzle["puzzle"]
 
-    insert_file = (
-        "insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);"
-    )
     cur.execute(
-        insert_file,
+        fetch_query_string("add-puzzle-file.sql"),
         {
             "puzzle": puzzle,
             "name": "original",
@@ -182,11 +158,8 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
         },
     )
 
-    insert_file = (
-        "insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);"
-    )
     cur.execute(
-        insert_file,
+        fetch_query_string("add-puzzle-file.sql"),
         {
             "puzzle": puzzle,
             "name": "preview_full",
@@ -310,6 +283,7 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
             {"puzzle_id": puzzle_id},
         ).fetchone()
         if not result:
+            cur.close()
             abort(400)
         owner = result[0]
 
@@ -375,24 +349,19 @@ class UnsplashPuzzleThread(threading.Thread):
         f.write(r.content)
         f.close()
 
-        d = {"puzzle_id": self.puzzle_id, "link": None, "description": description}
         cur.execute(
-            """update Puzzle set
-        link = :link,
-        description = :description
-        where puzzle_id = :puzzle_id;
-        """,
-            d,
+            read_query_file("update-puzzle-link-description-for-puzzle_id.sql"),
+            {"puzzle_id": self.puzzle_id, "link": None, "description": description},
         )
         db.commit()
 
         puzzle = rowify(
             cur.execute(
-                "select id from Puzzle where puzzle_id = :puzzle_id;",
+                read_query_file("select_puzzle_id_by_puzzle_id.sql"),
                 {"puzzle_id": self.puzzle_id},
             ).fetchall(),
             cur.description,
-        )[0][0]["id"]
+        )[0][0]["puzzle"]
 
         # Set preview full url and fallback to small
         preview_full_url = data.get("urls", {}).get(
@@ -401,13 +370,9 @@ class UnsplashPuzzleThread(threading.Thread):
         # Use the max version to keep the image ratio and not crop it.
         preview_full_url = re.sub("fit=crop", "fit=max", preview_full_url)
 
-        insert_attribution_unsplash_photo = read_query_file(
-            "insert_attribution_unsplash_photo.sql"
-        )
-
         # Not using url_fix on the user.links.html since it garbles the '@'.
         result = cur.execute(
-            insert_attribution_unsplash_photo,
+            read_query_file("insert_attribution_unsplash_photo.sql"),
             {
                 "title": "Photo",
                 "author_link": "{user_link}?utm_source={application_name}&utm_medium=referral".format(
@@ -424,9 +389,8 @@ class UnsplashPuzzleThread(threading.Thread):
 
         attribution_id = result.lastrowid
 
-        insert_file = "update PuzzleFile set url = :url, attribution = :attribution where puzzle = :puzzle and name = :name;"
         cur.execute(
-            insert_file,
+            read_query_file("update-puzzle_file-url-attribution-for-puzzle.sql"),
             {
                 "puzzle": puzzle,
                 "attribution": attribution_id,

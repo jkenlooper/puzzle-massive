@@ -60,6 +60,7 @@ class ChooseBitView(MethodView):
             )
 
         cur.close()
+        db.commit()
         return response
 
 
@@ -95,6 +96,7 @@ class ClaimBitView(MethodView):
         ).fetchone()
         if not result:
             cur.close()
+            db.commit()
             data["message"] = "That bit icon is no longer available."
             data["name"] = "error"
             return make_response(json.jsonify(data), 400)
@@ -105,6 +107,8 @@ class ClaimBitView(MethodView):
             if user == None:
                 data["message"] = "Not logged in."
                 data["name"] = "error"
+                cur.close()
+                db.commit()
                 return make_response(json.jsonify(data), 400)
             user = int(user)
 
@@ -146,15 +150,8 @@ class ClaimUserView(MethodView):
         login = generate_user_login()
         (p_string, password) = generate_password()
 
-        query = """
-        update User set
-        password = :password,
-        m_date = datetime('now'),
-        cookie_expires = strftime('%Y-%m-%d', 'now', '+14 days')
-        where ip = :ip and id = :id and password isnull;
-        """
         cur.execute(
-            query,
+            fetch_query_string("set-initial-password-for-user.sql"),
             {
                 "id": user_id,
                 "password": password,
@@ -186,11 +183,10 @@ class ClaimUserView(MethodView):
 
         # Only set new user if enough dots
         result = cur.execute(
-            "select points from User where id = :id and points >= :startpoints + :cost;",
+            fetch_query_string("select-minimum-points-for-user.sql"),
             {
-                "id": user,
-                "cost": POINT_COST_FOR_CHANGING_BIT,
-                "startpoints": NEW_USER_STARTING_POINTS,
+                "user": user,
+                "points": NEW_USER_STARTING_POINTS + POINT_COST_FOR_CHANGING_BIT,
             },
         ).fetchone()
         if result:
@@ -204,8 +200,8 @@ class ClaimUserView(MethodView):
             current_app.secure_cookie.set(u"shareduser", "", response, expires=expires)
 
             cur.execute(
-                "update User set points = points - :cost where id = :id;",
-                {"id": user, "cost": POINT_COST_FOR_CHANGING_BIT},
+                fetch_query_string("decrease-user-points.sql"),
+                {"user": user, "points": POINT_COST_FOR_CHANGING_BIT},
             )
 
         cur.close()

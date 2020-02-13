@@ -55,9 +55,10 @@ class PlayerEmailLoginResetView(MethodView):
             {"email": email},
         ).fetchone()
         if not result or result[0] == 0:
-            cur.close()
             response["message"] = "Sorry, that e-mail address has not been verified."
             response["name"] = "error"
+            cur.close()
+            db.commit()
             return make_response(json.jsonify(response), 400)
         else:
             user = result[0]
@@ -68,19 +69,21 @@ class PlayerEmailLoginResetView(MethodView):
         ).fetchall()
         if not result:
             # This shouldn't happen if user-has-player-account.sql
-            cur.close()
             response["message"] = "No player account."
             response["name"] = "error"
+            cur.close()
+            db.commit()
             return make_response(json.jsonify(response), 400)
         (result, col_names) = rowify(result, cur.description)
         existing_player_data = result[0]
 
         if existing_player_data["has_active_reset_login_token"]:
-            cur.close()
             response[
                 "message"
             ] = "Please check your e-mail for a reset login link.  The reset login link that was sent earlier has not expired."
             response["name"] = "error"
+            cur.close()
+            db.commit()
             return make_response(json.jsonify(response), 400)
 
         # Send a link to reset the login (silent fail if not configured)

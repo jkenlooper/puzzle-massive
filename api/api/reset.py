@@ -66,6 +66,7 @@ class PuzzlePiecesResetView(MethodView):
         if not result:
             # Puzzle does not exist or is not completed status.
             # Reload the page as the status may have been changed.
+            cur.close()
             return redirect(
                 "/chill/site/puzzle/{puzzle_id}/".format(puzzle_id=puzzle_id)
             )
@@ -78,6 +79,7 @@ class PuzzlePiecesResetView(MethodView):
             query_user_points_prereq, {"user": user, "puzzle": puzzle}
         ).fetchall()
         if not userHasEnoughPoints:
+            cur.close()
             abort(403)
 
         cur.execute(
