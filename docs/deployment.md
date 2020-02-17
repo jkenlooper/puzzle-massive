@@ -163,7 +163,24 @@ by the public.
     sudo systemctl reload nginx
     ```
 
-7)  Generate some random data and test.
+7.  _This step is not necessary. The site isn't using https yet._
+
+    Set up the production server with TLS certs. [certbot](https://certbot.eff.org/)
+    is used to deploy [Let's Encrypt](https://letsencrypt.org/) certificates.
+    This will initially fail if the server isn't accepting traffic at the domain
+    name. The certs can be copied over from the live server later.
+
+    ```bash
+    cd /usr/local/src/puzzle-massive/;
+    source bin/activate;
+    sudo bin/provision-certbot.sh /srv/puzzle-massive/
+    make ENVIRONMENT=production;
+    sudo make ENVIRONMENT=production install;
+    sudo nginx -t && \
+    sudo systemctl reload nginx
+    ```
+
+8.  Generate some random data and test.
 
     ```bash
     puzzle-massive-testdata players --count=100;

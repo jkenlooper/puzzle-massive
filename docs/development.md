@@ -68,8 +68,9 @@ sudo chown -R dev:dev ~/.npm
 ```
 
 To have TLS (SSL) on your development machine run the `bin/provision-local.sh`
-script. That will use `openssl` to create some certs in the web/ directory.
-The rootCA.pem should be imported to Keychain Access and marked as always trusted.
+script. That will use `openssl` to create some certs in the web/ directory. The
+`local-puzzle-massive-CA.pem`
+file should be imported to Keychain Access and marked as always trusted.
 _This step is not necessary. The site isn't using https yet._
 
 ### The 'dev' user and sqlite db file

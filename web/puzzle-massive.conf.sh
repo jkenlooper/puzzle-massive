@@ -274,11 +274,22 @@ HERE
 
 if test "${ENVIRONMENT}" == 'development'; then
 
-cat <<HEREBEDEVELOPMENT
-  # certs for localhost only
-  #ssl_certificate /etc/nginx/ssl/server.crt;
-  #ssl_certificate_key /etc/nginx/ssl/server.key;
+if test -e .has-certs; then
+cat <<HEREENABLESSLCERTS
+  # certs created for local development
+  ssl_certificate /etc/nginx/ssl/local-puzzle-massive.crt;
+  ssl_certificate_key /etc/nginx/ssl/local-puzzle-massive.key;
+HEREENABLESSLCERTS
+else
+cat <<HERETODOSSLCERTS
+  # certs for local development can be created by running './bin/provision-local.sh'
+  # uncomment after they exist (run make again)
+  #ssl_certificate /etc/nginx/ssl/local-puzzle-massive.crt;
+  #ssl_certificate_key /etc/nginx/ssl/local-puzzle-massive.key;
+HERETODOSSLCERTS
+fi
 
+cat <<HEREBEDEVELOPMENT
   # Only when in development should the site be accessible via internal ip.
   # This makes it easier to test with other devices that may not be able to
   # update a /etc/hosts file.

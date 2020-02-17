@@ -35,13 +35,12 @@
 !/puzzle-massive/MANIFEST
 
 /web/dhparam.pem
-/web/rootCA.key
-/web/rootCA.pem
-/web/rootCA.srl
-/web/server.crt
-/web/server.csr
-/web/server.key
-/web/v3.ext
+/web/local-puzzle-massive-CA.key
+/web/local-puzzle-massive-CA.pem
+/web/local-puzzle-massive-CA.srl
+/web/local-puzzle-massive.crt
+/web/local-puzzle-massive.csr
+/web/local-puzzle-massive.key
 
 /include/
 /lib/
