@@ -112,6 +112,20 @@ rsync --inplace \
   --itemize-changes \
   web/dhparam.pem "${NGINXDIR}ssl/dhparam.pem";
 fi
+if (test -f web/local-puzzle-massive.crt); then
+mkdir -p "${NGINXDIR}ssl/"
+rsync --inplace \
+  --checksum \
+  --itemize-changes \
+  web/local-puzzle-massive.crt "${NGINXDIR}ssl/local-puzzle-massive.crt";
+fi
+if (test -f web/local-puzzle-massive.key); then
+mkdir -p "${NGINXDIR}ssl/"
+rsync --inplace \
+  --checksum \
+  --itemize-changes \
+  web/local-puzzle-massive.key "${NGINXDIR}ssl/local-puzzle-massive.key";
+fi
 
 # Create the root directory for stats. The awstats icons will be placed there.
 mkdir -p "${SRVDIR}stats"

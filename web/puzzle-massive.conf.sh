@@ -115,6 +115,7 @@ cat <<HERE
 proxy_cache_path ${CACHEDIR} levels=1:2 keys_zone=pm_cache_zone:10m inactive=600m use_temp_path=off;
 server {
   listen      80;
+  listen 443 ssl http2;
   root ${SRVDIR}root;
   valid_referers server_names;
 
@@ -301,8 +302,8 @@ else
 if test -e .has-certs; then
 cat <<HEREENABLESSLCERTS
   # certs created from certbot
-  #ssl_certificate /etc/letsencrypt/live/puzzle.massive.xyz/fullchain.pem;
-  #ssl_certificate_key /etc/letsencrypt/live/puzzle.massive.xyz/privkey.pem;
+  ssl_certificate /etc/letsencrypt/live/puzzle.massive.xyz/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/puzzle.massive.xyz/privkey.pem;
 HEREENABLESSLCERTS
 else
 cat <<HERETODOSSLCERTS

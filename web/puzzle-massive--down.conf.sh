@@ -39,6 +39,7 @@ map \$request_uri \$loggable {
 
 server {
   listen      80;
+  listen 443 ssl http2;
   root ${SRVDIR}root;
   valid_referers server_names;
 
@@ -92,17 +93,52 @@ server {
 HERE
 
 if test "${ENVIRONMENT}" == 'development'; then
+
+if test -e .has-certs; then
+cat <<HEREENABLESSLCERTS
+  # certs created for local development
+  ssl_certificate /etc/nginx/ssl/local-puzzle-massive.crt;
+  ssl_certificate_key /etc/nginx/ssl/local-puzzle-massive.key;
+HEREENABLESSLCERTS
+else
+cat <<HERETODOSSLCERTS
+  # certs for local development can be created by running './bin/provision-local.sh'
+  # uncomment after they exist (run make again)
+  #ssl_certificate /etc/nginx/ssl/local-puzzle-massive.crt;
+  #ssl_certificate_key /etc/nginx/ssl/local-puzzle-massive.key;
+HERETODOSSLCERTS
+fi
+
 cat <<HEREBEDEVELOPMENT
   # Only when in development should the site be accessible via internal ip.
   # This makes it easier to test with other devices that may not be able to
   # update a /etc/hosts file.
   server_name local-puzzle-massive $INTERNALIP;
 HEREBEDEVELOPMENT
+
 else
+
+if test -e .has-certs; then
+cat <<HEREENABLESSLCERTS
+  # certs created from certbot
+  #ssl_certificate /etc/letsencrypt/live/puzzle.massive.xyz/fullchain.pem;
+  #ssl_certificate_key /etc/letsencrypt/live/puzzle.massive.xyz/privkey.pem;
+HEREENABLESSLCERTS
+else
+cat <<HERETODOSSLCERTS
+  # certs can be created from running 'bin/provision-certbot.sh ${SRVDIR}'
+  # TODO: uncomment after they exist
+  #ssl_certificate /etc/letsencrypt/live/puzzle.massive.xyz/fullchain.pem;
+  #ssl_certificate_key /etc/letsencrypt/live/puzzle.massive.xyz/privkey.pem;
+HERETODOSSLCERTS
+fi
+
 cat <<HEREBEPRODUCTION
   server_name puzzle-blue puzzle-green ${DOMAIN_NAME};
 HEREBEPRODUCTION
+
 fi
+
 cat <<HERE
   error_page 500 501 502 504 505 506 507 /error_page.html;
   location = /error_page.html {

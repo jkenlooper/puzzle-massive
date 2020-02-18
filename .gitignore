@@ -1,6 +1,7 @@
 *.DS_Store
 /.env
 /.htpasswd
+/.has-certs
 /.vagrant/
 /site.cfg
 /frozen.tar.gz
