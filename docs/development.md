@@ -20,8 +20,7 @@ After cloning or forking the git repo
 [puzzle-massive](https://github.com/jkenlooper/puzzle-massive); open a terminal
 and `cd` to that directory.
 
-If using Vagrant; then run `vagrant up` after switching the box back to the
-ubuntu version in the `Vagrantfile` and ssh in (`vagrant ssh`) and clone go to
+If using Vagrant; then run `vagrant up` and ssh in (`vagrant ssh`). Go to
 the /vagrant/ shared directory when running the rest of the commands.
 
 If using Vagrant and VirtualBox, then it is recommended to not do development on
@@ -30,6 +29,15 @@ a shared folder and instead create a dev user and clone from the shared
 between VirtualBox and your host machine. The repo should be cloned from the
 shared /vagrant folder to the /home/dev/puzzle-massive folder in the virtual
 machine.
+
+With this setup, there will be two git repositories. The one that was initially
+cloned on your host machine and is in the shared /vagrant/ directory. The other
+git repo will be on the virtual machine and is in the /home/dev/puzzle-massive/
+directory. Making commits in either one will require those commits to be synced
+with the other.
+
+<!-- TODO: Is there a better way of setting this syncing of git repos up via
+mirroring? -->
 
 ```bash
 vagrant up;
@@ -154,7 +162,7 @@ The service config files are created by running `make` and installed with
 and activating each time for a new shell with `source bin/activate` before
 running `make`.
 
-**All commands are run from the projects directory unless otherwise noted.** For
+**All commands are run from the project's directory unless otherwise noted.** For
 the Vagrant setup this should be the home folder of the dev user
 `/home/dev/puzzle-massive/`.
 
