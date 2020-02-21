@@ -446,7 +446,15 @@ class UserSession:
             headers=self.headers,
         )
         if r.status_code in (429, 409):
-            time.sleep(1)
+            try:
+                data = r.json()
+            except ValueError as err:
+                time.sleep(1)
+                print(r.text)
+                return
+            print(data.get("msg"))
+            if data.get("timeout"):
+                time.sleep(data.get("timeout", 1))
             return
         try:
             data = r.json()
@@ -472,6 +480,18 @@ class UserSession:
             cookies={"shareduser": self.shareduser_cookie},
             headers=my_headers,
         )
+
+        if r.status_code in (429, 409):
+            try:
+                data = r.json()
+            except ValueError as err:
+                time.sleep(1)
+                print(r.text)
+                return
+            print(data.get("msg"))
+            if data.get("timeout"):
+                time.sleep(data.get("timeout", 1))
+            return
         try:
             data = r.json()
         except ValueError as err:
