@@ -121,8 +121,8 @@ else
 if test -e .has-certs; then
 cat <<HEREENABLESSLCERTS
   # certs created from certbot
-  #ssl_certificate /etc/letsencrypt/live/puzzle.massive.xyz/fullchain.pem;
-  #ssl_certificate_key /etc/letsencrypt/live/puzzle.massive.xyz/privkey.pem;
+  ssl_certificate /etc/letsencrypt/live/puzzle.massive.xyz/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/puzzle.massive.xyz/privkey.pem;
 HEREENABLESSLCERTS
 else
 cat <<HERETODOSSLCERTS
