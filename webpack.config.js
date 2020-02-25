@@ -1,11 +1,11 @@
 const webpack = require('webpack')
 const path = require('path')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const TerserPlugin = require('terser-webpack-plugin')
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 const postcssImport = require('postcss-import')
 const postcssPresetEnv = require('postcss-preset-env')
-const postcssCustomMedia = require('postcss-custom-media')
 
 const srcEntry = require('./src/index.js')
 
@@ -95,11 +95,7 @@ config.module = {
           loader: 'postcss-loader',
           options: {
             ident: 'postcss',
-            plugins: (loader) => [
-              postcssImport(),
-              postcssCustomMedia(),
-              postcssPresetEnv(),
-            ],
+            plugins: (loader) => [postcssImport(), postcssPresetEnv()],
           },
         },
       ],
@@ -113,11 +109,7 @@ config.module = {
           loader: 'postcss-loader',
           options: {
             ident: 'postcss',
-            plugins: (loader) => [
-              postcssImport(),
-              postcssCustomMedia(),
-              postcssPresetEnv(),
-            ],
+            plugins: (loader) => [postcssImport(), postcssPresetEnv()],
           },
         },
       ],
@@ -142,7 +134,10 @@ config.module = {
   ],
 }
 
-config.plugins = [new MiniCssExtractPlugin({ filename: '[name].css' })]
+config.plugins = [
+  new CleanWebpackPlugin(),
+  new MiniCssExtractPlugin({ filename: '[name].css' }),
+]
 
 config.stats = 'minimal'
 

@@ -16,6 +16,7 @@
   "devDependencies": {
     "@types/hammerjs": "^2.0.36",
     "@types/tape": "^4.2.34",
+    "clean-webpack-plugin": "^3.0.0",
     "css-loader": "^3.4.2",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.0",
@@ -50,7 +51,6 @@
   "scripts": {
     "pretest": "stylelint \"src/**/*.css\"",
     "test": "tsc --project . --outDir tests --module commonjs && tape \"tests/**/*.spec.js\"",
-    "prebuild": "rm -rf dist",
     "build": "webpack --mode=production",
     "debug": "webpack --mode=development --debug --devtool source-map --output-pathinfo",
     "watch": "npm run debug -- --watch",

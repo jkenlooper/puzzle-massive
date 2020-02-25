@@ -213,6 +213,7 @@ on the old server and copy all the data over to the new puzzle-green server.
     source bin/activate;
     printf 'Updating...' > /srv/puzzle-massive/root/puzzle-massive-message.html;
     sudo ./bin/puzzlectl.sh stop;
+    sudo ./bin/clear_nginx_cache.sh;
     ./bin/backup-db.sh;
     ```
 
