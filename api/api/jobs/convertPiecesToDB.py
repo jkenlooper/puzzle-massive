@@ -135,4 +135,7 @@ if __name__ == "__main__":
     transferAll(args["--cleanup"])
 
 else:
-    from api.app import db, redis_connection
+    config = loadConfig("site.cfg")
+
+    db = get_db(config)
+    redis_connection = get_redis_connection(config)

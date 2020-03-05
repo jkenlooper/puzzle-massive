@@ -50,7 +50,7 @@ been uploaded to the home directory.
     printf 'Updating...' > /srv/puzzle-massive/root/puzzle-massive-message.html;
     sudo ./bin/puzzlectl.sh stop;
     sudo ./bin/clear_nginx_cache.sh;
-    ./bin/backup-db.sh;
+    ./bin/backup-db.sh -c;
     deactivate;
     ```
 
@@ -214,7 +214,7 @@ on the old server and copy all the data over to the new puzzle-green server.
     printf 'Updating...' > /srv/puzzle-massive/root/puzzle-massive-message.html;
     sudo ./bin/puzzlectl.sh stop;
     sudo ./bin/clear_nginx_cache.sh;
-    ./bin/backup-db.sh;
+    ./bin/backup-db.sh -c;
     ```
 
 2.  On the **new server** the files from the old server will be copied over with

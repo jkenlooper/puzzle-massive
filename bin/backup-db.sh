@@ -3,12 +3,13 @@ set -eu -o pipefail
 
 function usage {
   cat <<USAGE
-Usage: ${0} [-h] [-d <backup-directory-path>] [<backup-filename>]
+Usage: ${0} [-h] [-d <backup-directory-path>] [-c] [<backup-filename>]
 
 Options:
   -h            Show help
   -d directory  Set the directory to store backup files in [default: ./]
   -w            Name backup file with the day of week
+  -c            Cleanup redis data after transferring to DB
 
 Creates a backup file of the database.  It first converts the redis piece data
 to the database and runs any necessary scheduler tasks for batched redis data.
@@ -18,8 +19,9 @@ USAGE
 }
 
 WEEKDAY_BACKUP=;
+CLEANUP=;
 BACKUP_DIRECTORY=$(pwd)
-while getopts ":hd:w" opt; do
+while getopts ":hd:wc" opt; do
   case ${opt} in
     h )
       usage;
@@ -29,6 +31,9 @@ while getopts ":hd:w" opt; do
       ;;
     w )
       WEEKDAY_BACKUP=1;
+      ;;
+    c )
+      CLEANUP="--cleanup";
       ;;
     \? )
       usage;
@@ -48,7 +53,7 @@ fi
 
 echo "Converting pieces to DB from Redis...";
 
-./bin/python api/api/jobs/convertPiecesToDB.py site.cfg || exit 1;
+./bin/python api/api/jobs/convertPiecesToDB.py site.cfg ${CLEANUP} || exit 1;
 
 echo "Running one-off scheduler tasks to clean up any batched data";
 ./bin/python api/api/scheduler.py site.cfg UpdatePlayer || exit 1;
