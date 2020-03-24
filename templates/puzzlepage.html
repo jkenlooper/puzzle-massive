@@ -259,7 +259,9 @@
                 puzzle-id="{{ puzzle.puzzle_id }}"
                 status="{{ puzzle.status }}">
                 <div slot="outline-bottom-content">
+                  {%- if puzzle.status in (ACTIVE, BUGGY_UNLISTED) %}
                   <pm-puzzle-latency puzzle-id="{{ puzzle.puzzle_id }}"></pm-puzzle-latency>
+                  {%- endif %}
                 </div>
               </pm-puzzle-pieces>
               <pm-puzzle-bits></pm-puzzle-bits>
