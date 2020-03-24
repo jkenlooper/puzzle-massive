@@ -51,7 +51,7 @@ def transfer(puzzle, cleanup=True):
 
     (all_pieces, col_names) = rowify(
         cur.execute(
-            read_query_file("select_all_piece_ids_for_puzzle.sql"), {"puzzle": puzzle}
+            read_query_file("select_all_piece_props_for_puzzle.sql"), {"puzzle": puzzle}
         ).fetchall(),
         cur.description,
     )
