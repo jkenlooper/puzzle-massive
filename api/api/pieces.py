@@ -114,20 +114,19 @@ class PuzzlePiecesView(MethodView):
             cur.description,
         )
 
-        # Create a pipe for buffering commands and disable atomic transactions
-        pipe = redis_connection.pipeline(transaction=False)
-
         # The 'rotate' field is not public. It is for the true orientation of the piece.
         # The 'r' field is the mutable rotation of the piece.
         publicPieceProperties = ("x", "y", "r", "s", "w", "h", "b")
 
-        for item in all_pieces:
-            piece = item.get("id")
-            pipe.hmget(
-                "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece),
-                *publicPieceProperties
-            )
-        allPublicPieceProperties = pipe.execute()
+        with redis_connection.pipeline(transaction=True) as pipe:
+            for item in all_pieces:
+                piece = item.get("id")
+                pipe.hmget(
+                    "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece),
+                    *publicPieceProperties
+                )
+            allPublicPieceProperties = pipe.execute()
+
         # convert the list of lists into list of dicts.  Only want to return the public piece props.
         pieces = [
             dict(list(zip(publicPieceProperties, properties)))

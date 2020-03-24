@@ -27,61 +27,72 @@ def convert(puzzle):
         cur.execute(query, {"puzzle": puzzle}).fetchall(), cur.description
     )
 
-    # Create a pipe for buffering commands and disable atomic transactions
-    pipe = redis_connection.pipeline(transaction=False)
+    pzm_puzzle_key = "pzm:{puzzle}".format(puzzle=puzzle)
+    # Bump the pzm id when preparing to mutate the puzzle.
+    puzzle_mutation_id = redis_connection.incr(pzm_puzzle_key)
 
-    for piece in all_pieces:
-        # print('convert piece {id} for puzzle: {puzzle}'.format(**piece))
-        offsets = {}
-        for (k, v) in [x.split(":") for x in piece.get("adjacent", "").split(" ")]:
-            offsets[k] = v
-        # print offsets
-        # Add Piece Properties
-        pc = {
-            "x": piece["x"],
-            "y": piece["y"],
-            "r": piece["r"],  # mutable rotation of piece
-            "rotate": piece["rotate"],  # immutable piece orientation
-            "w": piece["w"],
-            "h": piece["h"],
-            "b": piece["b"],
-            # The 's' is not set from the database 'status'. That is handled later
-        }
-        pc.update(offsets)
-        pipe.hmset("pc:{puzzle}:{id}".format(**piece), pc)
+    # Create a pipe for buffering commands to load up piece data
+    with redis_connection.pipeline(transaction=True) as pipe:
+        for piece in all_pieces:
+            pc_puzzle_piece_key = "pc:{puzzle}:{piece}".format(
+                puzzle=puzzle, piece=piece["id"]
+            )
+            # print('convert piece {id} for puzzle: {puzzle}'.format(**piece))
+            offsets = {}
+            for (k, v) in [x.split(":") for x in piece.get("adjacent", "").split(" ")]:
+                offsets[k] = v
+            # print offsets
+            # Add Piece Properties
+            pc = {
+                "x": piece["x"],
+                "y": piece["y"],
+                "r": piece["r"],  # mutable rotation of piece
+                "rotate": piece["rotate"],  # immutable piece orientation
+                "w": piece["w"],
+                "h": piece["h"],
+                "b": piece["b"],
+                # The 's' is not set from the database 'status'. That is handled later
+            }
+            pc.update(offsets)
+            pipe.hmset(pc_puzzle_piece_key, pc)
 
-        # Add Piece Group
-        pieceParent = piece.get("parent", None)
-        if pieceParent != None:
-            pipe.sadd("pcg:{puzzle}:{parent}".format(**piece), piece["id"])
-            pipe.hset("pc:{puzzle}:{id}".format(**piece), "g", piece["parent"])
+            # Add Piece Group
+            pieceParent = piece.get("parent", None)
+            if pieceParent != None:
+                pipe.sadd(
+                    "pcg:{puzzle}:{parent}".format(
+                        puzzle=puzzle, parent=piece["parent"]
+                    ),
+                    piece["id"],
+                )
+                pipe.hset(pc_puzzle_piece_key, "g", piece["parent"])
 
-        pieceStatus = piece.get("status", None)
-        if pieceStatus != None:
-            # print 'pieceStatus'
-            # print pieceStatus
-            # print("immovable piece: {id}".format(**piece))
-            pieceStatus = int(
-                pieceStatus
-            )  # in case it's from the actual results of the query
-            pipe.hset("pc:{puzzle}:{id}".format(**piece), "s", pieceStatus)
-            if pieceStatus == 1:
-                # Add Piece Fixed (immovable)
-                pipe.sadd("pcfixed:{puzzle}".format(**locals()), piece["id"])
-            elif pieceStatus == 2:
-                # Add Piece Stacked
-                pipe.sadd("pcstacked:{puzzle}".format(**locals()), piece["id"])
+            pieceStatus = piece.get("status", None)
+            if pieceStatus != None:
+                # print 'pieceStatus'
+                # print pieceStatus
+                # print("immovable piece: {id}".format(**piece))
+                pieceStatus = int(
+                    pieceStatus
+                )  # in case it's from the actual results of the query
+                pipe.hset(pc_puzzle_piece_key, "s", pieceStatus)
+                if pieceStatus == 1:
+                    # Add Piece Fixed (immovable)
+                    pipe.sadd("pcfixed:{puzzle}".format(puzzle=puzzle), piece["id"])
+                elif pieceStatus == 2:
+                    # Add Piece Stacked
+                    pipe.sadd("pcstacked:{puzzle}".format(puzzle=puzzle), piece["id"])
 
-        # Add Piece x Set
-        pipe.zadd("pcx:{puzzle}".format(**piece), {piece["id"]: piece["x"]})
+            # Add Piece x Set
+            pipe.zadd("pcx:{puzzle}".format(puzzle=puzzle), {piece["id"]: piece["x"]})
 
-        # Add Piece y Set
-        pipe.zadd("pcy:{puzzle}".format(**piece), {piece["id"]: piece["y"]})
+            # Add Piece y Set
+            pipe.zadd("pcy:{puzzle}".format(puzzle=puzzle), {piece["id"]: piece["y"]})
 
-    # Add to the pcupdates sorted set
-    pipe.zadd("pcupdates", {puzzle: int(time.time())})
+        # Add to the pcupdates sorted set
+        pipe.zadd("pcupdates", {puzzle: int(time.time())})
 
-    pipe.execute()
+        pipe.execute()
     cur.close()
 
 

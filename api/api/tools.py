@@ -85,43 +85,33 @@ def get_public_karma_points(redis_connection, ip, user, puzzle):
 
 def deletePieceDataFromRedis(redis_connection, puzzle, all_pieces):
     groups = set()
-    # TODO: this needs to be one transaction.  There is a chance that the group
-    # for a piece may change after it has been added to the groups set.
-    for piece in all_pieces:
-        pieceFromRedis = redis_connection.hgetall(
-            "pc:{puzzle}:{id}".format(puzzle=puzzle, id=piece["id"])
-        )
-        # Find all the groups for each piece
-        groups.add(pieceFromRedis.get("g"))
+    pzm_puzzle_key = "pzm:{puzzle}".format(puzzle=puzzle)
+    # Bump the pzm id when preparing to mutate the puzzle.
+    puzzle_mutation_id = redis_connection.incr(pzm_puzzle_key)
 
-    # Create a pipe for buffering commands and disable atomic transactions
-    # TODO: why disable atomic transaction when deletePieceDataFromRedis?
-    pipe = redis_connection.pipeline(transaction=False)
+    with redis_connection.pipeline(transaction=True) as pipe:
+        # Delete all piece data
+        for piece in all_pieces:
+            pipe.delete("pc:{puzzle}:{id}".format(puzzle=puzzle, id=piece["id"]))
+            # Blind delete all groups (ignore if group id doesn't exist)
+            pipe.delete("pcg:{puzzle}:{g}".format(puzzle=puzzle, g=piece["id"]))
 
-    # Delete all piece data
-    for piece in all_pieces:
-        pipe.delete("pc:{puzzle}:{id}".format(puzzle=puzzle, id=piece["id"]))
+        # Delete Piece Fixed
+        pipe.delete("pcfixed:{puzzle}".format(puzzle=puzzle))
 
-    # Delete all groups
-    for g in groups:
-        pipe.delete("pcg:{puzzle}:{g}".format(puzzle=puzzle, g=g))
+        # Delete Piece Stacked
+        pipe.delete("pcstacked:{puzzle}".format(puzzle=puzzle))
 
-    # Delete Piece Fixed
-    pipe.delete("pcfixed:{puzzle}".format(puzzle=puzzle))
+        # Delete Piece X
+        pipe.delete("pcx:{puzzle}".format(puzzle=puzzle))
 
-    # Delete Piece Stacked
-    pipe.delete("pcstacked:{puzzle}".format(puzzle=puzzle))
+        # Delete Piece Y
+        pipe.delete("pcy:{puzzle}".format(puzzle=puzzle))
 
-    # Delete Piece X
-    pipe.delete("pcx:{puzzle}".format(puzzle=puzzle))
+        # Remove from the pcupdates sorted set
+        pipe.zrem("pcupdates", puzzle)
 
-    # Delete Piece Y
-    pipe.delete("pcy:{puzzle}".format(puzzle=puzzle))
-
-    # Remove from the pcupdates sorted set
-    pipe.zrem("pcupdates", puzzle)
-
-    pipe.execute()
+        pipe.execute()
 
 
 def check_bg_color(bg_color):
