@@ -49,18 +49,20 @@ def transfer(puzzle, cleanup=True):
         {"status": MAINTENANCE, "puzzle": puzzle},
     )
 
-    query = """select * from Piece where (puzzle = :puzzle)"""
     (all_pieces, col_names) = rowify(
-        cur.execute(query, {"puzzle": puzzle}).fetchall(), cur.description
+        cur.execute(
+            read_query_file("select_all_piece_ids_for_puzzle.sql"), {"puzzle": puzzle}
+        ).fetchall(),
+        cur.description,
     )
 
-    query_update_piece = """
-    update Piece set x = :x, y = :y, r = :r, parent = :parent, status = :status where puzzle = :puzzle and id = :id
-    """
+    query_update_piece = read_query_file("update_piece_props_for_puzzle.sql")
 
     # Save the redis data to the db
     for piece in all_pieces:
-        pieceFromRedis = redis_connection.hgetall("pc:{puzzle}:{id}".format(**piece))
+        pieceFromRedis = redis_connection.hgetall(
+            "pc:{puzzle}:{id}".format(puzzle=puzzle, id=piece["id"])
+        )
 
         # The redis data may be empty so fall back on what is in db.
         piece["x"] = pieceFromRedis.get("x", piece["x"])

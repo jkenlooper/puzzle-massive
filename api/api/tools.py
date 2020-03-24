@@ -85,17 +85,22 @@ def get_public_karma_points(redis_connection, ip, user, puzzle):
 
 def deletePieceDataFromRedis(redis_connection, puzzle, all_pieces):
     groups = set()
+    # TODO: this needs to be one transaction.  There is a chance that the group
+    # for a piece may change after it has been added to the groups set.
     for piece in all_pieces:
-        pieceFromRedis = redis_connection.hgetall("pc:{puzzle}:{id}".format(**piece))
+        pieceFromRedis = redis_connection.hgetall(
+            "pc:{puzzle}:{id}".format(puzzle=puzzle, id=piece["id"])
+        )
         # Find all the groups for each piece
         groups.add(pieceFromRedis.get("g"))
 
     # Create a pipe for buffering commands and disable atomic transactions
+    # TODO: why disable atomic transaction when deletePieceDataFromRedis?
     pipe = redis_connection.pipeline(transaction=False)
 
     # Delete all piece data
     for piece in all_pieces:
-        pipe.delete("pc:{puzzle}:{id}".format(**piece))
+        pipe.delete("pc:{puzzle}:{id}".format(puzzle=puzzle, id=piece["id"]))
 
     # Delete all groups
     for g in groups:

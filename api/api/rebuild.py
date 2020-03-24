@@ -132,7 +132,7 @@ class PuzzlePiecesRebuildView(MethodView):
         # Delete any piece data from redis since it is no longer needed.
         (all_pieces, col_names) = rowify(
             cur.execute(
-                fetch_query_string("select-all-from-puzzle-by-puzzle.sql"),
+                fetch_query_string("select_all_piece_ids_for_puzzle.sql"),
                 {"puzzle": puzzle},
             ).fetchall(),
             cur.description,

@@ -108,7 +108,7 @@ class PuzzlePiecesView(MethodView):
 
         (all_pieces, col_names) = rowify(
             cur.execute(
-                fetch_query_string("select-id-from-piece-for-puzzle.sql"),
+                fetch_query_string("select_all_piece_ids_for_puzzle.sql"),
                 {"puzzle": puzzle},
             ).fetchall(),
             cur.description,
