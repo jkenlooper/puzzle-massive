@@ -21,9 +21,8 @@ import time
 
 from docopt import docopt
 
-from api.database import rowify
+from api.database import rowify, read_query_file
 from api.tools import loadConfig, get_db, get_redis_connection, deletePieceDataFromRedis
-from api.database import read_query_file
 from api.constants import MAINTENANCE
 
 
