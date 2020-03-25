@@ -27,9 +27,8 @@ def find_puzzles_in_redis(results={}):
 
     puzzles_in_redis = redis_connection.zrange("pcupdates", 0, -1)
     for puzzle in puzzles_in_redis:
-        test_result = _results.get(
-            puzzle, {"puzzle": puzzle, "puzzle_id": None, "msg": ""}
-        )
+        test_result = _results.get(puzzle, {"puzzle": puzzle, "msg": "", "test": []})
+        test_result["test"].append("redis")
         _results.update({puzzle: test_result})
         (result, col_names) = rowify(
             cur.execute(
@@ -42,8 +41,8 @@ def find_puzzles_in_redis(results={}):
             # Test failed.
             test_result[
                 "msg"
-            ] = "Failed to find top left piece for puzzle {puzzle}".format(
-                puzzle=puzzle
+            ] = "{msg} Failed to find top left piece for puzzle {puzzle}".format(
+                msg=test_result.get("msg", ""), puzzle=puzzle
             )
             test_result["status"] = "fail"
             continue
@@ -64,8 +63,10 @@ def find_puzzles_in_redis(results={}):
             # Test passed.
             test_result[
                 "msg"
-            ] = "{puzzle_id} {puzzle} all immovable pieces are in the same group as top left".format(
-                puzzle_id=top_left_piece["puzzle_id"], puzzle=puzzle
+            ] = "{msg} {puzzle_id} {puzzle} all immovable pieces are in the same group as top left".format(
+                msg=test_result.get("msg", ""),
+                puzzle_id=top_left_piece["puzzle_id"],
+                puzzle=puzzle,
             )
             test_result["status"] = "pass"
             continue
@@ -73,8 +74,10 @@ def find_puzzles_in_redis(results={}):
             # Test failed.
             test_result[
                 "msg"
-            ] = "{puzzle_id} {puzzle} not all immovable pieces are in the same group as top left".format(
-                puzzle_id=top_left_piece["puzzle_id"], puzzle=puzzle
+            ] = "{msg} {puzzle_id} {puzzle} not all immovable pieces are in the same group as top left".format(
+                msg=test_result.get("msg", ""),
+                puzzle_id=top_left_piece["puzzle_id"],
+                puzzle=puzzle,
             )
             test_result["status"] = "fail"
     return _results
@@ -99,13 +102,59 @@ def find_puzzles_in_database(results={}):
     for puzzle_data in puzzles_in_database:
         puzzle = puzzle_data["id"]
         test_result = _results.get(
-            puzzle, {"puzzle": puzzle, "puzzle_id": puzzle_data["puzzle_id"], "msg": ""}
+            puzzle,
+            {
+                "puzzle": puzzle,
+                "puzzle_id": puzzle_data["puzzle_id"],
+                "msg": "",
+                "test": [],
+            },
         )
+        test_result["test"].append("database")
         _results.update({puzzle: test_result})
 
         # TODO: Check piece data for this puzzle to see if pieces that are
         # immovable have the same parent as top left piece.
-        test_result["status"] = "skip"
+        (immovable_pieces, col_names) = rowify(
+            cur.execute(
+                read_query_file("select_immovable_piece_groups_for_puzzle.sql"),
+                {"puzzle": puzzle},
+            ).fetchall(),
+            cur.description,
+        )
+
+        # Fail if no immovable piece groups
+        if not immovable_pieces:
+            test_result[
+                "msg"
+            ] = "{msg} {puzzle_id} {puzzle} no immovable piece groups found in database".format(
+                msg=test_result.get("msg", ""),
+                puzzle_id=puzzle_data["puzzle_id"],
+                puzzle=puzzle,
+            )
+            test_result["status"] = "fail"
+
+        # Fail if more than one immovable piece group
+        if len(immovable_pieces) > 1:
+            test_result[
+                "msg"
+            ] = "{msg} {puzzle_id} {puzzle} multiple immovable piece groups found in database".format(
+                msg=test_result.get("msg", ""),
+                puzzle_id=puzzle_data["puzzle_id"],
+                puzzle=puzzle,
+            )
+            test_result["status"] = "fail"
+
+        # Pass if only one immovable piece group found
+        if len(immovable_pieces) == 1:
+            test_result[
+                "msg"
+            ] = "{msg} {puzzle_id} {puzzle} single immovable piece group found in database".format(
+                msg=test_result.get("msg", ""),
+                puzzle_id=puzzle_data["puzzle_id"],
+                puzzle=puzzle,
+            )
+            test_result["status"] = "pass"
 
     return _results
 
@@ -139,6 +188,10 @@ if __name__ == "__main__":
         results=multiple_immovable_piece_group_results
     )
 
+    # TODO: Fix puzzles that failed the test
+    fix_redis_piece_groups()
+    fix_db_piece_parents()
+
     # Print out the results
     failed_results = list(
         filter(
@@ -152,27 +205,41 @@ if __name__ == "__main__":
             multiple_immovable_piece_group_results.values(),
         )
     )
+    redis_tests = list(
+        filter(
+            lambda x: "redis" in x["test"],
+            multiple_immovable_piece_group_results.values(),
+        )
+    )
+    database_tests = list(
+        filter(
+            lambda x: "database" in x["test"],
+            multiple_immovable_piece_group_results.values(),
+        )
+    )
     for result in failed_results:
         print(result["msg"])
     print(
         """
 Total results:
+Redis puzzles tested: {redis_count}
+Database puzzles tested: {database_count}
 Pass: {pass_count}
 Fail: {fail_count}
+Fixed: 0
 """.format(
-            pass_count=len(passed_results), fail_count=len(failed_results),
+            pass_count=len(passed_results),
+            fail_count=len(failed_results),
+            redis_count=len(redis_tests),
+            database_count=len(database_tests),
         )
     )
     for result in failed_results:
         print(
             "{puzzle} {puzzle_id}".format(
-                puzzle=result["puzzle"], puzzle_id=result["puzzle_id"]
+                puzzle=result["puzzle"], puzzle_id=result.get("puzzle_id")
             )
         )
-
-    # TODO: Fix puzzles that failed the test
-    fix_redis_piece_groups()
-    fix_db_piece_parents()
 
 else:
     # Support for using within the Flask app.
