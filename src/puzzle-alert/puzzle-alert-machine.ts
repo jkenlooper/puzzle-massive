@@ -61,7 +61,14 @@ export const puzzleAlertMachine = createMachine({
         },
       },
     },
-    inactive: {},
+    inactive: {
+      on: {
+        PUZZLE_COMPLETED_TIMER: {
+          target: "inactive",
+          actions: ["hideCompletedAlert"],
+        },
+      },
+    },
     disconnected: {
       on: {
         RECONNECTING: {

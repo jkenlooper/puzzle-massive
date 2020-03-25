@@ -9,6 +9,7 @@ import { puzzleAlertMachine } from "./puzzle-alert-machine";
 import "./puzzle-alert.css";
 
 enum AlertStatus {
+  none = "none",
   connecting = "connecting",
   error = "error",
   connected = "connected",
@@ -46,6 +47,7 @@ customElements.define(
     private puzzleAlertService: any;
     private blockedTimer: number = 0;
     private blockedTimeout: number | undefined;
+    private readonly timeoutForCompletedAlert = 5000;
 
     constructor() {
       super();
@@ -102,7 +104,7 @@ customElements.define(
     }
 
     private handleStateChange(state) {
-      console.log(`puzzle-alert: ${state.value}`);
+      //console.log(`puzzle-alert: ${state.value}`);
       switch (state.value) {
         case "connecting":
           state.actions.forEach((action) => {
@@ -142,6 +144,9 @@ customElements.define(
               case "setStatusCompleted":
                 this.status = AlertStatus.completed;
                 break;
+              case "hideCompletedAlert":
+                this.status = AlertStatus.none;
+                break;
               case "setStatusInQueue":
                 this.status = AlertStatus.in_queue;
                 break;
@@ -177,6 +182,9 @@ customElements.define(
           : ""}
       `;
       function showAlert(status: AlertStatus) {
+        if (status === AlertStatus.none) {
+          return "";
+        }
         return html`
           <section class="pm-PuzzleAlert-section">
             <h1><small>Alerts</small></h1>
@@ -392,6 +400,9 @@ customElements.define(
       switch (status) {
         case Status.COMPLETED:
           this.puzzleAlertService.send("PUZZLE_COMPLETED");
+          window.setTimeout(() => {
+            this.puzzleAlertService.send("PUZZLE_COMPLETED_TIMER");
+          }, this.timeoutForCompletedAlert);
           break;
         case Status.IN_QUEUE:
           this.puzzleAlertService.send("PUZZLE_IN_QUEUE");

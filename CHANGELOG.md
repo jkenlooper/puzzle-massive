@@ -23,6 +23,8 @@ git commit messages (`git shortlog 2.3.2..origin/develop`).
 ### Changed
 
 - Hide latency on completed puzzles
+- Hide puzzle completed alert after 5 seconds
+- Add puzzle outline background color back in
 
 ## [2.5.0] - 2020-02-22
 
