@@ -12,7 +12,17 @@ git commit messages (`git shortlog 2.3.2..origin/develop`).
 
 ## [Unreleased] - ...
 
-...
+### Fixed
+
+- Improved code to avoid causes of multiple immovable piece groups. These fixes
+  were not 100% confirmed to fix the possible causes of this bug (issue #63).
+  A python script
+  ([fix_immovable_piece_groups_in_redis.py](api/api/jobs/fix_immovable_piece_groups_in_redis.py))
+  was added to better find puzzles with the problem.
+
+### Changed
+
+- Hide latency on completed puzzles
 
 ## [2.5.0] - 2020-02-22
 
