@@ -27,7 +27,7 @@ import time
 from uuid import uuid4
 import hashlib
 import subprocess
-from random import randint, choice
+from random import randint, choice, random
 import multiprocessing
 
 import requests
@@ -529,10 +529,11 @@ class PuzzlePieces:
         ]
         # TODO: connect to the stream and update movable_pieces
 
-    def move_random_pieces_with_delay(self, delay):
+    def move_random_pieces_with_delay(self, delay=1, max_delay=10):
         while True:
+            random_delay = round((random() * (max_delay - delay)), 3) + delay
             self.move_random_piece()
-            time.sleep(delay)
+            time.sleep(random_delay)
 
     def move_random_piece(self):
         piece_id = choice(self.movable_pieces)
@@ -587,7 +588,7 @@ class PuzzleActivityJob:
             self.puzzle_details["table_width"],
             self.puzzle_details["table_height"],
         )
-        puzzle_pieces.move_random_pieces_with_delay(1)
+        puzzle_pieces.move_random_pieces_with_delay(delay=1, max_delay=10)
 
 
 def simulate_puzzle_activity(puzzle_ids, count=1):
