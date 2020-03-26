@@ -83,12 +83,14 @@ been uploaded to the home directory.
     sudo nginx -t && \
     sudo systemctl reload nginx;
     printf '' > /srv/puzzle-massive/root/puzzle-massive-message.html;
+    sudo ./bin/clear_nginx_cache.sh;
     ```
 
 4.  Verify that stuff is working by monitoring the logs.
 
     ```bash
-    ./bin/log.sh;
+    sudo ./bin/puzzlectl.sh status;
+    sudo ./bin/log.sh;
     ```
 
 ## Blue-Green Deployments
