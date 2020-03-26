@@ -8,14 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!--
 Not every commit is added to this list, but many items listed are taken from the
 git commit messages (`git shortlog 2.3.2..origin/develop`).
+## [Unreleased] - ...
 -->
 
-## [Unreleased] - ...
+## [2.5.1] - 2020-03-26
 
 ### Fixed
 
 - Improved code to avoid causes of multiple immovable piece groups. These fixes
-  were not 100% confirmed to fix the possible causes of this bug (issue #63).
+  were not 100% confirmed to fix the possible causes of this bug
+  ([issue #63](https://github.com/jkenlooper/puzzle-massive/issues/63)).
+
   A python script
   ([fix_immovable_piece_groups_in_redis.py](api/api/jobs/fix_immovable_piece_groups_in_redis.py))
   was added to better find puzzles with the problem.
