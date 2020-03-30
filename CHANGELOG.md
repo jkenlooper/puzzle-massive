@@ -11,6 +11,10 @@ git commit messages (`git shortlog 2.3.2..origin/develop`).
 ## [Unreleased] - ...
 -->
 
+## [Unreleased] - ...
+
+...
+
 ## [2.5.2] - 2020-03-30
 
 ### Fixed
