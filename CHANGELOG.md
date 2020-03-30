@@ -8,9 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!--
 Not every commit is added to this list, but many items listed are taken from the
 git commit messages (`git shortlog 2.3.2..origin/develop`).
+## [Unreleased] - ...
 -->
 
-## [Unreleased] - ...
+## [2.5.2] - 2020-03-30
 
 ### Fixed
 
