@@ -12,7 +12,9 @@ git commit messages (`git shortlog 2.3.2..origin/develop`).
 
 ## [Unreleased] - ...
 
-...
+### Fixed
+
+- Corrected adjacent piece logic when the piece group id is 0
 
 ## [2.5.1] - 2020-03-26
 

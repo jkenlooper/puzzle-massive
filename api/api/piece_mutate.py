@@ -135,7 +135,8 @@ class PieceMutateProcess:
             pipe.multi()
 
             pcg_puzzle_g_key = "pcg:{puzzle}:{piece_group}".format(
-                puzzle=self.puzzle, piece_group=self.piece_properties.get("g")
+                puzzle=self.puzzle,
+                piece_group=self.piece_properties.get("g", self.piece),
             )
             self.origin_x = self.piece_properties.get("x")
             self.origin_y = self.piece_properties.get("y")
@@ -302,7 +303,7 @@ class PieceMutateProcess:
         ) in self.adjacent_piece_properties.items():
             # Skip if adjacent piece in same group
             if (
-                piece_group
+                piece_group != None
                 and self.adjacent_piece_group_ids.get(adjacent_piece) == piece_group
             ):
                 continue

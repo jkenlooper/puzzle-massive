@@ -80,6 +80,7 @@ def find_puzzles_in_redis(results={}):
                 puzzle=puzzle,
             )
             test_result["status"] = "fail"
+    cur.close()
     return _results
 
 
