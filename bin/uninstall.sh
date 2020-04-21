@@ -24,7 +24,7 @@ ARCHIVEDIR=$5
 CACHEDIR=$6
 
 # /var/lib/puzzle-massive/urls-to-purge.txt
-PURGEURLLIST=${10}
+PURGEURLLIST=$7
 
 rm -rf ${SRVDIR}root/!(.well-known|.|..)
 
