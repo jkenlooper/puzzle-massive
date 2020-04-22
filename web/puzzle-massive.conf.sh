@@ -5,9 +5,11 @@ set -eu -o pipefail
 ENVIRONMENT=$1
 SRVDIR=$2
 NGINXLOGDIR=$3
-PORTREGISTRY=$4
-INTERNALIP=$5
-CACHEDIR=$6
+NGINXDIR=$4
+PORTREGISTRY=$5
+INTERNALIP=$6
+CACHEDIR=$7
+STATE=$8
 
 # shellcheck source=/dev/null
 source "$PORTREGISTRY"
@@ -19,10 +21,86 @@ DATE=$(date)
 
 DEBUG=$(./bin/site-cfg.py site.cfg DEBUG || echo 'False')
 
+# Load snippet confs
+file_ssl_params_conf=$(cat web/ssl_params.conf)
+
+function ssl_certs {
+  if test "${ENVIRONMENT}" == 'development'; then
+
+    if test -e .has-certs; then
+    cat <<HEREENABLESSLCERTS
+      # certs created for local development
+      ssl_certificate "${NGINXDIR}ssl/local-puzzle-massive.crt";
+      ssl_certificate_key "${NGINXDIR}ssl/local-puzzle-massive.key";
+HEREENABLESSLCERTS
+    else
+    cat <<HERETODOSSLCERTS
+      # certs for local development can be created by running './bin/provision-local-ssl-certs.sh'
+      # uncomment after they exist (run make again)
+      #ssl_certificate "${NGINXDIR}ssl/local-puzzle-massive.crt";
+      #ssl_certificate_key "${NGINXDIR}ssl/local-puzzle-massive.key";
+HERETODOSSLCERTS
+    fi
+
+  else
+
+    if test -e .has-certs; then
+    cat <<HEREENABLESSLCERTS
+      # certs created from certbot
+      ssl_certificate /etc/letsencrypt/live/puzzle.massive.xyz/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/puzzle.massive.xyz/privkey.pem;
+HEREENABLESSLCERTS
+    else
+    cat <<HERETODOSSLCERTS
+      # certs can be created from running 'bin/provision-certbot.sh ${SRVDIR}'
+      # TODO: uncomment after they exist
+      #ssl_certificate /etc/letsencrypt/live/puzzle.massive.xyz/fullchain.pem;
+      #ssl_certificate_key /etc/letsencrypt/live/puzzle.massive.xyz/privkey.pem;
+HERETODOSSLCERTS
+    fi
+  fi
+
+  if (test -f web/dhparam.pem); then
+  cat <<HERE
+    ## Danger Zone.  Only uncomment if you know what you are doing.
+    #ssl_dhparam /etc/nginx/ssl/dhparam.pem;
+HERE
+  fi
+}
+
+function server_header {
+  cat <<HERE
+  listen 80;
+  server_tokens off;
+HERE
+  #if test "${ENVIRONMENT}" == 'development'; then
+  #else
+  #fi
+
+  if test -e .has-certs; then
+    cat <<HEREBECERTS
+    listen 443 ssl http2;
+    ${file_ssl_params_conf}
+HEREBECERTS
+    ssl_certs;
+  else
+    cat <<HERENOCERTS
+    # Site is not configured for ssl certs. No .has-certs file found.
+    #listen 443 ssl http2;
+HERENOCERTS
+    # ssl_certs function will comment out the ssl_certificate directive
+    ssl_certs;
+  fi
+}
+
 cat <<HERE
 # File generated from $0
 # on ${DATE}
 
+HERE
+
+if test "${STATE}" == 'up'; then
+cat <<HEREBEUP
 limit_conn_zone \$binary_remote_addr zone=addr:1m;
 limit_req_zone \$binary_remote_addr zone=piece_move_limit_per_ip:1m rate=60r/m;
 limit_req_zone \$binary_remote_addr zone=piece_token_limit_per_ip:1m rate=60r/m;
@@ -38,51 +116,18 @@ limit_req_zone \$binary_remote_addr zone=chill_site_internal_limit:1m rate=10r/s
 
 proxy_headers_hash_bucket_size 2048;
 
-server {
-  # Redirect for old hosts
-  listen       80;
-  server_name puzzle.weboftomorrow.com www.puzzle.massive.xyz;
-  return       301 http://puzzle.massive.xyz\$request_uri;
-}
-
-map \$request_uri \$loggable {
-    # Don't log requests to the anonymous login link.
-    ~/puzzle-api/bit/.* 0;
-    ~/newapi/user-login/.* 0;
-
-    default 1;
-}
-
-map \$request_uri \$hotlinking_policy {
-  # Set routes to 0 to allow hotlinking or direct loading (bookmarked).
-
-  # anonymous login links
-  ~/puzzle-api/bit/.* 0;
-  ~/newapi/user-login/.* 0;
-
-  # Pages on the site.
-  ~/chill/site/.* 0;
-
-  # og:image image that can be used when sharing links
-  /puzzle-massive-logo-600.png 0;
-  /favicon.ico 0;
-  ~/resources/.*/preview_full.jpg 0;
-
-  default \$invalid_referer;
-}
-
 map \$request_uri \$cache_expire {
   default off;
-HERE
+HEREBEUP
 if test "${DEBUG}" = 'True'; then
-cat <<HERE
+cat <<HEREBEUPDEBUG
   # DEBUG=True means that cache on /chill/site/* is off.
   ~/chill/site/.* -1;
   ~/theme/.*?/.* -1;
   # Any below matches for chill/site/ and theme/ are ignored.
-HERE
+HEREBEUPDEBUG
 fi
-cat <<HERE
+cat <<HEREBEUP
   ~/chill/site/internal/player-bit/.* 1d;
   ~/chill/site/internal/attribution/.* 1d;
   ~/chill/site/claim-player/.* off;
@@ -110,13 +155,90 @@ cat <<HERE
   /newapi/player-puzzle-list/ off;
 }
 
-# Cache server
 # Manually purge files in cache with the script ./bin/purge_nginx_cache_file.sh
 proxy_cache_path ${CACHEDIR} levels=1:2 keys_zone=pm_cache_zone:10m inactive=600m use_temp_path=off;
+
+HEREBEUP
+
+else
+# STATE is down
+
+cat <<HEREBEDOWN
+HEREBEDOWN
+
+fi
+# end STATE
+
+
+cat <<HERE
+map \$request_uri \$hotlinking_policy {
+  # Set routes to 0 to allow hotlinking or direct loading (bookmarked).
+
+  # anonymous login links
+  ~/puzzle-api/bit/.* 0;
+  ~/newapi/user-login/.* 0;
+
+  # Pages on the site.
+  ~/chill/site/.* 0;
+
+  # og:image image that can be used when sharing links
+  /puzzle-massive-logo-600.png 0;
+  /favicon.ico 0;
+  ~/resources/.*/preview_full.jpg 0;
+
+  default \$invalid_referer;
+}
+
+map \$request_uri \$loggable {
+    # Don't log requests to the anonymous login link.
+    ~/puzzle-api/bit/.* 0;
+    ~/newapi/user-login/.* 0;
+
+    default 1;
+}
+
+
+# Redirect for old hosts
 server {
-  listen      80;
-  listen 443 ssl http2;
+  listen       80;
+  server_tokens off;
+  server_name puzzle.weboftomorrow.com www.puzzle.massive.xyz;
+  return       301 http://puzzle.massive.xyz\$request_uri;
+}
+HERE
+
+
+cat <<HERECACHESERVER
+# Cache server
+server {
+HERECACHESERVER
+
+server_header;
+
+if test "${ENVIRONMENT}" == 'development'; then
+cat <<HEREBEDEVELOPMENT
+  # Only when in development should the site be accessible via internal ip.
+  # This makes it easier to test with other devices that may not be able to
+  # update a /etc/hosts file.
+  server_name local-puzzle-massive $INTERNALIP;
+HEREBEDEVELOPMENT
+else
+cat <<HEREBEPRODUCTION
+  server_name puzzle-blue puzzle-green ${DOMAIN_NAME};
+
+HEREBEPRODUCTION
+fi
+cat <<HERECACHESERVER
+
+
+  add_header X-Frame-Options DENY;
+  add_header X-Content-Type-Options nosniff;
+
   root ${SRVDIR}root;
+
+  access_log  ${NGINXLOGDIR}access.log;
+  error_log   ${NGINXLOGDIR}error.log;
+
   valid_referers server_names;
 
   # Limit the max simultaneous connections per ip address (10 per browser * 4 if within LAN)
@@ -157,14 +279,16 @@ server {
   rewrite ^/(site.webmanifest)\$ /\$1? last;
   # Matches root files: /humans.txt, /robots.txt, /puzzle-massive-logo-600.png, /favicon.ico
   rewrite ^/([^/]+)(\.txt|\.png|\.ico)\$ /\$1\$2? last;
-HERE
-if test "${ENVIRONMENT}" != 'development'; then
-cat <<HERE
-  rewrite ^/(theme/.*)\$ /\$1? last;
-HERE
-fi
-cat <<HERE
 
+HERECACHESERVER
+if test "${ENVIRONMENT}" != 'development'; then
+cat <<HERECACHESERVERPRODUCTION
+  rewrite ^/(theme/.*)\$ /\$1? last;
+HERECACHESERVERPRODUCTION
+fi
+
+if test "${STATE}" == 'up'; then
+cat <<HERECACHESERVERUP
   location / {
     rewrite ^/\$ /chill/site/front/ last;
 
@@ -229,10 +353,6 @@ cat <<HERE
     proxy_pass http://localhost:${PORTORIGIN};
   }
 
-  location /newapi/message/ {
-    rewrite ^/.* /puzzle-massive-message.html break;
-  }
-
   # Skipping divulger since it is not needed at the moment.
   #location /divulge/ {
   #  proxy_pass_header Server;
@@ -270,87 +390,90 @@ cat <<HERE
     # Channel is in the route, so /stream/puzzle/puzzle_id/ will go to: /stream?channel=puzzle:puzzle_id
     rewrite ^/stream/puzzle/([^/]+)/\$ /stream?channel=puzzle:\$1? break;
   }
-
-HERE
-
-if test "${ENVIRONMENT}" == 'development'; then
-
-if test -e .has-certs; then
-cat <<HEREENABLESSLCERTS
-  # certs created for local development
-  ssl_certificate /etc/nginx/ssl/local-puzzle-massive.crt;
-  ssl_certificate_key /etc/nginx/ssl/local-puzzle-massive.key;
-HEREENABLESSLCERTS
+HERECACHESERVERUP
 else
-cat <<HERETODOSSLCERTS
-  # certs for local development can be created by running './bin/provision-local.sh'
-  # uncomment after they exist (run make again)
-  #ssl_certificate /etc/nginx/ssl/local-puzzle-massive.crt;
-  #ssl_certificate_key /etc/nginx/ssl/local-puzzle-massive.key;
-HERETODOSSLCERTS
+cat <<HERECACHESERVERDOWN
+  # Temporary redirect document pages to allow robots to index them.
+  location ~* ^/(about|faq|help|credits|buy-stuff)/ {
+    # stop caching
+    expires -1;
+    add_header Cache-Control "public";
+
+    rewrite ^/.* /error_page.html break;
+  }
+
+  rewrite ^/\$ /chill/site/front/ last;
+  location / {
+    try_files \$uri \$uri =404;
+  }
+  location /chill/site/ {
+    # stop caching
+    expires -1;
+    add_header Cache-Control "public";
+
+    rewrite ^/.* /error_page.html break;
+  }
+  location /newapi/ {
+    return 503;
+  }
+HERECACHESERVERDOWN
 fi
 
-cat <<HEREBEDEVELOPMENT
-  # Only when in development should the site be accessible via internal ip.
-  # This makes it easier to test with other devices that may not be able to
-  # update a /etc/hosts file.
-  server_name local-puzzle-massive $INTERNALIP;
-HEREBEDEVELOPMENT
+cat <<HERECACHESERVER
 
-else
-
-if test -e .has-certs; then
-cat <<HEREENABLESSLCERTS
-  # certs created from certbot
-  ssl_certificate /etc/letsencrypt/live/puzzle.massive.xyz/fullchain.pem;
-  ssl_certificate_key /etc/letsencrypt/live/puzzle.massive.xyz/privkey.pem;
-HEREENABLESSLCERTS
-else
-cat <<HERETODOSSLCERTS
-  # certs can be created from running 'bin/provision-certbot.sh ${SRVDIR}'
-  # TODO: uncomment after they exist
-  #ssl_certificate /etc/letsencrypt/live/puzzle.massive.xyz/fullchain.pem;
-  #ssl_certificate_key /etc/letsencrypt/live/puzzle.massive.xyz/privkey.pem;
-HERETODOSSLCERTS
-fi
-
-cat <<HEREBEPRODUCTION
-
-  server_name puzzle-blue puzzle-green ${DOMAIN_NAME};
+  location /newapi/message/ {
+    rewrite ^/.* /puzzle-massive-message.html break;
+  }
 
   location /.well-known/ {
     try_files \$uri =404;
   }
-HEREBEPRODUCTION
-fi
 
-cat <<HERE
+  #TODO: error pages work on cache server? May need to move back to origin server?
+  error_page 500 501 502 504 505 506 507 /error.html;
+  location = /error.html {
+    internal;
+  }
+
+  error_page 503 /overload_page.html;
+  location = /overload_page.html {
+    internal;
+  }
+
+  error_page 400 /invalid_page.html;
+  location = /invalid_page.html {
+    internal;
+  }
+
+  error_page 401 403 /unauthorized_page.html;
+  location = /unauthorized_page.html {
+    internal;
+  }
+
+  error_page 404 /notfound.html;
+  location = /notfound.html {
+    internal;
+  }
+
+  error_page 429 /too_many_requests_page.html;
+  location = /too_many_requests_page.html {
+    internal;
+  }
+
+  error_page 409 /conflict_page.html;
+  location = /conflict_page.html {
+    internal;
+  }
 }
+HERECACHESERVER
 
+
+if test "${STATE}" == 'up'; then
+cat <<HEREORIGINSERVER
 # Origin server
 server {
   server_name localhost;
   listen      ${PORTORIGIN};
-  #listen 443 ssl http2;
-
-  ## SSL Params
-  # from https://cipherli.st/
-  # and https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html
-
-  #ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
-  #ssl_prefer_server_ciphers on;
-  #ssl_ciphers "EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH";
-  #ssl_ecdh_curve secp384r1;
-  #ssl_session_cache shared:SSL:10m;
-  #ssl_session_tickets off;
-  #ssl_stapling on;
-  #ssl_stapling_verify on;
-  #resolver 8.8.8.8 8.8.4.4 valid=300s;
-  #resolver_timeout 5s;
-  ## Disable preloading HSTS for now.  You can use the commented out header line that includes
-  ## the "preload" directive if you understand the implications.
-  ##add_header Strict-Transport-Security "max-age=63072000; includeSubdomains; preload";
-  #add_header Strict-Transport-Security "max-age=63072000; includeSubdomains";
 
   add_header X-Frame-Options DENY;
   add_header X-Content-Type-Options nosniff;
@@ -358,14 +481,6 @@ server {
   set_real_ip_from localhost;
   real_ip_header X-Real-IP;
   real_ip_recursive on;
-
-HERE
-if (test -f web/dhparam.pem); then
-cat <<HERE
-  #ssl_dhparam /etc/nginx/ssl/dhparam.pem;
-HERE
-fi
-cat <<HERE
 
   root ${SRVDIR}root;
 
@@ -461,17 +576,17 @@ cat <<HERE
   }
 
   location /newapi/admin/ {
-HERE
+HEREORIGINSERVER
 if test "${ENVIRONMENT}" != 'development'; then
-cat <<HERE
+cat <<HEREORIGINSERVERPRODUCTION
     # Set to droplet ip not floating ip.
     # Requires using SOCKS proxy (ssh -D 8080 user@host)
     allow $INTERNALIP;
     allow 127.0.0.1;
     deny all;
-HERE
+HEREORIGINSERVERPRODUCTION
 fi
-cat <<HERE
+cat <<HEREORIGINSERVER
     auth_basic "Restricted Content";
     auth_basic_user_file ${SRVDIR}.htpasswd;
 
@@ -599,17 +714,17 @@ cat <<HERE
 
   location /chill/site/admin/ {
 
-HERE
+HEREORIGINSERVER
 if test "${ENVIRONMENT}" != 'development'; then
-cat <<HERE
+cat <<HEREORIGINSERVERPRODUCTION
     # Set to droplet ip not floating ip.
     # Requires using SOCKS proxy (ssh -D 8080 user@host)
     allow $INTERNALIP;
     allow 127.0.0.1;
     deny all;
-HERE
+HEREORIGINSERVERPRODUCTION
 fi
-cat <<HERE
+cat <<HEREORIGINSERVER
 
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
@@ -624,7 +739,7 @@ cat <<HERE
     rewrite ^/chill/(.*)\$  /\$1 break;
   }
 
-HERE
+HEREORIGINSERVER
 if test "${ENVIRONMENT}" != 'development'; then
 cat <<HEREBEPRODUCTION
   location ~* ^/theme/.*?/(.*)\$ {
@@ -652,7 +767,7 @@ cat <<HEREBEDEVELOPMENT
   }
 HEREBEDEVELOPMENT
 fi
-cat <<HERE
+cat <<HEREORIGINSERVER
 
   location /media/bit-icons/ {
     expires \$cache_expire;
@@ -677,40 +792,7 @@ cat <<HERE
     root ${SRVDIR};
   }
 
-  error_page 500 501 502 504 505 506 507 /error_page.html;
-  location = /error_page.html {
-    internal;
-  }
-
-  error_page 503 /overload_page.html;
-  location = /overload_page.html {
-    internal;
-  }
-
-  error_page 400 /invalid_page.html;
-  location = /invalid_page.html {
-    internal;
-  }
-
-  error_page 401 403 /unauthorized_page.html;
-  location = /unauthorized_page.html {
-    internal;
-  }
-
-  error_page 404 /notfound_page.html;
-  location = /notfound_page.html {
-    internal;
-  }
-
-  error_page 429 /too_many_requests_page.html;
-  location = /too_many_requests_page.html {
-    internal;
-  }
-
-  error_page 409 /conflict_page.html;
-  location = /conflict_page.html {
-    internal;
-  }
-
 }
-HERE
+HEREORIGINSERVER
+fi
+
