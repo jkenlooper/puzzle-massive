@@ -128,7 +128,7 @@ class DivulgerService {
   onMessageSocket(msg) {
     this.lastMessageSent = new Date().getTime();
     window.clearTimeout(this.stalePuzzleTimeout);
-    this.stalePuzzleTimeout = window.setTimeout(function() {
+    this.stalePuzzleTimeout = window.setTimeout(function () {
       // TODO: Puzzle piece data may have moved away from redis storage if the
       // puzzle has been stale for 30 minutes.
     }, 30 * 60 * 1000);
@@ -150,7 +150,7 @@ class DivulgerService {
     // Set the poll interval to be 2 seconds less than the checkInterval
     const pollIntervalMs = (checkInterval - 2) * 1000;
     const interval = (PROXY_READ_TIMEOUT - checkInterval) * 1000;
-    return window.setInterval(function() {
+    return window.setInterval(function () {
       // Prevent keeping the connection open if nothing is happening
       const currentTime = new Date().getTime();
       if (

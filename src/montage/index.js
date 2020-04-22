@@ -1,1 +1,1 @@
-import './montage.css'
+import "./montage.css";

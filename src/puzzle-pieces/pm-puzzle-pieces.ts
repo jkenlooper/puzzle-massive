@@ -79,22 +79,22 @@ customElements.define(
       if (!withinSlabMassive) {
         // Patch in these properties from the attrs
         Object.defineProperty(this.$slabMassive, "scale", {
-          get: function() {
+          get: function () {
             return Number(this.getAttribute("scale"));
           },
         });
         Object.defineProperty(this.$slabMassive, "zoom", {
-          get: function() {
+          get: function () {
             return Number(this.getAttribute("zoom"));
           },
         });
         Object.defineProperty(this.$slabMassive, "offsetX", {
-          get: function() {
+          get: function () {
             return Number(this.getAttribute("offset-x"));
           },
         });
         Object.defineProperty(this.$slabMassive, "offsetY", {
-          get: function() {
+          get: function () {
             return Number(this.getAttribute("offset-y"));
           },
         });
@@ -165,7 +165,7 @@ customElements.define(
           enable: () => this.$slabMassive.zoom !== 1,
         })
       );
-      mc.on("panstart panmove", function(ev) {
+      mc.on("panstart panmove", function (ev) {
         if (ev.target.tagName === "SLAB-MASSIVE") {
           return;
         }

@@ -1,1 +1,1 @@
-import './high-scores.css'
+import "./high-scores.css";

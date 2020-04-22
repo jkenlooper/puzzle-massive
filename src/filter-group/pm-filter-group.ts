@@ -124,11 +124,7 @@ export default class PmFilterGroup extends HTMLElement {
       this.labelList.length !== this._valueList.length
     ) {
       throw new Error(
-        `${this.legend} ${
-          this.instanceId
-        } must have same number of labels and values. (${this.labelList}) (${
-          this._valueList
-        })`
+        `${this.legend} ${this.instanceId} must have same number of labels and values. (${this.labelList}) (${this._valueList})`
       );
     }
   }
@@ -240,54 +236,45 @@ export default class PmFilterGroup extends HTMLElement {
     } else if (this.filtertype === FilterGroupType.Interval) {
       // two numbers sorted
       checked = this._valueList
-        .reduce(
-          (acc, item) => {
-            if (value === item) {
-              if (isChecked) {
-                acc.push(item);
-              }
-            } else if (this.checked.includes(item)) {
-              acc.push(item);
-            }
-            return acc;
-          },
-          <Array<string>>[]
-        )
-        .map((item) => parseInt(item))
-        .filter((item) => {
-          return !isNaN(item);
-        })
-        .reduce(
-          (acc, item) => {
-            if (acc.length === 0) {
-              acc.push(item);
-              acc.push(item);
-            } else {
-              if (item < acc[0]) {
-                acc[0] = item;
-              } else if (item > acc[1]) {
-                acc[1] = item;
-              }
-            }
-            return acc;
-          },
-          <Array<number>>[]
-        )
-        .map((item) => String(item));
-    } else {
-      checked = this._valueList.reduce(
-        (acc, item) => {
+        .reduce((acc, item) => {
           if (value === item) {
             if (isChecked) {
-              acc.push(value);
+              acc.push(item);
             }
           } else if (this.checked.includes(item)) {
             acc.push(item);
           }
           return acc;
-        },
-        <Array<string>>[]
-      );
+        }, <Array<string>>[])
+        .map((item) => parseInt(item))
+        .filter((item) => {
+          return !isNaN(item);
+        })
+        .reduce((acc, item) => {
+          if (acc.length === 0) {
+            acc.push(item);
+            acc.push(item);
+          } else {
+            if (item < acc[0]) {
+              acc[0] = item;
+            } else if (item > acc[1]) {
+              acc[1] = item;
+            }
+          }
+          return acc;
+        }, <Array<number>>[])
+        .map((item) => String(item));
+    } else {
+      checked = this._valueList.reduce((acc, item) => {
+        if (value === item) {
+          if (isChecked) {
+            acc.push(value);
+          }
+        } else if (this.checked.includes(item)) {
+          acc.push(item);
+        }
+        return acc;
+      }, <Array<string>>[]);
     }
 
     this._checkedList = checked;
@@ -329,11 +316,7 @@ export default class PmFilterGroup extends HTMLElement {
         })}
       >
         <legend class="pm-FilterGroup-legend">
-          ${data.legend}${data.disabled
-            ? html`
-                &hellip;
-              `
-            : ""}
+          ${data.legend}${data.disabled ? html` &hellip; ` : ""}
         </legend>
         ${data.filtertype === FilterGroupType.Pagination
           ? html`
@@ -390,7 +373,7 @@ export default class PmFilterGroup extends HTMLElement {
                 group=${data.group}
                 name=${data.name}
                 ?disabled=${data.disabled ||
-                  data.firstCheckedItemIndex >= data.filterItems.length - 1}
+                data.firstCheckedItemIndex >= data.filterItems.length - 1}
                 value=${data.firstCheckedItemIndex < data.filterItems.length - 1
                   ? data.firstCheckedItemIndex + 2
                   : 0}

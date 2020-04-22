@@ -186,9 +186,7 @@ customElements.define(
 
     template(data: TemplateData) {
       if (data.hasError) {
-        return html`
-          ${data.errorMessage}
-        `;
+        return html` ${data.errorMessage} `;
       }
       return html`
         <div class="pm-PuzzleImagePicker">
@@ -268,9 +266,7 @@ customElements.define(
                     )}
                   </div>
                 `
-              : html`
-                  <p>No puzzles found that match the criteria.</p>
-                `}
+              : html` <p>No puzzles found that match the criteria.</p> `}
           </div>
         </div>
       `;

@@ -1,2 +1,2 @@
-import 'jscolor-picker'
-import './pm-hash-color'
+import "jscolor-picker";
+import "./pm-hash-color";

@@ -40,19 +40,19 @@ config.output = {
 };
 
 config.resolve = {
-  extensions: ['.ts', '.js'],
-  modules: ['src', 'node_modules'],
-}
+  extensions: [".ts", ".js"],
+  modules: ["src", "node_modules"],
+};
 
 config.externals = {
-  'webcomponents.js': 'WebComponents',
-  angular: 'angular',
-  lazysizes: 'lazysizes',
-  'slab-massive.js': 'slabMassive',
-  hammerjs: 'Hammer',
-  reqwest: 'reqwest',
-  modernizr: 'Modernizr',
-}
+  "webcomponents.js": "WebComponents",
+  angular: "angular",
+  lazysizes: "lazysizes",
+  "slab-massive.js": "slabMassive",
+  hammerjs: "Hammer",
+  reqwest: "reqwest",
+  modernizr: "Modernizr",
+};
 
 config.module = {
   rules: [
@@ -81,8 +81,8 @@ config.module = {
       test: /\.(png|gif|jpg)$/,
       use: [
         {
-          loader: 'file-loader',
-          options: { name: '[name].[ext]' },
+          loader: "file-loader",
+          options: { name: "[name].[ext]" },
         },
       ],
       exclude: /node_modules/,
@@ -94,9 +94,9 @@ config.module = {
         MiniCssExtractPlugin.loader,
         { loader: "css-loader", options: { importLoaders: 1 } },
         {
-          loader: 'postcss-loader',
+          loader: "postcss-loader",
           options: {
-            ident: 'postcss',
+            ident: "postcss",
             plugins: (loader) => [
               postcssImport({ root: loader.resourcePath }),
               postcssCustomMedia(),
@@ -111,11 +111,11 @@ config.module = {
       test: /\puzzle-pieces.css$/,
       exclude: /node_modules/,
       use: [
-        'css-loader',
+        "css-loader",
         {
-          loader: 'postcss-loader',
+          loader: "postcss-loader",
           options: {
-            ident: 'postcss',
+            ident: "postcss",
             plugins: (loader) => [postcssImport(), postcssPresetEnv()],
           },
         },
@@ -125,28 +125,28 @@ config.module = {
       test: /\.svg$/,
       use: [
         {
-          loader: 'file-loader',
+          loader: "file-loader",
           options: {
-            name: '[name].[ext]',
+            name: "[name].[ext]",
           },
         },
-        'svgo-loader',
+        "svgo-loader",
       ],
       exclude: /(node_modules|fonts|.*sprite\.svg)/,
     },
     {
       test: /\.html$/,
-      use: 'raw-loader',
+      use: "raw-loader",
     },
   ],
-}
+};
 
 config.plugins = [
   new CleanWebpackPlugin(),
-  new MiniCssExtractPlugin({ filename: '[name].css' }),
-]
+  new MiniCssExtractPlugin({ filename: "[name].css" }),
+];
 
-config.stats = 'minimal'
+config.stats = "minimal";
 
 config.optimization = {
   minimizer: [
@@ -162,24 +162,24 @@ config.optimization = {
     }),
     new OptimizeCSSAssetsPlugin({}),
   ],
-}
+};
 
 config.performance = {
-  hints: 'warning',
+  hints: "warning",
   maxAssetSize: 600000,
   maxEntrypointSize: 800000,
-}
+};
 
 module.exports = (env, argv) => {
-  if (argv.mode !== 'production') {
-    config.devtool = 'source-map'
-    config.watch = argv.watch
+  if (argv.mode !== "production") {
+    config.devtool = "source-map";
+    config.watch = argv.watch;
     config.watchOptions = {
       aggregateTimeout: 300,
       poll: 1000,
-    }
-    config.optimization = {}
+    };
+    config.optimization = {};
   }
 
-  return config
-}
+  return config;
+};

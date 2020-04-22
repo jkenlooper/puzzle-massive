@@ -1,1 +1,1 @@
-import './pm-puzzle-alert'
+import "./pm-puzzle-alert";

@@ -42,12 +42,8 @@ customElements.define(
         <small>
           active
           ${data.playerStats.totalActivePlayers > 1
-            ? html`
-                players
-              `
-            : html`
-                player
-              `}
+            ? html` players `
+            : html` player `}
           in the last 14 days.
         </small>
       `;

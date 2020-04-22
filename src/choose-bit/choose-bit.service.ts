@@ -12,7 +12,7 @@ export class ChooseBitService {
       headers: {
         "Content-Type": "application/json",
       },
-    }).then(function(response: Response) {
+    }).then(function (response: Response) {
       if (!response.ok) {
         throw new Error(response.statusText);
       }

@@ -122,9 +122,7 @@ customElements.define(
         return html``;
       }
       if (data.hasError) {
-        return html`
-          ${data.errorMessage}
-        `;
+        return html` ${data.errorMessage} `;
       }
       if (!data.hasPuzzleDetails || !data.hasActions) {
         return html``;
@@ -145,9 +143,7 @@ customElements.define(
                 delete
               </button>
             `
-          : html`
-              <button disabled>delete</button>
-            `}
+          : html` <button disabled>delete</button> `}
         ${data.isFrozen
           ? html`
               <button data-action="unfreeze" @click=${data.actionHandler}>

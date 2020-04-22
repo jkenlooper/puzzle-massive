@@ -100,16 +100,12 @@ customElements.define(
 
     template(data: TemplateData) {
       if (data.hasError) {
-        return html`
-          ${data.errorMessage}
-        `;
+        return html` ${data.errorMessage} `;
       }
       return html`
         <div class="pm-Gallery">
           ${data.isLoadingPuzzles
-            ? html`
-                Loading puzzles&hellip;
-              `
+            ? html` Loading puzzles&hellip; `
             : html`
                 ${data.puzzles && data.puzzles.length
                   ? html`
@@ -126,9 +122,7 @@ customElements.define(
                         )}
                       </div>
                     `
-                  : html`
-                      <p>No puzzles.</p>
-                    `}
+                  : html` <p>No puzzles.</p> `}
               `}
         </div>
       `;

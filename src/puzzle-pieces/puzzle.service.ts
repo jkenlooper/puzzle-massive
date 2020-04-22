@@ -429,7 +429,7 @@ class PuzzleService {
             },
           });
         },
-        success: function(d) {
+        success: function (d) {
           self.onKarmaUpdate(d);
         },
         complete: () => {

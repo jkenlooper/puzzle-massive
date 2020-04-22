@@ -1,1 +1,1 @@
-import './pm-logout-link'
+import "./pm-logout-link";

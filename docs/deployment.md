@@ -48,7 +48,7 @@ been uploaded to the home directory.
     cd /usr/local/src/puzzle-massive;
     source bin/activate;
     printf 'Updating...' > /srv/puzzle-massive/root/puzzle-massive-message.html;
-    sudo ./bin/puzzlectl.sh stop;
+    sudo ./bin/appctl.sh stop;
     sudo ./bin/clear_nginx_cache.sh;
     ./bin/backup-db.sh -c;
     deactivate;
@@ -92,7 +92,7 @@ been uploaded to the home directory.
 4.  Verify that stuff is working by monitoring the logs.
 
     ```bash
-    sudo ./bin/puzzlectl.sh status;
+    sudo ./bin/appctl.sh status;
     sudo ./bin/log.sh;
     ```
 
@@ -140,7 +140,7 @@ by the public.
     source bin/activate;
     make ENVIRONMENT=production;
     sudo make ENVIRONMENT=production install;
-    sudo ./bin/puzzlectl.sh stop;
+    sudo ./bin/appctl.sh stop;
 
     # Update the limits in /etc/ImageMagick-6/policy.xml
     # Refer to notes in api/api/jobs/pieceRenderer.py
@@ -148,7 +148,7 @@ by the public.
     # should be run as 'dev' user
     python api/api/create_database.py site.cfg;
 
-    sudo ./bin/puzzlectl.sh start;
+    sudo ./bin/appctl.sh start;
     ```
 
 5.  The logs can be followed with the `./bin/log.sh` command. It is just
@@ -218,7 +218,7 @@ on the old server and copy all the data over to the new puzzle-massive-green ser
     cd /usr/local/src/puzzle-massive/;
     source bin/activate;
     printf 'Updating...' > /srv/puzzle-massive/root/puzzle-massive-message.html;
-    sudo ./bin/puzzlectl.sh stop;
+    sudo ./bin/appctl.sh stop;
     sudo ./bin/clear_nginx_cache.sh;
     ./bin/backup-db.sh -c;
     ```
@@ -230,7 +230,7 @@ on the old server and copy all the data over to the new puzzle-massive-green ser
     ```bash
     cd /usr/local/src/puzzle-massive/;
     source bin/activate;
-    sudo ./bin/puzzlectl.sh stop;
+    sudo ./bin/appctl.sh stop;
     rm /var/lib/puzzle-massive/sqlite3/db*;
     rm -rf /var/lib/puzzle-massive/archive/*
     rm -rf /srv/puzzle-massive/resources/*;
@@ -279,7 +279,7 @@ on the old server and copy all the data over to the new puzzle-massive-green ser
       dev@puzzle-blue:/srv/puzzle-massive/resources \
       /srv/puzzle-massive/
     ```
-    
+
 7.  Copy the certificates listed on the old server (`sudo certbot certificates`) to the new server.
 
     ```bash
@@ -307,7 +307,7 @@ on the old server and copy all the data over to the new puzzle-massive-green ser
     ```
     cd /usr/local/src/puzzle-massive/;
     source bin/activate;
-    sudo ./bin/puzzlectl.sh start;
+    sudo ./bin/appctl.sh start;
     printf '' > /srv/puzzle-massive/root/puzzle-massive-message.html;
     sudo ./bin/log.sh;
     ```

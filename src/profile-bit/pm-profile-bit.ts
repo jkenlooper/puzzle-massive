@@ -136,21 +136,15 @@ customElements.define(
                 `
             : ""}
           ${data.showScore
-            ? html`
-                <div>Score <b>${data.score}</b></div>
-              `
+            ? html` <div>Score <b>${data.score}</b></div> `
             : html``}
           ${data.showDots
-            ? html`
-                <div>Dots <b>${data.dots}</b></div>
-              `
+            ? html` <div>Dots <b>${data.dots}</b></div> `
             : html``}
           ${data.canClaimUser && data.showClaimButton
             ? html`
                 ${data.isProcessingClaimUser
-                  ? html`
-                      ...
-                    `
+                  ? html` ... `
                   : html`
                       <button @click=${data.claimUserHandler}>claim</button>
                     `}
@@ -188,14 +182,10 @@ customElements.define(
           handleEvent: this.handleClickClaimUser.bind(this),
           capture: true,
         },
-        profileLink: `${this.player_profile_url}${
-          userDetailsService.userDetails.login
-        }/`,
+        profileLink: `${this.player_profile_url}${userDetailsService.userDetails.login}/`,
         iconAlt: "bit icon " + userDetailsService.userDetails.icon || "",
         hasIcon: !!userDetailsService.userDetails.icon,
-        iconSrc: `${this.mediaPath}bit-icons/64-${
-          userDetailsService.userDetails.icon
-        }.png`,
+        iconSrc: `${this.mediaPath}bit-icons/64-${userDetailsService.userDetails.icon}.png`,
         bitBackground: userDetailsService.userDetails.bitBackground,
         userId: userDetailsService.userDetails.id || 0,
         username: userDetailsService.userDetails.name,

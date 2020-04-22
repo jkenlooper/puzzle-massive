@@ -1,1 +1,1 @@
-import './puzzle-actions.css'
+import "./puzzle-actions.css";

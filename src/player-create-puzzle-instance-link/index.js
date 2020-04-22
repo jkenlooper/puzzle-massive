@@ -1,1 +1,1 @@
-import './pm-player-create-puzzle-instance-link'
+import "./pm-player-create-puzzle-instance-link";

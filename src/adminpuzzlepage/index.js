@@ -1,4 +1,3 @@
-import '../admin-puzzle-actions'
-import '../montage'
-import './adminpuzzlepage.css'
-
+import "../admin-puzzle-actions";
+import "../montage";
+import "./adminpuzzlepage.css";

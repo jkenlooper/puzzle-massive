@@ -1,1 +1,1 @@
-import './pm-rebuild-form'
+import "./pm-rebuild-form";

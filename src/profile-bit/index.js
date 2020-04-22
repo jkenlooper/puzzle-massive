@@ -1,2 +1,2 @@
-import '../logout-link'
-import './pm-profile-bit'
+import "../logout-link";
+import "./pm-profile-bit";

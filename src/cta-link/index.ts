@@ -1,1 +1,1 @@
-import './cta-link.css';
+import "./cta-link.css";

@@ -1,2 +1,2 @@
-import '../logo'
-import './footer.css'
+import "../logo";
+import "./footer.css";

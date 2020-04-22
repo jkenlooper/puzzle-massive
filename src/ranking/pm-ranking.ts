@@ -117,14 +117,10 @@ customElements.define(
 
       function contents() {
         if (!data.isReady) {
-          return html`
-            loading...
-          `;
+          return html` loading... `;
         }
         if (data.hasError) {
-          return html`
-            error: ${data.errorMessage}
-          `;
+          return html` error: ${data.errorMessage} `;
         }
         return html`
           <div class="pm-Ranking-list" role="list">

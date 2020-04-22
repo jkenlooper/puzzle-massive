@@ -1,1 +1,1 @@
-import './adminnameregisterreviewpage.css'
+import "./adminnameregisterreviewpage.css";

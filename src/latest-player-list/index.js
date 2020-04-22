@@ -1,1 +1,1 @@
-import './pm-latest-player-list'
+import "./pm-latest-player-list";

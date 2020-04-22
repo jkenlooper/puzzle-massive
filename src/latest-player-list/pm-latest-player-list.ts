@@ -64,14 +64,10 @@ customElements.define(
 
     template(data: TemplateData) {
       if (!data.isReady) {
-        return html`
-          loading...
-        `;
+        return html` loading... `;
       }
       if (data.hasError) {
-        return html`
-          ${data.errorMessage}
-        `;
+        return html` ${data.errorMessage} `;
       }
 
       const offset = this.offset;

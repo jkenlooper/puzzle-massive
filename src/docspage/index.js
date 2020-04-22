@@ -1,1 +1,1 @@
-import './docspage.css'
+import "./docspage.css";

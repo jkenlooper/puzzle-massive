@@ -1,1 +1,1 @@
-import './pm-dot-require'
+import "./pm-dot-require";

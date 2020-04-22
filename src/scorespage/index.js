@@ -1,3 +1,3 @@
-import './scorespage.css'
-import '../high-scores'
-import '../ranking'
+import "./scorespage.css";
+import "../high-scores";
+import "../ranking";

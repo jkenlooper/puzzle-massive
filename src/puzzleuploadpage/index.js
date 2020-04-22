@@ -1,2 +1,2 @@
-import '../upload-form'
-import './puzzleuploadpage.css'
+import "../upload-form";
+import "./puzzleuploadpage.css";

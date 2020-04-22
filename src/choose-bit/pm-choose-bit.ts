@@ -152,14 +152,10 @@ customElements.define(
           `;
         }
         if (data.hasError) {
-          return html`
-            An error occured.
-          `;
+          return html` An error occured. `;
         } else {
           if (!data.bits.length) {
-            return html`
-              No bits are available at this time.
-            `;
+            return html` No bits are available at this time. `;
           } else {
             return html`
               ${repeat(

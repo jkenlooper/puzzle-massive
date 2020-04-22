@@ -144,9 +144,9 @@ class UserDetailsService {
   }
 
   get anonymousLoginLink(): string {
-    return `${baseUrl}${window.localStorage.getItem(
-      UserDetailsService.anonymousLoginName
-    ) || ""}`;
+    return `${baseUrl}${
+      window.localStorage.getItem(UserDetailsService.anonymousLoginName) || ""
+    }`;
   }
 
   currentUserId(): Promise<string> {

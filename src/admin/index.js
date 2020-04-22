@@ -1,6 +1,6 @@
-import './admin.css'
+import "./admin.css";
 
-import '../player-bit'
+import "../player-bit";
 
-import '../adminpuzzlepage'
-import '../adminnameregisterreviewpage'
+import "../adminpuzzlepage";
+import "../adminnameregisterreviewpage";

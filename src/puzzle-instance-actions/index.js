@@ -1,1 +1,1 @@
-import './pm-puzzle-instance-actions'
+import "./pm-puzzle-instance-actions";

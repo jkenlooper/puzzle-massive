@@ -53,13 +53,7 @@ customElements.define(
         <strong>${data.activePlayerCount}</strong>
         <small>
           Active
-          ${data.activePlayerCount > 1
-            ? html`
-                Players
-              `
-            : html`
-                Player
-              `}
+          ${data.activePlayerCount > 1 ? html` Players ` : html` Player `}
         </small>
       `;
     }

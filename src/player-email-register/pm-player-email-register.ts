@@ -88,9 +88,7 @@ customElements.define(
                 <p>
                   The e-mail address (${data.email}) has
                   ${data.emailVerifed
-                    ? html`
-                        been verified.
-                      `
+                    ? html` been verified. `
                     : html`
                         <strong>not</strong> been verified. Please check your
                         e-mail for a verification link.

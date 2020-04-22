@@ -1,1 +1,1 @@
-import './pm-puzzle-original-actions'
+import "./pm-puzzle-original-actions";

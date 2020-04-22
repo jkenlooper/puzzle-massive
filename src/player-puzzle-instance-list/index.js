@@ -1,1 +1,1 @@
-import './pm-player-puzzle-instance-list'
+import "./pm-player-puzzle-instance-list";

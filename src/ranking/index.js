@@ -1,1 +1,1 @@
-import './pm-ranking'
+import "./pm-ranking";

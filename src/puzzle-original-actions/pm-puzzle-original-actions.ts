@@ -107,9 +107,7 @@ customElements.define(
         return html``;
       }
       if (data.hasError) {
-        return html`
-          ${data.errorMessage}
-        `;
+        return html` ${data.errorMessage} `;
       }
       if (!data.hasPuzzleDetails || !data.hasActions) {
         return html``;
@@ -130,9 +128,7 @@ customElements.define(
                 Bump
               </button>
             `
-          : html`
-              <button disabled>Bump</button>
-            `}
+          : html` <button disabled>Bump</button> `}
         ${data.canBump
           ? html`
               <p>

@@ -1,2 +1,2 @@
-import 'jscolor-picker'
-import './upload-form.css'
+import "jscolor-picker";
+import "./upload-form.css";
