@@ -44,3 +44,5 @@
 /wsdump.py
 /futurize
 /pasteurize
+/chardetect
+/pybabel

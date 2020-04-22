@@ -1,7 +1,7 @@
 --- !ChillNode
 name: footerpages_item
 route: /faq/
-template: docs.html
+template: docs.html.jinja2
 value:
   content: faqpage-content.html
   description: Frequently Asked Questions
@@ -11,7 +11,7 @@ value:
 --- !ChillNode
 name: footerpages_item
 route: /contact/
-template: docs.html
+template: docs.html.jinja2
 value:
   content: contactpage-content.html
   description: a contact form
@@ -21,7 +21,7 @@ value:
 --- !ChillNode
 name: footerpages_item
 route: /about/
-template: docs.html
+template: docs.html.jinja2
 value:
   content: aboutpage-content.html
   description: 'About page for online jigsaw puzzle site: Puzzle Massive'
@@ -31,7 +31,7 @@ value:
 --- !ChillNode
 name: footerpages_item
 route: /help/
-template: docs.html
+template: docs.html.jinja2
 value:
   content: helppage-content.html
   description: Tutorial for new players
@@ -42,14 +42,14 @@ value:
 --- !ChillNode
 name: header_cta
 route: /internal/header-cta/
-template: header-cta.html
+template: header-cta.html.jinja2
 value:
   content: header-cta-buy-stuff.html
 
 --- !ChillNode
 name: buystuffpage
 route: /buy-stuff/
-template: docs.html
+template: docs.html.jinja2
 value:
   content: buystuffpage-content.html
   description: Enable some advanced options for puzzles.

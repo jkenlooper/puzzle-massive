@@ -70,7 +70,7 @@
     <script type="module" src="{{ url_for('send_theme_file', filename='lazysizes.min.js') }}"></script>
     <script src="{{ url_for('send_theme_file', filename='reqwest.min.js') }}"></script>
 
-    <script src="{{ url_for('send_theme_file', filename='app.bundle.js') }}{% if config.DEBUG == True and config.CACHE_TYPE == "null" %}?debug-no-cache={{ chill_now }}{% endif %}"></script>
+    <script type="module" src="{{ url_for('send_theme_file', filename='app.bundle.js') }}{% if config.DEBUG == True and config.CACHE_TYPE == "null" %}?debug-no-cache={{ chill_now }}{% endif %}"></script>
     {% endblock %}
 
 {% if config.DEBUG == True %}

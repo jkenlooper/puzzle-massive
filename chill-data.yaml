@@ -1,7 +1,7 @@
 !ChillNode
 name: frontpage
 route: /front/<puzzle_id>/
-template: front.html
+template: front.html.jinja2
 value:
   description_txt_file: sitewide-description.txt
   pageimage: puzzle-massive-logo-600.png
@@ -13,20 +13,20 @@ value:
 --- !ChillNode
 name: scorespage
 route: /high-scores/
-template: scorespage.html
+template: scorespage.html.jinja2
 value:
   content:
     pagetitle: High Scores
   page:
     description: High scores and ranking for players
     highScores:
-      chill_template: highScores.html
+      chill_template: highScores.html.jinja2
       chill_value: _select-high-scores.sql
 
 --- !ChillNode
 name: puzzleuploadpage
 route: /new-puzzle/<contributor>/
-template: puzzleuploadpage.html
+template: puzzleuploadpage.html.jinja2
 value:
   page:
     description: Create custom puzzles by uploading a picture
@@ -36,11 +36,12 @@ value:
 --- !ChillNode
 name: puzzlepage
 route: /puzzle/<puzzle_id>/scale/<int:scale>/
-template: puzzlepage.html
+template: puzzlepage.html.jinja2
 value:
   args: _select-args-for-puzzlepage.sql
   page:
     description: puzzle assembly
+    info: _frontpage-page-info-for-puzzle_id.sql
   parent_of_top_left: _select-puzzle-piece-top-left-parent.sql
   preview_full: _select-puzzle-resources-preview_full-by-puzzle_id.sql
   puzzle: _select-puzzle-by-puzzle_id.sql
@@ -49,7 +50,7 @@ value:
 --- !ChillNode
 name: profilepage
 route: /player/
-template: profilepage.html
+template: profilepage.html.jinja2
 value:
   pagetitle: Player Profile
   content:
@@ -58,12 +59,12 @@ value:
 --- !ChillNode
 name: biticonspartial
 route: /bit-icons/<iconname>/
-template: bit-icons-img.html
+template: bit-icons-img.html.jinja2
 value: _select-iconname-for-route.sql
 --- !ChillNode
 name: footerpages_item
 route: /credits/
-template: docs.html
+template: docs.html.jinja2
 value:
   page:
     description: List of people who put this site together
@@ -75,15 +76,15 @@ value:
 --- !ChillNode
 name: artist_martin_berube_bit_icons
 route: /artist/martin-berube/bit-icons/
-template: credit-bit-icons-for-martin-berube.html
+template: credit-bit-icons-for-martin-berube.html.jinja2
 --- !ChillNode
 name: artist_mackenzie_deragon_bit_icons
 route: /artist/mackenzie-deragon/bit-icons/
-template: credit-bit-icons-for-mackenzie-deragon.html
+template: credit-bit-icons-for-mackenzie-deragon.html.jinja2
 --- !ChillNode
 name: homepage
 route: /front/
-template: front.html
+template: front.html.jinja2
 value:
   page:
     content: frontpage-content.html
@@ -93,10 +94,10 @@ value:
 --- !ChillNode
 name: api_front_for_puzzle_id
 route: /api/front/<puzzle_id>/
-template: frontpage.html
+template: frontpage.html.jinja2
 value:
   preview:
-    chill_template: preview.html
+    chill_template: preview.html.jinja2
     chill_value:
       recent: _select-frontpage-preview.sql
   puzzle_id: _route-pass-puzzle_id.sql
@@ -106,14 +107,14 @@ route:
   method: GET
   path: /admin/puzzle/
   weight: 1
-template: admin-puzzlepage.html
+template: admin-puzzlepage.html.jinja2
 value:
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
 --- !ChillNode
 name: admin_puzzle_page_all
 route: /admin/puzzle/all/
-template: admin-puzzlepage.html
+template: admin-puzzlepage.html.jinja2
 value:
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
@@ -121,7 +122,7 @@ value:
 --- !ChillNode
 name: admin_puzzle_page_submitted
 route: /admin/puzzle/submitted/
-template: admin-puzzlepage.html
+template: admin-puzzlepage.html.jinja2
 value:
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
@@ -129,7 +130,7 @@ value:
 --- !ChillNode
 name: admin_puzzle_page_renderqueue
 route: /admin/puzzle/renderqueue/
-template: admin-puzzlepage.html
+template: admin-puzzlepage.html.jinja2
 value:
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
@@ -137,7 +138,7 @@ value:
 --- !ChillNode
 name: admin_puzzle_page_suggested
 route: /admin/puzzle/suggested/
-template: admin-puzzlepage.html
+template: admin-puzzlepage.html.jinja2
 value:
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
@@ -145,7 +146,7 @@ value:
 --- !ChillNode
 name: admin_puzzle_page_suggested_add
 route: /admin/puzzle/suggested/<puzzle_id>/
-template: admin-puzzle-suggested-page.html
+template: admin-puzzle-suggested-page.html.jinja2
 value:
   page:
     description: Manage suggested puzzle data
@@ -154,7 +155,7 @@ value:
 --- !ChillNode
 name: suggested_puzzle_thank_you_page
 route: /suggested-puzzle-thank-you/
-template: docs.html
+template: docs.html.jinja2
 value:
   content: suggested-puzzle-thank-you-content.html
   page:
@@ -164,7 +165,7 @@ value:
 --- !ChillNode
 name: internal_attribution_for_id
 route: /internal/attribution/<int:attribution_id>/
-template: attribution.html
+template: attribution.html.jinja2
 value:
   attribution: _select_attribution_for_id.sql
   attribution_id: _route_pass_attribution_id.sql
@@ -172,7 +173,7 @@ value:
 --- !ChillNode
 name: puzzleimagepickerpage
 route: /puzzle-list/
-template: puzzleimagepickerpage.html
+template: puzzleimagepickerpage.html.jinja2
 value:
   page:
     description: Find a jigsaw puzzle by searching through all existing puzzles on the Puzzle Massive site.
@@ -182,7 +183,7 @@ value:
 --- !ChillNode
 name: puzzleinstanceformpage
 route: /create-puzzle-instance/<puzzle_id>/
-template: puzzleinstancepage.html
+template: puzzleinstancepage.html.jinja2
 value:
   page:
     description: Create a new puzzle instance from the image.
@@ -192,7 +193,7 @@ value:
 --- !ChillNode
 name: internal_player_bit_for_id
 route: /internal/player-bit/<int:player_id>/
-template: player-bit.html
+template: player-bit.html.jinja2
 value:
   bit: select-bit-icon-for-player-id.sql
   player_id: route-pass-player-id.sql
@@ -200,7 +201,7 @@ value:
 --- !ChillNode
 name: admin_player_page
 route: /admin/player/
-template: admin-playerpage.html
+template: admin-playerpage.html.jinja2
 value:
   players: select-players.sql
   index: route-pass-index.sql
@@ -210,7 +211,7 @@ value:
 --- !ChillNode
 name: admin_player_details_page
 route: /admin/player/details/<int:player_id>/
-template: admin-playerdetailspage.html
+template: admin-playerdetailspage.html.jinja2
 value:
   player: select-admin-player-details-for-player-id.sql
   player_id: route-pass-player-id.sql
@@ -218,7 +219,7 @@ value:
 --- !ChillNode
 name: playerpuzzlelistpage
 route: /player-puzzle-list/
-template: playerpuzzlelistpage.html
+template: playerpuzzlelistpage.html.jinja2
 value:
   page:
     description: Puzzle instances that are owned by the current player
@@ -227,7 +228,7 @@ value:
 --- !ChillNode
 name: newplayerpage
 route: /new-player/
-template: newplayerpage.html
+template: newplayerpage.html.jinja2
 value:
   description_txt_file: sitewide-description.txt
   page:
@@ -239,14 +240,14 @@ value:
 --- !ChillNode
 name: admin_name_register_review_page
 route: /admin/name-register-review/
-template: admin-name_register-review-page.html
+template: admin-name_register-review-page.html.jinja2
 value:
   unapproved_names: select-name-on-name-register-to-review.sql
 
 --- !ChillNode
 name: claim_player_by_token_page
 route: /claim-player/<token>/
-template: claim-player-by-token.html
+template: claim-player-by-token.html.jinja2
 value:
   content:
     pagetitle: Claim Player
@@ -256,7 +257,7 @@ value:
 --- !ChillNode
 name: reset_login_by_token_page
 route: /reset-login/<token>/
-template: reset-login-by-token.html
+template: reset-login-by-token.html.jinja2
 value:
   content:
     pagetitle: Reset Login

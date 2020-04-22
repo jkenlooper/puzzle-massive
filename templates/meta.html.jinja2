@@ -5,12 +5,11 @@ Title tag optimal format.
 Title tag optimal length is around 60 characters.
 #}
 <title>
-  {%- if _pagetitle %}{{ _pagetitle }} |
-  {%- else %}{% block title %}{% endblock %} | {% endif -%}
+  {%- if _pagetitle %}{{ _pagetitle }} | {% endif -%}
   {{ 'sitetitle.txt'|readfile|trim -}}
 </title>
 {% if _description -%}
-<meta name="description" content="{% block description %}{{ _description }}{% endblock %}">
+<meta name="description" content="{{ _description }}">
 {%- endif -%}
 
 {#- https://developers.facebook.com/docs/sharing/webmasters#markup -#}
