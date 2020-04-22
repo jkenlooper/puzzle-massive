@@ -1,0 +1,42 @@
+{% extends 'site.html.jinja2' %}
+
+{% set baseModifierClass = '' %}
+
+{% block body %}
+{% if baseModifier == 'mainFocus' %}
+  {% set baseModifierClass = 'pm-Base--mainFocus' %}
+{% endif %}
+<div class="pm-Base {{ baseModifierClass }}">
+  <header class="pm-Base-header">
+    {% block header %}
+      {% include 'header.html.jinja2' %}
+    {% endblock %}
+  </header>
+
+<div class="pm-Base-menu">
+  <div class="pm-Base-menuPrimary">
+  {% include 'menu.html.jinja2' %}
+  </div>
+  <div class="pm-Base-menuSecondary">
+  {% block secondarymenu %}
+  {% endblock %}
+  </div>
+
+</div>
+
+  <main class="pm-Base-main" role="main">
+    {% block main %}
+    {% endblock %}
+  </main>
+
+  <footer class="pm-Base-footer">
+    {% block kneeer %}
+    {% endblock %}
+    {% block footer %}
+    {% include 'player-stats-summary.html.jinja2' %}
+      {% include 'post-comment.html.jinja2' %}
+      {% include 'footer.html.jinja2' %}
+    {% endblock %}
+  </footer>
+</div>
+{% endblock %}

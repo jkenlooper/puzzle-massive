@@ -1,0 +1,22 @@
+{% extends 'admin-site.html.jinja2' %}
+
+{% block body %}
+<div class="pm-AdminBase">
+  <header>
+    {% block header %}
+      {% include 'admin-header.html.jinja2' %}
+    {% endblock %}
+  </header>
+
+  <main class="pm-AdminBase-main" role="main">
+    {% block main %}
+    {% endblock %}
+  </main>
+
+  <footer>
+    {% block footer %}
+      {% include 'admin-footer.html.jinja2' %}
+    {% endblock %}
+  </footer>
+</div>
+{% endblock %}

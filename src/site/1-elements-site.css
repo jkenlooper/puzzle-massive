@@ -1,0 +1,130 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* font-size 1em = 10px on default browser settings */
+  font-size: 0.625em;
+}
+
+body {
+  background-color: var(--designtoken-BackgroundColor-background);
+  background-color: var(--color-light-accent);
+  color: var(--designtoken-TextColor-onBackground);
+  color: var(--color-dark);
+  padding: 0;
+  font-family: "Trebuchet MS", sans-serif;
+  font-size: 1.6rem;
+  line-height: 1.4;
+}
+
+/* can't be combined with other ::selection */
+::-moz-selection {
+  background: var(--designtoken-Selected-backgroundColor);
+  color: var(--designtoken-Selected-textColor);
+}
+::selection {
+  background: var(--designtoken-Selected-backgroundColor);
+  color: var(--designtoken-Selected-textColor);
+}
+
+hr {
+  display: block;
+  height: 1px;
+  border: 0;
+  border-top: 1px solid currentcolor;
+  margin: 1em 0;
+  padding: 0;
+}
+
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+textarea {
+  resize: vertical;
+}
+
+a {
+  font-weight: bold;
+  color: var(--designtoken-TextColor-primaryOnBackground);
+  color: var(--color-accent);
+}
+.pm-Header a {
+  color: currentColor;
+}
+
+h1 {
+  margin: 0 0 0.4em;
+  font-size: 2.6rem;
+}
+
+article > h1 {
+  border-bottom: 2px solid var(--color-accent);
+}
+
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0 0 0.4em;
+  font-size: 2.6rem;
+}
+
+dl {
+  margin: 1em 0;
+}
+
+dt {
+  display: block;
+  margin-top: 13px;
+  font-weight: bold;
+}
+
+dd {
+  display: block;
+  margin-left: 40px;
+  margin-bottom: 1em;
+}
+
+article {
+  margin: 20px 0;
+}
+
+/* Style the targeted article with a hashed or postage stamp border. */
+article:target {
+  outline: 10px dashed hsl(0, 0%, 98%);
+  box-shadow: 0 0 25px 10px var(--color-dark-light);
+  padding: 10px;
+}
+
+input[type="color"] {
+  padding: 0;
+  width: 4em;
+  font-size: small;
+}
+
+details {
+  border: 1px solid var(--color-dark-light);
+  border-radius: 4px;
+  padding: 0.5em 0.5em 0;
+}
+
+details[open] {
+  padding: 0.5em;
+}
+
+summary {
+  font-weight: bold;
+  margin: -0.5em -0.5em 0;
+  padding: 0.5em;
+  cursor: pointer;
+}
+
+details[open] summary {
+  border-bottom: 1px solid var(--color-dark-light);
+  margin-bottom: 0.5em;
+}

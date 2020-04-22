@@ -17,4 +17,4 @@ tar --create --auto-compress --file "${FROZEN_TAR}" frozen/
 
 # Remove frozen files that were generated since the tar should be used to
 # install.
-rm -rf frozen/*
+rm -rf frozen

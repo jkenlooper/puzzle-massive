@@ -1,6 +1,0 @@
-{% from 'preview-unknown.html' import preview_unknown %}
-{% if src == '' %}
-{{ preview_unknown(width=width, height=height, class="pm-PreviewFullImg", style="font-size:3em;") }}
-{% else %}
-<img class="lazyload pm-PreviewFullImg" width="{{width|int}}" height="{{height|int}}" data-src="{{src}}" alt="">
-{% endif %}

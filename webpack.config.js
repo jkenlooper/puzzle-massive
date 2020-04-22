@@ -1,43 +1,43 @@
-const webpack = require('webpack')
-const path = require('path')
-const { CleanWebpackPlugin } = require('clean-webpack-plugin')
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const TerserPlugin = require('terser-webpack-plugin')
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
-const postcssImport = require('postcss-import')
-const postcssURL = require('postcss-url')
-const postcssPresetEnv = require('postcss-preset-env')
-const postcssCustomMedia = require('postcss-custom-media')
+const webpack = require("webpack");
+const path = require("path");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
+const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
+const postcssImport = require("postcss-import");
+const postcssURL = require("postcss-url");
+const postcssPresetEnv = require("postcss-preset-env");
+const postcssCustomMedia = require("postcss-custom-media");
 
-const srcEntry = require('./src/index.js')
+const srcEntry = require("./src/index.js");
 
-process.traceDeprecation = true
+process.traceDeprecation = true;
 
 /**
  * Config
  * Reference: http://webpack.github.io/docs/configuration.html
  * This is the object where all configuration gets set
  */
-const config = {}
+const config = {};
 
-config.mode = 'development'
+config.mode = "development";
 
-config.bail = true
+config.bail = true;
 
 /**
  * Entry
  * Reference: http://webpack.github.io/docs/configuration.html#entry
  */
-config.entry = srcEntry
+config.entry = srcEntry;
 
 /**
  * Output
  * Reference: http://webpack.github.io/docs/configuration.html#output
  */
 config.output = {
-  path: path.resolve(__dirname, 'dist'),
-  filename: '[name].bundle.js',
-}
+  path: path.resolve(__dirname, "dist"),
+  filename: "[name].bundle.js",
+};
 
 config.resolve = {
   extensions: ['.ts', '.js'],
@@ -60,7 +60,7 @@ config.module = {
       test: /\.ts$/,
       exclude: /node_modules/,
       use: {
-        loader: 'ts-loader',
+        loader: "ts-loader",
         // Only care about transpiling typescript and not doing all the type
         // checking which is slower.  TODO: could do type checking by using
         // fork-ts-checker-webpack-plugin
@@ -71,8 +71,8 @@ config.module = {
       test: /fonts\/.*\.(eot|svg|ttf|woff)$/,
       use: [
         {
-          loader: 'file-loader',
-          options: { name: '[name].[ext]' },
+          loader: "file-loader",
+          options: { name: "[name].[ext]" },
         },
       ],
       exclude: /node_modules/,
@@ -92,7 +92,7 @@ config.module = {
       exclude: /node_modules|puzzle-pieces.css/,
       use: [
         MiniCssExtractPlugin.loader,
-        'css-loader',
+        { loader: "css-loader", options: { importLoaders: 1 } },
         {
           loader: 'postcss-loader',
           options: {

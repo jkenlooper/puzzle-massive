@@ -1,8 +1,10 @@
-trailingComma: "es5"
-arrowParens: "always"
+## Using defaults https://prettier.io/docs/en/options.html
 
-overrides:
-  - files: "*.js"
-    options:
-      semi: false
-      singleQuote: true
+# trailingComma: "none"
+# arrowParens: "avoid"
+#
+# overrides:
+#   - files: "*.js"
+#     options:
+#       semi: true
+#       singleQuote: false

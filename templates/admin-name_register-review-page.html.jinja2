@@ -1,0 +1,51 @@
+{% extends 'admin-base.html.jinja2' %}
+{% if unapproved_names is mapping %}
+{% set unapproved_names = [unapproved_names] %}
+{% endif %}
+
+{% block title %}
+ | Name Register Review
+{%- endblock %}
+
+{% block description %}
+Review submitted player names for their bit icons and reject any before they are
+auto approved after the approved date.
+{% endblock %}
+
+{% block main %}
+
+<section class="pma-NameRegisterReview">
+  <h1>
+  Name Register Review
+  </h1>
+
+  <form method="POST" action="/newapi/admin/player/name-register/">
+    <input type="hidden" name="action" value="reject">
+    <ul>
+  {% for item in unapproved_names %}
+  <li>
+  <div>
+        <pm-player-bit player="{{ item.user }}"></pm-player-bit>
+  </div>
+  <label class=" u-inlineBlock u-paddingTopXs u-paddingBottomXs u-paddingLeftSm u-paddingRightSm">
+    <input type="hidden" name="name_register_user" value="{{ item.user }}">
+  <input class="pma-NameRegisterReview-checkbox" type="checkbox" name="name_register_id" value="{{ item.id }}">
+  {% if item.approved == 1 %}
+  <b class="pma-NameRegisterReview-displayName">{{ item.display_name }}</b>
+  {% else %}
+  <span class="pma-NameRegisterReview-displayName">
+  {{ item.display_name }}
+  </span>
+  {% endif %}
+  </label>
+  </li>
+  {% endfor %}
+    </ul>
+
+  <div>
+  <input type="submit" value="reject">
+  </div>
+  </form>
+</section>
+
+{% endblock %}

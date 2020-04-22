@@ -1,0 +1,22 @@
+# Use of colors loosely follow Material Design guidelines.
+# https://www.material.io/design/color/
+
+imports:
+  - ../color.yaml
+global:
+  type: color
+  category: text-color
+
+props:
+  TextColor-onBackground:
+    value: "{!color-dark-contrast-high}"
+  TextColor-onBackground--medium:
+    value: "{!color-dark-contrast-medium}"
+  TextColor-onBackground--disabled:
+    value: "{!color-dark-contrast-disabled}"
+  TextColor-onSurface:
+    value: "{!color-dark-contrast-high}"
+  TextColor-onSurface--medium:
+    value: "{!color-dark-contrast-medium}"
+  TextColor-onSurface--disabled:
+    value: "{!color-dark-contrast-disabled}"

@@ -1,10 +1,15 @@
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
 *.DS_Store
 /.env
+/.eslintcache
 /.htpasswd
 /.has-certs
 /.vagrant/
+/.design-tokens-css
 /site.cfg
 /frozen.tar.gz
+/puzzle-massive-*.tar.gz
 /web/puzzle-massive.conf
 /web/puzzle-massive--down.conf
 /stats/awstats.puzzle.massive.xyz.conf
@@ -32,15 +37,10 @@
 /src/*/*.tmp.css.map
 /src/*/*.tmp.js
 /src/*/*.tmp.js.map
-/puzzle-massive/*
-!/puzzle-massive/MANIFEST
 
 /web/dhparam.pem
-/web/local-puzzle-massive-CA.key
-/web/local-puzzle-massive-CA.pem
-/web/local-puzzle-massive-CA.srl
 /web/local-puzzle-massive.crt
-/web/local-puzzle-massive.csr
+/web/local-development.csr
 /web/local-puzzle-massive.key
 
 /include/

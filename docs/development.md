@@ -4,7 +4,7 @@ Get a local development version of Puzzle Massive to run on your machine by
 following these (super awesome) instructions. This is necessary in order to
 create a dist file (`make dist`) for deploying to a production server.
 
-Written for a Linux machine that is Debian based. Only tested on Ubuntu 18.04. Use
+Written for a Linux machine that is Debian based. Only tested on Ubuntu. Use
 [VirtualBox](https://www.virtualbox.org/) and
 [Vagrant](https://www.vagrantup.com/) if not on a Linux machine.
 
@@ -63,7 +63,7 @@ sudo usermod -aG sudo dev
 ```
 
 Run the initial `bin/setup.sh` script after logging into the development
-machine. This may take some time and it will ask a few questions.
+machine.
 
 ```bash
 # Install other software dependencies with apt-get and npm.
@@ -75,11 +75,16 @@ sudo chown -R dev:dev ~/.config
 sudo chown -R dev:dev ~/.npm
 ```
 
-To have TLS (SSL) on your development machine run the `bin/provision-local.sh`
-script. That will use `openssl` to create some certs in the web/ directory. The
-`local-puzzle-massive-CA.pem`
-file should be imported to Keychain Access and marked as always trusted.
-_This step is not necessary. The site isn't using https yet._
+To have TLS (SSL) on your development machine run the
+`provision-local-ssl-certs.sh` script. That will use `openssl` to create some
+certs in the web/ directory. The `localhost-CA.pem` file that is created in the
+home directory by default should be imported to Keychain Access and marked as
+always trusted. The Firefox web browser will require importing the
+`localhost-CA.pem` certificate authority file.
+
+```bash
+./bin/provision-local-ssl-certs.sh
+```
 
 ### The 'dev' user and sqlite db file
 
@@ -158,32 +163,37 @@ htpasswd -c .htpasswd admin;
 The website apps are managed as
 [systemd](https://freedesktop.org/wiki/Software/systemd/) services.
 The service config files are created by running `make` and installed with
-`sudo make install`. It is recommended to use Python's `virtualenv .`
+`sudo make install`. It is recommended to use Python's `virtualenv . -p python3`
 and activating each time for a new shell with `source bin/activate` before
 running `make`.
 
 **All commands are run from the project's directory unless otherwise noted.** For
-the Vagrant setup this should be the home folder of the dev user
-`/home/dev/puzzle-massive/`.
+the Vagrant setup this is the shared folder `/vagrant/`.
 
 ```bash
 vagrant ssh;
-sudo su dev;
-cd /home/dev/puzzle-massive/;
+cd /vagrant/;
 ```
 
 Some git commit hooks are installed and rely on commands to be installed to
-format the python code ([black](https://github.com/python/black)) and format other code ([prettier](https://github.com/prettier/prettier)). Committing
-before following the below setup that installs these will result in an error.
+format the python code (black) and format other code (prettier). Committing
+before following the below setup will result in an error if these commands
+haven't been installed on the development machine.
 
-The [Node Version Manager (nvm)](https://github.com/creationix/nvm) is used in
-order to select a npm and node version that is compatible with the build
-scripts. See the link for more information.
+If `nvm` isn't available on the dev machine then install it. See
+[github.com/nvm-sh/nvm](https://github.com/nvm-sh/nvm) for more
+information.
 
 ```bash
-# On Vagrant or dev machine
-# Install Node Version Manager (nvm)
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
+# Install Node Version Manager
+
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
+source ~/.bashrc
+
+# Update to latest Nodejs LTS version and update the .nvmrc
+# This is optional.
+#nvm install --lts=Erbium
+#nvm current > .nvmrc
 
 # Install and use the version set in .nvmrc
 nvm install
@@ -203,12 +213,18 @@ pip install black;
 # Build the dist files for local development
 nvm use
 npm install;
+
+# Checkout any git submodules in this repo if didn't
+# `git clone --recurse-submodules ...`.
+git submodule init;
+git submodule update;
+
+# Build the dist files for local development
 npm run build;
 
-# Makes the initial development version and the db.dump.sql file
+# Makes the initial development version
 make;
 
-# Creates the initial database from the db.dump.sql file, installs other files
 sudo make install;
 
 # Update the limits in /etc/ImageMagick-6/policy.xml
@@ -224,12 +240,10 @@ exit
 sudo systemctl reload nginx
 ```
 
-The puzzle site is available on your own machine at http://localhost or
-http://localhost:8080 if using Vagrant.
-
-Update `/etc/hosts` to have local-puzzle-massive map to your machine. Access your
-local development version of Puzzle Massive at http://local-puzzle-massive/ .
-**If using vagrant you'll need to use the 8080 port http://local-puzzle-massive:8080/ .**
+Update `/etc/hosts` to have local-puzzle-massive map to your machine.
+Access your local development version of the website at
+http://local-puzzle-massive/ . If using vagrant you'll need to use the
+8080 port http://local-puzzle-massive:8080/ .
 
 Append to your `/etc/hosts` file on the host machine (Not vagrant). The
 location of this file on a Windows machine is different.
@@ -277,9 +291,9 @@ puzzle-massive-testdata instances --count=10 --min-pieces=200 --pieces=500;
 The javascript and CSS files in the `dist/` directory are built from the source
 files in `src/` by running the `npm run build` command. This uses
 [webpack](https://webpack.js.org/) and is configured with the
-`webpack.config.js`. The entry file is `src/index.ts` and following that the
-main site bundle (`site.bundle.js`, `site.css`) is built from
-`src/site/index.js`.
+`webpack.config.js`. The entry file is `src/index.js` and following that the
+main app bundle (`app.bundle.js`, `app.css`) is built from
+`src/app.js`.
 
 The source files for javascript and CSS are organized mostly as components. The
 `src/site/` being an exception as it includes CSS and javascript used across the
@@ -298,45 +312,135 @@ order for them to be included in the distribution file. The distribution file
 is uploaded to the server and the guide to do deployments should then be
 followed.
 
-To create the versioned distribution file (like puzzle-massive-2.2.0.tar.gz) use the
-`make dist` command. Note that the version is set in the package.json.
+To create the versioned distribution file (like `puzzle-massive-2.0.0.tar.gz`) use the
+`make dist` command. Note that the version is set in the `package.json`.
 
 The script to create the distribution file only includes the files that have
 been committed to git. It will also limit these to what is listed in the
-`puzzle-massive/MANIFEST`.
+`MANIFEST`.
 
-## Feature branches and chill-data
+## Committing database data to source control
 
-The `chill-data.sql` contains only a dump of the database tables that are used
-in chill. The Chill, Node, Node_Node, Query, Route, and Template tables are
-rebuilt if the `cat chill-data.sql | sqlite3 /path/to/sqlite/db` command is run.
-This command is commonly run when deploying or setting up the puzzle on
-a machine. A new feature on a git feature branch will sometimes require updates
-to the `chill-data.sql` file. There is a potential that if multiple feature
-branches are being developed, that there will be messy git conflicts in
-`chill-data.sql`. That would happen if those feature branches committed any
-changes to `chill-data.sql`.
+Any data that is required for the site to operate should be stored along with
+the source files. Chill specific data is stored as `chill-data.yaml` and any
+other `chill-data-*.yaml` files. Other data that chill would query for should be
+stored in a `site-data.sql` file. The `bin/create-site-data-sql.sh` can be
+edited and run when needed in development. It should export database table data
+to the `site-data.sql` file. The `site-data.sql` should be committed to source
+control and will be used when deploying the site to a server.
 
-To solve this potential problem of conflicts with `chill-data.sql`, feature
-branches should _not_ be committing any changes to the `chill-data.sql`.
-Instead the new additions to the chill data should be dumped into
-a `chill-data-feature-[feature-name].yaml` file using the `chill dump` command.
-Then when the feature branch is being merged into the develop branch,
-the chill feature yaml can also be merged into the `chill-data.yaml`
+The `chill-data.yaml` and `chill-data-*.yaml` files can be manually edited or
+recreated by running the `chill dump` command. The dump command will export
+chill specific data to these files.
+
+It is good practice to dump feature branch specific chill data to separate files
+like `chill-data-[feature-name].yaml`. That way those changes will not conflict
+with other changes that may be committed to `chill-data.yaml`. When the feature
+branch has been merged to the develop branch, the
+`chill-data-feature-[feature-name].yaml` file contents should be appended to the
+`chill-data.yaml` file. The `chill-data-feature-[feature-name].yaml` file should
+then be removed.
 
 The `chill-data-feature-[feature-name].yaml` file should also be edited to
 _only_ include changes that are being added for that feature branch.
 
-On updates to any chill-data\*.yaml files; run the below commands to reload the chill database.
+On updates to any `chill-data*.yaml` or `site-data.sql` files; run the below
+commands to reload the chill database.
 
 ```bash
 # stop the apps first
-sudo ./bin/puzzlectl.sh stop;
+sudo ./bin/appctl.sh stop;
 
 # Builds new db.dump.sql
 make;
 
-# Reset the chill data tables with what is in the new db.dump.sql file
-sqlite3 "/var/lib/puzzle-massive/sqlite3/db" < db.dump.sql;
-echo "pragma journal_mode=wal" | sqlite3 /var/lib/puzzle-massive/sqlite3/db;
+# Update the database with what is in db.dump.sql
+sudo make install;
+```
+
+## Uninstalling the app
+
+Run the below commands to remove puzzle-massive from your
+development machine. This will uninstall and disable the services, remove any
+files installed outside of the project's directory including the sqlite3
+database. _Only do this on a development machine if it's database and other
+data is no longer needed._
+
+```bash
+source bin/activate;
+sudo ./bin/appctl.sh stop;
+
+# Removes any installed files outside of the project
+sudo make uninstall;
+
+# Remove files generated by make
+make clean;
+deactivate;
+
+# Remove any source files and directories that are ignored by git...
+# Swap -n for -f for deleting files
+git clean -dX -n
+
+# ...or just clean up and preserve some files.
+# Swap -n for -f for deleting files
+git clean -dx -e /.htpasswd -e /.env -e /.has-certs -e /web -n
+
+# Removes all data including the sqlite3 database
+sudo rm -rf /var/lib/puzzle-massive/
+```
+
+## Regenerating with cookiecutter
+
+Get the latest changes from the cookiecutter that initially generated the
+project
+([jkenlooper/cookiecutter-website](https://github.com/jkenlooper/cookiecutter-website))
+by uninstalling the app, running the cookiecutter in a different directory, and
+then rsync the changed files back in. Use `git` to then patch files as needed.
+
+```bash
+now=$(date --iso-8601 --utc)
+# In the project directory of puzzle-massive.
+cd ../;
+mkdir puzzle-massive--${now};
+cd puzzle-massive--${now};
+
+# Regenerate using last entered config from initial project.  Then git clean the
+# new project files that were just created.
+cookiecutter \
+  --config-file ../puzzle-massive/.cookiecutter-regen-config.yaml \
+  gh:jkenlooper/cookiecutter-website renow=${now};
+cd puzzle-massive;
+git clean -fdx;
+
+# Back to parent directory
+cd ../../;
+
+# Create backup tar of project directory before removing all untracked files.
+tar --auto-compress --create --file puzzle-massive-${now}.bak.tar.gz puzzle-massive;
+cd puzzle-massive;
+git clean -fdx --exclude=.env --exclude=.htpasswd;
+cd ../;
+
+# Use rsync to copy over the generated project
+# (puzzle-massive--${now}/puzzle-massive)
+# files to the initial project.
+# This will delete all files from the initial project.
+rsync -a \
+  --itemize-changes \
+  --delete \
+  --exclude=.git/ \
+  --exclude=.env \
+  --exclude=.htpasswd \
+  puzzle-massive--${now}/puzzle-massive/ \
+  puzzle-massive
+
+# Remove the generated project after it has been rsynced.
+rm -rf puzzle-massive--${now};
+
+# Patch files (git add) and drop changes (git checkout) as needed.
+# Refer to the backup puzzle-massive-${now}.bak.tar.gz
+# if a file or directory that was not tracked by git is missing.
+cd puzzle-massive;
+git add -i .;
+git checkout -p .;
 ```

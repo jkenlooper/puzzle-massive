@@ -34,6 +34,8 @@ rm -rf "${SRVDIR}media/"
 
 rm -f "${NGINXDIR}sites-enabled/puzzle-massive.conf";
 rm -f "${NGINXDIR}sites-available/puzzle-massive.conf";
+rm -f "${NGINXDIR}sites-enabled/puzzle-massive--down.conf";
+rm -f "${NGINXDIR}sites-available/puzzle-massive--down.conf";
 
 rm -f "${SRVDIR}.htpasswd";
 

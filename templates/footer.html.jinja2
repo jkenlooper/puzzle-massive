@@ -1,0 +1,72 @@
+<div class="pm-Footer">
+  <div class="pm-Footer-grid">
+    <div class="pm-Footer-gridA">
+      {% include './logo.html.jinja2' %}{% if title and title == "About" %}
+      <div class="pm-Logo-eggShell">
+        <a class="pm-Logo-eggLink" href="http://puzzle.massive.xyz/chill/site/front/5512016996c09/" title="Polar Bear in a Snowstorm"></a>
+        <svg class="pm-Logo-egg" width="100%" height="100%" fit="" preserveAspectRatio="xMidYMid meet" focusable="false"><use xlink:href="{{ url_for('send_theme_file', filename='puzzle-massive-logo.svg') }}#egg"/></svg>
+      </div>{% endif %}
+    </div>
+
+    <div class="pm-Footer-gridB">
+      <div class="pm-Footer-socialLinks">
+        <a title="Discord chat server" href="https://discord.gg/uVhE2Kd">
+          <img src="{{ url_for('send_media_file', filename='discordwhite.svg') }}" width="147" height="50" alt="Discord">
+        </a>
+        <a title="Fork the project on GitHub" href="{{ config.PACKAGEJSON.homepage }}">
+          <img src="{{ url_for('send_media_file', filename='GitHub-Mark-Light-120px-plus.png') }}" alt="GitHub Mark" width="64" height="64">
+        </a>
+      </div>
+
+      <nav class="pm-Footer-nav">
+        <a href="/about/">
+          About
+        </a>
+        <a href="/help/">
+          Help
+        </a>
+        <a href="/credits/">
+          Credits
+        </a>
+        <a href="/faq/">FAQs</a>
+      <a href="/">
+        Recent Puzzle
+      </a>
+      <a href="/chill{{ url_for('.page_uri', uri='puzzle-list') }}">
+        Search For Puzzles
+      </a>
+      <a href="/chill{{ url_for('.page_uri', uri='high-scores') }}">
+        High Scores
+      </a>
+      <a href="/chill{{ url_for('.page_uri', uri='new-puzzle/submit') }}">
+        Suggest Puzzle
+      </a>
+      <a href="/chill{{ url_for('.page_uri', uri='player') }}">
+        Your Player Profile
+      </a>
+      </nav>
+
+      <p class="pm-Footer-summary">
+        Massively Multiplayer Online Jigsaw Puzzles
+      </p>
+      <p class="pm-Footer-copyright">
+        Copyright 2011 - 2020,
+        <span class="u-textNoWrap">{{ config.PACKAGEJSON.author }}</span>
+        <br>
+        Licensed under the
+        <a href="https://github.com/jkenlooper/puzzle-massive/blob/master/LICENSE">GNU Affero General Public License v3.0</a>
+      </p>
+
+      <p>This site uses cookies for player logins.  Your information is not shared with third parties.</p>
+    </div>
+    {% if page and page.description == " Massively Multiplayer Online Jigsaw Puzzles" %}{{ config.M3|safe }}{% endif %}{# reality check #}
+    <div class="pm-Footer-gridC">
+      <p class="u-textRight">
+        <a title="Puzzle Massive is an open source project" href="{{ config.PACKAGEJSON.homepage }}">
+          {{ config.PACKAGEJSON.name }}
+          {{ config.VERSION }}
+        </a>
+      </p>
+    </div>
+  </div>
+</div>

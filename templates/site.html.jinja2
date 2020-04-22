@@ -1,0 +1,80 @@
+{%- if pagetitle %}
+  {%- set _pagetitle = pagetitle|trim -%}
+{% elif content and content.pagetitle %}
+  {%- set _pagetitle = content.pagetitle|trim -%}
+{% elif page and page.title %}
+  {%- set _pagetitle = page.title|trim -%}
+{%- elif title %}
+  {%- set _pagetitle = title|trim -%}
+{% endif -%}
+{%- if pageimage %}
+  {%- set _pageimage = pageimage|trim -%}
+{% elif content and content.pageimage %}
+  {%- set _pageimage = content.pageimage|trim -%}
+{% endif -%}
+{%- if description_txt_file %}
+  {%- set _description = description_txt_file|readfile|trim -%}
+{% elif content and content.description %}
+  {%- set _description = content.description|trim -%}
+{% elif page and page.description %}
+  {%- set _description = page.description|trim -%}
+{% endif -%}
+{%- if canonical_url %}
+  {%- set _canonical_url = canonical_url|trim -%}
+{% elif content and content.canonical_url %}
+  {%- set _canonical_url = content.canonical_url|trim -%}
+{% else %}
+  {# request.path will start with a '/' #}
+  {%- set _canonical_url = '{scheme}://{hostname}{path}'.format(scheme=config.SITE_PROTOCOL, hostname=config.HOSTNAME, path=request.path) -%}
+{% endif -%}
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+  <head>
+    {%- block meta %}
+    {% include 'meta.html.jinja2' %}
+    {% endblock -%}
+
+    <link type="text/plain" rel="author" href="/humans.txt">
+    {% block stylesheet %}
+
+    <link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='app.css') }}{% if config.DEBUG == True and config.CACHE_TYPE == "null" %}?debug-no-cache={{ chill_now }}{% endif %}">
+    {% endblock %}
+
+    {# https://github.com/audreyr/favicon-cheat-sheet #}
+    {% if config.DEBUG %}
+    <!-- Force setting favicon when in debug mode. -->
+    <!-- The favicon link is not needed in production. -->
+    <link rel="shortcut icon" href="//{{ request.host }}/favicon.ico?v={{ config.VERSION }}&debug-no-cache={{ chill_now }}" />
+    <link rel="icon" sizes="16x16 32x32 48x48" href="/favicon.ico?v={{ config.VERSION }}&debug-no-cache={{ chill_now }}">
+    {% endif %}
+
+    {% block headscript %}
+    <script type="module" src="{{ url_for('send_theme_file', filename='modernizr.build.min.js') }}"></script>
+    <script>THEME_STATIC_PATH="{{ config.THEME_STATIC_PATH }}"</script>
+    {% endblock %}
+
+  </head>
+  <body class="on-module-{{ ngModule }}">
+    <pm-site-wide-message></pm-site-wide-message>
+
+    {% block body %}
+      {{ body_html_file|readfile|safe }}
+    {% endblock %}
+
+    {% block script %}
+    {# Super simple message to display for browsers that are not supported.  #}
+    <script nomodule id="not-supported-browser-message" data-info-link="/faq/#puzzle-massive_faqpage-content_browser-support" src="{{ url_for('send_theme_file', filename='not-supported-browser-message.js') }}"></script>
+
+    <script type="module" src="{{ url_for('send_theme_file', filename='webcomponents-loader.js') }}"></script>
+    <script type="module" src="{{ url_for('send_theme_file', filename='hammer.min.js') }}"></script>
+    <script type="module" src="{{ url_for('send_theme_file', filename='lazysizes.min.js') }}"></script>
+    <script src="{{ url_for('send_theme_file', filename='reqwest.min.js') }}"></script>
+
+    <script src="{{ url_for('send_theme_file', filename='app.bundle.js') }}{% if config.DEBUG == True and config.CACHE_TYPE == "null" %}?debug-no-cache={{ chill_now }}{% endif %}"></script>
+    {% endblock %}
+
+{% if config.DEBUG == True %}
+config.DEBUG: True; chill_now: {{ chill_now|datetime }}
+{% endif %}
+  </body>
+</html>

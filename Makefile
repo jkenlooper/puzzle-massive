@@ -50,6 +50,7 @@ ifneq ($(shell which pip),$(project_dir)bin/pip)
 $(warning run "source bin/activate" to activate the virtualenv. Using $(shell which pip). Ignore this warning if using sudo make install.)
 endif
 
+
 # Always run.  Useful when target is like targetname.% .
 # Use $* to get the stem
 FORCE:
@@ -59,6 +60,7 @@ objects := site.cfg web/puzzle-massive.conf web/puzzle-massive--down.conf stats/
 
 #####
 
+# Uncomment if this is needed in the ssl setup
 #web/dhparam.pem:
 	#openssl dhparam -out $@ 2048
 
@@ -77,8 +79,8 @@ frozen.tar.gz: db.dump.sql site.cfg package.json $(shell find templates/ -type f
 	bin/freeze.sh $@
 
 objects += db.dump.sql
-# Create db.dump.sql from chill-data.sql and any chill-*.yaml files
-db.dump.sql: site.cfg chill-data.sql $(wildcard chill-*.yaml)
+# Create db.dump.sql from site-data.sql and any chill-*.yaml files
+db.dump.sql: site.cfg site-data.sql $(wildcard chill-*.yaml)
 	bin/create-db-dump-sql.sh
 
 # Also installs janitor, worker, scheduler and artist
@@ -141,13 +143,14 @@ api/puzzle-massive-backup-db.timer: api/puzzle-massive-backup-db.timer.sh
 	./$< $(ENVIRONMENT) > $@
 
 site.cfg: site.cfg.sh $(PORTREGISTRY) $(ENV_FILE)
-	./$< $(ENVIRONMENT) $(SRVDIR) $(DATABASEDIR) $(PORTREGISTRY) $(ARCHIVEDIR) $(CACHEDIR) $(PURGEURLLIST) > $@
+	./$< $(ENVIRONMENT) $(DATABASEDIR) $(PORTREGISTRY) $(SRVDIR) $(ARCHIVEDIR) $(CACHEDIR) $(PURGEURLLIST) > $@
 
-web/puzzle-massive.conf: web/puzzle-massive.conf.sh $(PORTREGISTRY)
-	./$< $(ENVIRONMENT) $(SRVDIR) $(NGINXLOGDIR) $(PORTREGISTRY) $(INTERNALIP) $(CACHEDIR) > $@
-web/puzzle-massive--down.conf: web/puzzle-massive--down.conf.sh $(PORTREGISTRY)
-	./$< $(ENVIRONMENT) $(SRVDIR) $(NGINXLOGDIR) $(PORTREGISTRY) $(INTERNALIP) $(CACHEDIR) > $@
+web/puzzle-massive.conf: web/puzzle-massive.conf.sh $(PORTREGISTRY) web/ssl_params.conf
+	./$< $(ENVIRONMENT) $(SRVDIR) $(NGINXLOGDIR) $(NGINXDIR) $(PORTREGISTRY) $(INTERNALIP) $(CACHEDIR) up > $@
+web/puzzle-massive--down.conf: web/puzzle-massive.conf.sh $(PORTREGISTRY) web/ssl_params.conf
+	./$< $(ENVIRONMENT) $(SRVDIR) $(NGINXLOGDIR) $(NGINXDIR) $(PORTREGISTRY) $(INTERNALIP) $(CACHEDIR) down > $@
 
+# Uncomment if using dhparam.pem
 #ifeq ($(ENVIRONMENT),production)
 ## Only create the dhparam.pem if needed.
 #objects += web/dhparam.pem
@@ -167,7 +170,7 @@ puzzle-massive-$(TAG).tar.gz: bin/dist.sh
 ######
 
 .PHONY: all
-all: bin/chill bin/puzzle-massive-api bin/puzzle-massive-divulger bin/puzzle-massive-stream $(objects)
+all: bin/chill bin/puzzle-massive-api bin/puzzle-massive-divulger bin/puzzle-massive-stream media $(objects)
 
 .PHONY: install
 install:
@@ -178,10 +181,12 @@ install:
 .PHONY: clean
 clean:
 	rm $(objects)
+	echo $(objects) | xargs rm -f
 	pip uninstall --yes -r chill/requirements.txt
 	pip uninstall --yes -r api/requirements.txt
 	pip uninstall --yes -r divulger/requirements.txt
 	pip uninstall --yes -r stream/requirements.txt
+	for mk in $(source_media_mk); do make -f $${mk} clean; done;
 
 # Remove files placed outside of src directory and uninstall app.
 # Will also remove the sqlite database file.
@@ -191,3 +196,10 @@ uninstall:
 
 .PHONY: dist
 dist: puzzle-massive-$(TAG).tar.gz
+
+# Find any make files in the source-media folder. Sort so the 00_ratio-hint.mk
+# is last.
+source_media_mk := $(shell find source-media/ -type f -name '*.mk' -print | sort --dictionary-order --ignore-case --reverse)
+.PHONY: media
+media:
+	for mk in $(source_media_mk); do make -f $${mk}; done;

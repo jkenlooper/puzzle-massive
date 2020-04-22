@@ -1,0 +1,83 @@
+{% extends 'admin-base.html.jinja2' %}
+
+{% block title %}
+ | Player Management
+{%- endblock %}
+
+{% block description %}
+  Player management
+{% endblock %}
+
+{% block main %}
+
+<section>
+  <h1>
+      Players
+  </h1>
+
+  <form method="GET" action="/chill{{ url_for('.page_uri', uri='admin/player')}}">
+    <input type="hidden" name="index" value="0">
+    <label>
+      e-mail (can use wildcards '%', and '_')
+      <input type="text" name="email" value="">
+    </label>
+    <input type="submit" value="filter">
+  </form>
+
+  <table style="width: 100%">
+    <thead>
+    <tr>
+      <td>action</td>
+      <th>id</th>
+      <th>player bit</th>
+      <th>player name</th>
+      <th>email verified</th>
+      <th>bit</th>
+      <th>days</th>
+      <th>dots</th>
+      <th>score</th>
+      <th>empty slots</th>
+      <th>filled slots</th>
+    </tr>
+    </thead>
+    <tbody>
+
+      {% if players is mapping -%}
+        {% set players = [players] %}
+      {%- endif %}
+    {% for player in players %}
+    <tr>
+      <td><a href="/chill{{ url_for('.page_uri', uri='admin/player/details/{}'.format(player.id)) }}">edit</a></td>
+      <td>{{ player.id }}</td>
+      <td>
+        <pm-player-bit player="{{ player.id }}"></pm-player-bit>
+      </td>
+      <td>{% if player.display_name %}
+        <strong><small>{{ player.approved }}</small></strong>
+        {{ player.display_name }}
+        {% endif %}</td>
+      <td>{% if player.email_verified %}Y{% endif %}</td>
+      <td>
+        {% if player.icon %}
+        <img width="16" height="16" src="{{ url_for('send_media_file', filename='bit-icons/64-{}.png'.format(player.icon or 'unknown-bit')) }}" alt="{{player.icon}}">
+        {{ player.icon }}
+        {% if player.bit_expired %}<em>expired</em>{% endif %}
+        {% endif %}
+      </td>
+      <td>
+        {{ (player.seconds_from_now / (60 * 60 * 24))|round(0, 'floor')|int }}
+      </td>
+      <td>{{ player.dots }}</td>
+      <td>{{ player.score }}</td>
+      <td>{{ player.empty_slots_count }}</td>
+      <td>{{ player.filled_slots_count }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+
+
+</section>
+
+{% endblock %}

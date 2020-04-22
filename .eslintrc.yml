@@ -1,18 +1,8 @@
+parserOptions:
+  ecmaVersion: 6
+  sourceType: module
 env:
   browser: true
   es6: true
-  commonjs: true
-extends: 'prettier'
-parserOptions:
-  ecmaVersion: 2016
-  sourceType: module
-rules:
-  quotes:
-    - off
-    - single
-  semi:
-    - off
-    - never
-  comma-dangle:
-    - off
-    - always-multiline
+extends:
+  - 'plugin:prettier/recommended'

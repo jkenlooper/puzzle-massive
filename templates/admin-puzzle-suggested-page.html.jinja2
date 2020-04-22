@@ -1,0 +1,62 @@
+{% extends 'admin-base.html.jinja2' %}
+
+{% block main %}
+suggested puzzle {{puzzle.puzzle_id}}
+
+<p>
+  Player ({{ puzzle.owner }}) has suggested this puzzle.
+</p>
+<p>
+  <a rel="noreferrer nofollow" href="{{ puzzle.link }}">{{ puzzle.link }}</a>
+</p>
+
+<form enctype="multipart/form-data" id="upload_puzzle" method="post" action="/newapi/admin/puzzle/promote-suggested/">
+  <input type="hidden" name="puzzle_id" value="{{ puzzle.puzzle_id }}">
+  <div class="pm-UploadForm">
+    <div class="pm-UploadForm-row">
+      <label for="pieces">
+        Piece Count
+      </label>
+      <div>
+        <input type="number"
+               min="{{ config.MINIMUM_PIECE_COUNT }}"
+               max="50000"
+               id="pieces" name="pieces" value="{{ puzzle.pieces }}">
+      </div>
+    </div>
+    <div class="pm-UploadForm-row">
+      <label for="bg_color">
+        Background Color
+      </label>
+      <input id="bg_color" class="jscolor pm-UploadForm-colorPicker u-textCenter" type="text" name="bg_color" value="{{ puzzle.bg_color }}">
+    </div>
+    <div class="pm-UploadForm-row">
+      <label for="link">The website that the image is found on.</label>
+      <div>
+        <input id="link-field" style="width:100%" type="text" name="link" value="{{ puzzle.link }}" placeholder="https://unsplash.com/photos/oTQVwECws8o" maxlength="1000">
+        {% if not config.UNSPLASH_APPLICATION_ID %}
+        <p>
+          <strong>This site is not set up to use the Unsplash API.</strong>
+        </p>
+        {% endif %}
+      </div>
+    </div>
+    <div class="pm-UploadForm-row">
+      <label class="u-block" for="description">Description</label>
+      <textarea id="description" name="description" maxlength="1000">{{ puzzle.description }}</textarea>
+    </div>
+    <div class="pm-UploadForm-row">
+      <label for="upload_file">Select an image for the puzzle</label>
+      <div>
+        <input type="file" name="upload_file" accept=".jpg,.jpeg">
+        <p>
+        <em>Only if not a picture from Unsplash</em>
+        </p>
+      </div>
+    </div>
+    <div class="u-textRight">
+      <input class="button" type="submit" name="save" value="Create Puzzle" />
+    </div>
+  </div>
+</form>
+{% endblock %}

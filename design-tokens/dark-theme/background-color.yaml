@@ -1,0 +1,27 @@
+# Use of colors loosely follow Material Design guidelines.
+# https://www.material.io/design/color/
+
+imports:
+  - ../color.yaml
+global:
+  type: color
+  category: background-color
+
+props:
+  BackgroundColor-background:
+    value: "{!color-dark-light}"
+  BackgroundColor-background--dark:
+    value: "{!color-dark-dark}"
+  BackgroundColor-background--light:
+    value: "{!color-dark-light}"
+  BackgroundColor-background--accent:
+    value: "{!color-dark-accent}"
+
+  BackgroundColor-surface:
+    value: "{!color-light}"
+  BackgroundColor-surface--dark:
+    value: "{!color-dark-dark}"
+  BackgroundColor-surface--light:
+    value: "{!color-dark-light}"
+  BackgroundColor-surface--accent:
+    value: "{!color-dark-accent}"

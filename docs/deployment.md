@@ -58,16 +58,19 @@ been uploaded to the home directory.
     puzzle-massive-2.0.0.tar.gz which should be in the dev home directory. The
     current source code is moved to the home directory under a date label in
     case it needs to revert back. The `.env` and `.htpasswd` files are copied
-    over since they are not included in the distribution.
+    over since they are not included in the distribution. The `.has-certs` file
+    will signal if the site is setup for SSL (https://).
 
     ```bash
-    PM_DATE="$(date --iso-8601 --utc)";
     cd /home/dev/;
-    sudo mv /usr/local/src/puzzle-massive "puzzle-massive-${PM_DATE}";
-    sudo tar --directory=/usr/local/src/ --extract --gunzip -f puzzle-massive-2.0.0.tar.gz
+    sudo mv /usr/local/src/puzzle-massive puzzle-massive-$(date +%F);
+    sudo tar --directory=/usr/local/src/ --extract --gunzip -f puzzle-massive-0.3.1.tar.gz
     sudo chown -R dev:dev /usr/local/src/puzzle-massive
-    cp "puzzle-massive-${PM_DATE}/.env" /usr/local/src/puzzle-massive/;
-    cp "puzzle-massive-${PM_DATE}/.htpasswd" /usr/local/src/puzzle-massive/;
+    cp puzzle-massive-$(date +%F)/.env /usr/local/src/puzzle-massive/;
+    cp puzzle-massive-$(date +%F)/.htpasswd /usr/local/src/puzzle-massive/;
+
+    # Add .has-certs file if site has already been setup with bin/provision-certbot.sh
+    cp puzzle-massive-$(date +%F)/.has-certs /usr/local/src/puzzle-massive/ || echo "No certs?";
     ```
 
 3.  Make the new apps and install the source code. The install will also start
@@ -148,26 +151,25 @@ by the public.
     sudo ./bin/puzzlectl.sh start;
     ```
 
-5)  The logs for all the apps for Puzzle Massive can be followed with the
-    `./bin/log.sh` command. It is just a shortcut to doing the same with
-    `journalctrl`.
+5.  The logs can be followed with the `./bin/log.sh` command. It is just
+    a shortcut to doing the same with `journalctrl`.
 
     Check the status of the apps with this convenience command to `systemctl`.
 
     ```bash
-    sudo ./bin/puzzlectl.sh status;
+    sudo ./bin/appctl.sh status;
     ```
 
-6)  Test and reload the nginx config.
+6.  Test and reload the nginx config. If this is a new server you may need to
+    remove the `/etc/nginx/sites-enabled/default` file. This site will include it's
+    own [web/default.conf]().
 
     ```bash
     sudo nginx -t && \
     sudo systemctl reload nginx
     ```
 
-7.  _This step is not necessary. The site isn't using https yet._
-
-    Set up the production server with TLS certs. [certbot](https://certbot.eff.org/)
+7.  Set up the production server with TLS certs. [certbot](https://certbot.eff.org/)
     is used to deploy [Let's Encrypt](https://letsencrypt.org/) certificates.
     This will initially fail if the server isn't accepting traffic at the domain
     name. The certs can be copied over from the live server later.
@@ -195,19 +197,21 @@ by the public.
     puzzle-massive-testdata instances --count=10 --min-pieces=9 --pieces=50;
     ```
 
-Note that by default the production version of the nginx conf for Puzzle Massive
-is hosted at http://puzzle.massive.xyz/ as well as http://puzzle-blue/ and
-http://puzzle-green/ . You can edit your `/etc/hosts` to point to the old
-(puzzle-blue) and new (puzzle-green) servers.
+Note that by default the production version of the nginx conf for the website is
+hosted at [puzzle.massive.xyz](http://puzzle.massive.xyz) as well as
+[puzzle-massive-blue](http://puzzle-massive-blue/) and
+[puzzle-massive-green](http://puzzle-massive-green/). You can edit
+your `/etc/hosts` to point to the old (puzzle-massive-blue) and new
+(puzzle-massive-green) servers.
 
 ### Transferring data from the old server to the new server
 
-At this point two servers should be running Puzzle Massive with only the older
-one having traffic. The new one should be verified that everything is working
+At this point two servers should be running the website with only the older
+one (blue) having traffic. The new one (green) should be verified that everything is working
 correctly by doing some integration testing. The next step is to stop the apps
-on the old server and copy all the data over to the new puzzle-green server.
+on the old server and copy all the data over to the new puzzle-massive-green server.
 
-1.  On the **old server** stop the apps and migrate the data out of redis. The old
+1.  On the **old server** (puzzle-massive-blue) stop the apps and backup the data. The old
     server is left untouched in case something fails on the new server.
 
     ```bash
@@ -219,7 +223,7 @@ on the old server and copy all the data over to the new puzzle-green server.
     ./bin/backup-db.sh -c;
     ```
 
-2.  On the **new server** the files from the old server will be copied over with
+2.  On the **new server** (puzzle-massive-green) the files from the old server will be copied over with
     rsync. First step here is to stop the apps on the new server and remove the
     initial db and any generated test puzzles.
 
@@ -242,9 +246,9 @@ on the old server and copy all the data over to the new puzzle-green server.
 
     ```bash
     cd /usr/local/src/puzzle-massive/;
-    DBDUMPFILE="db-$(date --iso-8601 --utc).dump.gz";
+    DBDUMPFILE="db-$(date +%F).dump.gz";
     rsync --archive --progress --itemize-changes \
-      dev@puzzle-blue:/usr/local/src/puzzle-massive/$DBDUMPFILE \
+      dev@puzzle-massive-blue:/usr/local/src/puzzle-massive/$DBDUMPFILE \
       /usr/local/src/puzzle-massive/;
     zcat $DBDUMPFILE | sqlite3 /var/lib/puzzle-massive/sqlite3/db
     cat db.dump.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
@@ -255,7 +259,7 @@ on the old server and copy all the data over to the new puzzle-green server.
 
     ```bash
     rsync --archive --progress --itemize-changes \
-      dev@puzzle-blue:/var/log/nginx/puzzle-massive \
+      dev@puzzle-massive-blue:/var/log/nginx/puzzle-massive \
       /var/log/nginx/
     ```
 
@@ -275,18 +279,29 @@ on the old server and copy all the data over to the new puzzle-green server.
       dev@puzzle-blue:/srv/puzzle-massive/resources \
       /srv/puzzle-massive/
     ```
+    
+7.  Copy the certificates listed on the old server (`sudo certbot certificates`) to the new server.
 
-7.  Run any migrate scripts if required for this version bump. Follow any other
+    ```bash
+    scp \
+      dev@puzzle-massive-blue:/etc/letsencrypt/live/puzzle.massive.xyz/fullchain.pem \
+      /etc/letsencrypt/live/puzzle.massive.xyz/
+    scp \
+      dev@puzzle-massive-blue:/etc/letsencrypt/live/puzzle.massive.xyz/privkey.pem \
+      /etc/letsencrypt/live/puzzle.massive.xyz/
+    ```
+
+8.  Run any migrate scripts if required for this version bump. Follow any other
     instructions for the migrate script if needed.
 
     ```bash
     python api/api/jobs/migrate_from_2_x.py site.cfg
     ```
 
-8.  Start the new server and switch traffic over to it.
+9.  Start the new server and switch traffic over to it.
 
     After the old server data has been copied over, then start up the new server
-    apps with the 'puzzlectl.sh' script. It is also good to monitor the logs to see
+    apps with the 'bin/appctl.sh' script. It is also good to monitor the logs to see
     if anything is throwing errors.
 
     ```
@@ -297,6 +312,35 @@ on the old server and copy all the data over to the new puzzle-green server.
     sudo ./bin/log.sh;
     ```
 
-    Verify that the new version of Puzzle Massive is running correctly on
-    puzzle-green/. If everything checks out, then switch the traffic over to
+    Verify that the new version of the website is running correctly on
+    puzzle-massive-green/. If everything checks out, then switch the traffic over to
     puzzle.massive.xyz/.
+
+## Removing the app from a server
+
+Run the below commands to remove puzzle-massive from the
+server. This will uninstall and disable the services, remove any files
+installed outside of the `/usr/local/src/puzzle-massive/`
+directory including the sqlite3 database and finally remove the source files as
+well. _Only do this if the website is running on the new server and is no
+longer needed on the old one._
+
+```bash
+cd /usr/local/src/puzzle-massive/;
+source bin/activate;
+sudo ./bin/appctl.sh stop;
+
+# Removes any installed files outside of the project
+sudo make uninstall;
+
+# Remove files generated by make
+make clean;
+deactivate;
+
+# Removes all data including the sqlite3 database
+sudo rm -rf /var/lib/puzzle-massive/
+
+# Remove the source files
+cd ../;
+sudo rm -rf /usr/local/src/puzzle-massive/;
+```

@@ -33,9 +33,6 @@ More documentation is available within the docs directory.
 - [Deployment guide](docs/deployment.md) for deploying to a live server. This
   covers both in-place deployments and blue-green deployments.
 
-The structure of this project inherits from this
-[cookiecutter](https://github.com/jkenlooper/cookiecutter-website).
-
 ## Getting Help
 
 I try to monitor the chat channels on the [Discord server for Puzzle
@@ -63,3 +60,14 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+## Compatible with `cookiecutter`
+
+The [cookiecutter](https://github.com/cookiecutter/cookiecutter) tool is commonly used to help with creating initial code
+snippets and such for the project.
+
+---
+
+<small>The structure of this project inherits from this
+[cookiecutter-website version 0.1.0](https://github.com/jkenlooper/cookiecutter-website)
+and is up to date with version 0.4.0 on 2020-04-21.</small>

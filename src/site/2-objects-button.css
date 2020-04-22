@@ -1,0 +1,74 @@
+/* @define Button */
+@import "suitcss-components-button";
+
+/*
+:root {
+  --Button-border-color: currentcolor;
+  --Button-border-width: 1px;
+  --Button-color: inherit;
+  --Button-disabled-opacity: 0.6;
+  --Button-font: inherit;
+  --Button-padding: 0.4em 0.75em;
+}
+*/
+
+.Button--text {
+  --Button-border-color: transparent;
+  --Button-padding: 0.4em 8px;
+  min-width: 64px;
+  min-height: 36px;
+  text-transform: uppercase;
+}
+.onBackground.Button--text {
+  --Button-color: var(--designtoken-TextColor-primaryOnBackground);
+}
+.onSurface.Button--text {
+  --Button-color: var(--designtoken-TextColor-primaryOnSurface);
+}
+.onError.Button--text {
+  --Button-color: var(--designtoken-TextColor-onError);
+}
+
+.Button--text:hover,
+.Button--text:focus,
+.Button--text:active {
+  --Button-border-color: currentcolor;
+}
+
+.Button--text:disabled,
+.Button--text.is-disabled {
+  --Button-color: var(--designtoken-TextColor-onBackground);
+}
+
+.Button--primary {
+  background: var(--designtoken-BackgroundColor-primary);
+  color: var(--designtoken-TextColor-onPrimary);
+  border-radius: 5px;
+  box-shadow: currentcolor 0 1px 2px;
+  text-shadow: var(--color-primary-dark) 0 0px 2px;
+}
+
+.Button--primary:hover {
+  box-shadow: currentcolor 0 0px 0px 1px;
+}
+
+.Button--primary:active {
+  background: var(--designtoken-BackgroundColor-primary--dark);
+  text-shadow: none;
+}
+
+.Button--accent {
+  background: var(--designtoken-BackgroundColor-accent);
+  color: var(--designtoken-TextColor-onAccent);
+  border-radius: 5px;
+  box-shadow: currentcolor 0 1px 2px;
+  text-shadow: none;
+}
+
+.Button--accent:hover {
+  box-shadow: currentcolor 0 0px 0px 1px;
+}
+
+.Button--accent:active {
+  background: var(--designtoken-BackgroundColor-accent--dark);
+}

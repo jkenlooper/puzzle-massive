@@ -1,0 +1,90 @@
+# Use of colors loosely follow Material Design guidelines.
+# https://www.material.io/design/color/
+
+imports:
+  - ../color.yaml
+global:
+  type: color
+  category: background-color
+
+props:
+  BackgroundColor-background:
+    value: "{!color-light-light}"
+  BackgroundColor-background--dark:
+    value: "{!color-light-dark}"
+  BackgroundColor-background--light:
+    value: "{!color-light-light}"
+  BackgroundColor-background--accent:
+    value: "{!color-light-accent}"
+
+  BackgroundColor-surface:
+    value: "{!color-light}"
+  BackgroundColor-surface--dark:
+    value: "{!color-light-dark}"
+  BackgroundColor-surface--light:
+    value: "{!color-light-light}"
+  BackgroundColor-surface--accent:
+    value: "{!color-light-accent}"
+
+  BackgroundColor-primary:
+    value: "{!color-primary}"
+  BackgroundColor-primary--dark:
+    value: "{!color-primary-dark}"
+  BackgroundColor-primary--light:
+    value: "{!color-primary-light}"
+  BackgroundColor-primary--accent:
+    value: "{!color-primary-accent}"
+
+  BackgroundColor-secondary:
+    value: "{!color-secondary}"
+  BackgroundColor-secondary--dark:
+    value: "{!color-secondary-dark}"
+  BackgroundColor-secondary--light:
+    value: "{!color-secondary-light}"
+  BackgroundColor-secondary--accent:
+    value: "{!color-secondary-accent}"
+
+  BackgroundColor-tertiary:
+    value: "{!color-tertiary}"
+  BackgroundColor-tertiary--dark:
+    value: "{!color-tertiary-dark}"
+  BackgroundColor-tertiary--light:
+    value: "{!color-tertiary-light}"
+  BackgroundColor-tertiary--accent:
+    value: "{!color-tertiary-accent}"
+
+  BackgroundColor-accent:
+    value: "{!color-accent}"
+  BackgroundColor-accent--dark:
+    value: "{!color-accent-dark}"
+  BackgroundColor-accent--light:
+    value: "{!color-accent-light}"
+  BackgroundColor-accent--accent:
+    value: "{!color-accent-accent}"
+
+  BackgroundColor-error:
+    value: "{!color-error}"
+  BackgroundColor-error--dark:
+    value: "{!color-error-dark}"
+  BackgroundColor-error--light:
+    value: "{!color-error-light}"
+  BackgroundColor-error--accent:
+    value: "{!color-error-accent}"
+
+  BackgroundColor-dark:
+    value: "{!color-dark}"
+  BackgroundColor-dark--dark:
+    value: "{!color-dark-dark}"
+  BackgroundColor-dark--light:
+    value: "{!color-dark-light}"
+  BackgroundColor-dark--accent:
+    value: "{!color-dark-accent}"
+
+  BackgroundColor-light:
+    value: "{!color-light}"
+  BackgroundColor-light--dark:
+    value: "{!color-light-dark}"
+  BackgroundColor-light--light:
+    value: "{!color-light-light}"
+  BackgroundColor-light--accent:
+    value: "{!color-light-accent}"

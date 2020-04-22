@@ -1,0 +1,31 @@
+{% extends 'base.html.jinja2' %}
+{% set ngModule = 'docspage' %}
+
+{% block secondarymenu %}
+
+  {%- if slug == 'faq' -%}
+  <span class="is-active">FAQs</span>
+  {%- else -%}
+  <a href="/faq/">FAQs</a>
+  {%- endif -%}
+
+  {%- if slug == 'about' -%}
+  <span class="is-active">About</span>
+  {%- else -%}
+  <a href="/about/">About</a>
+  {%- endif -%}
+
+  {%- if slug == 'help' -%}
+  <span class="is-active">Help</span>
+  {%- else -%}
+  <a href="/help/">Help</a>
+  {%- endif -%}
+
+{% endblock %}
+
+{% block main %}
+  <div class="pm-Doc">
+  {{ content|readfile|safe|shortcodes }}
+  </div>
+{% endblock %}
+

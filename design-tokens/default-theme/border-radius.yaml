@@ -1,0 +1,7 @@
+global:
+  type: number
+  category: border-radius
+
+props:
+  BorderRadius-sm:
+    value: "3px"

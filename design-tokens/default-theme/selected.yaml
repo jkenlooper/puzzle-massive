@@ -1,0 +1,12 @@
+imports:
+  - ../color.yaml
+global:
+  category: selected
+
+props:
+  Selected-backgroundColor:
+    type: color
+    value: "{!color-primary}"
+  Selected-textColor:
+    type: color
+    value: "{!color-primary-contrast}"

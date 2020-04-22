@@ -34,7 +34,7 @@ CACHEDIR=$9
 PURGEURLLIST=${10}
 
 mkdir -p "${SRVDIR}root/";
-chown -R dev:dev "${SRVDIR}root/";
+#chown -R dev:dev "${SRVDIR}root/";
 rsync --archive \
   --inplace \
   --delete \
@@ -97,7 +97,7 @@ echo rsynced web/default.conf web/puzzle-massive.conf web/puzzle-massive--down.c
 mkdir -p "${NGINXDIR}sites-enabled";
 ln -sf "${NGINXDIR}sites-available/default.conf" "${NGINXDIR}sites-enabled/default.conf";
 
-rm -f /etc/nginx/sites-enabled/puzzle-massive--down.conf;
+rm -f "${NGINXDIR}sites-enabled/puzzle-massive--down.conf"
 ln -sf "${NGINXDIR}sites-available/puzzle-massive.conf"  "${NGINXDIR}sites-enabled/puzzle-massive.conf";
 
 rsync --inplace \
@@ -149,17 +149,15 @@ systemctl stop cron && systemctl start cron || echo "Can't reload cron service"
 # Add the awstats conf
 cp stats/awstats.puzzle.massive.xyz.conf /etc/awstats/
 
-# Create the sqlite database file if not there.
-if (test ! -f "${DATABASEDIR}db"); then
-    echo "Creating database from db.dump.sql"
-    mkdir -p "${DATABASEDIR}"
-    chown -R dev:dev "${DATABASEDIR}"
-    su dev -c "sqlite3 \"${DATABASEDIR}db\" < db.dump.sql"
-    # Need to set Write-Ahead Logging so multiple apps can work with the db
-    # concurrently.  https://sqlite.org/wal.html
-    su dev -c "echo \"pragma journal_mode=wal\" | sqlite3 ${DATABASEDIR}db"
-    chmod -R 770 "${DATABASEDIR}"
-fi
+# Set the sqlite database file from the db.dump.sql.
+echo "Setting Chill database tables from db.dump.sql"
+mkdir -p "${DATABASEDIR}"
+chown -R dev:dev "${DATABASEDIR}"
+su dev -c "sqlite3 \"${DATABASEDIR}db\" < db.dump.sql"
+# Need to set Write-Ahead Logging so multiple apps can work with the db
+# concurrently.  https://sqlite.org/wal.html
+su dev -c "echo \"pragma journal_mode=wal\" | sqlite3 ${DATABASEDIR}db"
+chmod -R 770 "${DATABASEDIR}"
 
 mkdir -p "${ARCHIVEDIR}"
 chown -R dev:dev "${ARCHIVEDIR}"

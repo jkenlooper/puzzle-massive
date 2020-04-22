@@ -10,7 +10,8 @@ TMPDIR=$(mktemp --directory);
 
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 
-git clone . "$TMPDIR";
+git clone --recurse-submodules . "$TMPDIR";
+
 (
 cd "$TMPDIR";
 
@@ -22,7 +23,8 @@ npm ci; # clean install
 npm run build;
 
 # Create symlinks for all files in the MANIFEST.
-for item in $(cat puzzle-massive/MANIFEST); do
+mkdir -p puzzle-massive;
+for item in $(cat MANIFEST); do
   dirname "puzzle-massive/${item}" | xargs mkdir -p;
   dirname "puzzle-massive/${item}" | xargs ln -sf "${PWD}/${item}";
 done;

@@ -1,0 +1,23 @@
+<div id="header" class="pm-Header">
+<div class="pm-Header-content">
+  <div class="pm-Header-profile">
+      <pm-profile-bit media-path="{{ url_for('send_media_file', filename='') }}" player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
+  </div>
+
+  <div class="pm-Header-logo">
+    {% include './logo.html.jinja2' %}
+  </div>
+
+  <div class="pm-Header-main">
+
+  <div class="pm-Header-cta">
+    {#- The header Call to Action is only inserted if this route exists. This allows this content to be more customized per distribution. -#}
+    {{ '[chill route /internal/header-cta/]'|shortcodes }}
+    {#- A 404 error HTML comment is inserted here if this route is not defined. -#}
+  </div>
+
+      <pm-player-puzzle-instance-list class="u-block" player-puzzle-list-href="/chill{{ url_for('.page_uri', uri='player-puzzle-list') }}"></pm-player-puzzle-instance-list>
+  </div>
+
+</div>
+</div>

@@ -3,6 +3,8 @@ name: frontpage
 route: /front/<puzzle_id>/
 template: front.html
 value:
+  description_txt_file: sitewide-description.txt
+  pageimage: puzzle-massive-logo-600.png
   page:
     content: frontpage-content.html
     description: Massively Multiplayer Online Jigsaw Puzzles
@@ -13,6 +15,8 @@ name: scorespage
 route: /high-scores/
 template: scorespage.html
 value:
+  content:
+    pagetitle: High Scores
   page:
     description: High scores and ranking for players
     highScores:
@@ -26,6 +30,7 @@ template: puzzleuploadpage.html
 value:
   page:
     description: Create custom puzzles by uploading a picture
+    title: Suggest Image for a Puzzle
   route: _select-args-for-uploadpage.sql
 
 --- !ChillNode
@@ -45,6 +50,10 @@ value:
 name: profilepage
 route: /player/
 template: profilepage.html
+value:
+  pagetitle: Player Profile
+  content:
+    description: Settings for the logged in player on the Puzzle Massive site.
 
 --- !ChillNode
 name: biticonspartial
@@ -56,8 +65,10 @@ name: footerpages_item
 route: /credits/
 template: docs.html
 value:
+  page:
+    description: List of people who put this site together
+    title: Credits
   content: creditspage-content.html
-  description: List of people who put this site together
   order: '50'
   slug: credits
   title: Credits
@@ -146,7 +157,9 @@ route: /suggested-puzzle-thank-you/
 template: docs.html
 value:
   content: suggested-puzzle-thank-you-content.html
-  description: Thank you page shown after player has suggested an image for a puzzle.
+  page:
+    description: Thank you page shown after player has suggested an image for a puzzle.
+    title: Thank You
   title: Thank You
 --- !ChillNode
 name: internal_attribution_for_id
@@ -163,7 +176,7 @@ template: puzzleimagepickerpage.html
 value:
   page:
     description: Find a jigsaw puzzle by searching through all existing puzzles on the Puzzle Massive site.
-    title: Available puzzles
+    title: Available Puzzle Images
   public_image_count: select_total_puzzle_image_count.sql
 
 --- !ChillNode
@@ -173,7 +186,7 @@ template: puzzleinstancepage.html
 value:
   page:
     description: Create a new puzzle instance from the image.
-    title: Create New Puzzle Instance
+    title: Create New Instance of a Puzzle
   puzzle: _select-frontpage-preview.sql
   route: _route-pass-puzzle_id.sql
 --- !ChillNode
@@ -216,6 +229,7 @@ name: newplayerpage
 route: /new-player/
 template: newplayerpage.html
 value:
+  description_txt_file: sitewide-description.txt
   page:
     description: Welcome new player. Browser cookies are used for player logins.  If you are seeing this page, then the browser you are currently using did not have a browser cookie set for this site. One should now be set in your browser.
     title: Massively Multiplayer Online Jigsaw Puzzles
@@ -233,11 +247,19 @@ value:
 name: claim_player_by_token_page
 route: /claim-player/<token>/
 template: claim-player-by-token.html
-value: _select-email-verify-token-for-route.sql
+value:
+  content:
+    pagetitle: Claim Player
+    description: For players following a claim player by token link in their e-mail.  This is used for switching a player from a shareduser to a user account.  It is also for verifying an e-mail address for that player.
+  email_verify_token: _select-email-verify-token-for-route.sql
 
 --- !ChillNode
 name: reset_login_by_token_page
 route: /reset-login/<token>/
 template: reset-login-by-token.html
-value: _select-reset-login-token-for-route.sql
+value:
+  content:
+    pagetitle: Reset Login
+    description: For players following a reset login by token link in their e-mail.
+  reset_login_token: _select-reset-login-token-for-route.sql
 

@@ -1,0 +1,16 @@
+{% extends 'base.html.jinja2' %}
+
+{% block main %}
+<section  class="pm-Doc">
+  <h1>Reset Login</h1>
+
+  {% if not reset_login_token.token %}
+  <p>This token is no longer valid.</p>
+  {% else %}
+
+  <pm-reset-login-by-token token="{{ reset_login_token.token }}"></pm-reset-login-by-token>
+
+  {% endif %}
+
+</section>
+{% endblock %}

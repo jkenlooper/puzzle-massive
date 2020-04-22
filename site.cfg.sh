@@ -3,9 +3,9 @@
 set -eu -o pipefail
 
 ENVIRONMENT=$1
-SRVDIR=$2
-DATABASEDIR=$3
-PORTREGISTRY=$4
+DATABASEDIR=$2
+PORTREGISTRY=$3
+SRVDIR=$4
 ARCHIVEDIR=$5
 CACHEDIR=$6
 PURGEURLLIST=$7
@@ -29,8 +29,10 @@ REDIS_DB=0
 DATE=$(date)
 
 if test "$ENVIRONMENT" == 'development'; then
+  HOSTNAME="'local-puzzle-massive'"
   DEBUG=True
 else
+  HOSTNAME="'${DOMAIN_NAME}'"
   DEBUG=False
 fi
 
@@ -43,7 +45,9 @@ cat <<HERE
 # Chill.
 
 # Set the HOST to 0.0.0.0 for being an externally visible server.
-HOST = '$HOST'
+HOST = '127.0.0.1'
+HOSTNAME = $HOSTNAME
+SITE_PROTOCOL = 'http'
 PORT = $PORTCHILL
 
 HOSTAPI = '$HOSTAPI'
@@ -95,6 +99,8 @@ ROOT_FOLDER = "root"
 # file from the document folder into the template.  If it is a Markdown file
 # you can also use another filter to parse the markdown into HTML with the
 # 'markdown' filter. For example:
+
+
 # {{ 'llamas-are-cool.md'|readfile|markdown }}
 DOCUMENT_FOLDER = "documents"
 
@@ -164,11 +170,12 @@ CACHE_TYPE = "null"
 
 PURGEURLLIST = "${PURGEURLLIST}"
 
+# https://pythonhosted.org/Frozen-Flask/#configuration
 # For creating a stand-alone static website that you can upload without
 # requiring an app to run it. This will use Frozen-Flask.
 # The path to the static/frozen website will be put.
 FREEZER_DESTINATION = "frozen"
-FREEZER_BASE_URL = "http://${DOMAIN_NAME}/"
+FREEZER_BASE_URL = "{0}://{1}/".format(SITE_PROTOCOL, HOSTNAME)
 
 # Unsplash
 UNSPLASH_APPLICATION_ID = "${UNSPLASH_APPLICATION_ID}"
