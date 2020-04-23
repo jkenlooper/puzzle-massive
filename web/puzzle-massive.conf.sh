@@ -23,6 +23,7 @@ DEBUG=$(./bin/site-cfg.py site.cfg DEBUG || echo 'False')
 
 # Load snippet confs
 file_ssl_params_conf=$(cat web/ssl_params.conf)
+file_error_page_conf=$(cat web/error_page.conf)
 
 function ssl_certs {
   if test "${ENVIRONMENT}" == 'development'; then
@@ -97,10 +98,6 @@ cat <<HERE
 # File generated from $0
 # on ${DATE}
 
-HERE
-
-if test "${STATE}" == 'up'; then
-cat <<HEREBEUP
 limit_conn_zone \$binary_remote_addr zone=addr:1m;
 limit_req_zone \$binary_remote_addr zone=piece_move_limit_per_ip:1m rate=60r/m;
 limit_req_zone \$binary_remote_addr zone=piece_token_limit_per_ip:1m rate=60r/m;
@@ -116,6 +113,10 @@ limit_req_zone \$binary_remote_addr zone=chill_site_internal_limit:1m rate=10r/s
 
 proxy_headers_hash_bucket_size 2048;
 
+HERE
+
+if test "${STATE}" == 'up'; then
+cat <<HEREBEUP
 map \$request_uri \$cache_expire {
   default off;
 HEREBEUP
@@ -148,7 +149,6 @@ cat <<HEREBEUP
   /humans.txt 1d;
   /robots.txt 1d;
   /site.webmanifest 1d;
-  /newapi/message/ off;
   /newapi/gallery-puzzle-list/ 1m;
   /newapi/puzzle-list/ 1m;
   # Safeguard for no cache on player-puzzle-list
@@ -399,7 +399,7 @@ cat <<HERECACHESERVERDOWN
     expires -1;
     add_header Cache-Control "public";
 
-    rewrite ^/.* /error_page.html break;
+    rewrite ^/.* /error.html break;
   }
 
   rewrite ^/\$ /chill/site/front/ last;
@@ -411,17 +411,24 @@ cat <<HERECACHESERVERDOWN
     expires -1;
     add_header Cache-Control "public";
 
-    rewrite ^/.* /error_page.html break;
+    rewrite ^/.* /error.html break;
   }
   location /newapi/ {
     return 503;
   }
+
+
 HERECACHESERVERDOWN
 fi
 
 cat <<HERECACHESERVER
 
-  location /newapi/message/ {
+  location = /newapi/message/ {
+    # stop caching
+    expires -1;
+    add_header Cache-Control "public";
+    # Allow this content to be loaded in the error page iframe
+    add_header X-Frame-Options ALLOW;
     rewrite ^/.* /puzzle-massive-message.html break;
   }
 
@@ -429,42 +436,9 @@ cat <<HERECACHESERVER
     try_files \$uri =404;
   }
 
-  #TODO: error pages work on cache server? May need to move back to origin server?
-  error_page 500 501 502 504 505 506 507 /error.html;
-  location = /error.html {
-    internal;
-  }
+  ${file_error_page_conf}
 
-  error_page 503 /overload_page.html;
-  location = /overload_page.html {
-    internal;
   }
-
-  error_page 400 /invalid_page.html;
-  location = /invalid_page.html {
-    internal;
-  }
-
-  error_page 401 403 /unauthorized_page.html;
-  location = /unauthorized_page.html {
-    internal;
-  }
-
-  error_page 404 /notfound.html;
-  location = /notfound.html {
-    internal;
-  }
-
-  error_page 429 /too_many_requests_page.html;
-  location = /too_many_requests_page.html {
-    internal;
-  }
-
-  error_page 409 /conflict_page.html;
-  location = /conflict_page.html {
-    internal;
-  }
-}
 HERECACHESERVER
 
 
@@ -791,6 +765,8 @@ cat <<HEREORIGINSERVER
     deny all;
     root ${SRVDIR};
   }
+
+  ${file_error_page_conf}
 
 }
 HEREORIGINSERVER
