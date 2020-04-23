@@ -20,34 +20,37 @@ aliases:
   color-light-accent: "#fbeedd"
 
   # Primary
-  color-primary: "#a5db72"
+  # dark orange
+  color-primary: "#E34A07"
   color-primary-contrast: "black"
   color-primary-contrast-high: "rgba(0,0,0,0.87)"
   color-primary-contrast-medium: "rgba(0,0,0,0.60)"
   color-primary-contrast-disabled: "rgba(0,0,0,0.38)"
-  color-primary-dark: "rgb(107, 162, 55)"
-  color-primary-light: "rgb(186, 242, 133)"
-  color-primary-accent: "rgb(139, 232, 50)"
+  color-primary-dark: "#B53600"
+  color-primary-light: "#FF5307"
+  color-primary-accent: "#E82A07"
 
   # Secondary
-  color-secondary: "#a872db"
-  color-secondary-contrast: "black"
-  color-secondary-contrast-high: "rgba(0,0,0,0.87)"
-  color-secondary-contrast-medium: "rgba(0,0,0,0.60)"
-  color-secondary-contrast-disabled: "rgba(0,0,0,0.38)"
-  color-secondary-dark: "rgb(100, 62, 136)"
-  color-secondary-light: "rgb(178, 141, 213)"
-  color-secondary-accent: "rgb(131, 44, 215)"
+  # purple
+  color-secondary: "#4F3482"
+  color-secondary-contrast: "white"
+  color-secondary-contrast-high: "rgba(255,255,255,0.87)"
+  color-secondary-contrast-medium: "rgba(255,255,255,0.60)"
+  color-secondary-contrast-disabled: "rgba(255,255,255,0.38)"
+  color-secondary-dark: ""
+  color-secondary-light: ""
+  color-secondary-accent: ""
 
   # Tertiary
-  color-tertiary: "#72a5db"
+  # blue
+  color-tertiary: "#2C5683"
   color-tertiary-contrast: "white"
   color-tertiary-contrast-high: "rgba(255,255,255,0.87)"
   color-tertiary-contrast-medium: "rgba(255,255,255,0.60)"
   color-tertiary-contrast-disabled: "rgba(255,255,255,0.38)"
-  color-tertiary-dark: "#547aa2"
-  color-tertiary-light: "#94b9e0"
-  color-tertiary-accent: "#4c9ff7"
+  color-tertiary-dark: ""
+  color-tertiary-light: ""
+  color-tertiary-accent: ""
 
   # Accent
   color-accent: "#fdba2b"
