@@ -108,8 +108,9 @@ limit_req_zone \$server_name zone=puzzle_list_limit_per_server:1m rate=20r/s;
 limit_req_zone \$binary_remote_addr zone=player_email_register_limit_per_ip:1m rate=1r/m;
 
 limit_req_zone \$binary_remote_addr zone=chill_puzzle_limit_per_ip:1m rate=30r/m;
+limit_req_zone \$binary_remote_addr zone=chill_site_internal_limit_per_ip:1m rate=10r/s;
 # 10 requests a second = 100ms
-limit_req_zone \$binary_remote_addr zone=chill_site_internal_limit:1m rate=10r/s;
+limit_req_zone \$server_name zone=chill_site_internal_limit:1m rate=10r/s;
 
 proxy_headers_hash_bucket_size 2048;
 
@@ -149,6 +150,7 @@ cat <<HEREBEUP
   /humans.txt 1d;
   /robots.txt 1d;
   /site.webmanifest 1d;
+  /.well-known/.* off;
   /newapi/gallery-puzzle-list/ 1m;
   /newapi/puzzle-list/ 1m;
   # Safeguard for no cache on player-puzzle-list
@@ -179,12 +181,20 @@ map \$request_uri \$hotlinking_policy {
   ~/newapi/user-login/.* 0;
 
   # Pages on the site.
-  ~/chill/site/.* 0;
+  / 0;
+  ~/.+/$ 0;
 
   # og:image image that can be used when sharing links
   /puzzle-massive-logo-600.png 0;
-  /favicon.ico 0;
   ~/resources/.*/preview_full.jpg 0;
+
+  # files in root
+  /favicon.ico 0;
+  /humans.txt 0;
+  /robots.txt 0;
+
+  # certbot challenges
+  ~/.well-known/.* 0;
 
   default \$invalid_referer;
 }
@@ -224,12 +234,13 @@ cat <<HEREBEDEVELOPMENT
 HEREBEDEVELOPMENT
 else
 cat <<HEREBEPRODUCTION
-  server_name puzzle-blue puzzle-green ${DOMAIN_NAME};
+  # Generated docs use puzzle-massive-blue puzzle-massive-green.
+  # Use of puzzle-blue and puzzle-green is deprecated.
+  server_name puzzle-massive-blue puzzle-blue puzzle-massive-green puzzle-green ${DOMAIN_NAME};
 
 HEREBEPRODUCTION
 fi
 cat <<HERECACHESERVER
-
 
   add_header X-Frame-Options DENY;
   add_header X-Content-Type-Options nosniff;
@@ -239,12 +250,17 @@ cat <<HERECACHESERVER
   access_log  ${NGINXLOGDIR}access.log;
   error_log   ${NGINXLOGDIR}error.log;
 
+  # The hotlinking_policy uses this with the invalid_referer variable.
   valid_referers server_names;
 
   # Limit the max simultaneous connections per ip address (10 per browser * 4 if within LAN)
-  limit_conn   addr 40;
+  # Skip doing this so players on a shared VPN are not blocked.
+  #limit_conn   addr 40;
 
+  # Prevent POST upload sizes that are larger than this.
   client_max_body_size  20m;
+
+  # The value none enables keep-alive connections with all browsers.
   keepalive_disable  none;
 
   # Rewrite the homepage url
@@ -257,9 +273,7 @@ cat <<HERECACHESERVER
   rewrite ^/puzzle-api/bit/([^/]+)/?\$ /newapi/user-login/\$1/;
 
   # handle old style of scale query param where 'scale=' meant to use without scaling
-  rewrite ^/chill/site/puzzle/([^/]+)/\$ /chill/site/puzzle/\$1/scale/\$arg_scale/?;
-  rewrite ^/chill/site/puzzle/([^/]+)/scale//\$ /chill/site/puzzle/\$1/scale/0/? last;
-  rewrite ^/chill/site/puzzle/([^/]+)/scale/(\d+)/\$ /chill/site/puzzle/\$1/scale/1/? last;
+  rewrite ^/chill/site/puzzle/([^/]+)/\$ /chill/site/puzzle/\$1/scale/0/? redirect;
 
   # redirect old puzzle queues
   rewrite ^/chill/site/queue/(.*)\$ /chill/site/puzzle-list/ permanent;
@@ -270,28 +284,42 @@ cat <<HERECACHESERVER
   # Temporary redirect document pages to allow robots to index them.
   rewrite ^/chill/site/(about|faq|help|credits|buy-stuff)/\$ /\$1/ redirect;
 
-  # Ignore query params so they are not part of the cache.
+  # Home page goes to the chill/site/front/
+  rewrite ^/\$ /chill/site/front/ last;
+
+  # Document pages go to /chill/site/
+  rewrite ^/d/(.*)/\$ /chill/site/\$1/ last;
+
+  # redirect old document pages
+  rewrite ^/(about|faq|help|credits|buy-stuff)/\$ /d/\$1/ redirect;
+
+  # Ignore query params on media so they are not part of the cache.
   rewrite ^/(media/.*)\$ /\$1? last;
 
   # Keep the query params on /resources/.*; they are for cache-busting.
   #rewrite ^/(resources/.*)\$ /\$1? last;
 
-  rewrite ^/(site.webmanifest)\$ /\$1? last;
-  # Matches root files: /humans.txt, /robots.txt, /puzzle-massive-logo-600.png, /favicon.ico
-  rewrite ^/([^/]+)(\.txt|\.png|\.ico)\$ /\$1\$2? last;
+  # Ignore query params on root files so they are not part of the cache.
+  # Matches root files: /humans.txt, /robots.txt, /puzzle-massive-logo-600.png
+  rewrite ^/([^/]+)(\.txt|\.png)\$ /\$1\$2? last;
 
 HERECACHESERVER
 if test "${ENVIRONMENT}" != 'development'; then
 cat <<HERECACHESERVERPRODUCTION
+  # Ignore query params on theme for production so they are not part of the cache.
   rewrite ^/(theme/.*)\$ /\$1? last;
+
+  # Ignore query params on favicon.ico for production.
+  rewrite ^/(favicon\.ico)\$ /\$1? last;
+
+  # Ignore query params on site.webmanifest for production.
+  rewrite ^/(site.webmanifest)\$ /\$1? last;
 HERECACHESERVERPRODUCTION
 fi
 
 if test "${STATE}" == 'up'; then
 cat <<HERECACHESERVERUP
   location / {
-    rewrite ^/\$ /chill/site/front/ last;
-
     if (\$hotlinking_policy) {
       return 444;
     }
@@ -305,20 +333,7 @@ cat <<HERECACHESERVERUP
     proxy_pass http://localhost:${PORTORIGIN};
   }
 
-  location ~* ^/(about|faq|help|credits|buy-stuff)/ {
-    # Allow document pages to be accessed without a cookie login.
-    rewrite ^/(.*)\$ /chill/site/\$1 break;
-
-    proxy_set_header X-Real-IP \$remote_addr;
-    proxy_set_header X-Forwarded-For \$remote_addr;
-    proxy_set_header X-Forwarded-Host \$remote_addr;
-    proxy_cache pm_cache_zone;
-    add_header X-Proxy-Cache \$upstream_cache_status;
-    include proxy_params;
-    proxy_pass http://localhost:${PORTORIGIN};
-  }
-
-  location /chill/site/ {
+  location ~* ^/chill/site/puzzle/(.*/)?$ {
     # At this time all routes on chill/* are GETs
     limit_except GET {
       deny all;
@@ -338,7 +353,11 @@ cat <<HERECACHESERVERUP
     proxy_pass http://localhost:${PORTORIGIN};
   }
 
-  location /chill/site/new-player/ {
+  location = /chill/site/new-player/ {
+    # At this time all routes on chill/* are GETs
+    limit_except GET {
+      deny all;
+    }
     # Redirect players with a user cookie to the player profile page
     if (\$http_cookie ~* "user=([^;]+)(?:;|\$)") {
       rewrite ^/chill/(.*)\$  /chill/site/player/ redirect;
@@ -371,6 +390,9 @@ cat <<HERECACHESERVERUP
 
   # /stream/puzzle/<channel>/
   location ~* ^/stream/puzzle/([^/]+)/\$ {
+    if (\$hotlinking_policy) {
+      return 444;
+    }
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -390,21 +412,26 @@ cat <<HERECACHESERVERUP
     # Channel is in the route, so /stream/puzzle/puzzle_id/ will go to: /stream?channel=puzzle:puzzle_id
     rewrite ^/stream/puzzle/([^/]+)/\$ /stream?channel=puzzle:\$1? break;
   }
+
 HERECACHESERVERUP
 else
 cat <<HERECACHESERVERDOWN
-  # Temporary redirect document pages to allow robots to index them.
-  location ~* ^/(about|faq|help|credits|buy-stuff)/ {
-    # stop caching
-    expires -1;
-    add_header Cache-Control "public";
-
-    rewrite ^/.* /error.html break;
+  location / {
+    if (\$hotlinking_policy) {
+      return 444;
+    }
+    try_files \$uri \$uri =404;
+  }
+  location /media/ {
+    if (\$hotlinking_policy) {
+      return 444;
+    }
+    root ${SRVDIR};
+    try_files \$uri \$uri =404;
   }
 
-  rewrite ^/\$ /chill/site/front/ last;
-  location / {
-    try_files \$uri \$uri =404;
+  location = / {
+    rewrite ^/.* /error.html break;
   }
   location /chill/site/ {
     # stop caching
@@ -424,16 +451,15 @@ fi
 cat <<HERECACHESERVER
 
   location = /newapi/message/ {
+    limit_except GET {
+      deny all;
+    }
     # stop caching
     expires -1;
     add_header Cache-Control "public";
     # Allow this content to be loaded in the error page iframe
     add_header X-Frame-Options ALLOW;
     rewrite ^/.* /puzzle-massive-message.html break;
-  }
-
-  location /.well-known/ {
-    try_files \$uri =404;
   }
 
   ${file_error_page_conf}
@@ -449,9 +475,6 @@ server {
   server_name localhost;
   listen      ${PORTORIGIN};
 
-  add_header X-Frame-Options DENY;
-  add_header X-Content-Type-Options nosniff;
-
   set_real_ip_from localhost;
   real_ip_header X-Real-IP;
   real_ip_recursive on;
@@ -461,19 +484,12 @@ server {
   access_log  ${NGINXLOGDIR}access.log combined if=\$loggable;
   error_log   ${NGINXLOGDIR}error.log;
 
-  # Limit the max simultaneous connections per ip address (10 per browser * 4 if within LAN)
-  limit_conn   addr 40;
-
-  client_max_body_size  20m;
-  keepalive_disable  none;
-
   # Serve any static files at ${SRVDIR}root/*
   location / {
     expires \$cache_expire;
     add_header Cache-Control "public";
     try_files \$uri \$uri =404;
   }
-
 
   location /stats/ {
     root   ${SRVDIR}stats;
@@ -627,6 +643,7 @@ cat <<HEREORIGINSERVER
     # Limit the response rate for the server as these requests can be called
     # multiple times on a page request.
     # Each request is delayed by 100ms up to 20 seconds.
+    limit_req zone=chill_site_internal_limit_per_ip burst=10 nodelay;
     limit_req zone=chill_site_internal_limit burst=200;
     limit_req_status 429;
 
@@ -672,7 +689,7 @@ cat <<HEREORIGINSERVER
     rewrite ^/chill/(.*)\$  /\$1 break;
   }
 
-  location /chill/site/new-player/ {
+  location = /chill/site/new-player/ {
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -726,6 +743,7 @@ cat <<HEREBEPRODUCTION
     expires \$cache_expire;
     add_header Cache-Control "public";
     root ${SRVDIR};
+    try_files \$uri \$uri =404;
   }
 HEREBEPRODUCTION
 
@@ -747,23 +765,27 @@ cat <<HEREORIGINSERVER
     expires \$cache_expire;
     add_header Cache-Control "public";
     root ${SRVDIR};
+    try_files \$uri \$uri =404;
   }
 
   location ~* ^/resources/.*/(scale-100/raster.png|scale-100/raster.css|pzz.css|pieces.png)\$ {
     expires \$cache_expire;
     add_header Cache-Control "public";
     root ${SRVDIR};
+    try_files \$uri \$uri =404;
   }
   location ~* ^/resources/.*/(preview_full.jpg)\$ {
     expires \$cache_expire;
     add_header Cache-Control "public";
     root ${SRVDIR};
+    try_files \$uri \$uri =404;
   }
   location ~* ^/resources/.*/(original.jpg)\$ {
     allow $INTERNALIP;
     allow 127.0.0.1;
     deny all;
     root ${SRVDIR};
+    try_files \$uri \$uri =404;
   }
 
   ${file_error_page_conf}
