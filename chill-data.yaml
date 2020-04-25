@@ -66,6 +66,7 @@ name: footerpages_item
 route: /credits/
 template: docs.html.jinja2
 value:
+  canonical_path: /d/credits/
   page:
     description: List of people who put this site together
     title: Credits
@@ -86,6 +87,7 @@ name: homepage
 route: /front/
 template: front.html.jinja2
 value:
+  canonical_path: /
   page:
     content: frontpage-content.html
     description: ' Massively Multiplayer Online Jigsaw Puzzles'

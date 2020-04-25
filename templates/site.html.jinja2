@@ -23,9 +23,18 @@
   {%- set _canonical_url = canonical_url|trim -%}
 {% elif content and content.canonical_url %}
   {%- set _canonical_url = content.canonical_url|trim -%}
-{% else %}
-  {# request.path will start with a '/' #}
-  {%- set _canonical_url = '{scheme}://{hostname}{path}'.format(scheme=config.SITE_PROTOCOL, hostname=config.HOSTNAME, path=request.path) -%}
+{% else -%}
+  {%- if canonical_path and canonical_path.value %}
+    {%- set _canonical_path = canonical_path.value|trim -%}
+  {%- elif canonical_path %}
+    {%- set _canonical_path = canonical_path|trim -%}
+  {% elif content and content.canonical_path %}
+    {%- set _canonical_path = content.canonical_path|trim -%}
+  {% else -%}
+    {#- request.path will start with a '/' -#}
+    {%- set _canonical_path = '/chill{path}'.format(path=request.path) -%}
+  {% endif -%}
+  {%- set _canonical_url = '{scheme}://{hostname}{path}'.format(scheme=config.SITE_PROTOCOL, hostname=config.HOSTNAME, path=_canonical_path) -%}
 {% endif -%}
 <!DOCTYPE html>
 <html class="no-js" lang="en">

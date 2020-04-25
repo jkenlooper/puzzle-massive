@@ -3,6 +3,7 @@ name: footerpages_item
 route: /faq/
 template: docs.html.jinja2
 value:
+  canonical_path: /d/faq/
   content: faqpage-content.html
   description: Frequently Asked Questions
   order: '40'
@@ -13,6 +14,7 @@ name: footerpages_item
 route: /contact/
 template: docs.html.jinja2
 value:
+  canonical_path: /d/contact/
   content: contactpage-content.html
   description: a contact form
   order: '30'
@@ -23,6 +25,7 @@ name: footerpages_item
 route: /about/
 template: docs.html.jinja2
 value:
+  canonical_path: /d/about/
   content: aboutpage-content.html
   description: 'About page for online jigsaw puzzle site: Puzzle Massive'
   order: '10'
@@ -33,6 +36,7 @@ name: footerpages_item
 route: /help/
 template: docs.html.jinja2
 value:
+  canonical_path: /d/help/
   content: helppage-content.html
   description: Tutorial for new players
   order: '20'
@@ -51,6 +55,7 @@ name: buystuffpage
 route: /buy-stuff/
 template: docs.html.jinja2
 value:
+  canonical_path: /d/buy-stuff/
   content: buystuffpage-content.html
   description: Enable some advanced options for puzzles.
   title: Buy Stuff
