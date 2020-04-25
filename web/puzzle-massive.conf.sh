@@ -257,8 +257,13 @@ cat <<HERECACHESERVER
   # Skip doing this so players on a shared VPN are not blocked.
   #limit_conn   addr 40;
 
-  # Prevent POST upload sizes that are larger than this.
-  client_max_body_size  20m;
+  # Limit all server wide to this small amount. Override on a location level.
+  client_max_body_size  20k;
+
+  # TODO: Research these before setting.
+  #client_body_buffer_size 200K;
+  #client_header_buffer_size 2k;
+  #large_client_header_buffers 3 1k;
 
   # The value none enables keep-alive connections with all browsers.
   keepalive_disable  none;
@@ -333,6 +338,22 @@ cat <<HERECACHESERVERUP
     proxy_pass http://localhost:${PORTORIGIN};
   }
 
+  location /newapi/puzzle-upload/ {
+    if (\$hotlinking_policy) {
+      return 444;
+    }
+    # Prevent POST upload sizes that are larger than this.
+    client_max_body_size 40m;
+
+    proxy_set_header X-Real-IP \$remote_addr;
+    proxy_set_header X-Forwarded-For \$remote_addr;
+    proxy_set_header X-Forwarded-Host \$remote_addr;
+    proxy_cache pm_cache_zone;
+    add_header X-Proxy-Cache \$upstream_cache_status;
+    include proxy_params;
+    proxy_pass http://localhost:${PORTORIGIN};
+  }
+
   location ~* ^/chill/site/puzzle/(.*/)?$ {
     # At this time all routes on chill/* are GETs
     limit_except GET {
@@ -393,6 +414,7 @@ cat <<HERECACHESERVERUP
     if (\$hotlinking_policy) {
       return 444;
     }
+
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -484,6 +506,9 @@ server {
   access_log  ${NGINXLOGDIR}access.log combined if=\$loggable;
   error_log   ${NGINXLOGDIR}error.log;
 
+  # Limit all server wide to this small amount. Override on a location level.
+  client_max_body_size 20k;
+
   # Serve any static files at ${SRVDIR}root/*
   location / {
     expires \$cache_expire;
@@ -502,6 +527,7 @@ server {
   }
 
   location /newapi/ {
+
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -512,6 +538,9 @@ server {
   }
 
   location /newapi/puzzle-upload/ {
+    # Prevent POST upload sizes that are larger than this.
+    client_max_body_size 40m;
+
     # Prevent too many uploads at once
     limit_req zone=puzzle_upload_limit_per_ip burst=5 nodelay;
     limit_req zone=puzzle_upload_limit_per_server burst=20 nodelay;
@@ -661,6 +690,9 @@ cat <<HEREORIGINSERVER
 
 
   location /chill/ {
+    limit_except GET {
+      deny all;
+    }
     # Location for /chill/theme/* /chill/media/* and others
     # Note that in development the /chill/theme/ and /chill/media/ are used, but
     # in production they argghhhhgghhhihfhghffhgghh.
@@ -676,6 +708,9 @@ cat <<HEREORIGINSERVER
   }
 
   location /chill/site/ {
+    limit_except GET {
+      deny all;
+    }
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -690,6 +725,9 @@ cat <<HEREORIGINSERVER
   }
 
   location = /chill/site/new-player/ {
+    limit_except GET {
+      deny all;
+    }
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
