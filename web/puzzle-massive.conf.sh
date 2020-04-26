@@ -183,6 +183,8 @@ map \$request_uri \$hotlinking_policy {
   # Pages on the site.
   / 0;
   ~/.+/$ 0;
+  # admin player page uses query params for GET
+  ~/chill/site/admin/player/?.+$ 0;
 
   # og:image image that can be used when sharing links
   /puzzle-massive-logo-600.png 0;
@@ -308,6 +310,12 @@ cat <<HERECACHESERVER
   # Matches root files: /humans.txt, /robots.txt, /puzzle-massive-logo-600.png
   rewrite ^/([^/]+)(\.txt|\.png)\$ /\$1\$2? last;
 
+  # Preserve query params on the route for /chill/site/admin/player/
+  rewrite ^/(chill/site/admin/player/.*)\$ /\$1 last;
+
+  # Ignore query params on pages so they are not part of the cache.
+  rewrite ^/(d|chill/site)/(.*)/\$ /\$1/\$2/? last;
+
 HERECACHESERVER
 if test "${ENVIRONMENT}" != 'development'; then
 cat <<HERECACHESERVERPRODUCTION
@@ -338,7 +346,7 @@ cat <<HERECACHESERVERUP
     proxy_pass http://localhost:${PORTORIGIN};
   }
 
-  location /newapi/puzzle-upload/ {
+  location ~* ^/newapi/(puzzle-upload|admin/puzzle/promote-suggested)/\$ {
     if (\$hotlinking_policy) {
       return 444;
     }
@@ -537,7 +545,7 @@ server {
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
-  location /newapi/puzzle-upload/ {
+  location ~* ^/newapi/(puzzle-upload|admin/puzzle/promote-suggested)/\$ {
     # Prevent POST upload sizes that are larger than this.
     client_max_body_size 40m;
 

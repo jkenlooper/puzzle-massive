@@ -23,5 +23,5 @@ select count(*) as filled_slots_count, player from User_Puzzle where puzzle is n
 where u.m_date is not null
 and (:email = '' or pa.email like :email)
 order by seconds_from_now asc
-limit 100 offset :index * 100
+limit 100 offset :page * 100
 ;

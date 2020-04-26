@@ -206,7 +206,7 @@ route: /admin/player/
 template: admin-playerpage.html.jinja2
 value:
   players: select-players.sql
-  index: route-pass-index.sql
+  page: route-pass-index.sql
   email: route-pass-email.sql
 
 
