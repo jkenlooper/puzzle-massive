@@ -13,7 +13,18 @@ git commit messages (`git shortlog 2.3.2..origin/develop`).
 
 ## [Unreleased] - ...
 
-...
+Breaks everything, maybe. Then fixed everything, hopefully. Now more up to
+date to the latest [jkenlooper/cookiecutter-website](https://github.com/jkenlooper/cookiecutter-website).
+
+### Added
+
+- New Puzzle Massive logo added to source-media.
+
+### Changed
+
+- More pages on the site are friendly to search indexing robots.
+- Merge web server configs and clean up. Document pages go to /d/ route.
+- Image upload size limit increased.
 
 ## [2.5.2] - 2020-03-30
 
