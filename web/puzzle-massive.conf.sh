@@ -192,6 +192,7 @@ map \$request_uri \$hotlinking_policy {
 
   # files in root
   /favicon.ico 0;
+  ~/favicon.ico?.+$ 0;
   /humans.txt 0;
   /robots.txt 0;
 

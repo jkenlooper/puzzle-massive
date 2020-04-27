@@ -53,3 +53,6 @@
 *.egg-info/
 
 /tests/
+
+# favicon.ico is generated from source-media/favicon/
+/root/favicon.ico

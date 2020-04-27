@@ -1,8 +1,7 @@
-<!doctype html>
+<!DOCTYPE html>
 <html class="no-js" lang="en">
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
     <title>Puzzle Massive Admin {%- if page and page.title %} | {{ page.title }}
       {%- elif title %} | {{ title }}
       {%- else %}{% block title %}{% endblock %}{% endif %}</title>
@@ -14,6 +13,7 @@
     {% block stylesheet %}
     <link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='admin.css') }}">
     {% endblock %}
+    {% include 'favicon.html.jinja2' %}
 
     {% block headscript %}
     {% endblock %}

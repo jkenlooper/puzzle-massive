@@ -48,14 +48,7 @@
 
     <link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='app.css') }}{% if config.DEBUG == True and config.CACHE_TYPE == "null" %}?debug-no-cache={{ chill_now }}{% endif %}">
     {% endblock %}
-
-    {# https://github.com/audreyr/favicon-cheat-sheet #}
-    {% if config.DEBUG %}
-    <!-- Force setting favicon when in debug mode. -->
-    <!-- The favicon link is not needed in production. -->
-    <link rel="shortcut icon" href="//{{ request.host }}/favicon.ico?v={{ config.VERSION }}&debug-no-cache={{ chill_now }}" />
-    <link rel="icon" sizes="16x16 32x32 48x48" href="/favicon.ico?v={{ config.VERSION }}&debug-no-cache={{ chill_now }}">
-    {% endif %}
+    {% include 'favicon.html.jinja2' %}
 
     {% block headscript %}
     <script type="module" src="{{ url_for('send_theme_file', filename='modernizr.build.min.js') }}"></script>
