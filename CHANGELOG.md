@@ -19,6 +19,7 @@ date to the latest [jkenlooper/cookiecutter-website](https://github.com/jkenloop
 ### Added
 
 - New Puzzle Massive logo added to source-media.
+- New favicon
 
 ### Changed
 
