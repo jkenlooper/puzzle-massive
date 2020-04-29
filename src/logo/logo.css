@@ -1,3 +1,5 @@
+@import "../site/viewport-breakpoints.css";
+
 .pm-Logo {
   font-size: 2.6em;
   line-height: 0.6em;
@@ -15,6 +17,35 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+  color: #2e2c58;
+}
+@media (--md-viewport) {
+  .pm-Logo-svg {
+    display: none;
+  }
+}
+@media (--lg-viewport) {
+  .pm-Logo-svg {
+    display: none;
+  }
+}
+.pm-Logo-img {
+  max-width: 731px;
+  max-height: 192px;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: none;
+}
+@media (--md-viewport) {
+  .pm-Logo-img {
+    display: block;
+  }
+}
+@media (--lg-viewport) {
+  .pm-Logo-img {
+    display: block;
+  }
 }
 
 .pm-Logo-text {

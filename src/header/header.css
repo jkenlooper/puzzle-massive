@@ -4,6 +4,7 @@
   outline: 2px solid var(--color-primary-light);
   border-bottom: 2px solid var(--color-light-light);
   background-color: var(--color-primary-light);
+  background-color: #dbd9d9;
   color: var(--color-dark);
 }
 
@@ -42,11 +43,15 @@
 @media (--md-viewport) {
   .pm-Header-logo {
     width: 220px;
+    width: 280px;
+    height: 94px;
   }
 }
 @media (--lg-viewport) {
   .pm-Header-logo {
     width: 220px;
+    width: 280px;
+    height: 94px;
   }
 }
 
