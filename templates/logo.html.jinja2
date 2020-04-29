@@ -1,7 +1,21 @@
-<a href="/" class="pm-Logo">
-    <svg class="pm-Logo-svg" width="100%" height="100%" fit="" preserveAspectRatio="xMidYMid meet" focusable="false"><use xlink:href="{{ url_for('send_theme_file', filename='puzzle-massive-logo.svg') }}#logo"/></svg>
-    <span class="pm-Logo-text">Puzzle Massive</span>
-    <img class="pm-Logo-img" src="{{ url_for('send_media_file', filename='puzzle-massive-logo-blue-on-black--440.png') }}">
+{% macro logo(variant) -%}
+<a href="/" class="pm-Logo {% if variant == 'header' %}pm-Logo--header{% endif %}{% if variant == 'footer' %}pm-Logo--footer{% endif %}{% if variant == 'footer-about' %}pm-Logo--footer-about{% endif %}">
+    {% if variant == 'header' -%}
+    <img class="pm-Logo-img"
+      alt="Puzzle Massive"
+      width="272"
+      height="86"
+      srcset="
+      {{ url_for('send_media_file', filename='puzzle-massive-logo-tertiary-on-background-accent--122.jpg') }} 122w,
+      {{ url_for('send_media_file', filename='puzzle-massive-logo-tertiary-on-background-accent--272.jpg') }} 272w,
+      {{ url_for('send_media_file', filename='puzzle-massive-logo-tertiary-on-background-accent--544.jpg') }} 544w
+      "
+      sizes="
+      (max-width: 639px) 122px,
+      272px
+      "
+      src="{{ url_for('send_media_file', filename='puzzle-massive-logo-tertiary-on-background-accent--272.jpg') }}" />
+    {%- endif %}
     {#
     logo is
     designtoken-TextColor-tertiaryOnDark
@@ -9,4 +23,45 @@
     dark mode should switch to orange
     designtoken-TextColor-primaryOnDark
     #}
+    {% if variant == 'footer' -%}
+    <img class="pm-Logo-img"
+      alt="Puzzle Massive"
+      width="520"
+      height="136"
+      srcset="
+      {{ url_for('send_media_file', filename='puzzle-massive-logo-tertiary-on-dark--520.jpg') }} 520w,
+      {{ url_for('send_media_file', filename='puzzle-massive-logo-tertiary-on-dark--731.jpg') }} 731w,
+      {{ url_for('send_media_file', filename='puzzle-massive-logo-tertiary-on-dark--1040.jpg') }} 1040w,
+      {{ url_for('send_media_file', filename='puzzle-massive-logo-tertiary-on-dark--1462.jpg') }} 1462w,
+      "
+      sizes="
+      (max-width: 560px) 520px,
+      (max-width: 960px) 731px,
+      (max-width: 1079px) 520px,
+      (min-width: 1080px) 731px,
+      520px
+      "
+      src="{{ url_for('send_media_file', filename='puzzle-massive-logo-tertiary-on-dark--520.jpg') }}" />
+    {%- endif %}
+    {% if variant == 'footer-about' -%}
+    <img class="pm-Logo-img"
+      alt="Puzzle Massive"
+      width="520"
+      height="136"
+      srcset="
+      {{ url_for('send_media_file', filename='puzzle-massive-logo-white-on-dark--520.jpg') }} 520w,
+      {{ url_for('send_media_file', filename='puzzle-massive-logo-white-on-dark--731.jpg') }} 731w,
+      {{ url_for('send_media_file', filename='puzzle-massive-logo-white-on-dark--1040.jpg') }} 1040w,
+      {{ url_for('send_media_file', filename='puzzle-massive-logo-white-on-dark--1462.jpg') }} 1462w,
+      "
+      sizes="
+      (max-width: 560px) 520px,
+      (max-width: 960px) 731px,
+      (max-width: 1079px) 520px,
+      (min-width: 1080px) 731px,
+      520px
+      "
+      src="{{ url_for('send_media_file', filename='puzzle-massive-logo-tertiary-on-dark--520.jpg') }}" />
+    {%- endif %}
 </a>
+{%- endmacro %}

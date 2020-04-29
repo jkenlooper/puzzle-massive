@@ -5,7 +5,7 @@
   </div>
 
   <div class="pm-Header-logo">
-    {% include './logo.html.jinja2' %}
+    {% from './logo.html.jinja2' import logo %}{{ logo('header') }}
   </div>
 
   <div class="pm-Header-main">

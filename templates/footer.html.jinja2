@@ -1,11 +1,11 @@
 <div class="pm-Footer">
   <div class="pm-Footer-grid">
     <div class="pm-Footer-gridA">
-      {% include './logo.html.jinja2' %}{% if title and title == "About" %}
+      {% from './logo.html.jinja2' import logo %}{% if title and title == "About" %}{{ logo('footer-about') }}
       <div class="pm-Logo-eggShell">
         <a class="pm-Logo-eggLink" href="http://puzzle.massive.xyz/chill/site/front/5512016996c09/" title="Polar Bear in a Snowstorm"></a>
         <svg class="pm-Logo-egg" width="100%" height="100%" fit="" preserveAspectRatio="xMidYMid meet" focusable="false"><use xlink:href="{{ url_for('send_theme_file', filename='puzzle-massive-logo.svg') }}#egg"/></svg>
-      </div>{% endif %}
+      </div>{% else %}{{ logo('footer') }}{% endif %}
     </div>
 
     <div class="pm-Footer-gridB">

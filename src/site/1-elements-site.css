@@ -1,3 +1,9 @@
+@font-face {
+  font-family: "giant_head_otregular";
+  src: url("../fonts/giant_head_regular_ot-webfont.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
 * {
   box-sizing: border-box;
 }

@@ -6,6 +6,7 @@
   background-color: var(--designtoken-BackgroundColor-dark--dark);
   padding: 10px 20px;
   color: var(--designtoken-TextColor-onDark);
+  overflow: hidden;
 }
 
 .pm-Footer a {

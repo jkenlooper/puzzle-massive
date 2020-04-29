@@ -46,6 +46,9 @@ props:
     value: "{!color-secondary}"
     comment: Logo
 
+  TextColor-tertiaryOnBackground:
+    value: "{!color-tertiary}"
+    comment: Logo
   TextColor-tertiaryOnDark:
-    value: "{!color-tertiary-dark}"
+    value: "{!color-tertiary}"
     comment: Logo
