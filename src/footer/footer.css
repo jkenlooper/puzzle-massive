@@ -1,11 +1,11 @@
 @import "../site/viewport-breakpoints.css";
 
 .pm-Footer {
-  outline: 2px solid var(--color-dark-dark);
-  border-top: 2px solid var(--color-light-light);
-  background-color: var(--color-dark-dark);
+  outline: 2px solid var(--designtoken-BackgroundColor-dark--dark);
+  border-top: 2px solid var(--designtoken-TextColor-onDark);
+  background-color: var(--designtoken-BackgroundColor-dark--dark);
   padding: 10px 20px;
-  color: var(--color-light-light);
+  color: var(--designtoken-TextColor-onDark);
 }
 
 .pm-Footer a {

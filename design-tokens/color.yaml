@@ -7,7 +7,7 @@ aliases:
   color-dark-contrast-disabled: "rgba(255,255,255,0.38)"
   color-dark-dark: "#000105"
   color-dark-light: "#43434e"
-  color-dark-accent: "#272738"
+  color-dark-accent: "#1A0E2F"
 
   # Light grays
   color-light: "hsl(0, 0%, 96%)"
@@ -17,57 +17,59 @@ aliases:
   color-light-contrast-disabled: "rgba(0,0,0,0.38)"
   color-light-dark: "hsl(0, 0%, 90%)"
   color-light-light: "hsl(0, 0%, 98%)"
-  color-light-accent: "#fbeedd"
+  color-light-accent: "#F3EDFC"
 
   # Primary
-  # dark orange
-  color-primary: "#E34A07"
+  # orange
+  color-primary: "#e58b1c"
   color-primary-contrast: "black"
   color-primary-contrast-high: "rgba(0,0,0,0.87)"
   color-primary-contrast-medium: "rgba(0,0,0,0.60)"
   color-primary-contrast-disabled: "rgba(0,0,0,0.38)"
-  color-primary-dark: "#B53600"
-  color-primary-light: "#FF5307"
-  color-primary-accent: "#E82A07"
+  color-primary-dark: "#c37513"
+  color-primary-light: "#eeab59"
+  color-primary-accent: "#E9B02D"
 
   # Secondary
-  # purple
-  color-secondary: "#4F3482"
+  # dark purple
+  color-secondary: "#4b376d"
   color-secondary-contrast: "white"
   color-secondary-contrast-high: "rgba(255,255,255,0.87)"
   color-secondary-contrast-medium: "rgba(255,255,255,0.60)"
   color-secondary-contrast-disabled: "rgba(255,255,255,0.38)"
-  color-secondary-dark: ""
-  color-secondary-light: ""
-  color-secondary-accent: ""
+  color-secondary-dark: "#3F2E58"
+  color-secondary-light: "#6e509f"
+  color-secondary-accent: "#4C2B5F"
 
   # Tertiary
   # blue
-  color-tertiary: "#2C5683"
+  color-tertiary: "#325292"
   color-tertiary-contrast: "white"
   color-tertiary-contrast-high: "rgba(255,255,255,0.87)"
   color-tertiary-contrast-medium: "rgba(255,255,255,0.60)"
   color-tertiary-contrast-disabled: "rgba(255,255,255,0.38)"
-  color-tertiary-dark: ""
-  color-tertiary-light: ""
-  color-tertiary-accent: ""
+  color-tertiary-dark: "#1c2d51"
+  color-tertiary-light: "#3B60AB"
+  color-tertiary-accent: "#2655B5"
 
   # Accent
-  color-accent: "#fdba2b"
-  color-accent-contrast: "black"
-  color-accent-contrast-high: "rgba(0,0,0,0.87)"
-  color-accent-contrast-medium: "rgba(0,0,0,0.60)"
-  color-accent-contrast-disabled: "rgba(0,0,0,0.38)"
-  color-accent-dark: "#d89d21"
-  color-accent-light: "#fed57f"
-  color-accent-accent: "#f5a704"
+  # purple
+  color-accent: "#7942d9"
+  color-accent-contrast: "white"
+  color-accent-contrast-high: "rgba(255,255,255,0.87)"
+  color-accent-contrast-medium: "rgba(255,255,255,0.60)"
+  color-accent-contrast-disabled: "rgba(255,255,255,0.38)"
+  color-accent-dark: "#6b2ed3"
+  color-accent-light: "#9d75e3"
+  color-accent-accent: "#402269"
 
   # Error
-  color-error: "#d8091c"
-  color-error-contrast: "white"
-  color-error-contrast-high: "rgba(255,255,255,0.87)"
-  color-error-contrast-medium: "rgba(255,255,255,0.60)"
-  color-error-contrast-disabled: "rgba(255,255,255,0.38)"
-  color-error-dark: "#c31626"
-  color-error-light: "#e83646"
-  color-error-accent: "#e40217"
+  # pirpol
+  color-error: "#D94542"
+  color-error-contrast: "black"
+  color-error-contrast-high: "rgba(0,0,0,0.87)"
+  color-error-contrast-medium: "rgba(0,0,0,0.60)"
+  color-error-contrast-disabled: "rgba(0,0,0,0.38)"
+  color-error-dark: "#9E211F"
+  color-error-light: "#D75057"
+  color-error-accent: "#EB4048"

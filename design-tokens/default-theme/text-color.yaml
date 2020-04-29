@@ -41,3 +41,11 @@ props:
   TextColor-primaryOnSurface:
     value: "{!color-primary-dark}"
     comment: Link text color
+
+  TextColor-secondaryOnDark:
+    value: "{!color-secondary}"
+    comment: Logo
+
+  TextColor-tertiaryOnDark:
+    value: "{!color-tertiary-dark}"
+    comment: Logo
