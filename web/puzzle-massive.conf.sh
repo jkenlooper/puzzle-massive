@@ -187,7 +187,7 @@ map \$request_uri \$hotlinking_policy {
   ~/chill/site/admin/player/?.+$ 0;
 
   # og:image image that can be used when sharing links
-  /puzzle-massive-logo-600.png 0;
+  ~/.*puzzle-massive-logo.* 0;
   ~/resources/.*/preview_full.jpg 0;
 
   # files in root
