@@ -309,7 +309,7 @@ cat <<HERECACHESERVER
 
   # Ignore query params on root files so they are not part of the cache.
   # Matches root files: /humans.txt, /robots.txt, /puzzle-massive-logo-600.png
-  rewrite ^/([^/]+)(\.txt|\.png)\$ /\$1\$2? last;
+  rewrite ^/([^/]+)(\.txt|\.png|\.jpg)\$ /\$1\$2? last;
 
   # Preserve query params on the route for /chill/site/admin/player/
   rewrite ^/(chill/site/admin/player/.*)\$ /\$1 last;

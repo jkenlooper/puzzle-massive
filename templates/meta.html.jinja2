@@ -22,12 +22,11 @@ Title tag optimal length is around 60 characters.
 {#- og:description A brief description of the content, usually between 2 and 4 sentences. This will display below the title of the post on Facebook. -#}
 <meta property="og:description" content="{{ _description }}" />
 {%- endif %}
-{%- if _pageimage %}
+{%- if _pageimage_url %}
 {#- og:image The URL of the image that appears when someone shares the content
 to Facebook. 1200 x 630 pixels for the best display on high resolution devices.
-At the minimum, you should use images that are 600 x 315.
-The site.cfg sets the FREEZER_BASE_URL which is used by Frozen-Flask since _external=True. -#}
-<meta property="og:image" content="{{ url_for('send_media_file', _external=True, filename=_pageimage) }}" />
+At the minimum, you should use images that are 600 x 315.  -#}
+<meta property="og:image" content="{{ _pageimage_url }}" />
 {%- endif %}
 {#- og:url The canonical URL for your page. This should be the undecorated URL, without session variables, user identifying parameters, or counters. Likes and Shares for this URL will aggregate at this URL. For example, mobile domain URLs should point to the desktop version of the URL as the canonical URL to aggregate Likes and Shares across different versions of the page. -#}
 <meta property="og:url" content="{{ _canonical_url }}" />

@@ -11,7 +11,24 @@
   {%- set _pageimage = pageimage|trim -%}
 {% elif content and content.pageimage %}
   {%- set _pageimage = content.pageimage|trim -%}
+{% else %}
+  {%- if pageimagemedia %}
+    {%- set _pageimage = pageimagemedia|trim -%}
+    {%- set _pageimage = url_for('send_media_file', _external=False, filename=_pageimage) -%}
+  {% elif content and content.pageimagemedia %}
+    {%- set _pageimage = content.pageimagemedia|trim -%}
+    {%- set _pageimage = url_for('send_media_file', _external=False, filename=_pageimage) -%}
+  {% endif -%}
 {% endif -%}
+
+{%- if _pageimage %}
+  {%- if _pageimage.startswith('http') %}
+    {%- set _pageimage_url = _pageimage %}
+  {% else %}
+    {%- set _pageimage_url = '{scheme}://{hostname}{path}'.format(scheme=config.SITE_PROTOCOL, hostname=config.HOSTNAME, path=_pageimage) -%}
+  {% endif -%}
+{% endif -%}
+
 {%- if description_txt_file %}
   {%- set _description = description_txt_file|readfile|trim -%}
 {% elif content and content.description %}
