@@ -39,6 +39,7 @@ route: /puzzle/<puzzle_id>/scale/<int:scale>/
 template: puzzlepage.html.jinja2
 value:
   args: _select-args-for-puzzlepage.sql
+  content: _select-frontpage-pageimage-url.sql
   page:
     description: puzzle assembly
     info: _frontpage-page-info-for-puzzle_id.sql

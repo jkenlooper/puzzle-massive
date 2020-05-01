@@ -314,6 +314,9 @@ cat <<HERECACHESERVER
   # Preserve query params on the route for /chill/site/admin/player/
   rewrite ^/(chill/site/admin/player/.*)\$ /\$1 last;
 
+  # Preserve query params on the route for /chill/site/new-player/
+  rewrite ^/(chill/site/new-player/.*)\$ /\$1 last;
+
   # Ignore query params on pages so they are not part of the cache.
   rewrite ^/(d|chill/site)/(.*)/\$ /\$1/\$2/? last;
 

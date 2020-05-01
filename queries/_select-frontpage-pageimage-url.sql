@@ -1,4 +1,6 @@
-select pf.url as pageimage from Puzzle as p
+select pf.url as pageimage,
+printf('/chill/site/front/%s/', :puzzle_id) as canonical_path
+from Puzzle as p
 join PuzzleFile as pf on (pf.puzzle = p1.id) -- Get the original
 join PuzzleInstance as pi on (pi.instance = p.id)
 join Puzzle as p1 on (p1.id = pi.original)
