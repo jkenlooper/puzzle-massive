@@ -460,7 +460,6 @@ class UserDetailsView(MethodView):
                     if puzzle_id:
                         front_url = "/chill/site/front/{}/".format(puzzle_id)
 
-                    cur.close()
                     return {
                         "front_url": front_url,
                         "src": puzzle_instance.get("src"),
