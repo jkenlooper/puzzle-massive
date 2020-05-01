@@ -40,5 +40,7 @@ media/puzzle-massive-logo-white-on-dark--1040.jpg : source-media/logo-puzzle-mas
 media/puzzle-massive-logo-white-on-dark--1462.jpg : source-media/logo-puzzle-massive/puzzle-massive-logo-mosaic/puzzle-massive-logo-mosaic-white-on-black.png
 	convert $< -format jpg -background "#000105" -flatten -alpha off -resize 1462x $@;
 
-media/puzzle-massive-logo-primary-on-white--1200x630.jpg : source-media/logo-puzzle-massive/puzzle-massive-logo-mosaic/puzzle-massive-logo-mosaic-orange-on-black.png
-	convert $< -format jpg -background white -flatten -alpha off -resize 1100x -gravity center -extent 1200x630 +repage $@;
+media/puzzle-massive-logo-primary-on-white--1200x630.jpg : source-media/logo-puzzle-massive/puzzle-massive-logo-mosaic/puzzle-massive-logo-mosaic-orange-on-black.png source-media/logo-puzzle-massive/logo-puzzle-pieces.png
+	composite \( source-media/logo-puzzle-massive/puzzle-massive-logo-mosaic/puzzle-massive-logo-mosaic-orange-on-black.png  -resize 1100 \) \
+		source-media/logo-puzzle-massive/logo-puzzle-pieces.png -compose Over -gravity center \
+		-format jpg -background white $@;
