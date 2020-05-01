@@ -35,19 +35,21 @@
 }
 
 .pm-Header-logo {
-  width: calc(122px + (4px * 2));
+  width: calc(222px + (4px * 2));
   height: 64px;
 }
-@media (--md-viewport) {
+@media (min-width: 360px) {
   .pm-Header-logo {
-    width: 220px;
-    width: 280px;
-    height: 94px;
+    width: calc(122px + (4px * 2));
   }
 }
-@media (--lg-viewport) {
+@media (min-width: 460px) {
   .pm-Header-logo {
-    width: 220px;
+    width: calc(222px + (4px * 2));
+  }
+}
+@media (min-width: 680px) {
+  .pm-Header-logo {
     width: 280px;
     height: 94px;
   }

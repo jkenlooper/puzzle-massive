@@ -4,8 +4,10 @@ route: /faq/
 template: docs.html.jinja2
 value:
   canonical_path: /d/faq/
+  pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
   content: faqpage-content.html
-  description: Frequently Asked Questions
+  page:
+    description: Frequently Asked Questions
   order: '40'
   slug: faq
   title: Questions and Answers
@@ -15,8 +17,10 @@ route: /contact/
 template: docs.html.jinja2
 value:
   canonical_path: /d/contact/
+  pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
   content: contactpage-content.html
-  description: a contact form
+  page:
+    description: a contact form
   order: '30'
   slug: contact
   title: Contact
@@ -26,8 +30,10 @@ route: /about/
 template: docs.html.jinja2
 value:
   canonical_path: /d/about/
+  pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
   content: aboutpage-content.html
-  description: 'About page for online jigsaw puzzle site: Puzzle Massive'
+  page:
+    description: 'About page for online jigsaw puzzle site: Puzzle Massive'
   order: '10'
   slug: about
   title: About
@@ -37,8 +43,10 @@ route: /help/
 template: docs.html.jinja2
 value:
   canonical_path: /d/help/
+  pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
   content: helppage-content.html
-  description: Tutorial for new players
+  page:
+    description: Tutorial for new players
   order: '20'
   slug: help
   title: Help
@@ -56,6 +64,11 @@ route: /buy-stuff/
 template: docs.html.jinja2
 value:
   canonical_path: /d/buy-stuff/
+  pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
   content: buystuffpage-content.html
-  description: Enable some advanced options for puzzles.
-  title: Buy Stuff
+  page:
+    description: >
+      Online store for Puzzle Massive where players can buy puzzle instances.
+      Other items available to sell from sponsors of Puzzle Massive are hand-made
+      pottery and watercolor paintings from some awesome artists.
+  title: Buy Stuff, Be Awesome

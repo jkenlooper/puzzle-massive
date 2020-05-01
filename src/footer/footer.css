@@ -76,13 +76,25 @@
 .pm-Footer-socialLinks {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: baseline;
   justify-content: start;
   padding: 15px 0;
 }
 
 .pm-Footer-socialLinks > * {
-  padding: 15px;
+  margin: 15px;
+}
+
+.pm-Footer-socialLink {
+  padding: 5px 10px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  border: 1px solid currentcolor;
+}
+.pm-Footer-socialLink > * + * {
+  padding-left: 5px;
 }
 
 .pm-Footer-summary {

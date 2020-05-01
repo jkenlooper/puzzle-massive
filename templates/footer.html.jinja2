@@ -6,18 +6,12 @@
         <a class="pm-Logo-eggLink" href="http://puzzle.massive.xyz/chill/site/front/5512016996c09/" title="Polar Bear in a Snowstorm"></a>
         <svg class="pm-Logo-egg" width="100%" height="100%" fit="" preserveAspectRatio="xMidYMid meet" focusable="false"><use xlink:href="{{ url_for('send_theme_file', filename='puzzle-massive-logo.svg') }}#egg"/></svg>
       </div>{% else %}{{ logo('footer') }}{% endif %}
+      <p class="pm-Footer-summary">
+        Massively Multiplayer Online Jigsaw Puzzles
+      </p>
     </div>
 
     <div class="pm-Footer-gridB">
-      <div class="pm-Footer-socialLinks">
-        <a title="Discord chat server" href="https://discord.gg/uVhE2Kd">
-          <img src="{{ url_for('send_media_file', filename='discordwhite.svg') }}" width="147" height="50" alt="Discord">
-        </a>
-        <a title="Fork the project on GitHub" href="{{ config.PACKAGEJSON.homepage }}">
-          <img src="{{ url_for('send_media_file', filename='GitHub-Mark-Light-120px-plus.png') }}" alt="GitHub Mark" width="64" height="64">
-        </a>
-      </div>
-
       <nav class="pm-Footer-nav">
         <a href="/d/about/">
           About
@@ -45,10 +39,22 @@
         Your Player Profile
       </a>
       </nav>
+      <div class="pm-Footer-socialLinks">
+        <a href="https://discord.gg/uVhE2Kd" class="pm-Footer-socialLink">
+          <img src="{{ url_for('send_media_file', filename='discordwhite.svg') }}" width="94" height="32" alt="Discord logo">
+          <span>
+          Join the Discord chat server
+          </span>
+        </a>
+        <a href="{{ config.PACKAGEJSON.homepage }}" class="pm-Footer-socialLink">
+          <img src="{{ url_for('send_media_file', filename='GitHub-Mark-Light-120px-plus.png') }}" alt="GitHub Mark" width="32" height="32">
+          <span>
+          Fork the project on GitHub
+          </span>
+        </a>
+      </div>
 
-      <p class="pm-Footer-summary">
-        Massively Multiplayer Online Jigsaw Puzzles
-      </p>
+
       <p class="pm-Footer-copyright">
         Copyright 2011 - 2020,
         <span class="u-textNoWrap">{{ config.PACKAGEJSON.author }}</span>
@@ -62,10 +68,17 @@
     {% if page and page.description == " Massively Multiplayer Online Jigsaw Puzzles" %}{{ config.M3|safe }}{% endif %}{# reality check #}
     <div class="pm-Footer-gridC">
       <p class="u-textRight">
-        <a title="Puzzle Massive is an open source project" href="{{ config.PACKAGEJSON.homepage }}">
+        <span class="u-block">
+        <strong>Puzzle Massive</strong> is an open source project.
+        </span>
+        <a href="{{ config.PACKAGEJSON.homepage }}">
           {{ config.PACKAGEJSON.name }}
           {{ config.VERSION }}
         </a>
+        <em class="u-block"><small>
+        Massive assembly required.
+        <!-- Because "some assembly required" would be an understatement. -->
+        </small></em>
       </p>
     </div>
   </div>

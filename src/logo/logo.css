@@ -11,6 +11,7 @@
 .pm-Footer .pm-Logo {
   color: var(--designtoken-TextColor-tertiaryOnDark);
   font-size: 9rem;
+  display: inline-block;
 }
 
 .pm-Logo-img {
