@@ -98,13 +98,13 @@ cat <<HERE
 # File generated from $0
 # on ${DATE}
 
-limit_conn_zone \$binary_remote_addr zone=addr:1m;
-limit_req_zone \$binary_remote_addr zone=piece_move_limit_per_ip:1m rate=60r/m;
-limit_req_zone \$binary_remote_addr zone=piece_token_limit_per_ip:1m rate=60r/m;
+# Dropping these IP limits for now.
+#limit_conn_zone \$binary_remote_addr zone=addr:1m;
+#limit_req_zone \$binary_remote_addr zone=piece_move_limit_per_ip:1m rate=60r/m;
+#limit_req_zone \$binary_remote_addr zone=piece_token_limit_per_ip:1m rate=60r/m;
+
 limit_req_zone \$binary_remote_addr zone=puzzle_upload_limit_per_ip:1m rate=3r/m;
-limit_req_zone \$server_name zone=puzzle_upload_limit_per_server:1m rate=20r/m;
 limit_req_zone \$binary_remote_addr zone=puzzle_list_limit_per_ip:1m rate=30r/m;
-limit_req_zone \$server_name zone=puzzle_list_limit_per_server:1m rate=20r/s;
 limit_req_zone \$binary_remote_addr zone=player_email_register_limit_per_ip:1m rate=1r/m;
 
 limit_req_zone \$binary_remote_addr zone=chill_puzzle_limit_per_ip:1m rate=30r/m;
@@ -603,7 +603,6 @@ server {
 
     # Prevent too many uploads at once
     limit_req zone=puzzle_upload_limit_per_ip burst=5 nodelay;
-    limit_req zone=puzzle_upload_limit_per_server burst=20 nodelay;
 
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
@@ -643,7 +642,6 @@ server {
 
     # Prevent too many puzzle list queries at once.
     limit_req zone=puzzle_list_limit_per_ip burst=20 nodelay;
-    limit_req zone=puzzle_list_limit_per_server burst=200;
     limit_req_status 429;
 
     proxy_pass_header Server;
@@ -680,8 +678,10 @@ cat <<HEREORIGINSERVER
   location ~* ^/newapi/puzzle/.*/piece/.*/token/ {
     # TODO: not sure why keepalive_timeout was set to 0 before.
     #keepalive_timeout 0;
-    limit_req zone=piece_token_limit_per_ip burst=60 nodelay;
-    limit_req_status 429;
+
+    # Dropping IP limits for now.
+    #limit_req zone=piece_token_limit_per_ip burst=60 nodelay;
+    #limit_req_status 429;
 
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
@@ -701,8 +701,10 @@ cat <<HEREORIGINSERVER
 
     # TODO: not sure why keepalive_timeout was set to 0 before.
     #keepalive_timeout 0;
-    limit_req zone=piece_move_limit_per_ip burst=60 nodelay;
-    limit_req_status 429;
+
+    # Dropping IP limits for now.
+    #limit_req zone=piece_move_limit_per_ip burst=60 nodelay;
+    #limit_req_status 429;
 
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;

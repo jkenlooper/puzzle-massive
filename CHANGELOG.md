@@ -38,6 +38,8 @@ date to the latest [jkenlooper/cookiecutter-website](https://github.com/jkenloop
 - More pages on the site are friendly to search indexing robots.
 - Merge web server configs and clean up. Document pages go to /d/ route.
 - Image upload size limit increased.
+- Dropped piece movement rate restrictions per IP. Players on a shared VPN
+  should have less errors once they claim or register their player account.
 - Improved footer layout and links.
 
 ## [2.5.2] - 2020-03-30
