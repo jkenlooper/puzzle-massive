@@ -409,7 +409,7 @@ class UpdatePuzzleQueue(Task):
 
 class AutoApproveUserNames(Task):
     "Approve user names that have not been approved and have old approved_date."
-    interval = HOUR
+    interval = 5 * MINUTE
 
     def __init__(self, id=None):
         super().__init__(id, __class__.__name__)

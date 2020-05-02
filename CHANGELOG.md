@@ -39,7 +39,9 @@ date to the latest [jkenlooper/cookiecutter-website](https://github.com/jkenloop
 - Merge web server configs and clean up. Document pages go to /d/ route.
 - Image upload size limit increased.
 - Dropped piece movement rate restrictions per IP. Players on a shared VPN
-  should have less errors once they claim or register their player account.
+  should have less errors once they claim or register their player account. The
+  karma rules still apply per puzzle for IPs.
+- Shorten player name automatic approval time to about 10 minutes.
 - Improved footer layout and links.
 
 ## [2.5.2] - 2020-03-30

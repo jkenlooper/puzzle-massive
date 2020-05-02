@@ -161,7 +161,7 @@ class PlayerNameRegisterView(MethodView):
                                 "player_id": user,
                                 "name": name,
                                 "display_name": display_name,
-                                "time": "+1 hour",
+                                "time": "+5 minutes",
                             },
                         )
                         cur.execute(
@@ -195,7 +195,7 @@ class PlayerNameRegisterView(MethodView):
                             "player_id": user,
                             "name": name,
                             "display_name": display_name,
-                            "time": "+1 hour",
+                            "time": "+5 minutes",
                         },
                     )
 
@@ -205,7 +205,7 @@ class PlayerNameRegisterView(MethodView):
                     )
                     response[
                         "message"
-                    ] = 'Thank you for submitting a new name.  "{}" will be shown next to your bit icon.'.format(
+                    ] = 'Thank you for submitting a new name.  "{}" will be shown next to your bit icon in about 10 minutes.'.format(
                         display_name
                     )
                     response["name"] = "success"
