@@ -1,11 +1,11 @@
 /* site wide message */
 .pm-SiteWideMessage {
-  max-width: 40em;
+  background-color: var(--designtoken-BackgroundColor-error--light);
+  color: var(--designtoken-TextColor-onError);
+  max-width: 100vw;
   max-height: 100px;
   overflow: auto;
-  border: 1px solid var(--color-accent);
-  margin: 1em;
+  margin: 0em;
   padding: 10px;
-  box-shadow: 3px 3px 0px 0px var(--color-dark);
-  background-color: var(--color-light-accent);
+  border-bottom: 3px dashed var(--designtoken-BackgroundColor-error--dark);
 }

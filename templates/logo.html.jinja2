@@ -17,7 +17,7 @@
       272px
       "
       src="{{ url_for('send_media_file', filename='puzzle-massive-logo-tertiary-on-background-accent--272.jpg') }}" />
-    {%- endif %}
+    {%- endif -%}
     {#
     logo is
     designtoken-TextColor-tertiaryOnDark
@@ -25,7 +25,7 @@
     dark mode should switch to orange
     designtoken-TextColor-primaryOnDark
     #}
-    {% if variant == 'footer' -%}
+    {%- if variant == 'footer' -%}
     <img class="pm-Logo-img"
       alt="Puzzle Massive"
       width="520"
@@ -45,7 +45,7 @@
       "
       src="{{ url_for('send_media_file', filename='puzzle-massive-logo-tertiary-on-dark--520.jpg') }}" />
     {%- endif %}
-    {% if variant == 'footer-about' -%}
+    {%- if variant == 'footer-about' -%}
     <img class="pm-Logo-img"
       alt="Puzzle Massive"
       width="520"

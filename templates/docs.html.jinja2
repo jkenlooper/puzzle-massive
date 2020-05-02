@@ -15,6 +15,12 @@
   <a href="/d/about/">About</a>
   {%- endif -%}
 
+  {%- if slug == 'buy-stuff' -%}
+  <span class="is-active">Shop</span>
+  {%- else -%}
+  <a href="/d/buy-stuff/">Shop</a>
+  {%- endif -%}
+
   {%- if slug == 'help' -%}
   <span class="is-active">Help</span>
   {%- else -%}

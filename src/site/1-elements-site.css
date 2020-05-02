@@ -55,8 +55,8 @@ textarea {
 
 a {
   color: var(--designtoken-TextColor-primaryOnBackground);
-  color: var(--color-accent);
 }
+.pm-SiteWideMessage a,
 .pm-Header a {
   color: currentColor;
 }
@@ -67,7 +67,7 @@ h1 {
 }
 
 article > h1 {
-  border-bottom: 2px solid var(--color-accent);
+  border-bottom: 2px solid var(--designtoken-TextColor-primaryOnBackground);
 }
 
 h2,

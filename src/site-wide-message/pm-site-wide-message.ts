@@ -15,7 +15,6 @@ const tag = "pm-site-wide-message";
 customElements.define(
   tag,
   class PmSiteWideMessage extends HTMLElement {
-    // TODO: get message from /newapi/message/
     private message = "";
     constructor() {
       super();

@@ -72,3 +72,5 @@ value:
       Other items available to sell from sponsors of Puzzle Massive are hand-made
       pottery and watercolor paintings from some awesome artists.
   title: Buy Stuff, Be Awesome
+  order: '15'
+  slug: buy-stuff

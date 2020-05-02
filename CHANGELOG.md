@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!--
 Not every commit is added to this list, but many items listed are taken from the
 git commit messages (`git shortlog 2.3.2..origin/develop`).
+
+Types of changes
+
+- **Added** for new features.
+- **Changed** for changes in existing functionality.
+- **Deprecated** for soon-to-be removed features.
+- **Removed** for now removed features.
+- **Fixed** for any bug fixes.
+- **Security** in case of vulnerabilities.
+
 ## [Unreleased] - ...
 -->
 
@@ -20,12 +30,15 @@ date to the latest [jkenlooper/cookiecutter-website](https://github.com/jkenloop
 
 - New Puzzle Massive logo added to source-media.
 - New favicon
+- New open graph shareable image
+- Included sponsor's online stores on buy stuff page.
 
 ### Changed
 
 - More pages on the site are friendly to search indexing robots.
 - Merge web server configs and clean up. Document pages go to /d/ route.
 - Image upload size limit increased.
+- Improved footer layout and links.
 
 ## [2.5.2] - 2020-03-30
 

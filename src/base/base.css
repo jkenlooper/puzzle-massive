@@ -85,8 +85,8 @@
 }
 .pm-Base-menuSecondary > span.is-active,
 .pm-Base-menuSecondary > a.is-active {
-  background-color: var(--color-accent);
-  color: var(--color-light-light);
+  background-color: var(--designtoken-BackgroundColor-secondary);
+  color: var(--designtoken-TextColor-onSecondary);
   text-decoration: none;
 }
 
