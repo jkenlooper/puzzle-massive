@@ -108,7 +108,8 @@ limit_req_zone \$server_name zone=puzzle_list_limit_per_server:1m rate=20r/s;
 limit_req_zone \$binary_remote_addr zone=player_email_register_limit_per_ip:1m rate=1r/m;
 
 limit_req_zone \$binary_remote_addr zone=chill_puzzle_limit_per_ip:1m rate=30r/m;
-limit_req_zone \$binary_remote_addr zone=chill_site_internal_limit_per_ip:1m rate=10r/s;
+
+# Most of the time these requests will be cached and not be rate limited.
 # 10 requests a second = 100ms
 limit_req_zone \$server_name zone=chill_site_internal_limit:1m rate=10r/s;
 
@@ -118,6 +119,46 @@ HERE
 
 if test "${STATE}" == 'up'; then
 cat <<HEREBEUP
+map \$request_uri \$cache_expire_public {
+  default off;
+HEREBEUP
+if test "${DEBUG}" = 'True'; then
+cat <<HEREBEUPDEBUG
+  # DEBUG=True means that cache on /chill/site/* is off.
+  ~/chill/site/.* -1;
+  ~/theme/.*?/.* -1;
+  # Any below matches for chill/site/ and theme/ are ignored.
+HEREBEUPDEBUG
+fi
+cat <<HEREBEUP
+  # short expire on player-bit, but origin has much longer expire
+  ~/chill/site/internal/player-bit/.* 5m;
+  ~/chill/site/internal/attribution/.* 1d; #TODO: internal only?
+  ~/chill/site/claim-player/.* off;
+  ~/chill/site/reset-login/.* off;
+  ~/chill/site/bit-icons/.* 1y; #TODO: internal only?
+  ~/chill/site/puzzle/.* off;
+  ~/chill/site/front/.* off;
+  ~/chill/site/api/.* 1m;
+  ~/chill/site/puzzle-list/.* 5m;
+  ~/chill/site/high-scores/ 1m;
+  ~/chill/site/admin/.* off;
+  ~/chill/site/.* 5m;
+  ~/theme/.*?/.* 1y;
+  ~/media/.* 1M;
+  ~/resources/.* 1M;
+  ~/.*?.png 1M;
+  /favicon.ico 1M;
+  /humans.txt 1d;
+  /robots.txt 1d;
+  /site.webmanifest 1d;
+  /.well-known/.* off;
+  /newapi/gallery-puzzle-list/ 30s;
+  ~/newapi/puzzle-list/.* 4m;
+  # Safeguard for no cache on player-puzzle-list
+  /newapi/player-puzzle-list/ off;
+}
+
 map \$request_uri \$cache_expire {
   default off;
 HEREBEUP
@@ -130,7 +171,9 @@ cat <<HEREBEUPDEBUG
 HEREBEUPDEBUG
 fi
 cat <<HEREBEUP
-  ~/chill/site/internal/player-bit/.* 1d;
+  # The internal/player-bit/ will have cache automatically reset when needed by
+  # the puzzle-massive-cache-purge service.
+  ~/chill/site/internal/player-bit/.* 1y;
   ~/chill/site/internal/attribution/.* 1d;
   ~/chill/site/claim-player/.* off;
   ~/chill/site/reset-login/.* off;
@@ -152,7 +195,7 @@ cat <<HEREBEUP
   /site.webmanifest 1d;
   /.well-known/.* off;
   /newapi/gallery-puzzle-list/ 1m;
-  /newapi/puzzle-list/ 1m;
+  ~/newapi/puzzle-list/.* 5m;
   # Safeguard for no cache on player-puzzle-list
   /newapi/player-puzzle-list/ off;
 }
@@ -340,6 +383,11 @@ cat <<HERECACHESERVERUP
     if (\$hotlinking_policy) {
       return 444;
     }
+
+    # Allow the cache server to use public cache control so browsers can have
+    # a shorter cache expire then the origin.
+    expires \$cache_expire_public;
+    add_header Cache-Control "public";
 
     proxy_set_header X-Real-IP \$remote_addr;
     proxy_set_header X-Forwarded-For \$remote_addr;
@@ -589,7 +637,7 @@ server {
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
-  location /newapi/puzzle-list/ {
+  location = /newapi/puzzle-list/ {
     expires \$cache_expire;
     add_header Cache-Control "public";
 
@@ -648,7 +696,8 @@ cat <<HEREORIGINSERVER
     #limit_conn   addr 4;
     # Not exactly sure why, but setting it to 4 will not allow more then 3 players on a single IP.
     # This is set to 40 to allow at most 39 players on one IP
-    limit_conn   addr 40;
+    # Dropping IP addr limits for now.
+    #limit_conn   addr 40;
 
     # TODO: not sure why keepalive_timeout was set to 0 before.
     #keepalive_timeout 0;
@@ -683,8 +732,8 @@ cat <<HEREORIGINSERVER
   location /chill/site/internal/ {
     # Limit the response rate for the server as these requests can be called
     # multiple times on a page request.
-    # Each request is delayed by 100ms up to 20 seconds.
-    limit_req zone=chill_site_internal_limit_per_ip burst=10 nodelay;
+    # Each request is delayed by 100ms up to 20 seconds (burst=200).
+    # Note that these requests are cached with a long expiration.
     limit_req zone=chill_site_internal_limit burst=200;
     limit_req_status 429;
 
