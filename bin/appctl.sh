@@ -17,8 +17,6 @@ fi
 systemctl reload nginx;
 
 # Skipping the puzzle-massive-cache-purge.service since it is activated by path
-# Skipping puzzle-massive-backup-db.timer since it may cause database locked
-# issues with the puzzle-massive-scheduler.
 # Skipping divulger and worker since they are not needed at the moment.
 # puzzle-massive-divulger \
 # puzzle-massive-worker \
@@ -27,6 +25,7 @@ for app in puzzle-massive-chill \
   puzzle-massive-stream \
   puzzle-massive-artist \
   puzzle-massive-scheduler \
+  puzzle-massive-backup-db.timer \
   puzzle-massive-janitor;
 do
   echo "";

@@ -133,8 +133,6 @@ objects += api/puzzle-massive-cache-purge.service
 api/puzzle-massive-cache-purge.service: api/puzzle-massive-cache-purge.service.sh
 	./$< $(PORTREGISTRY) $(CACHEDIR) $(project_dir) $(PURGEURLLIST) > $@
 
-# The puzzle-massive-backup-db service and timer are currently skipped when
-# installing.
 objects += api/puzzle-massive-backup-db.service
 api/puzzle-massive-backup-db.service: api/puzzle-massive-backup-db.service.sh
 	./$< $(ENVIRONMENT) $(project_dir) > $@

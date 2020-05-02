@@ -213,11 +213,9 @@ systemctl enable puzzle-massive-cache-purge.path || echo "can't enable service"
 systemctl start puzzle-massive-cache-purge.service || echo "can't start service"
 systemctl enable puzzle-massive-cache-purge.service || echo "can't enable service"
 
-# Skipping puzzle-massive-backup-db.service and puzzle-massive-backup-db.timer
-# since they may cause database locked issues with the puzzle-massive-scheduler.
-#cp api/puzzle-massive-backup-db.service "${SYSTEMDDIR}"
-#cp api/puzzle-massive-backup-db.timer "${SYSTEMDDIR}"
-#systemctl start puzzle-massive-backup-db.timer || echo "can't start service"
-#systemctl enable puzzle-massive-backup-db.timer || echo "can't enable service"
-#systemctl start puzzle-massive-backup-db.service || echo "can't start service"
-#systemctl enable puzzle-massive-backup-db.service || echo "can't enable service"
+cp api/puzzle-massive-backup-db.service "${SYSTEMDDIR}"
+cp api/puzzle-massive-backup-db.timer "${SYSTEMDDIR}"
+systemctl start puzzle-massive-backup-db.timer || echo "can't start service"
+systemctl enable puzzle-massive-backup-db.timer || echo "can't enable service"
+systemctl start puzzle-massive-backup-db.service || echo "can't start service"
+systemctl enable puzzle-massive-backup-db.service || echo "can't enable service"
