@@ -21,7 +21,7 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
-## [2.6.0] - 2020-05-02
+## [2.6.0] - 2020-05-03
 
 Breaks everything, maybe. Then fixed everything, hopefully. Now more up to
 date to the latest [jkenlooper/cookiecutter-website](https://github.com/jkenlooper/cookiecutter-website).
