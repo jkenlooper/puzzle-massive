@@ -21,6 +21,14 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
+## [Unreleased] - ...
+
+### Fixed
+
+- Hotlinking policy in web server config is less restrictive. Social media sites
+  commonly add a query param to the pages that are shared. Did a hotfix on
+  the live site to fix this (2020-05-04).
+
 ## [2.6.0] - 2020-05-03
 
 Breaks everything, maybe. Then fixed everything, hopefully. Now more up to

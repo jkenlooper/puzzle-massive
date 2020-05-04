@@ -227,21 +227,27 @@ map \$request_uri \$hotlinking_policy {
   ~/puzzle-api/bit/.* 0;
   ~/newapi/user-login/.* 0;
 
-  # Pages on the site.
+  # Pages on the site. Includes the query params in case the link is hi-jacked
+  # with query params from some other site (common with social media sites).
   / 0;
+  ~/\?.* 0;
   ~/.+/$ 0;
+  ~/.+/\?.* 0;
   # admin player page uses query params for GET
-  ~/chill/site/admin/player/?.+$ 0;
+  ~/chill/site/admin/player/\?.+$ 0;
 
   # og:image image that can be used when sharing links
   ~/.*puzzle-massive-logo.* 0;
-  ~/resources/.*/preview_full.jpg 0;
+  ~/resources/.*/preview_full.jpg$ 0;
+  ~/resources/.*/preview_full.jpg\?.+$ 0;
 
   # files in root
   /favicon.ico 0;
-  ~/favicon.ico?.+$ 0;
+  ~/favicon.ico\?.* 0;
   /humans.txt 0;
+  ~/humans.txt\?.* 0;
   /robots.txt 0;
+  ~/robots.txt\?.* 0;
 
   # certbot challenges
   ~/.well-known/.* 0;
@@ -339,11 +345,11 @@ cat <<HERECACHESERVER
   # Temporary redirect document pages to allow robots to index them.
   rewrite ^/chill/site/(about|faq|help|credits|buy-stuff)/\$ /\$1/ redirect;
 
-  # Home page goes to the chill/site/front/
-  rewrite ^/\$ /chill/site/front/ last;
+  # Home page goes to the chill/site/front/ and strip query params
+  rewrite ^/\$ /chill/site/front/? last;
 
-  # Document pages go to /chill/site/
-  rewrite ^/d/(.*)/\$ /chill/site/\$1/ last;
+  # Document pages go to /chill/site/ and strip query params
+  rewrite ^/d/(.*)/\$ /chill/site/\$1/? last;
 
   # redirect old document pages
   rewrite ^/(about|faq|help|credits|buy-stuff)/\$ /d/\$1/ redirect;
@@ -355,8 +361,8 @@ cat <<HERECACHESERVER
   #rewrite ^/(resources/.*)\$ /\$1? last;
 
   # Ignore query params on root files so they are not part of the cache.
-  # Matches root files: /humans.txt, /robots.txt, /puzzle-massive-logo-600.png
-  rewrite ^/([^/]+)(\.txt|\.png|\.jpg)\$ /\$1\$2? last;
+  # Matches root files: /humans.txt, /robots.txt, /puzzle-massive-logo-600.png, /puzzle-massive-logo-600.jpg, favicon.ico
+  rewrite ^/([^/]+)(\.txt|\.png|\.jpg|\.ico)\$ /\$1\$2? last;
 
   # Preserve query params on the route for /chill/site/admin/player/
   rewrite ^/(chill/site/admin/player/.*)\$ /\$1 last;
