@@ -50,7 +50,7 @@ been uploaded to the home directory.
     printf 'Updating...' > /srv/puzzle-massive/root/puzzle-massive-message.html;
     sudo ./bin/appctl.sh stop;
     sudo ./bin/clear_nginx_cache.sh;
-    ./bin/backup-db.sh -c;
+    ./bin/backup.sh -c;
     deactivate;
     ```
 
