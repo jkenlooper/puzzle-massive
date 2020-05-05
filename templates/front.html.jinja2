@@ -60,16 +60,16 @@
 {# if the puzzle has been deleted the page.info may not be available. #}
 {% block ogimage %}
 {% if page.info and page.info.url is string and page.info.url %}
-{% if page.info.url.startswith('/') %}
-<meta property="og:image" content="http://{{ config.DOMAIN_NAME }}{{ page.info.url }}" />
-{% else %}
-<meta property="og:image" content="{{ page.info.url|safe }}" />
-{% endif %}
-{% set width = page.info.long if page.info.table_width > page.info.table_height else page.info.short %}
-{% set height = page.info.short if page.info.table_width > page.info.table_height else page.info.long %}
-<meta property="og:image:type" content="image/jpeg" />
-<meta property="og:image:width" content="{{width|int}}" />
-<meta property="og:image:height" content="{{height|int}}" />
+  {% if page.info.url.startswith('/') %}
+  <meta property="og:image" content="http://{{ config.DOMAIN_NAME }}{{ page.info.url }}" />
+  {% else %}
+  <meta property="og:image" content="{{ page.info.url|safe }}" />
+  {% endif %}
+  {% set width = page.info.long if page.info.table_width > page.info.table_height else page.info.short %}
+  {% set height = page.info.short if page.info.table_width > page.info.table_height else page.info.long %}
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:width" content="{{width|int}}" />
+  <meta property="og:image:height" content="{{height|int}}" />
 {% else %}
 {{ super() }}
 {% endif %}
@@ -90,6 +90,16 @@
 
 
 {% block main %}
+{% if page.description.startswith(' ') %}
+<div class="pm-Frontpage">
+  <div class="pm-Frontpage-intro">
+    <p>
+    {{ _description }}
+    </p>
+  </div>
+</div>
+{% endif %}
+
 {% if not page.info.pieces %}
 <p>
             This jigsaw puzzle is not available. Please choose a different one.

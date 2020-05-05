@@ -23,6 +23,11 @@ Types of changes
 
 ## [Unreleased] - ...
 
+### Changed
+
+- Home page includes a better description so search engines can index the site
+  better.
+
 ### Fixed
 
 - Hotlinking policy in web server config is less restrictive. Social media sites

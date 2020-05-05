@@ -11,10 +11,22 @@
   {%- set _pageimage = pageimage|trim -%}
 {% elif content and content.pageimage %}
   {%- set _pageimage = content.pageimage|trim -%}
+  {%- if content.pageimage_long and content.pageimage_short and content.pageimage_table_width and content.pageimage_table_height %}
+    {# Handle case of front page puzzle images having unknown width and height #}
+    {% set _pageimage_width = content.pageimage_long if content.pageimage_table_width > content.pageimage_table_height else content.pageimage_short %}
+    {% set _pageimage_height = content.pageimage_short if content.pageimage_table_width > content.pageimage_table_height else content.pageimage_long %}
+  {%- elif content.pageimage_width and content.pageimage_height %}
+    {% set _pageimage_width = content.pageimage_width %}
+    {% set _pageimage_height = content.pageimage_height %}
+  {%- endif %}
 {% else %}
   {%- if pageimagemedia %}
     {%- set _pageimage = pageimagemedia|trim -%}
     {%- set _pageimage = url_for('send_media_file', _external=False, filename=_pageimage) -%}
+    {%- if pageimagemedia_width and pageimagemedia_height %}
+      {% set _pageimage_width = pageimagemedia_width %}
+      {% set _pageimage_height = pageimagemedia_height %}
+    {% endif -%}
   {% elif content and content.pageimagemedia %}
     {%- set _pageimage = content.pageimagemedia|trim -%}
     {%- set _pageimage = url_for('send_media_file', _external=False, filename=_pageimage) -%}

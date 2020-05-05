@@ -16,6 +16,8 @@ route: /high-scores/
 template: scorespage.html.jinja2
 value:
   pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
+  pageimagemedia_width: 1200
+  pageimagemedia_height: 630
   content:
     pagetitle: High Scores
   page:
@@ -30,6 +32,8 @@ route: /new-puzzle/<contributor>/
 template: puzzleuploadpage.html.jinja2
 value:
   pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
+  pageimagemedia_width: 1200
+  pageimagemedia_height: 630
   page:
     description: Create custom puzzles by uploading a picture
     title: Suggest Image for a Puzzle
@@ -56,6 +60,8 @@ route: /player/
 template: profilepage.html.jinja2
 value:
   pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
+  pageimagemedia_width: 1200
+  pageimagemedia_height: 630
   pagetitle: Player Profile
   content:
     description: Settings for the logged in player on the Puzzle Massive site.
@@ -72,6 +78,8 @@ template: docs.html.jinja2
 value:
   canonical_path: /d/credits/
   pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
+  pageimagemedia_width: 1200
+  pageimagemedia_height: 630
   page:
     description: List of people who put this site together
     title: Credits
@@ -94,6 +102,9 @@ template: front.html.jinja2
 value:
   canonical_path: /
   pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
+  pageimagemedia_width: 1200
+  pageimagemedia_height: 630
+  description_txt_file: sitewide-description.txt
   page:
     content: frontpage-content.html
     description: ' Massively Multiplayer Online Jigsaw Puzzles'
@@ -166,6 +177,8 @@ route: /suggested-puzzle-thank-you/
 template: docs.html.jinja2
 value:
   pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
+  pageimagemedia_width: 1200
+  pageimagemedia_height: 630
   content: suggested-puzzle-thank-you-content.html
   page:
     description: Thank you page shown after player has suggested an image for a puzzle.
@@ -185,6 +198,8 @@ route: /puzzle-list/
 template: puzzleimagepickerpage.html.jinja2
 value:
   pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
+  pageimagemedia_width: 1200
+  pageimagemedia_height: 630
   page:
     description: Find a jigsaw puzzle by searching through all existing puzzles on the Puzzle Massive site.
     title: Available Puzzle Images
@@ -196,6 +211,8 @@ route: /create-puzzle-instance/<puzzle_id>/
 template: puzzleinstancepage.html.jinja2
 value:
   pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
+  pageimagemedia_width: 1200
+  pageimagemedia_height: 630
   page:
     description: Create a new puzzle instance from the image.
     title: Create New Instance of a Puzzle
@@ -233,6 +250,8 @@ route: /player-puzzle-list/
 template: playerpuzzlelistpage.html.jinja2
 value:
   pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
+  pageimagemedia_width: 1200
+  pageimagemedia_height: 630
   page:
     description: Puzzle instances that are owned by the current player
     title: Player Puzzle List
@@ -243,6 +262,8 @@ route: /new-player/
 template: newplayerpage.html.jinja2
 value:
   pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
+  pageimagemedia_width: 1200
+  pageimagemedia_height: 630
   description_txt_file: sitewide-description.txt
   page:
     description: Welcome new player. Browser cookies are used for player logins.  If you are seeing this page, then the browser you are currently using did not have a browser cookie set for this site. One should now be set in your browser.

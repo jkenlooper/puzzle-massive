@@ -27,6 +27,12 @@ Title tag optimal length is around 60 characters.
 to Facebook. 1200 x 630 pixels for the best display on high resolution devices.
 At the minimum, you should use images that are 600 x 315.  -#}
 <meta property="og:image" content="{{ _pageimage_url }}" />
+<meta property="og:image:type" content="image/jpeg" />
+{% if _pageimage_width and _pageimage_height -%}
+<meta property="og:image:width" content="{{ _pageimage_width|int }}" />
+<meta property="og:image:height" content="{{ _pageimage_height|int }}" />
+{%- endif -%}
+
 {%- endif %}
 {#- og:url The canonical URL for your page. This should be the undecorated URL, without session variables, user identifying parameters, or counters. Likes and Shares for this URL will aggregate at this URL. For example, mobile domain URLs should point to the desktop version of the URL as the canonical URL to aggregate Likes and Shares across different versions of the page. -#}
 <meta property="og:url" content="{{ _canonical_url }}" />

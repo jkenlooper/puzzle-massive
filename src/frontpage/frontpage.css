@@ -8,6 +8,16 @@
   margin-top: 13px;
 }
 
+.pm-Frontpage-intro {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+@media (--lg-viewport) {
+  .pm-Frontpage-intro {
+    margin: 0 30px;
+  }
+}
+
 .pm-Frontpage-grid {
 }
 @media (--lg-viewport) {
