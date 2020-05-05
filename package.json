@@ -1,6 +1,6 @@
 {
   "name": "puzzle-massive",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "Puzzle Massive is a Massively Multiplayer Online Jigsaw Puzzle web application. Jigsaw puzzles are made from randomly generated classic interlocking pieces and can be 5000+ pieces.  Players can collaborate on the same jigsaw puzzle in real time.  Other player's piece movements are moderated automatically in order to prevent abusive behavior.",
   "author": "Jake Hickenlooper",
   "contributors": [
@@ -34,7 +34,7 @@
     "jscolor-picker": "~2.0.4",
     "lazysizes": "^5.2.0",
     "lit-element": "^2.2.1",
-    "main.css": "^2.0.0",
+    "main.css": "^2.1.0",
     "normalize.css": "^8.0.1",
     "reqwest": "~2.0.5",
     "rxjs": "^6.5.5",
@@ -49,8 +49,8 @@
   "devDependencies": {
     "@types/hammerjs": "^2.0.36",
     "@types/tape": "^4.13.0",
-    "@typescript-eslint/eslint-plugin": "^2.30.0",
-    "@typescript-eslint/parser": "^2.30.0",
+    "@typescript-eslint/eslint-plugin": "^2.31.0",
+    "@typescript-eslint/parser": "^2.31.0",
     "clean-webpack-plugin": "^3.0.0",
     "css-loader": "^3.5.2",
     "eslint": "^6.8.0",
@@ -64,7 +64,7 @@
     "node-fetch": "^2.6.0",
     "optimist": "^0.6.1",
     "optimize-css-assets-webpack-plugin": "^5.0.3",
-    "postcss": "^7.0.28",
+    "postcss": "^7.0.29",
     "postcss-custom-media": "^7.0.8",
     "postcss-import": "^12.0.1",
     "postcss-loader": "^3.0.0",
