@@ -29,8 +29,10 @@ for item in $(cat MANIFEST); do
   dirname "puzzle-massive/${item}" | xargs ln -sf "${PWD}/${item}";
 done;
 
+# Exclude gimp source files (.xcf)
 tar --dereference \
   --exclude=MANIFEST \
+  --exclude=*.xcf \
   --create \
   --auto-compress \
   --file "${ARCHIVE}" puzzle-massive;
