@@ -4,27 +4,27 @@
 {% block secondarymenu %}
 
   {%- if slug == 'faq' -%}
-  <span class="is-active">FAQs</span>
+  <span class="Button Button--plain is-disabled">FAQs</span>
   {%- else -%}
-  <a href="/d/faq/">FAQs</a>
+  <a class="Button Button--plain" href="/d/faq/">FAQs</a>
   {%- endif -%}
 
   {%- if slug == 'about' -%}
-  <span class="is-active">About</span>
+  <span class="Button Button--plain is-disabled">About</span>
   {%- else -%}
-  <a href="/d/about/">About</a>
+  <a class="Button Button--plain" href="/d/about/">About</a>
   {%- endif -%}
 
   {%- if slug == 'buy-stuff' -%}
-  <span class="is-active">Shop</span>
+  <span class="Button Button--plain is-disabled">Shop</span>
   {%- else -%}
-  <a href="/d/buy-stuff/">Shop</a>
+  <a class="Button Button--plain" href="/d/buy-stuff/">Shop</a>
   {%- endif -%}
 
   {%- if slug == 'help' -%}
-  <span class="is-active">Help</span>
+  <span class="Button Button--plain is-disabled">Help</span>
   {%- else -%}
-  <a href="/d/help/">Help</a>
+  <a class="Button Button--plain" href="/d/help/">Help</a>
   {%- endif -%}
 
 {% endblock %}

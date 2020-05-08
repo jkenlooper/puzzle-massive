@@ -59,37 +59,6 @@
   }
 }
 
-/* Using selectors like this here because these child elements should be styled
- * like this because of their location in the secondary menu.  These elements
- * are commonly outside of the base template, however.
- */
-.pm-Base-menuSecondary > span,
-.pm-Base-menuSecondary > a {
-  padding: 5px 10px;
-  border-radius: 5px;
-  border: 2px solid currentColor;
-  text-decoration: none;
-  color: var(--color-dark);
-}
-@media (--sm-viewport) {
-  .pm-Base-menuSecondary > span,
-  .pm-Base-menuSecondary > a {
-    padding: 5px 5px;
-    border: 1px solid currentColor;
-  }
-}
-.pm-Base-menuSecondary > a:hover,
-.pm-Base-menuSecondary > a:active,
-.pm-Base-menuSecondary > a:focus {
-  text-decoration: underline;
-}
-.pm-Base-menuSecondary > span.is-active,
-.pm-Base-menuSecondary > a.is-active {
-  background-color: var(--designtoken-BackgroundColor-secondary);
-  color: var(--designtoken-TextColor-onSecondary);
-  text-decoration: none;
-}
-
 .pm-Base-menuSecondary > * + * {
   margin-left: 10px;
 }

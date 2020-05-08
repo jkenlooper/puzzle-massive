@@ -38,13 +38,13 @@
         <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{recent.url|safe}}" alt="">
       {% endif %}
       </a>
-    <span class="u-block u-textRight">
+    <span class="u-block u-textRight u-marginTopMd">
           <span class="u-inlineBlock u-marginRightMd u-textNoWrap">
             <strong class="pm-Preview-pieceCount">{{recent.pieces}}</strong>
             <span>pieces</span>
           </span>
 
-      <a class="pm-CtaLink" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/1'.format(recent.puzzle_id)) }}">
+      <a class="Button Button--accent" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/1'.format(recent.puzzle_id)) }}">
         Join Puzzle
       </a>
     </span>

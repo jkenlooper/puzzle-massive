@@ -13,7 +13,7 @@
 @import "../../node_modules/main.css/dist/_print.css";
 
 /* 2 Objects */
-/* @import "2-objects-button.css"; */
+@import "2-objects-button.css";
 
 /* 3 Components */
 /* Imported via app.js. */

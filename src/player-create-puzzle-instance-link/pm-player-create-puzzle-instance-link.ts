@@ -65,7 +65,9 @@ customElements.define(
           ${!data.hasAvailableUserPuzzleSlot
             ? html`
                 <span
-                  ><s>${data.linkText}</s>
+                  ><s class="Button Button--secondary is-disabled"
+                    >${data.linkText}</s
+                  >
                   <em class="u-block"
                     ><small
                       >All your puzzle instance slots are filled.</small
@@ -74,7 +76,11 @@ customElements.define(
                 >
               `
             : html`
-                <a href=${data.createPuzzleInstanceHref}>${data.linkText}</a>
+                <a
+                  class="Button Button--secondary"
+                  href=${data.createPuzzleInstanceHref}
+                  >${data.linkText}</a
+                >
               `}
         </div>
       `;

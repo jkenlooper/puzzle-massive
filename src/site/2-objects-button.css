@@ -1,4 +1,5 @@
 /* @define Button */
+@import "../site/viewport-breakpoints.css";
 @import "suitcss-components-button";
 
 /*
@@ -11,13 +12,20 @@
   --Button-padding: 0.4em 0.75em;
 }
 */
+:root {
+  --Button-border-width: 2px;
+}
 
 .Button--text {
   --Button-border-color: transparent;
   --Button-padding: 0.4em 8px;
+  border-radius: 5px;
+  /*
+  display: flex;
+  align-items: center;
+  */
   min-width: 64px;
   min-height: 36px;
-  text-transform: uppercase;
 }
 .onBackground.Button--text {
   --Button-color: var(--designtoken-TextColor-primaryOnBackground);
@@ -40,12 +48,42 @@
   --Button-color: var(--designtoken-TextColor-onBackground);
 }
 
+.Button--plain {
+  --Button-border-width: 2px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+}
+@media (--sm-viewport) {
+  .Button--plain {
+    --Button-border-width: 1px;
+  }
+}
+
+.Button--plain:hover,
+.Button--plain:focus,
+.Button--plain:active {
+  text-decoration: underline;
+}
+
+.Button--plain:active {
+  background: var(--designtoken-BackgroundColor-primary--dark);
+}
+
+.Button--plain:disabled,
+.Button--plain.is-disabled {
+  text-decoration: none;
+}
+.Button--plain > * + * {
+  padding-left: 5px;
+}
+
 .Button--primary {
+  --Button-border-color: var(--designtoken-BackgroundColor-primary--dark);
   background: var(--designtoken-BackgroundColor-primary);
   color: var(--designtoken-TextColor-onPrimary);
   border-radius: 5px;
   box-shadow: currentcolor 0 1px 2px;
-  text-shadow: var(--color-primary-dark) 0 0px 2px;
 }
 
 .Button--primary:hover {
@@ -54,7 +92,22 @@
 
 .Button--primary:active {
   background: var(--designtoken-BackgroundColor-primary--dark);
-  text-shadow: none;
+}
+
+.Button--secondary {
+  --Button-border-color: var(--designtoken-BackgroundColor-secondary--dark);
+  background: var(--designtoken-BackgroundColor-secondary);
+  color: var(--designtoken-TextColor-onSecondary);
+  border-radius: 5px;
+  box-shadow: currentcolor 0 1px 2px;
+}
+
+.Button--secondary:hover {
+  box-shadow: currentcolor 0 0px 0px 1px;
+}
+
+.Button--secondary:active {
+  background: var(--designtoken-BackgroundColor-secondary--dark);
 }
 
 .Button--accent {
@@ -62,7 +115,6 @@
   color: var(--designtoken-TextColor-onAccent);
   border-radius: 5px;
   box-shadow: currentcolor 0 1px 2px;
-  text-shadow: none;
 }
 
 .Button--accent:hover {
