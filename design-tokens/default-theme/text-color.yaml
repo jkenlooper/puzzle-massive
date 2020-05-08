@@ -23,8 +23,12 @@ props:
 
   TextColor-onPrimary:
     value: "{!color-primary-contrast}"
+  TextColor-onPrimary--disabled:
+    value: "{!color-primary-contrast-disabled}"
   TextColor-onSecondary:
     value: "{!color-secondary-contrast}"
+  TextColor-onSecondary--disabled:
+    value: "{!color-secondary-contrast-disabled}"
   TextColor-onTertiary:
     value: "{!color-tertiary-contrast}"
   TextColor-onAccent:

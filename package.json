@@ -40,7 +40,6 @@
     "rxjs": "^6.5.5",
     "rxjs-compat": "^6.5.5",
     "slab-massive": "^0.4.0",
-    "suitcss-components-button": "^6.0.2",
     "suitcss-utils-display": "^1.0.2",
     "suitcss-utils-image": "~0.1.0",
     "suitcss-utils-spacing": "^1.1.1",

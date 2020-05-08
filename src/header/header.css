@@ -60,6 +60,9 @@
   flex: 1 auto;
   height: 70px;
   width: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   --PlayerPuzzleInstanceList-width: 170px;
 }
 @media (--md-viewport) {

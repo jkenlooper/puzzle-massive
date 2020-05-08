@@ -30,10 +30,15 @@
   </main>
 
   <footer class="pm-Base-footer">
-    {% block kneeer %}
-    {% endblock %}
+  <div class="pm-Base-kneeer">
+    {%- block kneeer -%}
+    {#- The chill route shortcode is only inserted if the route exists. This allows this content to be more customized per distribution. -#}
+    {{ '[chill route /internal/header-cta/]'|shortcodes }}
+    {#- A 404 error HTML comment is inserted here if this route is not defined. -#}
+    {%- endblock -%}
+    </div>
     {% block footer %}
-    {% include 'player-stats-summary.html.jinja2' %}
+      {% include 'player-stats-summary.html.jinja2' %}
       {% include 'post-comment.html.jinja2' %}
       {% include 'footer.html.jinja2' %}
     {% endblock %}

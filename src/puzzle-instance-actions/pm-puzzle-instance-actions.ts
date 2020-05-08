@@ -139,19 +139,33 @@ customElements.define(
       return html`
         ${data.canDelete
           ? html`
-              <button data-action="delete" @click=${data.actionHandler}>
+              <button
+                class="Button Button--plain"
+                data-action="delete"
+                @click=${data.actionHandler}
+              >
                 delete
               </button>
             `
-          : html` <button disabled>delete</button> `}
+          : html`
+              <button class="Button Button--plain" disabled>delete</button>
+            `}
         ${data.isFrozen
           ? html`
-              <button data-action="unfreeze" @click=${data.actionHandler}>
+              <button
+                class="Button Button--plain"
+                data-action="unfreeze"
+                @click=${data.actionHandler}
+              >
                 unfreeze
               </button>
             `
           : html`
-              <button data-action="freeze" @click=${data.actionHandler}>
+              <button
+                class="Button Button--plain"
+                data-action="freeze"
+                @click=${data.actionHandler}
+              >
                 freeze
               </button>
             `}

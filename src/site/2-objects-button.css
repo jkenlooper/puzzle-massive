@@ -1,40 +1,105 @@
 /* @define Button */
 @import "../site/viewport-breakpoints.css";
-@import "suitcss-components-button";
+/** Button styles modified from suitcss-components-button 6.0.2 */
 
-/*
 :root {
   --Button-border-color: currentcolor;
-  --Button-border-width: 1px;
+  --Button-border-width: 2px;
+  --Button-border-radius: 5px;
   --Button-color: inherit;
   --Button-disabled-opacity: 0.6;
   --Button-font: inherit;
-  --Button-padding: 0.4em 0.75em;
-}
-*/
-:root {
-  --Button-border-width: 2px;
+  --Button-padding: 5px 10px;
+  --Button-disabled-shadow-color: currentcolor;
 }
 
+/**
+ * The button classes are best applied to links and buttons.
+ * These components can be used in forms, as calls to action, or as part of the
+ * general UI of the site/app.
+ */
+
+/**
+ * 1. Normalize `box-sizing` across all elements that this component could be
+ *    applied to.
+ * 2. Inherit text color from ancestor.
+ * 3. Inherit font styles from ancestor.
+ * 4. Prevent button text from being selectable.
+ * 5. Support button with icon.
+ * 6. Prevent button from being too small for touch screens.
+ */
+
+.Button {
+  background: transparent;
+  border-color: var(--Button-border-color);
+  border-radius: var(--Button-border-radius);
+  border-style: solid;
+  border-width: var(--Button-border-width);
+  box-sizing: border-box; /* 1 */
+  color: var(--Button-color); /* 2 */
+  display: inline-flex; /* 5 */
+  align-items: center; /* 5 */
+  justify-content: center;
+  font: var(--Button-font); /* 3 */
+  margin: 0;
+  padding: var(--Button-padding);
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  user-select: none; /* 4 */
+  min-width: 36px; /* 6 */
+  min-height: 36px; /* 6 */
+}
+@media (--sm-viewport) {
+  .Button {
+    --Button-border-width: 1px;
+  }
+}
+
+/**
+ * Remove excess padding and border in Firefox 4+
+ */
+
+.Button::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+/**
+ * Work around a Firefox/IE bug where the transparent `button` background
+ * results in a loss of the default `button` focus styles.
+ */
+
+.Button:focus {
+  outline: 1px dotted;
+  outline: 5px auto -webkit-focus-ring-color;
+}
+
+/**
+ * UI states
+ */
+
+.Button:hover,
+.Button:focus,
+.Button:active {
+  text-decoration: none;
+}
+
+.Button:disabled,
+.Button.is-disabled {
+  cursor: default;
+  opacity: var(--Button-disabled-opacity);
+  box-shadow: 0 0 0 5px var(--Button-disabled-shadow-color);
+}
+
+/* Spacing for button with icon. */
+.Button > * + * {
+  padding-left: 5px;
+}
+
+/* Text button */
 .Button--text {
   --Button-border-color: transparent;
-  --Button-padding: 0.4em 8px;
-  border-radius: 5px;
-  /*
-  display: flex;
-  align-items: center;
-  */
-  min-width: 64px;
-  min-height: 36px;
-}
-.onBackground.Button--text {
-  --Button-color: var(--designtoken-TextColor-primaryOnBackground);
-}
-.onSurface.Button--text {
-  --Button-color: var(--designtoken-TextColor-primaryOnSurface);
-}
-.onError.Button--text {
-  --Button-color: var(--designtoken-TextColor-onError);
 }
 
 .Button--text:hover,
@@ -43,84 +108,89 @@
   --Button-border-color: currentcolor;
 }
 
-.Button--text:disabled,
-.Button--text.is-disabled {
-  --Button-color: var(--designtoken-TextColor-onBackground);
-}
-
+/* Plain button that should have a set background color. */
 .Button--plain {
-  --Button-border-width: 2px;
-  border-radius: 5px;
-  display: flex;
-  align-items: center;
-}
-@media (--sm-viewport) {
-  .Button--plain {
-    --Button-border-width: 1px;
-  }
 }
 
 .Button--plain:hover,
 .Button--plain:focus,
 .Button--plain:active {
-  text-decoration: underline;
-}
-
-.Button--plain:active {
-  background: var(--designtoken-BackgroundColor-primary--dark);
 }
 
 .Button--plain:disabled,
 .Button--plain.is-disabled {
-  text-decoration: none;
-}
-.Button--plain > * + * {
-  padding-left: 5px;
 }
 
+/* Primary button is usually the 'submit' form button. */
 .Button--primary {
   --Button-border-color: var(--designtoken-BackgroundColor-primary--dark);
+  --Button-color: var(--designtoken-TextColor-onPrimary);
   background: var(--designtoken-BackgroundColor-primary);
-  color: var(--designtoken-TextColor-onPrimary);
-  border-radius: 5px;
-  box-shadow: currentcolor 0 1px 2px;
 }
 
-.Button--primary:hover {
-  box-shadow: currentcolor 0 0px 0px 1px;
-}
-
+.Button--primary:hover,
+.Button--primary:focus,
 .Button--primary:active {
   background: var(--designtoken-BackgroundColor-primary--dark);
 }
 
 .Button--secondary {
   --Button-border-color: var(--designtoken-BackgroundColor-secondary--dark);
+  --Button-color: var(--designtoken-TextColor-onSecondary);
   background: var(--designtoken-BackgroundColor-secondary);
-  color: var(--designtoken-TextColor-onSecondary);
-  border-radius: 5px;
-  box-shadow: currentcolor 0 1px 2px;
+  --Button-disabled-shadow-color: var(
+    --designtoken-TextColor-onSurface--disabled
+  );
 }
 
-.Button--secondary:hover {
-  box-shadow: currentcolor 0 0px 0px 1px;
-}
-
+.Button--secondary:hover,
+.Button--secondary:focus,
 .Button--secondary:active {
   background: var(--designtoken-BackgroundColor-secondary--dark);
 }
+.Button--secondary:disabled,
+.Button--secondary.is-disabled {
+  --Button-color: var(--designtoken-TextColor-onSecondary--disabled);
+  --Button-color: var(--designtoken-TextColor-onSecondary);
+  --Button-border-width: 0px;
+  opacity: 1;
+  text-shadow: 0 0 3px black;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--Button-disabled-shadow-color),
+    var(--Button-disabled-shadow-color) 5px,
+    var(--designtoken-BackgroundColor-secondary) 5px,
+    var(--designtoken-BackgroundColor-secondary) 20px
+  );
+}
+
+.Button--secondary:disabled:hover,
+.Button--secondary:disabled:focus,
+.Button--secondary:disabled:active,
+.Button--secondary.is-disabled:hover,
+.Button--secondary.is-disabled:focus,
+.Button--secondary.is-disabled:active {
+  /*
+  background: var(--designtoken-BackgroundColor-secondary);
+  */
+}
 
 .Button--accent {
+  --Button-border-color: var(--designtoken-BackgroundColor-accent--dark);
+  --Button-color: var(--designtoken-TextColor-onAccent);
   background: var(--designtoken-BackgroundColor-accent);
-  color: var(--designtoken-TextColor-onAccent);
-  border-radius: 5px;
-  box-shadow: currentcolor 0 1px 2px;
 }
 
-.Button--accent:hover {
-  box-shadow: currentcolor 0 0px 0px 1px;
-}
-
+.Button--accent:hover,
+.Button--accent:focus,
 .Button--accent:active {
   background: var(--designtoken-BackgroundColor-accent--dark);
+}
+.Button--accent:disabled:hover,
+.Button--accent:disabled:focus,
+.Button--accent:disabled:active,
+.Button--accent.is-disabled:hover,
+.Button--accent.is-disabled:focus,
+.Button--accent.is-disabled:active {
+  background: var(--designtoken-BackgroundColor-accent);
 }

@@ -86,3 +86,10 @@
 .pm-Base-footer {
   z-index: 90;
 }
+
+.pm-Base-kneeer {
+  display: flex;
+}
+.pm-Base-kneeer > * {
+  margin: 0 10px;
+}
