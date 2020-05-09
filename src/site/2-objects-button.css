@@ -1,6 +1,7 @@
 /* @define Button */
 @import "../site/viewport-breakpoints.css";
 /** Button styles modified from suitcss-components-button 6.0.2 */
+/** Variants inspired by Material-UI */
 
 :root {
   --Button-border-color: currentcolor;
@@ -30,6 +31,8 @@
  */
 
 .Button {
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 1px -2px,
+    rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 1px 5px 0px;
   background: transparent;
   border-color: var(--Button-border-color);
   border-radius: var(--Button-border-radius);
@@ -97,7 +100,13 @@
   padding-left: 5px;
 }
 
-/* Text button */
+/**
+ * Text button (Material-UI)
+ *
+ * Text buttons are typically used for less-pronounced actions, including those
+ * located in dialogs and in cards. In cards, text buttons help maintain an
+ * emphasis on card content.
+ */
 .Button--text {
   --Button-border-color: transparent;
 }
@@ -108,7 +117,11 @@
   --Button-border-color: currentcolor;
 }
 
-/* Plain button that should have a set background color. */
+/**
+ * Plain button
+ *
+ * that should have a set background color.
+ */
 .Button--plain {
 }
 
@@ -150,8 +163,8 @@
 }
 .Button--secondary:disabled,
 .Button--secondary.is-disabled {
-  --Button-color: var(--designtoken-TextColor-onSecondary--disabled);
-  --Button-color: var(--designtoken-TextColor-onSecondary);
+  --Button-color: var(--designtoken-TextColor-onDark--disabled);
+  --Button-color: var(--designtoken-TextColor-onDark);
   --Button-border-width: 0px;
   opacity: 1;
   text-shadow: 0 0 3px black;
@@ -159,8 +172,8 @@
     45deg,
     var(--Button-disabled-shadow-color),
     var(--Button-disabled-shadow-color) 5px,
-    var(--designtoken-BackgroundColor-secondary) 5px,
-    var(--designtoken-BackgroundColor-secondary) 20px
+    var(--designtoken-BackgroundColor-dark) 5px,
+    var(--designtoken-BackgroundColor-dark) 20px
   );
 }
 
