@@ -1,0 +1,17 @@
+{% extends 'styleguide.html.jinja2' %}
+
+  {% block header %}
+    <header class="pm-Base-header">
+        {{ header(is_mock=True, show_profile_bit=False, show_instance_list=False) }}
+    </header>
+    <header class="pm-Base-header">
+        {{ header(is_mock=True, show_profile_bit=True, show_instance_list=False) }}
+    </header>
+    <header class="pm-Base-header">
+        {{ header(is_mock=True, show_profile_bit=True, show_instance_list=True) }}
+    </header>
+  {% endblock %}
+
+  {% block main %}
+  Show various header content possibilities.
+  {% endblock %}

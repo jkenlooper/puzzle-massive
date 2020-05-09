@@ -1,0 +1,46 @@
+--- !ChillNode
+name: styleguide-index
+route: /styleguide/
+template: doc-styleguide.html.jinja2
+value:
+  canonical_path: /d/styleguide/
+  pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
+  pageimagemedia_width: 1200
+  pageimagemedia_height: 630
+  title: Style Guide
+  content: styleguide-index.html
+
+--- !ChillNode
+name: styleguide-base-header
+route: /styleguide/base-header/
+template: styleguide-base-header.html.jinja2
+value:
+  canonical_path: /d/styleguide/base-header/
+  pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
+  pageimagemedia_width: 1200
+  pageimagemedia_height: 630
+  title: Style Guide Base Header Content
+
+--- !ChillNode
+name: styleguide-elements
+route: /styleguide/elements/
+template: doc-styleguide.html.jinja2
+value:
+  canonical_path: /d/styleguide/elements/
+  pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
+  pageimagemedia_width: 1200
+  pageimagemedia_height: 630
+  title: Style Guide Elements
+  content: styleguide-elements.html
+
+--- !ChillNode
+name: styleguide-buttons
+route: /styleguide/buttons/
+template: doc-styleguide.html.jinja2
+value:
+  canonical_path: /d/styleguide/buttons/
+  pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
+  pageimagemedia_width: 1200
+  pageimagemedia_height: 630
+  title: Style Guide Elements
+  content: styleguide-buttons.html

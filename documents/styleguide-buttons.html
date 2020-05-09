@@ -1,0 +1,74 @@
+<p><b>Work in progress...</b></p>
+<h1>Buttons</h1>
+<p>
+  Button styles modified from suitcss-components-button 6.0.2. Variants inspired
+  by Material Design.
+</p>
+
+<p>
+  Button style can be applied to inline and block level elements. Commonly set
+  on anchor, button, and input elements.
+</p>
+<ul>
+  <li>
+    <span class="Button is-disabled">span</span>
+    (should always have <code>is-disabled</code> class)
+  </li>
+  <li>
+    <div class="Button is-disabled">div</div>
+    (should always have <code>is-disabled</code> class)
+  </li>
+  <li>
+    <a href="" class="Button">Anchor</a>
+  </li>
+  <li>
+    <button class="Button">Button</button>
+  </li>
+  <li>
+    <input class="Button" type="reset" value="Reset" />
+  </li>
+  <li>
+    <input class="Button" type="submit" value="Submit" />
+  </li>
+</ul>
+
+<h2>Button UI States</h2>
+
+<h3>Disabled</h3>
+<p>
+  Disabled buttons are set with the <code>.is-disabled</code> class or the
+  <code>disabled</code> attribute. Note that the span element is used for
+  disabled buttons that would normally be a link.
+</p>
+
+<p>
+  <button disabled>Disabled Attribute</button>
+  and
+  <span class="Button is-disabled" href="">is-disabled Class</span>
+</p>
+
+<h2>Button Modifiers</h2>
+
+<ul>
+  <li><code>Button--text</code></li>
+  <li><code>Button--textPrimary</code></li>
+  <li><code>Button--plain</code></li>
+  <li><code>Button--primary</code></li>
+  <li><code>Button--secondary</code></li>
+  <li><code>Button--tertiary</code></li>
+  <li><code>Button--accent</code></li>
+</ul>
+
+<p>
+  <button class="Button Button--text">Text Button</button>
+  <button disabled class="Button Button--text">Disabled Text Button</button>
+</p>
+
+<h3>Text Button</h3>
+
+<p>
+  <button class="Button Button--text">Button</button>
+  <button disabled class="Button Button--text">Disabled Button</button>
+  <a class="Button Button--text" href="">Anchor</a>
+  <span class="Button Button--text is-disabled">Disabled Anchor</span>
+</p>

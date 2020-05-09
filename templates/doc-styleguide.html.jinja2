@@ -1,0 +1,6 @@
+{% extends 'styleguide.html.jinja2' %}
+  {% block main %}
+  <div class="pm-Doc">
+  {{ content|readfile|safe|shortcodes }}
+  </div>
+  {% endblock %}

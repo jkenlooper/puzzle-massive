@@ -1,7 +1,7 @@
 /* @define Button */
 @import "../site/viewport-breakpoints.css";
 /** Button styles modified from suitcss-components-button 6.0.2 */
-/** Variants inspired by Material-UI */
+/** Variants inspired by Material Design */
 
 :root {
   --Button-border-color: currentcolor;
@@ -31,8 +31,10 @@
  */
 
 .Button {
+  /*
   box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 1px -2px,
     rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 1px 5px 0px;
+    */
   background: transparent;
   border-color: var(--Button-border-color);
   border-radius: var(--Button-border-radius);
@@ -80,12 +82,15 @@
 
 /**
  * UI states
+ *
+ * 1. Override link style.
  */
 
 .Button:hover,
 .Button:focus,
 .Button:active {
-  text-decoration: none;
+  text-decoration: none; /* 1 */
+  box-shadow: 0 0 0 5px var(--designtoken-TextColor-onSurface--medium);
 }
 
 .Button:disabled,
@@ -101,7 +106,7 @@
 }
 
 /**
- * Text button (Material-UI)
+ * Text button
  *
  * Text buttons are typically used for less-pronounced actions, including those
  * located in dialogs and in cards. In cards, text buttons help maintain an
@@ -111,16 +116,15 @@
   --Button-border-color: transparent;
 }
 
-.Button--text:hover,
-.Button--text:focus,
-.Button--text:active {
-  --Button-border-color: currentcolor;
+.Button--textPrimary {
+  --Button-border-color: transparent;
+  --Button-color: var(--designtoken-BackgroundColor-primary--dark);
 }
 
 /**
  * Plain button
  *
- * that should have a set background color.
+ * Uses contrast color for background.
  */
 .Button--plain {
 }
@@ -134,7 +138,10 @@
 .Button--plain.is-disabled {
 }
 
-/* Primary button is usually the 'submit' form button. */
+/** Primary Button
+ *
+ * Usually the 'submit' form button.
+ */
 .Button--primary {
   --Button-border-color: var(--designtoken-BackgroundColor-primary--dark);
   --Button-color: var(--designtoken-TextColor-onPrimary);
@@ -147,6 +154,11 @@
   background: var(--designtoken-BackgroundColor-primary--dark);
 }
 
+/**
+ * Secondary Button
+ *
+ * Button that is second in charge.
+ */
 .Button--secondary {
   --Button-border-color: var(--designtoken-BackgroundColor-secondary--dark);
   --Button-color: var(--designtoken-TextColor-onSecondary);
@@ -187,6 +199,20 @@
   background: var(--designtoken-BackgroundColor-secondary);
   */
 }
+
+/**
+ * Tertiary Button
+ *
+ */
+
+.Button--tertiary {
+}
+
+/**
+ * Accent Button
+ *
+ * Look what I can do.
+ */
 
 .Button--accent {
   --Button-border-color: var(--designtoken-BackgroundColor-accent--dark);

@@ -1,4 +1,5 @@
 {% extends 'site.html.jinja2' %}
+{% from './header.html.jinja2' import header %}
 
 {% set baseModifierClass = '' %}
 
@@ -7,11 +8,11 @@
   {% set baseModifierClass = 'pm-Base--mainFocus' %}
 {% endif %}
 <div class="pm-Base {{ baseModifierClass }}">
-  {% block header -%}
+  {% block header %}
     <header class="pm-Base-header">
-        {% from './header.html.jinja2' import header %}{{ header() }}
+        {{ header(is_mock=True, show_profile_bit=True, show_instance_list=False) }}
     </header>
-  {%- endblock %}
+  {% endblock %}
 
 <div class="pm-Base-menu">
   <div class="pm-Base-menuPrimary">
@@ -19,7 +20,9 @@
   </div>
   <div class="pm-Base-menuSecondary">
   {% block secondarymenu %}
+  <a href="/d/styleguide/">Style Guide</a>
   {% endblock %}
+
   </div>
 
 </div>
@@ -32,6 +35,7 @@
   <footer class="pm-Base-footer">
   <div class="pm-Base-kneeer">
     {%- block kneeer -%}
+      <a href="/d/styleguide/">Style Guide</a>
     {#- The chill route shortcode is only inserted if the route exists. This allows this content to be more customized per distribution. -#}
     {{ '[chill route /internal/header-cta/]'|shortcodes }}
     {#- A 404 error HTML comment is inserted here if this route is not defined. -#}
