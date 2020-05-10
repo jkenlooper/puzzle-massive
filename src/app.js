@@ -29,6 +29,7 @@ import "./total-active-player-count";
 import "./player-bit";
 import "./response-message";
 import "./site-wide-message";
+import "./swatch.css";
 
 import "./frontpage";
 import "./profilepage";

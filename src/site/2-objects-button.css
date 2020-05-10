@@ -7,7 +7,7 @@
   --Button-border-color: currentcolor;
   --Button-border-width: 2px;
   --Button-border-radius: 5px;
-  --Button-color: inherit;
+  --Button-color: currentcolor;
   --Button-disabled-opacity: 0.6;
   --Button-font: inherit;
   --Button-padding: 5px 10px;
@@ -31,10 +31,6 @@
  */
 
 .Button {
-  /*
-  box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 1px -2px,
-    rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 1px 5px 0px;
-    */
   background: transparent;
   border-color: var(--Button-border-color);
   border-radius: var(--Button-border-radius);
@@ -90,14 +86,14 @@
 .Button:focus,
 .Button:active {
   text-decoration: none; /* 1 */
-  box-shadow: 0 0 0 5px var(--designtoken-TextColor-onSurface--medium);
+  box-shadow: inset 0 0 0 2px white, inset 0 0 0 4px var(--Button-color);
 }
 
 .Button:disabled,
 .Button.is-disabled {
   cursor: default;
   opacity: var(--Button-disabled-opacity);
-  box-shadow: 0 0 0 5px var(--Button-disabled-shadow-color);
+  box-shadow: none;
 }
 
 /* Spacing for button with icon. */
@@ -114,6 +110,38 @@
  */
 .Button--text {
   --Button-border-color: transparent;
+  border-radius: 0;
+  font-weight: bold;
+  --Button-color: var(--designtoken-TextColor-primaryOnSurface);
+}
+.Button--text:hover,
+.Button--text:focus,
+.Button--text:active {
+  box-shadow: none;
+  border-bottom-color: currentcolor;
+}
+
+.Button--text:disabled,
+.Button--text.is-disabled {
+  border-bottom-color: transparent;
+}
+.Button--text.on-background {
+  --Button-color: var(--designtoken-TextColor-primaryOnBackground);
+}
+.Button--text.on-primary {
+  --Button-color: var(--designtoken-TextColor-onPrimary);
+}
+.Button--text.on-secondary {
+  --Button-color: var(--designtoken-TextColor-onSecondary);
+}
+.Button--text.on-tertiary {
+  --Button-color: var(--designtoken-TextColor-onTertiary);
+}
+.Button--text.on-accent {
+  --Button-color: var(--designtoken-TextColor-onAccent);
+}
+.Button--text.on-error {
+  --Button-color: var(--designtoken-TextColor-onError);
 }
 
 .Button--textPrimary {
@@ -127,6 +155,11 @@
  * Uses contrast color for background.
  */
 .Button--plain {
+  /*
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 1px -2px,
+    rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 1px 5px 0px;
+    */
+  text-transform: none;
 }
 
 .Button--plain:hover,

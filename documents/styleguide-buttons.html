@@ -7,7 +7,8 @@
 
 <p>
   Button style can be applied to inline and block level elements. Commonly set
-  on anchor, button, and input elements.
+  on anchor, button, and input elements. The default style of the
+  <code>Button</code> class is an outlined button with uppercase letters.
 </p>
 <ul>
   <li>
@@ -42,7 +43,7 @@
 </p>
 
 <p>
-  <button disabled>Disabled Attribute</button>
+  <button class="Button" disabled>Disabled Attribute</button>
   and
   <span class="Button is-disabled" href="">is-disabled Class</span>
 </p>
@@ -61,14 +62,258 @@
 
 <p>
   <button class="Button Button--text">Text Button</button>
-  <button disabled class="Button Button--text">Disabled Text Button</button>
 </p>
 
 <h3>Text Button</h3>
 
+<p>Use in boxed in content like dialogs or cards.</p>
+
+<div class="pm-Doc-breakOut">
+  <div class="u-marginMd u-textCenter">
+    <div class="Swatch Swatch--surface">
+      <p>
+        <button class="Button Button--text">Button</button>
+        <button disabled class="Button Button--text">Disabled Button</button>
+        <a class="Button Button--text" href="">Anchor</a>
+        <span class="Button Button--text is-disabled">Disabled Anchor</span>
+      </p>
+    </div>
+    <br />
+    <div class="Swatch Swatch--background">
+      <p>
+        Boxed in content example.
+      </p>
+      <button class="Button Button--text on-background">Button</button>
+      <button disabled class="Button Button--text on-background">
+        Disabled
+      </button>
+    </div>
+    <div class="Swatch Swatch--primary">
+      <p>
+        Boxed in content example.
+      </p>
+      <button class="Button Button--text on-primary">Button</button>
+      <button disabled class="Button Button--text on-primary">Disabled</button>
+    </div>
+    <div class="Swatch Swatch--secondary">
+      <p>
+        Boxed in content example.
+      </p>
+      <button class="Button Button--text on-secondary">Button</button>
+      <button disabled class="Button Button--text on-secondary">
+        Disabled
+      </button>
+    </div>
+    <div class="Swatch Swatch--tertiary">
+      <p>
+        Boxed in content example.
+      </p>
+      <button class="Button Button--text on-tertiary">Button</button>
+      <button disabled class="Button Button--text on-tertiary">Disabled</button>
+    </div>
+    <div class="Swatch Swatch--accent">
+      <p>
+        Boxed in content example.
+      </p>
+      <button class="Button Button--text on-accent">Button</button>
+      <button disabled class="Button Button--text on-accent">Disabled</button>
+    </div>
+    <div class="Swatch Swatch--error">
+      <p>
+        Boxed in content example.
+      </p>
+      <button class="Button Button--text on-error">Button</button>
+      <button disabled class="Button Button--text on-error">Disabled</button>
+    </div>
+    <div class="Swatch Swatch--dark">
+      <p>
+        Boxed in content example.
+      </p>
+      <button class="Button Button--text on-dark">Button</button>
+      <button disabled class="Button Button--text on-dark">Disabled</button>
+    </div>
+    <div class="Swatch Swatch--light">
+      <p>
+        Boxed in content example.
+      </p>
+      <button class="Button Button--text on-light">Button</button>
+      <button disabled class="Button Button--text on-light">Disabled</button>
+    </div>
+  </div>
+</div>
+
+<h3>Contained Buttons</h3>
+
 <p>
-  <button class="Button Button--text">Button</button>
-  <button disabled class="Button Button--text">Disabled Button</button>
-  <a class="Button Button--text" href="">Anchor</a>
-  <span class="Button Button--text is-disabled">Disabled Anchor</span>
+  Variations of the contained or filled buttons that have a set background
+  color.
 </p>
+<h4>Plain</h4>
+<div class="pm-Doc-breakOut">
+  <div class="u-marginMd u-textCenter">
+    <div class="Swatch Swatch--surface">
+      <button class="Button Button--plain">Button</button>
+      <button disabled class="Button Button--plain">Disabled Button</button>
+    </div>
+    <div class="Swatch Swatch--background">
+      <button class="Button Button--plain on-background">Button</button>
+      <button disabled class="Button Button--plain on-background">
+        Disabled Button
+      </button>
+    </div>
+    <div class="Swatch Swatch--error">
+      <button class="Button Button--plain on-error">Button</button>
+      <button disabled class="Button Button--plain on-error">
+        Disabled Button
+      </button>
+    </div>
+    <div class="Swatch Swatch--dark">
+      <button class="Button Button--plain on-dark">Button</button>
+      <button disabled class="Button Button--plain on-dark">
+        Disabled Button
+      </button>
+    </div>
+    <div class="Swatch Swatch--light">
+      <button class="Button Button--plain on-light">Button</button>
+      <button disabled class="Button Button--plain on-light">
+        Disabled Button
+      </button>
+    </div>
+  </div>
+</div>
+
+<h4>Primary</h4>
+<div class="pm-Doc-breakOut">
+  <div class="u-marginMd u-textCenter">
+    <div class="Swatch Swatch--surface">
+      <button class="Button Button--primary">Button</button>
+      <button disabled class="Button Button--primary">Disabled Button</button>
+    </div>
+    <div class="Swatch Swatch--background">
+      <button class="Button Button--primary on-background">Button</button>
+      <button disabled class="Button Button--primary on-background">
+        Disabled Button
+      </button>
+    </div>
+    <div class="Swatch Swatch--error">
+      <button class="Button Button--primary on-error">Button</button>
+      <button disabled class="Button Button--primary on-error">
+        Disabled Button
+      </button>
+    </div>
+    <div class="Swatch Swatch--dark">
+      <button class="Button Button--primary on-dark">Button</button>
+      <button disabled class="Button Button--primary on-dark">
+        Disabled Button
+      </button>
+    </div>
+    <div class="Swatch Swatch--light">
+      <button class="Button Button--primary on-light">Button</button>
+      <button disabled class="Button Button--primary on-light">
+        Disabled Button
+      </button>
+    </div>
+  </div>
+</div>
+
+<h4>Secondary</h4>
+<div class="pm-Doc-breakOut">
+  <div class="u-marginMd u-textCenter">
+    <div class="Swatch Swatch--surface">
+      <button class="Button Button--secondary">Button</button>
+      <button disabled class="Button Button--secondary">Disabled Button</button>
+    </div>
+    <div class="Swatch Swatch--background">
+      <button class="Button Button--secondary on-background">Button</button>
+      <button disabled class="Button Button--secondary on-background">
+        Disabled Button
+      </button>
+    </div>
+    <div class="Swatch Swatch--error">
+      <button class="Button Button--secondary on-error">Button</button>
+      <button disabled class="Button Button--secondary on-error">
+        Disabled Button
+      </button>
+    </div>
+    <div class="Swatch Swatch--dark">
+      <button class="Button Button--secondary on-dark">Button</button>
+      <button disabled class="Button Button--secondary on-dark">
+        Disabled Button
+      </button>
+    </div>
+    <div class="Swatch Swatch--light">
+      <button class="Button Button--secondary on-light">Button</button>
+      <button disabled class="Button Button--secondary on-light">
+        Disabled Button
+      </button>
+    </div>
+  </div>
+</div>
+
+<h4>Tertiary</h4>
+<div class="pm-Doc-breakOut">
+  <div class="u-marginMd u-textCenter">
+    <div class="Swatch Swatch--surface">
+      <button class="Button Button--tertiary">Button</button>
+      <button disabled class="Button Button--tertiary">Disabled Button</button>
+    </div>
+    <div class="Swatch Swatch--background">
+      <button class="Button Button--tertiary on-background">Button</button>
+      <button disabled class="Button Button--tertiary on-background">
+        Disabled Button
+      </button>
+    </div>
+    <div class="Swatch Swatch--error">
+      <button class="Button Button--tertiary on-error">Button</button>
+      <button disabled class="Button Button--tertiary on-error">
+        Disabled Button
+      </button>
+    </div>
+    <div class="Swatch Swatch--dark">
+      <button class="Button Button--tertiary on-dark">Button</button>
+      <button disabled class="Button Button--tertiary on-dark">
+        Disabled Button
+      </button>
+    </div>
+    <div class="Swatch Swatch--light">
+      <button class="Button Button--tertiary on-light">Button</button>
+      <button disabled class="Button Button--tertiary on-light">
+        Disabled Button
+      </button>
+    </div>
+  </div>
+</div>
+
+<h4>Accent</h4>
+<div class="pm-Doc-breakOut">
+  <div class="u-marginMd u-textCenter">
+    <div class="Swatch Swatch--surface">
+      <button class="Button Button--accent">Button</button>
+      <button disabled class="Button Button--accent">Disabled Button</button>
+    </div>
+    <div class="Swatch Swatch--background">
+      <button class="Button Button--accent on-background">Button</button>
+      <button disabled class="Button Button--accent on-background">
+        Disabled Button
+      </button>
+    </div>
+    <div class="Swatch Swatch--error">
+      <button class="Button Button--accent on-error">Button</button>
+      <button disabled class="Button Button--accent on-error">
+        Disabled Button
+      </button>
+    </div>
+    <div class="Swatch Swatch--dark">
+      <button class="Button Button--accent on-dark">Button</button>
+      <button disabled class="Button Button--accent on-dark">
+        Disabled Button
+      </button>
+    </div>
+    <div class="Swatch Swatch--light">
+      <button class="Button Button--accent on-light">Button</button>
+      <button disabled class="Button Button--accent on-light">
+        Disabled Button
+      </button>
+    </div>
+  </div>
+</div>

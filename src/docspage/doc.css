@@ -1,6 +1,18 @@
 .pm-Doc {
   margin-right: 10px;
   margin-left: 10px;
-  max-width: 40em;
-  width: calc(100vw - 40px);
+}
+
+@media (min-width: 42em) {
+  .pm-Doc {
+    max-width: 40em;
+  }
+}
+.pm-Doc-breakOut {
+}
+@media (min-width: 42em) {
+  .pm-Doc-breakOut {
+    margin-left: calc((((100vw - 20px) - 40em) / 2) * -1);
+    width: calc(100vw - 20px);
+  }
 }

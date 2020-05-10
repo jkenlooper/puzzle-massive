@@ -1,0 +1,225 @@
+:root {
+  --Swatch-fg: black;
+  --Swatch-bg: white;
+  --Swatch-label: "swatch";
+}
+/**
+ * Swatch
+ * Used in styleguide.
+ * 1. Leave space for label to be outside of box.
+ */
+.Swatch {
+  color: var(--Swatch-fg);
+  background-color: var(--Swatch-bg);
+  border: 1px solid black;
+  outline: 1px solid white;
+  display: inline-block;
+  padding: 10px;
+  min-width: 10px;
+  position: relative; /* 1 */
+  margin-bottom: 1em; /* 1 */
+  margin-top: 10px;
+}
+.Swatch:after {
+  content: var(--Swatch-label);
+  position: absolute;
+  display: inline-block;
+  text-align: right;
+  right: -1px;
+  bottom: calc((1em + 2px * 2) * -1);
+  line-height: 1;
+  padding: 2px;
+  background-color: black;
+  color: white;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.Swatch--background {
+  --Swatch-fg: var(--designtoken-TextColor-onBackground);
+  --Swatch-bg: var(--designtoken-BackgroundColor-background);
+  --Swatch-label: "background";
+}
+.Swatch--backgroundDark {
+  --Swatch-fg: var(--designtoken-TextColor-onBackground);
+  --Swatch-bg: var(--designtoken-BackgroundColor-background--dark);
+  --Swatch-label: "background dark";
+}
+.Swatch--backgroundLight {
+  --Swatch-fg: var(--designtoken-TextColor-onBackground);
+  --Swatch-bg: var(--designtoken-BackgroundColor-background--light);
+  --Swatch-label: "background light";
+}
+.Swatch--backgroundAccent {
+  --Swatch-fg: var(--designtoken-TextColor-onBackground);
+  --Swatch-bg: var(--designtoken-BackgroundColor-background--accent);
+  --Swatch-label: "background accent";
+}
+
+.Swatch--surface {
+  --Swatch-fg: var(--designtoken-TextColor-onSurface);
+  --Swatch-bg: var(--designtoken-BackgroundColor-surface);
+  --Swatch-label: "surface";
+}
+.Swatch--surfaceDark {
+  --Swatch-fg: var(--designtoken-TextColor-onSurface);
+  --Swatch-bg: var(--designtoken-BackgroundColor-surface--dark);
+  --Swatch-label: "surface dark";
+}
+.Swatch--surfaceLight {
+  --Swatch-fg: var(--designtoken-TextColor-onSurface);
+  --Swatch-bg: var(--designtoken-BackgroundColor-surface--light);
+  --Swatch-label: "surface light";
+}
+.Swatch--surfaceAccent {
+  --Swatch-fg: var(--designtoken-TextColor-onSurface);
+  --Swatch-bg: var(--designtoken-BackgroundColor-surface--accent);
+  --Swatch-label: "surface accent";
+}
+
+.Swatch--primary {
+  --Swatch-fg: var(--designtoken-TextColor-onPrimary);
+  --Swatch-bg: var(--designtoken-BackgroundColor-primary);
+  --Swatch-label: "primary";
+}
+.Swatch--primaryDark {
+  --Swatch-fg: var(--designtoken-TextColor-onPrimary);
+  --Swatch-bg: var(--designtoken-BackgroundColor-primary--dark);
+  --Swatch-label: "primary dark";
+}
+.Swatch--primaryLight {
+  --Swatch-fg: var(--designtoken-TextColor-onPrimary);
+  --Swatch-bg: var(--designtoken-BackgroundColor-primary--light);
+  --Swatch-label: "primary light";
+}
+.Swatch--primaryAccent {
+  --Swatch-fg: var(--designtoken-TextColor-onPrimary);
+  --Swatch-bg: var(--designtoken-BackgroundColor-primary--accent);
+  --Swatch-label: "primary accent";
+}
+
+.Swatch--secondary {
+  --Swatch-fg: var(--designtoken-TextColor-onSecondary);
+  --Swatch-bg: var(--designtoken-BackgroundColor-secondary);
+  --Swatch-label: "secondary";
+}
+.Swatch--secondaryDark {
+  --Swatch-fg: var(--designtoken-TextColor-onSecondary);
+  --Swatch-bg: var(--designtoken-BackgroundColor-secondary--dark);
+  --Swatch-label: "secondary dark";
+}
+.Swatch--secondaryLight {
+  --Swatch-fg: var(--designtoken-TextColor-onSecondary);
+  --Swatch-bg: var(--designtoken-BackgroundColor-secondary--light);
+  --Swatch-label: "secondary light";
+}
+.Swatch--secondaryAccent {
+  --Swatch-fg: var(--designtoken-TextColor-onSecondary);
+  --Swatch-bg: var(--designtoken-BackgroundColor-secondary--accent);
+  --Swatch-label: "secondary accent";
+}
+
+.Swatch--tertiary {
+  --Swatch-fg: var(--designtoken-TextColor-onTertiary);
+  --Swatch-bg: var(--designtoken-BackgroundColor-tertiary);
+  --Swatch-label: "tertiary";
+}
+.Swatch--tertiaryDark {
+  --Swatch-fg: var(--designtoken-TextColor-onTertiary);
+  --Swatch-bg: var(--designtoken-BackgroundColor-tertiary--dark);
+  --Swatch-label: "tertiary dark";
+}
+.Swatch--tertiaryLight {
+  --Swatch-fg: var(--designtoken-TextColor-onTertiary);
+  --Swatch-bg: var(--designtoken-BackgroundColor-tertiary--light);
+  --Swatch-label: "tertiary light";
+}
+.Swatch--tertiaryAccent {
+  --Swatch-fg: var(--designtoken-TextColor-onTertiary);
+  --Swatch-bg: var(--designtoken-BackgroundColor-tertiary--accent);
+  --Swatch-label: "tertiary accent";
+}
+
+.Swatch--accent {
+  --Swatch-fg: var(--designtoken-TextColor-onAccent);
+  --Swatch-bg: var(--designtoken-BackgroundColor-accent);
+  --Swatch-label: "accent";
+}
+.Swatch--accentDark {
+  --Swatch-fg: var(--designtoken-TextColor-onAccent);
+  --Swatch-bg: var(--designtoken-BackgroundColor-accent--dark);
+  --Swatch-label: "accent dark";
+}
+.Swatch--accentLight {
+  --Swatch-fg: var(--designtoken-TextColor-onAccent);
+  --Swatch-bg: var(--designtoken-BackgroundColor-accent--light);
+  --Swatch-label: "accent light";
+}
+.Swatch--accentAccent {
+  --Swatch-fg: var(--designtoken-TextColor-onAccent);
+  --Swatch-bg: var(--designtoken-BackgroundColor-accent--accent);
+  --Swatch-label: "accent accent";
+}
+
+.Swatch--error {
+  --Swatch-fg: var(--designtoken-TextColor-onError);
+  --Swatch-bg: var(--designtoken-BackgroundColor-error);
+  --Swatch-label: "error";
+}
+.Swatch--errorDark {
+  --Swatch-fg: var(--designtoken-TextColor-onError);
+  --Swatch-bg: var(--designtoken-BackgroundColor-error--dark);
+  --Swatch-label: "error dark";
+}
+.Swatch--errorLight {
+  --Swatch-fg: var(--designtoken-TextColor-onError);
+  --Swatch-bg: var(--designtoken-BackgroundColor-error--light);
+  --Swatch-label: "error light";
+}
+.Swatch--errorAccent {
+  --Swatch-fg: var(--designtoken-TextColor-onError);
+  --Swatch-bg: var(--designtoken-BackgroundColor-error--accent);
+  --Swatch-label: "error accent";
+}
+
+.Swatch--dark {
+  --Swatch-fg: var(--designtoken-TextColor-onDark);
+  --Swatch-bg: var(--designtoken-BackgroundColor-dark);
+  --Swatch-label: "dark";
+}
+.Swatch--darkDark {
+  --Swatch-fg: var(--designtoken-TextColor-onDark);
+  --Swatch-bg: var(--designtoken-BackgroundColor-dark--dark);
+  --Swatch-label: "dark dark";
+}
+.Swatch--darkLight {
+  --Swatch-fg: var(--designtoken-TextColor-onDark);
+  --Swatch-bg: var(--designtoken-BackgroundColor-dark--light);
+  --Swatch-label: "dark light";
+}
+.Swatch--darkAccent {
+  --Swatch-fg: var(--designtoken-TextColor-onDark);
+  --Swatch-bg: var(--designtoken-BackgroundColor-dark--accent);
+  --Swatch-label: "dark accent";
+}
+
+.Swatch--light {
+  --Swatch-fg: var(--designtoken-TextColor-onLight);
+  --Swatch-bg: var(--designtoken-BackgroundColor-light);
+  --Swatch-label: "light";
+}
+.Swatch--lightDark {
+  --Swatch-fg: var(--designtoken-TextColor-onLight);
+  --Swatch-bg: var(--designtoken-BackgroundColor-light--dark);
+  --Swatch-label: "light dark";
+}
+.Swatch--lightLight {
+  --Swatch-fg: var(--designtoken-TextColor-onLight);
+  --Swatch-bg: var(--designtoken-BackgroundColor-light--light);
+  --Swatch-label: "light light";
+}
+.Swatch--lightAccent {
+  --Swatch-fg: var(--designtoken-TextColor-onLight);
+  --Swatch-bg: var(--designtoken-BackgroundColor-light--accent);
+  --Swatch-label: "light accent";
+}
