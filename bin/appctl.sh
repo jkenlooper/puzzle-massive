@@ -20,12 +20,14 @@ systemctl reload nginx;
 # Skipping divulger and worker since they are not needed at the moment.
 # puzzle-massive-divulger \
 # puzzle-massive-worker \
+# Skipping puzzle-massive-backup-db.timer to prevent database locks with
+# scheduler.
+# puzzle-massive-backup-db.timer \
 for app in puzzle-massive-chill \
   puzzle-massive-api \
   puzzle-massive-stream \
   puzzle-massive-artist \
   puzzle-massive-scheduler \
-  puzzle-massive-backup-db.timer \
   puzzle-massive-janitor;
 do
   echo "";
