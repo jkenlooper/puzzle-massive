@@ -5,6 +5,7 @@
 
 :root {
   --Button-border-color: currentcolor;
+  --Button-outline-color: var(--designtoken-BackgroundColor-light--light);
   --Button-border-width: 2px;
   --Button-border-radius: 5px;
   --Button-color: currentcolor;
@@ -86,14 +87,13 @@
 .Button:focus,
 .Button:active {
   text-decoration: none; /* 1 */
-  box-shadow: inset 0 0 0 2px white, inset 0 0 0 4px var(--Button-color);
 }
 
 .Button:disabled,
 .Button.is-disabled {
   cursor: default;
   opacity: var(--Button-disabled-opacity);
-  box-shadow: none;
+  box-shadow: var(--u-elevation0-boxShadow);
 }
 
 /* Spacing for button with icon. */
@@ -113,11 +113,11 @@
   border-radius: 0;
   font-weight: bold;
   --Button-color: var(--designtoken-TextColor-primaryOnSurface);
+  position: relative;
 }
 .Button--text:hover,
 .Button--text:focus,
 .Button--text:active {
-  box-shadow: none;
   border-bottom-color: currentcolor;
 }
 
@@ -144,22 +144,43 @@
   --Button-color: var(--designtoken-TextColor-onError);
 }
 
+.Button--text:after {
+  content: "";
+  display: block;
+  position: absolute;
+  height: 0;
+  border-bottom: 1px solid currentcolor;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
 .Button--textPrimary {
   --Button-border-color: transparent;
   --Button-color: var(--designtoken-BackgroundColor-primary--dark);
 }
 
 /**
+ * Contained Buttons
+ *
+ * Plain, primary, secondary, tertiary, and accent are all contained buttons.
+ * They have a higher emphasis and should not be used next to each other.
+ */
+
+/*
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 1px -2px,
+    rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 1px 5px 0px;
+    */
+/**
  * Plain button
  *
  * Uses contrast color for background.
  */
 .Button--plain {
-  /*
-  box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 1px -2px,
-    rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 1px 5px 0px;
-    */
-  text-transform: none;
+  background: var(--designtoken-BackgroundColor-dark);
+  --Button-color: var(--designtoken-TextColor-onDark);
+  --Button-outline-color: var(--designtoken-BackgroundColor-dark--dark);
+  box-shadow: var(--u-elevation1-boxShadow);
 }
 
 .Button--plain:hover,
@@ -171,20 +192,59 @@
 .Button--plain.is-disabled {
 }
 
+.Button--plain.on-background {
+}
+.Button--plain.on-error {
+  background: var(--designtoken-BackgroundColor-dark--dark);
+  --Button-color: var(--designtoken-TextColor-onDark);
+}
+.Button--plain.on-dark {
+  background: var(--designtoken-BackgroundColor-light);
+  --Button-color: var(--designtoken-TextColor-onLight);
+  --Button-outline-color: var(--designtoken-BackgroundColor-light--light);
+}
+.Button--plain.on-light {
+  background: var(--designtoken-BackgroundColor-dark--dark);
+  --Button-color: var(--designtoken-TextColor-onDark);
+}
+
 /** Primary Button
  *
  * Usually the 'submit' form button.
  */
 .Button--primary {
-  --Button-border-color: var(--designtoken-BackgroundColor-primary--dark);
-  --Button-color: var(--designtoken-TextColor-onPrimary);
   background: var(--designtoken-BackgroundColor-primary);
+  --Button-color: var(--designtoken-TextColor-onPrimary);
+  --Button-border-color: var(--designtoken-BackgroundColor-primary--dark);
+  --Button-outline-color: var(--designtoken-BackgroundColor-primary--dark);
+  box-shadow: var(--u-elevation1-boxShadow);
 }
 
 .Button--primary:hover,
 .Button--primary:focus,
 .Button--primary:active {
+}
+
+.Button--primary:disabled,
+.Button--primary.is-disabled {
+  box-shadow: var(--u-elevation0-boxShadow);
+}
+
+.Button--primary.on-background {
+}
+.Button--primary.on-error {
+  background: var(--designtoken-BackgroundColor-light--dark);
+  --Button-border-color: var(--designtoken-TextColor-onLight);
+  --Button-color: var(--designtoken-TextColor-onLight);
+  --Button-outline-color: var(--designtoken-BackgroundColor-primary);
+}
+.Button--primary.on-dark {
   background: var(--designtoken-BackgroundColor-primary--dark);
+  --Button-border-color: var(--designtoken-BackgroundColor-primary--light);
+}
+.Button--primary.on-light {
+  background: var(--designtoken-BackgroundColor-primary--light);
+  --Button-border-color: var(--designtoken-BackgroundColor-primary--dark);
 }
 
 /**
