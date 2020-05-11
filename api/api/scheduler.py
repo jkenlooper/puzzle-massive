@@ -80,7 +80,7 @@ class Task:
 
 class AutoRebuildCompletedPuzzle(Task):
     "Auto rebuild completed puzzles that are no longer recent"
-    interval = 15 * HOUR + 26 * MINUTE
+    interval = 26 * MINUTE
 
     # The minimum count of incomplete puzzles before the auto rebuild task will
     # find random puzzles to rebuild.
