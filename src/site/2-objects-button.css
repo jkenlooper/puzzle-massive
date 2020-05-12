@@ -5,7 +5,6 @@
 
 :root {
   --Button-border-color: currentcolor;
-  --Button-outline-color: var(--designtoken-BackgroundColor-light--light);
   --Button-border-width: 2px;
   --Button-border-radius: 5px;
   --Button-color: currentcolor;
@@ -118,12 +117,10 @@
 .Button--text:hover,
 .Button--text:focus,
 .Button--text:active {
-  border-bottom-color: currentcolor;
 }
 
 .Button--text:disabled,
 .Button--text.is-disabled {
-  border-bottom-color: transparent;
 }
 .Button--text.on-background {
   --Button-color: var(--designtoken-TextColor-primaryOnBackground);
@@ -155,15 +152,10 @@
   bottom: 0;
 }
 
-.Button--textPrimary {
-  --Button-border-color: transparent;
-  --Button-color: var(--designtoken-BackgroundColor-primary--dark);
-}
-
 /**
  * Contained Buttons
  *
- * Plain, primary, secondary, tertiary, and accent are all contained buttons.
+ * Contrast, primary, secondary, tertiary, and accent are all contained buttons.
  * They have a higher emphasis and should not be used next to each other.
  */
 
@@ -172,38 +164,36 @@
     rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 1px 5px 0px;
     */
 /**
- * Plain button
+ * Contrast button
  *
  * Uses contrast color for background.
  */
-.Button--plain {
+.Button--contrast {
   background: var(--designtoken-BackgroundColor-dark);
   --Button-color: var(--designtoken-TextColor-onDark);
-  --Button-outline-color: var(--designtoken-BackgroundColor-dark--dark);
   box-shadow: var(--u-elevation1-boxShadow);
 }
 
-.Button--plain:hover,
-.Button--plain:focus,
-.Button--plain:active {
+.Button--contrast:hover,
+.Button--contrast:focus,
+.Button--contrast:active {
 }
 
-.Button--plain:disabled,
-.Button--plain.is-disabled {
+.Button--contrast:disabled,
+.Button--contrast.is-disabled {
 }
 
-.Button--plain.on-background {
+.Button--contrast.on-background {
 }
-.Button--plain.on-error {
+.Button--contrast.on-error {
   background: var(--designtoken-BackgroundColor-dark--dark);
   --Button-color: var(--designtoken-TextColor-onDark);
 }
-.Button--plain.on-dark {
+.Button--contrast.on-dark {
   background: var(--designtoken-BackgroundColor-light);
   --Button-color: var(--designtoken-TextColor-onLight);
-  --Button-outline-color: var(--designtoken-BackgroundColor-light--light);
 }
-.Button--plain.on-light {
+.Button--contrast.on-light {
   background: var(--designtoken-BackgroundColor-dark--dark);
   --Button-color: var(--designtoken-TextColor-onDark);
 }
@@ -216,7 +206,6 @@
   background: var(--designtoken-BackgroundColor-primary);
   --Button-color: var(--designtoken-TextColor-onPrimary);
   --Button-border-color: var(--designtoken-BackgroundColor-primary--dark);
-  --Button-outline-color: var(--designtoken-BackgroundColor-primary--dark);
   box-shadow: var(--u-elevation1-boxShadow);
 }
 
@@ -236,7 +225,6 @@
   background: var(--designtoken-BackgroundColor-light--dark);
   --Button-border-color: var(--designtoken-TextColor-onLight);
   --Button-color: var(--designtoken-TextColor-onLight);
-  --Button-outline-color: var(--designtoken-BackgroundColor-primary);
 }
 .Button--primary.on-dark {
   background: var(--designtoken-BackgroundColor-primary--dark);
@@ -253,44 +241,36 @@
  * Button that is second in charge.
  */
 .Button--secondary {
-  --Button-border-color: var(--designtoken-BackgroundColor-secondary--dark);
-  --Button-color: var(--designtoken-TextColor-onSecondary);
   background: var(--designtoken-BackgroundColor-secondary);
-  --Button-disabled-shadow-color: var(
-    --designtoken-TextColor-onSurface--disabled
-  );
+  --Button-color: var(--designtoken-TextColor-onSecondary);
+  --Button-border-color: var(--designtoken-BackgroundColor-secondary--dark);
+  box-shadow: var(--u-elevation1-boxShadow);
 }
 
 .Button--secondary:hover,
 .Button--secondary:focus,
 .Button--secondary:active {
-  background: var(--designtoken-BackgroundColor-secondary--dark);
-}
-.Button--secondary:disabled,
-.Button--secondary.is-disabled {
-  --Button-color: var(--designtoken-TextColor-onDark--disabled);
-  --Button-color: var(--designtoken-TextColor-onDark);
-  --Button-border-width: 0px;
-  opacity: 1;
-  text-shadow: 0 0 3px black;
-  background: repeating-linear-gradient(
-    45deg,
-    var(--Button-disabled-shadow-color),
-    var(--Button-disabled-shadow-color) 5px,
-    var(--designtoken-BackgroundColor-dark) 5px,
-    var(--designtoken-BackgroundColor-dark) 20px
-  );
 }
 
-.Button--secondary:disabled:hover,
-.Button--secondary:disabled:focus,
-.Button--secondary:disabled:active,
-.Button--secondary.is-disabled:hover,
-.Button--secondary.is-disabled:focus,
-.Button--secondary.is-disabled:active {
-  /*
-  background: var(--designtoken-BackgroundColor-secondary);
-  */
+.Button--secondary:disabled,
+.Button--secondary.is-disabled {
+  box-shadow: var(--u-elevation0-boxShadow);
+}
+
+.Button--secondary.on-background {
+}
+.Button--secondary.on-error {
+  background: var(--designtoken-BackgroundColor-dark--dark);
+  --Button-border-color: var(--designtoken-TextColor-onDark);
+  --Button-color: var(--designtoken-TextColor-onDark);
+}
+.Button--secondary.on-dark {
+  background: var(--designtoken-BackgroundColor-secondary--dark);
+  --Button-border-color: var(--designtoken-BackgroundColor-secondary--light);
+}
+.Button--secondary.on-light {
+  background: var(--designtoken-BackgroundColor-secondary--light);
+  --Button-border-color: var(--designtoken-BackgroundColor-secondary--dark);
 }
 
 /**
@@ -299,6 +279,36 @@
  */
 
 .Button--tertiary {
+  background: var(--designtoken-BackgroundColor-tertiary);
+  --Button-color: var(--designtoken-TextColor-onTertiary);
+  --Button-border-color: var(--designtoken-BackgroundColor-tertiary--dark);
+  box-shadow: var(--u-elevation1-boxShadow);
+}
+
+.Button--tertiary:hover,
+.Button--tertiary:focus,
+.Button--tertiary:active {
+}
+
+.Button--tertiary:disabled,
+.Button--tertiary.is-disabled {
+  box-shadow: var(--u-elevation0-boxShadow);
+}
+
+.Button--tertiary.on-background {
+}
+.Button--tertiary.on-error {
+  background: var(--designtoken-BackgroundColor-dark--dark);
+  --Button-border-color: var(--designtoken-TextColor-onDark);
+  --Button-color: var(--designtoken-TextColor-onDark);
+}
+.Button--tertiary.on-dark {
+  background: var(--designtoken-BackgroundColor-tertiary--dark);
+  --Button-border-color: var(--designtoken-BackgroundColor-tertiary--light);
+}
+.Button--tertiary.on-light {
+  background: var(--designtoken-BackgroundColor-tertiary--light);
+  --Button-border-color: var(--designtoken-BackgroundColor-tertiary--dark);
 }
 
 /**
@@ -308,21 +318,34 @@
  */
 
 .Button--accent {
-  --Button-border-color: var(--designtoken-BackgroundColor-accent--dark);
-  --Button-color: var(--designtoken-TextColor-onAccent);
   background: var(--designtoken-BackgroundColor-accent);
+  --Button-color: var(--designtoken-TextColor-onAccent);
+  --Button-border-color: var(--designtoken-BackgroundColor-accent--dark);
+  box-shadow: var(--u-elevation1-boxShadow);
 }
 
 .Button--accent:hover,
 .Button--accent:focus,
 .Button--accent:active {
-  background: var(--designtoken-BackgroundColor-accent--dark);
 }
-.Button--accent:disabled:hover,
-.Button--accent:disabled:focus,
-.Button--accent:disabled:active,
-.Button--accent.is-disabled:hover,
-.Button--accent.is-disabled:focus,
-.Button--accent.is-disabled:active {
-  background: var(--designtoken-BackgroundColor-accent);
+
+.Button--accent:disabled,
+.Button--accent.is-disabled {
+  box-shadow: var(--u-elevation0-boxShadow);
+}
+
+.Button--accent.on-background {
+}
+.Button--accent.on-error {
+  background: var(--designtoken-BackgroundColor-dark--dark);
+  --Button-border-color: var(--designtoken-TextColor-onDark);
+  --Button-color: var(--designtoken-TextColor-onDark);
+}
+.Button--accent.on-dark {
+  background: var(--designtoken-BackgroundColor-accent--dark);
+  --Button-border-color: var(--designtoken-BackgroundColor-accent--light);
+}
+.Button--accent.on-light {
+  background: var(--designtoken-BackgroundColor-accent--light);
+  --Button-border-color: var(--designtoken-BackgroundColor-accent--dark);
 }

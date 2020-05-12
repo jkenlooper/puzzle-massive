@@ -8,7 +8,8 @@
 <p>
   Button style can be applied to inline and block level elements. Commonly set
   on anchor, button, and input elements. The default style of the
-  <code>Button</code> class is an outlined button with uppercase letters.
+  <code>Button</code> class is an outlined button with transparent background
+  and no shadow.
 </p>
 <ul>
   <li>
@@ -34,18 +35,9 @@
 </ul>
 
 <p>
-  Examples of using <code>u-elevation[0-5]</code> utility class. It is
-  <b class="u-textNoWrap">not recommended</b> to use elevation for outlined
-  buttons because it would create too much emphasis. Use
-  <code>Button--plain</code> instead.
-  <span class="u-textCenter u-block">
-    <button class="Button u-elevation0 u-marginXs">0</button>
-    <button class="Button u-elevation1 u-marginXs">1</button>
-    <button class="Button u-elevation2 u-marginXs">2</button>
-    <button class="Button u-elevation3 u-marginXs">3</button>
-    <button class="Button u-elevation4 u-marginXs">4</button>
-    <button class="Button u-elevation5 u-marginXs">5</button>
-  </span>
+  The <code>u-elevation[0-5]</code> utility class is
+  <b class="u-textNoWrap">not recommended</b> to use on outlined buttons. Only
+  use them on contained buttons when needing to bump up the elevation.
 </p>
 <div class="pm-Doc-breakOut">
   <div class="u-marginMd u-textCenter">
@@ -121,19 +113,19 @@
 
 <h2>Button Modifiers</h2>
 
+<p>
+  Follows SUITCSS guidelines and use both the <code>Button</code> and modifier
+  class on the element.
+</p>
+
 <ul>
   <li><code>Button--text</code></li>
-  <li><code>Button--textPrimary</code></li>
-  <li><code>Button--plain</code></li>
+  <li><code>Button--contrast</code></li>
   <li><code>Button--primary</code></li>
   <li><code>Button--secondary</code></li>
   <li><code>Button--tertiary</code></li>
   <li><code>Button--accent</code></li>
 </ul>
-
-<p>
-  <button class="Button Button--text">Text Button</button>
-</p>
 
 <h3>Text Button</h3>
 
@@ -223,41 +215,41 @@
 <p>
   Examples of using <code>u-elevation[0-5]</code> utility class.
   <span class="u-textCenter u-block">
-    <button class="Button Button--plain u-elevation0 u-marginXs">0</button>
-    <button class="Button Button--plain u-elevation1 u-marginXs">1</button>
-    <button class="Button Button--plain u-elevation2 u-marginXs">2</button>
-    <button class="Button Button--plain u-elevation3 u-marginXs">3</button>
-    <button class="Button Button--plain u-elevation4 u-marginXs">4</button>
-    <button class="Button Button--plain u-elevation5 u-marginXs">5</button>
+    <button class="Button Button--contrast u-elevation0 u-marginXs">0</button>
+    <button class="Button Button--contrast u-elevation1 u-marginXs">1</button>
+    <button class="Button Button--contrast u-elevation2 u-marginXs">2</button>
+    <button class="Button Button--contrast u-elevation3 u-marginXs">3</button>
+    <button class="Button Button--contrast u-elevation4 u-marginXs">4</button>
+    <button class="Button Button--contrast u-elevation5 u-marginXs">5</button>
   </span>
 </p>
 <div class="pm-Doc-breakOut">
   <div class="u-marginMd u-textCenter">
     <div class="Swatch Swatch--surface">
-      <button class="Button Button--plain">Button</button>
-      <button disabled class="Button Button--plain">Disabled Button</button>
+      <button class="Button Button--contrast">Button</button>
+      <button disabled class="Button Button--contrast">Disabled Button</button>
     </div>
     <div class="Swatch Swatch--background">
-      <button class="Button Button--plain on-background">Button</button>
-      <button disabled class="Button Button--plain on-background">
+      <button class="Button Button--contrast on-background">Button</button>
+      <button disabled class="Button Button--contrast on-background">
         Disabled Button
       </button>
     </div>
     <div class="Swatch Swatch--error">
-      <button class="Button Button--plain on-error">Button</button>
-      <button disabled class="Button Button--plain on-error">
+      <button class="Button Button--contrast on-error">Button</button>
+      <button disabled class="Button Button--contrast on-error">
         Disabled Button
       </button>
     </div>
     <div class="Swatch Swatch--dark">
-      <button class="Button Button--plain on-dark">Button</button>
-      <button disabled class="Button Button--plain on-dark">
+      <button class="Button Button--contrast on-dark">Button</button>
+      <button disabled class="Button Button--contrast on-dark">
         Disabled Button
       </button>
     </div>
     <div class="Swatch Swatch--light">
-      <button class="Button Button--plain on-light">Button</button>
-      <button disabled class="Button Button--plain on-light">
+      <button class="Button Button--contrast on-light">Button</button>
+      <button disabled class="Button Button--contrast on-light">
         Disabled Button
       </button>
     </div>
