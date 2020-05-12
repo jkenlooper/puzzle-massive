@@ -153,14 +153,14 @@
 {% endif %}
 
   {% block secondarymenu %}
-        <a class="Button Button--plain" href="/chill{{ url_for('.page_uri', uri='front/{}'.format(puzzle.puzzle_id)) }}">
+        <a class="Button" href="/chill{{ url_for('.page_uri', uri='front/{}'.format(puzzle.puzzle_id)) }}">
           <pm-icon size="sm">arrow-left-circle-sprite</pm-icon>
         </a>
 
         {% if isPuzzleVisible %}
         {% if preview_full.url != '' %}
         {# TODO: Convert to web component #}
-        <span class="Button Button--plain">
+        <span class="Button">
           <label>
             <input class="u-hidden" type="checkbox" id="puzzle-preview-button">
             <pm-icon size="sm">image-sprite</pm-icon>
@@ -176,7 +176,7 @@
         {% endif %}
         #}
 
-        <span class="Button Button--plain">
+        <span class="Button">
         <pm-hash-color background-color="{{ puzzle.bg_color }}" name="{{ puzzle.puzzle_id }}">
         </pm-hash-color>
         </span>

@@ -13,5 +13,13 @@
   justify-content: center;
 }
 
+.pm-PuzzleList--card {
+}
+
+.pm-PuzzleList--inline {
+  --pm-PuzzleList-columnWidth: 40px;
+  --pm-PuzzleList-gap: 2px;
+}
+
 .pm-PuzzleList-item {
 }

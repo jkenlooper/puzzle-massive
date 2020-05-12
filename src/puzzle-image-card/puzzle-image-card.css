@@ -1,5 +1,9 @@
 .pm-PuzzleImageCard {
 }
+.pm-PuzzleImageCard--card {
+}
+.pm-PuzzleImageCard--inline {
+}
 
 .pm-PuzzleImageCard-activePlayerCount {
   color: var(--color-accent);
@@ -58,6 +62,15 @@
   background-color: inherit;
   color: inherit;
   padding: 5px;
+}
+.pm-PuzzleImageCard--inline .pm-PuzzleImageCard-pieceCount {
+}
+.pm-PuzzleImageCard-pieceCountAmount {
+}
+.pm-PuzzleImageCard-pieceCountLabel {
+}
+.pm-PuzzleImageCard--inline .pm-PuzzleImageCard-pieceCountLabel {
+  display: none;
 }
 
 .pm-PuzzleImageCard-status {

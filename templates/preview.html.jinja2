@@ -12,68 +12,111 @@
 {% set height = recent.short if recent.table_width > recent.table_height else recent.long %}
 
 <div class="pm-Preview">
-  {% if recent.link -%}
-  <small class="pm-Preview-source u-textTruncate">
-    Picture source:
-  <a href="{{recent.link}}" rel="nofollow">
-    {{recent.link|replace('http://', '')|replace('https://', '')}}
-  </a>
-  </small>
-  {%- endif %}
-
-      {% if recent.status == COMPLETED and not recent.is_recent -%}
-      <pm-dot-require min="{{recent.pieces}}" type="info">
-        This puzzle requires more dots in order to rebuild.
-      </pm-dot-require>
-      {% endif %}
 
   <div class="pm-Preview-grid" >
     <div class="pm-Preview-gridA">
-      <p>
 
-      <a href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/1'.format(recent.puzzle_id)) }}">
-      {% if recent.url == '' %}
-        {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
-      {% else %}
-        <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{recent.url|safe}}" alt="">
-      {% endif %}
-      </a>
-    <span class="u-block u-textRight u-marginTopMd">
           <span class="u-inlineBlock u-marginRightMd u-textNoWrap">
             <strong class="pm-Preview-pieceCount">{{recent.pieces}}</strong>
             <span>pieces</span>
           </span>
 
-      <a class="Button Button--plain" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/1'.format(recent.puzzle_id)) }}">
-        Join Puzzle
+  {% if recent.status == ACTIVE %}
+      Active Jigsaw Puzzle
+      <a class="Button" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/0'.format(recent.puzzle_id)) }}">
+          <pm-icon>full-screen-sprite</pm-icon>
+          <span>
+        Full View
+        </span>
       </a>
-    </span>
-      </p>
+      <a class="Button" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/1'.format(recent.puzzle_id)) }}">
+          <pm-icon>minimize-sprite</pm-icon>
+          <span>
+        Scaled View
+        </span>
+      </a>
+  {% elif recent.status == IN_QUEUE %}
+      Jigsaw Puzzle is <strong>in queue</strong>
+  {% elif recent.status == COMPLETED %}
+      Completed Jigsaw Puzzle
+      {% if not recent.is_recent -%}
+      <pm-dot-require min="200" type="hidden">
+        <a class="Button" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/0'.format(recent.puzzle_id)) }}">
+        Rebuild
+        </a>
+      </pm-dot-require>
+      {% endif %}
+  {% elif recent.status == FROZEN %}
+      Frozen Jigsaw Puzzle
+      <a class="Button" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/0'.format(recent.puzzle_id)) }}">
+          <pm-icon>full-screen-sprite</pm-icon>
+          <span>
+        Full View
+        </span>
+      </a>
+      <a class="Button" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/1'.format(recent.puzzle_id)) }}">
+          <pm-icon>minimize-sprite</pm-icon>
+          <span>
+        Scaled View
+        </span>
+      </a>
+  {% elif recent.status == DELETED_REQUEST and not recent.is_original  %}
+    {# Puzzle instance removed by owner #}
+  {% endif %}
 
-      <pm-latest-player-list
-        puzzle-id="{{recent.puzzle_id}}"
-        show-time-since="true"
-        limit="9"></pm-latest-player-list>
+      {% if recent.url == '' %}
+        {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
+      {% else %}
+        <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{recent.url|safe}}" alt="">
+      {% endif %}
 
-      <p class="pm-Preview-description u-textTruncate">
+  {% if not recent.is_original or recent.permission == 0 -%} {# instance or original PUBLIC #}
+  <pm-player-create-puzzle-instance-link create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}"></pm-player-create-puzzle-instance-link>
+  {% endif %}
+
+  {% if not recent.is_original %}
+    {% if recent.status != DELETED_REQUEST %}
+    <pm-puzzle-instance-actions class="u-block" puzzle-id="{{ recent.puzzle_id }}" owner="{{ recent.owner }}" status="{{ recent.status }}"></pm-puzzle-instance-actions>
+    {% endif %}
+  {% else %}
+  {% if recent.status == IN_QUEUE %}
+    {# At this time this is only used for bumping the queue for puzzles that are in the queue. #}
+    <pm-puzzle-original-actions class="u-block" puzzle-id="{{ recent.puzzle_id }}" status="{{ recent.status }}"></pm-puzzle-original-actions>
+    {% endif %}
+  {% endif %}
+
+      <p class="pm-Preview-description">
         <small>
           {{recent.description}}
         </small>
       </p>
-    </div>
 
-    <div class="pm-Preview-gridB">
-    <div class="pm-Preview-pieceInfo">
-      <pm-latest-player-list
-        puzzle-id="{{recent.puzzle_id}}"
-        offset="9"></pm-latest-player-list>
-    </div>
-    </div>
-  </div>
+  {% if recent.link -%}
+  <p class="pm-Preview-source u-textTruncate">
+    Picture source:
+  <a href="{{recent.link}}" rel="nofollow">
+    {{recent.link|replace('http://', '')|replace('https://', '')}}
+  </a>
+  </p>
+  {%- endif %}
+
   {% if recent.attribution %}
   <p class="pm-Preview-attribution">{{ '[chill route /internal/attribution/{}/ ]'.format(recent.attribution) }}</p>
   {% endif %}
 
+  {% if not recent.is_original %}
+  <p class="pm-Preview-statusNote">
+  Puzzle instance created by
+  <pm-player-bit player="{{ recent.owner }}"></pm-player-bit>
+  from this <a href="/chill{{ url_for('.page_uri', uri='front/{}'.format(recent.original_puzzle_id)) }}">original puzzle</a>
+  </p>
+  {% endif %}
+
+      {% if recent.status == COMPLETED and not recent.is_recent -%}
+      <pm-dot-require min="200" type="info">
+        This puzzle requires more dots in order to rebuild.
+      </pm-dot-require>
+      {% endif %}
 
   {% if recent.permission == -1 -%} {# PRIVATE #}
   <p class="pm-Preview-statusNote">
@@ -107,25 +150,15 @@
   </p>
   {% endif %}
 
-  {% if not recent.is_original or recent.permission == 0 -%} {# instance or original PUBLIC #}
-  <pm-player-create-puzzle-instance-link create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}"></pm-player-create-puzzle-instance-link>
-  {% endif %}
 
-  {% if not recent.is_original %}
-  <p class="pm-Preview-statusNote">
-  Puzzle instance created by
-  <pm-player-bit player="{{ recent.owner }}"></pm-player-bit>
-  from this <a href="/chill{{ url_for('.page_uri', uri='front/{}'.format(recent.original_puzzle_id)) }}">original puzzle</a>
-    {% if recent.status != DELETED_REQUEST %}
-    <pm-puzzle-instance-actions class="u-block" puzzle-id="{{ recent.puzzle_id }}" owner="{{ recent.owner }}" status="{{ recent.status }}"></pm-puzzle-instance-actions>
-    {% endif %}
-  </p>
-  {% else %}
-  {% if recent.status == IN_QUEUE %}
-    {# At this time this is only used for bumping the queue for puzzles that are in the queue. #}
-    <pm-puzzle-original-actions class="u-block" puzzle-id="{{ recent.puzzle_id }}" status="{{ recent.status }}"></pm-puzzle-original-actions>
-    {% endif %}
-  {% endif %}
+    </div>{# end pm-Preview-gridA #}
+
+    <div class="pm-Preview-gridB">
+      <pm-latest-player-list
+        puzzle-id="{{recent.puzzle_id}}"
+        limit="100"></pm-latest-player-list>
+    </div>
+  </div>
 
 </div>
 {% endif %}

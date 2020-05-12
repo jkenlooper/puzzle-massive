@@ -27,7 +27,7 @@
   padding-right: 10px;
   display: flex;
   align-items: center;
-  height: var(--pm-Base-menu-height);
+  min-height: var(--pm-Base-menu-height);
   background-color: var(--color-light-accent);
   z-index: 100;
   padding-top: calc(13px - 2px);
@@ -37,6 +37,7 @@
 }
 
 .pm-Base-menuPrimary {
+  align-self: flex-start;
 }
 @media (--sm-viewport) {
   .pm-Base-menuPrimary {

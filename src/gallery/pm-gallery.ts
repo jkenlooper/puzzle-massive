@@ -14,7 +14,9 @@ interface TemplateData {
   hasError: boolean;
   isLoadingPuzzles: boolean;
   puzzles: undefined | Array<PuzzleImageData>;
+  puzzlesOrderedByPieceCount: undefined | Array<PuzzleImageData>;
   frontFragmentHref: undefined | string;
+  variant: string;
 }
 
 // Copied SKILL_LEVEL_RANGES from api/api/constants.py
@@ -40,9 +42,11 @@ customElements.define(
     frontFragmentHref: undefined | string;
     skipPuzzleId: string = "";
     puzzles: undefined | Array<PuzzleImageData> = undefined;
+    puzzlesOrderedByPieceCount: undefined | Array<PuzzleImageData> = undefined;
     hasError: boolean = false;
     errorMessage: string = "";
     isLoadingPuzzles: boolean = true;
+    private variant: string = "card";
 
     constructor() {
       super();
@@ -61,6 +65,11 @@ customElements.define(
       const skipAttr = this.attributes.getNamedItem("skip") || "";
       if (skipAttr && skipAttr.value) {
         this.skipPuzzleId = skipAttr.value;
+      }
+
+      const variantAttr = this.attributes.getNamedItem("variant") || "";
+      if (variantAttr && variantAttr.value) {
+        this.variant = variantAttr.value;
       }
     }
 
@@ -86,6 +95,14 @@ customElements.define(
                 return true;
               }
             });
+          this.puzzlesOrderedByPieceCount = puzzleList.puzzles.filter(
+            (puzzle) => {
+              return puzzle.puzzle_id !== this.skipPuzzleId;
+            }
+          );
+          this.puzzlesOrderedByPieceCount.sort((puzzleA, puzzleB) => {
+            return puzzleA.pieces - puzzleB.pieces;
+          });
         })
         .catch((err) => {
           console.error(err);
@@ -102,30 +119,76 @@ customElements.define(
       if (data.hasError) {
         return html` ${data.errorMessage} `;
       }
-      return html`
-        <div class="pm-Gallery">
-          ${data.isLoadingPuzzles
-            ? html` Loading puzzles&hellip; `
-            : html`
-                ${data.puzzles && data.puzzles.length
-                  ? html`
-                      <div class="pm-PuzzleList" role="list">
-                        ${repeat(
-                          data.puzzles,
-                          (puzzle) => puzzle.puzzle_id,
-                          (puzzle) => html`
-                            <pm-puzzle-image-card
-                              .puzzle=${puzzle}
-                              front-fragment-href=${data.frontFragmentHref}
-                            ></pm-puzzle-image-card>
-                          `
-                        )}
-                      </div>
-                    `
-                  : html` <p>No puzzles.</p> `}
-              `}
-        </div>
-      `;
+      if (data.variant === "card") {
+        return html`
+          <div class="pm-Gallery">
+            ${data.isLoadingPuzzles
+              ? html` Loading puzzles&hellip; `
+              : html`
+                  ${data.puzzles && data.puzzles.length
+                    ? html`
+                        <div
+                          class="pm-PuzzleList pm-PuzzleList--card"
+                          role="list"
+                        >
+                          ${repeat(
+                            data.puzzles,
+                            (puzzle) => puzzle.puzzle_id,
+                            (puzzle) => html`
+                              <pm-puzzle-image-card
+                                variant=${data.variant}
+                                .puzzle=${puzzle}
+                                front-fragment-href=${data.frontFragmentHref}
+                              ></pm-puzzle-image-card>
+                            `
+                          )}
+                        </div>
+                      `
+                    : html` <p>No puzzles.</p> `}
+                `}
+          </div>
+        `;
+      } else if (data.variant === "inline") {
+        return html`
+          <div class="pm-Gallery">
+            ${data.isLoadingPuzzles
+              ? html` &hellip; `
+              : html`
+                  ${data.puzzlesOrderedByPieceCount &&
+                  data.puzzlesOrderedByPieceCount.length
+                    ? html`
+                        Active Jigsaw Puzzles from
+                        <span class="u-textNoWrap">
+                          ${data.puzzlesOrderedByPieceCount[0].pieces} to
+                          ${data.puzzlesOrderedByPieceCount[
+                            data.puzzlesOrderedByPieceCount.length - 1
+                          ].pieces}
+                        </span>
+                        Pieces
+                        <div
+                          class="pm-PuzzleList pm-PuzzleList--inline"
+                          role="list"
+                        >
+                          ${repeat(
+                            data.puzzlesOrderedByPieceCount,
+                            (puzzle) => puzzle.puzzle_id,
+                            (puzzle) => html`
+                              <pm-puzzle-image-card
+                                variant=${data.variant}
+                                .puzzle=${puzzle}
+                                front-fragment-href=${data.frontFragmentHref}
+                              ></pm-puzzle-image-card>
+                            `
+                          )}
+                        </div>
+                      `
+                    : html` <p>No puzzles.</p> `}
+                `}
+          </div>
+        `;
+      } else {
+        return html``;
+      }
     }
 
     get data(): TemplateData {
@@ -134,7 +197,9 @@ customElements.define(
         hasError: this.hasError,
         errorMessage: this.errorMessage,
         puzzles: this.puzzles,
+        puzzlesOrderedByPieceCount: this.puzzlesOrderedByPieceCount,
         frontFragmentHref: this.frontFragmentHref,
+        variant: this.variant,
       };
     }
 

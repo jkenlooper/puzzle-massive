@@ -36,6 +36,7 @@ interface TemplateData {
   licenseTitle: string;
   hideOwner: boolean;
   frontFragmentHref: string;
+  variant: string;
 }
 
 const tag = "pm-puzzle-image-card";
@@ -63,98 +64,133 @@ customElements.define(
       license_title: "",
     };
     private frontFragmentHref: string = "";
+    private variant: string = "card";
     constructor() {
       super();
     }
 
     template(data: TemplateData) {
-      return html`
-        <div class="pm-PuzzleImageCard">
-          ${data.isRecent && !data.isComplete
-            ? html`
-                <pm-active-player-count
-                  class="pm-PuzzleImageCard-activePlayerCount"
-                  puzzle-id=${data.puzzleId}
-                ></pm-active-player-count>
-              `
-            : html`
-                <span class="pm-PuzzleImageCard-activePlayerCount"></span>
-              `}
-          <a
-            class=${classMap({
-              "pm-PuzzleImageCard-puzzleLink": true,
-              isActive: data.isActive,
-              isRecent: data.isRecent,
-              isComplete: data.isComplete,
-              isQueue: data.isQueue,
-              notAvailable: !data.isAvailable,
-            })}
-            href=${`${data.frontFragmentHref}${data.puzzleId}/`}
-          >
-            <div class="pm-PuzzleImageCard-pieceCount">
-              <strong>${data.pieces}</strong>
-              <small>Pieces</small>
-            </div>
-            <img
-              class="lazyload pm-PuzzleImageCard-image"
-              width="160"
-              height="160"
-              data-src=${data.src}
-              alt=""
-            />
-            <em class="pm-PuzzleImageCard-status">${data.statusText}</em>
-          </a>
+      if (data.variant === "inline") {
+        return inlineView();
+      } else {
+        return cardView();
+      }
 
-          ${data.licenseName === "unsplash"
-            ? html`
-                <small>
-                  <a href=${data.source}>${data.title}</a>
-                  by
-                  <a
-                    xmlns:cc="http://creativecommons.org/ns#"
-                    href=${data.authorLink}
-                    property="cc:attributionName"
-                    rel="cc:attributionURL"
-                    >${data.authorName}</a
-                  >
-                  on
-                  <a href=${data.licenseSource}>${data.licenseTitle}</a>
-                </small>
-              `
-            : html``}
-          ${data.isAvailable || data.isFrozen || data.isQueue
-            ? html`
-                ${data.timeSince
-                  ? html`
-                      <div class="pm-PuzzleImageCard-timeSince">
-                        <span class="pm-PuzzleImageCard-timeSinceLabel">
-                          Last active
-                        </span>
-                        <span class="pm-PuzzleImageCard-timeSinceAmount"
-                          >${data.timeSince}</span
-                        >
-                        <span class="pm-PuzzleImageCard-timeSinceLabel">
-                          ago
-                        </span>
-                      </div>
-                    `
-                  : ""}
-              `
-            : html`
-                <div class="pm-PuzzleImageCard-infoMessage">
-                  Currently not available
-                </div>
-              `}
-          ${!data.isOriginal && !data.hideOwner
-            ? html`
-                <small>
-                  Instance by
-                  <pm-player-bit player=${data.owner}></pm-player-bit>
-                </small>
-              `
-            : ""}
-        </div>
-      `;
+      function inlineView() {
+        return html`
+          <div class="pm-PuzzleImageCard pm-PuzzleImageCard--inline">
+            <a
+              class=${classMap({
+                "pm-PuzzleImageCard-puzzleLink": true,
+                isActive: data.isActive,
+                isRecent: data.isRecent,
+                isComplete: data.isComplete,
+                isQueue: data.isQueue,
+                notAvailable: !data.isAvailable,
+              })}
+              href=${`${data.frontFragmentHref}${data.puzzleId}/`}
+            >
+              <img
+                class="lazyload pm-PuzzleImageCard-image"
+                width="40"
+                height="40"
+                data-src=${data.src}
+                alt=""
+              />
+            </a>
+          </div>
+        `;
+      }
+
+      function cardView() {
+        return html`
+          <div class="pm-PuzzleImageCard pm-PuzzleImageCard--card">
+            ${data.isRecent && !data.isComplete
+              ? html`
+                  <pm-active-player-count
+                    class="pm-PuzzleImageCard-activePlayerCount"
+                    puzzle-id=${data.puzzleId}
+                  ></pm-active-player-count>
+                `
+              : html`
+                  <span class="pm-PuzzleImageCard-activePlayerCount"></span>
+                `}
+            <a
+              class=${classMap({
+                "pm-PuzzleImageCard-puzzleLink": true,
+                isActive: data.isActive,
+                isRecent: data.isRecent,
+                isComplete: data.isComplete,
+                isQueue: data.isQueue,
+                notAvailable: !data.isAvailable,
+              })}
+              href=${`${data.frontFragmentHref}${data.puzzleId}/`}
+            >
+              <div class="pm-PuzzleImageCard-pieceCount">
+                <strong>${data.pieces}</strong>
+                <small>Pieces</small>
+              </div>
+              <img
+                class="lazyload pm-PuzzleImageCard-image"
+                width="160"
+                height="160"
+                data-src=${data.src}
+                alt=""
+              />
+              <em class="pm-PuzzleImageCard-status">${data.statusText}</em>
+            </a>
+
+            ${data.licenseName === "unsplash"
+              ? html`
+                  <small>
+                    <a href=${data.source}>${data.title}</a>
+                    by
+                    <a
+                      xmlns:cc="http://creativecommons.org/ns#"
+                      href=${data.authorLink}
+                      property="cc:attributionName"
+                      rel="cc:attributionURL"
+                      >${data.authorName}</a
+                    >
+                    on
+                    <a href=${data.licenseSource}>${data.licenseTitle}</a>
+                  </small>
+                `
+              : html``}
+            ${data.isAvailable || data.isFrozen || data.isQueue
+              ? html`
+                  ${data.timeSince
+                    ? html`
+                        <div class="pm-PuzzleImageCard-timeSince">
+                          <span class="pm-PuzzleImageCard-timeSinceLabel">
+                            Last active
+                          </span>
+                          <span class="pm-PuzzleImageCard-timeSinceAmount"
+                            >${data.timeSince}</span
+                          >
+                          <span class="pm-PuzzleImageCard-timeSinceLabel">
+                            ago
+                          </span>
+                        </div>
+                      `
+                    : ""}
+                `
+              : html`
+                  <div class="pm-PuzzleImageCard-infoMessage">
+                    Currently not available
+                  </div>
+                `}
+            ${!data.isOriginal && !data.hideOwner
+              ? html`
+                  <small>
+                    Instance by
+                    <pm-player-bit player=${data.owner}></pm-player-bit>
+                  </small>
+                `
+              : ""}
+          </div>
+        `;
+      }
     }
 
     get data(): TemplateData {
@@ -174,6 +210,7 @@ customElements.define(
         licenseName: this.puzzle.license_name,
         licenseTitle: this.puzzle.license_title,
         frontFragmentHref: this.frontFragmentHref,
+        variant: this.variant,
 
         isActive: !!this.puzzle.is_active,
         isRecent: !!this.puzzle.is_recent,
@@ -203,6 +240,7 @@ customElements.define(
 
     connectedCallback() {
       this.frontFragmentHref = this.getAttribute("front-fragment-href") || "";
+      this.variant = this.getAttribute("variant") || this.variant;
       this.render();
     }
   }

@@ -52,18 +52,8 @@
 
 .pm-Preview-img {
   display: inline-block;
-  transition: transform 300ms;
-  box-shadow: 0 0 9px rgba(0, 0, 0, 0.5);
-  border: 1px solid white;
-  border-radius: 7px;
   max-width: 100%;
   height: auto;
-}
-
-a:focus img.pm-Preview-img,
-a:hover img.pm-Preview-img,
-a:active img.pm-Preview-img {
-  transform: scale(1.06);
 }
 
 .pm-Preview-description {
