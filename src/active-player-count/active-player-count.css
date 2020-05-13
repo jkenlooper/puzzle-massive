@@ -1,0 +1,14 @@
+.pm-ActivePlayerCount {
+}
+
+.pm-ActivePlayerCount-amount {
+}
+.pm-PuzzleList--inline .pm-ActivePlayerCount-amount {
+  font-size: small;
+}
+
+.pm-ActivePlayerCount-label {
+}
+.pm-PuzzleList--inline .pm-ActivePlayerCount-label {
+  display: none;
+}

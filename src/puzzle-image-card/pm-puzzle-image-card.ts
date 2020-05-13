@@ -90,13 +90,26 @@ customElements.define(
               })}
               href=${`${data.frontFragmentHref}${data.puzzleId}/`}
             >
-              <img
-                class="lazyload pm-PuzzleImageCard-image"
-                width="160"
-                height="160"
-                data-src=${data.src}
-                alt=""
-              />
+              <span class="u-intrinsicRatio1:1">
+                <img
+                  class="lazyload pm-PuzzleImageCard-image"
+                  width="160"
+                  height="160"
+                  data-src=${data.src}
+                  alt=""
+                />
+              </span>
+              <small class="pm-PuzzleImageCard-pieceCount">
+                ${data.pieces}
+              </small>
+              ${data.isRecent && !data.isComplete
+                ? html`
+                    <pm-active-player-count
+                      class="pm-PuzzleImageCard-activePlayerCount"
+                      puzzle-id=${data.puzzleId}
+                    ></pm-active-player-count>
+                  `
+                : html``}
             </a>
           </div>
         `;

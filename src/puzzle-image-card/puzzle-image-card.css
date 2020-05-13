@@ -15,6 +15,21 @@
 .pm-PuzzleImageCard-activePlayerCount:empty {
 }
 
+.pm-PuzzleList--inline .pm-PuzzleImageCard-activePlayerCount {
+  background-color: inherit;
+  color: inherit;
+  padding: 0px;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  border-top-left-radius: 3px;
+  padding-left: 4px;
+  min-width: 26px;
+  text-align: left;
+  border-left: 1px solid var(--color-light);
+  border-top: 1px solid var(--color-light);
+}
+
 .pm-PuzzleImageCard-puzzleLink {
   border: 3px solid transparent;
   border-radius: 5px;
@@ -30,6 +45,28 @@
   box-shadow: 0 0 0 1px var(--color-light-light),
     0px 0px 0px 3px var(--color-accent);
 }
+.pm-PuzzleList--inline .pm-PuzzleImageCard-puzzleLink:active,
+.pm-PuzzleList--inline .pm-PuzzleImageCard-puzzleLink:focus,
+.pm-PuzzleList--inline .pm-PuzzleImageCard-puzzleLink:hover {
+  box-shadow: none;
+}
+@media (--md-viewport) {
+  .pm-PuzzleList--inline .pm-PuzzleImageCard-puzzleLink:active,
+  .pm-PuzzleList--inline .pm-PuzzleImageCard-puzzleLink:focus,
+  .pm-PuzzleList--inline .pm-PuzzleImageCard-puzzleLink:hover {
+    box-shadow: 0 0 0 1px var(--color-light-light),
+      0px 0px 0px 3px var(--color-accent);
+  }
+}
+@media (--lg-viewport) {
+  .pm-PuzzleList--inline .pm-PuzzleImageCard-puzzleLink:active,
+  .pm-PuzzleList--inline .pm-PuzzleImageCard-puzzleLink:focus,
+  .pm-PuzzleList--inline .pm-PuzzleImageCard-puzzleLink:hover {
+    box-shadow: 0 0 0 1px var(--color-light-light),
+      0px 0px 0px 3px var(--color-accent);
+  }
+}
+
 .pm-PuzzleImageCard-puzzleLink.isRecent {
   background-color: var(--color-accent);
 }
@@ -50,6 +87,22 @@
 .pm-PuzzleImageCard-puzzleLink.notAvailable:hover {
   opacity: 1;
 }
+.pm-PuzzleImageCard--inline .pm-PuzzleImageCard-puzzleLink {
+  border: 2px solid transparent;
+  border-radius: 0;
+}
+@media (--md-viewport) {
+  .pm-PuzzleImageCard--inline .pm-PuzzleImageCard-puzzleLink {
+    border: 3px solid transparent;
+    border-radius: 5px;
+  }
+}
+@media (--lg-viewport) {
+  .pm-PuzzleImageCard--inline .pm-PuzzleImageCard-puzzleLink {
+    border: 3px solid transparent;
+    border-radius: 5px;
+  }
+}
 
 .pm-PuzzleImageCard-image {
   object-fit: cover;
@@ -58,21 +111,6 @@
   border-radius: 3px;
   border: 1px solid var(--color-light);
 }
-.pm-PuzzleImageCard--inline .pm-PuzzleImageCard-image {
-  max-height: 40px;
-}
-@media (--md-viewport) {
-  .pm-PuzzleImageCard--inline .pm-PuzzleImageCard-image {
-    max-height: 60px;
-  }
-}
-@media (--lg-viewport) {
-  .pm-PuzzleImageCard--inline .pm-PuzzleImageCard-image {
-    max-height: 80px;
-  }
-}
-/*
-*/
 
 .pm-PuzzleImageCard-pieceCount {
   background-color: inherit;
@@ -80,6 +118,16 @@
   padding: 5px;
 }
 .pm-PuzzleImageCard--inline .pm-PuzzleImageCard-pieceCount {
+  padding: 0px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-bottom-right-radius: 3px;
+  padding-right: 4px;
+  min-width: 26px;
+  text-align: right;
+  border-right: 1px solid var(--color-light);
+  border-bottom: 1px solid var(--color-light);
 }
 .pm-PuzzleImageCard-pieceCountAmount {
 }

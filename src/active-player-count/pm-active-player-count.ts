@@ -3,6 +3,7 @@ import {
   puzzleStatsService,
   PlayerCountData,
 } from "../site/puzzle-stats.service";
+import "./active-player-count.css";
 
 interface TemplateData {
   hasError: boolean;
@@ -50,11 +51,15 @@ customElements.define(
         return html``;
       }
       return html`
-        <strong>${data.activePlayerCount}</strong>
-        <small>
-          Active
-          ${data.activePlayerCount > 1 ? html` Players ` : html` Player `}
-        </small>
+        <span class="pm-ActivePlayerCount">
+          <strong class="pm-ActivePlayerCount-amount"
+            >${data.activePlayerCount}</strong
+          >
+          <small class="pm-ActivePlayerCount-label">
+            Active
+            ${data.activePlayerCount > 1 ? html` Players ` : html` Player `}
+          </small>
+        </span>
       `;
     }
 

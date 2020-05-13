@@ -1,0 +1,29 @@
+:root {
+  --intrinsicRatio-width: 4;
+  --intrinsicRatio-height: 3;
+}
+
+.u-intrinsicRatio1\:1,
+.u-intrinsicRatio {
+  position: relative;
+  padding-bottom: calc(
+    100% * (var(--intrinsicRatio-height) / var(--intrinsicRatio-width))
+  );
+  height: 0;
+  overflow: hidden;
+  display: block;
+}
+
+.u-intrinsicRatio1\:1 {
+  --intrinsicRatio-width: 1;
+  --intrinsicRatio-height: 1;
+}
+
+.u-intrinsicRatio1\:1 > *,
+.u-intrinsicRatio > * {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}

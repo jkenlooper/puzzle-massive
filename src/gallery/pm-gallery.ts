@@ -157,14 +157,16 @@ customElements.define(
                   ${data.puzzlesOrderedByPieceCount &&
                   data.puzzlesOrderedByPieceCount.length
                     ? html`
-                        Active Jigsaw Puzzles from
-                        <span class="u-textNoWrap">
-                          ${data.puzzlesOrderedByPieceCount[0].pieces} to
-                          ${data.puzzlesOrderedByPieceCount[
-                            data.puzzlesOrderedByPieceCount.length - 1
-                          ].pieces}
+                        <span class="u-block u-textRight">
+                          Active Jigsaw Puzzles from
+                          <strong class="u-textNoWrap">
+                            ${data.puzzlesOrderedByPieceCount[0].pieces} to
+                            ${data.puzzlesOrderedByPieceCount[
+                              data.puzzlesOrderedByPieceCount.length - 1
+                            ].pieces}
+                          </strong>
+                          Pieces
                         </span>
-                        Pieces
                         <div
                           class="pm-PuzzleList pm-PuzzleList--inline"
                           role="list"
