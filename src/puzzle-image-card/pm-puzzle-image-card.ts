@@ -92,8 +92,8 @@ customElements.define(
             >
               <img
                 class="lazyload pm-PuzzleImageCard-image"
-                width="40"
-                height="40"
+                width="160"
+                height="160"
                 data-src=${data.src}
                 alt=""
               />

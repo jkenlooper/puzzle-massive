@@ -1,3 +1,4 @@
+@import "../site/viewport-breakpoints.css";
 :root {
   --pm-PuzzleList-columnWidth: 160px;
   --pm-PuzzleList-gap: 10px;
@@ -19,6 +20,18 @@
 .pm-PuzzleList--inline {
   --pm-PuzzleList-columnWidth: 40px;
   --pm-PuzzleList-gap: 2px;
+}
+@media (--md-viewport) {
+  .pm-PuzzleList--inline {
+    --pm-PuzzleList-columnWidth: 60px;
+    --pm-PuzzleList-gap: 2px;
+  }
+}
+@media (--lg-viewport) {
+  .pm-PuzzleList--inline {
+    --pm-PuzzleList-columnWidth: 80px;
+    --pm-PuzzleList-gap: 2px;
+  }
 }
 
 .pm-PuzzleList-item {

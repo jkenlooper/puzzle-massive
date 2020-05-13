@@ -1,3 +1,4 @@
+@import "../site/viewport-breakpoints.css";
 .pm-PuzzleImageCard {
 }
 .pm-PuzzleImageCard--card {
@@ -57,6 +58,21 @@
   border-radius: 3px;
   border: 1px solid var(--color-light);
 }
+.pm-PuzzleImageCard--inline .pm-PuzzleImageCard-image {
+  max-height: 40px;
+}
+@media (--md-viewport) {
+  .pm-PuzzleImageCard--inline .pm-PuzzleImageCard-image {
+    max-height: 60px;
+  }
+}
+@media (--lg-viewport) {
+  .pm-PuzzleImageCard--inline .pm-PuzzleImageCard-image {
+    max-height: 80px;
+  }
+}
+/*
+*/
 
 .pm-PuzzleImageCard-pieceCount {
   background-color: inherit;
