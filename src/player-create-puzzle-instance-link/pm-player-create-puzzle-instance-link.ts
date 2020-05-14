@@ -8,6 +8,7 @@ interface TemplateData {
   hasUserPuzzleSlots: boolean;
   hasAvailableUserPuzzleSlot: boolean;
   linkText: string;
+  view: string;
 }
 
 const tag = "pm-player-create-puzzle-instance-link";
@@ -25,6 +26,7 @@ customElements.define(
     isReady: boolean = false;
     hasUserPuzzleSlots: boolean = false;
     hasAvailableUserPuzzleSlot: boolean = false;
+    view: string = ""; // buttons, message
 
     constructor() {
       super();
@@ -42,6 +44,13 @@ customElements.define(
         this.createPuzzleInstanceHref = createPuzzleInstanceHref.value;
       }
 
+      const viewAttr = this.attributes.getNamedItem("view");
+      if (!viewAttr || !viewAttr.value) {
+        this.view = "";
+      } else {
+        this.view = viewAttr.value;
+      }
+
       userDetailsService.subscribe(this._setData.bind(this), this.instanceId);
     }
 
@@ -56,34 +65,50 @@ customElements.define(
     }
 
     template(data: TemplateData) {
-      if (!data.isReady || !data.hasUserPuzzleSlots) {
-        // TODO: show link to get an initial user puzzle slot
+      if (!data.isReady) {
         return html``;
       }
-      return html`
-        <div class="u-block u-textRight">
-          ${!data.hasAvailableUserPuzzleSlot
-            ? html`
-                <span
-                  ><s class="Button Button--secondary is-disabled"
-                    >${data.linkText}</s
-                  >
-                  <em class="u-block"
-                    ><small
-                      >All your puzzle instance slots are filled.</small
-                    ></em
-                  ></span
-                >
-              `
-            : html`
-                <a
-                  class="Button Button--secondary"
-                  href=${data.createPuzzleInstanceHref}
-                  >${data.linkText}</a
-                >
-              `}
-        </div>
-      `;
+      let renderedView = html``;
+      switch (data.view) {
+        case "buttons":
+          if (data.hasUserPuzzleSlots) {
+            renderedView = html`
+              ${!data.hasAvailableUserPuzzleSlot
+                ? html`
+                    <span class="Button is-disabled">${data.linkText}</span>
+                  `
+                : html`
+                    <a class="Button" href=${data.createPuzzleInstanceHref}
+                      >${data.linkText}</a
+                    >
+                  `}
+            `;
+          } else {
+            renderedView = html``;
+          }
+          break;
+        case "message":
+          if (data.hasUserPuzzleSlots) {
+            renderedView = html`
+              ${!data.hasAvailableUserPuzzleSlot
+                ? html`<p>
+                    All your Puzzle Instance Slots have been filled.
+                    <a href="/d/buy-stuff/">Buy another Puzzle Instance Slot</a>
+                    or delete one of your Puzzle Instances to free up a slot.
+                  </p>`
+                : html``}
+            `;
+          } else {
+            renderedView = html`<p>
+              Create your own puzzle from this image. Buy a
+              <a href="/d/buy-stuff/">Puzzle Instance Slot</a>.
+            </p>`;
+          }
+          break;
+        default:
+          renderedView = html``;
+      }
+      return renderedView;
     }
 
     get data(): TemplateData {
@@ -92,7 +117,8 @@ customElements.define(
         hasUserPuzzleSlots: this.hasUserPuzzleSlots,
         hasAvailableUserPuzzleSlot: this.hasAvailableUserPuzzleSlot,
         createPuzzleInstanceHref: this.createPuzzleInstanceHref,
-        linkText: "Create New Puzzle Instance",
+        linkText: "New Puzzle Instance",
+        view: this.view,
       };
     }
 

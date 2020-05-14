@@ -7,24 +7,21 @@
 }
 
 .pm-PuzzleImageCard-activePlayerCount {
-  color: var(--color-accent);
   display: block;
+}
+.pm-PuzzleList--card .pm-PuzzleImageCard-activePlayerCount {
+  color: var(--color-accent);
   min-height: 1.4em;
   margin-left: 8px;
-}
-.pm-PuzzleImageCard-activePlayerCount:empty {
 }
 
 .pm-PuzzleList--inline .pm-PuzzleImageCard-activePlayerCount {
   background-color: inherit;
   color: inherit;
-  padding: 0px;
   position: absolute;
   right: 0;
   bottom: 0;
   border-top-left-radius: 3px;
-  padding-left: 4px;
-  min-width: 26px;
   text-align: left;
   border-left: 1px solid var(--color-light);
   border-top: 1px solid var(--color-light);

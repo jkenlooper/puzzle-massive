@@ -20,6 +20,7 @@ interface TemplateData {
   deleteDisabledMessage: string;
   isProcessing: boolean; // the status on the puzzle page is not the same as the status returned.
   actionHandler: any; // event listener object
+  view: string;
 }
 
 const tag = "pm-puzzle-instance-actions";
@@ -40,6 +41,7 @@ customElements.define(
     isReady: boolean = false;
     puzzleDetails: undefined | PuzzleInstanceDetails = undefined;
     status: number = -99;
+    view: string = ""; // buttons, message
 
     constructor() {
       super();
@@ -68,6 +70,13 @@ customElements.define(
         this.errorMessage = "No status has been set.";
       } else {
         this.status = parseInt(status.value);
+      }
+
+      const viewAttr = this.attributes.getNamedItem("view");
+      if (!viewAttr || !viewAttr.value) {
+        this.view = "";
+      } else {
+        this.view = viewAttr.value;
       }
 
       userDetailsService.subscribe(
@@ -121,9 +130,20 @@ customElements.define(
       if (!data.isReady) {
         return html``;
       }
+
+      let renderedView = html``;
+
       if (data.hasError) {
-        return html` ${data.errorMessage} `;
+        switch (data.view) {
+          case "buttons":
+            break;
+          case "message":
+            renderedView = html` ${data.errorMessage} `;
+            break;
+        }
+        return renderedView;
       }
+
       if (!data.hasPuzzleDetails || !data.hasActions) {
         return html``;
       }
@@ -132,62 +152,74 @@ customElements.define(
         // a processing request code (202 or something?).  This is because the
         // front page is cached for a minute and removing that cache isn't within
         // scope of this.
-        return html`
-          <em>Processing last action that has updated the puzzle status.</em>
-        `;
+        switch (data.view) {
+          case "buttons":
+            renderedView = html`<a class="Button" href="">Reload</a>`;
+            break;
+          case "message":
+            renderedView = html`
+              <p>
+                Processing last action that has updated the puzzle status.
+              </p>
+            `;
+        }
+        return renderedView;
       }
-      return html`
-        ${data.canDelete
-          ? html`
-              <button
-                class="Button Button--plain"
-                data-action="delete"
-                @click=${data.actionHandler}
-              >
-                delete
-              </button>
-            `
-          : html`
-              <button class="Button Button--plain" disabled>delete</button>
-            `}
-        ${data.isFrozen
-          ? html`
-              <button
-                class="Button Button--plain"
-                data-action="unfreeze"
-                @click=${data.actionHandler}
-              >
-                unfreeze
-              </button>
-            `
-          : html`
-              <button
-                class="Button Button--plain"
-                data-action="freeze"
-                @click=${data.actionHandler}
-              >
-                freeze
-              </button>
-            `}
-        ${data.canDelete
-          ? html`
-              <p>
-                ${data.deletePenalty > 0
-                  ? html`
-                    <em
-                      >Deleting this puzzle will cost ${data.deletePenalty} dots
-                      because it is not complete.</em
-                    >
-                  </p>`
-                  : html``}
-              </p>
-            `
-          : html`
-              <p>
-                <em>${data.deleteDisabledMessage}</em>
-              </p>
-            `}
-      `;
+
+      switch (data.view) {
+        case "buttons":
+          renderedView = html`
+            ${data.canDelete
+              ? html`
+                  <button
+                    class="Button"
+                    data-action="delete"
+                    @click=${data.actionHandler}
+                  >
+                    Delete
+                  </button>
+                `
+              : html` <button class="Button" disabled>Delete</button> `}
+            ${data.isFrozen
+              ? html`
+                  <button
+                    class="Button"
+                    data-action="unfreeze"
+                    @click=${data.actionHandler}
+                  >
+                    Unfreeze
+                  </button>
+                `
+              : html`
+                  <button
+                    class="Button"
+                    data-action="freeze"
+                    @click=${data.actionHandler}
+                  >
+                    Freeze
+                  </button>
+                `}
+          `;
+          break;
+        case "message":
+          renderedView = html`
+            ${data.canDelete
+              ? html`
+                  <p>
+                    ${data.deletePenalty > 0
+                      ? html` Deleting this puzzle will cost
+                        ${data.deletePenalty} dots because it is not complete.`
+                      : html``}
+                  </p>
+                `
+              : html`
+                  <p>
+                    ${data.deleteDisabledMessage}
+                  </p>
+                `}
+          `;
+      }
+      return renderedView;
     }
 
     get data(): TemplateData {
@@ -211,6 +243,7 @@ customElements.define(
           handleEvent: this.handleAction.bind(this),
           capture: true,
         },
+        view: this.view,
       };
     }
 

@@ -75,22 +75,21 @@
 {% endif %}
 {% endblock %}
 
+{% block header %}
+{{ super() }}
+{% if page.description.startswith(' ') %}
+    <p class="pm-HomeIntro">
+    {{ page.content | readfile }}
+    </p>
+{% endif %}
+{% endblock %}
+
 {% block secondarymenu %}
   <pm-gallery variant="inline" skip="{{ page.info.puzzle_id }}" front-fragment-href="/chill{{ url_for('.page_uri', uri='front') }}"></pm-gallery>
 {% endblock %}
 
 
 {% block main %}
-{% if page.description.startswith(' ') %}
-<div class="pm-Frontpage">
-  <div class="pm-Frontpage-intro">
-    <p>
-    {{ _description }}
-    </p>
-  </div>
-</div>
-{% endif %}
-
 {% if not page.info.pieces %}
 <p>
             This jigsaw puzzle is not available. Please choose a different one.

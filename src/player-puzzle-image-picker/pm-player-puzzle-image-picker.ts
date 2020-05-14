@@ -76,7 +76,10 @@ customElements.define(
             : html`
                 ${data.puzzles && data.puzzles.length
                   ? html`
-                      <div class="pm-PuzzleList" role="list">
+                      <div
+                        class="pm-PuzzleList pm-PuzzleList--card"
+                        role="list"
+                      >
                         ${repeat(
                           data.puzzles,
                           (puzzle) => puzzle.puzzle_id,

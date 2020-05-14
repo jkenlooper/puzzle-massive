@@ -19,6 +19,7 @@ interface TemplateData {
   bumpDisabledMessage: string;
   isProcessing: boolean; // the status on the puzzle page is not the same as the status returned.
   actionHandler: any; // event listener object
+  view: string;
 }
 
 const tag = "pm-puzzle-original-actions";
@@ -38,6 +39,7 @@ customElements.define(
     isReady: boolean = false;
     puzzleDetails: undefined | PuzzleOriginalDetails = undefined;
     status: number = -99;
+    view: string = ""; // buttons, message
 
     constructor() {
       super();
@@ -58,6 +60,13 @@ customElements.define(
         this.errorMessage = "No status has been set.";
       } else {
         this.status = parseInt(status.value);
+      }
+
+      const viewAttr = this.attributes.getNamedItem("view");
+      if (!viewAttr || !viewAttr.value) {
+        this.view = "";
+      } else {
+        this.view = viewAttr.value;
       }
 
       userDetailsService.subscribe(
@@ -106,44 +115,79 @@ customElements.define(
       if (!data.isReady) {
         return html``;
       }
+
+      let renderedView = html``;
+
       if (data.hasError) {
-        return html` ${data.errorMessage} `;
+        switch (data.view) {
+          case "buttons":
+            break;
+          case "message":
+            renderedView = html` ${data.errorMessage} `;
+            break;
+        }
+        return renderedView;
       }
+
       if (!data.hasPuzzleDetails || !data.hasActions) {
         return html``;
       }
+
       if (data.isProcessing) {
         // When action buttons are pressed the server will respond with
         // a processing request code (202 or something?).  This is because the
         // front page is cached for a minute and removing that cache isn't within
         // scope of this.
-        return html`
-          <em>Processing last action that has updated the puzzle status.</em>
-        `;
+        switch (data.view) {
+          case "buttons":
+            renderedView = html`<a class="Button" href="">Reload</a>`;
+            break;
+          case "message":
+            renderedView = html`
+              <p>
+                Processing last action that has updated the puzzle status.
+              </p>
+            `;
+            break;
+        }
+        return renderedView;
       }
-      return html`
-        ${data.canBump
-          ? html`
-              <button data-action="bump" @click=${data.actionHandler}>
-                Bump
-              </button>
-            `
-          : html` <button disabled>Bump</button> `}
-        ${data.canBump
-          ? html`
-              <p>
-                <em
-                  >Bumping this puzzle forward in the queue will cost
-                  ${data.highestBid} dots.</em
-                >
-              </p>
-            `
-          : html`
-              <p>
-                <em>${data.bumpDisabledMessage}</em>
-              </p>
-            `}
-      `;
+
+      switch (data.view) {
+        case "buttons":
+          renderedView = html`
+            ${data.canBump
+              ? html`
+                  <button
+                    class="Button"
+                    data-action="bump"
+                    @click=${data.actionHandler}
+                  >
+                    Bump
+                  </button>
+                `
+              : html` <button class="Button" disabled>Bump</button> `}
+          `;
+          break;
+
+        case "message":
+          renderedView = html`
+            ${data.canBump
+              ? html`
+                  <p>
+                    Bumping this puzzle forward in the queue will cost
+                    ${data.highestBid} dots.
+                  </p>
+                `
+              : html`
+                  <p>
+                    ${data.bumpDisabledMessage}
+                  </p>
+                `}
+          `;
+          break;
+      }
+      return renderedView;
     }
 
     get data(): TemplateData {
@@ -164,6 +208,7 @@ customElements.define(
           handleEvent: this.handleAction.bind(this),
           capture: true,
         },
+        view: this.view,
       };
     }
 

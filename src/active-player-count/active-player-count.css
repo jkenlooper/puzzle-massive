@@ -1,4 +1,6 @@
 .pm-ActivePlayerCount {
+  padding-left: 4px;
+  min-width: 26px;
 }
 
 .pm-ActivePlayerCount-amount {

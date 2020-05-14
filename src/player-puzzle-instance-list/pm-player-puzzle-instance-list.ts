@@ -75,6 +75,7 @@ customElements.define(
       }
       return html`
         <div class="pm-PlayerPuzzleInstanceList">
+          <small class="u-block">Puzzle Instance Slots</small>
           <ul class="pm-PlayerPuzzleInstanceList-list">
             <li class="pm-PlayerPuzzleInstanceList-listItem">
               <a

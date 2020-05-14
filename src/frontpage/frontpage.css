@@ -8,25 +8,7 @@
   margin-top: 13px;
 }
 
-.pm-Frontpage-intro {
-  max-width: 72rem;
-  margin: 0 auto;
-}
-@media (--lg-viewport) {
-  .pm-Frontpage-intro {
-    margin: 0 30px;
-  }
-}
-
 .pm-Frontpage-grid {
-}
-@media (--lg-viewport) {
-  .pm-Frontpage-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    flex-direction: row;
-  }
 }
 
 .pm-Frontpage-grid > * + * {
@@ -35,48 +17,15 @@
 
 /* preview and gallery */
 .pm-Frontpage-gridA {
-  display: flex;
-  flex-direction: column;
-  order: 1;
-}
-
-@media (--lg-viewport) {
-  .pm-Frontpage-gridA {
-    max-width: 900px;
-    padding-right: 20px;
-    margin-right: 19px;
-    min-width: calc(
-      940px - ((var(--pm-PuzzleList-columnWidth) * 3) + (10px * 2))
-    );
-    width: 46%;
-    border-right: 1px solid var(--color-dark-light);
-  }
 }
 
 /* aux gallery */
 .pm-Frontpage-gridB {
-  order: 2;
 }
 
-@media (--lg-viewport) {
-  .pm-Frontpage-gridB {
-    --pm-Frontpage-gridB-columnMaxWidth: 216px;
-    width: 50%;
-    min-width: calc(
-      (var(--pm-PuzzleList-columnWidth) * 3) + (var(--pm-PuzzleList-gap) * 2)
-    );
-    max-width: calc(
-      (var(--pm-Frontpage-gridB-columnMaxWidth) * 3) +
-        (var(--pm-PuzzleList-gap) * 2)
-    );
-  }
-}
 .pm-Frontpage-sectionHeader {
-  margin-right: 13px;
 }
 
 /* other content */
 .pm-Frontpage-gridC {
-  order: 3;
-  width: 100%;
 }

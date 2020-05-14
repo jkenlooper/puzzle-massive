@@ -30,6 +30,7 @@ import "./player-bit";
 import "./response-message";
 import "./site-wide-message";
 import "./swatch.css";
+import "./home-intro.css";
 
 import "./frontpage";
 import "./profilepage";

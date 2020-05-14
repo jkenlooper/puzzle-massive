@@ -13,14 +13,13 @@
 
 <div class="pm-Preview">
 
-  <div class="pm-Preview-grid" >
-    <div class="pm-Preview-gridA">
+<div class="pm-Preview-card">
+  <h2 class="pm-Preview-pieceCount">
+  <strong>{{recent.pieces}}</strong>
+  <span>pieces</span>
+  </h2>
 
-          <span class="u-inlineBlock u-marginRightMd u-textNoWrap">
-            <strong class="pm-Preview-pieceCount">{{recent.pieces}}</strong>
-            <span>pieces</span>
-          </span>
-
+  <div class="pm-Preview-cta">
   {% if recent.status == ACTIVE %}
       Active Jigsaw Puzzle
       <a class="Button" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/0'.format(recent.puzzle_id)) }}">
@@ -63,27 +62,50 @@
   {% elif recent.status == DELETED_REQUEST and not recent.is_original  %}
     {# Puzzle instance removed by owner #}
   {% endif %}
+  </div>
 
+      <div class="u-intrinisicRatio" style="--intrinsicRatio-width: {{width|int}}; --intrinsicRatio-height: {{height|int}};">
       {% if recent.url == '' %}
         {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
       {% else %}
         <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{recent.url|safe}}" alt="">
       {% endif %}
+      </div>
 
-  {% if not recent.is_original or recent.permission == 0 -%} {# instance or original PUBLIC #}
-  <pm-player-create-puzzle-instance-link create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}"></pm-player-create-puzzle-instance-link>
-  {% endif %}
+<div class="pm-Preview-actions">
+  <div class="pm-Preview-actionsRow">
+    {% if not recent.is_original or recent.permission == 0 -%} {# instance or original PUBLIC #}
+    <pm-player-create-puzzle-instance-link view="buttons" create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}"></pm-player-create-puzzle-instance-link>
+    {% endif %}
 
-  {% if not recent.is_original %}
-    {% if recent.status != DELETED_REQUEST %}
-    <pm-puzzle-instance-actions class="u-block" puzzle-id="{{ recent.puzzle_id }}" owner="{{ recent.owner }}" status="{{ recent.status }}"></pm-puzzle-instance-actions>
+    {% if not recent.is_original %}
+      {% if recent.status != DELETED_REQUEST %}
+      <pm-puzzle-instance-actions view="buttons" puzzle-id="{{ recent.puzzle_id }}" owner="{{ recent.owner }}" status="{{ recent.status }}"></pm-puzzle-instance-actions>
+      {% endif %}
+    {% else %}
+    {% if recent.status == IN_QUEUE %}
+      {# At this time this is only used for bumping the queue for puzzles that are in the queue. #}
+      <pm-puzzle-original-actions view="buttons" puzzle-id="{{ recent.puzzle_id }}" status="{{ recent.status }}"></pm-puzzle-original-actions>
+      {% endif %}
     {% endif %}
-  {% else %}
-  {% if recent.status == IN_QUEUE %}
-    {# At this time this is only used for bumping the queue for puzzles that are in the queue. #}
-    <pm-puzzle-original-actions class="u-block" puzzle-id="{{ recent.puzzle_id }}" status="{{ recent.status }}"></pm-puzzle-original-actions>
+  </div>
+  <div class="pm-Preview-actionsRow">
+    {% if not recent.is_original or recent.permission == 0 -%} {# instance or original PUBLIC #}
+    <pm-player-create-puzzle-instance-link view="message" create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}"></pm-player-create-puzzle-instance-link>
     {% endif %}
-  {% endif %}
+
+    {% if not recent.is_original %}
+      {% if recent.status != DELETED_REQUEST %}
+      <pm-puzzle-instance-actions view="message" puzzle-id="{{ recent.puzzle_id }}" owner="{{ recent.owner }}" status="{{ recent.status }}"></pm-puzzle-instance-actions>
+      {% endif %}
+    {% else %}
+    {% if recent.status == IN_QUEUE %}
+      {# At this time this is only used for bumping the queue for puzzles that are in the queue. #}
+      <pm-puzzle-original-actions view="message" puzzle-id="{{ recent.puzzle_id }}" status="{{ recent.status }}"></pm-puzzle-original-actions>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
 
       <p class="pm-Preview-description">
         <small>
