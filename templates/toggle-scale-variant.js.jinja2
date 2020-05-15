@@ -1,0 +1,32 @@
+{#- This script is inlined after the input[name=]. This way it doesn't have to wait for the DOMContentLoaded event to fire. -#}
+{#- Some manual minification is done for code golfing purposes while still making it somewhat readable. -#}
+(function(){
+  {#- -#}
+  let k="scale_variant",
+  {#- -#}
+  t=document.querySelectorAll(`input[name=${k}]`),
+  {#- -#}
+  l=localStorage;
+  {#- -#}
+  if(t){
+  {#- -#}
+    t.forEach(e=>{
+  {#- -#}
+        if(l.getItem(k)&&e.value==l.getItem(k)){
+  {#- -#}
+            e.checked=true;
+  {#- -#}
+        }
+      {#- -#}
+        e.addEventListener("change",()=>{
+      {#- -#}
+          l.setItem(k,e.checked?e.value:"");
+      {#- -#}
+        });
+  {#- -#}
+    })
+  {#- -#}
+  }
+  {#- -#}
+})();
+{#- -#}

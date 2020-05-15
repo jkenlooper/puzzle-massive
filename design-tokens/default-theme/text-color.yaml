@@ -37,8 +37,16 @@ props:
     value: "{!color-error-contrast}"
   TextColor-onDark:
     value: "{!color-dark-contrast}"
+  TextColor-onDark--medium:
+    value: "{!color-dark-contrast-medium}"
+  TextColor-onDark--disabled:
+    value: "{!color-dark-contrast-disabled}"
   TextColor-onLight:
     value: "{!color-light-contrast}"
+  TextColor-onLight--medium:
+    value: "{!color-light-contrast-medium}"
+  TextColor-onLight--disabled:
+    value: "{!color-light-contrast-disabled}"
   TextColor-primaryOnBackground:
     value: "{!color-primary-dark}"
     comment: Link text color

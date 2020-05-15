@@ -26,6 +26,9 @@
 {# image doesn't show original author #}
 {% set NO_ATTRIBUTION   = -2  %}
 
+{# puzzle has been placed in rebuild queue #}
+{% set REBUILD          = -3 %}
+
 {# puzzle image has been accepted and is now in render queue #}
 {% set IN_RENDER_QUEUE  = -5  %}
 
@@ -45,14 +48,24 @@
 {% set DELETED_REQUEST  = -13 %}
 
 {%- if page.info.puzzle_id %}
-  {% if page.info.pieces and page.info.status in (ACTIVE, IN_QUEUE) %}
+  {% if page.info.pieces and page.info.status == ACTIVE %}
     {%- set _pagetitle = '{} Piece Jigsaw Puzzle'.format(page.info.pieces) -%}
+  {% elif page.info.pieces and page.info.status == IN_QUEUE %}
+    {%- set _pagetitle = '{} Piece Jigsaw Puzzle In Queue'.format(page.info.pieces) -%}
   {% elif page.info.pieces and page.info.status == COMPLETED %}
-    {%- set _pagetitle = '{0} Piece Jigsaw Puzzle Completed on {1}'.format(page.info.pieces, page.info.m_date) -%}
+    {%- set _pagetitle = '{0} Piece Jigsaw Puzzle Completed On {1}'.format(page.info.pieces, page.info.m_date) -%}
   {% elif page.info.pieces and page.info.status == BUGGY_UNLISTED %}
-    {%- set _pagetitle = '{0} Piece Jigsaw Puzzle With Some Errors'.format(page.info.pieces) -%}
+    {%- set _pagetitle = '{0} Piece J1g5aw Pu221e With Some Errors'.format(page.info.pieces) -%}
+  {% elif page.info.pieces and page.info.status == FROZEN %}
+    {%- set _pagetitle = '{} Piece Jigsaw Puzzle Is Frozen'.format(page.info.pieces) -%}
+  {% elif page.info.status == NEEDS_MODERATION %}
+    {%- set _pagetitle = 'Jigsaw Puzzle Image Waiting Moderation' -%}
+  {% elif page.info.status in (REBUILD, IN_RENDER_QUEUE) %}
+    {%- set _pagetitle = 'Jigsaw Puzzle is Waiting in Render Queue' -%}
+  {% elif page.info.status == RENDERING %}
+    {%- set _pagetitle = 'Jigsaw Puzzle is Being Rendered' -%}
   {% else %}
-    {%- set _pagetitle = 'Jigsaw Puzzle No Longer Available' -%}
+    {%- set _pagetitle = 'Jigsaw Puzzle Not Available' -%}
   {%- endif %}
 {%- endif %}
 

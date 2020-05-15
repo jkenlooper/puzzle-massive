@@ -25,6 +25,7 @@ Types of changes
 
 ### Changed
 
+- Redesign of puzzle front page layout (WIP)
 - Shorten auto-rebuild interval to keep at least the minimum amount of active
   puzzles per skill level. Did a hotfix on the live site (2020-05-10).
 
