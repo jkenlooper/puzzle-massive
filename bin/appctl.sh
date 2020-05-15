@@ -21,7 +21,7 @@ systemctl reload nginx;
 # puzzle-massive-divulger \
 # puzzle-massive-worker \
 # Skipping puzzle-massive-backup-db.timer to prevent database locks with
-# scheduler.
+# scheduler. Backups should be done manually for now; see bin/reload.sh script.
 # puzzle-massive-backup-db.timer \
 for app in puzzle-massive-chill \
   puzzle-massive-api \

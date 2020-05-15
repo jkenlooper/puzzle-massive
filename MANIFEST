@@ -28,6 +28,7 @@ bin/install.sh
 bin/log.sh
 bin/provision-certbot.sh
 bin/purge_nginx_cache_file.sh
+bin/reload.sh
 bin/resize-bit-icons.sh
 bin/setup.sh
 bin/site-cfg.py
