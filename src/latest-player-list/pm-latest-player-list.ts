@@ -184,21 +184,23 @@ customElements.define(
                 })}
                 role="listitem"
               >
-                ${item.score
-                  ? html`<span class="pm-LatestPlayerList-score"
-                      >${item.score}<span
-                        class="pm-LatestPlayerList-scoreLabel"
-                      >
-                        Piece${item.score > 1 ? "s" : ""}</span
-                      ></span
-                    >`
-                  : ""}
+                <span class="pm-LatestPlayerList-badge">
+                  ${item.score
+                    ? html`<span class="pm-LatestPlayerList-score"
+                        >${item.score}<span
+                          class="pm-LatestPlayerList-badgeLabel"
+                        >
+                          Piece${item.score > 1 ? "s" : ""}</span
+                        ></span
+                      >`
+                    : ""}
+                  <br /><span class="pm-LatestPlayerList-timeSince"
+                    >${item.timeSince}</span
+                  >
+                </span>
                 <span class="pm-LatestPlayerList-playerBit">
                   <pm-player-bit player=${item.id}></pm-player-bit>
                 </span>
-                <span class="pm-LatestPlayerList-timeSince"
-                  >${item.timeSince}</span
-                >
               </div>
             `;
           })}

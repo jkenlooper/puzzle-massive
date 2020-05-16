@@ -12,18 +12,22 @@
   display: flex;
   align-items: stretch;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: flex-start;
+}
+@media (min-width: 760px) {
+  .pm-LatestPlayerList-list {
+    justify-content: flex-end;
+  }
 }
 
 .pm-LatestPlayerList-item {
   align-items: center;
   position: relative;
   display: inline-flex;
-  padding: 5px 2px 5px 10px;
-  border: 1px solid var(--designtoken-TextColor-onLight--disabled);
+  padding: 5px 2px 5px 20px;
+  flex: 0 1 300px;
 }
 .pm-LatestPlayerList-group--recent .pm-LatestPlayerList-item {
-  border-color: var(--designtoken-BackgroundColor-primary--light);
 }
 
 .is-active.pm-LatestPlayerList-item {
@@ -31,52 +35,48 @@
 }
 
 .pm-LatestPlayerList-item--row {
-  flex: 0 1 auto;
-  padding-right: 10px;
-  min-width: 300px;
 }
 .pm-LatestPlayerList-item--condensed {
-  flex: 1 1 auto;
 }
 
 .pm-LatestPlayerList-timeSince {
-  flex: 1 0 auto;
-  display: inline-block;
-  text-align: right;
-  margin-left: 10px;
 }
 .pm-LatestPlayerList-item--row .pm-LatestPlayerList-timeSince {
-  display: inline;
 }
 .pm-LatestPlayerList-item--condensed .pm-LatestPlayerList-timeSince {
-  display: none;
 }
 
 .pm-LatestPlayerList-playerBit {
 }
 
-.pm-LatestPlayerList-score {
+.pm-LatestPlayerList-badge {
   border: 1px solid var(--designtoken-BackgroundColor-dark--dark);
-  border-left: 0;
   background-color: var(--designtoken-BackgroundColor-dark--light);
   color: var(--designtoken-TextColor-onDark);
-  padding: 8px 2px;
+  padding: 2px;
   font-size: small;
-  line-height: 1;
-  margin-left: -10px;
+  line-height: 1.3;
   margin-right: 4px;
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
+  border-radius: 5px;
 }
-.pm-LatestPlayerList-group--recent .pm-LatestPlayerList-score {
+.pm-LatestPlayerList-group--recent .pm-LatestPlayerList-badge {
   background-color: var(--designtoken-BackgroundColor-primary--light);
   border-color: var(--designtoken-BackgroundColor-primary--dark);
   color: var(--designtoken-TextColor-onPrimary);
 }
 
+.pm-LatestPlayerList-badgeLabel {
+  display: inline;
+}
+.pm-LatestPlayerList-item--row .pm-LatestPlayerList-badgeLabel {
+}
+
+.pm-LatestPlayerList-score {
+}
+.pm-LatestPlayerList-group--recent .pm-LatestPlayerList-score {
+}
+
 .pm-LatestPlayerList-scoreLabel {
-  display: none;
 }
 .pm-LatestPlayerList-item--row .pm-LatestPlayerList-scoreLabel {
-  display: inline;
 }

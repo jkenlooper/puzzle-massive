@@ -15,7 +15,7 @@
 @media (min-width: 760px) {
   .pm-Preview-puzzle {
     flex: 1 1 500px;
-    max-width: 50%;
+    max-width: 900px;
     order: 2;
     padding-left: 20px;
     margin-left: -21px;
@@ -109,7 +109,6 @@
 .pm-Preview-puzzleViewIcon {
   position: absolute;
   top: 0;
-  left: 0;
   display: block;
   padding: 10px;
   margin: 10px;
@@ -120,6 +119,17 @@
   box-shadow: 0 0 0 3px currentcolor;
 }
 
+.pm-Preview-puzzleViewToggle--scale0:checked
+  ~ .pm-Preview-puzzleView--scale0
+  .pm-Preview-puzzleViewIcon {
+  left: 0;
+}
+.pm-Preview-puzzleViewToggle--scale1:checked
+  ~ .pm-Preview-puzzleView--scale1
+  .pm-Preview-puzzleViewIcon {
+  right: 0;
+}
+
 .pm-Preview-img {
   display: inline-block;
   max-width: 100%;
@@ -127,6 +137,9 @@
   border-radius: 5px;
   background-color: var(--designtoken-BackgroundColor-dark);
   padding: 2px;
+}
+.pm-Preview-activePlayerCount {
+  text-align: right;
 }
 
 .pm-Preview-source {

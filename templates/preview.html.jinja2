@@ -90,6 +90,11 @@
               {%- endif -%}
             </div>
           </div>
+          <div class="pm-Preview-activePlayerCount">
+            <pm-active-player-count
+              puzzle-id="{{ recent.puzzle_id }}"></pm-active-player-count>
+              <span class="Button Button--text on-dark">Join</span>
+          </div>
         </a>
       {% endfor %}
       {#- The script is inlined right after the input so no need to wait for DOMContentLoad. -#}
