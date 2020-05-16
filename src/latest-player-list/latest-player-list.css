@@ -3,12 +3,9 @@
 
 .pm-LatestPlayerList-group {
   padding: 5px;
-  border: 1px solid transparent;
 }
 .pm-LatestPlayerList-group--recent {
-  background-color: var(--designtoken-BackgroundColor-primary--light);
-  border-color: var(--designtoken-BackgroundColor-primary--dark);
-  color: var(--designtoken-TextColor-onPrimary);
+  color: var(--designtoken-BackgroundColor-primary--dark);
 }
 
 .pm-LatestPlayerList-list {
@@ -26,7 +23,7 @@
   border: 1px solid var(--designtoken-TextColor-onLight--disabled);
 }
 .pm-LatestPlayerList-group--recent .pm-LatestPlayerList-item {
-  border-color: var(--designtoken-TextColor-onPrimary--disabled);
+  border-color: var(--designtoken-BackgroundColor-primary--light);
 }
 
 .is-active.pm-LatestPlayerList-item {
@@ -46,6 +43,7 @@
   flex: 1 0 auto;
   display: inline-block;
   text-align: right;
+  margin-left: 10px;
 }
 .pm-LatestPlayerList-item--row .pm-LatestPlayerList-timeSince {
   display: inline;
@@ -58,16 +56,22 @@
 }
 
 .pm-LatestPlayerList-score {
-  border: 1px solid var(--designtoken-TextColor-onLight--disabled);
-  background-color: var(--designtoken-BackgroundColor-dark);
-  color: var(--designtoken-TextColor-onDark--medium);
-  padding: 2px;
+  border: 1px solid var(--designtoken-BackgroundColor-dark--dark);
+  border-left: 0;
+  background-color: var(--designtoken-BackgroundColor-dark--light);
+  color: var(--designtoken-TextColor-onDark);
+  padding: 8px 2px;
   font-size: small;
   line-height: 1;
   margin-left: -10px;
   margin-right: 4px;
   border-top-right-radius: 5px;
   border-bottom-right-radius: 5px;
+}
+.pm-LatestPlayerList-group--recent .pm-LatestPlayerList-score {
+  background-color: var(--designtoken-BackgroundColor-primary--light);
+  border-color: var(--designtoken-BackgroundColor-primary--dark);
+  color: var(--designtoken-TextColor-onPrimary);
 }
 
 .pm-LatestPlayerList-scoreLabel {

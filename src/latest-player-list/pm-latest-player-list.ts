@@ -83,7 +83,10 @@ customElements.define(
                   <div
                     class="pm-LatestPlayerList-group pm-LatestPlayerList-group--recent"
                   >
-                    ${data.players.recent.length} players in the last 5 minutes
+                    ${data.players.recent.length > 1
+                      ? data.players.recent.length
+                      : ""}
+                    players in the last 5 minutes
                     <div class="pm-LatestPlayerList-list" role="list">
                       ${itemsWithTimeSince(
                         data.players.recent,
@@ -98,7 +101,10 @@ customElements.define(
                   <div
                     class="pm-LatestPlayerList-group pm-LatestPlayerList-group--lastHour"
                   >
-                    ${data.players.lastHour.length} players in the last hour
+                    ${data.players.lastHour.length > 1
+                      ? data.players.lastHour.length
+                      : ""}
+                    players in the last hour
                     <div class="pm-LatestPlayerList-list" role="list">
                       ${itemsWithTimeSince(
                         data.players.lastHour,
@@ -113,8 +119,10 @@ customElements.define(
                   <div
                     class="pm-LatestPlayerList-group pm-LatestPlayerList-group--lastSevenHours"
                   >
-                    ${data.players.lastSevenHours.length} players in the last 7
-                    hours
+                    ${data.players.lastSevenHours.length > 1
+                      ? data.players.lastSevenHours.length
+                      : ""}
+                    players in the last 7 hours
                     <div class="pm-LatestPlayerList-list" role="list">
                       ${itemsWithTimeSince(
                         data.players.lastSevenHours,
@@ -130,8 +138,11 @@ customElements.define(
                     class="pm-LatestPlayerList-group pm-LatestPlayerList-group--rest"
                   >
                     ${data.players.rest.length === 1
-                      ? html`1 player ${data.players.rest[0].timeSince} ago`
-                      : html`${data.players.rest.length} players
+                      ? html`players ${data.players.rest[0].timeSince} ago`
+                      : html`${data.players.rest.length > 1
+                            ? data.players.rest.length
+                            : ""}
+                          players
                           <span class="u-textNoWrap"
                             >from ${data.players.rest[0].timeSince}
                             ${data.players.rest[0].timeSince ===

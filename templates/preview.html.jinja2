@@ -52,52 +52,50 @@
     {%- endif -%}
     </h2>
 
+    {% if recent.status in (ACTIVE, FROZEN, BUGGY_UNLISTED) %}
+      <input type="radio" autocomplete="off" class="pm-Preview-puzzleViewToggle pm-Preview-puzzleViewToggle--scale0" name="scale_variant" value="0" id="scale_variant_0" checked>
+      <input type="radio" autocomplete="off" class="pm-Preview-puzzleViewToggle pm-Preview-puzzleViewToggle--scale1" name="scale_variant" value="1" id="scale_variant_1">
+    {% endif %}
     <div class="pm-Preview-cta">
     {% if recent.status in (ACTIVE, FROZEN, BUGGY_UNLISTED) %}
-      <label class="pm-Preview-puzzleViewToggleLabel" for="scale_variant_0">
+      <label class="pm-Preview-puzzleViewToggleLabel" for="scale_variant_0" tabindex="0">
           <pm-icon>full-screen-sprite</pm-icon>
           <span>Full View</span>
       </label>
-      <label class="pm-Preview-puzzleViewToggleLabel" for="scale_variant_1">
+      <label class="pm-Preview-puzzleViewToggleLabel" for="scale_variant_1" tabindex="0">
           <pm-icon>minimize-sprite</pm-icon>
           <span>Scaled View</span>
       </label>
-    {% elif recent.status == IN_QUEUE %}
-        <span class="Button is-disabled">
-          <pm-icon>full-screen-sprite</pm-icon>
-          <span>Full View</span>
-        </span>
-        <span class="Button is-disabled">
-          <pm-icon>minimize-sprite</pm-icon>
-          <span>Scaled View</span>
-        </span>
-    {% elif recent.status == COMPLETED %}
-        {% if not recent.is_recent -%}
-        <pm-dot-require min="200" type="hidden">
-          <a class="Button" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/0'.format(recent.puzzle_id)) }}">
-          Rebuild
-          </a>
-        </pm-dot-require>
-        {% endif %}
     {% elif recent.status == DELETED_REQUEST and not recent.is_original  %}
       {# Puzzle instance removed by owner #}
     {% endif %}
     </div>
 
-    {% for scale in (0, 1) %}
-    {% set scale_variant = "pm-Preview-puzzleView--scale{}".format(scale) %}
     {% if recent.status in (ACTIVE, FROZEN, BUGGY_UNLISTED) %}
-    <input type="radio" autocomplete="off" class="pm-Preview-puzzleViewToggle" name="scale_variant" value="{{ scale }}" id="scale_variant_{{ scale }}"{% if scale == 0 %} checked{% endif %}>
-    <a class="pm-Preview-puzzleView {{ scale_variant }} Button Button--contrast" href="/chill{{ url_for('.page_uri', uri='puzzle/{puzzle_id}/scale/{scale}'.format(puzzle_id=recent.puzzle_id, scale=scale)) }}">
+      {% for scale in (0, 1) %}
+        {% set scale_variant = "pm-Preview-puzzleView--scale{}".format(scale) %}
+        <a class="pm-Preview-puzzleView {{ scale_variant }} Button Button--contrast" href="/chill{{ url_for('.page_uri', uri='puzzle/{puzzle_id}/scale/{scale}'.format(puzzle_id=recent.puzzle_id, scale=scale)) }}">
           {% if scale == 0 -%}
           <span class="pm-Preview-puzzleViewIcon u-elevation1"><pm-icon>full-screen-sprite</pm-icon></span>
           {%- endif -%}
           {%- if scale == 1 -%}
           <span class="pm-Preview-puzzleViewIcon u-elevation1"><pm-icon>minimize-sprite</pm-icon></span>
           {%- endif -%}
+          <div class="pm-Preview-puzzleView {{ scale_variant }}">
+            <div class="u-intrinisicRatio" style="--intrinsicRatio-width: {{width|int}}; --intrinsicRatio-height: {{height|int}};">
+              {%- if recent.url == '' -%}
+                {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
+              {%- else -%}
+                <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{recent.url|safe}}" alt="">
+              {%- endif -%}
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+      {#- The script is inlined right after the input so no need to wait for DOMContentLoad. -#}
+      <script>{% include 'toggle-scale-variant.js.jinja2' %}</script>
     {% else %}
     <div class="pm-Preview-puzzleView">
-    {% endif %}
       <div class="u-intrinisicRatio" style="--intrinsicRatio-width: {{width|int}}; --intrinsicRatio-height: {{height|int}};">
         {%- if recent.url == '' -%}
           {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
@@ -105,14 +103,8 @@
           <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{recent.url|safe}}" alt="">
         {%- endif -%}
       </div>
-    {% if recent.status in (ACTIVE, FROZEN, BUGGY_UNLISTED) %}
-    </a>
-    {% else %}
     </div>
-    {% endif %}
-    {% endfor %}
-  {#- The script is inlined right after the input so no need to wait for DOMContentLoad. -#}
-  <script>{% include 'toggle-scale-variant.js.jinja2' %}</script>
+    {%- endif -%}
 
     {% if recent.link -%}
     <p class="pm-Preview-source u-textTruncate">
@@ -135,6 +127,15 @@
 
     <div class="pm-Preview-actions">
       <div class="pm-Preview-actionsRow">
+        {% if recent.status == COMPLETED %}
+          {% if not recent.is_recent -%}
+          <pm-dot-require min="200" type="hidden">
+            <a class="Button Button--primary" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/0'.format(recent.puzzle_id)) }}">
+            Rebuild
+            </a>
+          </pm-dot-require>
+          {% endif %}
+        {% endif %}
         {% if not recent.is_original or recent.permission == 0 -%} {# instance or original PUBLIC #}
         <pm-player-create-puzzle-instance-link view="buttons" create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}"></pm-player-create-puzzle-instance-link>
         {% endif %}

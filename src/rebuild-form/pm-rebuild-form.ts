@@ -100,7 +100,11 @@ customElements.define(
               id="pieces"
               value=${data.pieceCount}
             />
-            <input type="submit" value="Rebuild the puzzle" />
+            <input
+              class="Button Button--primary"
+              type="submit"
+              value="Rebuild the puzzle"
+            />
           </form>
         `;
       } else {

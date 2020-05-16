@@ -15,8 +15,11 @@
 @media (min-width: 760px) {
   .pm-Preview-puzzle {
     flex: 1 1 500px;
-    max-width: 600px;
+    max-width: 50%;
     order: 2;
+    padding-left: 20px;
+    margin-left: -21px;
+    border-left: 1px solid var(--designtoken-TextColor-onSurface--medium);
   }
 }
 .pm-Preview-puzzle > * + * {
@@ -36,6 +39,39 @@
   justify-content: center;
   user-select: none;
 }
+.pm-Preview-puzzleViewToggleLabel:focus,
+.pm-Preview-puzzleViewToggleLabel:hover,
+.pm-Preview-puzzleViewToggleLabel:active {
+}
+.pm-Preview-puzzleViewToggle--scale0:checked
+  ~ .pm-Preview-cta
+  .pm-Preview-puzzleViewToggleLabel[for="scale_variant_0"],
+.pm-Preview-puzzleViewToggle--scale1:checked
+  ~ .pm-Preview-cta
+  .pm-Preview-puzzleViewToggleLabel[for="scale_variant_1"] {
+}
+
+.pm-Preview-puzzleViewToggleLabel:before {
+  content: "✔";
+  color: transparent;
+  display: inline-block;
+  margin-right: 5px;
+  border-radius: 2px;
+  line-height: 1;
+  font-size: 1.6rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 1px solid var(--designtoken-TextColor-onSurface--disabled);
+}
+.pm-Preview-puzzleViewToggle--scale0:checked
+  ~ .pm-Preview-cta
+  .pm-Preview-puzzleViewToggleLabel[for="scale_variant_0"]:before,
+.pm-Preview-puzzleViewToggle--scale1:checked
+  ~ .pm-Preview-cta
+  .pm-Preview-puzzleViewToggleLabel[for="scale_variant_1"]:before {
+  color: currentcolor;
+}
+
 .pm-Preview-puzzleViewToggleLabel + .pm-Preview-puzzleViewToggleLabel {
   margin-left: 20px;
 }
@@ -48,16 +84,23 @@
   max-width: 384px;
   margin-left: auto;
   margin-right: auto;
-  display: none;
 }
 .pm-Preview-cta ~ .pm-Preview-puzzleView {
   margin-top: 0;
 }
+.pm-Preview-puzzleViewToggle ~ .pm-Preview-puzzleView {
+  display: none;
+}
 
-.pm-Preview-puzzleViewToggle:checked + .pm-Preview-puzzleView {
+.pm-Preview-puzzleView--scale0 {
+}
+.pm-Preview-puzzleViewToggle--scale0:checked ~ .pm-Preview-puzzleView--scale0 {
   display: block;
 }
-.pm-Preview-puzzleView--scale0 {
+.pm-Preview-puzzleView--scale1 {
+}
+.pm-Preview-puzzleViewToggle--scale1:checked ~ .pm-Preview-puzzleView--scale1 {
+  display: block;
 }
 
 .pm-Preview-puzzleViewToggle {
@@ -70,10 +113,11 @@
   display: block;
   padding: 10px;
   margin: 10px;
-  background-color: var(--designtoken-BackgroundColor-dark--dark);
-  color: var(--designtoken-TextColor-onDark);
+  background-color: var(--designtoken-BackgroundColor-accent--dark);
+  color: var(--designtoken-TextColor-onAccent);
   border-radius: 50%;
   border: 2px solid var(--designtoken-TextColor-onDark--medium);
+  box-shadow: 0 0 0 3px currentcolor;
 }
 
 .pm-Preview-img {
