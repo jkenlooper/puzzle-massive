@@ -1,7 +1,12 @@
 @import "../site/viewport-breakpoints.css";
 
 .pm-Frontpage {
-  width: calc(100vw - 20px);
+}
+.pm-Base-main > .pm-Frontpage {
+  padding-right: 10px;
+  padding-left: 10px;
+  margin-right: auto;
+  margin-left: auto;
 }
 
 .pm-Frontpage > * + * {

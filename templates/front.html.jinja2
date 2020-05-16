@@ -104,9 +104,11 @@
 
 {% block main %}
 {% if not page.info.pieces %}
-<p>
-            This jigsaw puzzle is not available. Please choose a different one.
-</p>
+<div class="pm-Frontpage">
+  <p>
+    This jigsaw puzzle is not available. Please choose a different one.
+  </p>
+</div>
 {% else %}
 {{ '[chill route /api/front/{}/ ]'.format(page.info.puzzle_id)|shortcodes }}
 

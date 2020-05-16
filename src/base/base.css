@@ -76,9 +76,6 @@
 
 /* Sets it at the top and center */
 .pm-Base-main {
-  flex: 1 0;
-  margin-left: auto;
-  margin-right: auto;
   min-height: 40vh;
   /* Position needs to be static so piece movements are not offset. */
   position: static;

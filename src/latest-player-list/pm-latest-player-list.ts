@@ -7,12 +7,18 @@ import {
 } from "../site/puzzle-stats.service";
 import "./latest-player-list.css";
 
+interface PlayersByTimeSince {
+  recent: Array<PlayerDetail>;
+  lastHour: Array<PlayerDetail>;
+  lastSevenHours: Array<PlayerDetail>;
+  rest: Array<PlayerDetail>;
+}
 interface TemplateData {
   errorMessage?: string;
   hasError: boolean;
   isReady: boolean;
-  players: Array<PlayerDetail>;
-  recentPlayersCount: number;
+  playerCount: number;
+  players: PlayersByTimeSince;
 }
 
 const tag = "pm-latest-player-list";
@@ -38,12 +44,11 @@ customElements.define(
         this.puzzleId = puzzleId.value;
       }
 
-      const limit = this.attributes.getNamedItem("limit");
-      if (limit && limit.value && !isNaN(parseInt(limit.value))) {
-        this.limit = parseInt(limit.value);
+      const limitAttr = this.attributes.getNamedItem("limit");
+      if (limitAttr && limitAttr.value && !isNaN(parseInt(limitAttr.value))) {
+        this.limit = parseInt(limitAttr.value);
       }
 
-      // TODO: fetch data
       this._setPlayers();
 
       this.render();
@@ -57,9 +62,7 @@ customElements.define(
         return html` ${data.errorMessage} `;
       }
 
-      const limit = this.limit;
-
-      if (data.players.length === 0) {
+      if (data.playerCount === 0) {
         return html`
           <p>
             <small>No players have joined pieces on this puzzle.</small>
@@ -73,40 +76,118 @@ customElements.define(
         return html`
           <div class="pm-LatestPlayerList">
             <h2>
-              ${data.players.length > 1 ? data.players.length : ""} Players
-              ${data.recentPlayersCount > 0
-                ? html`
-                    <em><small>${data.recentPlayersCount} Active</small></em>
-                  `
-                : ""}
+              ${data.playerCount > 1 ? data.playerCount : ""} Players
             </h2>
-            <div class="pm-LatestPlayerList-list" role="list">
-              ${itemsWithTimeSince()}
-            </div>
+            ${data.players.recent.length > 0
+              ? html`
+                  <div
+                    class="pm-LatestPlayerList-group pm-LatestPlayerList-group--recent"
+                  >
+                    ${data.players.recent.length} players in the last 5 minutes
+                    <div class="pm-LatestPlayerList-list" role="list">
+                      ${itemsWithTimeSince(
+                        data.players.recent,
+                        data.players.recent.length > 10 ? "condensed" : "row"
+                      )}
+                    </div>
+                  </div>
+                `
+              : ""}
+            ${data.players.lastHour.length > 0
+              ? html`
+                  <div
+                    class="pm-LatestPlayerList-group pm-LatestPlayerList-group--lastHour"
+                  >
+                    ${data.players.lastHour.length} players in the last hour
+                    <div class="pm-LatestPlayerList-list" role="list">
+                      ${itemsWithTimeSince(
+                        data.players.lastHour,
+                        data.players.recent.length > 15 ? "condensed" : "row"
+                      )}
+                    </div>
+                  </div>
+                `
+              : ""}
+            ${data.players.lastSevenHours.length > 0
+              ? html`
+                  <div
+                    class="pm-LatestPlayerList-group pm-LatestPlayerList-group--lastSevenHours"
+                  >
+                    ${data.players.lastSevenHours.length} players in the last 7
+                    hours
+                    <div class="pm-LatestPlayerList-list" role="list">
+                      ${itemsWithTimeSince(
+                        data.players.lastSevenHours,
+                        data.players.recent.length > 15 ? "condensed" : "row"
+                      )}
+                    </div>
+                  </div>
+                `
+              : ""}
+            ${data.players.rest.length > 0
+              ? html`
+                  <div
+                    class="pm-LatestPlayerList-group pm-LatestPlayerList-group--rest"
+                  >
+                    ${data.players.rest.length === 1
+                      ? html`1 player ${data.players.rest[0].timeSince} ago`
+                      : html`${data.players.rest.length} players
+                          <span class="u-textNoWrap"
+                            >from ${data.players.rest[0].timeSince}
+                            ${data.players.rest[0].timeSince ===
+                            data.players.rest[data.players.rest.length - 1]
+                              .timeSince
+                              ? ""
+                              : html`
+                                  to
+                                  ${data.players.rest[
+                                    data.players.rest.length - 1
+                                  ].timeSince}
+                                `}
+                            ago</span
+                          >`}
+                    <div class="pm-LatestPlayerList-list" role="list">
+                      ${itemsWithTimeSince(
+                        data.players.rest,
+                        data.players.rest.length > 10 ? "condensed" : "row"
+                      )}
+                    </div>
+                  </div>
+                `
+              : ""}
           </div>
         `;
       }
-      function itemsWithTimeSince() {
-        const playerSlice = data.players.slice(0, limit);
+      function itemsWithTimeSince(players, variant) {
         return html`
-          ${playerSlice.map((item) => {
+          ${players.map((item) => {
             return html`
               <div
                 class=${classMap({
                   "pm-LatestPlayerList-item": true,
+                  "pm-LatestPlayerList-item--row": variant === "row",
+                  "pm-LatestPlayerList-item--condensed":
+                    variant === "condensed",
                   "is-active": item.isRecent,
+                  "u-textNoWrap": true,
                 })}
                 role="listitem"
               >
-                <span class="pm-LatestPlayerList-timeSince">
-                  ${item.timeSince}
-                </span>
-                <span class="pm-LatestPlayerList-score">
-                  ${item.score}
-                </span>
+                ${item.score
+                  ? html`<span class="pm-LatestPlayerList-score"
+                      >${item.score}<span
+                        class="pm-LatestPlayerList-scoreLabel"
+                      >
+                        Piece${item.score > 1 ? "s" : ""}</span
+                      ></span
+                    >`
+                  : ""}
                 <span class="pm-LatestPlayerList-playerBit">
                   <pm-player-bit player=${item.id}></pm-player-bit>
                 </span>
+                <span class="pm-LatestPlayerList-timeSince"
+                  >${item.timeSince}</span
+                >
               </div>
             `;
           })}
@@ -119,13 +200,27 @@ customElements.define(
         isReady: this.isReady,
         hasError: this.hasError,
         errorMessage: this.errorMessage,
-        players: this.players,
-        recentPlayersCount: this.players.reduce((acc, player) => {
-          if (player.isRecent) {
-            acc += 1;
+        playerCount: this.players.length,
+        players: this.players.reduce(
+          (acc, player) => {
+            if (player.isRecent) {
+              acc.recent.push(player);
+            } else if (player.seconds_from_now <= 60 * 60) {
+              acc.lastHour.push(player);
+            } else if (player.seconds_from_now <= 7 * (60 * 60)) {
+              acc.lastSevenHours.push(player);
+            } else {
+              acc.rest.push(player);
+            }
+            return acc;
+          },
+          <PlayersByTimeSince>{
+            recent: [],
+            lastHour: [],
+            lastSevenHours: [],
+            rest: [],
           }
-          return acc;
-        }, 0),
+        ),
       };
     }
 
@@ -137,7 +232,7 @@ customElements.define(
       return puzzleStatsService
         .getPlayerStatsOnPuzzle(this.puzzleId)
         .then((playerStats: PlayerStatsData) => {
-          this.players = playerStats.players;
+          this.players = playerStats.players.slice(0, this.limit);
         })
         .catch(() => {
           this.hasError = true;

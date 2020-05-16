@@ -1,26 +1,78 @@
 .pm-LatestPlayerList {
 }
 
+.pm-LatestPlayerList-group {
+  padding: 5px;
+  border: 1px solid transparent;
+}
+.pm-LatestPlayerList-group--recent {
+  background-color: var(--designtoken-BackgroundColor-primary--light);
+  border-color: var(--designtoken-BackgroundColor-primary--dark);
+  color: var(--designtoken-TextColor-onPrimary);
+}
+
 .pm-LatestPlayerList-list {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .pm-LatestPlayerList-item {
-  display: inline-block;
+  align-items: center;
+  position: relative;
+  display: inline-flex;
+  padding: 5px 2px 5px 10px;
+  border: 1px solid var(--designtoken-TextColor-onLight--disabled);
+}
+.pm-LatestPlayerList-group--recent .pm-LatestPlayerList-item {
+  border-color: var(--designtoken-TextColor-onPrimary--disabled);
 }
 
 .is-active.pm-LatestPlayerList-item {
-  display: block;
+  color: var(--designtoken-TextColor-accent);
+}
+
+.pm-LatestPlayerList-item--row {
+  flex: 0 1 auto;
+  padding-right: 10px;
+  min-width: 300px;
+}
+.pm-LatestPlayerList-item--condensed {
+  flex: 1 1 auto;
 }
 
 .pm-LatestPlayerList-timeSince {
-  display: none;
+  flex: 1 0 auto;
+  display: inline-block;
+  text-align: right;
 }
-.is-active.pm-LatestPlayerList-item .pm-LatestPlayerList-timeSince {
+.pm-LatestPlayerList-item--row .pm-LatestPlayerList-timeSince {
   display: inline;
+}
+.pm-LatestPlayerList-item--condensed .pm-LatestPlayerList-timeSince {
+  display: none;
 }
 
 .pm-LatestPlayerList-playerBit {
 }
 
 .pm-LatestPlayerList-score {
+  border: 1px solid var(--designtoken-TextColor-onLight--disabled);
+  background-color: var(--designtoken-BackgroundColor-dark);
+  color: var(--designtoken-TextColor-onDark--medium);
+  padding: 2px;
+  font-size: small;
+  line-height: 1;
+  margin-left: -10px;
+  margin-right: 4px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+.pm-LatestPlayerList-scoreLabel {
+  display: none;
+}
+.pm-LatestPlayerList-item--row .pm-LatestPlayerList-scoreLabel {
+  display: inline;
 }

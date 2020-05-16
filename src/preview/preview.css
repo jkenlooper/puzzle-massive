@@ -106,7 +106,11 @@
 }
 @media (min-width: 760px) {
   .pm-Preview-players {
-    flex: 1 1 400px;
     order: 1;
+    flex: 1 1 400px;
+    padding-right: 20px;
+    margin-right: 20px;
+    border-right: 1px solid var(--designtoken-TextColor-onSurface--medium);
+    text-align: right;
   }
 }

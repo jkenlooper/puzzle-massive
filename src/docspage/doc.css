@@ -1,6 +1,10 @@
 .pm-Doc {
-  margin-right: 10px;
-  margin-left: 10px;
+}
+.pm-Base-main > .pm-Doc {
+  padding-right: 10px;
+  padding-left: 10px;
+  margin-right: auto;
+  margin-left: auto;
 }
 
 @media (min-width: 42em) {
@@ -12,7 +16,7 @@
 }
 @media (min-width: 42em) {
   .pm-Doc-breakOut {
-    margin-left: calc((((100vw - 20px) - 40em) / 2) * -1);
-    width: calc(100vw - 20px);
+    margin-left: calc(((100vw - (40em - (10px * 2))) / 2) * -1);
+    width: 100vw;
   }
 }

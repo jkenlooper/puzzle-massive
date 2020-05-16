@@ -62,16 +62,6 @@
           <pm-icon>minimize-sprite</pm-icon>
           <span>Scaled View</span>
       </label>
-        {#
-        <a class="Button" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/0'.format(recent.puzzle_id)) }}">
-          <pm-icon>full-screen-sprite</pm-icon>
-          <span>Full View</span>
-        </a>
-        <a class="Button" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/1'.format(recent.puzzle_id)) }}">
-          <pm-icon>minimize-sprite</pm-icon>
-          <span>Scaled View</span>
-        </a>
-        #}
     {% elif recent.status == IN_QUEUE %}
         <span class="Button is-disabled">
           <pm-icon>full-screen-sprite</pm-icon>
