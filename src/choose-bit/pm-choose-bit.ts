@@ -117,20 +117,23 @@ customElements.define(
           <div class="pm-ChooseBit-items">
             ${items()}
           </div>
-          <button
-            ?disabled=${self.isReloading}
-            @click=${self.handleClickMore.bind(self)}
-          >
-            More
-          </button>
-          ${data.hasResponseMessage
-            ? html`
-                <pm-response-message
-                  message=${data.responseMessage}
-                  name=${data.responseName}
-                ></pm-response-message>
-              `
-            : ""}
+          <div class="u-paddingTopSm u-paddingBottomSm u-textCenter">
+            <button
+              class="Button Button--primary"
+              ?disabled=${self.isReloading}
+              @click=${self.handleClickMore.bind(self)}
+            >
+              More
+            </button>
+            ${data.hasResponseMessage
+              ? html`
+                  <pm-response-message
+                    message=${data.responseMessage}
+                    name=${data.responseName}
+                  ></pm-response-message>
+                `
+              : ""}
+          </div>
         </div>
       `;
 
@@ -164,7 +167,7 @@ customElements.define(
                 (item) => {
                   return html`
                     <span class="pm-ChooseBit-item" role="list-item">
-                      <button @click=${claimBit.bind(self)}>
+                      <button class="Button" @click=${claimBit.bind(self)}>
                         <img
                           src="${self.mediaPath}bit-icons/64-${item}.png"
                           width="64"

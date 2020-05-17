@@ -64,6 +64,7 @@ customElements.define(
         >
           <input type="hidden" name="token" value=${data.token} />
           <button
+            class="Button"
             form="claim-player-by-token-form"
             @click=${data.submitHandler}
           >

@@ -2,14 +2,16 @@
 {% set ngModule = 'profilepage' %}
 
 {% block main %}
-<section  class="pm-Profilepage">
+<section class="pm-Doc">
   <h1>Player Profile</h1>
 
   <div>
       <pm-profile-bit media-path="{{ url_for('send_media_file', filename='') }}" score dots name claim player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
       <details class="u-marginTopMd u-marginBottomMd">
         <summary>Change Bit Icon</summary>
-        <pm-choose-bit limit="48" message="" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
+        <div class="pm-Doc-breakOut">
+          <pm-choose-bit limit="48" message="" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
+        </div>
       </details>
 
       <details class="u-marginTopMd u-marginBottomMd">

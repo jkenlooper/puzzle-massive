@@ -106,7 +106,11 @@ customElements.define(
             name="email"
             value=${data.email}
           />
-          <button form="email-register-form" @click=${data.submitEmailHandler}>
+          <button
+            class="Button"
+            form="email-register-form"
+            @click=${data.submitEmailHandler}
+          >
             Register E-mail
           </button>
 

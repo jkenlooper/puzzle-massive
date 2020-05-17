@@ -9,16 +9,28 @@
 }
 
 .pm-UploadForm-row {
-  display: flex;
+}
+@media (min-width: 600px) {
+  .pm-UploadForm-row {
+    display: flex;
+  }
 }
 
 .pm-UploadForm-row > *:first-child {
-  flex: none;
-  width: 11em;
+}
+@media (min-width: 600px) {
+  .pm-UploadForm-row > *:first-child {
+    flex: none;
+    width: 11em;
+  }
 }
 
 .pm-UploadForm-row > :first-child:last-child {
-  flex: 1 0 auto;
+}
+@media (min-width: 600px) {
+  .pm-UploadForm-row > :first-child:last-child {
+    flex: 1 0 auto;
+  }
 }
 
 .pm-UploadForm-colorPicker {

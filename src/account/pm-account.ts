@@ -69,6 +69,7 @@ customElements.define(
                     `
                   : html`
                       <button
+                        class="Button"
                         @click=${data.generateBitLink}
                         ?disabled=${data.isGeneratingLoginLink}
                       >

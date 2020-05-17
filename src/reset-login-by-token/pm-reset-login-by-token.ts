@@ -77,6 +77,7 @@ customElements.define(
                   <span class="u-block">
                     <input type="hidden" name="token" value=${data.token} />
                     <button
+                      class="Button"
                       form="reset-login-by-token-form"
                       @click=${data.submitHandler}
                     >

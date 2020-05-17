@@ -26,9 +26,9 @@
     <div class="pm-UploadForm-row">
       <label for="link">The website that the image is found on.</label>
       <div>
-        <input id="link-field" style="width:100%" type="text" name="link" value="" placeholder="https://unsplash.com/photos/oTQVwECws8o" maxlength="1000">
+        <input id="link-field" style="width:100%" type="text" name="link" value="" placeholder="https://unsplash.com/photos/4nr59MLWI9E" maxlength="1000">
         <p>
-        <em>If the picture is from <a href="https://unsplash.com/">Unsplash</a> add the url like this: <b>https://unsplash.com/photos/oTQVwECws8o</b></em>
+        <em>If the picture is from <a href="https://unsplash.com/">Unsplash</a> add the url like this: <b class="u-block">https://unsplash.com/photos/4nr59MLWI9E</b></em>
         </p>
         {% if not config.UNSPLASH_APPLICATION_ID %}
         <p>
@@ -39,7 +39,7 @@
     </div>
     <div class="pm-UploadForm-row">
       <label for="description">Description</label>
-      <textarea id="description" name="description" maxlength="1000"></textarea>
+      <textarea style="width:100%" id="description" name="description" maxlength="1000"></textarea>
     </div>
     <div class="pm-UploadForm-row">
       <label for="upload_file">Select an image for the puzzle</label>

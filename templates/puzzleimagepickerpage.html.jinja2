@@ -7,7 +7,9 @@
   <section>
     <h1>{{ public_image_count.value }} Unique Puzzle Images</h1>
 
-    <pm-puzzle-image-picker front-fragment-href="/chill{{ url_for('.page_uri', uri='front') }}"></pm-puzzle-image-picker>
+    <div class="pm-PuzzleListPage-listing">
+      <pm-puzzle-image-picker front-fragment-href="/chill{{ url_for('.page_uri', uri='front') }}"></pm-puzzle-image-picker>
+    </div>
   </section>
 
 </div>

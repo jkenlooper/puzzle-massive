@@ -1,3 +1,17 @@
 .pm-PuzzleListPage {
-  width: calc(100vw - 50px);
+}
+.pm-Base-main > .pm-PuzzleListPage {
+  padding-right: 10px;
+  padding-left: 10px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+@media (min-width: 62em) {
+  .pm-PuzzleListPage {
+    max-width: 60em;
+  }
+}
+
+.pm-PuzzleListPage-listing {
 }

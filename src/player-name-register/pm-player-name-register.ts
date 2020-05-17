@@ -84,6 +84,7 @@ customElements.define(
             placeholder="Hedgewig von Bitty"
           />
           <button
+            class="Button"
             form="player-name-register-form"
             @click=${data.submitNameHandler}
           >

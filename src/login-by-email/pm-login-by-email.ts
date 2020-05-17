@@ -69,7 +69,11 @@ customElements.define(
             value=""
           />
 
-          <button form="login-by-email-form" @click=${data.submitHandler}>
+          <button
+            class="Button"
+            form="login-by-email-form"
+            @click=${data.submitHandler}
+          >
             Login by E-mail
           </button>
 

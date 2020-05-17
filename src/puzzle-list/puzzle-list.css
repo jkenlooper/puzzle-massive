@@ -7,6 +7,17 @@
 .pm-PuzzleList {
 }
 
+.pm-PuzzleListPage-listing .pm-PuzzleList {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+@media (min-width: 62em) {
+  .pm-PuzzleListPage-listing .pm-PuzzleList {
+    margin-left: calc(((100vw - (60em - (10px * 2))) / 2) * -1);
+    width: 100vw;
+  }
+}
+
 .pm-PuzzleList--card {
   display: grid;
   grid-template-columns: repeat(

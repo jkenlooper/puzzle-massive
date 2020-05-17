@@ -321,7 +321,7 @@ export default class PmFilterGroup extends HTMLElement {
         ${data.filtertype === FilterGroupType.Pagination
           ? html`
               <button
-                class="pm-FilterGroup-input"
+                class="Button pm-FilterGroup-input"
                 @click=${data.itemValueChangeHandler}
                 group=${data.group}
                 name=${data.name}
@@ -338,7 +338,7 @@ export default class PmFilterGroup extends HTMLElement {
                 })}
               >
                 <button
-                  class="pm-FilterGroup-input"
+                  class="Button pm-FilterGroup-input"
                   @click=${data.itemValueChangeHandler}
                   group=${data.group}
                   name=${data.name}
@@ -357,7 +357,7 @@ export default class PmFilterGroup extends HTMLElement {
               >
                 &hellip;
                 <button
-                  class="pm-FilterGroup-input"
+                  class="Button pm-FilterGroup-input"
                   @click=${data.itemValueChangeHandler}
                   group=${data.group}
                   name=${data.name}
@@ -368,7 +368,7 @@ export default class PmFilterGroup extends HTMLElement {
                 </button>
               </span>
               <button
-                class="pm-FilterGroup-input"
+                class="Button pm-FilterGroup-input"
                 @click=${data.itemValueChangeHandler}
                 group=${data.group}
                 name=${data.name}

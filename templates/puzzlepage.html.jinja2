@@ -167,6 +167,16 @@
           <pm-icon size="sm">arrow-left-circle-sprite</pm-icon>
         </a>
 
+        {% if scale == 1 %}
+        <a class="Button" href="/chill{{ url_for('.page_uri', uri='puzzle/{puzzle_id}/scale/0'.format(puzzle_id=puzzle.puzzle_id)) }}">
+          <pm-icon size="sm">full-screen-sprite</pm-icon>
+        </a>
+        {% else %}
+        <a class="Button" href="/chill{{ url_for('.page_uri', uri='puzzle/{puzzle_id}/scale/1'.format(puzzle_id=puzzle.puzzle_id)) }}">
+          <pm-icon size="sm">minimize-sprite</pm-icon>
+        </a>
+        {% endif %}
+
         {% if isPuzzleVisible %}
         {% if preview_full.url != '' %}
         {# TODO: Convert to web component #}

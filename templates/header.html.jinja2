@@ -1,16 +1,6 @@
 {% macro header(is_mock=False, show_profile_bit=True, show_instance_list=True) -%}
 <div id="header" class="pm-Header">
 <div class="pm-Header-content">
-  <div class="pm-Header-profile">
-      {% if is_mock == True -%}
-        {% if show_profile_bit == True -%}
-        profile-bit
-        {%- endif -%}
-      {%- else -%}
-      <pm-profile-bit media-path="{{ url_for('send_media_file', filename='') }}" player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
-      {%- endif -%}
-  </div>
-
   <div class="pm-Header-logo">
     {% from './logo.html.jinja2' import logo %}{{ logo('header') }}
   </div>
@@ -24,6 +14,16 @@
       {%- else -%}
       <pm-player-puzzle-instance-list class="u-block" player-puzzle-list-href="/chill{{ url_for('.page_uri', uri='player-puzzle-list') }}"></pm-player-puzzle-instance-list>
       {%- endif -%}
+  <div class="pm-Header-profile">
+      {% if is_mock == True -%}
+        {% if show_profile_bit == True -%}
+        profile-bit
+        {%- endif -%}
+      {%- else -%}
+      <pm-profile-bit media-path="{{ url_for('send_media_file', filename='') }}" player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
+      {%- endif -%}
+  </div>
+
   </div>
 
 </div>
