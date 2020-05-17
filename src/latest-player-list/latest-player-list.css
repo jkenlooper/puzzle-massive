@@ -4,6 +4,10 @@
 .pm-LatestPlayerList-group {
   padding: 5px;
 }
+.pm-LatestPlayerList-group + .pm-LatestPlayerList-group {
+  margin-top: var(--spaceMd);
+}
+
 .pm-LatestPlayerList-group--recent {
   color: var(--designtoken-BackgroundColor-primary--dark);
 }
@@ -37,6 +41,7 @@
 .pm-LatestPlayerList-item--row {
 }
 .pm-LatestPlayerList-item--condensed {
+  flex: 0 1 200px;
 }
 
 .pm-LatestPlayerList-timeSince {
@@ -44,6 +49,7 @@
 .pm-LatestPlayerList-item--row .pm-LatestPlayerList-timeSince {
 }
 .pm-LatestPlayerList-item--condensed .pm-LatestPlayerList-timeSince {
+  display: none;
 }
 
 .pm-LatestPlayerList-playerBit {
@@ -69,6 +75,9 @@
   display: inline;
 }
 .pm-LatestPlayerList-item--row .pm-LatestPlayerList-badgeLabel {
+}
+.pm-LatestPlayerList-item--condensed .pm-LatestPlayerList-badgeLabel {
+  display: none;
 }
 
 .pm-LatestPlayerList-score {

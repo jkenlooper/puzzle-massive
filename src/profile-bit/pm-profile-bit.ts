@@ -146,7 +146,14 @@ customElements.define(
                 ${data.isProcessingClaimUser
                   ? html` ... `
                   : html`
-                      <button @click=${data.claimUserHandler}>claim</button>
+                      <div class="u-marginTopSm">
+                        <button
+                          class="Button Button--accent"
+                          @click=${data.claimUserHandler}
+                        >
+                          Claim
+                        </button>
+                      </div>
                     `}
               `
             : html``}

@@ -14,9 +14,13 @@
 }
 .pm-Doc-breakOut {
 }
+.pm-Doc > .pm-Doc-breakOut {
+}
 @media (min-width: 42em) {
   .pm-Doc-breakOut {
-    margin-left: calc(((100vw - (40em - (10px * 2))) / 2) * -1);
-    width: 100vw;
+  }
+  .pm-Doc > .pm-Doc-breakOut {
+    margin-left: calc(((100vw - 40em) / 2) * -1);
+    width: calc(100vw - (10px * 2));
   }
 }

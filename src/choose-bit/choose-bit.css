@@ -21,7 +21,7 @@
   display: flex;
   flex: 1;
   flex-wrap: wrap;
-  justify-content: flex-start;
+  justify-content: center;
 }
 
 .pm-ChooseBit-item {

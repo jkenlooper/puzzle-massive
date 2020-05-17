@@ -49,6 +49,8 @@
 {# deleted on request from the owner. Can be deleted automatically after completion or date or? #}
 {% set DELETED_REQUEST  = -13 %}
 
+{# Puzzle is temporarily in maintenance mode. Usually when running a backup script. #}
+{% set MAINTENANCE  = -30 %}
 
 {# Puzzle is visible if the puzzle is active or if the puzzle has recently been complete. #}
 {% set isPuzzleVisible = puzzle.status in (ACTIVE, COMPLETED, FROZEN, BUGGY_UNLISTED) and not (puzzle.status == COMPLETED and puzzle.is_recent != 1) %}
@@ -75,6 +77,8 @@
     {%- set _pagetitle = 'Jigsaw Puzzle is Waiting in Render Queue' -%}
   {% elif page.info.status == RENDERING %}
     {%- set _pagetitle = 'Jigsaw Puzzle is Being Rendered' -%}
+  {% elif page.info.status == MAINTENANCE %}
+    {%- set _pagetitle = 'Jigsaw Puzzle is Temporarily Not Available' -%}
   {% else %}
     {%- set _pagetitle = 'Jigsaw Puzzle Not Available' -%}
   {%- endif %}
@@ -137,6 +141,9 @@
   {% elif puzzle.status == RENDERING %}
     {% set msg = "The Puzzle is rendering." %}
     {% set title = "Rendering" %}
+  {% elif page.info.status == MAINTENANCE %}
+    {% set msg = "The Jigsaw Puzzle is Temporarily Not Available." %}
+    {% set title = "Maintenance" %}
   {% elif puzzle.status == DELETED_LICENSE %}
     {% set msg = "The image for this puzzle has a copyright that doesn't allow usage on this website." %}
     {% set title = "Deleted" %}

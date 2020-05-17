@@ -17,6 +17,7 @@
 {% set REBUILD          = -3  %}
 {% set IN_RENDER_QUEUE  = -5  %}
 {% set RENDERING        = -6  %}
+{% set MAINTENANCE      = -30 %}
 
 {% set QUEUE_WINNING_BID= 1   %}
 
@@ -47,8 +48,12 @@
         Jigsaw Puzzle Not Available
     {%- elif recent.status in (REBUILD, IN_RENDER_QUEUE) -%}
         Jigsaw Puzzle is Waiting in Render Queue
-    {%- elif recent.status in (RENDERING) -%}
+    {%- elif recent.status == RENDERING -%}
         Jigsaw Puzzle is Being Rendered
+    {%- elif recent.status == MAINTENANCE -%}
+        Jigsaw Puzzle is Temporarily Not Available
+    {% else %}
+        Jigsaw Puzzle Not Available
     {%- endif -%}
     </h2>
 
@@ -68,6 +73,8 @@
       </label>
     {% elif recent.status == DELETED_REQUEST and not recent.is_original  %}
       {# Puzzle instance removed by owner #}
+    {% else %}
+      {# not available #}
     {% endif %}
     </div>
 

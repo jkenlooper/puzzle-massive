@@ -34,6 +34,10 @@
 
 {# puzzle is currently being rendered #}
 {% set RENDERING        = -6  %}
+{% set RENDERING_FAILED = -7  %}
+
+{# Puzzle is temporarily in maintenance mode. Usually when running a backup script. #}
+{% set MAINTENANCE  = -30 %}
 
 {# permission to use image does not comply #}
 {% set DELETED_LICENSE  = -10 %}
@@ -64,6 +68,8 @@
     {%- set _pagetitle = 'Jigsaw Puzzle is Waiting in Render Queue' -%}
   {% elif page.info.status == RENDERING %}
     {%- set _pagetitle = 'Jigsaw Puzzle is Being Rendered' -%}
+  {% elif page.info.status == MAINTENANCE %}
+    {%- set _pagetitle = 'Jigsaw Puzzle is Temporarily Not Available' -%}
   {% else %}
     {%- set _pagetitle = 'Jigsaw Puzzle Not Available' -%}
   {%- endif %}

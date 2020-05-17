@@ -5,32 +5,30 @@
 <section class="pm-Doc">
   <h1>Player Profile</h1>
 
-  <div>
-      <pm-profile-bit media-path="{{ url_for('send_media_file', filename='') }}" score dots name claim player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
-      <details class="u-marginTopMd u-marginBottomMd">
-        <summary>Change Bit Icon</summary>
-        <div class="pm-Doc-breakOut">
-          <pm-choose-bit limit="48" message="" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
-        </div>
-      </details>
+  <pm-profile-bit media-path="{{ url_for('send_media_file', filename='') }}" score dots name claim player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
 
-      <details class="u-marginTopMd u-marginBottomMd">
-        <summary>Change Player Name</summary>
-        <p>Changing the player name will cost 100 dots. <small><em>Every day your balance will be set to a minimum of 1300 dots.</em></small></p>
-        <pm-dot-require min="100" type="blur">
-          <p>
-            The player name is <b>not</b> used when logging into your account
-            and can be anything that you would like. Names are limited to 26
-            characters and must be unique from other player names.
-          </p>
-          <pm-player-name-register></pm-player-name-register>
-          <p>
-            Player names may be unapproved for any reason.
-          </p>
-        </pm-dot-require>
-      </details>
+  <div class="pm-Doc-breakOut u-textCenter">
+    <details class="u-marginTopMd u-marginBottomMd">
+      <summary>Change Bit Icon</summary>
+        <pm-choose-bit limit="48" message="" media-path="{{ url_for('send_media_file', filename='') }}"></pm-choose-bit>
+    </details>
   </div>
 
+  <details class="u-marginTopMd u-marginBottomMd">
+    <summary>Change Player Name</summary>
+    <p>Changing the player name will cost 100 dots. <small><em>Every day your balance will be set to a minimum of 1300 dots.</em></small></p>
+    <pm-dot-require min="100" type="blur">
+      <p>
+        The player name is <b>not</b> used when logging into your account
+        and can be anything that you would like. Names are limited to 26
+        characters and must be unique from other player names.
+      </p>
+      <pm-player-name-register></pm-player-name-register>
+      <p>
+        Player names may be unapproved for any reason.
+      </p>
+    </pm-dot-require>
+  </details>
 
   <div class="u-marginTopMd u-marginBottomMd">
     <div class="pm-Profilepage-account">
@@ -58,7 +56,8 @@
             </pm-player-email-register>
           </details>
 
-        <div class="pm-Profilepage-anonymousLogin u-marginTopMd u-marginBottomMd">
+        <hr class="u-marginTopLg">
+        <div class="pm-Profilepage-anonymousLogin u-marginTopLg u-marginBottomMd">
           <pm-account></pm-account>
         </div>
       </div>
