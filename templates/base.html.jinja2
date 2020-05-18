@@ -23,7 +23,7 @@
   </div>
 </nav>
 
-  <main class="pm-Base-main" role="main">
+  <main class="pm-Base-main" role="main" {% if ngModule == 'puzzlepage' %}style="flex: 1 0; margin-left:auto; margin-right:auto;"{% endif %}>
     {% block main %}
     {% endblock %}
   </main>
