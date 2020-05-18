@@ -21,7 +21,7 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
-## [Unreleased] - ...
+## [2.7.0] - 2020-05-17
 
 ### Changed
 
