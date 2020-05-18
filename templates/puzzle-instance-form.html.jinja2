@@ -12,6 +12,7 @@
 <form enctype="multipart/form-data" id="puzzle-instance-form" method="post" action="/newapi/puzzle-instance/">
   <input type="hidden" name="puzzle_id" value="{{puzzle.puzzle_id}}">
 
+  <input type="checkbox" id="copypuzzlepieces" name="fork" value="1">
   <div class="pm-UploadForm">
 
     <div class="pm-UploadForm-row">
@@ -39,13 +40,24 @@
     </div>
 
     <div class="pm-UploadForm-row">
-      <label for="pieces">
+      <label for="permission">
         Unlisted
       </label>
       <div>
         <input type="checkbox" id="permission" name="permission" value="-1">
         <p>
           Check this box to <em>not</em> have this puzzle publicly listed on the site.
+        </p>
+      </div>
+    </div>
+
+    <div class="pm-UploadForm-row">
+      <label for="copypuzzlepieces">
+        Copy Pieces
+      </label>
+      <div>
+        <p>
+        Copy pieces and current piece positions from the puzzle instead of rendering new puzzle with a different piece count.
         </p>
       </div>
     </div>
@@ -80,11 +92,11 @@
 
 
     {# TODO: Should a new instance description be allowed?  It could show after the original description.
+    #}
     <div class="pm-UploadForm-row">
       <label for="instance_description">Instance Description</label>
       <textarea id="instance_description" name="instance_description" maxlength="1000"></textarea>
     </div>
-    #}
 
 
     <div class="u-textRight">

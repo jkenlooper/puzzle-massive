@@ -17,6 +17,7 @@ from api.constants import (
     FROZEN,
     REBUILD,
     IN_RENDER_QUEUE,
+    MAINTENANCE,
     RENDERING,
     CLASSIC,
     QUEUE_NEW,
@@ -26,8 +27,7 @@ from api.constants import (
 class CreatePuzzleInstanceView(MethodView):
     """
     Handle a form submission to create a new puzzle instance from an existing puzzle.
-    The player needs to have a minimum of 2400 dots
-    An available puzzle instance slot
+    The player needs to have an available puzzle instance slot.
     """
 
     decorators = [user_not_banned]
@@ -47,6 +47,9 @@ class CreatePuzzleInstanceView(MethodView):
 
         bg_color = check_bg_color(args.get("bg_color", "#808080")[:50])
 
+        # Check description
+        instance_description = args.get("instance_description", "")
+
         # Check puzzle_id
         original_puzzle_id = args.get("puzzle_id")
         if not original_puzzle_id:
@@ -56,6 +59,12 @@ class CreatePuzzleInstanceView(MethodView):
         permission = int(args.get("permission", PUBLIC))
         if permission not in (PUBLIC, PRIVATE):
             abort(400)
+
+        # Check fork
+        fork = int(args.get("fork", "0"))
+        if fork not in ("0", "1"):
+            abort(400)
+        fork = fork == "1"
 
         user = int(
             current_app.secure_cookie.get(u"user")
@@ -83,30 +92,51 @@ class CreatePuzzleInstanceView(MethodView):
             abort(400)
 
         # Check if puzzle is valid to be a new puzzle instance
-        result = cur.execute(
-            fetch_query_string("select-valid-puzzle-for-new-puzzle-instance.sql"),
-            {
-                "puzzle_id": original_puzzle_id,
-                "ACTIVE": ACTIVE,
-                "IN_QUEUE": IN_QUEUE,
-                "COMPLETED": COMPLETED,
-                "FROZEN": FROZEN,
-                "REBUILD": REBUILD,
-                "IN_RENDER_QUEUE": IN_RENDER_QUEUE,
-                "RENDERING": RENDERING,
-                "PUBLIC": PUBLIC,
-            },
-        ).fetchall()
-        if not result:
-            # Puzzle does not exist or is not a valid puzzle to create instance from.
-            cur.close()
-            db.commit()
-            abort(400)
+        if not fork:
+            # Creating a new puzzle instance
+            result = cur.execute(
+                fetch_query_string("select-valid-puzzle-for-new-puzzle-instance.sql"),
+                {
+                    "puzzle_id": original_puzzle_id,
+                    "ACTIVE": ACTIVE,
+                    "IN_QUEUE": IN_QUEUE,
+                    "COMPLETED": COMPLETED,
+                    "FROZEN": FROZEN,
+                    "REBUILD": REBUILD,
+                    "IN_RENDER_QUEUE": IN_RENDER_QUEUE,
+                    "RENDERING": RENDERING,
+                    "PUBLIC": PUBLIC,
+                },
+            ).fetchall()
+            if not result:
+                # Puzzle does not exist or is not a valid puzzle to create instance from.
+                cur.close()
+                db.commit()
+                abort(400)
+        else:
+            # Creating a copy of existing puzzle pieces (forking)
+            result = cur.execute(
+                fetch_query_string(
+                    "select-valid-puzzle-for-new-puzzle-instance-fork.sql"
+                ),
+                {
+                    "puzzle_id": original_puzzle_id,
+                    "ACTIVE": ACTIVE,
+                    "IN_QUEUE": IN_QUEUE,
+                    "FROZEN": FROZEN,
+                    "PUBLIC": PUBLIC,
+                },
+            ).fetchall()
+            if not result:
+                # Puzzle does not exist or is not a valid puzzle to create instance from.
+                cur.close()
+                db.commit()
+                abort(400)
 
         (result, col_names) = rowify(result, cur.description)
-        originalPuzzleData = result[0]
+        sourcePuzzleData = result[0]
 
-        puzzle_id = generate_new_puzzle_id(originalPuzzleData["name"])
+        puzzle_id = generate_new_puzzle_id(sourcePuzzleData["name"])
 
         # Create puzzle dir
         puzzle_dir = os.path.join(current_app.config.get("PUZZLE_RESOURCES"), puzzle_id)
@@ -114,14 +144,16 @@ class CreatePuzzleInstanceView(MethodView):
 
         d = {
             "puzzle_id": puzzle_id,
-            "pieces": pieces,
-            "name": originalPuzzleData["name"],
-            "link": originalPuzzleData["link"],
-            "description": originalPuzzleData["description"],
+            "pieces": pieces if not fork else sourcePuzzleData["pieces"],
+            "name": sourcePuzzleData["name"],
+            "link": sourcePuzzleData["link"],
+            "description": sourcePuzzleData["description"]
+            if not instance_description
+            else instance_description,
             "bg_color": bg_color,
             "owner": user,
             "queue": QUEUE_NEW,
-            "status": IN_RENDER_QUEUE,
+            "status": IN_RENDER_QUEUE if not fork else MAINTENANCE,
             "permission": permission,
         }
         cur.execute(
@@ -129,7 +161,6 @@ class CreatePuzzleInstanceView(MethodView):
         )
         db.commit()
 
-        # TODO:
         result = cur.execute(
             fetch_query_string("select-all-from-puzzle-by-puzzle_id.sql"),
             {"puzzle_id": puzzle_id},
@@ -150,7 +181,7 @@ class CreatePuzzleInstanceView(MethodView):
         cur.execute(
             fetch_query_string("insert-puzzle-instance.sql"),
             {
-                "original": originalPuzzleData["id"],
+                "original": sourcePuzzleData["id"],
                 "instance": puzzle,
                 "variant": classic_variant,
             },
@@ -164,11 +195,20 @@ class CreatePuzzleInstanceView(MethodView):
         db.commit()
         cur.close()
 
-        job = current_app.createqueue.enqueue_call(
-            func="api.jobs.pieceRenderer.render",
-            args=([puzzleData]),
-            result_ttl=0,
-            timeout="24h",
-        )
+        if not fork:
+            job = current_app.createqueue.enqueue_call(
+                func="api.jobs.pieceRenderer.render",
+                args=([puzzleData]),
+                result_ttl=0,
+                timeout="24h",
+            )
+        else:
+            # TODO: copy existing puzzle
+            job = current_app.createqueue.enqueue_call(
+                func="api.jobs.pieceForker.render",
+                args=([puzzleData]),
+                result_ttl=0,
+                timeout="24h",
+            )
 
         return redirect("/chill/site/puzzle/{0}/".format(puzzle_id), code=303)
