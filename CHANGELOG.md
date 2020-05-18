@@ -30,6 +30,12 @@ Types of changes
 - Shorten auto-rebuild interval to keep at least the minimum amount of active
   puzzles per skill level. Did a hotfix on the live site (2020-05-10).
 
+### Added
+
+- Link to Puzzle Massive store which is currently a square site that allows
+  players to buy puzzle instance slots.
+- Style guide page when developing
+
 ## [2.6.1] - 2020-05-05
 
 ### Changed
