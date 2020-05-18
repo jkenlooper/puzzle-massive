@@ -92,17 +92,15 @@ customElements.define(
             renderedView = html`
               ${!data.hasAvailableUserPuzzleSlot
                 ? html`<p>
-                    All your Puzzle Instance Slots have been filled.
-                    <a href="/d/buy-stuff/">Buy another Puzzle Instance Slot</a>
-                    or delete one of your Puzzle Instances to free up a slot.
+                    All your Puzzle Instance Slots have been filled. Delete one
+                    of your Puzzle Instances to free up a slot.
                   </p>`
                 : html``}
             `;
           } else {
-            renderedView = html`<p>
-              Create your own puzzle from this image. Buy a
-              <a href="/d/buy-stuff/">Puzzle Instance Slot</a>.
-            </p>`;
+            /* Nothing. Could advertise to the player to buy stuff like a puzzle
+             * instance slot, but that was a bit pushy.
+             */
           }
           break;
         default:
