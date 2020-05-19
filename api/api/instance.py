@@ -8,6 +8,7 @@ from api.app import db
 from api.database import rowify, fetch_query_string, generate_new_puzzle_id
 from api.user import user_id_from_ip, user_not_banned
 from api.tools import check_bg_color
+from api.jobs import piece_forker
 from api.constants import (
     PUBLIC,
     PRIVATE,
@@ -134,9 +135,9 @@ class CreatePuzzleInstanceView(MethodView):
                 abort(400)
 
         (result, col_names) = rowify(result, cur.description)
-        sourcePuzzleData = result[0]
+        source_puzzle_data = result[0]
 
-        puzzle_id = generate_new_puzzle_id(sourcePuzzleData["name"])
+        puzzle_id = generate_new_puzzle_id(source_puzzle_data["name"])
 
         # Create puzzle dir
         puzzle_dir = os.path.join(current_app.config.get("PUZZLE_RESOURCES"), puzzle_id)
@@ -144,10 +145,10 @@ class CreatePuzzleInstanceView(MethodView):
 
         d = {
             "puzzle_id": puzzle_id,
-            "pieces": pieces if not fork else sourcePuzzleData["pieces"],
-            "name": sourcePuzzleData["name"],
-            "link": sourcePuzzleData["link"],
-            "description": sourcePuzzleData["description"]
+            "pieces": pieces if not fork else source_puzzle_data["pieces"],
+            "name": source_puzzle_data["name"],
+            "link": source_puzzle_data["link"],
+            "description": source_puzzle_data["description"]
             if not instance_description
             else instance_description,
             "bg_color": bg_color,
@@ -171,8 +172,8 @@ class CreatePuzzleInstanceView(MethodView):
             abort(500)
 
         (result, col_names) = rowify(result, cur.description)
-        puzzleData = result[0]
-        puzzle = puzzleData["id"]
+        puzzle_data = result[0]
+        puzzle = puzzle_data["id"]
 
         classic_variant = cur.execute(
             fetch_query_string("select-puzzle-variant-id-for-slug.sql"),
@@ -181,7 +182,7 @@ class CreatePuzzleInstanceView(MethodView):
         cur.execute(
             fetch_query_string("insert-puzzle-instance.sql"),
             {
-                "original": sourcePuzzleData["id"],
+                "original": source_puzzle_data["id"],
                 "instance": puzzle,
                 "variant": classic_variant,
             },
@@ -198,17 +199,19 @@ class CreatePuzzleInstanceView(MethodView):
         if not fork:
             job = current_app.createqueue.enqueue_call(
                 func="api.jobs.pieceRenderer.render",
-                args=([puzzleData]),
+                args=([puzzle_data]),
                 result_ttl=0,
                 timeout="24h",
             )
         else:
             # TODO: copy existing puzzle
-            job = current_app.createqueue.enqueue_call(
-                func="api.jobs.pieceForker.render",
-                args=([puzzleData]),
-                result_ttl=0,
-                timeout="24h",
-            )
+            try:
+                piece_forker.fork_puzzle_pieces(source_puzzle_data, puzzle_data)
+            except piece_forker.Error:
+                # Redirect to the source puzzle for errors
+                return redirect(
+                    "/chill/site/front/{0}/".format(source_puzzle_data["puzzle_id"]),
+                    code=303,
+                )
 
-        return redirect("/chill/site/puzzle/{0}/".format(puzzle_id), code=303)
+        return redirect("/chill/site/front/{0}/".format(puzzle_id), code=303)
