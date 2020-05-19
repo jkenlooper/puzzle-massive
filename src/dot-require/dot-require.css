@@ -4,6 +4,7 @@ pm-dot-require {
 
 .pm-DotRequire {
   visibility: visible;
+  display: inline;
 }
 
 /* Don't display is dotted content. */
@@ -36,7 +37,7 @@ pm-dot-require {
   content: "More dots are needed for this.";
 }
 .pm-DotRequire--blur.is-dotted::after {
-  display: flex;
+  display: inline-flex;
   position: absolute;
   top: 0;
   right: 0;
