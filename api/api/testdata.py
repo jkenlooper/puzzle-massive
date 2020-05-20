@@ -205,47 +205,20 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
             "status": IN_RENDER_QUEUE,
             "permission": permission,
         }
-        cur.execute(
-            """insert into Puzzle (
-        puzzle_id,
-        pieces,
-        name,
-        link,
-        description,
-        bg_color,
-        owner,
-        queue,
-        status,
-        permission) values
-        (:puzzle_id,
-        :pieces,
-        :name,
-        :link,
-        :description,
-        :bg_color,
-        :owner,
-        :queue,
-        :status,
-        :permission);
-        """,
-            d,
-        )
+        cur.execute(read_query_file("insert_puzzle.sql"), d)
         db.commit()
 
         puzzle = rowify(
             cur.execute(
-                "select id from Puzzle where puzzle_id = :puzzle_id;",
+                read_query_file("select_puzzle_id_by_puzzle_id.sql"),
                 {"puzzle_id": puzzle_id},
             ).fetchall(),
             cur.description,
         )[0][0]
-        puzzle = puzzle["id"]
+        puzzle = puzzle["puzzle"]
 
-        insert_file = (
-            "insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);"
-        )
         cur.execute(
-            insert_file,
+            read_query_file("add-puzzle-file.sql"),
             {
                 "puzzle": puzzle,
                 "name": "original",
@@ -255,11 +228,8 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
             },
         )
 
-        insert_file = (
-            "insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);"
-        )
         cur.execute(
-            insert_file,
+            read_query_file("add-puzzle-file.sql"),
             {
                 "puzzle": puzzle,
                 "name": "preview_full",

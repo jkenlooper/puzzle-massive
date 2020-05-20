@@ -8,6 +8,7 @@ from shutil import copytree
 
 import sqlite3
 from PIL import Image
+from flask import current_app
 
 from api.app import db, redis_connection
 from api.database import read_query_file
@@ -45,7 +46,7 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
     source_puzzle_id = source_puzzle_data["puzzle_id"]
     puzzle_id = puzzle_data["puzzle_id"]
 
-    logger.info(
+    current_app.logger.info(
         "Creating new fork of puzzle {source_puzzle_id} to {puzzle_id}".format(
             source_puzzle_id=source_puzzle_id, puzzle_id=puzzle_id
         )
@@ -72,15 +73,20 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
         )
 
     original_puzzle_id = result[0]
-    original_puzzle_dir = os.path.join(config["PUZZLE_RESOURCES"], original_puzzle_id)
-    puzzle_dir = os.path.join(config["PUZZLE_RESOURCES"], puzzle_id)
+    original_puzzle_dir = os.path.join(
+        current_app.config["PUZZLE_RESOURCES"], original_puzzle_id
+    )
+    puzzle_dir = os.path.join(current_app.config["PUZZLE_RESOURCES"], puzzle_id)
 
     # Copy the puzzle resources to the new puzzle_dir
-    source_puzzle_dir = os.path.join(config["PUZZLE_RESOURCES"], source_puzzle_id)
-    puzzle_dir = os.path.join(config["PUZZLE_RESOURCES"], puzzle_id)
+    source_puzzle_dir = os.path.join(
+        current_app.config["PUZZLE_RESOURCES"], source_puzzle_id
+    )
+    puzzle_dir = os.path.join(current_app.config["PUZZLE_RESOURCES"], puzzle_id)
     copytree(source_puzzle_dir, puzzle_dir)
-    logger.debug("copied to {}".format(puzzle_dir))
+    current_app.logger.debug("copied to {}".format(puzzle_dir))
 
+    # TODO: finish up this
     return
 
     # TODO: Get all piece props of source puzzle

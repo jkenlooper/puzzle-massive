@@ -5,9 +5,24 @@ import shutil
 import os
 
 from api.app import make_app, db
-from api.database import init_db, fetch_query_string
+from api.tools import loadConfig
+from api.database import fetch_query_string, generate_new_puzzle_id, rowify
 from api.jobs.piece_forker import fork_puzzle_pieces
 from api.helper_tests import PuzzleTestCase
+from api.constants import (
+    PUBLIC,
+    PRIVATE,
+    ACTIVE,
+    IN_QUEUE,
+    COMPLETED,
+    FROZEN,
+    REBUILD,
+    IN_RENDER_QUEUE,
+    MAINTENANCE,
+    RENDERING,
+    CLASSIC,
+    QUEUE_NEW,
+)
 
 
 class TestPieceForker(PuzzleTestCase):
@@ -23,55 +38,39 @@ class TestPieceForker(PuzzleTestCase):
     def test_fork_puzzle_pieces(self):
         ""
         with self.app.app_context():
-            self.app.logger.debug("hi")
             cur = self.db.cursor()
 
-            # TODO: create fake puzzle
-            source_puzzle_data = {
-                "puzzle_id": "abc",
-                "pieces": 16,
-                "name": "abc",
-                "rows": 4,
-                "cols": 4,
-                "piece_width": 64.0,
-                "mask_width": 102.0,
-                "table_width": 2000,
-                "table_height": 2000,
-                "name": "abc",
-                "link": "http://example.com/",
-                "description": "example",
-                "bg_color": "gray",
-                "m_date": "2016-06-24 02:59:32",
-                "owner": 0,
-                "queue": 2,
-                "status": ACTIVE,
+            # Create fake source puzzle that will be forked
+            fake_puzzle = self.fabricate_fake_puzzle()
+            source_puzzle_id = fake_puzzle.get("puzzle_id")
+
+            puzzle_id = generate_new_puzzle_id("fork-puzzle")
+
+            d = {
+                "puzzle_id": puzzle_id,
+                "pieces": fake_puzzle["pieces"],
+                "name": fake_puzzle["name"],
+                "link": fake_puzzle["link"],
+                "description": "forky",
+                "bg_color": "#f041EE",
+                "owner": 3,
+                "queue": 1,
+                "status": MAINTENANCE,
                 "permission": PUBLIC,
             }
             cur.execute(
-                fetch_query_string("insert_puzzle.sql"), source_puzzle_data,
+                fetch_query_string("insert_puzzle.sql"), d,
             )
+            db.commit()
 
-            # get puzzle that was just inserted
+            result = cur.execute(
+                fetch_query_string("select-all-from-puzzle-by-puzzle_id.sql"),
+                {"puzzle_id": puzzle_id},
+            ).fetchall()
 
-            cur.execute(
-                fetch_query_string("add-puzzle-file.sql"),
-                {
-                    "puzzle": puzzle,
-                    "name": "original",
-                    "url": "/resources/{0}/original.jpg".format(
-                        puzzle_id
-                    ),  # Not a public file (only on admin page)
-                },
-            )
-
-            cur.execute(
-                fetch_query_string("add-puzzle-file.sql"),
-                {
-                    "puzzle": puzzle,
-                    "name": "preview_full",
-                    "url": "/resources/{0}/preview_full.jpg".format(puzzle_id),
-                },
-            )
+            (result, col_names) = rowify(result, cur.description)
+            puzzle_data = result[0]
+            puzzle = puzzle_data["id"]
 
             classic_variant = cur.execute(
                 fetch_query_string("select-puzzle-variant-id-for-slug.sql"),
@@ -79,13 +78,23 @@ class TestPieceForker(PuzzleTestCase):
             ).fetchone()[0]
             cur.execute(
                 fetch_query_string("insert-puzzle-instance.sql"),
-                {"original": puzzle, "instance": puzzle, "variant": classic_variant},
+                {
+                    "original": fake_puzzle["id"],
+                    "instance": puzzle,
+                    "variant": classic_variant,
+                },
+            )
+
+            cur.execute(
+                fetch_query_string("fill-user-puzzle-slot.sql"),
+                {"player": 3, "puzzle": puzzle},
             )
 
             self.db.commit()
 
-            fork_puzzle_pieces(source_puzzle_data, puzzle_data)
-            pass
+            fork_puzzle_pieces(fake_puzzle, puzzle_data)
+
+            # TODO: test stuff
 
 
 if __name__ == "__main__":

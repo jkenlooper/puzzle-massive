@@ -33,10 +33,40 @@ def init_db():
         # db = get_db()
         cur = db.cursor()
 
-        for filename in PUZZLE_CREATE_TABLE_LIST:
-            cur.execute(fetch_query_string(filename))
+        ## Create the new tables and populate with initial data
+        query_files = list(PUZZLE_CREATE_TABLE_LIST)
+        query_files.append("initial_puzzle_variant.sql")
+        query_files.append("insert_initial_bit_expiration_round_2.sql")
+        query_files.append("insert_initial_bit_author_and_anon_user.sql")
+        for file_path in query_files:
+            query = read_query_file(file_path)
+            for statement in query.split(";"):
+                cur.execute(statement)
+                db.commit()
 
+        application_name = current_app.config.get("UNSPLASH_APPLICATION_NAME")
+        ## Set initial licenses
+        for statement in read_query_file("initial_licenses.sql").split(";"):
+            cur.execute(statement, {"application_name": application_name})
+            db.commit()
+
+        ## Add fake bit icons
+        def each(bit):
+            for b in bit:
+                yield b
+
+        bits = [
+            {"name": "fake-cat", "author": 1},
+            {"name": "fake-dog", "author": 1},
+            {"name": "fake-eel", "author": 2},
+            {"name": "fake-bug", "author": 2},
+        ]
+        query = """
+        INSERT OR REPLACE INTO BitIcon (author, name) VALUES (:author, :name);
+        """
+        cur.executemany(query, each(bits))
         db.commit()
+        cur.close()
 
 
 def rowify(l, description):

@@ -462,7 +462,7 @@ def render(*args):
         db.commit()
         cur.close()
 
-        whitelist = [
+        keep_list = [
             "original.jpg",
             "preview_full.jpg",
             "resized-original.jpg",
@@ -470,15 +470,15 @@ def render(*args):
             "raster.css",
             "raster.png",
         ]
-        cleanup(puzzle["puzzle_id"], whitelist)
+        cleanup(puzzle["puzzle_id"], keep_list)
 
 
-def cleanup(puzzle_id, whitelist):
+def cleanup(puzzle_id, keep_list):
     puzzle_dir = os.path.join(config["PUZZLE_RESOURCES"], puzzle_id)
     for (dirpath, dirnames, filenames) in os.walk(puzzle_dir, False):
         for filename in filenames:
-            if filename not in whitelist:
+            if filename not in keep_list:
                 os.unlink(os.path.join(dirpath, filename))
         for dirname in dirnames:
-            if dirname not in whitelist:
+            if dirname not in keep_list:
                 os.rmdir(os.path.join(dirpath, dirname))

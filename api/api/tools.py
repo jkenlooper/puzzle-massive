@@ -38,7 +38,10 @@ def get_db(config):
     # Check that journal_mode is set to wal
     result = cur.execute("pragma journal_mode;").fetchone()
     if result[0] != "wal":
-        raise sqlite3.IntegrityError("The pragma journal_mode is not set to wal.")
+        if not config.get("TESTING"):
+            raise sqlite3.IntegrityError("The pragma journal_mode is not set to wal.")
+        else:
+            logger.info("In TESTING mode. Ignoring requirement for wal journal_mode.")
 
     cur.close()
 
