@@ -86,9 +86,6 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
     copytree(source_puzzle_dir, puzzle_dir)
     current_app.logger.debug("copied to {}".format(puzzle_dir))
 
-    # TODO: finish up this
-    return
-
     # TODO: Get all piece props of source puzzle
     piece_properties = []
 
@@ -104,10 +101,34 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
         )
 
     # Update Puzzle data
+    current_app.logger.debug("set status to active for {}".format(puzzle_data["id"]))
     cur.execute(
         "update Puzzle set status = :status where id = :id",
         {"status": ACTIVE, "id": puzzle_data["id"]},
     )
+    cur.execute(
+        insert_puzzle_file,
+        {
+            "puzzle": puzzle_data["id"],
+            "name": "original",
+            "url": "/resources/{puzzle_id}/original.jpg".format(puzzle_id=puzzle_id),
+        },
+    )
+    source_preview_full_url = cur.execute(
+        "select url from PuzzleFile where puzzle = :source_puzzle and name = :name;",
+        {"name": "preview_full", "source_puzzle": source_puzzle_data["id"]},
+    ).fetchone()[0]
+    cur.execute(
+        insert_puzzle_file,
+        {
+            "puzzle": puzzle_data["id"],
+            "name": "preview_full",
+            "url": "/resources/{puzzle_id}/preview_full.jpg".format(puzzle_id=puzzle_id)
+            if source_preview_full_url.startswith("/")
+            else source_preview_full_url,
+        },
+    )
+
     cur.execute(
         insert_puzzle_file,
         {
