@@ -51,6 +51,7 @@ def convert(puzzle):
                 "w": piece["w"],
                 "h": piece["h"],
                 "b": piece["b"],
+                # The 'g' property for piece group is set depending on piece["parent"]
                 # The 's' is not set from the database 'status'. That is handled later
             }
             pc.update(offsets)

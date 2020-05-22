@@ -101,11 +101,6 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
         )
 
     # Update Puzzle data
-    current_app.logger.debug("set status to active for {}".format(puzzle_data["id"]))
-    cur.execute(
-        "update Puzzle set status = :status where id = :id",
-        {"status": ACTIVE, "id": puzzle_data["id"]},
-    )
     cur.execute(
         insert_puzzle_file,
         {
@@ -148,6 +143,11 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
                 puzzle_id=puzzle_id, timestamp=int(time.time())
             ),
         },
+    )
+    current_app.logger.debug("set status to active for {}".format(puzzle_data["id"]))
+    cur.execute(
+        "update Puzzle set status = :status where id = :id",
+        {"status": ACTIVE, "id": puzzle_data["id"]},
     )
     db.commit()
     cur.close()

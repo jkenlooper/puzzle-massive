@@ -217,8 +217,25 @@ class TestPieceForker(PuzzleTestCase):
             with self.app.test_client() as c:
                 cur = self.db.cursor()
 
-                # TODO: Set non-local url for preview_full
-                # "https://images.example.com/cat.jpg"
+                # Set non-local url for preview_full
+                # "https://images.example.com/cat.jpg" and remove the
+                # source puzzle preview_full image.
+                source_puzzle_dir = os.path.join(
+                    self.app.config["PUZZLE_RESOURCES"], self.source_puzzle_id
+                )
+                blank_preview_full_image = os.path.join(
+                    source_puzzle_dir, "preview_full.jpg"
+                )
+                os.unlink(blank_preview_full_image)
+                cur.execute(
+                    "update PuzzleFile set url = :url where name = :name and puzzle = :puzzle;",
+                    {
+                        "name": "preview_full",
+                        "puzzle": self.source_puzzle_data["id"],
+                        "url": "https://images.example.com/cat.jpg",
+                    },
+                )
+                self.db.commit()
 
                 pf.fork_puzzle_pieces(self.source_puzzle_data, self.puzzle_data)
 

@@ -151,7 +151,10 @@ class PuzzlePiecesView(MethodView):
             # transfer completed puzzles back out
             print("transfer {0}".format(puzzle))
             job = current_app.cleanupqueue.enqueue_call(
-                func="api.jobs.convertPiecesToDB.transfer", args=(puzzle,), result_ttl=0
+                func="api.jobs.convertPiecesToDB.transfer",
+                args=(puzzle,),
+                kwargs={"cleanup": True},
+                result_ttl=0,
             )
 
         return encoder.encode(pieceData)

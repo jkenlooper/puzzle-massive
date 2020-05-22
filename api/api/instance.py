@@ -63,9 +63,9 @@ class CreatePuzzleInstanceView(MethodView):
 
         # Check fork
         fork = int(args.get("fork", "0"))
-        if fork not in ("0", "1"):
+        if fork not in (0, 1):
             abort(400)
-        fork = fork == "1"
+        fork = bool(fork == 1)
 
         user = int(
             current_app.secure_cookie.get(u"user")

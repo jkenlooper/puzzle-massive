@@ -35,6 +35,7 @@ def transfer(puzzle, cleanup=True):
     if not result:
         # Most likely because of a database switch and forgot to run this script
         # between those actions.
+        # TODO: Raise an error here and let the caller decide how to handle it.
         print("Puzzle {} not in database. Skipping.".format(puzzle))
         return
 
