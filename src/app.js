@@ -12,7 +12,9 @@ require("file-loader?name=[name].[ext]!../node_modules/lazysizes/lazysizes.min.j
 require("file-loader?name=[name].[ext]!../node_modules/reqwest/reqwest.min.js");
 require("file-loader?name=[name].[ext]!./modernizr.build.min.js");
 
-/** @format */
+// Alpine.js see the ./alpine/README.md
+import "./alpine";
+
 // site includes all the things
 /* 0 Generic */
 /* 1 Elements */

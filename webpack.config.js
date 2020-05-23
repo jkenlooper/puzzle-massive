@@ -52,6 +52,7 @@ config.externals = {
   hammerjs: "Hammer",
   reqwest: "reqwest",
   modernizr: "Modernizr",
+  alpine: "alpine",
 };
 
 config.module = {

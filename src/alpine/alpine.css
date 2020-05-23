@@ -1,0 +1,7 @@
+/**
+ * x-cloak attributes are removed from elements when Alpine initializes. This is
+ * useful for hiding pre-initialized DOM.
+ */
+[x-cloak] {
+  display: none;
+}

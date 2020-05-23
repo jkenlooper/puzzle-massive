@@ -30,6 +30,7 @@
     "@types/modernizr": "^3.5.3",
     "@webcomponents/webcomponentsjs": "^2.4.1",
     "@xstate/fsm": "^1.4.0",
+    "alpinejs": "^2.3.5",
     "hammerjs": "~2.0.8",
     "jscolor-picker": "~2.0.4",
     "lazysizes": "^5.2.0",
