@@ -9,10 +9,25 @@
 </p>
 {% else %}
 
-<form enctype="multipart/form-data" id="puzzle-instance-form" method="post" action="/newapi/puzzle-instance/">
+{% if config.MINIMUM_PIECE_COUNT > puzzle.pieces %}
+    {% set piece_count = config.MINIMUM_PIECE_COUNT %}
+{% else %}
+    {% set piece_count = puzzle.pieces %}
+{% endif %}
+<form enctype="multipart/form-data" id="puzzle-instance-form" method="post" action="/newapi/puzzle-instance/"
+x-data="puzzleInstanceForm()">
+<script>
+function puzzleInstanceForm() {
+    return {
+        copypuzzlepieces: false,
+        pieces: {{ piece_count }},
+        unlisted: false,
+        canBePublic() { return this.copypuzzlepieces === true ? false : true }
+    }
+}
+</script>
   <input type="hidden" name="puzzle_id" value="{{puzzle.puzzle_id}}">
 
-  <input type="checkbox" id="copypuzzlepieces" name="fork" value="1">
   <div class="pm-UploadForm">
 
     <div class="pm-UploadForm-row">
@@ -44,18 +59,22 @@
         Unlisted
       </label>
       <div>
-        <input type="checkbox" id="permission" name="permission" value="-1">
-        <p>
+        <input type="checkbox" id="permission" name="permission" value="-1" x-model="unlisted" x-bind:disabled="!canBePublic()">
+        <p x-cloak x-show="!canBePublic()">
+            Copied puzzles can not be publicly listed. Un-check the "Copy Pieces" checkbox to have this puzzle publicly listed on the site.
+        </p>
+        <p x-show="canBePublic()">
           Check this box to <em>not</em> have this puzzle publicly listed on the site.
         </p>
       </div>
     </div>
 
-    <div class="pm-UploadForm-row">
+    <div x-cloak class="pm-UploadForm-row">
       <label for="copypuzzlepieces">
         Copy Pieces
       </label>
       <div>
+        <input type="checkbox" id="copypuzzlepieces" name="fork" value="1" x-model="copypuzzlepieces" x-on:change="pieces = {{ piece_count }}; unlisted = true">
         <p>
         Copy pieces and current piece positions from the puzzle instead of rendering new puzzle with a different piece count.
         </p>
@@ -67,16 +86,16 @@
         Piece Count
       </label>
       <div>
-          {% if config.MINIMUM_PIECE_COUNT > puzzle.pieces %}
-            {% set piece_count = config.MINIMUM_PIECE_COUNT %}
-          {% else %}
-            {% set piece_count = puzzle.pieces %}
-          {% endif %}
         <input type="number"
                min="{{ config.MINIMUM_PIECE_COUNT }}"
                max="50000"
-               id="pieces" name="pieces" value="{{ piece_count }}">
-        <p>
+               x-bind:disabled="copypuzzlepieces"
+               x-model="pieces"
+               id="pieces" name="pieces">
+        <p x-cloak x-show="copypuzzlepieces">
+        The new puzzle instance will copy the existing pieces and their current position.
+        </p>
+        <p x-show="!copypuzzlepieces">
         When the puzzle is being rendered try to create this many pieces from the image.
         </p>
       </div>
