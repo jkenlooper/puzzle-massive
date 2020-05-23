@@ -25,6 +25,10 @@ from api.constants import MAINTENANCE
 
 
 def transfer(puzzle, cleanup=True):
+    """
+    Transfer the puzzle data from Redis to the database. If the cleanup flag is
+    set the Redis data for the puzzle will be removed afterward.
+    """
     print("transferring puzzle: {0}".format(puzzle))
     cur = db.cursor()
 
@@ -56,20 +60,37 @@ def transfer(puzzle, cleanup=True):
 
     query_update_piece = read_query_file("update_piece_props_for_puzzle.sql")
 
-    # Save the redis data to the db
+    # Save the redis data to the db if it has changed
     for piece in all_pieces:
+        has_changes = False
         pieceFromRedis = redis_connection.hgetall(
             "pc:{puzzle}:{id}".format(puzzle=puzzle, id=piece["id"])
         )
 
-        # The redis data may be empty so fall back on what is in db.
-        piece["x"] = pieceFromRedis.get("x", piece["x"])
-        piece["y"] = pieceFromRedis.get("y", piece["y"])
-        piece["r"] = pieceFromRedis.get("r", piece["r"])
-        piece["parent"] = pieceFromRedis.get("g", None)
-        # status is reset here based on what was in redis
-        piece["status"] = pieceFromRedis.get("s", None)
-        cur.execute(query_update_piece, piece)
+        # The redis data may be empty so skip updating the db
+        if len(pieceFromRedis) == 0:
+            continue
+
+        # Compare redis data with db for any changes
+        for (prop, colname) in [
+            ("x", "x"),
+            ("y", "y"),
+            ("r", "r"),
+            ("g", "parent"),
+            ("s", "status"),
+        ]:
+            redis_piece_prop = pieceFromRedis.get(prop)
+            redis_piece_prop = (
+                int(redis_piece_prop)
+                if isinstance(redis_piece_prop, str)
+                else redis_piece_prop
+            )
+            if redis_piece_prop != piece[colname]:
+                piece[colname] = redis_piece_prop
+                has_changes = True
+
+        if has_changes:
+            cur.execute(query_update_piece, piece)
 
     if cleanup:
         deletePieceDataFromRedis(redis_connection, puzzle, all_pieces)
