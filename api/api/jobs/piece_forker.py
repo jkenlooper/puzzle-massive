@@ -11,7 +11,7 @@ from PIL import Image
 from flask import current_app
 
 from api.app import db, redis_connection
-from api.database import read_query_file
+from api.database import read_query_file, rowify
 from api.tools import loadConfig, get_db
 from api.constants import (
     MAINTENANCE,
@@ -87,15 +87,21 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
     current_app.logger.debug("copied to {}".format(puzzle_dir))
 
     # TODO: Get all piece props of source puzzle
-    piece_properties = []
+    # convertPiecesToDB.transfer() and then load all piece data from db.
+    query = """select * from Piece where (puzzle = :puzzle)"""
+    (piece_properties, col_names) = rowify(
+        cur.execute(query, {"puzzle": source_puzzle_data["id"]}).fetchall(),
+        cur.description,
+    )
 
     # Commit the piece properties and puzzle resources
     # row and col are really only useful for determining the top left piece when resetting puzzle
     for pc in piece_properties:
+        pc["puzzle"] = puzzle_data["id"]
         cur.execute(
             """
             insert or ignore into Piece (id, x, y, r, w, h, b, adjacent, rotate, row, col, status, parent, puzzle) values (
-          :id, :x, :y, :r, :w, :h, :b, :adjacent, :rotate, :row, :col, :status, :g, :puzzle
+          :id, :x, :y, :r, :w, :h, :b, :adjacent, :rotate, :row, :col, :status, :parent, :puzzle
             );""",
             pc,
         )

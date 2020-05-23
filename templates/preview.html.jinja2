@@ -148,7 +148,7 @@
           </pm-dot-require>
           {% endif %}
         {% endif %}
-        {% if not recent.is_original or recent.permission == 0 -%} {# instance or original PUBLIC #}
+        {% if recent.permission == 0 -%} {# public instance or original PUBLIC #}
         <pm-player-create-puzzle-instance-link view="buttons" create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}"></pm-player-create-puzzle-instance-link>
         {% endif %}
 
@@ -164,7 +164,7 @@
         {% endif %}
       </div>
       <div class="pm-Preview-actionsRow">
-        {% if not recent.is_original or recent.permission == 0 -%} {# instance or original PUBLIC #}
+        {% if recent.permission == 0 -%} {# public instance or original PUBLIC #}
         <pm-player-create-puzzle-instance-link view="message" create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}"></pm-player-create-puzzle-instance-link>
         {% endif %}
 

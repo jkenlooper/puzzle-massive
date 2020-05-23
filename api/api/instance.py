@@ -124,6 +124,7 @@ class CreatePuzzleInstanceView(MethodView):
                     "puzzle_id": original_puzzle_id,
                     "ACTIVE": ACTIVE,
                     "IN_QUEUE": IN_QUEUE,
+                    "COMPLETED": COMPLETED,
                     "FROZEN": FROZEN,
                     "PUBLIC": PUBLIC,
                 },
@@ -140,26 +141,54 @@ class CreatePuzzleInstanceView(MethodView):
         puzzle_id = generate_new_puzzle_id(source_puzzle_data["name"])
 
         # Create puzzle dir
-        puzzle_dir = os.path.join(current_app.config.get("PUZZLE_RESOURCES"), puzzle_id)
-        os.mkdir(puzzle_dir)
+        if not fork:
+            puzzle_dir = os.path.join(
+                current_app.config.get("PUZZLE_RESOURCES"), puzzle_id
+            )
+            os.mkdir(puzzle_dir)
 
-        d = {
-            "puzzle_id": puzzle_id,
-            "pieces": pieces if not fork else source_puzzle_data["pieces"],
-            "name": source_puzzle_data["name"],
-            "link": source_puzzle_data["link"],
-            "description": source_puzzle_data["description"]
-            if not instance_description
-            else instance_description,
-            "bg_color": bg_color,
-            "owner": user,
-            "queue": QUEUE_NEW,
-            "status": IN_RENDER_QUEUE if not fork else MAINTENANCE,
-            "permission": permission,
-        }
-        cur.execute(
-            fetch_query_string("insert_puzzle.sql"), d,
-        )
+        if not fork:
+            d = {
+                "puzzle_id": puzzle_id,
+                "pieces": pieces,
+                "name": source_puzzle_data["name"],
+                "link": source_puzzle_data["link"],
+                "description": source_puzzle_data["description"]
+                if not instance_description
+                else instance_description,
+                "bg_color": bg_color,
+                "owner": user,
+                "queue": QUEUE_NEW,
+                "status": IN_RENDER_QUEUE,
+                "permission": permission,
+            }
+            cur.execute(
+                fetch_query_string("insert_puzzle.sql"), d,
+            )
+        else:
+            d = {
+                "puzzle_id": puzzle_id,
+                "pieces": source_puzzle_data["pieces"],
+                "rows": source_puzzle_data["rows"],
+                "cols": source_puzzle_data["cols"],
+                "piece_width": source_puzzle_data["piece_width"],
+                "mask_width": source_puzzle_data["mask_width"],
+                "table_width": source_puzzle_data["table_width"],
+                "table_height": source_puzzle_data["table_height"],
+                "name": source_puzzle_data["name"],
+                "link": source_puzzle_data["link"],
+                "description": source_puzzle_data["description"]
+                if not instance_description
+                else instance_description,
+                "bg_color": bg_color,
+                "owner": user,
+                "queue": QUEUE_NEW,
+                "status": MAINTENANCE,
+                "permission": permission,
+            }
+            cur.execute(
+                fetch_query_string("insert_puzzle_instance_copy.sql"), d,
+            )
         db.commit()
 
         result = cur.execute(
