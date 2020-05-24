@@ -233,7 +233,7 @@ class CreatePuzzleInstanceView(MethodView):
                 timeout="24h",
             )
         else:
-            # TODO: copy existing puzzle
+            # Copy existing puzzle
             try:
                 piece_forker.fork_puzzle_pieces(source_puzzle_data, puzzle_data)
             except piece_forker.Error:

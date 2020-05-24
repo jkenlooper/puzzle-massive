@@ -438,7 +438,7 @@ def render(*args):
         # migratePuzzleFile.
 
         cur.execute(
-            "update Puzzle set status = :status where id = :id",
+            "update Puzzle set status = :status, m_date = datetime('now') where id = :id",
             {"status": puzzleStatus, "id": puzzle["id"]},
         )
         cur.execute(

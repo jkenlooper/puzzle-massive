@@ -302,6 +302,37 @@ class TestPieceForker(PuzzleTestCase):
 
                 cur.close()
 
+    def test_change_to_complete_status(self):
+        "Should switch status to completed if all the pieces have been joined"
+        with self.app.app_context():
+            with self.app.test_client() as c:
+                cur = self.db.cursor()
+
+                cur.execute(
+                    "update Piece set parent = 2 where puzzle = :puzzle",
+                    {"puzzle": self.source_puzzle_data["id"]},
+                )
+                cur.execute(
+                    "update Puzzle set status = :COMPLETED where id = :puzzle",
+                    {"puzzle": self.source_puzzle_data["id"], "COMPLETED": COMPLETED},
+                )
+                self.source_puzzle_data["status"] = COMPLETED
+
+                result = cur.execute(
+                    "select status from Puzzle where puzzle_id = :puzzle_id",
+                    {"puzzle_id": self.puzzle_id},
+                ).fetchone()[0]
+                self.assertEqual(MAINTENANCE, result)
+
+                pf.fork_puzzle_pieces(self.source_puzzle_data, self.puzzle_data)
+
+                result = cur.execute(
+                    "select status from Puzzle where puzzle_id = :puzzle_id",
+                    {"puzzle_id": self.puzzle_id},
+                ).fetchone()[0]
+                self.app.logger.debug(result)
+                self.assertEqual(COMPLETED, result)
+
 
 if __name__ == "__main__":
     unittest.main()

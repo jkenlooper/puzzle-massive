@@ -8,9 +8,13 @@ from api.database import fetch_query_string, rowify, delete_puzzle_resources
 from api.constants import (
     DELETED_REQUEST,
     FROZEN,
+    BUGGY_UNLISTED,
     ACTIVE,
     COMPLETED,
     IN_QUEUE,
+    RENDERING_FAILED,
+    REBUILD,
+    IN_RENDER_QUEUE,
     SKILL_LEVEL_RANGES,
     BID_COST_PER_PUZZLE,
     QUEUE_WINNING_BID,
@@ -20,7 +24,7 @@ encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
 ORIGINAL_ACTIONS = ("bump",)
 
-INSTANCE_ACTIONS = ("delete", "freeze", "unfreeze")
+INSTANCE_ACTIONS = ("delete", "freeze", "unfreeze", "reset")
 
 
 class PuzzleInstanceDetailsView(MethodView):
@@ -38,6 +42,18 @@ class PuzzleInstanceDetailsView(MethodView):
                 current_app.config["MINIMUM_PIECE_COUNT"], puzzleData["pieces"]
             )
             can_delete = puzzleData["user_points"] >= delete_penalty
+            # Waive the delete penalty if the m_date for the puzzle is old
+            if not puzzleData["m_date"]:
+                # Puzzles without an m_date may have been created before the
+                # change to pieceRenderer that set an initial m_date or the
+                # puzzle failed to render.
+                can_delete = True
+                delete_penalty = -1
+            elif puzzleData["is_old"]:
+                # A puzzle with an older m_date should be allowed to be deleted
+                # without the delete penalty.
+                can_delete = True
+                delete_penalty = -1
             if not can_delete:
                 delete_disabled_message = "Not enough dots to delete this puzzle"
         return (delete_penalty, can_delete, delete_disabled_message)
@@ -80,7 +96,15 @@ class PuzzleInstanceDetailsView(MethodView):
             cur.close()
             abort(400)
 
-        if puzzleData["status"] not in (FROZEN, ACTIVE, COMPLETED):
+        if puzzleData["status"] not in (
+            FROZEN,
+            ACTIVE,
+            COMPLETED,
+            BUGGY_UNLISTED,
+            RENDERING_FAILED,
+            REBUILD,
+            IN_RENDER_QUEUE,
+        ):
             cur.close()
             abort(400)
 
@@ -169,6 +193,9 @@ class PuzzleInstanceDetailsView(MethodView):
                 "status": ACTIVE,
             }
 
+        elif action == "reset":
+            pass
+
         cur.close()
         return make_response(encoder.encode(response), 202)
 
@@ -206,7 +233,16 @@ class PuzzleInstanceDetailsView(MethodView):
         )
         response = {
             "canDelete": can_delete,
-            "hasActions": puzzleData.get("status") in (FROZEN, ACTIVE, COMPLETED),
+            "hasActions": puzzleData.get("status")
+            in (
+                FROZEN,
+                ACTIVE,
+                COMPLETED,
+                BUGGY_UNLISTED,
+                RENDERING_FAILED,
+                REBUILD,
+                IN_RENDER_QUEUE,
+            ),
             "deleteDisabledMessage": delete_disabled_message,
             "deletePenalty": delete_penalty,
             "isFrozen": puzzleData.get("status") == FROZEN,

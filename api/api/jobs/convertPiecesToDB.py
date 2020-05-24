@@ -24,12 +24,14 @@ from api.tools import loadConfig, get_db, get_redis_connection, deletePieceDataF
 from api.constants import MAINTENANCE
 
 
-def transfer(puzzle, cleanup=True):
+def transfer(puzzle, my_db=None, cleanup=True):
     """
     Transfer the puzzle data from Redis to the database. If the cleanup flag is
     set the Redis data for the puzzle will be removed afterward.
     """
     print("transferring puzzle: {0}".format(puzzle))
+    if my_db != None:
+        db = my_db
     cur = db.cursor()
 
     query = """select * from Puzzle where (id = :puzzle)"""

@@ -199,6 +199,14 @@ customElements.define(
                     Freeze
                   </button>
                 `}
+
+            <button
+              class="Button"
+              data-action="reset"
+              @click=${data.actionHandler}
+            >
+              Reset
+            </button>
           `;
           break;
         case "message":
@@ -206,10 +214,14 @@ customElements.define(
             ${data.canDelete
               ? html`
                   <p>
+                    ${data.deletePenalty === -1
+                      ? html`The last modified date for this puzzle is old.
+                          Deleting the puzzle will <b>not</b> cost any dots.`
+                      : ""}
                     ${data.deletePenalty > 0
                       ? html` Deleting this puzzle will cost
                         ${data.deletePenalty} dots because it is not complete.`
-                      : html``}
+                      : ""}
                   </p>
                 `
               : html`

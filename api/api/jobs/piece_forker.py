@@ -13,6 +13,7 @@ from flask import current_app
 from api.app import db, redis_connection
 from api.database import read_query_file, rowify
 from api.tools import loadConfig, get_db
+from api.jobs.convertPiecesToDB import transfer
 from api.constants import (
     MAINTENANCE,
     IN_RENDER_QUEUE,
@@ -21,6 +22,7 @@ from api.constants import (
     RENDERING_FAILED,
     IN_QUEUE,
     ACTIVE,
+    COMPLETED,
     PUBLIC,
 )
 
@@ -88,9 +90,10 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
 
     # TODO: Get all piece props of source puzzle
     # convertPiecesToDB.transfer() and then load all piece data from db.
+    transfer(source_puzzle_data["instance_id"], my_db=db)
     query = """select * from Piece where (puzzle = :puzzle)"""
     (piece_properties, col_names) = rowify(
-        cur.execute(query, {"puzzle": source_puzzle_data["id"]}).fetchall(),
+        cur.execute(query, {"puzzle": source_puzzle_data["instance_id"]}).fetchall(),
         cur.description,
     )
 
@@ -105,6 +108,13 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
             );""",
             pc,
         )
+
+    # Check if there is only one piece parent and mark as complete
+    is_complete = True
+    for index, pc in enumerate(piece_properties):
+        if pc["parent"] != piece_properties[max(0, index - 1)]["parent"]:
+            is_complete = False
+            break
 
     # Update Puzzle data
     cur.execute(
@@ -150,10 +160,17 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
             ),
         },
     )
-    current_app.logger.debug("set status to active for {}".format(puzzle_data["id"]))
+    status = ACTIVE
+    if is_complete:
+        status = COMPLETED
+    current_app.logger.debug(
+        "set status to {} for {}".format(
+            "active" if status == ACTIVE else "completed", puzzle_data["id"]
+        )
+    )
     cur.execute(
         "update Puzzle set status = :status where id = :id",
-        {"status": ACTIVE, "id": puzzle_data["id"]},
+        {"status": status, "id": puzzle_data["id"]},
     )
     db.commit()
     cur.close()

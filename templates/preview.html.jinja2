@@ -141,7 +141,7 @@
       <div class="pm-Preview-actionsRow">
         {% if recent.status == COMPLETED %}
           {% if not recent.is_recent -%}
-          <pm-dot-require min="200" type="hidden">
+          <pm-dot-require min="200" type="none">
             <a class="Button Button--primary" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/0'.format(recent.puzzle_id)) }}">
             Rebuild
             </a>
