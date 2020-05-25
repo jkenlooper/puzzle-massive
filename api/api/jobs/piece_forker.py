@@ -1,7 +1,6 @@
 import os
 import json
 import sys
-import logging
 import subprocess
 import time
 from shutil import copytree
@@ -23,6 +22,7 @@ from api.constants import (
     IN_QUEUE,
     ACTIVE,
     COMPLETED,
+    FROZEN,
     PUBLIC,
     PRIVATE,
 )
@@ -55,6 +55,9 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
             source_instance_puzzle_id=source_instance_puzzle_id, puzzle_id=puzzle_id
         )
     )
+
+    if source_puzzle_data["status"] not in (ACTIVE, IN_QUEUE, COMPLETED, FROZEN):
+        raise DataError("Source puzzle not in acceptable status")
 
     result = cur.execute(
         "select * from Puzzle where id = :id", {"id": puzzle_data["id"]},

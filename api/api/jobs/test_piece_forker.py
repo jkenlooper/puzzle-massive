@@ -12,12 +12,14 @@ from api.constants import (
     PUBLIC,
     PRIVATE,
     ACTIVE,
+    BUGGY_UNLISTED,
     IN_QUEUE,
     COMPLETED,
     FROZEN,
     REBUILD,
     IN_RENDER_QUEUE,
     MAINTENANCE,
+    DELETED_REQUEST,
     RENDERING,
     CLASSIC,
     QUEUE_NEW,
@@ -362,6 +364,18 @@ class TestPieceForker(PuzzleTestCase):
                     {"puzzle_id": self.puzzle_id},
                 ).fetchone()[0]
                 self.assertEqual(PRIVATE, result)
+
+    def test_status_of_puzzle(self):
+        "Source puzzle needs to be in the correct status for copying"
+        with self.app.app_context():
+            with self.app.test_client() as c:
+                cur = self.db.cursor()
+
+                not_acceptable_statuses = [BUGGY_UNLISTED, MAINTENANCE, DELETED_REQUEST]
+                for status in not_acceptable_statuses:
+                    self.source_puzzle_data["status"] = status
+                    with self.assertRaises(pf.DataError):
+                        pf.fork_puzzle_pieces(self.source_puzzle_data, self.puzzle_data)
 
 
 if __name__ == "__main__":

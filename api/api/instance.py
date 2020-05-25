@@ -13,6 +13,7 @@ from api.constants import (
     PUBLIC,
     PRIVATE,
     ACTIVE,
+    BUGGY_UNLISTED,
     IN_QUEUE,
     COMPLETED,
     FROZEN,

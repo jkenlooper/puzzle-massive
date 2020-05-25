@@ -16,6 +16,7 @@ import sys
 import os.path
 import math
 import time
+import logging
 
 from docopt import docopt
 
@@ -23,13 +24,16 @@ from api.database import rowify, read_query_file
 from api.tools import loadConfig, get_db, get_redis_connection, deletePieceDataFromRedis
 from api.constants import MAINTENANCE
 
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+
 
 def transfer(puzzle, my_db=None, cleanup=True):
     """
     Transfer the puzzle data from Redis to the database. If the cleanup flag is
     set the Redis data for the puzzle will be removed afterward.
     """
-    print("transferring puzzle: {0}".format(puzzle))
+    logger.info("transferring puzzle: {0}".format(puzzle))
     if my_db != None:
         db = my_db
     cur = db.cursor()
@@ -42,7 +46,7 @@ def transfer(puzzle, my_db=None, cleanup=True):
         # Most likely because of a database switch and forgot to run this script
         # between those actions.
         # TODO: Raise an error here and let the caller decide how to handle it.
-        print("Puzzle {} not in database. Skipping.".format(puzzle))
+        logger.warn("Puzzle {} not in database. Skipping.".format(puzzle))
         return
 
     puzzle_data = result[0]
@@ -88,6 +92,11 @@ def transfer(puzzle, my_db=None, cleanup=True):
                 else redis_piece_prop
             )
             if redis_piece_prop != piece[colname]:
+                logger.debug(
+                    "{} has {} changes. {} != {}".format(
+                        piece["id"], colname, redis_piece_prop, piece[colname]
+                    )
+                )
                 piece[colname] = redis_piece_prop
                 has_changes = True
 
@@ -131,18 +140,18 @@ def transferOldest(target_memory):
 def transferAll(cleanup=False):
     # Get all puzzles
     puzzles = redis_connection.zrange("pcupdates", 0, -1)
-    print("transferring puzzles: {0}".format(puzzles))
+    logger.info("transferring puzzles: {0}".format(puzzles))
     for puzzle in puzzles:
-        print("transfer puzzle: {0}".format(puzzle))
+        logger.info("transfer puzzle: {0}".format(puzzle))
         transfer(puzzle, cleanup=cleanup)
         memory = redis_connection.info(section="memory")
         if cleanup:
-            print("used_memory: {used_memory_human}".format(**memory))
+            logger.info("used_memory: {used_memory_human}".format(**memory))
 
 
 def handle_fail(job, exception, exception_func, traceback):
     # TODO: handle fail for janitor; see handle_render_fail of pieceRenderer.py
-    print("Handle janitor fail {0}".format(job.args[0]))
+    logger.info("Handle janitor fail {0}".format(job.args[0]))
 
 
 if __name__ == "__main__":
@@ -151,6 +160,7 @@ if __name__ == "__main__":
     # config_file = sys.argv[1]
     config_file = args["<site.cfg>"]
     config = loadConfig(config_file)
+    logger.setLevel(logging.DEBUG if config["DEBUG"] else logging.INFO)
 
     db = get_db(config)
     redis_connection = get_redis_connection(config)
@@ -159,6 +169,7 @@ if __name__ == "__main__":
 
 else:
     config = loadConfig("site.cfg")
+    logger.setLevel(logging.DEBUG if config["DEBUG"] else logging.INFO)
 
     db = get_db(config)
     redis_connection = get_redis_connection(config)

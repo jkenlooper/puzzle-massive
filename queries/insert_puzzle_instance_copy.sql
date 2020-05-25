@@ -14,6 +14,7 @@ insert into Puzzle (
     owner,
     queue,
     status,
+    m_date,
     permission) values
     (:puzzle_id,
     :pieces,
@@ -30,4 +31,5 @@ insert into Puzzle (
     :owner,
     :queue,
     :status,
+    datetime('now'),
     :permission);
