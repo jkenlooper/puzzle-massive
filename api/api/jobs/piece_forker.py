@@ -24,6 +24,7 @@ from api.constants import (
     ACTIVE,
     COMPLETED,
     PUBLIC,
+    PRIVATE,
 )
 
 insert_puzzle_file = """
@@ -45,22 +46,36 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
     """
     """
     cur = db.cursor()
-    source_puzzle_id = source_puzzle_data["puzzle_id"]
+    original_puzzle_id = source_puzzle_data["puzzle_id"]
+    source_instance_puzzle_id = source_puzzle_data["instance_puzzle_id"]
     puzzle_id = puzzle_data["puzzle_id"]
 
     current_app.logger.info(
-        "Creating new fork of puzzle {source_puzzle_id} to {puzzle_id}".format(
-            source_puzzle_id=source_puzzle_id, puzzle_id=puzzle_id
+        "Creating new fork of puzzle {source_instance_puzzle_id} to {puzzle_id}".format(
+            source_instance_puzzle_id=source_instance_puzzle_id, puzzle_id=puzzle_id
         )
     )
 
     result = cur.execute(
-        "select status from Puzzle where status = :MAINTENANCE and id = :id",
-        {"MAINTENANCE": MAINTENANCE, "id": puzzle_data["id"]},
-    ).fetchone()
+        "select * from Puzzle where id = :id", {"id": puzzle_data["id"]},
+    ).fetchall()
     if not result:
         raise DataError(
             "Puzzle {puzzle_id} no longer in maintenance status.".format(
+                puzzle_id=puzzle_id
+            )
+        )
+    (result, col_names) = rowify(result, cur.description)
+    puzzle_data = result[0]
+    if puzzle_data["status"] != MAINTENANCE:
+        raise DataError(
+            "Puzzle {puzzle_id} no longer in maintenance status.".format(
+                puzzle_id=puzzle_id
+            )
+        )
+    if puzzle_data["permission"] != PRIVATE:
+        raise DataError(
+            "Puzzle {puzzle_id} needs to have private (unlisted) permission.".format(
                 puzzle_id=puzzle_id
             )
         )
@@ -81,11 +96,14 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
     puzzle_dir = os.path.join(current_app.config["PUZZLE_RESOURCES"], puzzle_id)
 
     # Copy the puzzle resources to the new puzzle_dir
-    source_puzzle_dir = os.path.join(
-        current_app.config["PUZZLE_RESOURCES"], source_puzzle_id
+    original_puzzle_dir = os.path.join(
+        current_app.config["PUZZLE_RESOURCES"], original_puzzle_id
+    )
+    source_instance_puzzle_dir = os.path.join(
+        current_app.config["PUZZLE_RESOURCES"], source_instance_puzzle_id
     )
     puzzle_dir = os.path.join(current_app.config["PUZZLE_RESOURCES"], puzzle_id)
-    copytree(source_puzzle_dir, puzzle_dir)
+    copytree(source_instance_puzzle_dir, puzzle_dir)
     current_app.logger.debug("copied to {}".format(puzzle_dir))
 
     # TODO: Get all piece props of source puzzle

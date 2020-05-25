@@ -3,11 +3,6 @@
 {% set width = puzzle.long if puzzle.table_width > puzzle.table_height else puzzle.short %}
 {% set height = puzzle.short if puzzle.table_width > puzzle.table_height else puzzle.long %}
 
-{% if puzzle.original_permission == -1 -%} {# PRIVATE #}
-<p>
-  This original puzzle is not public on the site.  Creating an instance of it is not allowed.
-</p>
-{% else %}
 
 {% if config.MINIMUM_PIECE_COUNT > puzzle.pieces %}
     {% set piece_count = config.MINIMUM_PIECE_COUNT %}
@@ -21,8 +16,13 @@ function puzzleInstanceForm() {
     return {
         copypuzzlepieces: false,
         pieces: {{ piece_count }},
+        {% if puzzle.permission == -1 -%} {# PRIVATE #}
+        unlisted: true,
+        canBePublic() { return false }
+        {% else %}
         unlisted: false,
         canBePublic() { return this.copypuzzlepieces === true ? false : true }
+        {% endif %}
     }
 }
 </script>
@@ -61,7 +61,11 @@ function puzzleInstanceForm() {
       <div>
         <input type="checkbox" id="permission" name="permission" value="-1" x-model="unlisted" x-bind:disabled="!canBePublic()">
         <p x-cloak x-show="!canBePublic()">
+          {% if puzzle.permission == -1 -%} {# PRIVATE #}
+            The source puzzle is unlisted on the site.  Creating a copy of it and making it publicly listed on the site is not allowed.
+          {%- else -%}
             Copied puzzles can not be publicly listed. Un-check the "Copy Pieces" checkbox to have this puzzle publicly listed on the site.
+          {%- endif %}
         </p>
         <p x-show="canBePublic()">
           Check this box to <em>not</em> have this puzzle publicly listed on the site.
@@ -123,5 +127,3 @@ function puzzleInstanceForm() {
     </div>
   </div>
 </form>
-
-{% endif %}

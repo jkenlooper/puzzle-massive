@@ -148,9 +148,7 @@
           </pm-dot-require>
           {% endif %}
         {% endif %}
-        {% if recent.permission == 0 -%} {# public instance or original PUBLIC #}
         <pm-player-create-puzzle-instance-link view="buttons" create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}"></pm-player-create-puzzle-instance-link>
-        {% endif %}
 
         {% if not recent.is_original %}
           {% if recent.status != DELETED_REQUEST %}
@@ -164,9 +162,7 @@
         {% endif %}
       </div>
       <div class="pm-Preview-actionsRow">
-        {% if recent.permission == 0 -%} {# public instance or original PUBLIC #}
         <pm-player-create-puzzle-instance-link view="message" create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}"></pm-player-create-puzzle-instance-link>
-        {% endif %}
 
         {% if not recent.is_original %}
           {% if recent.status != DELETED_REQUEST %}

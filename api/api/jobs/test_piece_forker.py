@@ -35,8 +35,25 @@ class TestPieceForker(PuzzleTestCase):
             # TODO: create players
 
             # Create fake source puzzle that will be forked
-            self.source_puzzle_data = self.fabricate_fake_puzzle()
-            self.source_puzzle_id = self.source_puzzle_data.get("puzzle_id")
+            fake_source_puzzle_data = self.fabricate_fake_puzzle()
+            self.source_puzzle_id = fake_source_puzzle_data.get("puzzle_id")
+
+            result = cur.execute(
+                fetch_query_string(
+                    "select-valid-puzzle-for-new-puzzle-instance-fork.sql"
+                ),
+                {
+                    "puzzle_id": self.source_puzzle_id,
+                    "ACTIVE": ACTIVE,
+                    "IN_QUEUE": IN_QUEUE,
+                    "COMPLETED": COMPLETED,
+                    "FROZEN": FROZEN,
+                },
+            ).fetchall()
+            if not result:
+                raise Exception("fake puzzle failed")
+            (result, col_names) = rowify(result, cur.description)
+            self.source_puzzle_data = result[0]
 
             self.puzzle_id = generate_new_puzzle_id("fork-puzzle")
 
@@ -50,7 +67,7 @@ class TestPieceForker(PuzzleTestCase):
                 "owner": 3,
                 "queue": 1,
                 "status": MAINTENANCE,
-                "permission": PUBLIC,
+                "permission": PRIVATE,
             }
             cur.execute(
                 fetch_query_string("insert_puzzle.sql"), d,
@@ -330,8 +347,21 @@ class TestPieceForker(PuzzleTestCase):
                     "select status from Puzzle where puzzle_id = :puzzle_id",
                     {"puzzle_id": self.puzzle_id},
                 ).fetchone()[0]
-                self.app.logger.debug(result)
                 self.assertEqual(COMPLETED, result)
+
+    def test_permission_is_not_public(self):
+        "Copied puzzles are not public"
+        with self.app.app_context():
+            with self.app.test_client() as c:
+                cur = self.db.cursor()
+
+                pf.fork_puzzle_pieces(self.source_puzzle_data, self.puzzle_data)
+
+                result = cur.execute(
+                    "select permission from Puzzle where puzzle_id = :puzzle_id",
+                    {"puzzle_id": self.puzzle_id},
+                ).fetchone()[0]
+                self.assertEqual(PRIVATE, result)
 
 
 if __name__ == "__main__":

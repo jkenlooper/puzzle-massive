@@ -5,6 +5,7 @@ p1.name,
 p1.link,
 p1.description,
 p.id as instance_id,
+p.puzzle_id as instance_puzzle_id,
 p.pieces,
 p.rows,
 p.cols,
@@ -21,5 +22,4 @@ and p.status in (
     :IN_QUEUE,
     :COMPLETED,
     :FROZEN
-)
-and p.permission = :PUBLIC;
+);

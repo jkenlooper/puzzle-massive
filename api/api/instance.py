@@ -52,13 +52,8 @@ class CreatePuzzleInstanceView(MethodView):
         instance_description = args.get("instance_description", "")
 
         # Check puzzle_id
-        original_puzzle_id = args.get("puzzle_id")
-        if not original_puzzle_id:
-            abort(400)
-
-        # Check permission
-        permission = int(args.get("permission", PUBLIC))
-        if permission not in (PUBLIC, PRIVATE):
+        source_puzzle_id = args.get("puzzle_id")
+        if not source_puzzle_id:
             abort(400)
 
         # Check fork
@@ -66,6 +61,14 @@ class CreatePuzzleInstanceView(MethodView):
         if fork not in (0, 1):
             abort(400)
         fork = bool(fork == 1)
+
+        # Check permission
+        permission = int(args.get("permission", PUBLIC))
+        if permission not in (PUBLIC, PRIVATE):
+            abort(400)
+        if fork:
+            # All copies of puzzles are unlisted
+            permission = PRIVATE
 
         user = int(
             current_app.secure_cookie.get(u"user")
@@ -98,7 +101,7 @@ class CreatePuzzleInstanceView(MethodView):
             result = cur.execute(
                 fetch_query_string("select-valid-puzzle-for-new-puzzle-instance.sql"),
                 {
-                    "puzzle_id": original_puzzle_id,
+                    "puzzle_id": source_puzzle_id,
                     "ACTIVE": ACTIVE,
                     "IN_QUEUE": IN_QUEUE,
                     "COMPLETED": COMPLETED,
@@ -106,7 +109,6 @@ class CreatePuzzleInstanceView(MethodView):
                     "REBUILD": REBUILD,
                     "IN_RENDER_QUEUE": IN_RENDER_QUEUE,
                     "RENDERING": RENDERING,
-                    "PUBLIC": PUBLIC,
                 },
             ).fetchall()
             if not result:
@@ -121,12 +123,11 @@ class CreatePuzzleInstanceView(MethodView):
                     "select-valid-puzzle-for-new-puzzle-instance-fork.sql"
                 ),
                 {
-                    "puzzle_id": original_puzzle_id,
+                    "puzzle_id": source_puzzle_id,
                     "ACTIVE": ACTIVE,
                     "IN_QUEUE": IN_QUEUE,
                     "COMPLETED": COMPLETED,
                     "FROZEN": FROZEN,
-                    "PUBLIC": PUBLIC,
                 },
             ).fetchall()
             if not result:
@@ -184,7 +185,7 @@ class CreatePuzzleInstanceView(MethodView):
                 "owner": user,
                 "queue": QUEUE_NEW,
                 "status": MAINTENANCE,
-                "permission": permission,
+                "permission": permission,  # All copies of puzzles are unlisted
             }
             cur.execute(
                 fetch_query_string("insert_puzzle_instance_copy.sql"), d,
@@ -236,8 +237,9 @@ class CreatePuzzleInstanceView(MethodView):
             # Copy existing puzzle
             try:
                 piece_forker.fork_puzzle_pieces(source_puzzle_data, puzzle_data)
-            except piece_forker.Error:
+            except piece_forker.Error as err:
                 # Redirect to the source puzzle for errors
+                current_app.logger.warn(err)
                 return redirect(
                     "/chill/site/front/{0}/".format(source_puzzle_data["puzzle_id"]),
                     code=303,

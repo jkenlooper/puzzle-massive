@@ -16,5 +16,4 @@ and p1.status in (
     :REBUILD,
     :IN_RENDER_QUEUE,
     :RENDERING
-)
-and p1.permission = :PUBLIC;
+);
