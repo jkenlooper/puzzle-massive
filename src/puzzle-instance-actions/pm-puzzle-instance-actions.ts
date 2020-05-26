@@ -16,6 +16,7 @@ interface TemplateData {
   hasActions: boolean;
   isFrozen: boolean;
   canDelete: boolean;
+  canReset: boolean;
   deletePenalty: number;
   deleteDisabledMessage: string;
   isProcessing: boolean; // the status on the puzzle page is not the same as the status returned.
@@ -87,6 +88,7 @@ customElements.define(
 
     _setPuzzleData() {
       if (userDetailsService.userDetails.id != this.owner) {
+        // The instance actions are only for the owner of the puzzle.
         this.isReady = true;
         this.render();
         return;
@@ -199,14 +201,17 @@ customElements.define(
                     Freeze
                   </button>
                 `}
-
-            <button
-              class="Button"
-              data-action="reset"
-              @click=${data.actionHandler}
-            >
-              Reset
-            </button>
+            ${data.canReset
+              ? html`
+                  <button
+                    class="Button"
+                    data-action="reset"
+                    @click=${data.actionHandler}
+                  >
+                    Reset
+                  </button>
+                `
+              : ""}
           `;
           break;
         case "message":
@@ -243,6 +248,7 @@ customElements.define(
         hasActions: this.puzzleDetails ? this.puzzleDetails.hasActions : false,
         isFrozen: !!this.puzzleDetails ? this.puzzleDetails.isFrozen : false,
         canDelete: !!this.puzzleDetails ? this.puzzleDetails.canDelete : false,
+        canReset: !!this.puzzleDetails ? this.puzzleDetails.canReset : false,
         deletePenalty: !!this.puzzleDetails
           ? this.puzzleDetails.deletePenalty
           : -1,

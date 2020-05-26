@@ -39,7 +39,9 @@ update User set points = points - :points where id = :user;
 
 class PuzzlePiecesResetView(MethodView):
     """
-    When a puzzle is complete allow resetting it.
+    Puzzle instance owners can reset a puzzle without it being in the complete
+    status. Puzzles that are reset will reuse the same pieces as before and are
+    not rerendered.
     """
 
     decorators = [user_not_banned]
@@ -87,6 +89,10 @@ class PuzzlePiecesResetView(MethodView):
             {"user": user, "points": puzzleData["pieces"]},
         )
 
+        # TODO: transfer any redis piece data out first since the puzzle can be
+        # reset regardless of the complete status.
+        # transfer(puzzle, cleanup=True):
+
         # Load the piece data from sqlite on demand
         if not redis_connection.zscore("pcupdates", puzzle):
             # TODO: check redis memory usage and create cleanup job if it's past a threshold
@@ -126,6 +132,7 @@ class PuzzlePiecesResetView(MethodView):
         allPiecesExceptTopLeft.remove(topLeftPiece["id"])
 
         # Create a pipe for buffering commands and disable atomic transactions
+        # TODO: don't disable atomic transactions
         pipe = redis_connection.pipeline(transaction=False)
 
         # Reset the pcfixed

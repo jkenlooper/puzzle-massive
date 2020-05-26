@@ -18,6 +18,8 @@ from api.constants import (
     SKILL_LEVEL_RANGES,
     BID_COST_PER_PUZZLE,
     QUEUE_WINNING_BID,
+    PRIVATE,
+    PUBLIC,
 )
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
@@ -194,7 +196,18 @@ class PuzzleInstanceDetailsView(MethodView):
             }
 
         elif action == "reset":
-            pass
+            if not (
+                puzzleData.get("permission") == PRIVATE
+                and not puzzleData.get("is_original")
+            ):
+                response = {"msg": "Only unlisted puzzle instances can be reset"}
+                cur.close()
+                return make_response(encoder.encode(response), 400)
+            # TODO: reset pieces
+            # TODO: Reset the redis puzzle token so players will be required to
+            # refresh the browser if they had the puzzle open.
+            # TODO: Set puzzle status to maintenance
+            # TODO: Archive and clear
 
         cur.close()
         return make_response(encoder.encode(response), 202)
@@ -203,6 +216,7 @@ class PuzzleInstanceDetailsView(MethodView):
         """
   deletePenalty: number;
   canDelete: boolean;
+  canReset: boolean;
   hasActions: boolean;
   deleteDisabledMessage: string; //Not enough dots to delete this puzzle
   isFrozen: boolean;
@@ -233,6 +247,8 @@ class PuzzleInstanceDetailsView(MethodView):
         )
         response = {
             "canDelete": can_delete,
+            "canReset": puzzleData.get("permission") == PRIVATE
+            and not puzzleData.get("is_original"),
             "hasActions": puzzleData.get("status")
             in (
                 FROZEN,
