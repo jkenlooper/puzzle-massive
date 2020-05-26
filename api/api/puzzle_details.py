@@ -4,6 +4,7 @@ from flask_sse import sse
 
 from api.app import db, redis_connection
 from api.user import user_id_from_ip, user_not_banned
+from api.jobs import piece_reset
 from api.database import fetch_query_string, rowify, delete_puzzle_resources
 from api.constants import (
     DELETED_REQUEST,
@@ -203,11 +204,52 @@ class PuzzleInstanceDetailsView(MethodView):
                 response = {"msg": "Only unlisted puzzle instances can be reset"}
                 cur.close()
                 return make_response(encoder.encode(response), 400)
-            # TODO: reset pieces
-            # TODO: Reset the redis puzzle token so players will be required to
-            # refresh the browser if they had the puzzle open.
-            # TODO: Set puzzle status to maintenance
-            # TODO: Archive and clear
+
+            if puzzleData.get("status") not in (
+                ACTIVE,
+                COMPLETED,
+                FROZEN,
+                BUGGY_UNLISTED,
+            ):
+                response = {
+                    "msg": "Puzzle is not in acceptable state in order to be reset"
+                }
+                cur.close()
+                return make_response(encoder.encode(response), 400)
+
+            if puzzleData.get("status") != ACTIVE:
+                # Only update the response status if puzzle status is changing.
+                # This way any response will trigger the "Reload" button since
+                # the active puzzle status will have an empty response status.
+                response = {"status": ACTIVE}
+
+            try:
+                piece_reset.reset_puzzle_pieces(puzzleData.get("id"))
+            except piece_reset.Error as err:
+                # Update puzzle status to RENDERING_FAILED
+                cur.execute(
+                    fetch_query_string("update_puzzle_status_for_puzzle.sql"),
+                    {"status": RENDERING_FAILED, "puzzle": puzzleData["id"]},
+                )
+                db.commit()
+                sse.publish(
+                    "status:{}".format(RENDERING_FAILED),
+                    channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id),
+                )
+                response = {"msg": err}
+                cur.close()
+                return make_response(encoder.encode(response), 400)
+
+            # Update puzzle status to ACTIVE and sse publish
+            cur.execute(
+                fetch_query_string("update_puzzle_status_for_puzzle.sql"),
+                {"status": ACTIVE, "puzzle": puzzleData["id"]},
+            )
+            db.commit()
+            sse.publish(
+                "status:{}".format(ACTIVE),
+                channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id),
+            )
 
         cur.close()
         return make_response(encoder.encode(response), 202)

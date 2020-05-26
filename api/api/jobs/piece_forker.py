@@ -109,8 +109,7 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
     copytree(source_instance_puzzle_dir, puzzle_dir)
     current_app.logger.debug("copied to {}".format(puzzle_dir))
 
-    # TODO: Get all piece props of source puzzle
-    # convertPiecesToDB.transfer() and then load all piece data from db.
+    # Get all piece props of source puzzle
     transfer(source_puzzle_data["instance_id"], my_db=db)
     query = """select * from Piece where (puzzle = :puzzle)"""
     (piece_properties, col_names) = rowify(
