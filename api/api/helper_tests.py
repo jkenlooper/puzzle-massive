@@ -25,6 +25,7 @@ class APITestCase(unittest.TestCase):
         cookie_secret = "oatmeal"
         self.app = make_app(
             SQLITE_DATABASE_URI=self.tmp_db.name,
+            REDIS_URL="redis://127.0.0.1:6379/1/",
             DEBUG=True,
             TESTING=True,  # Ignore wal journal_mode requirement
             PUZZLE_RESOURCES=self.tmp_puzzle_resources,

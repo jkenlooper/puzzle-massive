@@ -85,57 +85,15 @@ def reset_puzzle_pieces(puzzle):
     allPiecesExceptTopLeft = list(range(0, puzzle_data["pieces"]))
     allPiecesExceptTopLeft.remove(topLeftPiece["id"])
 
-    # Create a pipe for buffering commands and disable atomic transactions
-    # TODO: don't disable atomic transactions
-    pipe = redis_connection.pipeline(transaction=False)
-
-    # Reset the pcfixed
-    pipe.delete("pcfixed:{puzzle}".format(puzzle=puzzle))
-    pipe.sadd("pcfixed:{puzzle}".format(puzzle=puzzle), topLeftPiece["id"])
-
-    # Drop piece stacked
-    pipe.delete("pcstacked:{puzzle}".format(puzzle=puzzle))
-
-    # Drop piece X and Y
-    pipe.delete("pcx:{puzzle}".format(puzzle=puzzle))
-    pipe.delete("pcy:{puzzle}".format(puzzle=puzzle))
-
-    # Drop immovable piece group
-    pipe.delete(
-        "pcg:{puzzle}:{topLeft}".format(puzzle=puzzle, topLeft=topLeftPiece["parent"])
-    )
-
-    # Remove all piece groups and status
-    for piece in allPiecesExceptTopLeft:
-        # the piece status is removed here
-        pipe.hdel("pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), "g", "s")
-
-        # Remove these empty piece groups for each piece
-        pipe.delete("pcg:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece))
-
-    # Add top left piece group back in
-    pipe.sadd(
-        "pcg:{puzzle}:{topLeft}".format(puzzle=puzzle, topLeft=topLeftPiece["parent"]),
-        topLeftPiece["id"],
-    )
-    pipe.zadd(
-        "pcx:{puzzle}".format(puzzle=puzzle), {topLeftPiece["id"]: topLeftPiece["x"]},
-    )
-    pipe.zadd(
-        "pcy:{puzzle}".format(puzzle=puzzle), {topLeftPiece["id"]: topLeftPiece["y"]},
-    )
-
-    # Randomize piece x, y
+    # Randomize piece x, y. Reset the parent
     for piece in allPiecesExceptTopLeft:
         x = randint(x1, x2)
         y = randint(y1, y2)
-        pipe.hmset(
-            "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), {"x": x, "y": y,},
+        cur.execute(
+            "update Piece set x = :x, y = :y, parent = null, status = null where puzzle = :puzzle and id = :id",
+            {"x": x, "y": y, "puzzle": puzzle, "id": piece},
         )
-        pipe.zadd("pcx:{puzzle}".format(puzzle=puzzle), {piece: x})
-        pipe.zadd("pcy:{puzzle}".format(puzzle=puzzle), {piece: y})
 
-    pipe.execute()
     # The caller should update the status of the puzzle to get it out of
     # MAINTENANCE mode.
     db.commit()

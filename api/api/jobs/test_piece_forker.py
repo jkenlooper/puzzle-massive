@@ -117,7 +117,7 @@ class TestPieceForker(PuzzleTestCase):
                     "select status from Puzzle where puzzle_id = :puzzle_id",
                     {"puzzle_id": self.puzzle_id},
                 ).fetchone()[0]
-                assert MAINTENANCE == result
+                self.assertEqual(MAINTENANCE, result)
 
                 pf.fork_puzzle_pieces(self.source_puzzle_data, self.puzzle_data)
 
@@ -126,7 +126,7 @@ class TestPieceForker(PuzzleTestCase):
                     {"puzzle_id": self.puzzle_id},
                 ).fetchone()[0]
                 self.app.logger.debug(result)
-                assert ACTIVE == result
+                self.assertEqual(ACTIVE, result)
 
     def test_maintenance_status_exception(self):
         "Should raise exception if not in maintenance"
