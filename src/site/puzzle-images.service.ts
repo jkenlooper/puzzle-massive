@@ -44,6 +44,7 @@ export enum Status {
   COMPLETED = 3,
   FROZEN = 4,
   DELETED_REQUEST = -13,
+  MAINTENANCE = -30,
 }
 export const PuzzleAvailableStatuses = [
   Status.ACTIVE,

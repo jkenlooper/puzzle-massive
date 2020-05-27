@@ -228,11 +228,22 @@ class PuzzleStream {
         });
         break;
       case "inactive":
+        console.log("inactive status", state);
         state.actions.forEach((action) => {
           switch (action.type) {
             case "destroyEventSource":
               this.destroyEventSource();
               break;
+            case "broadcastPuzzleStatus":
+              this.broadcastPuzzleStatus();
+              break;
+          }
+        });
+        break;
+      case "active":
+        console.log("active status", state);
+        state.actions.forEach((action) => {
+          switch (action.type) {
             case "broadcastPuzzleStatus":
               this.broadcastPuzzleStatus();
               break;
@@ -326,6 +337,8 @@ class PuzzleStream {
   }
 
   private handleMessageEvent(message: any) {
+    console.log("message", message);
+    debugger;
     if (message.data && message.data.startsWith("status:")) {
       this.puzzleStatus = parseInt(message.data.substr("status:".length));
       switch (this.puzzleStatus) {
@@ -334,6 +347,12 @@ class PuzzleStream {
           break;
         case Status.FROZEN:
           this.puzzleStreamService.send("PUZZLE_FROZEN");
+          break;
+        case Status.ACTIVE:
+          this.puzzleStreamService.send("PUZZLE_ACTIVE");
+          break;
+        case Status.MAINTENANCE:
+          this.puzzleStreamService.send("PUZZLE_NOT_ACTIVE");
           break;
         case Status.DELETED_REQUEST:
           this.puzzleStreamService.send("PUZZLE_DELETED");

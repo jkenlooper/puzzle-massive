@@ -17,6 +17,8 @@ enum AlertStatus {
   disconnected = "disconnected",
   blocked = "blocked",
   completed = "completed",
+  maintenance = "maintenance",
+  reset = "reset",
   frozen = "frozen",
   deleted = "deleted",
   in_queue = "in_queue",
@@ -104,7 +106,7 @@ customElements.define(
     }
 
     private handleStateChange(state) {
-      //console.log(`puzzle-alert: ${state.value}`);
+      console.log(`puzzle-alert: ${state.value}`);
       switch (state.value) {
         case "connecting":
           state.actions.forEach((action) => {
@@ -132,6 +134,15 @@ customElements.define(
               case "hidePieceMoveBlocked":
                 // Reset back to connected state.
                 this.status = AlertStatus.connected;
+                break;
+              case "setStatusMaintenance":
+                this.status = AlertStatus.maintenance;
+                break;
+              case "setStatusReset":
+                this.status = AlertStatus.reset;
+                break;
+              case "hideAlert":
+                this.status = AlertStatus.none;
                 break;
               default:
                 break;
@@ -254,6 +265,7 @@ customElements.define(
                 >
                   <h2>Piece movement blocked</h2>
                   ${getDetails()}
+                  <a href="" class="Button">Reload</a>
                 </div>
               `;
               break;
@@ -284,6 +296,28 @@ customElements.define(
                 >
                   <h2>Puzzle Deleted</h2>
                   ${getDetails()}
+                </div>
+              `;
+              break;
+            case AlertStatus.maintenance:
+              return html`
+                <div
+                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--statusMaintenance"
+                >
+                  <h2>Puzzle Maintenance</h2>
+                  ${getDetails()}
+                  <a href="" class="Button">Reload</a>
+                </div>
+              `;
+              break;
+            case AlertStatus.reset:
+              return html`
+                <div
+                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--statusReset"
+                >
+                  <h2>Puzzle Reset</h2>
+                  ${getDetails()}
+                  <a href="" class="Button">Reload</a>
                 </div>
               `;
               break;
@@ -347,6 +381,7 @@ customElements.define(
     }
 
     onMoveBlocked(data) {
+      console.log("move blocked data", data);
       if (data.msg) {
         this.message = data.msg;
       } else {
@@ -372,6 +407,8 @@ customElements.define(
         }, timeout);
       }
 
+      //if (data.type === "puzzleimmutable"
+
       this.puzzleAlertService.send("PIECE_MOVE_BLOCKED");
       this.render();
     }
@@ -395,9 +432,13 @@ customElements.define(
     }
 
     onPuzzleStatus(status: Status) {
+      console.log("onPuzzleStatus", status);
       this.message = "";
       this.reason = "";
       switch (status) {
+        case Status.ACTIVE:
+          this.puzzleAlertService.send("PUZZLE_ACTIVE");
+          break;
         case Status.COMPLETED:
           this.puzzleAlertService.send("PUZZLE_COMPLETED");
           window.setTimeout(() => {
@@ -412,6 +453,9 @@ customElements.define(
           break;
         case Status.DELETED_REQUEST:
           this.puzzleAlertService.send("PUZZLE_DELETED");
+          break;
+        case Status.MAINTENANCE:
+          this.puzzleAlertService.send("MAINTENANCE");
           break;
         default:
           this.puzzleAlertService.send("PUZZLE_INVALID");

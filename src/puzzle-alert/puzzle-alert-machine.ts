@@ -43,6 +43,10 @@ export const puzzleAlertMachine = createMachine({
           target: "disconnected",
           actions: ["setStatusDisconnected"],
         },
+        MAINTENANCE: {
+          target: "active",
+          actions: ["setStatusMaintenance"],
+        },
         PUZZLE_COMPLETED: {
           target: "inactive",
           actions: ["setStatusCompleted"],
@@ -55,6 +59,10 @@ export const puzzleAlertMachine = createMachine({
           target: "inactive",
           actions: ["setStatusDeleted"],
         },
+        PUZZLE_RESET: {
+          target: "active",
+          actions: ["setStatusReset"],
+        },
         PUZZLE_IN_QUEUE: {
           target: "inactive",
           actions: ["setStatusInQueue"],
@@ -66,6 +74,10 @@ export const puzzleAlertMachine = createMachine({
         PUZZLE_COMPLETED_TIMER: {
           target: "inactive",
           actions: ["hideCompletedAlert"],
+        },
+        PUZZLE_ACTIVE: {
+          target: "active",
+          actions: ["hideAlert"],
         },
       },
     },

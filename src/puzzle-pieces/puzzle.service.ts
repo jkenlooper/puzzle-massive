@@ -272,11 +272,6 @@ class PuzzleService {
               reason: data.status,
             };
           }
-          if (!responseObj.timeout) {
-            const expire = new Date().getTime() / 1000 + 10;
-            responseObj.expires = expire;
-            responseObj.timeout = 10;
-          }
           switch (responseObj.type) {
             case PieceMoveErrorTypes.piecelock:
             case PieceMoveErrorTypes.piecequeue:
@@ -292,8 +287,16 @@ class PuzzleService {
             case PieceMoveErrorTypes.bannedusers:
             case PieceMoveErrorTypes.expiredtoken:
             case PieceMoveErrorTypes.puzzleimmutable:
-            default:
               self._broadcast(pieceMoveBlocked, responseObj);
+              break;
+            default:
+              if (!responseObj.timeout) {
+                const expire = new Date().getTime() / 1000 + 10;
+                responseObj.expires = expire;
+                responseObj.timeout = 10;
+              }
+              self._broadcast(pieceMoveBlocked, responseObj);
+              break;
           }
           pieceMovement.fail = true;
           self.onPieceMoveRejected({ id: piece });
