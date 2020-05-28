@@ -4,22 +4,16 @@ import sys
 
 from rq import Worker, Queue, Connection
 
+from api.app import redis_connection, make_app
 from api.tools import loadConfig, get_redis_connection
 
 # Preload libs
 from api.jobs import convertPiecesToDB
 
-# Get the args
-config_file = sys.argv[1]
-config = loadConfig(config_file)
-
-listen = ["puzzle_cleanup"]
-
-redis_connection = get_redis_connection(config, decode_responses=False)
-
 
 def main():
     ""
+    listen = ["puzzle_cleanup"]
     with Connection(redis_connection):
         worker = Worker(list(map(Queue, listen)))
 
@@ -30,4 +24,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    config_file = sys.argv[1]
+    config = loadConfig(config_file)
+    cookie_secret = config.get("SECURE_COOKIE_SECRET")
+    app = make_app(config=config, cookie_secret=cookie_secret)
+
+    with app.app_context():
+        main()

@@ -18,8 +18,6 @@ from __future__ import absolute_import
 from docopt import docopt
 import subprocess
 
-# from ConfigParser import RawConfigParser
-
 from .app import make_app
 from api.tools import loadConfig
 
@@ -56,6 +54,7 @@ def run(config, cookie_secret):
 
 def serve(config, cookie_secret):
     from gevent import pywsgi, signal
+    from flask_sse import sse
 
     app = make_app(config=config, cookie_secret=cookie_secret)
 
@@ -66,6 +65,13 @@ def serve(config, cookie_secret):
     server = pywsgi.WSGIServer((host, port), app)
 
     def shutdown():
+        app.logger.info("api is being shutdown")
+        # TODO: send puzzle status of puzzle temporarily not available
+        # with app.app_context():
+        #    sse.publish(
+        #        "status:{}".format(-30), channel="puzzle:",  # MAINTENANCE
+        #    )
+
         server.stop(timeout=10)
 
         # Transfer all piece data out of Redis and into the database when

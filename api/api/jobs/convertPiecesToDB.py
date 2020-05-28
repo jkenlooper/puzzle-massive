@@ -16,26 +16,23 @@ import sys
 import os.path
 import math
 import time
-import logging
 
 from docopt import docopt
+from flask import current_app
+from flask_sse import sse
 
+from api.app import redis_connection, db, make_app
 from api.database import rowify, read_query_file
-from api.tools import loadConfig, get_db, get_redis_connection, deletePieceDataFromRedis
+from api.tools import loadConfig, deletePieceDataFromRedis
 from api.constants import MAINTENANCE
 
-logging.basicConfig()
-logger = logging.getLogger(__name__)
 
-
-def transfer(puzzle, my_db=None, cleanup=True):
+def transfer(puzzle, cleanup=True):
     """
     Transfer the puzzle data from Redis to the database. If the cleanup flag is
     set the Redis data for the puzzle will be removed afterward.
     """
-    logger.info("transferring puzzle: {0}".format(puzzle))
-    if my_db != None:
-        db = my_db
+    current_app.logger.info("transferring puzzle: {0}".format(puzzle))
     cur = db.cursor()
 
     query = """select * from Puzzle where (id = :puzzle)"""
@@ -46,7 +43,7 @@ def transfer(puzzle, my_db=None, cleanup=True):
         # Most likely because of a database switch and forgot to run this script
         # between those actions.
         # TODO: Raise an error here and let the caller decide how to handle it.
-        logger.warn("Puzzle {} not in database. Skipping.".format(puzzle))
+        current_app.logger.warn("Puzzle {} not in database. Skipping.".format(puzzle))
         return
 
     puzzle_data = result[0]
@@ -55,6 +52,10 @@ def transfer(puzzle, my_db=None, cleanup=True):
     cur.execute(
         read_query_file("update_puzzle_status_for_puzzle.sql"),
         {"status": MAINTENANCE, "puzzle": puzzle},
+    )
+    sse.publish(
+        "status:{}".format(MAINTENANCE),
+        channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_data["puzzle_id"]),
     )
 
     (all_pieces, col_names) = rowify(
@@ -92,7 +93,7 @@ def transfer(puzzle, my_db=None, cleanup=True):
                 else redis_piece_prop
             )
             if redis_piece_prop != piece[colname]:
-                logger.debug(
+                current_app.logger.debug(
                     "{} has {} changes. {} != {}".format(
                         piece["id"], colname, redis_piece_prop, piece[colname]
                     )
@@ -140,36 +141,27 @@ def transferOldest(target_memory):
 def transferAll(cleanup=False):
     # Get all puzzles
     puzzles = redis_connection.zrange("pcupdates", 0, -1)
-    logger.info("transferring puzzles: {0}".format(puzzles))
+    current_app.logger.info("transferring puzzles: {0}".format(puzzles))
     for puzzle in puzzles:
-        logger.info("transfer puzzle: {0}".format(puzzle))
+        current_app.logger.info("transfer puzzle: {0}".format(puzzle))
         transfer(puzzle, cleanup=cleanup)
         memory = redis_connection.info(section="memory")
         if cleanup:
-            logger.info("used_memory: {used_memory_human}".format(**memory))
+            current_app.logger.info("used_memory: {used_memory_human}".format(**memory))
 
 
 def handle_fail(job, exception, exception_func, traceback):
     # TODO: handle fail for janitor; see handle_render_fail of pieceRenderer.py
-    logger.info("Handle janitor fail {0}".format(job.args[0]))
+    current_app.logger.info("Handle janitor fail {0}".format(job.args[0]))
 
 
 if __name__ == "__main__":
     # Get the args from the janitor and connect to the database
     args = docopt(__doc__)
-    # config_file = sys.argv[1]
     config_file = args["<site.cfg>"]
     config = loadConfig(config_file)
-    logger.setLevel(logging.DEBUG if config["DEBUG"] else logging.INFO)
+    cookie_secret = config.get("SECURE_COOKIE_SECRET")
+    app = make_app(config=config_file, cookie_secret=cookie_secret)
 
-    db = get_db(config)
-    redis_connection = get_redis_connection(config)
-
-    transferAll(args["--cleanup"])
-
-else:
-    config = loadConfig("site.cfg")
-    logger.setLevel(logging.DEBUG if config["DEBUG"] else logging.INFO)
-
-    db = get_db(config)
-    redis_connection = get_redis_connection(config)
+    with app.app_context():
+        transferAll(args["--cleanup"])
