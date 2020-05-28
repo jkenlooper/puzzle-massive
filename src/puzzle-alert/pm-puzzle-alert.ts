@@ -18,7 +18,7 @@ enum AlertStatus {
   blocked = "blocked",
   completed = "completed",
   maintenance = "maintenance",
-  reset = "reset",
+  reload = "reload",
   frozen = "frozen",
   deleted = "deleted",
   in_queue = "in_queue",
@@ -135,11 +135,8 @@ customElements.define(
                 // Reset back to connected state.
                 this.status = AlertStatus.connected;
                 break;
-              case "setStatusMaintenance":
-                this.status = AlertStatus.maintenance;
-                break;
-              case "setStatusReset":
-                this.status = AlertStatus.reset;
+              case "setStatusMaintenanceReload":
+                this.status = AlertStatus.reload;
                 break;
               case "hideAlert":
                 this.status = AlertStatus.none;
@@ -166,6 +163,9 @@ customElements.define(
                 break;
               case "setStatusDeleted":
                 this.status = AlertStatus.deleted;
+                break;
+              case "setStatusMaintenance":
+                this.status = AlertStatus.maintenance;
                 break;
               case "setInvalid":
                 this.status = AlertStatus.invalid;
@@ -310,12 +310,12 @@ customElements.define(
                 </div>
               `;
               break;
-            case AlertStatus.reset:
+            case AlertStatus.reload:
               return html`
                 <div
-                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--statusReset"
+                  class="pm-PuzzleAlert-message pm-PuzzleAlert-message--statusReload"
                 >
-                  <h2>Puzzle Reset</h2>
+                  <h2>Puzzle Updated</h2>
                   ${getDetails()}
                   <a href="" class="Button">Reload</a>
                 </div>

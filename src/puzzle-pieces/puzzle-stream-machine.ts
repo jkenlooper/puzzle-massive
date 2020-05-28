@@ -138,7 +138,7 @@ export const puzzleStreamMachine = createMachine<Context>({
           actions: ["broadcastPuzzleStatus"],
         },
         PUZZLE_ACTIVE: {
-          target: "active",
+          target: "connected",
           actions: ["broadcastPuzzleStatus"],
         },
         CLOSE: {
@@ -156,8 +156,8 @@ export const puzzleStreamMachine = createMachine<Context>({
       ],
       on: {
         PUZZLE_ACTIVE: {
-          target: "active",
-          actions: ["broadcastPuzzleStatus"],
+          target: "inactive",
+          actions: ["destroyEventSource", "broadcastPuzzleStatus"],
         },
       },
     },

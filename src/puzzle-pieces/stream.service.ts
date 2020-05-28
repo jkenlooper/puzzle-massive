@@ -174,8 +174,6 @@ class PuzzleStream {
   }
 
   private handleStateChange(state) {
-    console.log(`puzzle-stream: ${state.value}`);
-    console.log(state.context);
     switch (state.value) {
       case "connecting":
         // Send a ping to the server every second while connecting.
@@ -206,6 +204,9 @@ class PuzzleStream {
             case "broadcastConnected":
               this.broadcast(socketConnected);
               break;
+            case "broadcastPuzzleStatus":
+              this.broadcastPuzzleStatus();
+              break;
           }
         });
         break;
@@ -228,22 +229,11 @@ class PuzzleStream {
         });
         break;
       case "inactive":
-        console.log("inactive status", state);
         state.actions.forEach((action) => {
           switch (action.type) {
             case "destroyEventSource":
               this.destroyEventSource();
               break;
-            case "broadcastPuzzleStatus":
-              this.broadcastPuzzleStatus();
-              break;
-          }
-        });
-        break;
-      case "active":
-        console.log("active status", state);
-        state.actions.forEach((action) => {
-          switch (action.type) {
             case "broadcastPuzzleStatus":
               this.broadcastPuzzleStatus();
               break;
@@ -337,8 +327,7 @@ class PuzzleStream {
   }
 
   private handleMessageEvent(message: any) {
-    console.log("message", message);
-    debugger;
+    //console.log("message from event source", message);
     if (message.data && message.data.startsWith("status:")) {
       this.puzzleStatus = parseInt(message.data.substr("status:".length));
       switch (this.puzzleStatus) {
@@ -369,7 +358,6 @@ class PuzzleStream {
     this.puzzleStreamService.send("SUCCESS");
   }
   private handleErrorEvent(error: Event | any) {
-    console.log("handleErrorEvent", error);
     switch (this.readyState) {
       case EventSource.CONNECTING:
         console.error("Failed to connect to puzzle stream.", error);
@@ -396,6 +384,7 @@ class PuzzleStream {
         }
         break;
       default:
+        console.log("handleErrorEvent", error);
         this.puzzleStreamService.send("ERROR");
         break;
     }

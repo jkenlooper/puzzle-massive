@@ -7,7 +7,7 @@ from flask_sse import sse
 
 from api.flask_secure_cookie import SecureCookie
 from api.database import fetch_query_string, rowify
-from api.constants import ACTIVE
+from api.constants import ACTIVE, BUGGY_UNLISTED, MAINTENANCE
 from api.user import user_id_from_ip
 from api.tools import get_db, files_loader
 
@@ -86,7 +86,7 @@ def make_app(config=None, **kw):
                 (result, col_names) = rowify(result, cur.description)
                 puzzle = result[0].get("puzzle")
                 status = result[0].get("status")
-                if status != ACTIVE:
+                if status not in (ACTIVE, BUGGY_UNLISTED, MAINTENANCE):
                     response["message"] = "Puzzle not active"
                     response["name"] = "invalid"
                     abort(make_response(json.jsonify(response), 400))
