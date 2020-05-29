@@ -1,3 +1,15 @@
+"""pieceRenderer.py - Create puzzle pieces for puzzles in render queue
+
+Usage: pieceRenderer.py [--config <file>]
+       pieceRenderer.py --help
+       pieceRenderer.py --list
+
+Options:
+    -h --help           Show this screen.
+    --config <file>     Set config file. [default: site.cfg]
+    --list              List puzzles that are being rendered or are in render queue
+"""
+
 from __future__ import print_function
 from __future__ import division
 from builtins import map
@@ -11,13 +23,16 @@ import logging
 from random import randint
 import subprocess
 import time
+from docopt import docopt
 
 import sqlite3
 from PIL import Image
 from piecemaker.base import JigsawPieceClipsSVG, Pieces
 from piecemaker.adjacent import Adjacent
+from flask import current_app
 
-from api.database import read_query_file
+from api.app import redis_connection, db, make_app
+from api.database import read_query_file, rowify
 from api.tools import loadConfig, get_db
 from api.constants import (
     IN_RENDER_QUEUE,
@@ -50,36 +65,74 @@ insert_puzzle_file = """
 insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);
 """
 
-# Get the args from the worker and connect to the database
-config_file = sys.argv[1]
-config = loadConfig(config_file)
-
-db = get_db(config)
-
-logging.basicConfig()
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG if config["DEBUG"] else logging.INFO)
-
 
 def handle_render_fail(job, exception, exception_func, traceback):
     """
     """
-    cur = db.cursor()
-
     print("Handle render fail")
     for puzzle in job.args:
-        print("set puzzle to fail status: {puzzle_id}".format(**puzzle))
-        # Update Puzzle data
-        cur.execute(
-            "update Puzzle set status = :RENDERING_FAILED where status = :RENDERING and id = :id;",
-            {
-                "RENDERING_FAILED": RENDERING_FAILED,
-                "RENDERING": RENDERING,
-                "id": puzzle["id"],
-            },
-        )
+        set_render_fail_on_puzzle(puzzle)
+
+
+def set_render_fail_on_puzzle(puzzle):
+    cur = db.cursor()
+
+    print("set puzzle to fail status: {puzzle_id}".format(**puzzle))
+    # Update Puzzle data
+    cur.execute(
+        "update Puzzle set status = :RENDERING_FAILED where status = :RENDERING and id = :id;",
+        {
+            "RENDERING_FAILED": RENDERING_FAILED,
+            "RENDERING": RENDERING,
+            "id": puzzle["id"],
+        },
+    )
     db.commit()
     cur.close()
+
+
+def render_all():
+    ""
+    cur = db.cursor()
+
+    result = cur.execute(
+        "select * from Puzzle where status in (:IN_RENDER_QUEUE, :REBUILD)",
+        {"IN_RENDER_QUEUE": IN_RENDER_QUEUE, "REBUILD": REBUILD,},
+    ).fetchall()
+    if not result:
+        print("no puzzles found in render or rebuild queues")
+        return
+    (result, col_names) = rowify(result, cur.description)
+    job = {"args": result}
+    for puzzle in result:
+        try:
+            render([puzzle])
+        except:
+            set_render_fail_on_puzzle(puzzle)
+
+
+def list_all():
+    ""
+    cur = db.cursor()
+
+    result = cur.execute(
+        "select * from Puzzle where status in (:IN_RENDER_QUEUE, :REBUILD, :RENDERING, :RENDERING_FAILED)",
+        {
+            "IN_RENDER_QUEUE": IN_RENDER_QUEUE,
+            "REBUILD": REBUILD,
+            "RENDERING": RENDERING,
+            "RENDERING_FAILED": RENDERING_FAILED,
+        },
+    ).fetchall()
+    if not result:
+        print(
+            "no puzzles found in render or rebuild queues. No puzzles rendering or have failed rendering."
+        )
+        return
+    (result, col_names) = rowify(result, cur.description)
+    # TODO: clean up the list and show each puzzle in a group
+    for puzzle in result:
+        print("{puzzle_id} is {status}".format(**puzzle))
 
 
 def render(*args):
@@ -129,9 +182,9 @@ def render(*args):
         original_puzzle_id = result[0]
         puzzle_id = puzzle["puzzle_id"]
         original_puzzle_dir = os.path.join(
-            config["PUZZLE_RESOURCES"], original_puzzle_id
+            current_app.config["PUZZLE_RESOURCES"], original_puzzle_id
         )
-        puzzle_dir = os.path.join(config["PUZZLE_RESOURCES"], puzzle_id)
+        puzzle_dir = os.path.join(current_app.config["PUZZLE_RESOURCES"], puzzle_id)
 
         # If it is being rebuilt then delete all the other resources.
         cleanup(puzzle_id, ["original.jpg", "preview_full.jpg"])
@@ -474,7 +527,7 @@ def render(*args):
 
 
 def cleanup(puzzle_id, keep_list):
-    puzzle_dir = os.path.join(config["PUZZLE_RESOURCES"], puzzle_id)
+    puzzle_dir = os.path.join(current_app.config["PUZZLE_RESOURCES"], puzzle_id)
     for (dirpath, dirnames, filenames) in os.walk(puzzle_dir, False):
         for filename in filenames:
             if filename not in keep_list:
@@ -482,3 +535,22 @@ def cleanup(puzzle_id, keep_list):
         for dirname in dirnames:
             if dirname not in keep_list:
                 os.rmdir(os.path.join(dirpath, dirname))
+
+
+def main():
+    args = docopt(__doc__)
+    config_file = args["--config"]
+    show_list = args.get("--list")
+    config = loadConfig(config_file)
+    cookie_secret = config.get("SECURE_COOKIE_SECRET")
+    app = make_app(config=config_file, cookie_secret=cookie_secret)
+
+    with app.app_context():
+        if not show_list:
+            render_all()
+        else:
+            list_all()
+
+
+if __name__ == "__main__":
+    main()

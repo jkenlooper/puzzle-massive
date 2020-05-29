@@ -18,7 +18,7 @@ After=network.target
 User=dev
 Group=dev
 WorkingDirectory=$SRCDIR
-ExecStart=${SRCDIR}bin/puzzle-massive-artist site.cfg serve
+ExecStart=${SRCDIR}bin/puzzle-massive-artist
 
 [Install]
 WantedBy=multi-user.target
