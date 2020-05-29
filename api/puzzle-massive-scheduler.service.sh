@@ -18,7 +18,7 @@ After=network.target
 User=dev
 Group=dev
 WorkingDirectory=$SRCDIR
-ExecStart=${SRCDIR}bin/puzzle-massive-scheduler site.cfg
+ExecStart=${SRCDIR}bin/puzzle-massive-scheduler
 
 [Install]
 WantedBy=multi-user.target

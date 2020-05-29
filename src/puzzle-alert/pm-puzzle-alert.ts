@@ -106,7 +106,7 @@ customElements.define(
     }
 
     private handleStateChange(state) {
-      console.log(`puzzle-alert: ${state.value}`);
+      //console.log(`puzzle-alert: ${state.value}`);
       switch (state.value) {
         case "connecting":
           state.actions.forEach((action) => {
@@ -432,7 +432,7 @@ customElements.define(
     }
 
     onPuzzleStatus(status: Status) {
-      console.log("onPuzzleStatus", status);
+      //console.log("onPuzzleStatus", status);
       this.message = "";
       this.reason = "";
       switch (status) {
