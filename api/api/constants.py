@@ -1,6 +1,3 @@
-POINT_COST_FOR_CHANGING_BIT = 100
-NEW_USER_STARTING_POINTS = 1300
-POINTS_CAP = 15000
 USER_NAME_MAXLENGTH = 26
 EMAIL_MAXLENGTH = 254
 # The SKILL_LEVEL_RANGES is also copied in src/gallery/pm-gallery.ts
@@ -51,5 +48,3 @@ QUEUE_INACTIVE = (
     10  # When a puzzle that was ACTIVE gets retired to IN_QUEUE because of old m_date
 )
 QUEUE_END_OF_LINE = 99  # Set when a puzzle is completed. Anything beyond this is also considered end of line and should be sorted by m_date
-
-BID_COST_PER_PUZZLE = 100

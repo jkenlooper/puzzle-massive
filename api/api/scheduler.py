@@ -27,10 +27,8 @@ from api.timeline import archive_and_clear
 from api.constants import (
     REBUILD,
     COMPLETED,
-    NEW_USER_STARTING_POINTS,
     SKILL_LEVEL_RANGES,
     QUEUE_END_OF_LINE,
-    POINTS_CAP,
 )
 from api.notify import send_message
 
@@ -188,7 +186,7 @@ class BumpMinimumDotsForPlayers(Task):
         cur = db.cursor()
         result = cur.execute(
             read_query_file("update_points_to_minimum_for_all_users.sql"),
-            {"minimum": NEW_USER_STARTING_POINTS},
+            {"minimum": current_app.config["NEW_USER_STARTING_POINTS"]},
         )
         if result.rowcount:
             self.log_task()
@@ -261,7 +259,7 @@ class UpdatePlayer(Task):
                     "id": user,
                     "points": points,
                     "score": score,
-                    "POINTS_CAP": POINTS_CAP,
+                    "POINTS_CAP": current_app.config["POINTS_CAP"],
                 },
             )
             cur.execute(

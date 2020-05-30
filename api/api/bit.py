@@ -13,7 +13,6 @@ from api.user import (
     user_id_from_ip,
     user_not_banned,
 )
-from api.constants import POINT_COST_FOR_CHANGING_BIT, NEW_USER_STARTING_POINTS
 from api.tools import purge_route_from_nginx_cache
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
@@ -186,7 +185,8 @@ class ClaimUserView(MethodView):
             fetch_query_string("select-minimum-points-for-user.sql"),
             {
                 "user": user,
-                "points": NEW_USER_STARTING_POINTS + POINT_COST_FOR_CHANGING_BIT,
+                "points": current_app.config["NEW_USER_STARTING_POINTS"]
+                + current_app.config["POINT_COST_FOR_CHANGING_BIT"],
             },
         ).fetchone()
         if result:
@@ -201,7 +201,10 @@ class ClaimUserView(MethodView):
 
             cur.execute(
                 fetch_query_string("decrease-user-points.sql"),
-                {"user": user, "points": POINT_COST_FOR_CHANGING_BIT},
+                {
+                    "user": user,
+                    "points": current_app.config["POINT_COST_FOR_CHANGING_BIT"],
+                },
             )
 
         cur.close()

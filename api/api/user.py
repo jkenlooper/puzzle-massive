@@ -13,7 +13,6 @@ from flask.views import MethodView
 
 from api.app import db, redis_connection
 from api.database import rowify, fetch_query_string
-from api.constants import POINT_COST_FOR_CHANGING_BIT, NEW_USER_STARTING_POINTS
 
 LETTERS = "%s%s" % (string.ascii_letters, string.digits)
 
@@ -82,7 +81,11 @@ def user_id_from_ip(ip, skip_generate=True):
         login = generate_user_login()
         cur.execute(
             fetch_query_string("add-new-user-for-ip.sql"),
-            {"ip": ip, "login": login, "points": NEW_USER_STARTING_POINTS},
+            {
+                "ip": ip,
+                "login": login,
+                "points": current_app.config["NEW_USER_STARTING_POINTS"],
+            },
         )
         db.commit()
 
@@ -476,7 +479,8 @@ class UserDetailsView(MethodView):
                 fetch_query_string("select-minimum-points-for-user.sql"),
                 {
                     "user": user,
-                    "points": NEW_USER_STARTING_POINTS + POINT_COST_FOR_CHANGING_BIT,
+                    "points": current_app.config["NEW_USER_STARTING_POINTS"]
+                    + current_app.config["POINT_COST_FOR_CHANGING_BIT"],
                 },
             ).fetchone()
             if result:
@@ -540,7 +544,8 @@ class SplitPlayer(MethodView):
             fetch_query_string("select-minimum-points-for-user.sql"),
             {
                 "user": user,
-                "points": NEW_USER_STARTING_POINTS + POINT_COST_FOR_CHANGING_BIT,
+                "points": current_app.config["NEW_USER_STARTING_POINTS"]
+                + current_app.config["POINT_COST_FOR_CHANGING_BIT"],
             },
         ).fetchone()
         if not result:
@@ -548,7 +553,7 @@ class SplitPlayer(MethodView):
             return make_response("not enough dots", 400)
         cur.execute(
             fetch_query_string("decrease-user-points.sql"),
-            {"user": user, "points": POINT_COST_FOR_CHANGING_BIT},
+            {"user": user, "points": current_app.config["POINT_COST_FOR_CHANGING_BIT"]},
         )
 
         # Create new user
@@ -561,7 +566,7 @@ class SplitPlayer(MethodView):
             {
                 "password": password,
                 "ip": ip,
-                "points": NEW_USER_STARTING_POINTS,
+                "points": current_app.config["NEW_USER_STARTING_POINTS"],
                 "login": login,
             },
         )

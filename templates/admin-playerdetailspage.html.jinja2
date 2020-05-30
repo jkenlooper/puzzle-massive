@@ -100,7 +100,7 @@
           <td>{{ player.dots }}</td>
           <td>
             <label>dots
-            <input name="dots" type="number" min="0" max="15000" value="{{ player.dots }}"><!-- POINTS_CAP -->
+            <input name="dots" type="number" min="0" max="{{ config.POINTS_CAP }}" value="{{ player.dots }}">
             </label>
           </td>
         </tr>

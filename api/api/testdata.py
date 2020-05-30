@@ -47,7 +47,6 @@ from api.constants import (
     IN_QUEUE,
     IN_RENDER_QUEUE,
     NEEDS_MODERATION,
-    NEW_USER_STARTING_POINTS,
     PUBLIC,
     REBUILD,
     RENDERING,
@@ -84,7 +83,7 @@ def generate_users(count):
             {
                 "ip": ip,
                 "login": login,
-                "points": NEW_USER_STARTING_POINTS,
+                "points": current_app.config["NEW_USER_STARTING_POINTS"],
                 "score": score,
             },
         )

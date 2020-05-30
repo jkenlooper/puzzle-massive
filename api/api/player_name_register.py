@@ -9,8 +9,6 @@ from api.user import user_id_from_ip, user_not_banned
 from api.constants import USER_NAME_MAXLENGTH
 from api.tools import normalize_name_from_display_name, purge_route_from_nginx_cache
 
-POINT_COST_FOR_CHANGING_NAME = 100
-
 ACTIONS = ("reject",)
 
 
@@ -109,7 +107,10 @@ class PlayerNameRegisterView(MethodView):
 
         result = cur.execute(
             fetch_query_string("select-minimum-points-for-user.sql"),
-            {"user": user, "points": POINT_COST_FOR_CHANGING_NAME},
+            {
+                "user": user,
+                "points": current_app.config["POINT_COST_FOR_CHANGING_NAME"],
+            },
         ).fetchone()
         if not result:
             response["message"] = "Not enough points to change name."
@@ -127,7 +128,10 @@ class PlayerNameRegisterView(MethodView):
                 )
                 cur.execute(
                     fetch_query_string("decrease-user-points.sql"),
-                    {"points": POINT_COST_FOR_CHANGING_NAME, "user": user,},
+                    {
+                        "points": current_app.config["POINT_COST_FOR_CHANGING_NAME"],
+                        "user": user,
+                    },
                 )
                 response["message"] = "Removed name."
                 response["name"] = "success"
@@ -166,7 +170,12 @@ class PlayerNameRegisterView(MethodView):
                         )
                         cur.execute(
                             fetch_query_string("decrease-user-points.sql"),
-                            {"points": POINT_COST_FOR_CHANGING_NAME, "user": user,},
+                            {
+                                "points": current_app.config[
+                                    "POINT_COST_FOR_CHANGING_NAME"
+                                ],
+                                "user": user,
+                            },
                         )
                         response["message"] = "Submitted name ({}) reclaimed.".format(
                             display_name
@@ -201,7 +210,12 @@ class PlayerNameRegisterView(MethodView):
 
                     cur.execute(
                         fetch_query_string("decrease-user-points.sql"),
-                        {"points": POINT_COST_FOR_CHANGING_NAME, "user": user,},
+                        {
+                            "points": current_app.config[
+                                "POINT_COST_FOR_CHANGING_NAME"
+                            ],
+                            "user": user,
+                        },
                     )
                     response[
                         "message"

@@ -7,6 +7,8 @@ import userDetailsService from "../site/user-details.service";
 interface TemplateData {
   dots: number;
   maxPointCost: number;
+  newUserStartingPoints: number;
+  pointsCap: number;
   minPieceCount: number;
   maxPieceCount: number;
   maxPieceCountForDots: number;
@@ -29,6 +31,8 @@ customElements.define(
     }
     private instanceId: string;
     private maxPointCost: number;
+    private newUserStartingPoints: number;
+    private pointsCap: number;
     private minPieceCount: number;
     private pieceCount: number;
     private puzzleId: string;
@@ -41,6 +45,16 @@ customElements.define(
 
       const maxPointCost = this.attributes.getNamedItem("max-point-cost");
       this.maxPointCost = maxPointCost ? parseInt(maxPointCost.value) : 0;
+
+      const newUserStartingPointsAttr = this.attributes.getNamedItem(
+        "new-user-starting-points"
+      );
+      this.newUserStartingPoints = newUserStartingPointsAttr
+        ? parseInt(newUserStartingPointsAttr.value)
+        : 0;
+
+      const pointsCapAttr = this.attributes.getNamedItem("points-cap");
+      this.pointsCap = pointsCapAttr ? parseInt(pointsCapAttr.value) : 0;
 
       const minPieceCount = this.attributes.getNamedItem("min-piece-count");
       this.minPieceCount = minPieceCount ? parseInt(minPieceCount.value) : 0;
@@ -80,9 +94,11 @@ customElements.define(
                 <p>
                   You have earned
                   <strong>${data.dots}</strong>
-                  dots by putting together puzzles. Rebuilding puzzles will
-                  decrease the number of dots depending on the piece count
-                  selected up to ${data.maxPointCost} dots.
+                  dots by putting together puzzles. All players start with a
+                  minimum of ${data.newUserStartingPoints} dots each day and
+                  have a maximum of ${data.pointsCap} that can be earned.
+                  Rebuilding puzzles will decrease the number of dots depending
+                  on the piece count selected up to ${data.maxPointCost} dots.
                 </p>
               `}
           <form method="post" action="/newapi/puzzle-rebuild/">
@@ -120,6 +136,8 @@ customElements.define(
       return {
         dots: userDetailsService.userDetails.dots,
         maxPointCost: this.maxPointCost,
+        newUserStartingPoints: this.newUserStartingPoints,
+        pointsCap: this.pointsCap,
         minPieceCount: this.minPieceCount,
         maxPieceCount: maxPieceCount,
         maxPieceCountForDots: Math.min(

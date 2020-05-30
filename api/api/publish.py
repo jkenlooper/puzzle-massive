@@ -27,8 +27,6 @@ from api.tools import (
 from api.constants import (
     ACTIVE,
     BUGGY_UNLISTED,
-    POINT_COST_FOR_CHANGING_BIT,
-    NEW_USER_STARTING_POINTS,
 )
 
 # from jobs import pieceMove
@@ -249,8 +247,12 @@ class PuzzlePieceTokenView(MethodView):
                             "select points from User where id = :id and points >= :cost + :startpoints;",
                             {
                                 "id": user,
-                                "cost": POINT_COST_FOR_CHANGING_BIT,
-                                "startpoints": NEW_USER_STARTING_POINTS,
+                                "cost": current_app.config[
+                                    "POINT_COST_FOR_CHANGING_BIT"
+                                ],
+                                "startpoints": current_app.config[
+                                    "NEW_USER_STARTING_POINTS"
+                                ],
                             },
                         ).fetchone()
                         if result:

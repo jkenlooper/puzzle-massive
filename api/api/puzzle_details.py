@@ -17,7 +17,6 @@ from api.constants import (
     REBUILD,
     IN_RENDER_QUEUE,
     SKILL_LEVEL_RANGES,
-    BID_COST_PER_PUZZLE,
     QUEUE_WINNING_BID,
     PRIVATE,
     PUBLIC,
@@ -37,12 +36,20 @@ class PuzzleInstanceDetailsView(MethodView):
     decorators = [user_not_banned]
 
     def get_delete_prereq(self, puzzleData):
+        """
+        The delete penalty is to limit how many puzzles a player can delete when
+        they are not complete.  The limit is needed because it doesn't cost any
+        dots to create a puzzle instance.
+        For puzzles that have no or an older modified date, the delete penalty
+        is waived.
+        """
         delete_penalty = 0
         can_delete = True
         delete_disabled_message = ""
         if puzzleData["status"] != COMPLETED:
-            delete_penalty = max(
-                current_app.config["MINIMUM_PIECE_COUNT"], puzzleData["pieces"]
+            delete_penalty = min(
+                current_app.config["MAX_POINT_COST_FOR_DELETING"],
+                max(current_app.config["MINIMUM_PIECE_COUNT"], puzzleData["pieces"]),
             )
             can_delete = puzzleData["user_points"] >= delete_penalty
             # Waive the delete penalty if the m_date for the puzzle is old
@@ -351,7 +358,9 @@ class PuzzleOriginalDetailsView(MethodView):
             {"low": low, "high": high},
         ).fetchone()
         if queue_count_result and len(queue_count_result):
-            bid_amount = (queue_count_result[0] + 1) * BID_COST_PER_PUZZLE
+            bid_amount = (queue_count_result[0] + 1) * current_app.config[
+                "BID_COST_PER_PUZZLE"
+            ]
             return bid_amount
 
     def patch(self, puzzle_id):

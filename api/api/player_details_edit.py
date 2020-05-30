@@ -5,7 +5,7 @@ from flask.views import MethodView
 
 from api.app import db
 from api.database import rowify, fetch_query_string, delete_puzzle_resources
-from api.constants import POINTS_CAP, USER_NAME_MAXLENGTH, EMAIL_MAXLENGTH
+from api.constants import USER_NAME_MAXLENGTH, EMAIL_MAXLENGTH
 from api.tools import normalize_name_from_display_name, purge_route_from_nginx_cache
 
 SLOT_ACTIONS = ("add", "delete")
@@ -87,7 +87,7 @@ class AdminPlayerDetailsEditView(MethodView):
             {
                 "player_id": player,
                 "points": int(args.get("dots", existing_player_data["dots"])),
-                "POINTS_CAP": POINTS_CAP,
+                "POINTS_CAP": current_app.config["POINTS_CAP"],
             },
         )
 

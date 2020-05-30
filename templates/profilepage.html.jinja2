@@ -16,11 +16,11 @@
 
   <details class="u-marginTopMd u-marginBottomMd">
     <summary>Change Player Name</summary>
-    <p>Changing the player name will cost 100 dots. <small><em>Every day your balance will be set to a minimum of 1300 dots.</em></small></p>
-    <pm-dot-require min="100" type="blur">
+    <p>Changing the player name will cost {{ config.POINT_COST_FOR_CHANGING_NAME }} dots. <small><em>Every day your balance will be set to a minimum of {{ config.NEW_USER_STARTING_POINTS }} dots.</em></small></p>
+    <pm-dot-require min="{{ config.POINT_COST_FOR_CHANGING_NAME }}" type="blur">
       <p>
         The player name is <b>not</b> used when logging into your account
-        and can be anything that you would like. Names are limited to 26
+        and can be anything that you would like. Names are limited to 26{# USER_NAME_MAXLENGTH #}
         characters and must be unique from other player names.
       </p>
       <pm-player-name-register></pm-player-name-register>

@@ -245,6 +245,8 @@
           {% endif %}
         <pm-dot-require min="{{ config.MINIMUM_PIECE_COUNT }}" type="none">
           <pm-rebuild-form max-point-cost="{{ config.MAX_POINT_COST_FOR_REBUILDING }}"
+                           new-user-starting-points="{{ config.NEW_USER_STARTING_POINTS }}"
+                           points-cap="{{ config.POINTS_CAP }}"
                            puzzle-id="{{puzzle.puzzle_id}}"
                            is-original="{{ puzzle.is_original }}"
                            owner="{{ puzzle.owner }}"
