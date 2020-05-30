@@ -1,10 +1,11 @@
 """convertPiecesToDB.py
 
-Usage: convertPiecesToDB.py <site.cfg> [--cleanup]
+Usage: convertPiecesToDB.py [--config <file>] [--cleanup]
        convertPiecesToDB.py --help
 
 Options:
   -h --help         Show this screen.
+  --config <file>   Set config file. [default: site.cfg]
   --cleanup         Clear redis data after transferring it to DB
 """
 from __future__ import print_function
@@ -16,8 +17,8 @@ import sys
 import os.path
 import math
 import time
-
 from docopt import docopt
+
 from flask import current_app
 from flask_sse import sse
 
@@ -156,9 +157,8 @@ def handle_fail(job, exception, exception_func, traceback):
 
 
 if __name__ == "__main__":
-    # Get the args from the janitor and connect to the database
     args = docopt(__doc__)
-    config_file = args["<site.cfg>"]
+    config_file = args["--config"]
     config = loadConfig(config_file)
     cookie_secret = config.get("SECURE_COOKIE_SECRET")
     app = make_app(config=config_file, cookie_secret=cookie_secret)

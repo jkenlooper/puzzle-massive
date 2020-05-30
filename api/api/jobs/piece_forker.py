@@ -110,7 +110,7 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
     current_app.logger.debug("copied to {}".format(puzzle_dir))
 
     # Get all piece props of source puzzle
-    transfer(source_puzzle_data["instance_id"], my_db=db)
+    transfer(source_puzzle_data["instance_id"])
     query = """select * from Piece where (puzzle = :puzzle)"""
     (piece_properties, col_names) = rowify(
         cur.execute(query, {"puzzle": source_puzzle_data["instance_id"]}).fetchall(),

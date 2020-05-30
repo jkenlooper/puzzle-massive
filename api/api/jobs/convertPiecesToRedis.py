@@ -1,13 +1,24 @@
+"""convertPiecesToRedis.py
+
+Usage: convertPiecesToRedis.py [--config <file>] [--cleanup]
+       convertPiecesToRedis.py --help
+
+Options:
+  -h --help         Show this screen.
+  --config <file>   Set config file. [default: site.cfg]
+"""
 import sys
 import os.path
 import math
 import time
+from docopt import docopt
 
+from flask import current_app
+
+from api.app import redis_connection, db, make_app
 from api.database import rowify
 from api.tools import (
     loadConfig,
-    get_db,
-    get_redis_connection,
     formatPieceMovementString,
 )
 from api.constants import COMPLETED
@@ -98,15 +109,13 @@ def convert(puzzle):
 
 
 if __name__ == "__main__":
-    # Get the args from the worker and connect to the database
-    config_file = sys.argv[1]
+    args = docopt(__doc__)
+    config_file = args["--config"]
     config = loadConfig(config_file)
+    cookie_secret = config.get("SECURE_COOKIE_SECRET")
+    app = make_app(config=config_file, cookie_secret=cookie_secret)
 
-    db = get_db(config)
-    redis_connection = get_redis_connection(config)
-
-    # convert(db, 264)
-    # convert(db, 255)
-
-else:
-    from api.app import db, redis_connection
+    with app.app_context():
+        pass
+        # convert(db, 264)
+        # convert(db, 255)

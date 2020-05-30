@@ -18,7 +18,7 @@ After=network.target
 User=dev
 Group=dev
 WorkingDirectory=$SRCDIR
-ExecStart=${SRCDIR}bin/puzzle-massive-janitor site.cfg
+ExecStart=${SRCDIR}bin/puzzle-massive-janitor
 
 [Install]
 WantedBy=multi-user.target

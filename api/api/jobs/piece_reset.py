@@ -65,7 +65,7 @@ def reset_puzzle_pieces(puzzle):
     )
 
     # Transfer any redis piece data out first.
-    transfer(puzzle, cleanup=True, my_db=db)
+    transfer(puzzle, cleanup=True)
 
     # TODO: archive the timeline
     # timeline ui should only show when the puzzle is in 'complete' status.

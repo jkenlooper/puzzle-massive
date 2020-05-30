@@ -1,13 +1,14 @@
 """puzzle-massive-testdata - Generate random puzzle data for testing
 
-Usage: puzzle-massive-testdata players [--count=<n>]
-       puzzle-massive-testdata puzzles [--count=<n>] [--pieces=<n>] [--min-pieces=<n>] [--size=<s>]
-       puzzle-massive-testdata instances [--count=<n>] [--pieces=<n>] [--min-pieces=<n>]
-       puzzle-massive-testdata activity [--puzzles=<list>] [--count=<n>]
+Usage: puzzle-massive-testdata players [--count=<n>] [--config <file>]
+       puzzle-massive-testdata puzzles [--count=<n>] [--pieces=<n>] [--min-pieces=<n>] [--size=<s>] [--config <file>]
+       puzzle-massive-testdata instances [--count=<n>] [--pieces=<n>] [--min-pieces=<n>] [--config <file>]
+       puzzle-massive-testdata activity [--puzzles=<list>] [--count=<n>] [--config <file>]
        puzzle-massive-testdata --help
 
 Options:
     -h --help         Show this screen.
+    --config <file>   Set config file. [default: site.cfg]
     --count=<n>       Create this many items [default: 1]
     --size=<s>        Random image size (passed to imagemagick resize opt) [default: 180x180!]
     --pieces=<n>      Piece count max [default: 9]
@@ -33,8 +34,10 @@ import multiprocessing
 import requests
 from rq import Queue
 from docopt import docopt
+from flask import current_app
 
-from api.tools import loadConfig, get_db, get_redis_connection, init_karma_key
+from api.app import db, redis_connection, make_app
+from api.tools import loadConfig, init_karma_key
 from api.user import generate_user_login
 from api.constants import (
     ACTIVE,
@@ -57,24 +60,10 @@ from api.database import (
     generate_new_puzzle_id,
 )
 
-args = docopt(__doc__, version="0.0")
-
-# Get the args and create db
-config_file = "site.cfg"
-config = loadConfig(config_file)
-
-db = get_db(config)
-redis_connection = get_redis_connection(config)
-
-createqueue = Queue("puzzle_create", connection=redis_connection)
-
 
 QUERY_USER_ID_BY_LOGIN = """
 select id from User where ip = :ip and login = :login;
 """
-
-PORTAPI = config.get("PORTAPI")
-api_host = "http://localhost:{PORTAPI}".format(**locals())
 
 
 def generate_users(count):
@@ -142,6 +131,7 @@ def generate_users(count):
 
 
 def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=3):
+
     cur = db.cursor()
     for index in range(count):
         link = ""
@@ -159,7 +149,7 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
         )
 
         # Create puzzle dir
-        puzzle_dir = os.path.join(config.get("PUZZLE_RESOURCES"), puzzle_id)
+        puzzle_dir = os.path.join(current_app.config.get("PUZZLE_RESOURCES"), puzzle_id)
         os.mkdir(puzzle_dir)
 
         # Create random image
@@ -260,7 +250,7 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
     # push each puzzle to artist job queue
     for puzzle in puzzles:
         # push puzzle to artist job queue
-        job = createqueue.enqueue_call(
+        job = current_app.createqueue.enqueue_call(
             func="api.jobs.pieceRenderer.render",
             args=([puzzle]),
             result_ttl=0,
@@ -271,6 +261,7 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
 
 
 def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
+
     cur = db.cursor()
     for index in range(count):
         bg_color = "#444444"
@@ -313,7 +304,9 @@ def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
             )
 
             # Create puzzle dir
-            puzzle_dir = os.path.join(config.get("PUZZLE_RESOURCES"), puzzle_id)
+            puzzle_dir = os.path.join(
+                current_app.config.get("PUZZLE_RESOURCES"), puzzle_id
+            )
             os.mkdir(puzzle_dir)
 
             # Insert puzzle directly to render queue
@@ -388,7 +381,7 @@ def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
             db.commit()
             print("pieces: {pieces} {puzzle_id}".format(**locals()))
 
-            job = createqueue.enqueue_call(
+            job = current_app.createqueue.enqueue_call(
                 func="api.jobs.pieceRenderer.render",
                 args=([puzzleData]),
                 result_ttl=0,
@@ -402,16 +395,20 @@ class UserSession:
         self.ip = ip
         self.headers = {"X-Real-IP": ip}
 
+        self.api_host = "http://localhost:{PORTAPI}".format(
+            PORTAPI=current_app.config["PORTAPI"]
+        )
+
         # get test user
         current_user_id = requests.get(
-            "{0}/current-user-id/".format(api_host), headers=self.headers
+            "{0}/current-user-id/".format(self.api_host), headers=self.headers
         )
         self.shareduser_cookie = current_user_id.cookies["shareduser"]
         self.shareduser = int(current_user_id.content)
 
     def get_data(self, route):
         r = requests.get(
-            "".join([api_host, route]),
+            "".join([self.api_host, route]),
             cookies={"shareduser": self.shareduser_cookie},
             headers=self.headers,
         )
@@ -445,7 +442,7 @@ class UserSession:
         my_headers = self.headers.copy()
         my_headers.update(headers)
         r = requests.patch(
-            "".join([api_host, route]),
+            "".join([self.api_host, route]),
             data=payload,
             cookies={"shareduser": self.shareduser_cookie},
             headers=my_headers,
@@ -600,42 +597,51 @@ def simulate_puzzle_activity(puzzle_ids, count=1):
 
 
 def main():
+    args = docopt(__doc__, version="0.0")
+
+    config_file = args["--config"]
+    config = loadConfig(config_file)
+    cookie_secret = config.get("SECURE_COOKIE_SECRET")
+
     count = int(args.get("--count"))
     size = args.get("--size")
     max_pieces = int(args.get("--pieces"))
     min_pieces = int(args.get("--min-pieces"))
     puzzles = args.get("--puzzles")
 
-    if args.get("players"):
-        print("Creating {} players".format(count))
-        generate_users(count)
+    app = make_app(config=config_file, cookie_secret=cookie_secret)
 
-    elif args.get("puzzles"):
-        print(
-            "Creating {count} puzzles at {size} with up to {max_pieces} pieces".format(
-                count=count, size=size, max_pieces=max_pieces, min_pieces=min_pieces
+    with app.app_context():
+        if args.get("players"):
+            print("Creating {} players".format(count))
+            generate_users(count)
+
+        elif args.get("puzzles"):
+            print(
+                "Creating {count} puzzles at {size} with up to {max_pieces} pieces".format(
+                    count=count, size=size, max_pieces=max_pieces, min_pieces=min_pieces
+                )
             )
-        )
-        generate_puzzles(
-            count=count, size=size, min_pieces=min_pieces, max_pieces=max_pieces
-        )
-
-    elif args.get("instances"):
-        print(
-            "Creating {count} puzzle instances with up to {max_pieces} pieces".format(
-                count=count, max_pieces=max_pieces, min_pieces=min_pieces
+            generate_puzzles(
+                count=count, size=size, min_pieces=min_pieces, max_pieces=max_pieces
             )
-        )
-        generate_puzzle_instances(
-            count=count, min_pieces=min_pieces, max_pieces=max_pieces
-        )
 
-    elif args.get("activity"):
-        print("Simulating puzzle activity")
-        puzzle_ids = []
-        if puzzles:
-            puzzle_ids = puzzles.split(",")
-        simulate_puzzle_activity(puzzle_ids, count=count)
+        elif args.get("instances"):
+            print(
+                "Creating {count} puzzle instances with up to {max_pieces} pieces".format(
+                    count=count, max_pieces=max_pieces, min_pieces=min_pieces
+                )
+            )
+            generate_puzzle_instances(
+                count=count, min_pieces=min_pieces, max_pieces=max_pieces
+            )
+
+        elif args.get("activity"):
+            print("Simulating puzzle activity")
+            puzzle_ids = []
+            if puzzles:
+                puzzle_ids = puzzles.split(",")
+            simulate_puzzle_activity(puzzle_ids, count=count)
 
 
 if __name__ == "__main__":

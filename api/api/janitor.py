@@ -1,33 +1,46 @@
+"""Janitor - Run the puzzle_cleanup jobs
+Usage: puzzle-massive-janitor [--config <file>]
+       puzzle-massive-janitor --help
+
+Options:
+    -h --help           Show this screen.
+    --config <file>     Set config file. [default: site.cfg]
+"""
 from builtins import map
 import os
 import sys
+from docopt import docopt
 
+from flask import current_app
 from rq import Worker, Queue, Connection
 
-from api.app import redis_connection, make_app
+from api.app import make_app
 from api.tools import loadConfig, get_redis_connection
 
 # Preload libs
 from api.jobs import convertPiecesToDB
 
+listen = ["puzzle_cleanup"]
+
 
 def main():
     ""
-    listen = ["puzzle_cleanup"]
-    with Connection(redis_connection):
-        worker = Worker(list(map(Queue, listen)))
+    args = docopt(__doc__)
+    config_file = args["--config"]
+    config = loadConfig(config_file)
+    cookie_secret = config.get("SECURE_COOKIE_SECRET")
+    redis_connection = get_redis_connection(config, decode_responses=False)
+    app = make_app(config=config_file, cookie_secret=cookie_secret)
 
-        # If the render process has an exception
-        worker.push_exc_handler(convertPiecesToDB.handle_fail)
+    with app.app_context():
+        with Connection(redis_connection):
+            worker = Worker(list(map(Queue, listen)))
 
-        worker.work()
+            # If the render process has an exception
+            worker.push_exc_handler(convertPiecesToDB.handle_fail)
+
+            worker.work()
 
 
 if __name__ == "__main__":
-    config_file = sys.argv[1]
-    config = loadConfig(config_file)
-    cookie_secret = config.get("SECURE_COOKIE_SECRET")
-    app = make_app(config=config, cookie_secret=cookie_secret)
-
-    with app.app_context():
-        main()
+    main()

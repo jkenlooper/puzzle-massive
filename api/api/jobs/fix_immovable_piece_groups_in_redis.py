@@ -1,18 +1,22 @@
 """fix_immovable_piece_groups.py
 Fix any separate immovable piece groups in redis.
 
-Usage: fix_immovable_piece_groups.py <site.cfg> [--cleanup]
+Usage: fix_immovable_piece_groups.py [--config <file>] [--cleanup]
        fix_immovable_piece_groups.py --help
 
 Options:
   -h --help         Show this screen.
+  --config <file>   Set config file. [default: site.cfg]
   --cleanup         ...
 """
 
 from docopt import docopt
 
+from flask import current_app
+
+from api.app import redis_connection, db, make_app
 from api.database import rowify, read_query_file
-from api.tools import loadConfig, get_db, get_redis_connection, deletePieceDataFromRedis
+from api.tools import loadConfig, deletePieceDataFromRedis
 from api.constants import MAINTENANCE
 
 
@@ -173,14 +177,7 @@ def fix_db_piece_parents():
     # piece.
 
 
-if __name__ == "__main__":
-    args = docopt(__doc__)
-    config_file = args["<site.cfg>"]
-    config = loadConfig(config_file)
-
-    db = get_db(config)
-    redis_connection = get_redis_connection(config)
-
+def do_it():
     # Check puzzles in redis data store
     multiple_immovable_piece_group_results = find_puzzles_in_redis(results={})
 
@@ -242,9 +239,13 @@ Fixed: 0
             )
         )
 
-else:
-    # Support for using within the Flask app.
-    config = loadConfig("site.cfg")
 
-    db = get_db(config)
-    redis_connection = get_redis_connection(config)
+if __name__ == "__main__":
+    args = docopt(__doc__)
+    config_file = args["--config"]
+    config = loadConfig(config_file)
+    cookie_secret = config.get("SECURE_COOKIE_SECRET")
+    app = make_app(config=config_file, cookie_secret=cookie_secret)
+
+    with app.app_context():
+        do_it()

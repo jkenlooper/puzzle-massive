@@ -14,7 +14,7 @@ from docopt import docopt
 from flask import current_app
 from rq import Worker, Queue, Connection
 
-from api.app import make_app, redis_connection
+from api.app import make_app
 from api.tools import loadConfig, get_redis_connection
 
 # Preload libs
@@ -25,11 +25,11 @@ listen = ["puzzle_create"]
 
 def main():
     ""
-    # Get the args from the janitor and connect to the database
     args = docopt(__doc__)
     config_file = args["--config"]
     config = loadConfig(config_file)
     cookie_secret = config.get("SECURE_COOKIE_SECRET")
+    redis_connection = get_redis_connection(config, decode_responses=False)
     app = make_app(config=config_file, cookie_secret=cookie_secret)
 
     with app.app_context():
