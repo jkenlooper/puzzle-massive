@@ -116,7 +116,7 @@ def list_all():
     cur = db.cursor()
 
     result = cur.execute(
-        "select * from Puzzle where status in (:IN_RENDER_QUEUE, :REBUILD, :RENDERING, :RENDERING_FAILED)",
+        "select * from Puzzle where status in (:IN_RENDER_QUEUE, :REBUILD, :RENDERING, :RENDERING_FAILED) order by status",
         {
             "IN_RENDER_QUEUE": IN_RENDER_QUEUE,
             "REBUILD": REBUILD,
@@ -130,9 +130,29 @@ def list_all():
         )
         return
     (result, col_names) = rowify(result, cur.description)
-    # TODO: clean up the list and show each puzzle in a group
+    puzzles_grouped_by_status = {
+        IN_RENDER_QUEUE: [],
+        REBUILD: [],
+        RENDERING: [],
+        RENDERING_FAILED: [],
+    }
     for puzzle in result:
-        print("{puzzle_id} is {status}".format(**puzzle))
+        puzzles_grouped_by_status[puzzle["status"]].append(puzzle)
+
+    for status, words in [
+        (IN_RENDER_QUEUE, "in render queue"),
+        (REBUILD, "in rebuild queue"),
+        (RENDERING, "rendering"),
+        (RENDERING_FAILED, "that failed rendering"),
+    ]:
+        if len(puzzles_grouped_by_status[status]):
+            print(
+                "\n{count} puzzles {words}:".format(
+                    count=len(puzzles_grouped_by_status[status]), words=words
+                )
+            )
+            for puzzle in puzzles_grouped_by_status[status]:
+                print("{pieces} pieces, ({id}) {puzzle_id}".format(**puzzle))
 
 
 def render(*args):
