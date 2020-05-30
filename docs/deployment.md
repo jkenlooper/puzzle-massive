@@ -41,7 +41,7 @@ been uploaded to the home directory.
 
 1.  Stop the running apps and backup the db. The deactivate command is done to
     deactivate the python virtualenv. A backup of the database is made just as
-    a cautionary measure and is left in the folder. The backup-db.sh script
+    a cautionary measure and is left in the folder. The backup.sh script
     also moves data out of redis and into the database.
 
     ```bash
@@ -220,7 +220,7 @@ on the old server and copy all the data over to the new puzzle-massive-green ser
     printf 'Updating...' > /srv/puzzle-massive/root/puzzle-massive-message.html;
     sudo ./bin/appctl.sh stop;
     sudo ./bin/clear_nginx_cache.sh;
-    ./bin/backup-db.sh -c;
+    ./bin/backup.sh -c;
     ```
 
 2.  On the **new server** (puzzle-massive-green) the files from the old server will be copied over with

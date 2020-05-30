@@ -56,9 +56,9 @@ echo "Converting pieces to DB from Redis...";
 ./bin/python api/api/jobs/convertPiecesToDB.py ${CLEANUP} || exit 1;
 
 echo "Running one-off scheduler tasks to clean up any batched data";
-puzzle-massive-scheduler UpdatePlayer || exit 1;
-puzzle-massive-scheduler UpdatePuzzleStats || exit 1;
-puzzle-massive-scheduler UpdateModifiedDateOnPuzzle || exit 1;
+puzzle-massive-scheduler --task UpdatePlayer || exit 1;
+puzzle-massive-scheduler --task UpdatePuzzleStats || exit 1;
+puzzle-massive-scheduler --task UpdateModifiedDateOnPuzzle || exit 1;
 
 # Allow passing in a file path of where to save the db dump file
 if [ -n "${1-}" ]; then
