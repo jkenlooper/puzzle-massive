@@ -2,6 +2,7 @@ import FetchService from "./fetch.service";
 
 export interface PuzzleInstanceDetails {
   deletePenalty: number;
+  canFreeze: boolean;
   canDelete: boolean;
   canReset: boolean;
   hasActions: boolean;

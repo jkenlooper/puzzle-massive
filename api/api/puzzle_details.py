@@ -16,6 +16,7 @@ from api.constants import (
     RENDERING_FAILED,
     REBUILD,
     IN_RENDER_QUEUE,
+    MAINTENANCE,
     SKILL_LEVEL_RANGES,
     QUEUE_WINNING_BID,
     PRIVATE,
@@ -46,7 +47,12 @@ class PuzzleInstanceDetailsView(MethodView):
         delete_penalty = 0
         can_delete = True
         delete_disabled_message = ""
-        if puzzleData["status"] != COMPLETED:
+        if puzzleData["status"] not in (
+            COMPLETED,
+            RENDERING_FAILED,
+            BUGGY_UNLISTED,
+            MAINTENANCE,
+        ):
             delete_penalty = min(
                 current_app.config["MAX_POINT_COST_FOR_DELETING"],
                 max(current_app.config["MINIMUM_PIECE_COUNT"], puzzleData["pieces"]),
@@ -114,6 +120,15 @@ class PuzzleInstanceDetailsView(MethodView):
             RENDERING_FAILED,
             REBUILD,
             IN_RENDER_QUEUE,
+            MAINTENANCE,
+        ):
+            cur.close()
+            abort(400)
+
+        if action in ("freeze", "unfreeze") and puzzleData["status"] not in (
+            FROZEN,
+            BUGGY_UNLISTED,
+            ACTIVE,
         ):
             cur.close()
             abort(400)
@@ -207,7 +222,10 @@ class PuzzleInstanceDetailsView(MethodView):
             if not (
                 puzzleData.get("permission") == PRIVATE
                 and not puzzleData.get("is_original")
+                and puzzleData.get("status")
+                in (FROZEN, BUGGY_UNLISTED, ACTIVE, COMPLETED)
             ):
+
                 response = {"msg": "Only unlisted puzzle instances can be reset"}
                 cur.close()
                 return make_response(encoder.encode(response), 400)
@@ -264,6 +282,7 @@ class PuzzleInstanceDetailsView(MethodView):
     def get(self, puzzle_id):
         """
   deletePenalty: number;
+  canFreeze: boolean;
   canDelete: boolean;
   canReset: boolean;
   hasActions: boolean;
@@ -296,8 +315,10 @@ class PuzzleInstanceDetailsView(MethodView):
         )
         response = {
             "canDelete": can_delete,
+            "canFreeze": puzzleData.get("status") in (FROZEN, BUGGY_UNLISTED, ACTIVE),
             "canReset": puzzleData.get("permission") == PRIVATE
-            and not puzzleData.get("is_original"),
+            and not puzzleData.get("is_original")
+            and puzzleData.get("status") in (FROZEN, BUGGY_UNLISTED, ACTIVE, COMPLETED),
             "hasActions": puzzleData.get("status")
             in (
                 FROZEN,
@@ -307,6 +328,7 @@ class PuzzleInstanceDetailsView(MethodView):
                 RENDERING_FAILED,
                 REBUILD,
                 IN_RENDER_QUEUE,
+                MAINTENANCE,
             ),
             "deleteDisabledMessage": delete_disabled_message,
             "deletePenalty": delete_penalty,

@@ -71,7 +71,13 @@ def serve(config, cookie_secret):
         # Transfer all piece data out of Redis and into the database when
         # shutting down.
         subprocess.call(
-            ["python", "api/api/jobs/convertPiecesToDB.py", config, "--cleanup"]
+            [
+                "python",
+                "api/api/jobs/convertPiecesToDB.py",
+                "--config",
+                config,
+                "--cleanup",
+            ]
         )
 
         exit(signal.SIGTERM)

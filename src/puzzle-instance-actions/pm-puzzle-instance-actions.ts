@@ -15,6 +15,7 @@ interface TemplateData {
   hasPuzzleDetails: boolean;
   hasActions: boolean;
   isFrozen: boolean;
+  canFreeze: boolean;
   canDelete: boolean;
   canReset: boolean;
   deletePenalty: number;
@@ -182,25 +183,29 @@ customElements.define(
                   </button>
                 `
               : html` <button class="Button" disabled>Delete</button> `}
-            ${data.isFrozen
+            ${data.canFreeze
               ? html`
-                  <button
-                    class="Button"
-                    data-action="unfreeze"
-                    @click=${data.actionHandler}
-                  >
-                    Unfreeze
-                  </button>
+                  ${data.isFrozen
+                    ? html`
+                        <button
+                          class="Button"
+                          data-action="unfreeze"
+                          @click=${data.actionHandler}
+                        >
+                          Unfreeze
+                        </button>
+                      `
+                    : html`
+                        <button
+                          class="Button"
+                          data-action="freeze"
+                          @click=${data.actionHandler}
+                        >
+                          Freeze
+                        </button>
+                      `}
                 `
-              : html`
-                  <button
-                    class="Button"
-                    data-action="freeze"
-                    @click=${data.actionHandler}
-                  >
-                    Freeze
-                  </button>
-                `}
+              : ""}
             ${data.canReset
               ? html`
                   <button
@@ -247,6 +252,7 @@ customElements.define(
         hasPuzzleDetails: !!this.puzzleDetails,
         hasActions: this.puzzleDetails ? this.puzzleDetails.hasActions : false,
         isFrozen: !!this.puzzleDetails ? this.puzzleDetails.isFrozen : false,
+        canFreeze: !!this.puzzleDetails ? this.puzzleDetails.canFreeze : false,
         canDelete: !!this.puzzleDetails ? this.puzzleDetails.canDelete : false,
         canReset: !!this.puzzleDetails ? this.puzzleDetails.canReset : false,
         deletePenalty: !!this.puzzleDetails

@@ -111,6 +111,11 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
 
         # TODO: Optimize by using redis for puzzle status
         if complete:
+            current_app.logger.info(
+                "puzzle {puzzle_id} is complete".format(
+                    puzzle_id=puzzleData["puzzle_id"]
+                )
+            )
             cur = db.cursor()
 
             cur.execute(
