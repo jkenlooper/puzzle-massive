@@ -17,7 +17,7 @@ from api.tools import (
     formatPieceMovementString,
     init_karma_key,
 )
-from api.constants import COMPLETED, QUEUE_END_OF_LINE
+from api.constants import COMPLETED, QUEUE_END_OF_LINE, PRIVATE, SKILL_LEVEL_RANGES
 from api.piece_mutate import PieceMutateProcess
 
 KARMA_POINTS_EXPIRE = 3600  # hour in seconds
@@ -27,26 +27,23 @@ MAX_RECENT_POINTS = 25
 MAX_KARMA = 25
 MIN_KARMA = int(old_div(MAX_KARMA, 2)) * -1  # -12
 
-# POINTS_CAP = 15000
+skill_level_intervals = list(map(lambda x: x[1], SKILL_LEVEL_RANGES))
+skill_level_intervals.sort()
 
 
-def get_earned_points(pieces):
-    earns = 7
-    if pieces < 200:
-        earns = 0
-    elif pieces < 400:
-        earns = 1
-    elif pieces < 800:
-        earns = 2
-    elif pieces < 1000:
-        earns = 3
-    elif pieces < 2000:
-        earns = 4
-    elif pieces < 3000:
-        earns = 5
-    elif pieces < 6000:
-        earns = 6
-    return earns
+def get_earned_points(pieces, permission=None):
+    """
+    Return earned points based on skill level of the puzzle. For unlisted
+    puzzles the amount is 0 because the puzzle could be a one that was reset.
+    Puzzles that have been reset could be scripted by a player in order for them
+    to get around the other limits that are controlled by dots.
+    """
+    if permission is not None and permission == PRIVATE:
+        return 0
+    for level, max_pieces in enumerate(skill_level_intervals):
+        if pieces < max_pieces:
+            return level
+    return len(skill_level_intervals)
 
 
 def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
@@ -85,7 +82,8 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
             redis_connection.zincrby("rank", amount=1, value=user)
             points_key = "points:{user}".format(user=user)
             pieces = int(puzzleData["pieces"])
-            earns = get_earned_points(pieces)
+            # Skip increasing dots if puzzle is private
+            earns = get_earned_points(pieces, permission=puzzleData.get("permission"))
 
             karma = int(redis_connection.get(karma_key))
             ## Max out recent points
