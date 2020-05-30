@@ -21,6 +21,37 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
+## [Unreleased] - ...
+
+Puzzle instance improvements and puzzle alert messages.
+
+### Changed
+
+- Deleting puzzle instances that are not complete depends on last modified date
+  and has a max dot cost of 1000. Puzzles that haven't been modified for
+  a while can be deleted without costing any dots.
+- Puzzle alerts when site goes down for maintenance as well as when the puzzle
+  is being updated that would require players to reload.
+- Update earned dots amount logic for piece joins. Unlisted puzzles do not earn any dots. However, the points for the player's score is still increased the same way as before. Earned dots are more closely aligned with the skill level range.
+- Site settings include things that use to be set in constants.py.
+
+### Added
+
+- Players with an open puzzle instance slot can create copies of puzzles. These
+  copies will copy the current piece positions of the source puzzle. The copy
+  can not be publicly listed on the site since that would be confusing for
+  players.
+- Puzzle instances can have their piece positions reset by the owner at any
+  time. Publicly listed puzzle instances can't have pieces reset since that
+  would not be nice to other players.
+
+### Fixed
+
+- [Database locked issue](https://github.com/jkenlooper/puzzle-massive/issues/67) when running other scripts (maybe?) .
+- Puzzles that have been recently modified show their recent status faster in
+  the active puzzle list. The scheduler interval is every second now instead
+  of every minute.
+
 ## [2.7.0] - 2020-05-17
 
 ### Changed
