@@ -20,8 +20,11 @@ interface TemplateData {
 }
 
 // Copied SKILL_LEVEL_RANGES from api/api/constants.py
+// Should also match src/puzzle-image-picker/pm-puzzle-image-picker.ts
 const SKILL_LEVEL_RANGES = [
-  [0, 400],
+  [0, 100],
+  [100, 200],
+  [200, 400],
   [400, 800],
   [800, 1600],
   [1600, 2200],

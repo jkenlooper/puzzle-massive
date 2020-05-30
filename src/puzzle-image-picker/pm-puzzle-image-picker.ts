@@ -31,7 +31,8 @@ interface TemplateData {
 }
 
 // piecesCountList should include ranges from SKILL_LEVEL_RANGES
-const piecesCountList = [0, 400, 800, 1600, 2200, 4000, 10000, 60000];
+// The SKILL_LEVEL_RANGES is also copied in src/gallery/pm-gallery.ts
+const piecesCountList = [0, 100, 200, 400, 800, 1600, 2200, 4000, 10000, 60000];
 // Set a minimum delay to prevent getting a too many requests error (429).  The
 // puzzle-list endpoint is rate-limited per ip at one request every 2 seconds
 // with a burst/bucket of 20. The burst here is set to half of that limit and is

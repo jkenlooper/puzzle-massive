@@ -1,8 +1,18 @@
 USER_NAME_MAXLENGTH = 26
 EMAIL_MAXLENGTH = 254
 # The SKILL_LEVEL_RANGES is also copied in src/gallery/pm-gallery.ts
+# Should also match src/puzzle-image-picker/pm-puzzle-image-picker.ts
 SKILL_LEVEL_RANGES = set(
-    [(0, 400), (400, 800), (800, 1600), (1600, 2200), (2200, 4000), (4000, 60000)]
+    [
+        (0, 100),
+        (100, 200),
+        (200, 400),
+        (400, 800),
+        (800, 1600),
+        (1600, 2200),
+        (2200, 4000),
+        (4000, 60000),
+    ]
 )
 
 # status
