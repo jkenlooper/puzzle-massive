@@ -65,6 +65,7 @@ def archive_and_clear(puzzle, db, redis_connection, archive_directory):
     json.dump(result, archive_file, separators=(",", ":"), sort_keys=True)
     archive_file.close()
 
+    # TODO: use newapi/internal/
     cur.execute(read_query_file("delete_puzzle_timeline.sql"), {"puzzle": puzzle})
     redis_connection.delete("timeline:{puzzle}".format(puzzle=puzzle))
     redis_connection.delete("score:{puzzle}".format(puzzle=puzzle))

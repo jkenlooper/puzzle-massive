@@ -18,6 +18,7 @@ import random
 
 from flask import current_app
 from rq import Queue
+import requests
 
 from api.database import rowify, read_query_file
 from api.app import redis_connection, db, make_app
@@ -126,15 +127,27 @@ class AutoRebuildCompletedPuzzle(Task):
                             ),
                             min(high - 1, completed_puzzle["pieces"] + 400),
                         )
-                        cur.execute(
-                            read_query_file("update_status_puzzle_for_puzzle_id.sql"),
-                            {
-                                "puzzle_id": completed_puzzle["puzzle_id"],
+                        # TODO: use newapi/internal/puzzle/<puzzle_id>/details/
+                        r = requests.patch(
+                            "http://localhost:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                                PORTAPI=current_app.config["PORTAPI"],
+                                puzzle_id=completed_puzzle["puzzle_id"],
+                            ),
+                            data={
                                 "status": REBUILD,
                                 "pieces": pieces,
                                 "queue": QUEUE_END_OF_LINE,
                             },
                         )
+                        # cur.execute(
+                        #    read_query_file("update_status_puzzle_for_puzzle_id.sql"),
+                        #    {
+                        #        "puzzle_id": completed_puzzle["puzzle_id"],
+                        #        "status": REBUILD,
+                        #        "pieces": pieces,
+                        #        "queue": QUEUE_END_OF_LINE,
+                        #    },
+                        # )
                         completed_puzzle["status"] = REBUILD
                         completed_puzzle["pieces"] = pieces
 
@@ -184,6 +197,7 @@ class BumpMinimumDotsForPlayers(Task):
         super().do_task()
 
         cur = db.cursor()
+        # TODO: use newapi/internal/
         result = cur.execute(
             read_query_file("update_points_to_minimum_for_all_users.sql"),
             {"minimum": current_app.config["NEW_USER_STARTING_POINTS"]},
@@ -212,6 +226,7 @@ class UpdateModifiedDateOnPuzzle(Task):
         self.last_update = int(time()) - 2  # allow some overlap
         for (puzzle, modified) in puzzles:
             puzzle = int(puzzle)
+            # TODO: use newapi/internal/
             cur.execute(
                 read_query_file("update_puzzle_m_date_to_now.sql"),
                 {"puzzle": puzzle, "modified": modified},
@@ -253,6 +268,7 @@ class UpdatePlayer(Task):
                     **{"id": user, "points": points, "score": score}
                 )
             )
+            # TODO: use newapi/internal/
             cur.execute(
                 read_query_file("update_user_points_and_m_date.sql"),
                 {
@@ -262,6 +278,7 @@ class UpdatePlayer(Task):
                     "POINTS_CAP": current_app.config["POINTS_CAP"],
                 },
             )
+            # TODO: use newapi/internal/
             cur.execute(
                 read_query_file("update_bit_icon_expiration.sql"), {"user": user}
             )
@@ -342,6 +359,7 @@ class UpdatePuzzleStats(Task):
                             timestamp=timestamp,
                         )
                     )
+                    # TODO: use newapi/internal/
                     cur.execute(
                         read_query_file("insert_batchpoints_to_timeline.sql"),
                         {
@@ -356,7 +374,9 @@ class UpdatePuzzleStats(Task):
             puzzle = redis_connection.spop("batchpuzzle")
 
         if self.first_run:
+            # TODO: use newapi/internal/
             cur.execute(read_query_file("create_timeline_puzzle_index.sql"))
+            # TODO: use newapi/internal/
             cur.execute(read_query_file("create_timeline_timestamp_index.sql"))
             db.commit()
             result = cur.execute(
@@ -410,6 +430,7 @@ class UpdatePuzzleQueue(Task):
         made_change = False
 
         cur = db.cursor()
+        # TODO: use newapi/internal/
         result = cur.execute(read_query_file("retire-inactive-puzzles-to-queue.sql"))
         if result.rowcount:
             made_change = True
@@ -427,6 +448,7 @@ class UpdatePuzzleQueue(Task):
                         low=low, high=high
                     )
                 )
+                # TODO: use newapi/internal/
                 update_result = cur.execute(
                     read_query_file("update-puzzle-next-in-queue-to-be-active.sql"),
                     {
@@ -457,6 +479,7 @@ class AutoApproveUserNames(Task):
         super().do_task()
 
         cur = db.cursor()
+        # TODO: use newapi/internal/
         result = cur.execute(
             read_query_file("update-user-name-approved-for-approved_date-due.sql")
         )

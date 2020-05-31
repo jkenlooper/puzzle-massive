@@ -50,6 +50,7 @@ def transfer(puzzle, cleanup=True):
     puzzle_data = result[0]
 
     puzzle_previous_status = puzzle_data["status"]
+    # TODO: use newapi/internal/
     cur.execute(
         read_query_file("update_puzzle_status_for_puzzle.sql"),
         {"status": MAINTENANCE, "puzzle": puzzle},
@@ -103,11 +104,13 @@ def transfer(puzzle, cleanup=True):
                 has_changes = True
 
         if has_changes:
+            # TODO: use newapi/internal/
             cur.execute(query_update_piece, piece)
 
     if cleanup:
         deletePieceDataFromRedis(redis_connection, puzzle, all_pieces)
 
+    # TODO: use newapi/internal/
     cur.execute(
         read_query_file("update_puzzle_status_for_puzzle.sql"),
         {"status": puzzle_previous_status, "puzzle": puzzle},

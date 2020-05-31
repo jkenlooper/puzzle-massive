@@ -169,6 +169,7 @@ def render(*args):
     for puzzle in args:
         print("Rendering puzzle: {puzzle_id}".format(**puzzle))
         # Set the status of the puzzle to rendering
+        # TODO: use newapi/internal/
         cur.execute(
             "update Puzzle set status = :RENDERING where status in (:IN_RENDER_QUEUE, :REBUILD) and id = :id",
             {
@@ -302,6 +303,7 @@ def render(*args):
         th = dimensions[100]["table_height"]
 
         # Update the table width/height
+        # TODO: use newapi/internal/
         cur.execute(
             "update Puzzle set pieces = :pieces, table_width = :table_width, table_height = :table_height where id = :id",
             {
@@ -482,9 +484,11 @@ def render(*args):
         # The original.jpg is assumed to be available locally because of migratePuzzleFile.py
         # Clear out any older pieces and their puzzle files, (raster.png,
         # raster.css) but keep preview full.
+        # TODO: use newapi/internal/
         cur.execute(
             "delete from Piece where puzzle = :puzzle", {"puzzle": puzzle["id"]}
         )
+        # TODO: use newapi/internal/
         cur.execute(
             "delete from PuzzleFile where puzzle = :puzzle and name in ('pieces', 'pzz')",
             {"puzzle": puzzle["id"]},
@@ -492,6 +496,7 @@ def render(*args):
 
         # Commit the piece properties and puzzle resources
         # row and col are really only useful for determining the top left piece when resetting puzzle
+        # TODO: use newapi/internal/
         for pc in piece_properties:
             cur.execute(
                 """
@@ -510,10 +515,12 @@ def render(*args):
         # reachable.  If it isn't; then run the set_lost_unsplash_photo from
         # migratePuzzleFile.
 
+        # TODO: use newapi/internal/
         cur.execute(
             "update Puzzle set status = :status, m_date = datetime('now') where id = :id",
             {"status": puzzleStatus, "id": puzzle["id"]},
         )
+        # TODO: use newapi/internal/
         cur.execute(
             insert_puzzle_file,
             {
@@ -522,6 +529,7 @@ def render(*args):
                 "url": "/resources/{puzzle_id}/scale-100/raster.png".format(**puzzle),
             },
         )
+        # TODO: use newapi/internal/
         cur.execute(
             insert_puzzle_file,
             {

@@ -662,6 +662,22 @@ server {
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
+  # Only for internal apps that need to write to the database. The api app is
+  # the only app that should be used when modifying the sqlite database. This is
+  # following the client/server pattern.
+  location /newapi/internal/ {
+    #allow $INTERNALIP;
+    #allow 127.0.0.1;
+    deny all;
+    #auth_basic "Internal Requests Only";
+    #auth_basic_user_file ${SRVDIR}.htpasswd;
+
+    #proxy_pass_header Server;
+    #proxy_pass http://localhost:${PORTAPI};
+    #proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
+    #rewrite ^/newapi/(.*)\$ /\$1 break;
+  }
+
   location /newapi/admin/ {
 HEREORIGINSERVER
 if test "${ENVIRONMENT}" != 'development'; then

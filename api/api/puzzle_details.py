@@ -507,3 +507,52 @@ class PuzzleOriginalDetailsView(MethodView):
         }
         cur.close()
         return encoder.encode(response)
+
+
+class InternalPuzzleDetailsView(MethodView):
+    ""
+
+    def patch(self, puzzle_id):
+        fields = set("status", "pieces", "queue")
+        cur = db.cursor()
+        # validate the puzzle_id
+        result = cur.execute(
+            fetch_query_string("select-puzzle-details-for-puzzle_id.sql"),
+            {"puzzle_id": puzzle_id},
+        ).fetchall()
+        if not result:
+            # 400 if puzzle does not exist
+            err_msg = {
+                "msg": "No puzzle found",
+            }
+            cur.close()
+            return make_response(json.jsonify(err_msg), 400)
+
+        data = request.get_json(silent=True)
+        if not data:
+            err_msg = {
+                "msg": "No JSON data sent",
+            }
+            cur.close()
+            return make_response(json.jsonify(err_msg), 400)
+
+        # verify that data keys are correct
+        if not fields.issubset(data.keys()):
+            err_msg = {
+                "msg": "Missing fields in JSON data sent",
+            }
+            cur.close()
+            return make_response(json.jsonify(err_msg), 400)
+
+        params = {"puzzle_id", puzzle_id}
+        params.update(data, **params)
+        result = cur.execute(
+            fetch_query_string("update_status_puzzle_for_puzzle_id.sql"), params,
+        )
+        cur.close()
+        db.commit()
+        return make_response(json.jsonify({"rowcount": result.rowcount}))
+
+        # "status": REBUILD,
+        # "pieces": pieces,
+        # "queue": QUEUE_END_OF_LINE,

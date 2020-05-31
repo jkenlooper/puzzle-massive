@@ -114,7 +114,11 @@ def make_app(config=None, **kw):
         PuzzleActiveCountView,
         PlayerStatsView,
     )
-    from api.puzzle_details import PuzzleInstanceDetailsView, PuzzleOriginalDetailsView
+    from api.puzzle_details import (
+        PuzzleInstanceDetailsView,
+        PuzzleOriginalDetailsView,
+        InternalPuzzleDetailsView,
+    )
     from api.puzzle_list import (
         PuzzleListView,
         PlayerPuzzleListView,
@@ -134,6 +138,8 @@ def make_app(config=None, **kw):
         AdminPlayerDetailsEditView,
         AdminPlayerDetailsSlotsView,
     )
+
+    # internal views
 
     # register the views
 
@@ -288,6 +294,17 @@ def make_app(config=None, **kw):
     app.add_url_rule(
         "/admin/player/name-register/",
         view_func=AdminPlayerNameRegisterView.as_view("admin-player-name-register"),
+    )
+
+    # TODO: Add internal client/server api URLs /newapi/internal/...
+    #
+    # app.add_url_rule(
+    #    "/internal/.../",
+    #    view_func=InternalSomethingView.as_view("internal-something"),
+    # )
+    app.add_url_rule(
+        "/internal/puzzle/<puzzle_id>/details/",
+        view_func=InternalPuzzleDetailsView.as_view("internal-puzzle-details"),
     )
 
     return app
