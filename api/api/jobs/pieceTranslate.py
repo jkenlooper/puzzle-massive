@@ -130,7 +130,8 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
                 fetch_query_string("update_puzzle_queue_for_puzzle.sql"),
                 {"puzzle": puzzle, "queue": QUEUE_END_OF_LINE},
             )
-            db.commit()
+            # TODO: uncomment
+            # db.commit()
             sse.publish(
                 "status:{}".format(COMPLETED),
                 channel="puzzle:{puzzle_id}".format(puzzle_id=puzzleData["puzzle_id"]),
@@ -138,6 +139,16 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
             job = current_app.cleanupqueue.enqueue_call(
                 func="api.jobs.convertPiecesToDB.transfer", args=(puzzle,), result_ttl=0
             )
+
+            # Force the app to keep db connection open for this write. This is
+            # one way to simulate the database lock issue with other apps since
+            # only one app can write to the db. Using wal allows multiple apps
+            # to read from the db.
+            # TODO: Remove this
+            current_app.logger.debug("Start sleep")
+            time.sleep(20)
+            current_app.logger.debug("End sleep")
+            db.commit()
 
             db.commit()
             cur.close()
