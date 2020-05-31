@@ -123,6 +123,10 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
                 {"puzzle": puzzle, "status": COMPLETED},
             )
             cur.execute(
+                fetch_query_string("update_puzzle_m_date_to_now.sql"),
+                {"puzzle": puzzle, "modified": now},
+            )
+            cur.execute(
                 fetch_query_string("update_puzzle_queue_for_puzzle.sql"),
                 {"puzzle": puzzle, "queue": QUEUE_END_OF_LINE},
             )
