@@ -296,16 +296,70 @@ def make_app(config=None, **kw):
         view_func=AdminPlayerNameRegisterView.as_view("admin-player-name-register"),
     )
 
-    # TODO: Add internal client/server api URLs /newapi/internal/...
+    # TODO: Add internal client/server api URLs /internal/...
     #
-    # app.add_url_rule(
-    #    "/internal/.../",
-    #    view_func=InternalSomethingView.as_view("internal-something"),
-    # )
     app.add_url_rule(
         "/internal/puzzle/<puzzle_id>/details/",
         view_func=InternalPuzzleDetailsView.as_view("internal-puzzle-details"),
     )
+    # TODO: Add InternalPuzzlePiecesView with DELETE, POST, PATCH methods
+    # app.add_url_rule(
+    #     "/internal/puzzle/<puzzle_id>/pieces/",
+    #     view_func=InternalPuzzlePiecesView.as_view("internal-puzzle-pieces"),
+    # )
+    # TODO: Add InternalPuzzleFileView with DELETE, POST methods
+    # app.add_url_rule(
+    #     "/internal/puzzle/<puzzle_id>/files/<file_name>/",
+    #     view_func=InternalPuzzleFileView.as_view("internal-puzzle-file"),
+    # )
+    # TODO: Add InternalPuzzleTimelineView with DELETE, POST methods
+    # app.add_url_rule(
+    #     "/internal/puzzle/<puzzle_id>/timeline/",
+    #     view_func=InternalPuzzleTimelineView.as_view("internal-puzzle-timeline"),
+    # )
+    # TODO: Add InternalTasksStartView with POST method
+    # app.add_url_rule(
+    #     "/internal/tasks/<task_name>/start/",
+    #     view_func=InternalTasksStartView.as_view("internal-tasks-start"),
+    # )
+
+    # api/api/jobs/convertPiecesToDB.py transfer
+    # internal-puzzle-details update_puzzle_status_for_puzzle.sql
+    # internal-puzzle-pieces update_piece_props_for_puzzle.sql
+
+    # api/api/jobs/pieceRenderer.py render
+    # internal-puzzle-details "update Puzzle set status = :RENDERING where status in (:IN_RENDER_QUEUE, :REBUILD) and id = :id"
+    # internal-puzzle-details "update Puzzle set pieces = :pieces, table_width = :table_width, table_height = :table_height where id = :id",
+    # internal-puzzle-pieces "delete from Piece where puzzle = :puzzle"
+    # internal-puzzle-file "delete from PuzzleFile where puzzle = :puzzle and name in ('pieces', 'pzz')"
+    # internal-puzzle-pieces "insert or ignore into Piece (id, x, y, r, w, h, b, adjacent, rotate, row, col, status, parent, puzzle) values (:id, :x, :y, :r, :w, :h, :b, :adjacent, :rotate, :row, :col, :status, :g, :puzzle);"
+    # internal-puzzle-details "update Puzzle set status = :status, m_date = datetime('now') where id = :id"
+    # internal-puzzle-file "insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);"
+
+    # api/api/scheduler.py BumpMinimumDotsForPlayers
+    # internal-tasks-start update_points_to_minimum_for_all_users.sql
+
+    # api/api/scheduler.py UpdateModifiedDateOnPuzzle
+    # internal-puzzle-details update_puzzle_m_date_to_now.sql
+
+    # api/api/scheduler.py UpdatePlayer
+    # internal-tasks-start update_user_points_and_m_date.sql
+    # internal-tasks-start update_bit_icon_expiration.sql
+
+    # api/api/scheduler.py UpdatePuzzleStats
+    # internal-puzzle-timeline insert_batchpoints_to_timeline.sql
+    # internal-puzzle-timeline create_timeline_puzzle_index.sql (only done on first run)
+    # internal-puzzle-timeline create_timeline_timestamp_index.sql (only done on first run)
+
+    # api/api/scheduler.py UpdatePuzzleQueue
+    # internal-puzzle-details retire-inactive-puzzles-to-queue.sql
+    # internal-puzzle-details update-puzzle-next-in-queue-to-be-active.sql
+
+    # api/api/scheduler.py AutoApproveUserNames
+    # internal-tasks-start update-user-name-approved-for-approved_date-due.sql
+
+    # api/api/timeline.py archive_and_clear
+    # internal-puzzle-timeline delete_puzzle_timeline.sql
 
     return app
 
