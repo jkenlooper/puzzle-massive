@@ -146,9 +146,7 @@ class PuzzlePiecesRebuildView(MethodView):
             timeout="24h",
         )
 
-        archive_and_clear(
-            puzzle, db, redis_connection, current_app.config.get("PUZZLE_ARCHIVE")
-        )
+        archive_and_clear(puzzle)
 
         cur.close()
         db.commit()

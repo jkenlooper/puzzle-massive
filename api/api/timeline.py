@@ -3,6 +3,9 @@ from builtins import str
 import os
 import json
 
+from flask import current_app
+
+from api.app import redis_connection, db
 from .database import rowify, read_query_file
 
 query_select_timeline_for_puzzle = """
@@ -32,7 +35,7 @@ def get_next_file(path):
     return os.path.join(path, "{0}.json".format(count))
 
 
-def archive_and_clear(puzzle, db, redis_connection, archive_directory):
+def archive_and_clear(puzzle):
     """
     Create an archive file for all timeline data for this puzzle.  Clear the
     timeline entries in the database.
@@ -47,7 +50,9 @@ def archive_and_clear(puzzle, db, redis_connection, archive_directory):
         return
 
     (result, col_names) = rowify(result, cur.description)
-    puzzle_directory = os.path.join(archive_directory, str(puzzle))
+    puzzle_directory = os.path.join(
+        current_app.config.get("PUZZLE_ARCHIVE"), str(puzzle)
+    )
     try:
         os.mkdir(puzzle_directory)
     except OSError:

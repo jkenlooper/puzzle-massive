@@ -128,17 +128,24 @@ class AutoRebuildCompletedPuzzle(Task):
                             min(high - 1, completed_puzzle["pieces"] + 400),
                         )
                         # TODO: use newapi/internal/puzzle/<puzzle_id>/details/
+                        current_app.logger.debug(
+                            "patch {puzzle_id}".format(**completed_puzzle)
+                        )
                         r = requests.patch(
                             "http://localhost:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
                                 PORTAPI=current_app.config["PORTAPI"],
                                 puzzle_id=completed_puzzle["puzzle_id"],
                             ),
-                            data={
+                            json={
                                 "status": REBUILD,
                                 "pieces": pieces,
                                 "queue": QUEUE_END_OF_LINE,
                             },
                         )
+                        current_app.logger.debug(r.status_code)
+                        if r.status_code != 200:
+                            current_app.logger.debug("Puzzle details api error")
+                            continue
                         # cur.execute(
                         #    read_query_file("update_status_puzzle_for_puzzle_id.sql"),
                         #    {
@@ -151,7 +158,7 @@ class AutoRebuildCompletedPuzzle(Task):
                         completed_puzzle["status"] = REBUILD
                         completed_puzzle["pieces"] = pieces
 
-                        db.commit()
+                        # db.commit()
 
                         # Delete any piece data from redis since it is no longer needed.
                         query_select_all_pieces_for_puzzle = (
@@ -172,12 +179,7 @@ class AutoRebuildCompletedPuzzle(Task):
                             timeout="24h",
                         )
 
-                        archive_and_clear(
-                            puzzle,
-                            db,
-                            redis_connection,
-                            current_app.config.get("PUZZLE_ARCHIVE"),
-                        )
+                        archive_and_clear(puzzle)
                     made_change = True
 
         cur.close()

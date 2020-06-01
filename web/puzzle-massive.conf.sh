@@ -666,6 +666,9 @@ server {
   # the only app that should be used when modifying the sqlite database. This is
   # following the client/server pattern.
   location /newapi/internal/ {
+    # Block everything from going through the proxy for now. Apps will access
+    # the internal api without using a proxy. The api doesn't allow connections
+    # outside of localhost by default.
     #allow $INTERNALIP;
     #allow 127.0.0.1;
     deny all;

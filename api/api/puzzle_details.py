@@ -510,10 +510,11 @@ class PuzzleOriginalDetailsView(MethodView):
 
 
 class InternalPuzzleDetailsView(MethodView):
-    ""
+    """
+    """
 
     def patch(self, puzzle_id):
-        fields = set("status", "pieces", "queue")
+        fields = {"status", "pieces", "queue"}
         cur = db.cursor()
         # validate the puzzle_id
         result = cur.execute(
@@ -544,7 +545,7 @@ class InternalPuzzleDetailsView(MethodView):
             cur.close()
             return make_response(json.jsonify(err_msg), 400)
 
-        params = {"puzzle_id", puzzle_id}
+        params = {"puzzle_id": puzzle_id}
         params.update(data, **params)
         result = cur.execute(
             fetch_query_string("update_status_puzzle_for_puzzle_id.sql"), params,

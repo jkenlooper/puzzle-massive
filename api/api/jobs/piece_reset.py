@@ -69,9 +69,7 @@ def reset_puzzle_pieces(puzzle):
 
     # TODO: archive the timeline
     # timeline ui should only show when the puzzle is in 'complete' status.
-    archive_and_clear(
-        puzzle, db, redis_connection, current_app.config.get("PUZZLE_ARCHIVE")
-    )
+    archive_and_clear(puzzle)
 
     (x1, y1, x2, y2) = (0, 0, puzzle_data["table_width"], puzzle_data["table_height"])
 
