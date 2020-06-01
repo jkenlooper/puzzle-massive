@@ -132,7 +132,8 @@ class AutoRebuildCompletedPuzzle(Task):
                             "patch {puzzle_id}".format(**completed_puzzle)
                         )
                         r = requests.patch(
-                            "http://localhost:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                                HOSTAPI=current_app.config["HOSTAPI"],
                                 PORTAPI=current_app.config["PORTAPI"],
                                 puzzle_id=completed_puzzle["puzzle_id"],
                             ),

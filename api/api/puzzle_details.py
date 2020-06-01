@@ -518,7 +518,7 @@ class InternalPuzzleDetailsView(MethodView):
         cur = db.cursor()
         # validate the puzzle_id
         result = cur.execute(
-            fetch_query_string("select-puzzle-details-for-puzzle_id.sql"),
+            fetch_query_string("select-internal-puzzle-details-for-puzzle_id.sql"),
             {"puzzle_id": puzzle_id},
         ).fetchall()
         if not result:
@@ -547,13 +547,10 @@ class InternalPuzzleDetailsView(MethodView):
 
         params = {"puzzle_id": puzzle_id}
         params.update(data, **params)
+        # TODO: switch to more generic update
         result = cur.execute(
             fetch_query_string("update_status_puzzle_for_puzzle_id.sql"), params,
         )
         cur.close()
         db.commit()
         return make_response(json.jsonify({"rowcount": result.rowcount}))
-
-        # "status": REBUILD,
-        # "pieces": pieces,
-        # "queue": QUEUE_END_OF_LINE,

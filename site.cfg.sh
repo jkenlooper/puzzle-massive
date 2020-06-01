@@ -20,6 +20,8 @@ source .env
 #source ".env"
 
 HOST='127.0.0.1'
+# The HOSTAPI should not be externally available.
+# Keep HOSTAPI as localhost (127.0.0.1)
 HOSTAPI='127.0.0.1'
 HOSTDIVULGER='127.0.0.1'
 HOSTSTREAM='127.0.0.1'
