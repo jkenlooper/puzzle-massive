@@ -2,6 +2,7 @@ import unittest
 import logging
 
 from api.helper_tests import PuzzleTestCase
+from api.database import fetch_query_string, rowify
 
 # import api.puzzle_details
 
@@ -43,7 +44,7 @@ class TestInternalPuzzleDetailsView(PuzzleTestCase):
                 self.assertEqual({"msg": "No JSON data sent"}, rv.json)
 
     def test_acceptable_fields_in_payload(self):
-        "Should respond with 400 HTTP error if missing fields in payload was sent with PATCH"
+        "Should respond with 400 HTTP error if extra fields in payload were sent with PATCH"
         with self.app.app_context():
             with self.app.test_client() as c:
                 rv = c.patch(
@@ -53,20 +54,60 @@ class TestInternalPuzzleDetailsView(PuzzleTestCase):
                     json={"bogus": "value", "pieces": 1234},
                 )
                 self.assertEqual(400, rv.status_code)
-                self.assertEqual({"msg": "Missing fields in JSON data sent"}, rv.json)
+                self.assertEqual(
+                    {"msg": "Extra fields in JSON data were sent"}, rv.json
+                )
 
-    def test_updates_puzzle_details_with_values(self):
-        "Should update the puzzle details with the values that were sent"
+    def test_updates_puzzle_details_with_id(self):
+        "Should respond with 400 HTTP error if puzzle_id in payload"
         with self.app.app_context():
             with self.app.test_client() as c:
                 rv = c.patch(
                     "/internal/puzzle/{puzzle_id}/details/".format(
                         puzzle_id=self.puzzle_id
                     ),
-                    json={"status": 1, "queue": 1, "pieces": 1234},
+                    json={"status": 1, "queue": 1, "pieces": 1234, "puzzle_id": "abc"},
+                )
+                self.assertEqual(400, rv.status_code)
+                self.assertEqual(
+                    {"msg": "Extra fields in JSON data were sent"}, rv.json
+                )
+
+                rv = c.patch(
+                    "/internal/puzzle/{puzzle_id}/details/".format(
+                        puzzle_id=self.puzzle_id
+                    ),
+                    json={"status": 1, "queue": 1, "pieces": 1234, "id": 123},
+                )
+                self.assertEqual(400, rv.status_code)
+                self.assertEqual(
+                    {"msg": "Extra fields in JSON data were sent"}, rv.json
+                )
+
+    def test_updates_puzzle_details_with_values(self):
+        "Should update the puzzle details with the values that were sent"
+        with self.app.app_context():
+            with self.app.test_client() as c:
+                new_data = {"status": 1, "queue": 1, "pieces": 1234}
+                rv = c.patch(
+                    "/internal/puzzle/{puzzle_id}/details/".format(
+                        puzzle_id=self.puzzle_id
+                    ),
+                    json=new_data,
                 )
                 self.assertEqual(200, rv.status_code)
                 self.assertEqual({"rowcount": 1}, rv.json)
+                self.puzzle_data.update(new_data)
+
+                cur = self.db.cursor()
+                result = cur.execute(
+                    fetch_query_string(
+                        "select-internal-puzzle-details-for-puzzle_id.sql"
+                    ),
+                    {"puzzle_id": self.puzzle_id,},
+                ).fetchall()
+                (result, col_names) = rowify(result, cur.description)
+                self.assertEqual(result[0], self.puzzle_data)
 
 
 if __name__ == "__main__":

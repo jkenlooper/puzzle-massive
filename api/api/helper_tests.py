@@ -123,7 +123,7 @@ class PuzzleTestCase(APITestCase):
 
         fake_puzzle = rowify(
             cur.execute(
-                read_query_file("_select-puzzle-by-puzzle_id.sql"),
+                read_query_file("select-internal-puzzle-details-for-puzzle_id.sql"),
                 {"puzzle_id": puzzle_id},
             ).fetchall(),
             cur.description,

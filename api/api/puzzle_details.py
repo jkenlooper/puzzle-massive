@@ -514,7 +514,25 @@ class InternalPuzzleDetailsView(MethodView):
     """
 
     def patch(self, puzzle_id):
-        fields = {"status", "pieces", "queue"}
+        fields = {
+            "pieces",
+            "rows",
+            "cols",
+            "piece_width",
+            "mask_width",
+            "table_width",
+            "table_height",
+            "name",
+            "link",
+            "description",
+            "bg_color",
+            "m_date",
+            "owner",
+            "queue",
+            "status",
+            "permission",
+        }
+
         cur = db.cursor()
         # validate the puzzle_id
         result = cur.execute(
@@ -529,6 +547,9 @@ class InternalPuzzleDetailsView(MethodView):
             cur.close()
             return make_response(json.jsonify(err_msg), 400)
 
+        (result, col_names) = rowify(result, cur.description)
+        original_details = result[0]
+
         data = request.get_json(silent=True)
         if not data:
             err_msg = {
@@ -538,19 +559,18 @@ class InternalPuzzleDetailsView(MethodView):
             return make_response(json.jsonify(err_msg), 400)
 
         # verify that data keys are correct
-        if not fields.issubset(data.keys()):
+        if not fields.issuperset(data.keys()):
             err_msg = {
-                "msg": "Missing fields in JSON data sent",
+                "msg": "Extra fields in JSON data were sent",
             }
             cur.close()
             return make_response(json.jsonify(err_msg), 400)
 
-        params = {"puzzle_id": puzzle_id}
-        params.update(data, **params)
-        # TODO: switch to more generic update
-        result = cur.execute(
-            fetch_query_string("update_status_puzzle_for_puzzle_id.sql"), params,
-        )
+        params = {}
+        params.update(original_details, **data)
+        # Can't modify the puzzle_id or id fields
+        params.update({"puzzle_id": puzzle_id, "id": original_details["id"]})
+        result = cur.execute(fetch_query_string("patch_puzzle_details.sql"), params,)
         cur.close()
         db.commit()
         return make_response(json.jsonify({"rowcount": result.rowcount}))
