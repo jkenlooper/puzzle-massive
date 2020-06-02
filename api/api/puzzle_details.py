@@ -248,32 +248,10 @@ class PuzzleInstanceDetailsView(MethodView):
                 # the active puzzle status will have an empty response status.
                 response = {"status": ACTIVE}
 
-            try:
-                piece_reset.reset_puzzle_pieces(puzzleData.get("id"))
-            except piece_reset.Error as err:
-                # Update puzzle status to RENDERING_FAILED
-                cur.execute(
-                    fetch_query_string("update_puzzle_status_for_puzzle.sql"),
-                    {"status": RENDERING_FAILED, "puzzle": puzzleData["id"]},
-                )
-                db.commit()
-                sse.publish(
-                    "status:{}".format(RENDERING_FAILED),
-                    channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id),
-                )
-                response = {"msg": err}
-                cur.close()
-                return make_response(encoder.encode(response), 400)
-
-            # Update puzzle status to ACTIVE and sse publish
-            cur.execute(
-                fetch_query_string("update_puzzle_status_for_puzzle.sql"),
-                {"status": ACTIVE, "puzzle": puzzleData["id"]},
-            )
-            db.commit()
-            sse.publish(
-                "status:{}".format(ACTIVE),
-                channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id),
+            job = current_app.cleanupqueue.enqueue_call(
+                func="api.jobs.piece_reset.reset_puzzle_pieces_and_handle_errors",
+                args=([puzzleData.get("id")]),
+                result_ttl=0,
             )
 
         cur.close()

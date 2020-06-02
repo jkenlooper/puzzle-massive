@@ -26,6 +26,8 @@ class APITestCase(unittest.TestCase):
         self.app = make_app(
             SQLITE_DATABASE_URI=self.tmp_db.name,
             REDIS_URL="redis://127.0.0.1:6379/1/",
+            HOSTAPI="127.0.0.1",
+            PORTAPI=6310,
             DEBUG=True,
             TESTING=True,  # Ignore wal journal_mode requirement
             PUZZLE_RESOURCES=self.tmp_puzzle_resources,

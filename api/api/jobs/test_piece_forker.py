@@ -32,6 +32,7 @@ class TestPieceForker(PuzzleTestCase):
 
     def setUp(self):
         super().setUp()
+        # TODO: setup mocks/stubs for internal api requests
         with self.app.app_context():
             cur = self.db.cursor()
             # TODO: create players

@@ -236,14 +236,10 @@ class CreatePuzzleInstanceView(MethodView):
             )
         else:
             # Copy existing puzzle
-            try:
-                piece_forker.fork_puzzle_pieces(source_puzzle_data, puzzle_data)
-            except piece_forker.Error as err:
-                # Redirect to the source puzzle for errors
-                current_app.logger.warn(err)
-                return redirect(
-                    "/chill/site/front/{0}/".format(source_puzzle_data["puzzle_id"]),
-                    code=303,
-                )
+            job = current_app.cleanupqueue.enqueue_call(
+                func="api.jobs.piece_forker.fork_puzzle_pieces",
+                args=([source_puzzle_data, puzzle_data]),
+                result_ttl=0,
+            )
 
         return redirect("/chill/site/front/{0}/".format(puzzle_id), code=303)

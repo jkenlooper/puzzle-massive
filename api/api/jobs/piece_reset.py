@@ -6,7 +6,7 @@ from flask_sse import sse
 
 from api.app import db, redis_connection
 from api.database import rowify, fetch_query_string
-from api.constants import MAINTENANCE
+from api.constants import MAINTENANCE, RENDERING_FAILED, ACTIVE
 from api.timeline import archive_and_clear
 from api.jobs.convertPiecesToDB import transfer
 
@@ -95,4 +95,44 @@ def reset_puzzle_pieces(puzzle):
     # The caller should update the status of the puzzle to get it out of
     # MAINTENANCE mode.
     db.commit()
+    cur.close()
+
+
+def reset_puzzle_pieces_and_handle_errors(puzzle):
+    cur = db.cursor()
+    result = cur.execute(
+        fetch_query_string("select_all_from_puzzle_for_id.sql"), {"id": puzzle},
+    ).fetchall()
+    if not result:
+        cur.close()
+        raise DataError("No puzzle found with that id.")
+
+    (result, col_names) = rowify(result, cur.description)
+    puzzle_data = result[0]
+
+    try:
+        reset_puzzle_pieces(puzzle)
+    except Error as err:
+        # Update puzzle status to RENDERING_FAILED
+        cur.execute(
+            fetch_query_string("update_puzzle_status_for_puzzle.sql"),
+            {"status": RENDERING_FAILED, "puzzle": puzzle},
+        )
+        db.commit()
+        sse.publish(
+            "status:{}".format(RENDERING_FAILED),
+            channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_data["puzzle_id"]),
+        )
+        cur.close()
+
+    # Update puzzle status to ACTIVE and sse publish
+    cur.execute(
+        fetch_query_string("update_puzzle_status_for_puzzle.sql"),
+        {"status": ACTIVE, "puzzle": puzzle},
+    )
+    db.commit()
+    sse.publish(
+        "status:{}".format(ACTIVE),
+        channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_data["puzzle_id"]),
+    )
     cur.close()

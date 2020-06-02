@@ -324,16 +324,12 @@ def make_app(config=None, **kw):
     # )
 
     # api/api/jobs/convertPiecesToDB.py transfer
-    # internal-puzzle-details update_puzzle_status_for_puzzle.sql
     # internal-puzzle-pieces update_piece_props_for_puzzle.sql
 
     # api/api/jobs/pieceRenderer.py render
-    # internal-puzzle-details "update Puzzle set status = :RENDERING where status in (:IN_RENDER_QUEUE, :REBUILD) and id = :id"
-    # internal-puzzle-details "update Puzzle set pieces = :pieces, table_width = :table_width, table_height = :table_height where id = :id",
     # internal-puzzle-pieces "delete from Piece where puzzle = :puzzle"
     # internal-puzzle-file "delete from PuzzleFile where puzzle = :puzzle and name in ('pieces', 'pzz')"
     # internal-puzzle-pieces "insert or ignore into Piece (id, x, y, r, w, h, b, adjacent, rotate, row, col, status, parent, puzzle) values (:id, :x, :y, :r, :w, :h, :b, :adjacent, :rotate, :row, :col, :status, :g, :puzzle);"
-    # internal-puzzle-details "update Puzzle set status = :status, m_date = datetime('now') where id = :id"
     # internal-puzzle-file "insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);"
 
     # api/api/scheduler.py BumpMinimumDotsForPlayers

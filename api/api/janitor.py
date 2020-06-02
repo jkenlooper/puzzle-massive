@@ -18,7 +18,7 @@ from api.app import make_app
 from api.tools import loadConfig, get_redis_connection
 
 # Preload libs
-from api.jobs import convertPiecesToDB
+from api.jobs import convertPiecesToDB, piece_forker, piece_reset
 
 listen = ["puzzle_cleanup"]
 

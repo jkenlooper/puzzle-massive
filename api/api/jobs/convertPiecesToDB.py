@@ -21,6 +21,7 @@ from docopt import docopt
 
 from flask import current_app
 from flask_sse import sse
+import requests
 
 from api.app import redis_connection, db, make_app
 from api.database import rowify, read_query_file
@@ -50,11 +51,20 @@ def transfer(puzzle, cleanup=True):
     puzzle_data = result[0]
 
     puzzle_previous_status = puzzle_data["status"]
-    # TODO: use newapi/internal/
-    cur.execute(
-        read_query_file("update_puzzle_status_for_puzzle.sql"),
-        {"status": MAINTENANCE, "puzzle": puzzle},
+    r = requests.patch(
+        "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+            HOSTAPI=current_app.config["HOSTAPI"],
+            PORTAPI=current_app.config["PORTAPI"],
+            puzzle_id=puzzle_data["puzzle_id"],
+        ),
+        json={"status": MAINTENANCE,},
     )
+    current_app.logger.debug(r.status_code)
+    if r.status_code != 200:
+        # TODO: Raise an error here and let the caller decide how to handle it.
+        current_app.logger.warn("Puzzle details api error")
+        return
+
     sse.publish(
         "status:{}".format(MAINTENANCE),
         channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_data["puzzle_id"]),
@@ -110,14 +120,22 @@ def transfer(puzzle, cleanup=True):
     if cleanup:
         deletePieceDataFromRedis(redis_connection, puzzle, all_pieces)
 
-    # TODO: use newapi/internal/
-    cur.execute(
-        read_query_file("update_puzzle_status_for_puzzle.sql"),
-        {"status": puzzle_previous_status, "puzzle": puzzle},
-    )
-
     db.commit()
     cur.close()
+
+    r = requests.patch(
+        "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+            HOSTAPI=current_app.config["HOSTAPI"],
+            PORTAPI=current_app.config["PORTAPI"],
+            puzzle_id=puzzle_data["puzzle_id"],
+        ),
+        json={"status": puzzle_previous_status,},
+    )
+    current_app.logger.debug(r.status_code)
+    if r.status_code != 200:
+        # TODO: Raise an error here and let the caller decide how to handle it.
+        current_app.logger.warn("Puzzle details api error")
+        return
 
 
 def transferOldest(target_memory):

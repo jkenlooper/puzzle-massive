@@ -30,6 +30,7 @@ from PIL import Image
 from piecemaker.base import JigsawPieceClipsSVG, Pieces
 from piecemaker.adjacent import Adjacent
 from flask import current_app
+import requests
 
 from api.app import redis_connection, db, make_app
 from api.database import read_query_file, rowify
@@ -167,26 +168,49 @@ def render(*args):
     cur = db.cursor()
 
     for puzzle in args:
-        print("Rendering puzzle: {puzzle_id}".format(**puzzle))
-        # Set the status of the puzzle to rendering
-        # TODO: use newapi/internal/
-        cur.execute(
-            "update Puzzle set status = :RENDERING where status in (:IN_RENDER_QUEUE, :REBUILD) and id = :id",
-            {
-                "RENDERING": RENDERING,
-                "IN_RENDER_QUEUE": IN_RENDER_QUEUE,
-                "REBUILD": REBUILD,
-                "id": puzzle["id"],
-            },
-        )
-        db.commit()
+        current_app.logger.info("Rendering puzzle: {puzzle_id}".format(**puzzle))
 
+        result = cur.execute(
+            read_query_file("select-internal-puzzle-details-for-puzzle_id.sql"),
+            {"puzzle_id": puzzle_id},
+        ).fetchall()
+        if not result:
+            current_app.logger.info(
+                "Puzzle {puzzle_id} not available; skipping.".format(**puzzle)
+            )
+            continue
+
+        puzzle_data = rowify(result, cur.description,)[0][0]
+        if puzzle_data["status"] not in (IN_RENDER_QUEUE, REBUILD):
+            current_app.logger.info(
+                "Puzzle {puzzle_id} no longer in rendering status; skipping.".format(
+                    **puzzle
+                )
+            )
+            continue
+
+        # Set the status of the puzzle to rendering
+        r = requests.patch(
+            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                HOSTAPI=current_app.config["HOSTAPI"],
+                PORTAPI=current_app.config["PORTAPI"],
+                puzzle_id=puzzle["puzzle_id"],
+            ),
+            json={"status": RENDERING},
+        )
+        current_app.logger.debug(r.status_code)
+        if r.status_code != 200:
+            # TODO: Raise an error here and let the caller decide how to handle it.
+            current_app.logger.warn("Puzzle details api error")
+            continue
+
+        # TODO: with wal enabled; will the status be RENDERING here?
         result = cur.execute(
             "select status from Puzzle where status = :RENDERING and id = :id",
             {"RENDERING": RENDERING, "id": puzzle["id"]},
         ).fetchone()
         if not result:
-            print(
+            current_app.logger.info(
                 "Puzzle {puzzle_id} no longer in rendering status; skipping.".format(
                     **puzzle
                 )
@@ -302,18 +326,18 @@ def render(*args):
         tw = dimensions[100]["table_width"]
         th = dimensions[100]["table_height"]
 
-        # Update the table width/height
-        # TODO: use newapi/internal/
-        cur.execute(
-            "update Puzzle set pieces = :pieces, table_width = :table_width, table_height = :table_height where id = :id",
-            {
-                "pieces": piece_count,
-                "table_width": tw,
-                "table_height": th,
-                "id": puzzle["id"],
-            },
+        # Update the table width and height, set the new piece count
+        r = requests.patch(
+            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                HOSTAPI=current_app.config["HOSTAPI"],
+                PORTAPI=current_app.config["PORTAPI"],
+                puzzle_id=puzzle["puzzle_id"],
+            ),
+            json={"pieces": piece_count, "table_width": tw, "table_height": th,},
         )
-        db.commit()
+        current_app.logger.debug(r.status_code)
+        if r.status_code != 200:
+            raise Exception("Puzzle details api error")
 
         # Update the css file with dimensions for puzzle outline
         cssfile = open(os.path.join(puzzle_dir, "scale-100", "raster.css"), "a")
@@ -515,11 +539,21 @@ def render(*args):
         # reachable.  If it isn't; then run the set_lost_unsplash_photo from
         # migratePuzzleFile.
 
-        # TODO: use newapi/internal/
-        cur.execute(
-            "update Puzzle set status = :status, m_date = datetime('now') where id = :id",
-            {"status": puzzleStatus, "id": puzzle["id"]},
+        r = requests.patch(
+            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                HOSTAPI=current_app.config["HOSTAPI"],
+                PORTAPI=current_app.config["PORTAPI"],
+                puzzle_id=puzzle["puzzle_id"],
+            ),
+            json={
+                "status": puzzleStatus,
+                "m_date": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()),
+            },
         )
+        current_app.logger.debug(r.status_code)
+        if r.status_code != 200:
+            raise Exception("Puzzle details api error")
+
         # TODO: use newapi/internal/
         cur.execute(
             insert_puzzle_file,
