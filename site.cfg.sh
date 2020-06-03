@@ -26,6 +26,7 @@ HOSTAPI='127.0.0.1'
 HOSTDIVULGER='127.0.0.1'
 HOSTSTREAM='127.0.0.1'
 HOSTREDIS='127.0.0.1'
+# The redis db is by default 0 and the redis db used for unit tests is 1
 REDIS_DB=0
 
 DATE=$(date)
@@ -52,6 +53,8 @@ HOSTNAME = $HOSTNAME
 SITE_PROTOCOL = 'http'
 PORT = $PORTCHILL
 
+# The HOSTAPI should not be externally available.
+# Keep HOSTAPI as localhost (127.0.0.1)
 HOSTAPI = '$HOSTAPI'
 PORTAPI = $PORTAPI
 
@@ -63,6 +66,7 @@ PORTSTREAM = $PORTSTREAM
 
 HOSTREDIS = '$HOSTREDIS'
 PORTREDIS = $PORTREDIS
+# The redis db is by default 0 and the redis db used for unit tests is 1
 REDIS_DB = $REDIS_DB
 REDIS_URL = 'redis://${HOSTREDIS}:${PORTREDIS}/${REDIS_DB}/'
 

@@ -8,7 +8,7 @@ import os
 import shutil
 from random import randint
 
-from api.app import make_app, db
+from api.app import make_app, db, redis_connection
 from api.database import init_db, read_query_file, rowify
 from api.constants import (
     ACTIVE,
@@ -25,6 +25,9 @@ class APITestCase(unittest.TestCase):
         cookie_secret = "oatmeal"
         self.app = make_app(
             SQLITE_DATABASE_URI=self.tmp_db.name,
+            HOSTREDIS="127.0.0.1",
+            PORTREDIS=6379,
+            REDIS_DB=1,
             REDIS_URL="redis://127.0.0.1:6379/1/",
             HOSTAPI="127.0.0.1",
             PORTAPI=6310,
@@ -43,7 +46,7 @@ class APITestCase(unittest.TestCase):
                 init_db()
 
     def tearDown(self):
-        """Get rid of the database after each test."""
+        """Get rid of the temporary sqlite database and redis test db (1) after each test."""
         self.tmp_db.close()
         for tmp_dir in (self.tmp_puzzle_resources, self.tmp_puzzle_archive):
             if tmp_dir.startswith("/tmp/"):
@@ -52,6 +55,9 @@ class APITestCase(unittest.TestCase):
                 raise Exception(
                     "temp directory is not temporary? {}".format(self.tmp_dir)
                 )
+
+        with self.app.app_context():
+            redis_connection.flushdb()
 
 
 class PuzzleTestCase(APITestCase):
