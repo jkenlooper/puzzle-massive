@@ -492,63 +492,65 @@ class InternalPuzzleDetailsView(MethodView):
     """
 
     def patch(self, puzzle_id):
-        fields = {
-            "pieces",
-            "rows",
-            "cols",
-            "piece_width",
-            "mask_width",
-            "table_width",
-            "table_height",
-            "name",
-            "link",
-            "description",
-            "bg_color",
-            "m_date",
-            "owner",
-            "queue",
-            "status",
-            "permission",
-        }
-
-        cur = db.cursor()
-        # validate the puzzle_id
-        result = cur.execute(
-            fetch_query_string("select-internal-puzzle-details-for-puzzle_id.sql"),
-            {"puzzle_id": puzzle_id},
-        ).fetchall()
-        if not result:
-            # 400 if puzzle does not exist
-            err_msg = {
-                "msg": "No puzzle found",
-            }
-            cur.close()
-            return make_response(json.jsonify(err_msg), 400)
-
-        (result, col_names) = rowify(result, cur.description)
-        original_details = result[0]
-
         data = request.get_json(silent=True)
-        if not data:
-            err_msg = {
-                "msg": "No JSON data sent",
-            }
-            cur.close()
-            return make_response(json.jsonify(err_msg), 400)
+        response_msg = update_puzzle_details(puzzle_id, data)
 
-        # verify that data keys are correct
-        if not fields.issuperset(data.keys()):
-            err_msg = {
-                "msg": "Extra fields in JSON data were sent",
-            }
-            cur.close()
-            return make_response(json.jsonify(err_msg), 400)
+        return make_response(json.jsonify(response_msg), response_msg["status_code"])
 
-        params = {}
-        params.update(original_details, **data)
-        # Can't modify the puzzle_id or id fields
-        params.update({"puzzle_id": puzzle_id, "id": original_details["id"]})
-        result = cur.execute(fetch_query_string("patch_puzzle_details.sql"), params,)
+
+def update_puzzle_details(puzzle_id, data):
+    ""
+    fields = {
+        "pieces",
+        "rows",
+        "cols",
+        "piece_width",
+        "mask_width",
+        "table_width",
+        "table_height",
+        "name",
+        "link",
+        "description",
+        "bg_color",
+        "m_date",
+        "owner",
+        "queue",
+        "status",
+        "permission",
+    }
+
+    cur = db.cursor()
+    # validate the puzzle_id
+    result = cur.execute(
+        fetch_query_string("select-internal-puzzle-details-for-puzzle_id.sql"),
+        {"puzzle_id": puzzle_id},
+    ).fetchall()
+    if not result:
+        # 400 if puzzle does not exist
+        err_msg = {"msg": "No puzzle found", "status_code": 400}
         cur.close()
-        db.commit()
-        return make_response(json.jsonify({"rowcount": result.rowcount}))
+        return err_msg
+
+    (result, col_names) = rowify(result, cur.description)
+    original_details = result[0]
+
+    if not data:
+        err_msg = {"msg": "No JSON data sent", "status_code": 400}
+        cur.close()
+        return err_msg
+
+    # verify that data keys are correct
+    if not fields.issuperset(data.keys()):
+        err_msg = {"msg": "Extra fields in JSON data were sent", "status_code": 400}
+        cur.close()
+        return err_msg
+
+    params = {}
+    params.update(original_details, **data)
+    # Can't modify the puzzle_id or id fields
+    params.update({"puzzle_id": puzzle_id, "id": original_details["id"]})
+    result = cur.execute(fetch_query_string("patch_puzzle_details.sql"), params,)
+    cur.close()
+    db.commit()
+    msg = {"rowcount": result.rowcount, "msg": "Updated", "status_code": 200}
+    return msg
