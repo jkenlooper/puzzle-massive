@@ -13,6 +13,19 @@ suggested puzzle {{puzzle.puzzle_id}}
 <form enctype="multipart/form-data" id="upload_puzzle" method="post" action="/newapi/admin/puzzle/promote-suggested/">
   <input type="hidden" name="puzzle_id" value="{{ puzzle.puzzle_id }}">
   <div class="pm-UploadForm">
+
+    <div class="pm-UploadForm-row">
+      <label for="permission">
+        Unlisted
+      </label>
+      <div>
+        <input type="checkbox" id="permission" name="permission" value="-1" {% if puzzle.permission == -1 %}checked{% endif %}>
+        <p>
+          Check this box to <em>not</em> have this puzzle publicly listed on the site.
+        </p>
+      </div>
+    </div>
+
     <div class="pm-UploadForm-row">
       <label for="pieces">
         Piece Count

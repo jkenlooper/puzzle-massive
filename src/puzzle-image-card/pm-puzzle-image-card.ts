@@ -14,6 +14,8 @@ interface TemplateData {
   src: string;
   puzzleId: string;
   pieces: number;
+  isPrivate: boolean;
+  isPlayerPuzzleInstance: boolean;
   queue: number;
   isActive: boolean;
   isRecent: boolean;
@@ -48,11 +50,13 @@ customElements.define(
       puzzle_id: "",
       status: 0,
       pieces: 0,
+      permission: 0,
       queue: 0,
       is_active: 0,
       is_new: 0,
       is_recent: 0,
       is_original: 0,
+      is_in_puzzle_instance_slot: 0,
       seconds_from_now: null,
       owner: 0,
       title: "",
@@ -201,6 +205,8 @@ customElements.define(
                   </small>
                 `
               : ""}
+            ${data.isPrivate ? html`Not publicly listed on the site.` : ""}
+            ${data.isPlayerPuzzleInstance ? html`player puzzle instance` : ""}
           </div>
         `;
       }
@@ -211,6 +217,8 @@ customElements.define(
         src: this.puzzle.src,
         puzzleId: this.puzzle.puzzle_id,
         pieces: this.puzzle.pieces,
+        isPrivate: this.puzzle.permission === -1,
+        isPlayerPuzzleInstance: this.puzzle.is_in_puzzle_instance_slot === 1,
         queue: this.puzzle.queue,
         isOriginal: !!this.puzzle.is_original,
         owner: this.puzzle.owner,

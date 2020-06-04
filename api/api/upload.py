@@ -22,7 +22,14 @@ from api.database import (
     read_query_file,
     generate_new_puzzle_id,
 )
-from api.constants import COMPLETED, NEEDS_MODERATION, PUBLIC, CLASSIC, QUEUE_NEW
+from api.constants import (
+    COMPLETED,
+    NEEDS_MODERATION,
+    PRIVATE,
+    PUBLIC,
+    CLASSIC,
+    QUEUE_NEW,
+)
 from api.user import user_id_from_ip, user_not_banned
 from api.tools import check_bg_color
 
@@ -218,11 +225,11 @@ class PuzzleUploadView(MethodView):
             or user_id_from_ip(request.headers.get("X-Real-IP"))
         )
 
-        # All puzzles are public
-        permission = PUBLIC
-        # permission = int(args.get('permission', PUBLIC))
-        # if permission != PUBLIC:
-        #    permission = PUBLIC
+        # All puzzles are public by default, but allow the player to set to
+        # PRIVATE if they have the role of membership.
+        permission = int(args.get("permission", PUBLIC))
+        if permission not in (PUBLIC, PRIVATE):
+            permission = PUBLIC
 
         description = escape(args.get("description", ""))[:1000]
 
@@ -263,11 +270,11 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
 
         bg_color = check_bg_color(args.get("bg_color", "#808080")[:50])
 
-        # All puzzles are public
-        permission = PUBLIC
-        # permission = int(args.get('permission', PUBLIC))
-        # if permission != PUBLIC:
-        #    permission = PUBLIC
+        # All puzzles are public by default, but allow the admin to set
+        # permission to PRIVATE.
+        permission = int(args.get("permission", PUBLIC))
+        if permission not in (PUBLIC, PRIVATE):
+            permission = PUBLIC
 
         description = escape(args.get("description", ""))[:1000]
 
@@ -300,7 +307,7 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
         db.commit()
         cur.close()
 
-        return redirect("/chill/site/puzzle/{0}/".format(new_puzzle_id), code=303)
+        return redirect("/chill/site/front/{0}/".format(new_puzzle_id), code=303)
 
 
 class UnsplashPuzzleThread(threading.Thread):

@@ -1,6 +1,15 @@
 {% extends 'base.html.jinja2' %}
 {% set ngModule = 'profilepage' %}
 
+  {% block secondarymenu %}
+    <span class="Button Button--plain is-disabled">
+      Player Profile
+    </span>
+    <a class="Button Button--plain" href="/chill{{ url_for('.page_uri', uri='player-puzzle-list') }}">
+      Your Puzzles
+    </a>
+  {% endblock %}
+
 {% block main %}
 <section class="pm-Doc">
   <h1>Player Profile</h1>

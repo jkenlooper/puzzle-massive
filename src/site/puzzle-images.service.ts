@@ -5,12 +5,14 @@ export interface PuzzleImageData {
   puzzle_id: string;
   status: number;
   pieces: number;
+  permission: number;
   queue: number;
   redo_date?: string;
   is_active: number;
   is_new: number;
   is_recent: number;
   is_original: number;
+  is_in_puzzle_instance_slot: number;
   seconds_from_now: number | null;
   owner: number;
   title: string;

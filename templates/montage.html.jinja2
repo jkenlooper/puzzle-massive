@@ -25,6 +25,7 @@
           {{item.puzzle_id}}
           </small>
         </a>
+        {% if item.permission == -1 %}private{% endif %}
       </div>
     {% endfor %}
   </div>

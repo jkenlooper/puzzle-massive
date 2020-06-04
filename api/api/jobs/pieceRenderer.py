@@ -172,7 +172,7 @@ def render(*args):
 
         result = cur.execute(
             read_query_file("select-internal-puzzle-details-for-puzzle_id.sql"),
-            {"puzzle_id": puzzle_id},
+            {"puzzle_id": puzzle["puzzle_id"]},
         ).fetchall()
         if not result:
             current_app.logger.info(
@@ -200,22 +200,7 @@ def render(*args):
         )
         current_app.logger.debug(r.status_code)
         if r.status_code != 200:
-            # TODO: Raise an error here and let the caller decide how to handle it.
-            current_app.logger.warn("Puzzle details api error")
-            continue
-
-        # TODO: with wal enabled; will the status be RENDERING here?
-        result = cur.execute(
-            "select status from Puzzle where status = :RENDERING and id = :id",
-            {"RENDERING": RENDERING, "id": puzzle["id"]},
-        ).fetchone()
-        if not result:
-            current_app.logger.info(
-                "Puzzle {puzzle_id} no longer in rendering status; skipping.".format(
-                    **puzzle
-                )
-            )
-            continue
+            raise Exception("Puzzle details api error")
 
         result = cur.execute(
             read_query_file("get_original_puzzle_id_from_puzzle_instance.sql"),
@@ -517,6 +502,7 @@ def render(*args):
             "delete from PuzzleFile where puzzle = :puzzle and name in ('pieces', 'pzz')",
             {"puzzle": puzzle["id"]},
         )
+        db.commit()
 
         # Commit the piece properties and puzzle resources
         # row and col are really only useful for determining the top left piece when resetting puzzle
@@ -529,6 +515,7 @@ def render(*args):
                 );""",
                 pc,
             )
+            db.commit()
 
         # Update Puzzle data
         puzzleStatus = ACTIVE
@@ -552,7 +539,9 @@ def render(*args):
         )
         current_app.logger.debug(r.status_code)
         if r.status_code != 200:
-            raise Exception("Puzzle details api error")
+            raise Exception(
+                "Puzzle details api error when updating status and m_date on newly rendered puzzle"
+            )
 
         # TODO: use newapi/internal/
         cur.execute(
@@ -560,7 +549,9 @@ def render(*args):
             {
                 "puzzle": puzzle["id"],
                 "name": "pieces",
-                "url": "/resources/{puzzle_id}/scale-100/raster.png".format(**puzzle),
+                "url": "/resources/{puzzle_id}/scale-100/raster.png".format(
+                    puzzle_id=puzzle["puzzle_id"]
+                ),
             },
         )
         # TODO: use newapi/internal/
