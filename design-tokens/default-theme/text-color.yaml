@@ -54,13 +54,28 @@ props:
     value: "{!color-primary-dark}"
     comment: Link text color
 
+  TextColor-secondaryOnSurface:
+    value: "{!color-secondary}"
+    comment: One Word Attribute
   TextColor-secondaryOnDark:
     value: "{!color-secondary}"
     comment: Logo
 
+  TextColor-tertiaryOnSurface:
+    value: "{!color-tertiary}"
+    comment: One Word Attribute
   TextColor-tertiaryOnBackground:
     value: "{!color-tertiary}"
     comment: Logo
   TextColor-tertiaryOnDark:
     value: "{!color-tertiary}"
     comment: Logo
+
+  TextColor-accentOnSurface:
+    value: "{!color-accent}"
+    comment: One Word Attribute
+
+  TextColor-errorOnSurface:
+    value: "{!color-error}"
+    comment: One Word Attribute
+

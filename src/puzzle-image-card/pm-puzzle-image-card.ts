@@ -205,8 +205,18 @@ customElements.define(
                   </small>
                 `
               : ""}
-            ${data.isPrivate ? html`Not publicly listed on the site.` : ""}
-            ${data.isPlayerPuzzleInstance ? html`player puzzle instance` : ""}
+            ${data.isPrivate
+              ? html`<span
+                  class="pm-PuzzleImageCard-oneWordAttr pm-PuzzleImageCard-oneWordAttr--unlisted"
+                  >Unlisted</span
+                >`
+              : ""}
+            ${data.isPlayerPuzzleInstance
+              ? html`<span
+                  class="pm-PuzzleImageCard-oneWordAttr pm-PuzzleImageCard-oneWordAttr--instance"
+                  >Instance</span
+                >`
+              : ""}
           </div>
         `;
       }

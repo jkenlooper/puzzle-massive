@@ -163,3 +163,18 @@
 .pm-PuzzleImageCard-infoMessage {
   font-size: smaller;
 }
+
+.pm-PuzzleImageCard-oneWordAttr {
+  font-size: smaller;
+  font-weight: bold;
+  display: inline-block;
+}
+.pm-PuzzleImageCard-oneWordAttr + .pm-PuzzleImageCard-oneWordAttr {
+  margin-left: 2em;
+}
+.pm-PuzzleImageCard-oneWordAttr--unlisted {
+  color: var(--designtoken-TextColor-accentOnSurface);
+}
+.pm-PuzzleImageCard-oneWordAttr--instance {
+  color: var(--designtoken-TextColor-tertiaryOnSurface);
+}
