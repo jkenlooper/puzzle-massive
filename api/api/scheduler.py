@@ -20,12 +20,15 @@ from flask import current_app
 from rq import Queue
 import requests
 
-from api.database import rowify, read_query_file
+from api.database import rowify, read_query_file, fetch_query_string
 from api.app import redis_connection, db, make_app
 from api.tools import loadConfig
 from api.tools import deletePieceDataFromRedis
 from api.timeline import archive_and_clear
 from api.constants import (
+    ACTIVE,
+    IN_QUEUE,
+    QUEUE_INACTIVE,
     REBUILD,
     COMPLETED,
     SKILL_LEVEL_RANGES,
@@ -127,10 +130,6 @@ class AutoRebuildCompletedPuzzle(Task):
                             ),
                             min(high - 1, completed_puzzle["pieces"] + 400),
                         )
-                        # TODO: use newapi/internal/puzzle/<puzzle_id>/details/
-                        current_app.logger.debug(
-                            "patch {puzzle_id}".format(**completed_puzzle)
-                        )
                         r = requests.patch(
                             "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
                                 HOSTAPI=current_app.config["HOSTAPI"],
@@ -143,19 +142,13 @@ class AutoRebuildCompletedPuzzle(Task):
                                 "queue": QUEUE_END_OF_LINE,
                             },
                         )
-                        current_app.logger.debug(r.status_code)
                         if r.status_code != 200:
-                            current_app.logger.debug("Puzzle details api error")
+                            current_app.logger.warning(
+                                "Puzzle details api error. Could not set puzzle status to rebuild. Skipping {puzzle_id}".format(
+                                    **completed_puzzle
+                                )
+                            )
                             continue
-                        # cur.execute(
-                        #    read_query_file("update_status_puzzle_for_puzzle_id.sql"),
-                        #    {
-                        #        "puzzle_id": completed_puzzle["puzzle_id"],
-                        #        "status": REBUILD,
-                        #        "pieces": pieces,
-                        #        "queue": QUEUE_END_OF_LINE,
-                        #    },
-                        # )
                         completed_puzzle["status"] = REBUILD
                         completed_puzzle["pieces"] = pieces
 
@@ -214,6 +207,7 @@ class BumpMinimumDotsForPlayers(Task):
 class UpdateModifiedDateOnPuzzle(Task):
     "Update the m_date for all recently updated puzzles based on pcupdates redis sorted set"
     interval = 15
+    first_run = True
     last_update = int(time())
 
     def __init__(self, id=None):
@@ -223,22 +217,57 @@ class UpdateModifiedDateOnPuzzle(Task):
         super().do_task()
 
         cur = db.cursor()
+
+        if self.first_run:
+            result = cur.execute(
+                fetch_query_string("select_most_recent_puzzle_by_m_date.sql")
+            ).fetchone()
+            if result and len(result):
+                self.last_update = int(result[0]) - self.interval
+
+            self.first_run = False
+
         puzzles = redis_connection.zrangebyscore(
             "pcupdates", self.last_update, "+inf", withscores=True
         )
         self.last_update = int(time()) - 2  # allow some overlap
         for (puzzle, modified) in puzzles:
             puzzle = int(puzzle)
-            # TODO: use newapi/internal/
-            cur.execute(
-                read_query_file("update_puzzle_m_date_to_now.sql"),
-                {"puzzle": puzzle, "modified": modified},
+            m_date = strftime("%Y-%m-%d %H:%M:%S", gmtime(modified))
+            current_app.logger.info("test {}".format(puzzle))
+
+            (result, col_names) = rowify(
+                cur.execute(
+                    fetch_query_string("select-all-from-puzzle-by-id.sql"),
+                    {"puzzle": puzzle},
+                ).fetchall(),
+                cur.description,
             )
-            current_app.logger.debug("Updating puzzle m_date {0}".format(puzzle))
+            if result:
+                puzzle_data = result[0]
+                r = requests.patch(
+                    "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                        HOSTAPI=current_app.config["HOSTAPI"],
+                        PORTAPI=current_app.config["PORTAPI"],
+                        puzzle_id=puzzle_data["puzzle_id"],
+                    ),
+                    json={"m_date": m_date,},
+                )
+                if r.status_code != 200:
+                    current_app.logger.warning(
+                        "Puzzle details api error. Could not update puzzle m_date to {m_date}. Skipping {puzzle_id}".format(
+                            m_date=m_date, puzzle_id=puzzle_data["puzzle_id"],
+                        )
+                    )
+                    continue
+                current_app.logger.debug(
+                    "Updated puzzle m_date {puzzle_id} {m_date}".format(
+                        m_date=m_date, puzzle_id=puzzle_data["puzzle_id"],
+                    )
+                )
         if len(puzzles) > 0:
             self.log_task()
         cur.close()
-        db.commit()
 
 
 class UpdatePlayer(Task):
@@ -433,11 +462,33 @@ class UpdatePuzzleQueue(Task):
         made_change = False
 
         cur = db.cursor()
-        # TODO: use newapi/internal/
-        result = cur.execute(read_query_file("retire-inactive-puzzles-to-queue.sql"))
-        if result.rowcount:
-            made_change = True
-        db.commit()
+
+        result = cur.execute(
+            fetch_query_string("select-active-public-puzzles-due-for-retirement.sql")
+        ).fetchall()
+        if result:
+            for item in result:
+                puzzle_id = item[0]
+                current_app.logger.debug(
+                    "{} has been inactive for more than 7 days".format(puzzle_id)
+                )
+                r = requests.patch(
+                    "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                        HOSTAPI=current_app.config["HOSTAPI"],
+                        PORTAPI=current_app.config["PORTAPI"],
+                        puzzle_id=puzzle_id,
+                    ),
+                    json={"status": IN_QUEUE, "queue": QUEUE_INACTIVE},
+                )
+                if r.status_code != 200:
+                    current_app.logger.warning(
+                        "Puzzle details api error. Could not update puzzle m_date to {m_date}. Skipping {puzzle_id}".format(
+                            m_date=m_date, puzzle_id=puzzle_data["puzzle_id"],
+                        )
+                    )
+                    continue
+                made_change = True
+
         # select all ACTIVE puzzles within each skill range
         skill_range_active_count = 2
         for (low, high) in SKILL_LEVEL_RANGES:
@@ -446,23 +497,45 @@ class UpdatePuzzleQueue(Task):
                 {"low": low, "high": high},
             ).fetchone()
             if result == None or result[0] < skill_range_active_count:
-                current_app.logger.debug(
-                    "Bump next puzzle in queue to be active for skill level range {low}, {high}".format(
-                        low=low, high=high
-                    )
-                )
-                # TODO: use newapi/internal/
-                update_result = cur.execute(
-                    read_query_file("update-puzzle-next-in-queue-to-be-active.sql"),
+                result = cur.execute(
+                    fetch_query_string("select-puzzle-next-in-queue-to-be-active.sql"),
                     {
                         "low": low,
                         "high": high,
                         "active_count": skill_range_active_count,
                     },
-                )
-                if update_result.rowcount:
-                    made_change = True
-                db.commit()
+                ).fetchall()
+                if result:
+                    current_app.logger.debug(
+                        "Bump next puzzle in queue to be active for skill level range {low}, {high}".format(
+                            low=low, high=high
+                        )
+                    )
+                    # TODO: this use to be 4 days in the past, but now using
+                    # present time.
+                    m_date_now = strftime("%Y-%m-%d %H:%M:%S", gmtime(time()))
+                    for item in result:
+                        puzzle_id = item[0]
+                        current_app.logger.debug(
+                            "{} is next in queue to be active".format(puzzle_id)
+                        )
+                        r = requests.patch(
+                            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                                HOSTAPI=current_app.config["HOSTAPI"],
+                                PORTAPI=current_app.config["PORTAPI"],
+                                puzzle_id=puzzle_id,
+                            ),
+                            json={"status": ACTIVE, "m_date": m_date_now},
+                        )
+                        if r.status_code != 200:
+                            current_app.logger.warning(
+                                "Puzzle details api error. Could not update puzzle m_date to {m_date} and status to active. Skipping {puzzle_id}".format(
+                                    m_date=m_date_now,
+                                    puzzle_id=puzzle_data["puzzle_id"],
+                                )
+                            )
+                            continue
+                        made_change = True
 
         if made_change:
             self.log_task()

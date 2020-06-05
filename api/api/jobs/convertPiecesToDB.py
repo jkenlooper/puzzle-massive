@@ -20,7 +20,7 @@ import time
 from docopt import docopt
 
 from flask import current_app
-from flask_sse import sse
+
 import requests
 
 from api.app import redis_connection, db, make_app
@@ -45,7 +45,9 @@ def transfer(puzzle, cleanup=True):
         # Most likely because of a database switch and forgot to run this script
         # between those actions.
         # TODO: Raise an error here and let the caller decide how to handle it.
-        current_app.logger.warn("Puzzle {} not in database. Skipping.".format(puzzle))
+        current_app.logger.warning(
+            "Puzzle {} not in database. Skipping.".format(puzzle)
+        )
         return
 
     puzzle_data = result[0]
@@ -62,13 +64,12 @@ def transfer(puzzle, cleanup=True):
     current_app.logger.debug(r.status_code)
     if r.status_code != 200:
         # TODO: Raise an error here and let the caller decide how to handle it.
-        current_app.logger.warn("Puzzle details api error")
+        current_app.logger.warning(
+            "Puzzle details api error when setting status to maintenance {}".format(
+                puzzle_data["puzzle_id"]
+            )
+        )
         return
-
-    sse.publish(
-        "status:{}".format(MAINTENANCE),
-        channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_data["puzzle_id"]),
-    )
 
     (all_pieces, col_names) = rowify(
         cur.execute(
@@ -134,7 +135,7 @@ def transfer(puzzle, cleanup=True):
     current_app.logger.debug(r.status_code)
     if r.status_code != 200:
         # TODO: Raise an error here and let the caller decide how to handle it.
-        current_app.logger.warn("Puzzle details api error")
+        current_app.logger.warning("Puzzle details api error")
         return
 
 

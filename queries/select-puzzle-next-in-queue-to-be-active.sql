@@ -1,5 +1,4 @@
-update Puzzle set status = 1, -- ACTIVE
-m_date = datetime('now', '-4 days')
+select puzzle_id from Puzzle
 where status = 2 -- IN_QUEUE
 and permission = 0 -- PUBLIC
 and pieces >= :low and pieces < :high

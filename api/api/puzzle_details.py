@@ -552,5 +552,15 @@ def update_puzzle_details(puzzle_id, data):
     result = cur.execute(fetch_query_string("patch_puzzle_details.sql"), params,)
     cur.close()
     db.commit()
+
+    # publish a MAINTENANCE puzzle status change so players that happen to be on
+    # a puzzle will get an alert message. This will require players to reload
+    # the puzzle.
+    if result.rowcount and data.get("status"):
+        sse.publish(
+            "status:{}".format(MAINTENANCE),
+            channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id),
+        )
+
     msg = {"rowcount": result.rowcount, "msg": "Updated", "status_code": 200}
     return msg

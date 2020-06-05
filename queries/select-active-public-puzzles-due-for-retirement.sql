@@ -1,5 +1,4 @@
-update Puzzle set status = 2, -- IN_QUEUE
-queue = 10 -- QUEUE_INACTIVE
+select puzzle_id from Puzzle
 where status = 1 -- ACTIVE
 and permission = 0 -- PUBLIC
 and id in (

@@ -335,9 +335,6 @@ def make_app(config=None, **kw):
     # api/api/scheduler.py BumpMinimumDotsForPlayers
     # internal-tasks-start update_points_to_minimum_for_all_users.sql
 
-    # api/api/scheduler.py UpdateModifiedDateOnPuzzle
-    # internal-puzzle-details update_puzzle_m_date_to_now.sql
-
     # api/api/scheduler.py UpdatePlayer
     # internal-tasks-start update_user_points_and_m_date.sql
     # internal-tasks-start update_bit_icon_expiration.sql
@@ -346,10 +343,6 @@ def make_app(config=None, **kw):
     # internal-puzzle-timeline insert_batchpoints_to_timeline.sql
     # internal-puzzle-timeline create_timeline_puzzle_index.sql (only done on first run)
     # internal-puzzle-timeline create_timeline_timestamp_index.sql (only done on first run)
-
-    # api/api/scheduler.py UpdatePuzzleQueue
-    # internal-puzzle-details retire-inactive-puzzles-to-queue.sql
-    # internal-puzzle-details update-puzzle-next-in-queue-to-be-active.sql
 
     # api/api/scheduler.py AutoApproveUserNames
     # internal-tasks-start update-user-name-approved-for-approved_date-due.sql

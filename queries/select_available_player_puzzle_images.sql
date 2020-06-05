@@ -26,5 +26,7 @@ left outer join Attribution as a on (a.id = pf.attribution)
 left outer join License as l on (l.id = a.license)
 
 where p.owner = :player
+-- any of the puzzle status except deleted and suggested
+and p.status in (0, 1, 2, 3, 4, 5, -1, -2, -3, -5, -6, -7, -30)
 order by p.m_date desc
 ;
