@@ -29,7 +29,9 @@ class TestInternalPuzzleDetailsView(PuzzleTestCase):
                     "/internal/puzzle/{puzzle_id}/details/".format(puzzle_id="abc")
                 )
                 self.assertEqual(400, rv.status_code)
-                self.assertEqual({"msg": "No puzzle found"}, rv.json)
+                self.assertEqual(
+                    {"msg": "No puzzle found", "status_code": 400}, rv.json
+                )
 
     def test_missing_payload(self):
         "Should respond with 400 HTTP error if no payload was sent with PATCH"
@@ -41,7 +43,9 @@ class TestInternalPuzzleDetailsView(PuzzleTestCase):
                     )
                 )
                 self.assertEqual(400, rv.status_code)
-                self.assertEqual({"msg": "No JSON data sent"}, rv.json)
+                self.assertEqual(
+                    {"msg": "No JSON data sent", "status_code": 400}, rv.json
+                )
 
     def test_acceptable_fields_in_payload(self):
         "Should respond with 400 HTTP error if extra fields in payload were sent with PATCH"
@@ -55,7 +59,8 @@ class TestInternalPuzzleDetailsView(PuzzleTestCase):
                 )
                 self.assertEqual(400, rv.status_code)
                 self.assertEqual(
-                    {"msg": "Extra fields in JSON data were sent"}, rv.json
+                    {"msg": "Extra fields in JSON data were sent", "status_code": 400},
+                    rv.json,
                 )
 
     def test_updates_puzzle_details_with_id(self):
@@ -70,7 +75,8 @@ class TestInternalPuzzleDetailsView(PuzzleTestCase):
                 )
                 self.assertEqual(400, rv.status_code)
                 self.assertEqual(
-                    {"msg": "Extra fields in JSON data were sent"}, rv.json
+                    {"msg": "Extra fields in JSON data were sent", "status_code": 400},
+                    rv.json,
                 )
 
                 rv = c.patch(
@@ -81,7 +87,8 @@ class TestInternalPuzzleDetailsView(PuzzleTestCase):
                 )
                 self.assertEqual(400, rv.status_code)
                 self.assertEqual(
-                    {"msg": "Extra fields in JSON data were sent"}, rv.json
+                    {"msg": "Extra fields in JSON data were sent", "status_code": 400},
+                    rv.json,
                 )
 
     def test_updates_puzzle_details_with_values(self):
@@ -96,7 +103,10 @@ class TestInternalPuzzleDetailsView(PuzzleTestCase):
                     json=new_data,
                 )
                 self.assertEqual(200, rv.status_code)
-                self.assertEqual({"rowcount": 1}, rv.json)
+                self.assertEqual(
+                    {"msg": "Updated", "rowcount": 1, "status_code": 200}, rv.json
+                )
+
                 self.puzzle_data.update(new_data)
 
                 cur = self.db.cursor()

@@ -7,6 +7,10 @@ from uuid import uuid4
 import os
 import shutil
 from random import randint
+import json
+import re
+
+import responses
 
 from api.app import make_app, db, redis_connection
 from api.database import init_db, read_query_file, rowify
@@ -15,6 +19,7 @@ from api.constants import (
     PUBLIC,
     CLASSIC,
 )
+import api.puzzle_details
 
 
 class APITestCase(unittest.TestCase):
@@ -63,7 +68,28 @@ class APITestCase(unittest.TestCase):
 class PuzzleTestCase(APITestCase):
     def setUp(self):
         super().setUp()
-        # TODO: add anything specific for testing puzzles
+
+        internal_puzzle_details_re = re.compile(
+            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/(?P<puzzle_id>[^/]+)/details/".format(
+                HOSTAPI=self.app.config["HOSTAPI"], PORTAPI=self.app.config["PORTAPI"],
+            )
+        )
+
+        def request_internal_puzzle_details_callback(request):
+            m = internal_puzzle_details_re.match(request.url)
+            puzzle_id = m.group("puzzle_id")
+            payload = json.loads(request.body)
+            response_msg = api.puzzle_details.update_puzzle_details(puzzle_id, payload)
+            headers = {}
+            return (response_msg["status_code"], headers, json.dumps(response_msg))
+
+        with self.app.app_context():
+            responses.add_callback(
+                responses.PATCH,
+                internal_puzzle_details_re,
+                callback=request_internal_puzzle_details_callback,
+                content_type="application/json",
+            )
 
     def tearDown(self):
         super().tearDown()

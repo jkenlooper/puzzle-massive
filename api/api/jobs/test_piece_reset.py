@@ -1,6 +1,8 @@
 import unittest
 import logging
 
+import responses
+
 from api.app import make_app, db
 from api.tools import loadConfig
 from api.database import fetch_query_string, rowify
@@ -46,6 +48,7 @@ class TestPieceReset(PuzzleTestCase):
                 with self.assertRaises(pr.DataError):
                     pr.reset_puzzle_pieces(1234)
 
+    @responses.activate
     def test_status_is_updated_after_reset(self):
         "Sets status to MAINTENANCE after piece reset"
         with self.app.app_context():
@@ -59,6 +62,7 @@ class TestPieceReset(PuzzleTestCase):
                 self.assertEqual(MAINTENANCE, result)
                 cur.close()
 
+    @responses.activate
     def test_pieces_are_updated_after_reset(self):
         "The puzzle piece positions should be randomly placed after reset"
         with self.app.app_context():

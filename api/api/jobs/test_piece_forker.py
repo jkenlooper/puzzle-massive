@@ -3,7 +3,6 @@ import tempfile
 import logging
 import shutil
 import os
-import json
 
 import responses
 
@@ -27,7 +26,6 @@ from api.constants import (
     CLASSIC,
     QUEUE_NEW,
 )
-import api.puzzle_details
 import api.jobs.piece_forker as pf
 
 
@@ -37,14 +35,6 @@ class TestPieceForker(PuzzleTestCase):
     def setUp(self):
         super().setUp()
 
-        def request_internal_puzzle_details_callback(request):
-            payload = json.loads(request.body)
-            response_msg = api.puzzle_details.update_puzzle_details(
-                self.source_puzzle_id, payload
-            )
-            headers = {}
-            return (response_msg["status_code"], headers, json.dumps(response_msg))
-
         with self.app.app_context():
             cur = self.db.cursor()
             # TODO: create players
@@ -52,17 +42,6 @@ class TestPieceForker(PuzzleTestCase):
             # Create fake source puzzle that will be forked
             fake_source_puzzle_data = self.fabricate_fake_puzzle()
             self.source_puzzle_id = fake_source_puzzle_data.get("puzzle_id")
-
-            responses.add_callback(
-                responses.PATCH,
-                "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
-                    HOSTAPI=self.app.config["HOSTAPI"],
-                    PORTAPI=self.app.config["PORTAPI"],
-                    puzzle_id=self.source_puzzle_id,
-                ),
-                callback=request_internal_puzzle_details_callback,
-                content_type="application/json",
-            )
 
             result = cur.execute(
                 fetch_query_string(

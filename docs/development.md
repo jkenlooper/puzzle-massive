@@ -286,6 +286,23 @@ puzzle-massive-testdata puzzles --count=300 --min-pieces=9 --pieces=200 --size=1
 puzzle-massive-testdata instances --count=10 --min-pieces=200 --pieces=500;
 ```
 
+### Python Unit Tests
+
+Some unit tests exist to cover parts of the api application. Some older tests
+have been skipped since they were not actively maintained. The existing ones can
+be run with the following commands.
+
+```bash
+# Run all the tests for the api
+python -m unittest discover --start-directory api --failfast
+
+# Run specific tests
+python api/api/test_puzzle_details.py
+
+# Run specific test case
+python api/api/test_puzzle_details.py TestInternalPuzzleDetailsView.test_missing_payload
+```
+
 ### Building the `dist/` files
 
 The javascript and CSS files in the `dist/` directory are built from the source
