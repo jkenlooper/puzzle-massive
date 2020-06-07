@@ -26,6 +26,6 @@ insert or ignore into Piece (
     :row,
     :col,
     :status,
-    :g,
+    :parent,
     :puzzle
 );

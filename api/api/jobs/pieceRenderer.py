@@ -198,7 +198,6 @@ def render(*args):
             ),
             json={"status": RENDERING},
         )
-        current_app.logger.debug(r.status_code)
         if r.status_code != 200:
             raise Exception("Puzzle details api error")
 
@@ -320,7 +319,6 @@ def render(*args):
             ),
             json={"pieces": piece_count, "table_width": tw, "table_height": th,},
         )
-        current_app.logger.debug(r.status_code)
         if r.status_code != 200:
             raise Exception("Puzzle details api error")
 
@@ -362,8 +360,8 @@ def render(*args):
                     "rotate": 0,  # immutable piece orientation
                     "row": -1,  # deprecated
                     "col": -1,  # deprecated
-                    "s": 0,  # side
-                    "g": None,  # parent
+                    # "s": 0,  # side
+                    "parent": None,  # parent
                     "b": 2,  # TODO: will need to be either 0 for dark or 1 for light
                     "status": None,
                 }
@@ -377,7 +375,7 @@ def render(*args):
             round(old_div((th - pieces.height), 2))
         )
         piece_properties[top_left_piece]["status"] = 1
-        piece_properties[top_left_piece]["g"] = top_left_piece
+        piece_properties[top_left_piece]["parent"] = top_left_piece
         # set row and col for finding the top left piece again after reset of puzzle
         piece_properties[top_left_piece]["row"] = 0
         piece_properties[top_left_piece]["col"] = 0
@@ -493,10 +491,20 @@ def render(*args):
         # The original.jpg is assumed to be available locally because of migratePuzzleFile.py
         # Clear out any older pieces and their puzzle files, (raster.png,
         # raster.css) but keep preview full.
-        # TODO: use newapi/internal/
-        cur.execute(
-            "delete from Piece where puzzle = :puzzle", {"puzzle": puzzle["id"]}
+        r = requests.delete(
+            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                HOSTAPI=current_app.config["HOSTAPI"],
+                PORTAPI=current_app.config["PORTAPI"],
+                puzzle_id=puzzle["puzzle_id"],
+            )
         )
+        if r.status_code != 200:
+            raise Exception(
+                "Puzzle pieces api error when deleting pieces for puzzle {}".format(
+                    puzzle_data["puzzle_id"]
+                )
+            )
+
         # TODO: use newapi/internal/
         cur.execute(
             "delete from PuzzleFile where puzzle = :puzzle and name in ('pieces', 'pzz')",
@@ -506,16 +514,18 @@ def render(*args):
 
         # Commit the piece properties and puzzle resources
         # row and col are really only useful for determining the top left piece when resetting puzzle
-        # TODO: use newapi/internal/
-        for pc in piece_properties:
-            cur.execute(
-                """
-                insert or ignore into Piece (id, x, y, r, w, h, b, adjacent, rotate, row, col, status, parent, puzzle) values (
-              :id, :x, :y, :r, :w, :h, :b, :adjacent, :rotate, :row, :col, :status, :g, :puzzle
-                );""",
-                pc,
+        r = requests.post(
+            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/pieces/".format(
+                HOSTAPI=current_app.config["HOSTAPI"],
+                PORTAPI=current_app.config["PORTAPI"],
+                puzzle_id=puzzle["puzzle_id"],
+            ),
+            json={"piece_properties": piece_properties},
+        )
+        if r.status_code != 200:
+            raise Exception(
+                "Puzzle pieces api error. Failed to post pieces. {}".format(r)
             )
-            db.commit()
 
         # Update Puzzle data
         puzzleStatus = ACTIVE
@@ -537,7 +547,6 @@ def render(*args):
                 "m_date": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()),
             },
         )
-        current_app.logger.debug(r.status_code)
         if r.status_code != 200:
             raise Exception(
                 "Puzzle details api error when updating status and m_date on newly rendered puzzle"

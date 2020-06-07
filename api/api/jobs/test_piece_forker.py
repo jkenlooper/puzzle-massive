@@ -40,7 +40,10 @@ class TestPieceForker(PuzzleTestCase):
             # TODO: create players
 
             # Create fake source puzzle that will be forked
-            fake_source_puzzle_data = self.fabricate_fake_puzzle()
+            (
+                fake_source_puzzle_data,
+                fake_source_piece_properties,
+            ) = self.fabricate_fake_puzzle()
             self.source_puzzle_id = fake_source_puzzle_data.get("puzzle_id")
 
             result = cur.execute(

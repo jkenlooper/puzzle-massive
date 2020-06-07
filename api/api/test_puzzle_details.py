@@ -14,7 +14,7 @@ class TestInternalPuzzleDetailsView(PuzzleTestCase):
         super().setUp()
         with self.app.app_context():
             cur = self.db.cursor()
-            self.puzzle_data = self.fabricate_fake_puzzle()
+            (self.puzzle_data, self.piece_properties) = self.fabricate_fake_puzzle()
             self.puzzle = self.puzzle_data.get("id")
             self.puzzle_id = self.puzzle_data.get("puzzle_id")
 

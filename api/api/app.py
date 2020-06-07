@@ -86,7 +86,7 @@ def make_app(config=None, **kw):
     # import the views and sockets
     from api.piece import PuzzlePieceView
     from api.publish import PuzzlePiecesMovePublishView, PuzzlePieceTokenView
-    from api.pieces import PuzzlePiecesView
+    from api.pieces import PuzzlePiecesView, InternalPuzzlePiecesView
 
     # from api.reset import PuzzlePiecesResetView
     from api.rebuild import PuzzlePiecesRebuildView
@@ -303,10 +303,10 @@ def make_app(config=None, **kw):
         view_func=InternalPuzzleDetailsView.as_view("internal-puzzle-details"),
     )
     # TODO: Add InternalPuzzlePiecesView with DELETE, POST, PATCH methods
-    # app.add_url_rule(
-    #     "/internal/puzzle/<puzzle_id>/pieces/",
-    #     view_func=InternalPuzzlePiecesView.as_view("internal-puzzle-pieces"),
-    # )
+    app.add_url_rule(
+        "/internal/puzzle/<puzzle_id>/pieces/",
+        view_func=InternalPuzzlePiecesView.as_view("internal-puzzle-pieces"),
+    )
     # TODO: Add InternalPuzzleFileView with DELETE, POST methods
     # app.add_url_rule(
     #     "/internal/puzzle/<puzzle_id>/files/<file_name>/",
@@ -323,13 +323,8 @@ def make_app(config=None, **kw):
     #     view_func=InternalTasksStartView.as_view("internal-tasks-start"),
     # )
 
-    # api/api/jobs/convertPiecesToDB.py transfer
-    # internal-puzzle-pieces update_piece_props_for_puzzle.sql
-
     # api/api/jobs/pieceRenderer.py render
-    # internal-puzzle-pieces "delete from Piece where puzzle = :puzzle"
     # internal-puzzle-file "delete from PuzzleFile where puzzle = :puzzle and name in ('pieces', 'pzz')"
-    # internal-puzzle-pieces "insert or ignore into Piece (id, x, y, r, w, h, b, adjacent, rotate, row, col, status, parent, puzzle) values (:id, :x, :y, :r, :w, :h, :b, :adjacent, :rotate, :row, :col, :status, :g, :puzzle);"
     # internal-puzzle-file "insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);"
 
     # api/api/scheduler.py BumpMinimumDotsForPlayers

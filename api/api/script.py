@@ -16,7 +16,6 @@ Subcommands:
 from __future__ import print_function
 from __future__ import absolute_import
 from docopt import docopt
-import subprocess
 
 from .app import make_app
 from api.tools import loadConfig
@@ -67,18 +66,6 @@ def serve(config, cookie_secret):
         app.logger.info("api is being shutdown")
 
         server.stop(timeout=10)
-
-        # Transfer all piece data out of Redis and into the database when
-        # shutting down.
-        subprocess.call(
-            [
-                "python",
-                "api/api/jobs/convertPiecesToDB.py",
-                "--config",
-                config,
-                "--cleanup",
-            ]
-        )
 
         exit(signal.SIGTERM)
 

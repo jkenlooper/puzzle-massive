@@ -78,9 +78,8 @@ def transfer(puzzle, cleanup=True):
         cur.description,
     )
 
-    query_update_piece = read_query_file("update_piece_props_for_puzzle.sql")
-
     # Save the redis data to the db if it has changed
+    changed_pieces = []
     for piece in all_pieces:
         has_changes = False
         pieceFromRedis = redis_connection.hgetall(
@@ -115,8 +114,21 @@ def transfer(puzzle, cleanup=True):
                 has_changes = True
 
         if has_changes:
-            # TODO: use newapi/internal/
-            cur.execute(query_update_piece, piece)
+            changed_pieces.append(piece)
+
+    if len(changed_pieces) != 0:
+        r = requests.patch(
+            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/pieces/".format(
+                HOSTAPI=current_app.config["HOSTAPI"],
+                PORTAPI=current_app.config["PORTAPI"],
+                puzzle_id=puzzle_data["puzzle_id"],
+            ),
+            json={"piece_properties": changed_pieces},
+        )
+        if r.status_code != 200:
+            raise Exception(
+                "Puzzle pieces api error. Failed to patch pieces. {}".format(r)
+            )
 
     if cleanup:
         deletePieceDataFromRedis(redis_connection, puzzle, all_pieces)

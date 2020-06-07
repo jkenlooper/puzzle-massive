@@ -236,8 +236,9 @@ on the old server and copy all the data over to the new puzzle-massive-green ser
     rm -rf /srv/puzzle-massive/resources/*;
     sudo ./bin/clear_nginx_cache.sh;
 
-    # do a `flushall` on the new server redis to clean out stuff
-    redis-cli
+    # Use `flushdb` on the new server to remove all keys on the redis database.
+    REDIS_DB=$(./bin/python bin/site-cfg.py site.cfg REDIS_DB);
+    redis-cli -n ${REDIS_DB} flushdb
     ```
 
 3.  Copy the backup db (db-YYYY-MM-DD.dump.gz) to the new server and replace the

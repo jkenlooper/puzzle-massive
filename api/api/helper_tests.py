@@ -216,15 +216,14 @@ class PuzzleTestCase(APITestCase):
                     "rotate": 0,
                     "row": -1,
                     "col": -1,
-                    "s": 0,
-                    "g": None,
+                    "parent": None,
                     "b": 2,
                     "status": None,
                 }
             )
         # Fake top left piece
         piece_properties[0]["status"] = 1
-        piece_properties[0]["g"] = 0
+        piece_properties[0]["parent"] = 0
         piece_properties[0]["row"] = 0
         piece_properties[0]["col"] = 0
 
@@ -256,4 +255,4 @@ class PuzzleTestCase(APITestCase):
         )
         self.db.commit()
         cur.close()
-        return fake_puzzle
+        return fake_puzzle, piece_properties

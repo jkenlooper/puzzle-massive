@@ -160,3 +160,200 @@ class PuzzlePiecesView(MethodView):
         return encoder.encode(pieceData)
         # TODO: update js code to properly handle json mimetype
         # return make_response(json.jsonify(pieceData), 200)
+
+
+immutable_attrs = {
+    "id",
+    "puzzle",
+}
+mutable_attrs = {
+    "adjacent",
+    "b",
+    "col",
+    "h",
+    "parent",
+    "r",
+    "rotate",
+    "row",
+    "status",
+    "w",
+    "x",
+    "y",
+}
+# piece_attrs should match queries/select_all_piece_props_for_puzzle.sql
+piece_attrs = immutable_attrs.union(mutable_attrs)
+
+
+def update_puzzle_pieces(puzzle_id, piece_properties):
+    """
+    """
+
+    if not isinstance(piece_properties, list):
+        err_msg = {"msg": "piece_properties should be list", "status_code": 400}
+        return err_msg
+    # validate each piece property
+    for piece in piece_properties:
+        if not piece_attrs == piece.keys():
+            err_msg = {"msg": "has extra piece property", "status_code": 400}
+            return err_msg
+
+    cur = db.cursor()
+    result = cur.execute(
+        fetch_query_string("select-internal-puzzle-details-for-puzzle_id.sql"),
+        {"puzzle_id": puzzle_id},
+    ).fetchall()
+    if not result:
+        err_msg = {"msg": "No puzzle found", "status_code": 400}
+        cur.close()
+        return err_msg
+
+    (result, col_names) = rowify(result, cur.description)
+    puzzle_data = result[0]
+    puzzle = puzzle_data["id"]
+
+    # get all current piece props
+    result = cur.execute(
+        fetch_query_string("select_all_piece_props_for_puzzle.sql"), {"puzzle": puzzle}
+    ).fetchall()
+    if not result:
+        err_msg = {"msg": "No pieces found for puzzle", "status_code": 400}
+        cur.close()
+        return err_msg
+    (result, col_names) = rowify(result, cur.description)
+    current_piece_properties = {x["id"]: x for x in result}
+
+    def set_attrs(piece):
+        _piece = current_piece_properties[piece["id"]]
+        _piece.update(piece)
+        return _piece
+
+    def is_different(piece):
+        return piece != current_piece_properties[piece["id"]]
+
+    # filter out any pieces that are same as current
+    # update current piece props
+    _piece_properties = list(map(set_attrs, filter(is_different, piece_properties)))
+
+    cur.executemany(
+        fetch_query_string("update_piece_props_for_puzzle.sql"), _piece_properties,
+    )
+    db.commit()
+    cur.close()
+
+    msg = {
+        "rowcount": len(_piece_properties),
+        "msg": "Updated",
+        "status_code": 200,
+    }
+    return msg
+
+
+def add_puzzle_pieces(puzzle_id, piece_properties):
+    """
+    piece_properties is a list of piece properties
+    """
+
+    if not isinstance(piece_properties, list):
+        err_msg = {"msg": "piece_properties should be list", "status_code": 400}
+        return err_msg
+    # validate each piece property
+    for piece in piece_properties:
+        if not piece_attrs == piece.keys():
+            err_msg = {"msg": "has extra piece property", "status_code": 400}
+            return err_msg
+
+    cur = db.cursor()
+    result = cur.execute(
+        fetch_query_string("select-internal-puzzle-details-for-puzzle_id.sql"),
+        {"puzzle_id": puzzle_id},
+    ).fetchall()
+    if not result:
+        err_msg = {"msg": "No puzzle found", "status_code": 400}
+        cur.close()
+        return err_msg
+
+    (result, col_names) = rowify(result, cur.description)
+    puzzle_data = result[0]
+    puzzle = puzzle_data["id"]
+
+    cur.executemany(
+        """
+        insert or ignore into Piece (id, x, y, r, w, h, b, adjacent, rotate, row, col, status, parent, puzzle) values (
+      :id, :x, :y, :r, :w, :h, :b, :adjacent, :rotate, :row, :col, :status, :parent, :puzzle
+        );""",
+        piece_properties,
+    )
+    db.commit()
+
+    cur.close()
+
+    msg = {"rowcount": len(piece_properties), "msg": "Inserted", "status_code": 200}
+    return msg
+
+
+def delete_puzzle_pieces(puzzle_id):
+    """
+    """
+
+    cur = db.cursor()
+    result = cur.execute(
+        fetch_query_string("select-internal-puzzle-details-for-puzzle_id.sql"),
+        {"puzzle_id": puzzle_id},
+    ).fetchall()
+    if not result:
+        err_msg = {"msg": "No puzzle found", "status_code": 400}
+        cur.close()
+        return err_msg
+
+    (result, col_names) = rowify(result, cur.description)
+    puzzle_data = result[0]
+    puzzle = puzzle_data["id"]
+
+    result = cur.execute("delete from Piece where puzzle = :puzzle", {"puzzle": puzzle})
+    db.commit()
+    cur.close()
+
+    msg = {"rowcount": result.rowcount, "msg": "Deleted", "status_code": 200}
+    return msg
+
+
+class InternalPuzzlePiecesView(MethodView):
+    """
+    Internal puzzle pieces view for use by other apps. Allows modifying piece data.
+    """
+
+    def post(self, puzzle_id):
+        ""
+        data = request.get_json(silent=True)
+        if not data:
+            err_msg = {"msg": "No JSON data sent", "status_code": 400}
+            return make_response(json.jsonify(err_msg), err_msg["status_code"])
+        if not {"piece_properties",}.issuperset(data.keys()):
+            err_msg = {"msg": "Extra fields in JSON data were sent", "status_code": 400}
+            return make_response(json.jsonify(err_msg), err_msg["status_code"])
+        response_msg = add_puzzle_pieces(puzzle_id, data["piece_properties"])
+
+        return make_response(json.jsonify(response_msg), response_msg["status_code"])
+
+    def patch(self, puzzle_id):
+        ""
+        data = request.get_json(silent=True)
+
+        if not data:
+            err_msg = {"msg": "No JSON data sent", "status_code": 400}
+            return make_response(json.jsonify(err_msg), err_msg["status_code"])
+        if not {"piece_properties",}.issuperset(data.keys()):
+            err_msg = {"msg": "Extra fields in JSON data were sent", "status_code": 400}
+            return make_response(json.jsonify(err_msg), err_msg["status_code"])
+
+        response_msg = update_puzzle_pieces(puzzle_id, data["piece_properties"])
+        return make_response(json.jsonify(response_msg), response_msg["status_code"])
+
+    def delete(self, puzzle_id):
+        ""
+        # api/api/jobs/pieceRenderer.py render
+        # internal-puzzle-pieces "delete from Piece where puzzle = :puzzle"
+        data = request.get_json(silent=True)
+        response_msg = delete_puzzle_pieces(puzzle_id)
+
+        return make_response(json.jsonify(response_msg), response_msg["status_code"])
