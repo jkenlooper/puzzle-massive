@@ -17,12 +17,7 @@ from .user import user_id_from_ip, increase_ban_time
 
 from .constants import COMPLETED
 
-# from jobs import pieceMove
-
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
-
-# TODO: create a puzzle status web socket that will update when the status of
-# the puzzle changes from converting, done, active, etc.
 
 # How many puzzles a user can open within this many seconds before being banned.
 # Allow 10 puzzles to be open within 100 seconds.

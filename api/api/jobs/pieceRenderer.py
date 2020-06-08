@@ -492,7 +492,7 @@ def render(*args):
         # Clear out any older pieces and their puzzle files, (raster.png,
         # raster.css) but keep preview full.
         r = requests.delete(
-            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/pieces/".format(
                 HOSTAPI=current_app.config["HOSTAPI"],
                 PORTAPI=current_app.config["PORTAPI"],
                 puzzle_id=puzzle["puzzle_id"],
@@ -501,16 +501,28 @@ def render(*args):
         if r.status_code != 200:
             raise Exception(
                 "Puzzle pieces api error when deleting pieces for puzzle {}".format(
-                    puzzle_data["puzzle_id"]
+                    puzzle["puzzle_id"]
                 )
             )
 
-        # TODO: use newapi/internal/
-        cur.execute(
-            "delete from PuzzleFile where puzzle = :puzzle and name in ('pieces', 'pzz')",
-            {"puzzle": puzzle["id"]},
-        )
-        db.commit()
+        for name in [
+            "pieces",
+            "pzz",
+        ]:
+            r = requests.delete(
+                "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/files/{file_name}/".format(
+                    HOSTAPI=current_app.config["HOSTAPI"],
+                    PORTAPI=current_app.config["PORTAPI"],
+                    puzzle_id=puzzle["puzzle_id"],
+                    file_name=name,
+                ),
+            )
+            if r.status_code != 200:
+                raise Exception(
+                    "Puzzle file api error when deleting file '{}' for puzzle {}".format(
+                        name, puzzle["puzzle_id"]
+                    )
+                )
 
         # Commit the piece properties and puzzle resources
         # row and col are really only useful for determining the top left piece when resetting puzzle
@@ -552,29 +564,36 @@ def render(*args):
                 "Puzzle details api error when updating status and m_date on newly rendered puzzle"
             )
 
-        # TODO: use newapi/internal/
-        cur.execute(
-            insert_puzzle_file,
-            {
-                "puzzle": puzzle["id"],
-                "name": "pieces",
-                "url": "/resources/{puzzle_id}/scale-100/raster.png".format(
+        for (name, url) in [
+            (
+                "pieces",
+                "/resources/{puzzle_id}/scale-100/raster.png".format(
                     puzzle_id=puzzle["puzzle_id"]
                 ),
-            },
-        )
-        # TODO: use newapi/internal/
-        cur.execute(
-            insert_puzzle_file,
-            {
-                "puzzle": puzzle["id"],
-                "name": "pzz",
-                "url": "/resources/{puzzle_id}/scale-100/raster.css?ts={timestamp}".format(
+            ),
+            (
+                "pzz",
+                "/resources/{puzzle_id}/scale-100/raster.css?ts={timestamp}".format(
                     puzzle_id=puzzle["puzzle_id"], timestamp=int(time.time())
                 ),
-            },
-        )
-        db.commit()
+            ),
+        ]:
+            r = requests.post(
+                "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/files/{file_name}/".format(
+                    HOSTAPI=current_app.config["HOSTAPI"],
+                    PORTAPI=current_app.config["PORTAPI"],
+                    puzzle_id=puzzle["puzzle_id"],
+                    file_name=name,
+                ),
+                json={"url": url,},
+            )
+            if r.status_code != 200:
+                raise Exception(
+                    "Puzzle file api error when adding file '{}' on newly rendered puzzle".format(
+                        name
+                    )
+                )
+
         cur.close()
 
         keep_list = [

@@ -1,5 +1,4 @@
 import unittest
-import logging
 
 from api.helper_tests import PuzzleTestCase
 from api.database import fetch_query_string, rowify

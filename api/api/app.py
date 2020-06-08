@@ -87,6 +87,7 @@ def make_app(config=None, **kw):
     from api.piece import PuzzlePieceView
     from api.publish import PuzzlePiecesMovePublishView, PuzzlePieceTokenView
     from api.pieces import PuzzlePiecesView, InternalPuzzlePiecesView
+    from api.puzzle_file import InternalPuzzleFileView
 
     # from api.reset import PuzzlePiecesResetView
     from api.rebuild import PuzzlePiecesRebuildView
@@ -302,16 +303,14 @@ def make_app(config=None, **kw):
         "/internal/puzzle/<puzzle_id>/details/",
         view_func=InternalPuzzleDetailsView.as_view("internal-puzzle-details"),
     )
-    # TODO: Add InternalPuzzlePiecesView with DELETE, POST, PATCH methods
     app.add_url_rule(
         "/internal/puzzle/<puzzle_id>/pieces/",
         view_func=InternalPuzzlePiecesView.as_view("internal-puzzle-pieces"),
     )
-    # TODO: Add InternalPuzzleFileView with DELETE, POST methods
-    # app.add_url_rule(
-    #     "/internal/puzzle/<puzzle_id>/files/<file_name>/",
-    #     view_func=InternalPuzzleFileView.as_view("internal-puzzle-file"),
-    # )
+    app.add_url_rule(
+        "/internal/puzzle/<puzzle_id>/files/<file_name>/",
+        view_func=InternalPuzzleFileView.as_view("internal-puzzle-file"),
+    )
     # TODO: Add InternalPuzzleTimelineView with DELETE, POST methods
     # app.add_url_rule(
     #     "/internal/puzzle/<puzzle_id>/timeline/",
@@ -322,10 +321,6 @@ def make_app(config=None, **kw):
     #     "/internal/tasks/<task_name>/start/",
     #     view_func=InternalTasksStartView.as_view("internal-tasks-start"),
     # )
-
-    # api/api/jobs/pieceRenderer.py render
-    # internal-puzzle-file "delete from PuzzleFile where puzzle = :puzzle and name in ('pieces', 'pzz')"
-    # internal-puzzle-file "insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);"
 
     # api/api/scheduler.py BumpMinimumDotsForPlayers
     # internal-tasks-start update_points_to_minimum_for_all_users.sql
