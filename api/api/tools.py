@@ -27,7 +27,12 @@ def loadConfig(argconfig):
 
 
 def get_db(config):
-    db = sqlite3.connect(config.get("SQLITE_DATABASE_URI"))
+    if config.get("database_writable"):
+        db = sqlite3.connect(config.get("SQLITE_DATABASE_URI"))
+    else:
+        db = sqlite3.connect(
+            "file:{}?mode=ro".format(config.get("SQLITE_DATABASE_URI")), uri=True
+        )
 
     # Enable foreign key support so 'on update' and 'on delete' actions
     # will apply. This needs to be set for each db connection.

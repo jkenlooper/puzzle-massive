@@ -42,6 +42,7 @@ class APITestCase(unittest.TestCase):
             PUZZLE_ARCHIVE=self.tmp_puzzle_archive,
             SECURE_COOKIE_SECRET=cookie_secret,
             cookie_secret=cookie_secret,
+            database_writable=True,
         )
 
         self.db = db

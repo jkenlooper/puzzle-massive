@@ -37,7 +37,7 @@ def set_redis_connection():
 redis_connection = LocalProxy(set_redis_connection)
 
 
-def make_app(config=None, **kw):
+def make_app(config=None, database_writable=False, **kw):
     app = API("api")
 
     if config:
@@ -46,7 +46,7 @@ def make_app(config=None, **kw):
         )
         app.config.from_pyfile(config_file)
 
-    app.config.update(kw)
+    app.config.update(kw, database_writable=database_writable)
 
     # Cookie secret value will be read from app.config.
     # If it does not exist, an exception will be thrown.

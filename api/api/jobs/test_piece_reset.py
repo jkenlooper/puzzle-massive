@@ -3,7 +3,7 @@ import logging
 
 import responses
 
-from api.app import make_app, db
+from api.app import db
 from api.tools import loadConfig
 from api.database import fetch_query_string, rowify
 from api.helper_tests import PuzzleTestCase

@@ -691,7 +691,11 @@ def main():
     config = loadConfig(config_file)
     cookie_secret = config.get("SECURE_COOKIE_SECRET")
 
-    app = make_app(config=config_file, cookie_secret=cookie_secret)
+    # TODO: Remove database_writable after all scheduler tasks have been
+    # updated.
+    app = make_app(
+        config=config_file, cookie_secret=cookie_secret, database_writable=True
+    )
 
     with app.app_context():
         # Check if running a one-off, otherwise just run main

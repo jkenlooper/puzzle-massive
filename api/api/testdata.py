@@ -608,7 +608,9 @@ def main():
     min_pieces = int(args.get("--min-pieces"))
     puzzles = args.get("--puzzles")
 
-    app = make_app(config=config_file, cookie_secret=cookie_secret)
+    app = make_app(
+        config=config_file, cookie_secret=cookie_secret, database_writable=True
+    )
 
     with app.app_context():
         if args.get("players"):
