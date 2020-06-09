@@ -13,6 +13,7 @@ cat <<HERE
 [Unit]
 Description=scheduler puzzle-massive instance
 After=network.target
+After=puzzle-massive-api.service
 
 [Service]
 User=dev

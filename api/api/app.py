@@ -88,6 +88,7 @@ def make_app(config=None, **kw):
     from api.publish import PuzzlePiecesMovePublishView, PuzzlePieceTokenView
     from api.pieces import PuzzlePiecesView, InternalPuzzlePiecesView
     from api.puzzle_file import InternalPuzzleFileView
+    from api.timeline import InternalPuzzleTimelineView
 
     # from api.reset import PuzzlePiecesResetView
     from api.rebuild import PuzzlePiecesRebuildView
@@ -311,11 +312,10 @@ def make_app(config=None, **kw):
         "/internal/puzzle/<puzzle_id>/files/<file_name>/",
         view_func=InternalPuzzleFileView.as_view("internal-puzzle-file"),
     )
-    # TODO: Add InternalPuzzleTimelineView with DELETE, POST methods
-    # app.add_url_rule(
-    #     "/internal/puzzle/<puzzle_id>/timeline/",
-    #     view_func=InternalPuzzleTimelineView.as_view("internal-puzzle-timeline"),
-    # )
+    app.add_url_rule(
+        "/internal/puzzle/<puzzle_id>/timeline/",
+        view_func=InternalPuzzleTimelineView.as_view("internal-puzzle-timeline"),
+    )
     # TODO: Add InternalTasksStartView with POST method
     # app.add_url_rule(
     #     "/internal/tasks/<task_name>/start/",
@@ -329,16 +329,8 @@ def make_app(config=None, **kw):
     # internal-tasks-start update_user_points_and_m_date.sql
     # internal-tasks-start update_bit_icon_expiration.sql
 
-    # api/api/scheduler.py UpdatePuzzleStats
-    # internal-puzzle-timeline insert_batchpoints_to_timeline.sql
-    # internal-puzzle-timeline create_timeline_puzzle_index.sql (only done on first run)
-    # internal-puzzle-timeline create_timeline_timestamp_index.sql (only done on first run)
-
     # api/api/scheduler.py AutoApproveUserNames
     # internal-tasks-start update-user-name-approved-for-approved_date-due.sql
-
-    # api/api/timeline.py archive_and_clear
-    # internal-puzzle-timeline delete_puzzle_timeline.sql
 
     return app
 

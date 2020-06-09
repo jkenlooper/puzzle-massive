@@ -382,35 +382,50 @@ class UpdatePuzzleStats(Task):
                     "batchpoints:{puzzle}:{user}".format(puzzle=puzzle, user=user), DAY
                 )
                 if points != 0:
+                    result = cur.execute(
+                        fetch_query_string("select-all-from-puzzle-by-id.sql"),
+                        {"puzzle": puzzle},
+                    ).fetchall()
+                    if not result:
+                        current_app.logger.warn(
+                            "no puzzle details found for puzzle {}".format(puzzle)
+                        )
+                        continue
+                    (result, col_names) = rowify(result, cur.description)
+                    puzzle_data = result[0]
+                    puzzle_id = puzzle_data["puzzle_id"]
+
                     timestamp = strftime("%Y-%m-%d %H:%M:%S", gmtime(update_timestamp))
                     current_app.logger.debug(
-                        "{timestamp} - bumping {points} points on {puzzle} for player: {player}".format(
+                        "{timestamp} - bumping {points} points on {puzzle} ({puzzle_id}) for player: {player}".format(
                             puzzle=puzzle,
+                            puzzle_id=puzzle_id,
                             player=user,
                             points=points,
                             timestamp=timestamp,
                         )
                     )
-                    # TODO: use newapi/internal/
-                    cur.execute(
-                        read_query_file("insert_batchpoints_to_timeline.sql"),
-                        {
-                            "puzzle": puzzle,
-                            "player": user,
-                            "points": points,
-                            "timestamp": timestamp,
-                        },
+
+                    r = requests.post(
+                        "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/timeline/".format(
+                            HOSTAPI=current_app.config["HOSTAPI"],
+                            PORTAPI=current_app.config["PORTAPI"],
+                            puzzle_id=puzzle_id,
+                        ),
+                        json={"player": user, "points": points, "timestamp": timestamp},
                     )
-                    db.commit()
+                    if r.status_code != 200:
+                        current_app.logger.warning(
+                            "Puzzle timeline api error. Could not add batchpoints. Skipping {puzzle_id}".format(
+                                puzzle_id=puzzle_id,
+                            )
+                        )
+                        continue
+
                 made_change = True
             puzzle = redis_connection.spop("batchpuzzle")
 
         if self.first_run:
-            # TODO: use newapi/internal/
-            cur.execute(read_query_file("create_timeline_puzzle_index.sql"))
-            # TODO: use newapi/internal/
-            cur.execute(read_query_file("create_timeline_timestamp_index.sql"))
-            db.commit()
             result = cur.execute(
                 read_query_file("get_list_of_puzzles_in_timeline.sql")
             ).fetchall()
@@ -447,7 +462,6 @@ class UpdatePuzzleStats(Task):
             self.log_task()
 
         cur.close()
-        db.commit()
 
 
 class UpdatePuzzleQueue(Task):

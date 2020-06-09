@@ -14,6 +14,7 @@ cat <<HERE
 [Unit]
 Description=Puzzle Massive backup database
 After=network.target
+After=puzzle-massive-api.service
 
 [Service]
 User=dev

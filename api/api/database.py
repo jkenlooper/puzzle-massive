@@ -12,6 +12,8 @@ PUZZLE_CREATE_TABLE_LIST = (
     "create_table_piece.sql",
     "create_table_user.sql",
     "create_table_timeline.sql",
+    "create_timeline_puzzle_index.sql",
+    "create_timeline_timestamp_index.sql",
     "create_table_puzzle_file.sql",
     "create_table_bit_author.sql",
     "create_table_bit_expiration.sql",
