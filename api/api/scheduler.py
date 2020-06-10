@@ -286,6 +286,7 @@ class UpdatePlayer(Task):
 
         user = redis_connection.spop("batchuser")
         while user:
+            user = int(user)
             score = redis_connection.getset(
                 "batchscore:{user}".format(user=user), value=0
             )
@@ -300,23 +301,38 @@ class UpdatePlayer(Task):
                     **{"id": user, "points": points, "score": score}
                 )
             )
-            # TODO: use newapi/internal/
-            cur.execute(
-                read_query_file("update_user_points_and_m_date.sql"),
-                {
-                    "id": user,
-                    "points": points,
-                    "score": score,
-                    "POINTS_CAP": current_app.config["POINTS_CAP"],
-                },
+
+            r = requests.post(
+                "http://{HOSTAPI}:{PORTAPI}/internal/tasks/{task_name}/start/".format(
+                    HOSTAPI=current_app.config["HOSTAPI"],
+                    PORTAPI=current_app.config["PORTAPI"],
+                    task_name="update_user_points_and_m_date",
+                ),
+                json={"player": user, "points": points, "score": score,},
             )
-            # TODO: use newapi/internal/
-            cur.execute(
-                read_query_file("update_bit_icon_expiration.sql"), {"user": user}
+            if r.status_code != 200:
+                current_app.logger.warning(
+                    "Internal tasks api error. Could not run task update_user_points_and_m_date for player {}".format(
+                        user
+                    )
+                )
+
+            r = requests.post(
+                "http://{HOSTAPI}:{PORTAPI}/internal/tasks/{task_name}/start/".format(
+                    HOSTAPI=current_app.config["HOSTAPI"],
+                    PORTAPI=current_app.config["PORTAPI"],
+                    task_name="update_bit_icon_expiration",
+                ),
+                json={"player": user,},
             )
+            if r.status_code != 200:
+                current_app.logger.warning(
+                    "Internal tasks api error. Could not run task update_bit_icon_expiration for player {}".format(
+                        user
+                    )
+                )
 
             user = redis_connection.spop("batchuser")
-            db.commit()
             made_change = True
 
         if self.first_run:
@@ -338,7 +354,6 @@ class UpdatePlayer(Task):
             self.log_task()
 
         cur.close()
-        db.commit()
 
 
 class UpdatePuzzleStats(Task):

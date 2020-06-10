@@ -134,6 +134,8 @@ def make_app(config=None, database_writable=False, **kw):
     from api.player_email_login_reset import PlayerEmailLoginResetView
     from api.ping import PingPuzzleView
 
+    from api.tasks import InternalTasksStartView
+
     # admin views
     from api.puzzle_batch_edit import AdminPuzzleBatchEditView
     from api.player_details_edit import (
@@ -316,19 +318,16 @@ def make_app(config=None, database_writable=False, **kw):
         "/internal/puzzle/<puzzle_id>/timeline/",
         view_func=InternalPuzzleTimelineView.as_view("internal-puzzle-timeline"),
     )
-    # TODO: Add InternalTasksStartView with POST method
-    # app.add_url_rule(
-    #     "/internal/tasks/<task_name>/start/",
-    #     view_func=InternalTasksStartView.as_view("internal-tasks-start"),
-    # )
+    app.add_url_rule(
+        "/internal/tasks/<task_name>/start/",
+        view_func=InternalTasksStartView.as_view("internal-tasks-start"),
+    )
 
+    # TODO:
     # api/api/scheduler.py BumpMinimumDotsForPlayers
     # internal-tasks-start update_points_to_minimum_for_all_users.sql
 
-    # api/api/scheduler.py UpdatePlayer
-    # internal-tasks-start update_user_points_and_m_date.sql
-    # internal-tasks-start update_bit_icon_expiration.sql
-
+    # TODO:
     # api/api/scheduler.py AutoApproveUserNames
     # internal-tasks-start update-user-name-approved-for-approved_date-due.sql
 
