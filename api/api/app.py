@@ -300,8 +300,10 @@ def make_app(config=None, database_writable=False, **kw):
         view_func=AdminPlayerNameRegisterView.as_view("admin-player-name-register"),
     )
 
-    # TODO: Add internal client/server api URLs /internal/...
-    #
+    # Internal URLs are only accessible for internal applications. This is to
+    # support a sqlite client/server model. For now, these are mostly for just
+    # being able to write to the database since only the api has database
+    # connection with write mode on.
     app.add_url_rule(
         "/internal/puzzle/<puzzle_id>/details/",
         view_func=InternalPuzzleDetailsView.as_view("internal-puzzle-details"),
@@ -322,14 +324,6 @@ def make_app(config=None, database_writable=False, **kw):
         "/internal/tasks/<task_name>/start/",
         view_func=InternalTasksStartView.as_view("internal-tasks-start"),
     )
-
-    # TODO:
-    # api/api/scheduler.py BumpMinimumDotsForPlayers
-    # internal-tasks-start update_points_to_minimum_for_all_users.sql
-
-    # TODO:
-    # api/api/scheduler.py AutoApproveUserNames
-    # internal-tasks-start update-user-name-approved-for-approved_date-due.sql
 
     return app
 

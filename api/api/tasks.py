@@ -56,6 +56,45 @@ def update_bit_icon_expiration(player):
     return msg
 
 
+def update_points_to_minimum_for_all_users(minimum):
+    cur = db.cursor()
+    try:
+        result = cur.execute(
+            fetch_query_string("update_points_to_minimum_for_all_users.sql"),
+            {"minimum": minimum},
+        )
+    except sqlite3.IntegrityError:
+        err_msg = {
+            "msg": "Database integrity error. update_points_to_minimum_for_all_users",
+            "status_code": 400,
+        }
+        cur.close()
+        return err_msg
+    cur.close()
+    db.commit()
+    msg = {"rowcount": result.rowcount, "msg": "Executed", "status_code": 200}
+    return msg
+
+
+def update_user_name_approved_for_approved_date_due():
+    cur = db.cursor()
+    try:
+        result = cur.execute(
+            fetch_query_string("update-user-name-approved-for-approved_date-due.sql"),
+        )
+    except sqlite3.IntegrityError:
+        err_msg = {
+            "msg": "Database integrity error. update_user_name_approved_for_approved_date_due",
+            "status_code": 400,
+        }
+        cur.close()
+        return err_msg
+    cur.close()
+    db.commit()
+    msg = {"rowcount": result.rowcount, "msg": "Executed", "status_code": 200}
+    return msg
+
+
 class InternalTasksStartView(MethodView):
     """
     Tasks are generally single database queries that need to have write access.
@@ -88,6 +127,26 @@ class InternalTasksStartView(MethodView):
                 }
             else:
                 response_msg = update_bit_icon_expiration(**data)
+
+        elif task_name == "update_points_to_minimum_for_all_users":
+            if not data:
+                response_msg = {"msg": "No JSON data sent", "status_code": 400}
+            elif not {"minimum",} == data.keys():
+                response_msg = {
+                    "msg": "Extra fields in JSON data were sent",
+                    "status_code": 400,
+                }
+            else:
+                response_msg = update_points_to_minimum_for_all_users(**data)
+
+        elif task_name == "update_user_name_approved_for_approved_date_due":
+            if data:
+                response_msg = {
+                    "msg": "No JSON data should be sent",
+                    "status_code": 400,
+                }
+            else:
+                response_msg = update_user_name_approved_for_approved_date_due()
 
         else:
             response_msg = {

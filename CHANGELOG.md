@@ -44,10 +44,15 @@ Puzzle instance improvements and puzzle alert messages.
 - Puzzle instances can have their piece positions reset by the owner at any
   time. Publicly listed puzzle instances can't have pieces reset since that
   would not be nice to other players.
+- Show player puzzles other then just puzzle instances owned by that player.
 
 ### Fixed
 
-- [Database locked issue](https://github.com/jkenlooper/puzzle-massive/issues/67) when running other scripts (maybe?) .
+- [Database locked issue](https://github.com/jkenlooper/puzzle-massive/issues/67) when running other scripts.
+  All other apps connect to the sqlite database in read only mode. Chill app is
+  the exception, but it doesn't write to the database. Scheduler will retry
+  every 5 minutes if a http connection error happens when hitting the internal
+  API URLs.
 - Puzzles that have been recently modified show their recent status faster in
   the active puzzle list. The scheduler interval is every second now instead
   of every minute.

@@ -41,6 +41,7 @@ DAY = HOUR * 24
 MINUTE = 60  # minute in seconds
 
 SCHEDULER_INTERVAL = 1
+SCHEDULER_RETRY_INTERVAL = 5 * MINUTE
 scheduler_key = "sc"
 
 
@@ -152,8 +153,6 @@ class AutoRebuildCompletedPuzzle(Task):
                         completed_puzzle["status"] = REBUILD
                         completed_puzzle["pieces"] = pieces
 
-                        # db.commit()
-
                         # Delete any piece data from redis since it is no longer needed.
                         query_select_all_pieces_for_puzzle = (
                             """select * from Piece where (puzzle = :puzzle)"""
@@ -177,7 +176,6 @@ class AutoRebuildCompletedPuzzle(Task):
                     made_change = True
 
         cur.close()
-        db.commit()
         if made_change:
             self.log_task()
 
@@ -192,16 +190,22 @@ class BumpMinimumDotsForPlayers(Task):
     def do_task(self):
         super().do_task()
 
-        cur = db.cursor()
-        # TODO: use newapi/internal/
-        result = cur.execute(
-            read_query_file("update_points_to_minimum_for_all_users.sql"),
-            {"minimum": current_app.config["NEW_USER_STARTING_POINTS"]},
+        r = requests.post(
+            "http://{HOSTAPI}:{PORTAPI}/internal/tasks/{task_name}/start/".format(
+                HOSTAPI=current_app.config["HOSTAPI"],
+                PORTAPI=current_app.config["PORTAPI"],
+                task_name="update_points_to_minimum_for_all_users",
+            ),
+            json={"minimum": current_app.config["NEW_USER_STARTING_POINTS"]},
         )
-        if result.rowcount:
+        if r.status_code != 200:
+            current_app.logger.warning(
+                "Internal tasks api error. Could not run task update_points_to_minimum_for_all_users"
+            )
+        response = r.json()
+
+        if response["rowcount"] > 0:
             self.log_task()
-        cur.close()
-        db.commit()
 
 
 class UpdateModifiedDateOnPuzzle(Task):
@@ -540,8 +544,7 @@ class UpdatePuzzleQueue(Task):
                             low=low, high=high
                         )
                     )
-                    # TODO: this use to be 4 days in the past, but now using
-                    # present time.
+                    # This use to be 4 days in the past, now uses present time.
                     m_date_now = strftime("%Y-%m-%d %H:%M:%S", gmtime(time()))
                     for item in result:
                         puzzle_id = item[0]
@@ -570,7 +573,6 @@ class UpdatePuzzleQueue(Task):
             self.log_task()
 
         cur.close()
-        db.commit()
 
 
 class AutoApproveUserNames(Task):
@@ -583,15 +585,21 @@ class AutoApproveUserNames(Task):
     def do_task(self):
         super().do_task()
 
-        cur = db.cursor()
-        # TODO: use newapi/internal/
-        result = cur.execute(
-            read_query_file("update-user-name-approved-for-approved_date-due.sql")
+        r = requests.post(
+            "http://{HOSTAPI}:{PORTAPI}/internal/tasks/{task_name}/start/".format(
+                HOSTAPI=current_app.config["HOSTAPI"],
+                PORTAPI=current_app.config["PORTAPI"],
+                task_name="update_user_name_approved_for_approved_date_due",
+            ),
         )
-        if result.rowcount:
+        if r.status_code != 200:
+            current_app.logger.warning(
+                "Internal tasks api error. Could not run task update_user_name_approved_for_approved_date_due"
+            )
+        response = r.json()
+
+        if response["rowcount"] > 0:
             self.log_task()
-        cur.close()
-        db.commit()
 
 
 class SendDigestEmailForAdmin(Task):
@@ -634,7 +642,6 @@ class SendDigestEmailForAdmin(Task):
                     pass
 
         cur.close()
-        db.commit()
 
 
 task_registry = [
@@ -671,14 +678,28 @@ def all_tasks():
     # reset all tasks to be scheduled now
     redis_connection.zadd(scheduler_key, task_ids_scheduled_to_now)
 
+    def cycle_over_tasks():
+        "Cycle over each and call the task"
+        for task_id in task_ids:
+            tasks[task_id]()
+
     while True:
         now = int(time())
         # Get list of tasks on the schedule that are due.
         task_ids = list(map(int, redis_connection.zrangebyscore(scheduler_key, 0, now)))
 
-        # Cycle over each and call the task
-        for task_id in task_ids:
-            tasks[task_id]()
+        # Cycle over each and call the task. Any connection errors will trigger
+        # a longer wait before retrying.
+        try:
+            for task_id in task_ids:
+                tasks[task_id]()
+        except requests.exceptions.ConnectionError as err:
+            current_app.logger.warning(
+                "Connection error. Retrying in {} seconds... \nError: {}".format(
+                    SCHEDULER_RETRY_INTERVAL, err
+                )
+            )
+            sleep(SCHEDULER_RETRY_INTERVAL)
 
         sleep(SCHEDULER_INTERVAL)
 
@@ -706,11 +727,7 @@ def main():
     config = loadConfig(config_file)
     cookie_secret = config.get("SECURE_COOKIE_SECRET")
 
-    # TODO: Remove database_writable after all scheduler tasks have been
-    # updated.
-    app = make_app(
-        config=config_file, cookie_secret=cookie_secret, database_writable=True
-    )
+    app = make_app(config=config_file, cookie_secret=cookie_secret,)
 
     with app.app_context():
         # Check if running a one-off, otherwise just run main
@@ -722,7 +739,15 @@ def main():
                 oneOffTask()
 
         else:
-            all_tasks()
+            try:
+                all_tasks()
+            except requests.exceptions.ConnectionError as err:
+                current_app.logger.warning(
+                    "Connection error. Retrying in {} seconds... \nError: {}".format(
+                        SCHEDULER_RETRY_INTERVAL, err
+                    )
+                )
+                sleep(SCHEDULER_RETRY_INTERVAL)
 
 
 if __name__ == "__main__":
