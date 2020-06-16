@@ -286,7 +286,9 @@ cat <<HEREBEDEVELOPMENT
   # Only when in development should the site be accessible via internal ip.
   # This makes it easier to test with other devices that may not be able to
   # update a /etc/hosts file.
-  server_name local-puzzle-massive $INTERNALIP;
+  # Use localhost when developing in a vm with Vagrant (see forwarded_port in
+  # VagrantFile).
+  server_name local-puzzle-massive localhost $INTERNALIP;
 HEREBEDEVELOPMENT
 else
 cat <<HEREBEPRODUCTION
