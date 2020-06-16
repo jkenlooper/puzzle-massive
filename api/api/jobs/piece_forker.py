@@ -118,6 +118,7 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
 
     # Commit the piece properties and puzzle resources
     # row and col are really only useful for determining the top left piece when resetting puzzle
+    # TODO: piece_forker needs to use internal api requests to write to db
     for pc in piece_properties:
         pc["puzzle"] = puzzle_data["id"]
         cur.execute(
@@ -127,6 +128,7 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
             );""",
             pc,
         )
+        db.commit()
 
     # Check if there is only one piece parent and mark as complete
     is_complete = True

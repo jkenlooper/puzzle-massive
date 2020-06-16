@@ -76,20 +76,18 @@ def handle_render_fail(job, exception, exception_func, traceback):
 
 
 def set_render_fail_on_puzzle(puzzle):
-    cur = db.cursor()
-
     print("set puzzle to fail status: {puzzle_id}".format(**puzzle))
-    # Update Puzzle data
-    cur.execute(
-        "update Puzzle set status = :RENDERING_FAILED where status = :RENDERING and id = :id;",
-        {
-            "RENDERING_FAILED": RENDERING_FAILED,
-            "RENDERING": RENDERING,
-            "id": puzzle["id"],
-        },
+    # Set the status of the puzzle to rendering failed
+    r = requests.patch(
+        "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+            HOSTAPI=current_app.config["HOSTAPI"],
+            PORTAPI=current_app.config["PORTAPI"],
+            puzzle_id=puzzle["puzzle_id"],
+        ),
+        json={"status": RENDERING_FAILED},
     )
-    db.commit()
-    cur.close()
+    if r.status_code != 200:
+        raise Exception("Puzzle details api error")
 
 
 def render_all():

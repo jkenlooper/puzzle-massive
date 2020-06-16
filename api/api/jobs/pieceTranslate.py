@@ -165,6 +165,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     pc_puzzle_piece_key = "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
 
     # Get the puzzle piece origin position
+    # TODO: Handle the potential error if the hmget here gets a None value for x and y.
     (originX, originY) = list(
         map(int, redis_connection.hmget(pc_puzzle_piece_key, ["x", "y"]),)
     )
