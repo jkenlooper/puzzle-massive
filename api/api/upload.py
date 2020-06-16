@@ -15,7 +15,7 @@ from flask.views import MethodView
 from werkzeug.utils import secure_filename, escape
 from werkzeug.urls import url_fix
 
-from api.app import db
+from api.app import redis_connection, db, make_app
 from api.database import (
     rowify,
     fetch_query_string,
@@ -70,8 +70,8 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
             puzzle_id,
             filename,
             description,
-            current_app.config.get("UNSPLASH_APPLICATION_ID"),
-            current_app.config.get("SQLITE_DATABASE_URI"),
+            current_app.config_file,
+            current_app.config.get("SECURE_COOKIE_SECRET"),
         )
     else:
         if not upload_file:
@@ -311,28 +311,35 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
 
 
 class UnsplashPuzzleThread(threading.Thread):
-    def __init__(self, puzzle_id, photo, description, application_id, db_file):
+    def __init__(self, puzzle_id, photo, description, config_file, cookie_secret):
         threading.Thread.__init__(self)
         self.puzzle_id = puzzle_id
         self.photo = photo
         self.description = description
-        self.application_id = application_id
-        self.db_file = db_file
-        self.puzzle_resources = current_app.config.get("PUZZLE_RESOURCES")
-        self.application_name = current_app.config.get("UNSPLASH_APPLICATION_NAME")
+
+        self.app = make_app(config=config_file, cookie_secret=cookie_secret)
+
+        self.application_id = (self.app.config.get("UNSPLASH_APPLICATION_ID"),)
+        self.puzzle_resources = self.app.config.get("PUZZLE_RESOURCES")
+        self.application_name = self.app.config.get("UNSPLASH_APPLICATION_NAME")
 
     def run(self):
-        r = requests.get(
-            "https://api.unsplash.com/photos/%s" % self.photo,
-            params={"client_id": self.application_id, "w": 384, "h": 384, "fit": "max"},
-            headers={"Accept-Version": "v1"},
-        )
-        data = r.json()
+        with self.app.app_context():
+            r = requests.get(
+                "https://api.unsplash.com/photos/%s" % self.photo,
+                params={
+                    "client_id": self.application_id,
+                    "w": 384,
+                    "h": 384,
+                    "fit": "max",
+                },
+                headers={"Accept-Version": "v1"},
+            )
+            data = r.json()
 
-        self.add_puzzle(data)
+            self.add_puzzle(data)
 
     def add_puzzle(self, data):
-        db = sqlite3.connect(self.db_file)
         cur = db.cursor()
 
         # Don't use unsplash description if puzzle already has one
@@ -356,11 +363,20 @@ class UnsplashPuzzleThread(threading.Thread):
         f.write(r.content)
         f.close()
 
-        cur.execute(
-            read_query_file("update-puzzle-link-description-for-puzzle_id.sql"),
-            {"puzzle_id": self.puzzle_id, "link": None, "description": description},
+        r = requests.patch(
+            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                HOSTAPI=self.app.config["HOSTAPI"],
+                PORTAPI=self.app.config["PORTAPI"],
+                puzzle_id=self.puzzle_id,
+            ),
+            json={"link": "", "description": description},
         )
-        db.commit()
+        if r.status_code != 200:
+            raise Exception(
+                "Puzzle details api error when setting link and description on unsplash photo upload {}".format(
+                    self.puzzle_id
+                )
+            )
 
         puzzle = rowify(
             cur.execute(
@@ -378,33 +394,35 @@ class UnsplashPuzzleThread(threading.Thread):
         preview_full_url = re.sub("fit=crop", "fit=max", preview_full_url)
 
         # Not using url_fix on the user.links.html since it garbles the '@'.
-        result = cur.execute(
-            read_query_file("insert_attribution_unsplash_photo.sql"),
-            {
-                "title": "Photo",
-                "author_link": "{user_link}?utm_source={application_name}&utm_medium=referral".format(
-                    user_link=data.get("user").get("links").get("html"),
-                    application_name=self.application_name,
-                ),
-                "author_name": data.get("user").get("name"),
-                "source": "{photo_link}?utm_source={application_name}&utm_medium=referral".format(
-                    photo_link=data.get("links").get("html"),
-                    application_name=self.application_name,
-                ),
-            },
-        )
-
-        attribution_id = result.lastrowid
-
-        cur.execute(
-            read_query_file("update-puzzle_file-url-attribution-for-puzzle.sql"),
-            {
-                "puzzle": puzzle,
-                "attribution": attribution_id,
-                "name": "preview_full",
+        r = requests.post(
+            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/files/{file_name}/".format(
+                HOSTAPI=self.app.config["HOSTAPI"],
+                PORTAPI=self.app.config["PORTAPI"],
+                puzzle_id=self.puzzle_id,
+                file_name="preview_full",
+            ),
+            json={
+                "attribution": {
+                    "title": "Photo",
+                    "author_link": "{user_link}?utm_source={application_name}&utm_medium=referral".format(
+                        user_link=data.get("user").get("links").get("html"),
+                        application_name=self.application_name,
+                    ),
+                    "author_name": data.get("user").get("name"),
+                    "source": "{photo_link}?utm_source={application_name}&utm_medium=referral".format(
+                        photo_link=data.get("links").get("html"),
+                        application_name=self.application_name,
+                    ),
+                    "license_name": "unsplash",
+                },
                 "url": preview_full_url,
             },
         )
+        if r.status_code != 200:
+            raise Exception(
+                "Puzzle file api error when setting attribution and url for unsplash preview_full {}".format(
+                    self.puzzle_id
+                )
+            )
 
-        db.commit()
         cur.close()

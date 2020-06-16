@@ -54,7 +54,8 @@ class APITestCase(unittest.TestCase):
         )
 
         self.db = db
-        self.app.logger.setLevel(logging.DEBUG)
+        # TODO: set logger level to DEBUG when actively developing the tests
+        self.app.logger.setLevel(logging.WARN)
         with self.app.app_context():
             with self.app.test_client() as c:
                 init_db()

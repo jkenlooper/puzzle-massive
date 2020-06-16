@@ -25,7 +25,6 @@ if test -f "${cache_url_list}"; then
 # Then the list won't need to be deleted at the end.
 while read cache_url; do
     echo ${origin_server}${cache_url};
-    ls "${nginx_cache_dir}$(nxcacheof ${origin_server}${cache_url})";
     rm -f "${nginx_cache_dir}$(nxcacheof ${origin_server}${cache_url})";
 done < "${cache_url_list}";
 rm -f "${cache_url_list}";

@@ -107,7 +107,6 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
     )
     puzzle_dir = os.path.join(current_app.config["PUZZLE_RESOURCES"], puzzle_id)
     copytree(source_instance_puzzle_dir, puzzle_dir)
-    current_app.logger.debug("copied to {}".format(puzzle_dir))
 
     # Get all piece props of source puzzle
     transfer(source_puzzle_data["instance_id"])
@@ -183,11 +182,11 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
     status = ACTIVE
     if is_complete:
         status = COMPLETED
-    current_app.logger.debug(
-        "set status to {} for {}".format(
-            "active" if status == ACTIVE else "completed", puzzle_data["id"]
-        )
-    )
+    # current_app.logger.debug(
+    #    "set status to {} for {}".format(
+    #        "active" if status == ACTIVE else "completed", puzzle_data["id"]
+    #    )
+    # )
     cur.execute(
         "update Puzzle set status = :status where id = :id",
         {"status": status, "id": puzzle_data["id"]},

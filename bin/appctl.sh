@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-set -eu -o pipefail
+# not setting the -e or the option -o pipefail here. That way if a service fails
+# to stop the others will continue to stop.
+set -u
 
 COMMAND=$1
 

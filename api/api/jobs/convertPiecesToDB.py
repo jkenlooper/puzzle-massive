@@ -61,7 +61,6 @@ def transfer(puzzle, cleanup=True):
         ),
         json={"status": MAINTENANCE,},
     )
-    current_app.logger.debug(r.status_code)
     if r.status_code != 200:
         # TODO: Raise an error here and let the caller decide how to handle it.
         current_app.logger.warning(
@@ -133,7 +132,6 @@ def transfer(puzzle, cleanup=True):
     if cleanup:
         deletePieceDataFromRedis(redis_connection, puzzle, all_pieces)
 
-    db.commit()
     cur.close()
 
     r = requests.patch(
@@ -144,7 +142,6 @@ def transfer(puzzle, cleanup=True):
         ),
         json={"status": puzzle_previous_status,},
     )
-    current_app.logger.debug(r.status_code)
     if r.status_code != 200:
         # TODO: Raise an error here and let the caller decide how to handle it.
         current_app.logger.warning("Puzzle details api error")

@@ -40,9 +40,11 @@ if __name__ == "__main__":
     main()
 
 
-def run(config, cookie_secret):
+def run(config_file, cookie_secret):
     "Start the web server in the foreground. Don't use for production."
-    app = make_app(config=config, cookie_secret=cookie_secret, database_writable=True)
+    app = make_app(
+        config=config_file, cookie_secret=cookie_secret, database_writable=True
+    )
 
     app.run(
         host=app.config.get("HOSTAPI"),
@@ -51,10 +53,12 @@ def run(config, cookie_secret):
     )
 
 
-def serve(config, cookie_secret):
+def serve(config_file, cookie_secret):
     from gevent import pywsgi, signal
 
-    app = make_app(config=config, cookie_secret=cookie_secret, database_writable=True)
+    app = make_app(
+        config=config_file, cookie_secret=cookie_secret, database_writable=True
+    )
 
     host = app.config.get("HOSTAPI")
     port = app.config.get("PORTAPI")

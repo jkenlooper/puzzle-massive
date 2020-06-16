@@ -39,6 +39,7 @@ redis_connection = LocalProxy(set_redis_connection)
 
 def make_app(config=None, database_writable=False, **kw):
     app = API("api")
+    app.config_file = config
 
     if config:
         config_file = (
