@@ -23,7 +23,7 @@ Types of changes
 
 ## [Unreleased] - ...
 
-Puzzle instance improvements and puzzle alert messages.
+Puzzle instance improvements and puzzle alert messages. Closes [#68](https://github.com/jkenlooper/puzzle-massive/issues/68).
 
 ### Changed
 
