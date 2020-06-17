@@ -99,63 +99,12 @@ sudo su dev;
 
 ## Configuration with `.env`
 
-Create the `.env` and `.htpasswd` files. These should **not** be added to the
-distribution or to source control (git).
+Use the `devsetup.sh` to create the `.env` and `.htpasswd` files. These should
+**not** be added to the distribution or to source control (git). Edit them as
+needed for your use case.
 
 ```bash
-touch .env;
-touch .htpasswd;
-```
-
-It is recommended to set up an account on [Unsplash](https://unsplash.com/). An
-app will need to be created in order to get the application id and such. See
-[Unsplash Image API](https://unsplash.com/developers). Leave blank if not using
-images from Unsplash.
-
-```bash
-echo "UNSPLASH_APPLICATION_ID=" >> .env;
-echo "UNSPLASH_APPLICATION_NAME=" >> .env;
-echo "UNSPLASH_SECRET=" >> .env;
-```
-
-Set these to something unique for the app. The NEW_PUZZLE_CONTRIB sets the URL
-used for directly submitting photos for puzzles. Eventually the puzzle
-contributor stuff will be done, but for now set it to your favorite [Muppet character](https://en.wikipedia.org/wiki/List_of_Muppets).
-
-```bash
-echo "NEW_PUZZLE_CONTRIB=beaker" >> .env;
-echo "SECURE_COOKIE_SECRET=make-up-some-random-text" >> .env;
-```
-
-These are mostly optional and self explanatory. Email settings are for
-transactional emails and currently only used when a photo for a puzzle is
-suggested. If hosting a production version of the site is planned, then set the
-domain name to something other then puzzle.massive.xyz. Leave it with the
-default if only doing local development on your own machine.
-
-```bash
-echo "SUGGEST_IMAGE_LINK='https://any-website-for-uploading/'" >> .env;
-echo "SMTP_HOST='localhost'" >> .env;
-echo "SMTP_PORT='587'" >> .env;
-echo "SMTP_USER='user@localhost'" >> .env;
-echo "SMTP_PASSWORD='somepassword'" >> .env;
-echo "EMAIL_SENDER='sender@localhost'" >> .env;
-echo "EMAIL_MODERATOR='moderator@localhost'" >> .env;
-echo "DOMAIN_NAME='puzzle.massive.xyz'" >> .env;
-```
-
-The admin page uses basic auth. Note that this site is not configured to use
-a secure protocol (https) and so anyone on your network _could_ see the password
-used here. Not really a big deal, but for production deployments the nginx
-config is also set to deny any requests to the admin page if not originating
-from the internal IP. Admin page access for production requires using a proxy
-or changing the nginx config.
-
-Set the initial admin user and password. This file is copied to the
-/srv/puzzle-massive/ when installing with `make install`.
-
-```bash
-htpasswd -c .htpasswd admin;
+./bin/devsetup.sh;
 ```
 
 ## Setup For Building

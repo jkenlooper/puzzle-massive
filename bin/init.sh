@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -eu -o pipefail
 
-# Run as root to set up a new ubuntu 16.04 server
-# https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-16-04
+# Run as root to set up a new ubuntu 18.04 server
+# https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-18-04
 
 apt-get --yes update
 apt-get --yes upgrade
@@ -21,7 +21,7 @@ ufw enable
 
 
 ## Create the dev user
-adduser dev
+adduser dev || echo 'dev user exists already?'
 
 # Set the user to have sudo privileges by placing in the sudo group
 usermod -aG sudo dev
