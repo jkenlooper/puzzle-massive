@@ -236,7 +236,6 @@ class CreatePuzzleInstanceView(MethodView):
             )
         else:
             # Copy existing puzzle
-            # TODO: switch to using requests
             job = current_app.cleanupqueue.enqueue_call(
                 func="api.jobs.piece_forker.fork_puzzle_pieces",
                 args=([source_puzzle_data, puzzle_data]),

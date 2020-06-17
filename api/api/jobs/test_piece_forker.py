@@ -132,7 +132,6 @@ class TestPieceForker(PuzzleTestCase):
                     "select status from Puzzle where puzzle_id = :puzzle_id",
                     {"puzzle_id": self.puzzle_id},
                 ).fetchone()[0]
-                self.app.logger.debug(result)
                 self.assertEqual(ACTIVE, result)
 
     def test_maintenance_status_exception(self):

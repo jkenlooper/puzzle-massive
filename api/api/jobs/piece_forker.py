@@ -8,9 +8,10 @@ from shutil import copytree
 import sqlite3
 from PIL import Image
 from flask import current_app
+import requests
 
 from api.app import db, redis_connection
-from api.database import read_query_file, rowify
+from api.database import fetch_query_string, read_query_file, rowify
 from api.tools import loadConfig, get_db
 from api.jobs.convertPiecesToDB import transfer
 from api.constants import (
@@ -110,25 +111,56 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
 
     # Get all piece props of source puzzle
     transfer(source_puzzle_data["instance_id"])
-    query = """select * from Piece where (puzzle = :puzzle)"""
+
     (piece_properties, col_names) = rowify(
-        cur.execute(query, {"puzzle": source_puzzle_data["instance_id"]}).fetchall(),
+        cur.execute(
+            """select id, puzzle, adjacent, b, col, h, parent, r, rotate, row, status, w, x, y from Piece where (puzzle = :puzzle)""",
+            {"puzzle": source_puzzle_data["instance_id"]},
+        ).fetchall(),
         cur.description,
     )
 
+    source_preview_full_attribution = None
+    result = cur.execute(
+        "select url, attribution from PuzzleFile where puzzle = :source_puzzle and name = :name;",
+        {"name": "preview_full", "source_puzzle": source_puzzle_data["id"]},
+    ).fetchall()
+    if result:
+        (result, _) = rowify(result, cur.description)
+        source_preview_full_url = result[0]["url"]
+        attribution_id = result[0]["attribution"]
+    if attribution_id:
+        result = cur.execute(
+            fetch_query_string("_select_attribution_for_id.sql"),
+            {"attribution_id": attribution_id},
+        ).fetchall()
+        if result:
+            (result, _) = rowify(result, cur.description)
+            source_preview_full_attribution = {
+                "title": result[0]["title"],
+                "author_link": result[0]["author_link"],
+                "author_name": result[0]["author_name"],
+                "source": result[0]["source"],
+                "license_name": result[0]["license_name"],
+            }
+
+    cur.close()
+
     # Commit the piece properties and puzzle resources
     # row and col are really only useful for determining the top left piece when resetting puzzle
-    # TODO: piece_forker needs to use internal api requests to write to db
     for pc in piece_properties:
         pc["puzzle"] = puzzle_data["id"]
-        cur.execute(
-            """
-            insert or ignore into Piece (id, x, y, r, w, h, b, adjacent, rotate, row, col, status, parent, puzzle) values (
-          :id, :x, :y, :r, :w, :h, :b, :adjacent, :rotate, :row, :col, :status, :parent, :puzzle
-            );""",
-            pc,
-        )
-        db.commit()
+
+    r = requests.post(
+        "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/pieces/".format(
+            HOSTAPI=current_app.config["HOSTAPI"],
+            PORTAPI=current_app.config["PORTAPI"],
+            puzzle_id=puzzle_id,
+        ),
+        json={"piece_properties": piece_properties},
+    )
+    if r.status_code != 200:
+        raise Exception("Puzzle details api error {}".format(r.json()))
 
     # Check if there is only one piece parent and mark as complete
     is_complete = True
@@ -137,61 +169,81 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
             is_complete = False
             break
 
-    # Update Puzzle data
-    cur.execute(
-        insert_puzzle_file,
-        {
-            "puzzle": puzzle_data["id"],
-            "name": "original",
+    # TODO: Copy attribution data on puzzle file if it exists.
+
+    r = requests.post(
+        "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/files/{file_name}/".format(
+            HOSTAPI=current_app.config["HOSTAPI"],
+            PORTAPI=current_app.config["PORTAPI"],
+            puzzle_id=puzzle_id,
+            file_name="original",
+        ),
+        json={
             "url": "/resources/{puzzle_id}/original.jpg".format(puzzle_id=puzzle_id),
         },
     )
-    source_preview_full_url = cur.execute(
-        "select url from PuzzleFile where puzzle = :source_puzzle and name = :name;",
-        {"name": "preview_full", "source_puzzle": source_puzzle_data["id"]},
-    ).fetchone()[0]
-    cur.execute(
-        insert_puzzle_file,
-        {
-            "puzzle": puzzle_data["id"],
-            "name": "preview_full",
+    if r.status_code != 200:
+        raise Exception("Puzzle details api error")
+
+    r = requests.post(
+        "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/files/{file_name}/".format(
+            HOSTAPI=current_app.config["HOSTAPI"],
+            PORTAPI=current_app.config["PORTAPI"],
+            puzzle_id=puzzle_id,
+            file_name="preview_full",
+        ),
+        json={
             "url": "/resources/{puzzle_id}/preview_full.jpg".format(puzzle_id=puzzle_id)
             if source_preview_full_url.startswith("/")
             else source_preview_full_url,
+            "attribution": source_preview_full_attribution,
         },
     )
+    if r.status_code != 200:
+        raise Exception("Puzzle details api error {}".format(r.json()))
 
-    cur.execute(
-        insert_puzzle_file,
-        {
-            "puzzle": puzzle_data["id"],
-            "name": "pieces",
+    r = requests.post(
+        "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/files/{file_name}/".format(
+            HOSTAPI=current_app.config["HOSTAPI"],
+            PORTAPI=current_app.config["PORTAPI"],
+            puzzle_id=puzzle_id,
+            file_name="pieces",
+        ),
+        json={
             "url": "/resources/{puzzle_id}/scale-100/raster.png".format(
                 puzzle_id=puzzle_id
             ),
         },
     )
-    cur.execute(
-        insert_puzzle_file,
-        {
-            "puzzle": puzzle_data["id"],
-            "name": "pzz",
+    if r.status_code != 200:
+        raise Exception("Puzzle details api error")
+
+    r = requests.post(
+        "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/files/{file_name}/".format(
+            HOSTAPI=current_app.config["HOSTAPI"],
+            PORTAPI=current_app.config["PORTAPI"],
+            puzzle_id=puzzle_id,
+            file_name="pzz",
+        ),
+        json={
             "url": "/resources/{puzzle_id}/scale-100/raster.css?ts={timestamp}".format(
                 puzzle_id=puzzle_id, timestamp=int(time.time())
-            ),
+            )
         },
     )
+    if r.status_code != 200:
+        raise Exception("Puzzle details api error")
+
     status = ACTIVE
     if is_complete:
         status = COMPLETED
-    # current_app.logger.debug(
-    #    "set status to {} for {}".format(
-    #        "active" if status == ACTIVE else "completed", puzzle_data["id"]
-    #    )
-    # )
-    cur.execute(
-        "update Puzzle set status = :status where id = :id",
-        {"status": status, "id": puzzle_data["id"]},
+    r = requests.patch(
+        "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+            HOSTAPI=current_app.config["HOSTAPI"],
+            PORTAPI=current_app.config["PORTAPI"],
+            puzzle_id=puzzle_id,
+        ),
+        json={"status": status},
     )
-    db.commit()
-    cur.close()
+    if r.status_code != 200:
+        raise Exception("Puzzle details api error")

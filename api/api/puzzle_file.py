@@ -191,7 +191,7 @@ class InternalPuzzleFileView(MethodView):
             err_msg = {"msg": "Extra fields in JSON data were sent", "status_code": 400}
             return make_response(json.jsonify(err_msg), err_msg["status_code"])
 
-        if "attribution" in data.keys():
+        if "attribution" in data.keys() and data["attribution"]:
             if file_name in puzzle_file_names_with_no_attribution:
                 err_msg = {
                     "msg": "File with that name does not support adding attribution",

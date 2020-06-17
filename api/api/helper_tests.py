@@ -20,6 +20,7 @@ from api.constants import (
     CLASSIC,
 )
 import api.puzzle_details
+import api.puzzle_file
 
 
 class APITestCase(unittest.TestCase):
@@ -93,11 +94,55 @@ class PuzzleTestCase(APITestCase):
             headers = {}
             return (response_msg["status_code"], headers, json.dumps(response_msg))
 
+        internal_puzzle_pieces_re = re.compile(
+            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/(?P<puzzle_id>[^/]+)/pieces/".format(
+                HOSTAPI=self.app.config["HOSTAPI"], PORTAPI=self.app.config["PORTAPI"],
+            )
+        )
+
+        def request_internal_puzzle_pieces_callback(request):
+            m = internal_puzzle_pieces_re.match(request.url)
+            puzzle_id = m.group("puzzle_id")
+            payload = json.loads(request.body)
+            response_msg = api.pieces.add_puzzle_pieces(puzzle_id, **payload)
+            headers = {}
+            return (response_msg["status_code"], headers, json.dumps(response_msg))
+
+        internal_puzzle_file_re = re.compile(
+            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/(?P<puzzle_id>[^/]+)/files/(?P<file_name>[^/]+)/".format(
+                HOSTAPI=self.app.config["HOSTAPI"], PORTAPI=self.app.config["PORTAPI"],
+            )
+        )
+
+        def request_internal_puzzle_file_callback(request):
+            m = internal_puzzle_file_re.match(request.url)
+            puzzle_id = m.group("puzzle_id")
+            file_name = m.group("file_name")
+            payload = json.loads(request.body)
+
+            response_msg = api.puzzle_file.add_puzzle_file(
+                puzzle_id, file_name, **payload
+            )
+            headers = {}
+            return (response_msg["status_code"], headers, json.dumps(response_msg))
+
         with self.app.app_context():
             responses.add_callback(
                 responses.PATCH,
                 internal_puzzle_details_re,
                 callback=request_internal_puzzle_details_callback,
+                content_type="application/json",
+            )
+            responses.add_callback(
+                responses.POST,
+                internal_puzzle_pieces_re,
+                callback=request_internal_puzzle_pieces_callback,
+                content_type="application/json",
+            )
+            responses.add_callback(
+                responses.POST,
+                internal_puzzle_file_re,
+                callback=request_internal_puzzle_file_callback,
                 content_type="application/json",
             )
 

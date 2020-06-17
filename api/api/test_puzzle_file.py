@@ -271,6 +271,25 @@ class TestInternalPuzzleFileView(PuzzleTestCase):
                         rv.json,
                     )
 
+    def test_add_puzzle_file_that_does_support_empty_attribution(self):
+        with self.app.app_context():
+            with self.app.test_client() as c:
+                for (name, url) in [
+                    ("original", "/something/original.jpg"),
+                    ("preview_full", "/something/preview_full.jpg"),
+                ]:
+                    rv = c.post(
+                        "/internal/puzzle/{puzzle_id}/files/{file_name}/".format(
+                            puzzle_id=self.puzzle_id, file_name=name
+                        ),
+                        json={"url": url, "attribution": None,},
+                    )
+                    self.assertEqual(200, rv.status_code)
+                    self.assertEqual(
+                        {"rowcount": 1, "msg": "Inserted", "status_code": 200,},
+                        rv.json,
+                    )
+
     def test_update_puzzle_file_that_does_support_attribution(self):
         with self.app.app_context():
             with self.app.test_client() as c:
