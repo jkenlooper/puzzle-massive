@@ -4,12 +4,19 @@ Get a local development version of Puzzle Massive to run on your machine by
 following these (super awesome) instructions. This is necessary in order to
 create a dist file (`make dist`) for deploying to a production server.
 
-Written for a Linux machine that is Debian based. Only tested on Ubuntu. Use
-[VirtualBox](https://www.virtualbox.org/) and
-[Vagrant](https://www.vagrantup.com/) if not on a Linux machine.
+Written for a Linux machine that is Debian based. Only tested on
+[Ubuntu 18.04.4 LTS (Bionic Beaver)](http://releases.ubuntu.com/18.04/).
+It is recommended to use a virtual machine of some sort to keep dependencies for
+the Puzzle Massive services isolated and manageable. Some virtualization
+software suggestions are listed below.
+
+- [VirtualBox](https://www.virtualbox.org/) - can be used with Vagrant.
+- [Vagrant](https://www.vagrantup.com/) - a Vagrantfile has already been made.
+- [KVM](https://wiki.debian.org/KVM) - Kernel Virtual Machine is available for
+  Linux machines.
 
 This guide assumes some familiarity with using the terminal and administrating
-a linux based machine like Ubuntu. If something isn't working right or you get
+a Linux based machine like Ubuntu. If something isn't working right, or you get
 stuck, please reach out on the
 [Discord chat channels](https://discord.gg/uVhE2Kd)
 for the project.
@@ -20,40 +27,23 @@ After cloning or forking the git repo
 [puzzle-massive](https://github.com/jkenlooper/puzzle-massive); open a terminal
 and `cd` to that directory.
 
-If using Vagrant; then run `vagrant up` and ssh in (`vagrant ssh`). Go to
-the /vagrant/ shared directory when running the rest of the commands.
+Development can be done with any text editor or IDE that you are comfortable
+with. If using a virtual machine; then the files will either need to be edited
+on the virtual machine or copied over each time they change. The
+`bin/devsync.sh`
+script helps with copying files to the virtual machine.
+TODO: A service can be enabled on the virtual machine that will trigger any
+builds necessary when any source files get updated.
 
-If using Vagrant and VirtualBox, then it is recommended to not do development on
-a shared folder and instead create a dev user and clone from the shared
-/vagrant/ folder. This avoids potential weird issues when using a shared folder
-between VirtualBox and your host machine. The repo should be cloned from the
-shared /vagrant folder to the /home/dev/puzzle-massive folder in the virtual
-machine.
+The instructions shown here assume that you are logged into a Linux system
+(`uname -o`) and are running Ubuntu 18 (`lsb_release -a`).
 
-With this setup, there will be two git repositories. The one that was initially
-cloned on your host machine and is in the shared /vagrant/ directory. The other
-git repo will be on the virtual machine and is in the /home/dev/puzzle-massive/
-directory. Making commits in either one will require those commits to be synced
-with the other.
+### Create `dev` user
 
-<!-- TODO: Is there a better way of setting this syncing of git repos up via
-mirroring? -->
-
-```bash
-vagrant up;
-vagrant ssh;
-
-# After logging in as the vagrant user on the vagrant machine.
-# Switch to the dev user.
-# and clone the repo from the shared vagrant folder.
-sudo su dev;
-cd;
-git clone /vagrant/ puzzle-massive;
-cd puzzle-massive;
-```
-
-If **not** using Vagrant and running locally on a Ubuntu 18.04 (Bionic Beaver)
-machine:
+Create the `dev` user for Puzzle Massive. This user will own the sqlite database
+among other things. There are other commands that set up ssh and adds your
+public key to your virtual machine. See the bin/init.sh for that if you are
+using a virtual machine.
 
 ```bash
 # Run only some commands from bin/init.sh to create the 'dev' user:
@@ -62,8 +52,11 @@ sudo adduser dev
 sudo usermod -aG sudo dev
 ```
 
-Run the initial `bin/setup.sh` script after logging into the development
-machine.
+### Install dependencies
+
+Run the initial setup script that will install many of the dependencies with
+apt-get the Debian based package manager. The redis config is also updated to
+set maxmemory when running the setup.sh script.
 
 ```bash
 # Install other software dependencies with apt-get and npm.
@@ -74,6 +67,8 @@ sudo ./bin/setup.sh;
 sudo chown -R dev:dev ~/.config
 sudo chown -R dev:dev ~/.npm
 ```
+
+### Create local SSL certs (optional)
 
 To have TLS (SSL) on your development machine run the
 `provision-local-ssl-certs.sh` script. That will use `openssl` to create some
@@ -86,24 +81,14 @@ always trusted. The Firefox web browser will require importing the
 ./bin/provision-local-ssl-certs.sh
 ```
 
-### The 'dev' user and sqlite db file
-
-The sqlite db file is owned by dev with group dev. If developing with
-a different user then run `adduser nameofuser dev` to include the 'nameofuser'
-to the dev group. Make sure to be signed in as the dev user when manually
-modifying the database.
-
-```bash
-sudo su dev;
-```
-
-## Configuration with `.env`
+### Create the `.env` and `.htpasswd` files
 
 Use the `devsetup.sh` to create the `.env` and `.htpasswd` files. These should
 **not** be added to the distribution or to source control (git). Edit them as
 needed for your use case.
 
 ```bash
+# Creates the .env and .htpasswd files.
 ./bin/devsetup.sh;
 ```
 
@@ -116,18 +101,14 @@ The service config files are created by running `make` and installed with
 and activating each time for a new shell with `source bin/activate` before
 running `make`.
 
-**All commands are run from the project's directory unless otherwise noted.** For
-the Vagrant setup this is the shared folder `/vagrant/`.
-
-```bash
-vagrant ssh;
-cd /vagrant/;
-```
+**All commands are run from the project's directory unless otherwise noted.**
 
 Some git commit hooks are installed and rely on commands to be installed to
 format the python code (black) and format other code (prettier). Committing
 before following the below setup will result in an error if these commands
 haven't been installed on the development machine.
+
+### Install `nvm`
 
 If `nvm` isn't available on the dev machine then install it. See
 [github.com/nvm-sh/nvm](https://github.com/nvm-sh/nvm) for more
@@ -139,17 +120,19 @@ information.
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
 source ~/.bashrc
 
-# Update to latest Nodejs LTS version and update the .nvmrc
-# This is optional.
-#nvm install --lts=Erbium
-#nvm current > .nvmrc
-
 # Install and use the version set in .nvmrc
 nvm install
 nvm use
 ```
 
-When first installing on a development machine (not production) run:
+### Initializing the project
+
+The limits for ImageMagick may need to be updated. Manually edit the
+`/etc/ImageMagick-6/policy.xml` file on your development machine. Refer to notes
+in `[api/api/jobs/pieceRenderer.py](api/api/jobs/pieceRenderer.py)` about what
+settings to use.
+
+When first installing on a development machine run the below commands.
 
 ```bash
 # Setup to use a virtual python environment
@@ -175,9 +158,7 @@ npm run build;
 make;
 
 sudo make install;
-
-# Update the limits in /etc/ImageMagick-6/policy.xml
-# Refer to notes in api/api/jobs/pieceRenderer.py
+sudo ./bin/appctl.sh stop;
 
 # Create the puzzle database tables and initial data
 # As the dev user:
@@ -186,20 +167,27 @@ source bin/activate
 python api/api/create_database.py site.cfg;
 exit
 
-sudo systemctl reload nginx
+sudo systemctl reload nginx;
+sudo ./bin/appctl.sh start;
 ```
+
+### Set local-puzzle-massive hostname
 
 Update `/etc/hosts` to have local-puzzle-massive map to your machine.
 Access your local development version of the website at
 http://local-puzzle-massive/ . If using vagrant you'll need to use the
-8080 port http://local-puzzle-massive:8080/ .
+8080 port http://local-puzzle-massive:8080/ . There are also some issues when
+using a port on the local-puzzle-massive host and the website does a redirect.
 
-Append to your `/etc/hosts` file on the host machine (Not vagrant). The
-location of this file on a Windows machine is different.
+Append "127.0.0.1 local-puzzle-massive" to your `/etc/hosts` file on the host
+machine (not the virtual machine). You'll then be able to access your local
+version of the site at the http://local-puzzle-massive/ URL. If installed on
+a virtual machine; then change the 127.0.0.1 to that IP of the virtual machine.
+This IP can be found by logging into the virtual machine and using this command:
+`ip -4 -br addr show`
 
 ```bash
-# Append to /etc/hosts
-127.0.0.1 local-puzzle-massive
+echo "127.0.0.1 local-puzzle-massive" >> /etc/hosts
 ```
 
 ## Developing Puzzle Massive locally and creating puzzles

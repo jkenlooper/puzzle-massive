@@ -29,8 +29,6 @@ shift "$((OPTIND-1))";
 
 which htpasswd > /dev/null || (echo "No htpasswd command found. Install apache2-utils to get htpasswd command." && exit 1)
 
-which rsync > /dev/null || (echo "No rsync command found. Install rsync." && exit 1)
-
 read -p "Enter some random text for secure cookie: " SECURE_COOKIE_SECRET;
 read -p "What is your favorite muppet character (should be one word): " MUPPET_CHARACTER;
 echo ""
