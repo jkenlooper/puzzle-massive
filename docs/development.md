@@ -15,11 +15,50 @@ software suggestions are listed below.
 - [KVM](https://wiki.debian.org/KVM) - Kernel Virtual Machine is available for
   Linux machines.
 
+<dl>
+  <dt>local machine</dt>
+  <dd>
+  This is your own computer (localhost) that you edit source files on using your
+  text editor or IDE of choice.
+  </dd>
+  <dt>development machine</dt>
+  <dd>
+  The Ubuntu 18 machine that will be setup to run the Puzzle Massive services.
+  Source files will be uploaded to it from the local machine each time they
+  change. This is commonly a virtual machine, but can be localhost. You should
+  have ssh access to it and have permissions to add a dev user.
+  </dd>
+</dl>
+
 This guide assumes some familiarity with using the terminal and administrating
 a Linux based machine like Ubuntu. If something isn't working right, or you get
 stuck, please reach out on the
 [Discord chat channels](https://discord.gg/uVhE2Kd)
 for the project.
+
+## Set local-puzzle-massive hostname
+
+Update your `/etc/hosts` to have local-puzzle-massive map to your development
+machine. This IP can either be localhost (127.0.0.1) or the IP of a virtual
+machine. It is recommended that access to this development machine should be
+limited so be careful if you use a development machine that is hosted in the
+cloud. The local development version of the website will be at
+http://local-puzzle-massive/ . If using vagrant for the virtual machine then
+you'll need to use the 8080 port http://local-puzzle-massive:8080/ . There are
+also some issues when using a port like 8080 on the local-puzzle-massive host
+and the website does a redirect.
+
+Append "127.0.0.1 local-puzzle-massive" to your `/etc/hosts` file on the local
+machine (not the development machine). You'll then be able to access your local
+version of the site at the http://local-puzzle-massive/ URL. If installed on
+a virtual machine; then change the 127.0.0.1 to that IP of the virtual machine.
+This IP can be found by logging into the virtual machine and using this command:
+`ip -4 -br addr show`
+
+```bash
+# Update 127.0.0.1 to be the IP of the development machine
+echo "127.0.0.1 local-puzzle-massive" >> /etc/hosts
+```
 
 ## Initial setup
 
@@ -27,32 +66,59 @@ After cloning or forking the git repo
 [puzzle-massive](https://github.com/jkenlooper/puzzle-massive); open a terminal
 and `cd` to that directory.
 
-Development can be done with any text editor or IDE that you are comfortable
-with. If using a virtual machine; then the files will either need to be edited
-on the virtual machine or copied over each time they change. The
-`bin/devsync.sh`
-script helps with copying files to the virtual machine.
-TODO: A service can be enabled on the virtual machine that will trigger any
-builds necessary when any source files get updated.
-
 The instructions shown here assume that you are logged into a Linux system
 (`uname -o`) and are running Ubuntu 18 (`lsb_release -a`).
 
-### Create `dev` user
+### Create `dev` user and project source directory
+
+Use `ssh` to login into the development machine either as root (`ssh root@local-puzzle-massive`) or as a user that has `sudo` permissions.
+
+```bash
+ssh local-puzzle-massive;
+```
 
 Create the `dev` user for Puzzle Massive. This user will own the sqlite database
 among other things. There are other commands that set up ssh and adds your
 public key to your virtual machine. See the bin/init.sh for that if you are
-using a virtual machine.
+using a separate machine (virtual machine) as your development machine.
 
 ```bash
 # Run only some commands from bin/init.sh to create the 'dev' user:
-sudo adduser dev
+sudo adduser dev;
 # Set the user to have sudo privileges by placing in the sudo group
-sudo usermod -aG sudo dev
+sudo usermod -aG sudo dev;
+```
+
+Create the initial source directory that files will by `rsync`ed to.
+
+```bash
+sudo mkdir -p /usr/local/src/puzzle-massive;
+sudo chown dev:dev /usr/local/src/puzzle-massive;
+```
+
+### Add initial files to `/usr/local/src/puzzle-massive`
+
+Development can be done with any text editor or IDE that you are comfortable
+with. To better match a production environment the project's source files are
+copied over to the /usr/local/src/puzzle-massive/ directory on the development machine.
+
+The `bin/devsync.sh` script is a wrapper around `rsync` that will upload the
+source files to the development machine. The destination path is by default
+the `/usr/local/src/puzzle-massive/` directory that was created when the dev
+user was made.
+
+```bash
+# On the local machine
+./bin/devsync.sh;
 ```
 
 ### Install dependencies
+
+Should be logged into the development machine
+
+```bash
+ssh dev@local-puzzle-massive;
+```
 
 Run the initial setup script that will install many of the dependencies with
 apt-get the Debian based package manager. The redis config is also updated to
@@ -60,6 +126,7 @@ set maxmemory when running the setup.sh script.
 
 ```bash
 # Install other software dependencies with apt-get and npm.
+cd /usr/local/src/puzzle-massive/;
 sudo ./bin/setup.sh;
 
 # Fix permissions on home .config and .npm directories because of sudo npm
@@ -69,6 +136,12 @@ sudo chown -R dev:dev ~/.npm
 ```
 
 ### Create local SSL certs (optional)
+
+Should be logged into the development machine
+
+```bash
+ssh dev@local-puzzle-massive;
+```
 
 To have TLS (SSL) on your development machine run the
 `provision-local-ssl-certs.sh` script. That will use `openssl` to create some
@@ -81,15 +154,20 @@ always trusted. The Firefox web browser will require importing the
 ./bin/provision-local-ssl-certs.sh
 ```
 
+**TODO: Work in Progress...**
+
 ### Create the `.env` and `.htpasswd` files
 
-Use the `devsetup.sh` to create the `.env` and `.htpasswd` files. These should
+Use these scripts to create the `.env` file and the `.htpasswd` file. These should
 **not** be added to the distribution or to source control (git). Edit them as
-needed for your use case.
+needed for your use case. They should both stay within the project's directory.
 
 ```bash
-# Creates the .env and .htpasswd files.
-./bin/devsetup.sh;
+# Creates the .env file
+./bin/create_dot_env.sh;
+
+# Creates the .htpasswd file
+./bin/create_dot_htpasswd.sh;
 ```
 
 ## Setup For Building
@@ -169,25 +247,6 @@ exit
 
 sudo systemctl reload nginx;
 sudo ./bin/appctl.sh start;
-```
-
-### Set local-puzzle-massive hostname
-
-Update `/etc/hosts` to have local-puzzle-massive map to your machine.
-Access your local development version of the website at
-http://local-puzzle-massive/ . If using vagrant you'll need to use the
-8080 port http://local-puzzle-massive:8080/ . There are also some issues when
-using a port on the local-puzzle-massive host and the website does a redirect.
-
-Append "127.0.0.1 local-puzzle-massive" to your `/etc/hosts` file on the host
-machine (not the virtual machine). You'll then be able to access your local
-version of the site at the http://local-puzzle-massive/ URL. If installed on
-a virtual machine; then change the 127.0.0.1 to that IP of the virtual machine.
-This IP can be found by logging into the virtual machine and using this command:
-`ip -4 -br addr show`
-
-```bash
-echo "127.0.0.1 local-puzzle-massive" >> /etc/hosts
 ```
 
 ## Developing Puzzle Massive locally and creating puzzles
