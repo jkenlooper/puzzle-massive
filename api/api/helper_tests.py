@@ -108,6 +108,14 @@ class PuzzleTestCase(APITestCase):
             headers = {}
             return (response_msg["status_code"], headers, json.dumps(response_msg))
 
+        def request_internal_puzzle_pieces_update_callback(request):
+            m = internal_puzzle_pieces_re.match(request.url)
+            puzzle_id = m.group("puzzle_id")
+            payload = json.loads(request.body)
+            response_msg = api.pieces.update_puzzle_pieces(puzzle_id, **payload)
+            headers = {}
+            return (response_msg["status_code"], headers, json.dumps(response_msg))
+
         internal_puzzle_file_re = re.compile(
             "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/(?P<puzzle_id>[^/]+)/files/(?P<file_name>[^/]+)/".format(
                 HOSTAPI=self.app.config["HOSTAPI"], PORTAPI=self.app.config["PORTAPI"],
@@ -137,6 +145,12 @@ class PuzzleTestCase(APITestCase):
                 responses.POST,
                 internal_puzzle_pieces_re,
                 callback=request_internal_puzzle_pieces_callback,
+                content_type="application/json",
+            )
+            responses.add_callback(
+                responses.PATCH,
+                internal_puzzle_pieces_re,
+                callback=request_internal_puzzle_pieces_update_callback,
                 content_type="application/json",
             )
             responses.add_callback(
@@ -260,7 +274,7 @@ class PuzzleTestCase(APITestCase):
         for pc in range(0, fake_puzzle["pieces"]):
             piece_properties.append(
                 {
-                    "id": pc + 1,
+                    "id": pc,
                     "puzzle": puzzle,
                     "x": randint(0, fake_puzzle["table_width"]),
                     "y": randint(0, fake_puzzle["table_height"]),

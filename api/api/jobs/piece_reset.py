@@ -3,6 +3,7 @@ from random import randint
 
 from flask import current_app, redirect
 from flask_sse import sse
+import requests
 
 from api.app import db, redis_connection
 from api.database import rowify, fetch_query_string
@@ -54,11 +55,16 @@ def reset_puzzle_pieces(puzzle):
     puzzle_data = result[0]
 
     # Update puzzle status to MAINTENANCE
-    cur.execute(
-        fetch_query_string("update_puzzle_status_for_puzzle.sql"),
-        {"status": MAINTENANCE, "puzzle": puzzle_data["id"]},
+    r = requests.patch(
+        "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+            HOSTAPI=current_app.config["HOSTAPI"],
+            PORTAPI=current_app.config["PORTAPI"],
+            puzzle_id=puzzle_data["puzzle_id"],
+        ),
+        json={"status": MAINTENANCE},
     )
-    db.commit()
+    if r.status_code != 200:
+        raise Exception("Puzzle details api error")
     sse.publish(
         "status:{}".format(MAINTENANCE),
         channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_data["puzzle_id"]),
@@ -79,23 +85,35 @@ def reset_puzzle_pieces(puzzle):
         ).fetchall(),
         cur.description,
     )
+    cur.close()
     topLeftPiece = result[0]
     allPiecesExceptTopLeft = list(range(0, puzzle_data["pieces"]))
     allPiecesExceptTopLeft.remove(topLeftPiece["id"])
 
     # Randomize piece x, y. Reset the parent
+    new_piece_properties = []
     for piece in allPiecesExceptTopLeft:
         x = randint(x1, x2)
         y = randint(y1, y2)
-        cur.execute(
-            "update Piece set x = :x, y = :y, parent = null, status = null where puzzle = :puzzle and id = :id",
-            {"x": x, "y": y, "puzzle": puzzle, "id": piece},
+        new_piece_properties.append(
+            {"x": x, "y": y, "parent": None, "status": None, "id": piece}
         )
 
+    current_app.logger.debug(new_piece_properties)
+    r = requests.patch(
+        "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/pieces/".format(
+            HOSTAPI=current_app.config["HOSTAPI"],
+            PORTAPI=current_app.config["PORTAPI"],
+            puzzle_id=puzzle_data["puzzle_id"],
+        ),
+        json={"piece_properties": new_piece_properties},
+    )
+    if r.status_code != 200:
+        raise Exception(
+            "Puzzle pieces api error. Failed to patch pieces. {}".format(r.json())
+        )
     # The caller should update the status of the puzzle to get it out of
     # MAINTENANCE mode.
-    db.commit()
-    cur.close()
 
 
 def reset_puzzle_pieces_and_handle_errors(puzzle):
@@ -109,30 +127,39 @@ def reset_puzzle_pieces_and_handle_errors(puzzle):
 
     (result, col_names) = rowify(result, cur.description)
     puzzle_data = result[0]
+    cur.close()
 
     try:
         reset_puzzle_pieces(puzzle)
     except Error as err:
         # Update puzzle status to RENDERING_FAILED
-        cur.execute(
-            fetch_query_string("update_puzzle_status_for_puzzle.sql"),
-            {"status": RENDERING_FAILED, "puzzle": puzzle},
+        r = requests.patch(
+            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                HOSTAPI=current_app.config["HOSTAPI"],
+                PORTAPI=current_app.config["PORTAPI"],
+                puzzle_id=puzzle_data["puzzle_id"],
+            ),
+            json={"status": RENDERING_FAILED},
         )
-        db.commit()
         sse.publish(
             "status:{}".format(RENDERING_FAILED),
             channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_data["puzzle_id"]),
         )
-        cur.close()
+        if r.status_code != 200:
+            raise Exception("Puzzle details api error")
 
     # Update puzzle status to ACTIVE and sse publish
-    cur.execute(
-        fetch_query_string("update_puzzle_status_for_puzzle.sql"),
-        {"status": ACTIVE, "puzzle": puzzle},
+    r = requests.patch(
+        "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+            HOSTAPI=current_app.config["HOSTAPI"],
+            PORTAPI=current_app.config["PORTAPI"],
+            puzzle_id=puzzle_data["puzzle_id"],
+        ),
+        json={"status": ACTIVE},
     )
-    db.commit()
     sse.publish(
         "status:{}".format(ACTIVE),
         channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_data["puzzle_id"]),
     )
-    cur.close()
+    if r.status_code != 200:
+        raise Exception("Puzzle details api error")

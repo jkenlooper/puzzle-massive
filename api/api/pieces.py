@@ -86,7 +86,7 @@ class PuzzlePiecesView(MethodView):
 
             # Check redis memory usage and create cleanup job if it's past a threshold
             memory = redis_connection.info(section="memory")
-            print("used_memory: {used_memory_human}".format(**memory))
+            current_app.logger.info("used_memory: {used_memory_human}".format(**memory))
             maxmemory = memory.get("maxmemory")
             if maxmemory != 0:
                 target_memory = maxmemory * 0.5
@@ -144,7 +144,7 @@ class PuzzlePiecesView(MethodView):
 
         if status == COMPLETED:
             # transfer completed puzzles back out
-            print("transfer {0}".format(puzzle))
+            current_app.logger.info("transfer {0}".format(puzzle))
             job = current_app.cleanupqueue.enqueue_call(
                 func="api.jobs.convertPiecesToDB.transfer",
                 args=(puzzle,),
@@ -188,7 +188,7 @@ def update_puzzle_pieces(puzzle_id, piece_properties):
         return err_msg
     # validate each piece property
     for piece in piece_properties:
-        if not piece_attrs == piece.keys():
+        if not piece_attrs.issuperset(piece.keys()):
             err_msg = {"msg": "has extra piece property", "status_code": 400}
             return err_msg
 
