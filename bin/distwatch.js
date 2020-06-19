@@ -20,8 +20,32 @@ const wp = new Watchpack({
   // Note: enable polling when watching on a network path
 });
 
-// Only watch the dist directory with a start time of 10 seconds in the past.
-wp.watch([], ["dist"], Date.now() - 10000);
+wp.watch(
+  [
+    "chill-data*.yaml",
+    "Makefile",
+    "MANIFEST",
+    "package.json",
+    "port-registry.cfg",
+    "site.cfg.sh",
+    "site-data.sql",
+  ],
+  [
+    "dist",
+    "api/api",
+    "divulger/divulger",
+    "documents",
+    "media",
+    "queries",
+    "resources",
+    "root",
+    "source-media",
+    "stream/stream",
+    "templates",
+    "web",
+  ],
+  Date.now() - 10000
+);
 
 wp.on("aggregated", () => {
   child_process.execSync("./bin/devsync.sh", {
