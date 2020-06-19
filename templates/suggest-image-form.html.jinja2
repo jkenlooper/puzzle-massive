@@ -1,4 +1,22 @@
-<form enctype="multipart/form-data" id="suggest-image-form" method="post" action="/newapi/suggest-image/">
+<form enctype="multipart/form-data" x-ref="suggestImageForm" id="suggest-image-form" method="post" action="/newapi/suggest-image/"
+x-data="form()">
+<script>
+function form() {
+  return {
+    isValid() {
+      return (
+        this.$refs.suggestImageForm.checkValidity() &&
+        ((this.link && this.link.trim() !== "") ||
+        (this.description && this.description.trim() !== "")
+          ? true
+          : false)
+      );
+    },
+    link: "",
+    description: "",
+  };
+}
+</script>
   <div class="pm-UploadForm">
     <div class="pm-UploadForm-row">
       <label for="pieces">
@@ -24,7 +42,7 @@
     <div class="pm-UploadForm-row">
       <label for="link">The website that the image is found on.</label>
       <div>
-        <input id="link-field" style="width:100%" type="url" name="link" value="" placeholder="https://unsplash.com/photos/4nr59MLWI9E" maxlength="1000">
+        <input id="link-field" style="width:100%" type="url" name="link" x-model="link" placeholder="https://unsplash.com/photos/4nr59MLWI9E" maxlength="1000">
         <p>
         <em>If the picture is from <a href="https://unsplash.com/">Unsplash</a> add the url like this: <b class="u-block">https://unsplash.com/photos/4nr59MLWI9E</b></em>
         </p>
@@ -43,11 +61,11 @@
     {% endif %}
     <div class="pm-UploadForm-row">
       <label for="description">Description</label>
-      <textarea style="width:100%" id="description" name="description" maxlength="1000"></textarea>
+      <textarea style="width:100%" id="description" name="description" x-model="description" maxlength="1000"></textarea>
     </div>
 
     <div class="u-textRight">
-      <input class="Button Button--primary" type="submit" name="save" value="Suggest Image" />
+      <input class="Button Button--primary" type="submit" name="save" value="Suggest Image" x-bind:disabled="!isValid()"/>
     </div>
   </div>
 </form>

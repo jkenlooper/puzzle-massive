@@ -49,10 +49,13 @@ class SuggestImageView(MethodView):
         # if permission != PUBLIC:
         #    permission = PUBLIC
 
-        description = escape(args.get("description", ""))[:1000]
+        description = escape(args.get("description", "").strip())[:1000]
 
         # Check link and validate
-        link = url_fix(args.get("link", ""))[:1000]
+        link = url_fix(args.get("link", "").strip())[:1000]
+
+        if not link and not description:
+            abort(400)
 
         puzzle_id = uuid.uuid1().hex
 
