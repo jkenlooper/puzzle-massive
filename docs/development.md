@@ -82,6 +82,8 @@ among other things. There are other commands that set up ssh and adds your
 public key to your virtual machine. See the bin/init.sh for that if you are
 using a separate machine (virtual machine) as your development machine.
 
+While logged into the development machine.
+
 ```bash
 # Run only some commands from bin/init.sh to create the 'dev' user:
 sudo adduser dev;
@@ -89,11 +91,20 @@ sudo adduser dev;
 sudo usermod -aG sudo dev;
 ```
 
-Create the initial source directory that files will by `rsync`ed to.
+Create the initial source directory that files will by `rsync`ed to on the
+development machine.
 
 ```bash
 sudo mkdir -p /usr/local/src/puzzle-massive;
 sudo chown dev:dev /usr/local/src/puzzle-massive;
+```
+
+Logout (exit) from the development machine. Most of the time this will be
+implied in the different sections of this guide.
+
+```bash
+# Get back to your local machine by exiting the development machine.
+exit;
 ```
 
 ### Add initial files to `/usr/local/src/puzzle-massive`
@@ -125,8 +136,9 @@ apt-get the Debian based package manager. The redis config is also updated to
 set maxmemory when running the setup.sh script.
 
 ```bash
-# Install other software dependencies with apt-get and npm.
 cd /usr/local/src/puzzle-massive/;
+
+# Install other software dependencies with apt-get and npm.
 sudo ./bin/setup.sh;
 
 # Fix permissions on home .config and .npm directories because of sudo npm
@@ -151,16 +163,18 @@ always trusted. The Firefox web browser will require importing the
 `localhost-CA.pem` certificate authority file.
 
 ```bash
+cd /usr/local/src/puzzle-massive/;
 ./bin/provision-local-ssl-certs.sh
 ```
-
-**TODO: Work in Progress...**
 
 ### Create the `.env` and `.htpasswd` files
 
 Use these scripts to create the `.env` file and the `.htpasswd` file. These should
 **not** be added to the distribution or to source control (git). Edit them as
 needed for your use case. They should both stay within the project's directory.
+
+Run these on the _local machine_ from within the project's directory (use `exit`
+command if still logged into development machine).
 
 ```bash
 # Creates the .env file
@@ -179,8 +193,6 @@ The service config files are created by running `make` and installed with
 and activating each time for a new shell with `source bin/activate` before
 running `make`.
 
-**All commands are run from the project's directory unless otherwise noted.**
-
 Some git commit hooks are installed and rely on commands to be installed to
 format the python code (black) and format other code (prettier). Committing
 before following the below setup will result in an error if these commands
@@ -188,29 +200,28 @@ haven't been installed on the development machine.
 
 ### Install `nvm`
 
-If `nvm` isn't available on the dev machine then install it. See
+If `nvm` isn't available on the local machine then install it. See
 [github.com/nvm-sh/nvm](https://github.com/nvm-sh/nvm) for more
 information.
 
-```bash
-# Install Node Version Manager
+Run these on the local machine from within the project's directory.
 
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
-source ~/.bashrc
+```bash
+# Install Node Version Manager (nvm)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash;
+source ~/.bashrc;
 
 # Install and use the version set in .nvmrc
-nvm install
-nvm use
+nvm install;
+nvm use;
 ```
 
-### Initializing the project
+### Initialize the project
 
-The limits for ImageMagick may need to be updated. Manually edit the
-`/etc/ImageMagick-6/policy.xml` file on your development machine. Refer to notes
-in `[api/api/jobs/pieceRenderer.py](api/api/jobs/pieceRenderer.py)` about what
-settings to use.
-
-When first installing on a development machine run the below commands.
+On the local machine install dependencies for prettier and black. These tools
+are needed to autoformat the changed code before committing. The `virtualenv`
+can be installed on your local machine with a package manager
+(`sudo apt-get install virtualenv`).
 
 ```bash
 # Setup to use a virtual python environment
@@ -221,7 +232,7 @@ source bin/activate;
 pip install black;
 
 # Build the dist files for local development
-nvm use
+nvm use;
 npm install;
 
 # Checkout any git submodules in this repo if didn't
@@ -232,26 +243,65 @@ git submodule update;
 # Build the dist files for local development
 npm run build;
 
+# Upload the changes to the development machine
+./bin/devsync.sh
+```
+
+The limits for ImageMagick may need to be updated. Copy the
+`/etc/ImageMagick-6/policy.xml` file from your development machine and replace
+the one included with the project. Check the differences and either edit it or
+use what the project has set. _This step is optional_, but the policy file will
+still be updated when running the `make install` command. When the
+`make uninstall` is used it is restored to how it was before.
+
+```bash
+# Grab the policy from your development machine.
+scp dev@local-puzzle-massive:/etc/ImageMagick-6/policy.xml resources/imagemagick-policy.xml;
+
+# Show the differences.
+git diff resources/imagemagick-policy.xml;
+
+# Use what was set for the project if it looked okay.
+git checkout resources/imagemagick-policy.xml;
+```
+
+### Initialize the development machine
+
+Should be logged into the development machine.
+
+```bash
+ssh dev@local-puzzle-massive;
+```
+
+```bash
+cd /usr/local/src/puzzle-massive/;
+
+# Setup to use a virtual python environment
+virtualenv . -p python3;
+source bin/activate;
+
 # Makes the initial development version
 make;
 
+# Install the files that were compiled.
 sudo make install;
+
+# Stop the apps here since we need to update the database.
 sudo ./bin/appctl.sh stop;
 
 # Create the puzzle database tables and initial data
-# As the dev user:
-sudo su dev
-source bin/activate
 python api/api/create_database.py site.cfg;
-exit
 
+# Test and reload the nginx configurations
+sudo nginx -t;
 sudo systemctl reload nginx;
+
+# Start the apps and monitor the logs
 sudo ./bin/appctl.sh start;
+sudo ./bin/log.sh;
 ```
 
 ## Developing Puzzle Massive locally and creating puzzles
-
-Update the URLs shown to use port 8080 if using Vagrant.
 
 After the initial install of Puzzle Massive on your machine there won't be any
 puzzles yet. You'll need to create one (create two to avoid a bug when only one
@@ -271,13 +321,22 @@ A script to generate a variety of puzzles and player data is used when
 developing to better simulate conditions on a production version. Run this
 script as needed. Some examples to get started are shown here.
 
+Should be logged into the development machine.
+
 ```bash
+ssh dev@local-puzzle-massive;
+```
+
+```bash
+cd /usr/local/src/puzzle-massive/;
+source bin/activate;
+
 puzzle-massive-testdata players --count=100;
 
 puzzle-massive-testdata puzzles --count=10 --min-pieces=200 --pieces=900 --size=1800x1300\!;
 puzzle-massive-testdata puzzles --count=10 --min-pieces=200 --pieces=900 --size=800x1500\!;
 puzzle-massive-testdata puzzles --count=1 --pieces=2000 --size=3800x3500\!;
-puzzle-massive-testdata puzzles --count=300 --min-pieces=9 --pieces=200 --size=180x180\!;
+puzzle-massive-testdata puzzles --count=30 --min-pieces=9 --pieces=200 --size=180x180\!;
 
 puzzle-massive-testdata instances --count=10 --min-pieces=200 --pieces=500;
 ```
@@ -288,7 +347,16 @@ Some unit tests exist to cover parts of the api application. Some older tests
 have been skipped since they were not actively maintained. The existing ones can
 be run with the following commands.
 
+Should be logged into the development machine.
+
 ```bash
+ssh dev@local-puzzle-massive;
+```
+
+```bash
+cd /usr/local/src/puzzle-massive/;
+source bin/activate;
+
 # Run all the tests for the api
 python -m unittest discover --start-directory api --failfast
 
@@ -302,7 +370,7 @@ python api/api/test_puzzle_details.py TestInternalPuzzleDetailsView.test_missing
 ### Building the `dist/` files
 
 The javascript and CSS files in the `dist/` directory are built from the source
-files in `src/` by running the `npm run build` command. This uses
+files in `src/` by running the `npm run build` command from your local machine. This uses
 [webpack](https://webpack.js.org/) and is configured with the
 `webpack.config.js`. The entry file is `src/index.js` and following that the
 main app bundle (`app.bundle.js`, `app.css`) is built from
@@ -316,7 +384,18 @@ classes follow the
 
 When editing files in `src/` either run `npm run debug` or `npm run watch`. The
 production version is done with `npm run build` which will create compressed
-versions of the files.
+versions of the files. To upload the just compiled files in the `dist/`
+directory use the `bin/devsync.sh` command.
+
+```bash
+# Build the dist files and rsync them to the development machine
+npm run debug && ./bin/devsync.sh;
+
+# Or watch for changes in src/, build, and rsync to development machine
+./bin/distwatch.js &
+npm run watch;
+pkill --full -u $(whoami) "\./bin/distwatch\.js";
+```
 
 ## Creating a versioned dist for deployment
 
@@ -326,7 +405,7 @@ is uploaded to the server and the guide to do deployments should then be
 followed.
 
 To create the versioned distribution file (like `puzzle-massive-2.0.0.tar.gz`) use the
-`make dist` command. Note that the version is set in the `package.json`.
+`make dist` command from your local machine. Note that the version is set in the `package.json`.
 
 The script to create the distribution file only includes the files that have
 been committed to git. It will also limit these to what is listed in the

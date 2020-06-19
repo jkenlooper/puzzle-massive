@@ -33,6 +33,11 @@ CACHEDIR=$9
 # /var/lib/puzzle-massive/urls-to-purge.txt
 PURGEURLLIST=${10}
 
+IMAGEMAGICK_POLICY=${11}
+
+#/etc/ImageMagick-6/policy.xml
+#resources/imagemagick-policy.xml;
+
 mkdir -p "${SRVDIR}root/";
 #chown -R dev:dev "${SRVDIR}root/";
 rsync --archive \
@@ -171,6 +176,14 @@ mkdir -p $(dirname ${PURGEURLLIST})
 chown dev:www-data -R $(dirname ${PURGEURLLIST})
 chmod 0770 $(dirname ${PURGEURLLIST})
 touch ${PURGEURLLIST}
+
+# Rename any existing policy.xml file before overwritting it.
+mkdir -p $(dirname ${IMAGEMAGICK_POLICY})
+touch ${IMAGEMAGICK_POLICY}
+if test ! -f ${IMAGEMAGICK_POLICY}.bak; then
+mv ${IMAGEMAGICK_POLICY} ${IMAGEMAGICK_POLICY}.bak
+fi
+cp resources/imagemagick-policy.xml ${IMAGEMAGICK_POLICY}
 
 mkdir -p "${SYSTEMDDIR}"
 cp chill/puzzle-massive-chill.service "${SYSTEMDDIR}"

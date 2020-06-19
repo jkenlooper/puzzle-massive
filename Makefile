@@ -29,6 +29,7 @@ AWSTATSLOGDIR := $(PREFIXDIR)/var/log/awstats/puzzle-massive/
 ARCHIVEDIR := $(PREFIXDIR)/var/lib/puzzle-massive/archive/
 CACHEDIR := $(PREFIXDIR)/var/lib/puzzle-massive/cache/
 PURGEURLLIST := $(PREFIXDIR)/var/lib/puzzle-massive/nginx/urls-to-purge.txt
+IMAGEMAGICK_POLICY := $(PREFIXDIR)/etc/ImageMagick-6/policy.xml
 
 # Set the internal ip which is used to secure access to admin/ pages.
 INTERNALIP := $(shell hostname -I | cut -d' ' -f1)
@@ -172,7 +173,7 @@ all: bin/chill bin/puzzle-massive-api bin/puzzle-massive-divulger bin/puzzle-mas
 
 .PHONY: install
 install:
-	./bin/install.sh $(ENVIRONMENT) $(SRVDIR) $(NGINXDIR) $(NGINXLOGDIR) $(AWSTATSLOGDIR) $(SYSTEMDDIR) $(DATABASEDIR) $(ARCHIVEDIR) $(CACHEDIR) $(PURGEURLLIST)
+	./bin/install.sh $(ENVIRONMENT) $(SRVDIR) $(NGINXDIR) $(NGINXLOGDIR) $(AWSTATSLOGDIR) $(SYSTEMDDIR) $(DATABASEDIR) $(ARCHIVEDIR) $(CACHEDIR) $(PURGEURLLIST) $(IMAGEMAGICK_POLICY)
 
 # Remove any created files in the src directory which were created by the
 # `make all` recipe.
@@ -190,7 +191,7 @@ clean:
 # Will also remove the sqlite database file.
 .PHONY: uninstall
 uninstall:
-	./bin/uninstall.sh $(SRVDIR) $(NGINXDIR) $(SYSTEMDDIR) $(DATABASEDIR) $(ARCHIVEDIR) $(CACHEDIR) $(PURGEURLLIST)
+	./bin/uninstall.sh $(SRVDIR) $(NGINXDIR) $(SYSTEMDDIR) $(DATABASEDIR) $(ARCHIVEDIR) $(CACHEDIR) $(PURGEURLLIST) $(IMAGEMAGICK_POLICY)
 
 .PHONY: dist
 dist: puzzle-massive-$(TAG).tar.gz

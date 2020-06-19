@@ -58,6 +58,7 @@ port-registry.cfg
 queries
 requirements.txt
 resources/bit-icons.tar.gz
+resources/imagemagick-policy.xml
 root
 site.cfg.sh
 source-media

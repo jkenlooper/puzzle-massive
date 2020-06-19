@@ -49,9 +49,20 @@ rsync --archive \
   --delay-updates \
   --itemize-changes \
   --relative \
+  --recursive \
   --files-from=MANIFEST \
   --exclude=.git \
   --exclude=.vagrant \
   --exclude=node_modules \
   --exclude=package-lock.json \
+  ${params}
+
+# Include any other files that are not part of the MANIFEST, but are created on
+# the local machine.
+rsync --archive \
+  --delay-updates \
+  --itemize-changes \
+  --include=".env" \
+  --include=".htpasswd" \
+  --exclude="*" \
   ${params}

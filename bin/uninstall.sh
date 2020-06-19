@@ -26,6 +26,8 @@ CACHEDIR=$6
 # /var/lib/puzzle-massive/urls-to-purge.txt
 PURGEURLLIST=$7
 
+IMAGEMAGICK_POLICY=$8
+
 rm -rf ${SRVDIR}root/!(.well-known|.|..)
 
 rm -rf "${SRVDIR}frozen/"
@@ -101,5 +103,10 @@ rm -rf "${ARCHIVEDIR}"
 rm -rf "${CACHEDIR}"
 
 rm -f "${PURGEURLLIST}"
+
+# Restore the policy.xml file.
+if test -f ${IMAGEMAGICK_POLICY}.bak; then
+mv ${IMAGEMAGICK_POLICY}.bak ${IMAGEMAGICK_POLICY}
+fi
 
 exit

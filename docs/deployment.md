@@ -11,7 +11,8 @@ server.
 ## Create a new version for the deployment
 
 Deployments should use a versioned distribution file that is uploaded to the
-server. This file can be made after a new version has been created with `npm version`. On the **development machine** build the versioned distribution file.
+server. This file can be made after a new version has been created with
+`npm version`. On the **local machine** build the versioned distribution file.
 Please follow these _super awesome instructions_ in the [Local development
 guide](development.md) in order to build a dist file.
 
@@ -142,9 +143,6 @@ by the public.
     sudo make ENVIRONMENT=production install;
     sudo ./bin/appctl.sh stop;
 
-    # Update the limits in /etc/ImageMagick-6/policy.xml
-    # Refer to notes in api/api/jobs/pieceRenderer.py
-
     # should be run as 'dev' user
     python api/api/create_database.py site.cfg;
 
@@ -192,7 +190,7 @@ by the public.
     puzzle-massive-testdata puzzles --count=2 --min-pieces=200 --pieces=900 --size=1800x1300\!;
     puzzle-massive-testdata puzzles --count=2 --min-pieces=200 --pieces=900 --size=800x1500\!;
     puzzle-massive-testdata puzzles --count=1 --pieces=2000 --size=3800x3500\!;
-    puzzle-massive-testdata puzzles --count=300 --pieces=9 --size=180x180\!;
+    puzzle-massive-testdata puzzles --count=30 --pieces=9 --size=180x180\!;
 
     puzzle-massive-testdata instances --count=10 --min-pieces=9 --pieces=50;
     ```
