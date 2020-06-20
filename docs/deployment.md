@@ -1,12 +1,10 @@
 # Deployment Guide
 
 There are two kinds of deployments outlined here. The first one is for in-place
-deployments where only minor changes are needed and don't require any services
-to be restarted. These are usually updates to the client-side resources like
-Javascript, CSS, and HTML or other graphic files. The other type of deployment
-is commonly called a blue-green deployment where a new server is created and
-then when everything has been deployed and ready; traffic is directed to the new
-server.
+deployments where only minor changes are needed and the risk is low. The other
+type of deployment is commonly called a blue-green deployment where a new server
+is created and then when everything has been deployed and ready; traffic is
+directed to the new server.
 
 ## Create a new version for the deployment
 
