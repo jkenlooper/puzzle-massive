@@ -24,7 +24,7 @@ from api.database import rowify, read_query_file, fetch_query_string
 from api.app import redis_connection, db, make_app
 from api.tools import loadConfig
 from api.tools import deletePieceDataFromRedis
-from api.timeline import archive_and_clear
+from api.jobs.timeline_archive import archive_and_clear
 from api.constants import (
     ACTIVE,
     IN_QUEUE,

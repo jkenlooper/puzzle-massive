@@ -8,7 +8,7 @@ import requests
 from api.app import db, redis_connection
 from api.database import rowify, fetch_query_string
 from api.constants import MAINTENANCE, RENDERING_FAILED, ACTIVE
-from api.timeline import archive_and_clear
+from api.jobs.timeline_archive import archive_and_clear
 from api.jobs.convertPiecesToDB import transfer
 
 query_select_puzzle_for_puzzle_id_and_status = """
@@ -73,7 +73,6 @@ def reset_puzzle_pieces(puzzle):
     # Transfer any redis piece data out first.
     transfer(puzzle, cleanup=True)
 
-    # TODO: archive the timeline
     # timeline ui should only show when the puzzle is in 'complete' status.
     archive_and_clear(puzzle)
 

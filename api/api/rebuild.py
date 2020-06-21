@@ -12,7 +12,7 @@ from .app import db, redis_connection
 
 from .database import rowify, fetch_query_string
 from .constants import REBUILD, COMPLETED, QUEUE_REBUILD
-from .timeline import archive_and_clear
+
 from .user import user_id_from_ip, user_not_banned
 from .jobs.convertPiecesToRedis import convert
 from .tools import deletePieceDataFromRedis
@@ -62,7 +62,7 @@ class PuzzlePiecesRebuildView(MethodView):
             # Reload the page as the status may have been changed.
             cur.close()
             return redirect(
-                "/chill/site/puzzle/{puzzle_id}/".format(puzzle_id=puzzle_id)
+                "/chill/site/front/{puzzle_id}/".format(puzzle_id=puzzle_id)
             )
 
         (result, col_names) = rowify(result, cur.description)
@@ -137,6 +137,7 @@ class PuzzlePiecesRebuildView(MethodView):
             ).fetchall(),
             cur.description,
         )
+        cur.close()
         deletePieceDataFromRedis(redis_connection, puzzle, all_pieces)
 
         job = current_app.createqueue.enqueue_call(
@@ -146,9 +147,11 @@ class PuzzlePiecesRebuildView(MethodView):
             timeout="24h",
         )
 
-        archive_and_clear(puzzle)
+        job = current_app.cleanupqueue.enqueue_call(
+            func="api.jobs.timeline_archive.archive_and_clear",
+            kwargs=({"puzzle": puzzle}),
+            result_ttl=0,
+            timeout="24h",
+        )
 
-        cur.close()
-        db.commit()
-
-        return redirect("/chill/site/puzzle/{puzzle_id}/".format(puzzle_id=puzzle_id))
+        return redirect("/chill/site/front/{puzzle_id}/".format(puzzle_id=puzzle_id))
