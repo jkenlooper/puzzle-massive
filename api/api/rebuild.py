@@ -94,9 +94,9 @@ class PuzzlePiecesRebuildView(MethodView):
         )
 
         # The user points for rebuilding the puzzle is decreased by the piece
-        # count for the puzzle. Use at least 200 points for smaller puzzles.
-        # Players that own a puzzle instance do not decrease any points (dots)
-        # if the puzzle is complete.
+        # count for the puzzle. Use at least minimum piece count (20) points for
+        # smaller puzzles.  Players that own a puzzle instance do not decrease
+        # any points (dots) if the puzzle is complete.
         point_cost = max(
             current_app.config["MINIMUM_PIECE_COUNT"],
             min(

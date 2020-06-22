@@ -57,12 +57,12 @@
     {%- endif -%}
     </h2>
 
-    {% if recent.status in (ACTIVE, FROZEN, BUGGY_UNLISTED) %}
+    {% if recent.status in (ACTIVE, FROZEN, BUGGY_UNLISTED, COMPLETED) %}
       <input type="radio" autocomplete="off" class="pm-Preview-puzzleViewToggle pm-Preview-puzzleViewToggle--scale0" name="scale_variant" value="0" id="scale_variant_0" checked>
       <input type="radio" autocomplete="off" class="pm-Preview-puzzleViewToggle pm-Preview-puzzleViewToggle--scale1" name="scale_variant" value="1" id="scale_variant_1">
     {% endif %}
     <div class="pm-Preview-cta">
-    {% if recent.status in (ACTIVE, FROZEN, BUGGY_UNLISTED) %}
+    {% if recent.status in (ACTIVE, FROZEN, BUGGY_UNLISTED, COMPLETED) %}
       <label class="pm-Preview-puzzleViewToggleLabel" for="scale_variant_0" tabindex="0">
           <pm-icon>full-screen-sprite</pm-icon>
           <span>Full View</span>
@@ -78,7 +78,7 @@
     {% endif %}
     </div>
 
-    {% if recent.status in (ACTIVE, FROZEN, BUGGY_UNLISTED) %}
+    {% if recent.status in (ACTIVE, FROZEN, BUGGY_UNLISTED, COMPLETED) %}
       {% for scale in (0, 1) %}
         {% set scale_variant = "pm-Preview-puzzleView--scale{}".format(scale) %}
         <a class="pm-Preview-puzzleView {{ scale_variant }} Button Button--contrast" href="/chill{{ url_for('.page_uri', uri='puzzle/{puzzle_id}/scale/{scale}'.format(puzzle_id=recent.puzzle_id, scale=scale)) }}">
@@ -100,7 +100,15 @@
           <div class="pm-Preview-activePlayerCount">
             <pm-active-player-count
               puzzle-id="{{ recent.puzzle_id }}"></pm-active-player-count>
-              <span class="Button Button--text on-dark">Join</span>
+              <span class="Button Button--text on-dark">
+              {%- if recent.status in (ACTIVE, BUGGY_UNLISTED) -%}
+              Join
+              {%- elif recent.status == COMPLETED and not recent.is_recent -%}
+              Rebuild
+              {%- else -%}
+              View
+              {%- endif -%}
+              </span>
           </div>
         </a>
       {% endfor %}
@@ -141,7 +149,7 @@
       <div class="pm-Preview-actionsRow">
         {% if recent.status == COMPLETED %}
           {% if not recent.is_recent -%}
-          <pm-dot-require min="200" type="none">
+          <pm-dot-require min="{{ config.MINIMUM_PIECE_COUNT }}" type="none">
             <a class="Button Button--primary" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/0'.format(recent.puzzle_id)) }}">
             Rebuild
             </a>
