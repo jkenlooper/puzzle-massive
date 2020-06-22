@@ -242,7 +242,7 @@ class PuzzleUploadView(MethodView):
             pieces, bg_color, user, permission, description, link, upload_file
         )
 
-        return redirect("/chill/site/puzzle/{0}/".format(puzzle_id), code=303)
+        return redirect("/chill/site/front/{0}/".format(puzzle_id), code=303)
 
 
 class AdminPuzzlePromoteSuggestedView(MethodView):

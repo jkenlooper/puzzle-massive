@@ -333,12 +333,11 @@ source bin/activate;
 
 puzzle-massive-testdata players --count=100;
 
-puzzle-massive-testdata puzzles --count=10 --min-pieces=200 --pieces=900 --size=1800x1300\!;
-puzzle-massive-testdata puzzles --count=10 --min-pieces=200 --pieces=900 --size=800x1500\!;
-puzzle-massive-testdata puzzles --count=1 --pieces=2000 --size=3800x3500\!;
 puzzle-massive-testdata puzzles --count=30 --min-pieces=9 --pieces=200 --size=180x180\!;
-
-puzzle-massive-testdata instances --count=10 --min-pieces=200 --pieces=500;
+puzzle-massive-testdata puzzles --count=10 --min-pieces=20 --pieces=900 --size=800x1500\!;
+puzzle-massive-testdata puzzles --count=10 --min-pieces=20 --pieces=900 --size=1800x1300\!;
+puzzle-massive-testdata instances --count=10 --min-pieces=20 --pieces=500;
+puzzle-massive-testdata puzzles --count=1 --pieces=2000 --size=3800x3500\!;
 ```
 
 ### Python Unit Tests

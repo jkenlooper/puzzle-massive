@@ -8,14 +8,14 @@ from flask import current_app, redirect, make_response, abort, request
 from flask.views import MethodView
 from PIL import Image
 
-from .app import db, redis_connection
+from api.app import db, redis_connection
 
-from .database import rowify, fetch_query_string
-from .constants import REBUILD, COMPLETED, QUEUE_REBUILD
+from api.database import rowify, fetch_query_string
+from api.constants import REBUILD, COMPLETED, QUEUE_REBUILD
 
-from .user import user_id_from_ip, user_not_banned
-from .jobs.convertPiecesToRedis import convert
-from .tools import deletePieceDataFromRedis
+from api.user import user_id_from_ip, user_not_banned
+from api.jobs.convertPiecesToRedis import convert
+from api.tools import deletePieceDataFromRedis, purge_route_from_nginx_cache
 
 # From pieceRenderer
 MIN_PIECE_SIZE = 64
@@ -152,6 +152,11 @@ class PuzzlePiecesRebuildView(MethodView):
             kwargs=({"puzzle": puzzle}),
             result_ttl=0,
             timeout="24h",
+        )
+
+        purge_route_from_nginx_cache(
+            "/chill/site/front/{puzzle_id}/".format(puzzle_id=puzzle_id),
+            current_app.config.get("PURGEURLLIST"),
         )
 
         return redirect("/chill/site/front/{puzzle_id}/".format(puzzle_id=puzzle_id))

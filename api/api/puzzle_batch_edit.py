@@ -6,6 +6,7 @@ from flask.views import MethodView
 
 from api.app import db, redis_connection
 from api.database import rowify, fetch_query_string, delete_puzzle_resources
+from api.tools import purge_route_from_nginx_cache
 from api.constants import (
     ACTIVE,
     IN_QUEUE,
@@ -123,6 +124,12 @@ class AdminPuzzleBatchEditView(MethodView):
             each(puzzle_ids),
         )
         db.commit()
+
+        for puzzle_id in puzzle_ids:
+            purge_route_from_nginx_cache(
+                "/chill/site/front/{puzzle_id}/".format(puzzle_id=puzzle_id),
+                current_app.config.get("PURGEURLLIST"),
+            )
 
         if action == "approve":
             puzzles = rowify(

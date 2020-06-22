@@ -138,7 +138,7 @@ cat <<HEREBEUP
   ~/chill/site/reset-login/.* off;
   ~/chill/site/bit-icons/.* 1y; #TODO: internal only?
   ~/chill/site/puzzle/.* off;
-  ~/chill/site/front/.* off;
+  ~/chill/site/front/.* -1;
   ~/chill/site/api/.* 1m;
   ~/chill/site/puzzle-list/.* 1m;
   ~/chill/site/high-scores/ 1m;

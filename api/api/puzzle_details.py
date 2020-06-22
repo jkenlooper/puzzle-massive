@@ -6,6 +6,7 @@ from api.app import db, redis_connection
 from api.user import user_id_from_ip, user_not_banned
 from api.jobs import piece_reset
 from api.database import fetch_query_string, rowify, delete_puzzle_resources
+from api.tools import purge_route_from_nginx_cache
 from api.constants import (
     DELETED_REQUEST,
     FROZEN,
@@ -255,6 +256,11 @@ class PuzzleInstanceDetailsView(MethodView):
             )
 
         cur.close()
+
+        purge_route_from_nginx_cache(
+            "/chill/site/front/{puzzle_id}/".format(puzzle_id=puzzle_id),
+            current_app.config.get("PURGEURLLIST"),
+        )
         return make_response(encoder.encode(response), 202)
 
     def get(self, puzzle_id):
@@ -443,6 +449,11 @@ class PuzzleOriginalDetailsView(MethodView):
             return make_response(encoder.encode({}), 400)
 
         cur.close()
+
+        purge_route_from_nginx_cache(
+            "/chill/site/front/{puzzle_id}/".format(puzzle_id=puzzle_id),
+            current_app.config.get("PURGEURLLIST"),
+        )
         return make_response(encoder.encode(response), 202)
 
     def get(self, puzzle_id):
@@ -495,6 +506,15 @@ class InternalPuzzleDetailsView(MethodView):
         data = request.get_json(silent=True)
         response_msg = update_puzzle_details(puzzle_id, data)
 
+        if (
+            response_msg.get("rowcount")
+            and response_msg.get("status_code") == 200
+            and data.get("status")
+        ):
+            purge_route_from_nginx_cache(
+                "/chill/site/front/{puzzle_id}/".format(puzzle_id=puzzle_id),
+                current_app.config.get("PURGEURLLIST"),
+            )
         return make_response(json.jsonify(response_msg), response_msg["status_code"])
 
 

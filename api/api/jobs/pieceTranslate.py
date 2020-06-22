@@ -16,6 +16,7 @@ from api.database import rowify, fetch_query_string
 from api.tools import (
     formatPieceMovementString,
     init_karma_key,
+    purge_route_from_nginx_cache,
 )
 from api.constants import COMPLETED, QUEUE_END_OF_LINE, PRIVATE, SKILL_LEVEL_RANGES
 from api.piece_mutate import PieceMutateProcess
@@ -137,6 +138,13 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
             )
             job = current_app.cleanupqueue.enqueue_call(
                 func="api.jobs.convertPiecesToDB.transfer", args=(puzzle,), result_ttl=0
+            )
+
+            purge_route_from_nginx_cache(
+                "/chill/site/front/{puzzle_id}/".format(
+                    puzzle_id=puzzleData["puzzle_id"]
+                ),
+                current_app.config.get("PURGEURLLIST"),
             )
 
             db.commit()
