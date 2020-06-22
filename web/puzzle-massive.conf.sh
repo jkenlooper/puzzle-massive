@@ -294,7 +294,7 @@ else
 cat <<HEREBEPRODUCTION
   # Generated docs use puzzle-massive-blue puzzle-massive-green.
   # Use of puzzle-blue and puzzle-green is deprecated.
-  server_name puzzle-massive-blue puzzle-blue puzzle-massive-green puzzle-green ${DOMAIN_NAME};
+  server_name local-puzzle-massive puzzle-massive-blue puzzle-blue puzzle-massive-green puzzle-green ${DOMAIN_NAME};
 
 HEREBEPRODUCTION
 fi
