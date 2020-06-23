@@ -147,6 +147,9 @@
 
     <div class="pm-Preview-actions">
       <div class="pm-Preview-actionsRow">
+        {% if recent.status == MAINTENANCE %}
+          <a class="Button" href="">Reload</a>
+        {% endif %}
         {% if recent.status == COMPLETED %}
           {% if not recent.is_recent -%}
           <pm-dot-require min="{{ config.MINIMUM_PIECE_COUNT }}" type="none">

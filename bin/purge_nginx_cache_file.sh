@@ -20,12 +20,24 @@ function nxcacheof {
     echo "${x:31:1}/${x:29:2}/${x:0:32}"
 }
 
-if test -f "${cache_url_list}"; then
-# TODO: use awk here to modify each line from the list to skip it next time.
-# Then the list won't need to be deleted at the end.
-while read cache_url; do
-    echo ${origin_server}${cache_url};
-    rm -f "${nginx_cache_dir}$(nxcacheof ${origin_server}${cache_url})";
-done < "${cache_url_list}";
-rm -f "${cache_url_list}";
-fi;
+function purge_cache_url_list {
+    if test -f "${cache_url_list}"; then
+        tmp_cache_url_list=$(mktemp)
+
+        # copy the url list to the tmp/ directory before removing it
+        cp "${cache_url_list}" "${tmp_cache_url_list}"
+        rm -f "${cache_url_list}";
+
+        # Process the cache url list
+        while read cache_url; do
+            echo ${origin_server}${cache_url};
+            rm -f "${nginx_cache_dir}$(nxcacheof ${origin_server}${cache_url})";
+        done < "${tmp_cache_url_list}";
+        rm -f "${tmp_cache_url_list}";
+    fi;
+}
+
+purge_cache_url_list;
+# Double check by delaying a second and running again.
+sleep 1;
+purge_cache_url_list;
