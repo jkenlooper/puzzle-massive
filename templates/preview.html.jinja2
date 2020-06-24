@@ -145,6 +145,11 @@
     </p>
     {%- endif %}
 
+    {# TODO: add component that subscribes to the puzzle-status #}
+    <pm-puzzle-status-reload status="{{ recent.status }}" puzzle-id="{{ recent.puzzle_id }}">
+    puzzle status reload
+    </pm-puzzle-status-reload>
+
     <div class="pm-Preview-actions">
       <div class="pm-Preview-actionsRow">
         {% if recent.status == MAINTENANCE %}

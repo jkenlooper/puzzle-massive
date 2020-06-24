@@ -129,13 +129,7 @@ class PuzzleService {
     string,
     PiecesInfoToggleMovableCallback
   > = new Map();
-  constructor() {
-    streamService.subscribe(
-      "piece/update",
-      this.onPieceUpdate.bind(this),
-      this.instanceId
-    );
-  }
+  constructor() {}
   //private handlePieceStateChange(state) {
   //  console.log(`puzzle-piece: ${state.value}`);
   //  if (state.matches("unknown")) {
@@ -144,6 +138,11 @@ class PuzzleService {
   //}
 
   init(puzzleId) {
+    streamService.subscribe(
+      "piece/update",
+      this.onPieceUpdate.bind(this),
+      this.instanceId
+    );
     this.puzzleId = puzzleId;
     return fetchPieces(this.puzzleId).then((data) => {
       let pieceData = JSON.parse(data);

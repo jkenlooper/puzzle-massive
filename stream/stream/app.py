@@ -77,21 +77,12 @@ def make_app(config=None, **kw):
 
             # Validate the puzzle_id
             result = cur.execute(
-                fetch_query_string("select_viewable_puzzle_id.sql"),
+                fetch_query_string("select-all-from-puzzle-by-puzzle_id.sql"),
                 {"puzzle_id": puzzle_id},
             ).fetchall()
             if not result:
                 abort(400)
-            else:
-                (result, col_names) = rowify(result, cur.description)
-                puzzle = result[0].get("puzzle")
-                status = result[0].get("status")
-                if status not in (ACTIVE, BUGGY_UNLISTED, MAINTENANCE):
-                    response["message"] = "Puzzle not active"
-                    response["name"] = "invalid"
-                    abort(make_response(json.jsonify(response), 400))
-
-                return None
+            return None
         else:
             abort(400)
 
