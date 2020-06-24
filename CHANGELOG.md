@@ -21,6 +21,17 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
+## [2.8.1] - 2020-06-23
+
+### Changed
+
+- Show recently completed puzzle pieces
+- Purge cache when puzzle status changes
+
+### Fixed
+
+- Fix rebuild freeze when using archive_and_clear
+
 ## [2.8.0] - 2020-06-20
 
 Puzzle instance improvements and puzzle alert messages. Closes [#68](https://github.com/jkenlooper/puzzle-massive/issues/68).

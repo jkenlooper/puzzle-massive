@@ -48,8 +48,10 @@ been uploaded to the home directory.
     source bin/activate;
     printf 'Updating...' > /srv/puzzle-massive/root/puzzle-massive-message.html;
     sudo ./bin/appctl.sh stop;
+    sudo systemctl start puzzle-massive-api;
     sudo ./bin/clear_nginx_cache.sh;
     ./bin/backup.sh -c;
+    sudo systemctl stop puzzle-massive-api;
     deactivate;
     ```
 
