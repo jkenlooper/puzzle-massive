@@ -40,18 +40,33 @@ export interface PuzzleListResponse {
   maxPieces: number;
 }
 
+// Should match api/api/constants.py
 export enum Status {
   ACTIVE = 1,
   IN_QUEUE = 2,
   COMPLETED = 3,
   FROZEN = 4,
+  BUGGY_UNLISTED = 5,
   DELETED_REQUEST = -13,
   MAINTENANCE = -30,
+  NEEDS_MODERATION = 0,
+  FAILED_LICENSE = -1,
+  NO_ATTRIBUTION = -2,
+  REBUILD = -3,
+  IN_RENDER_QUEUE = -5,
+  RENDERING = -6,
+  RENDERING_FAILED = -7,
+  DELETED_LICENSE = -10,
+  DELETED_INAPT = -11,
+  DELETED_OLD = -12,
+  SUGGESTED = -20,
+  SUGGESTED_DONE = -21,
 }
 export const PuzzleAvailableStatuses = [
   Status.ACTIVE,
   Status.IN_QUEUE,
   Status.COMPLETED,
+  Status.BUGGY_UNLISTED,
 ];
 
 class PuzzleImagesService {
@@ -149,6 +164,51 @@ class PuzzleImagesService {
         break;
       case Status.FROZEN:
         return "Frozen";
+        break;
+      case Status.BUGGY_UNLISTED:
+        return "Buggy";
+        break;
+      case Status.NEEDS_MODERATION:
+        return "Needs Moderation";
+        break;
+      case Status.FAILED_LICENSE:
+        return "Failed License";
+        break;
+      case Status.NO_ATTRIBUTION:
+        return "No Attribution";
+        break;
+      case Status.REBUILD:
+        return "Rebuild";
+        break;
+      case Status.IN_RENDER_QUEUE:
+        return "In Render Queue";
+        break;
+      case Status.RENDERING:
+        return "Rendering";
+        break;
+      case Status.RENDERING_FAILED:
+        return "Rendering Failed";
+        break;
+      case Status.DELETED_LICENSE:
+        return "Deleted License";
+        break;
+      case Status.DELETED_INAPT:
+        return "Deleted Inappropriate";
+        break;
+      case Status.DELETED_OLD:
+        return "Deleted Old";
+        break;
+      case Status.DELETED_REQUEST:
+        return "Deleted Request";
+        break;
+      case Status.SUGGESTED:
+        return "Suggested";
+        break;
+      case Status.SUGGESTED_DONE:
+        return "Suggested Done";
+        break;
+      case Status.MAINTENANCE:
+        return "Maintenance";
         break;
       default:
         return "Unavailable";

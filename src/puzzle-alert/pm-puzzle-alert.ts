@@ -55,14 +55,17 @@ customElements.define(
       super();
       this.instanceId = PmPuzzleAlerts._instanceId;
 
-      const puzzleId = this.attributes.getNamedItem("puzzle-id");
-      this.puzzleId = puzzleId ? puzzleId.value : "";
+      const puzzleIdAttribute = this.attributes.getNamedItem("puzzle-id");
+      this.puzzleId = puzzleIdAttribute ? puzzleIdAttribute.value : "";
 
-      const puzzleStatus = this.attributes.getNamedItem("status");
-      this.puzzleStatus = puzzleStatus
-        ? <Status>(<unknown>parseInt(puzzleStatus.value))
+      const puzzleStatusAttribute = this.attributes.getNamedItem("status");
+      this.puzzleStatus = puzzleStatusAttribute
+        ? <Status>(<unknown>parseInt(puzzleStatusAttribute.value))
         : undefined;
-      if (!this.puzzleStatus || this.puzzleStatus !== Status.ACTIVE) {
+      if (
+        !this.puzzleStatus ||
+        ![Status.ACTIVE, Status.BUGGY_UNLISTED].includes(this.puzzleStatus)
+      ) {
         return;
       }
 
@@ -437,6 +440,7 @@ customElements.define(
       this.reason = "";
       switch (status) {
         case Status.ACTIVE:
+        case Status.BUGGY_UNLISTED:
           this.puzzleAlertService.send("PUZZLE_ACTIVE");
           break;
         case Status.COMPLETED:

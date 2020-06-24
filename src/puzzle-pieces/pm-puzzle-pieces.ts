@@ -113,7 +113,10 @@ customElements.define(
           console.error(err);
           this.$container.innerHTML = "Failed to get puzzle pieces.";
         });
-      if (this.puzzleStatus && this.puzzleStatus === Status.ACTIVE) {
+      if (
+        this.puzzleStatus &&
+        [Status.ACTIVE, Status.BUGGY_UNLISTED].includes(this.puzzleStatus)
+      ) {
         streamService.connect(this.puzzleId);
 
         streamService.subscribe(
