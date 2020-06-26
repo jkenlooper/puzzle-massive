@@ -3,6 +3,8 @@ import { html, render } from "lit-html";
 import { streamService } from "../puzzle-pieces/stream.service";
 import { Status } from "../site/puzzle-images.service";
 
+import "./puzzle-status-reload.css";
+
 interface TemplateData {
   status: Status;
   hasChanged: boolean;
@@ -30,12 +32,12 @@ customElements.define(
       this.puzzleId = puzzleIdAttribute ? puzzleIdAttribute.value : "";
 
       const puzzleStatusAttribute = this.attributes.getNamedItem("status");
-      console.log("puzzleStatusAttribute", puzzleStatusAttribute);
       this.puzzleStatus = puzzleStatusAttribute
         ? <Status>(<unknown>parseInt(puzzleStatusAttribute.value))
         : Status.MAINTENANCE;
       this.status = this.puzzleStatus;
-      console.log("puzzle status", this.puzzleStatus);
+
+      this.attachShadow({ mode: "open" });
 
       streamService.connect(this.puzzleId);
       streamService.subscribe(
@@ -43,17 +45,26 @@ customElements.define(
         this.onPuzzleStatus.bind(this),
         this.instanceId
       );
-      this.render();
     }
 
     onPuzzleStatus(status: Status) {
-      console.log("onPuzzleStatus", status);
-      this.status = status;
-      this.render();
+      if (status !== undefined) {
+        // The status may be undefined if the puzzle is invalid.
+        this.status = status;
+        this.render();
+      }
     }
 
     template(data: TemplateData) {
-      return html` ${data.status} `;
+      if (data.hasChanged) {
+        return html`<div class="pm-PuzzleStatusReload">
+          <slot class="pm-PuzzleStatusReload-slotReload" name="reload"></slot>
+        </div>`;
+      } else {
+        return html`<div class="pm-PuzzleStatusReload">
+          <slot class="pm-PuzzleStatusReload-slot"></slot>
+        </div>`;
+      }
     }
 
     get data(): TemplateData {
@@ -64,7 +75,10 @@ customElements.define(
     }
 
     render() {
-      render(this.template(this.data), this);
+      render(this.template(this.data), <DocumentFragment>this.shadowRoot);
+    }
+    connectedCallback() {
+      this.render();
     }
 
     disconnectedCallback() {

@@ -145,57 +145,61 @@
     </p>
     {%- endif %}
 
-    {# TODO: add component that subscribes to the puzzle-status #}
     <pm-puzzle-status-reload status="{{ recent.status }}" puzzle-id="{{ recent.puzzle_id }}">
-    puzzle status reload
-    </pm-puzzle-status-reload>
-
-    <div class="pm-Preview-actions">
-      <div class="pm-Preview-actionsRow">
-        {% if recent.status == MAINTENANCE %}
+      <div slot="reload" class="pm-Preview-actions">
+        <div class="pm-Preview-actionsRow">
           <a class="Button" href="">Reload</a>
-        {% endif %}
-        {% if recent.status == COMPLETED %}
-          {% if not recent.is_recent -%}
-          <pm-dot-require min="{{ config.MINIMUM_PIECE_COUNT }}" type="none">
-            <a class="Button Button--primary" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/0'.format(recent.puzzle_id)) }}">
-            Rebuild
-            </a>
-          </pm-dot-require>
-          {% endif %}
-        {% endif %}
-        {% if recent.status in (ACTIVE, IN_QUEUE, COMPLETED, FROZEN) %}
-        <pm-player-create-puzzle-instance-link view="buttons" create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}"></pm-player-create-puzzle-instance-link>
-        {% endif %}
-
-        {% if not recent.is_original %}
-          {% if recent.status != DELETED_REQUEST %}
-          <pm-puzzle-instance-actions view="buttons" puzzle-id="{{ recent.puzzle_id }}" owner="{{ recent.owner }}" status="{{ recent.status }}"></pm-puzzle-instance-actions>
-          {% endif %}
-        {% else %}
-        {% if recent.status == IN_QUEUE %}
-          {# At this time this is only used for bumping the queue for puzzles that are in the queue. #}
-          <pm-puzzle-original-actions view="buttons" puzzle-id="{{ recent.puzzle_id }}" status="{{ recent.status }}"></pm-puzzle-original-actions>
-          {% endif %}
-        {% endif %}
+        </div>
       </div>
-      <div class="pm-Preview-actionsRow">
-        {% if recent.status in (ACTIVE, IN_QUEUE, COMPLETED, FROZEN) %}
-        <pm-player-create-puzzle-instance-link view="message" create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}"></pm-player-create-puzzle-instance-link>
-        {% endif %}
 
-        {% if not recent.is_original %}
-          {% if recent.status != DELETED_REQUEST %}
-          <pm-puzzle-instance-actions view="message" puzzle-id="{{ recent.puzzle_id }}" owner="{{ recent.owner }}" status="{{ recent.status }}"></pm-puzzle-instance-actions>
+      <div class="pm-Preview-actions">
+        <div class="pm-Preview-actionsRow">
+          {% if recent.status == MAINTENANCE %}
+            <a class="Button" href="">Reload</a>
+          {% else %}
+            {% if recent.status == COMPLETED %}
+              {% if not recent.is_recent -%}
+              <pm-dot-require min="{{ config.MINIMUM_PIECE_COUNT }}" type="none">
+                <a class="Button Button--primary" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/0'.format(recent.puzzle_id)) }}">
+                Rebuild
+                </a>
+              </pm-dot-require>
+              {% endif %}
+            {% endif %}
+            {% if recent.status in (ACTIVE, IN_QUEUE, COMPLETED, FROZEN) %}
+            <pm-player-create-puzzle-instance-link view="buttons" create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}"></pm-player-create-puzzle-instance-link>
+            {% endif %}
+
+            {% if not recent.is_original %}
+              {% if recent.status != DELETED_REQUEST %}
+              <pm-puzzle-instance-actions view="buttons" puzzle-id="{{ recent.puzzle_id }}" owner="{{ recent.owner }}" status="{{ recent.status }}"></pm-puzzle-instance-actions>
+              {% endif %}
+            {% else %}
+            {% if recent.status == IN_QUEUE %}
+              {# At this time this is only used for bumping the queue for puzzles that are in the queue. #}
+              <pm-puzzle-original-actions view="buttons" puzzle-id="{{ recent.puzzle_id }}" status="{{ recent.status }}"></pm-puzzle-original-actions>
+              {% endif %}
+            {% endif %}
           {% endif %}
-        {% else %}
-        {% if recent.status == IN_QUEUE %}
-          {# At this time this is only used for bumping the queue for puzzles that are in the queue. #}
-          <pm-puzzle-original-actions view="message" puzzle-id="{{ recent.puzzle_id }}" status="{{ recent.status }}"></pm-puzzle-original-actions>
+        </div>
+        <div class="pm-Preview-actionsRow">
+          {% if recent.status in (ACTIVE, IN_QUEUE, COMPLETED, FROZEN) %}
+          <pm-player-create-puzzle-instance-link view="message" create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}"></pm-player-create-puzzle-instance-link>
           {% endif %}
-        {% endif %}
+
+          {% if not recent.is_original %}
+            {% if recent.status != DELETED_REQUEST %}
+            <pm-puzzle-instance-actions view="message" puzzle-id="{{ recent.puzzle_id }}" owner="{{ recent.owner }}" status="{{ recent.status }}"></pm-puzzle-instance-actions>
+            {% endif %}
+          {% else %}
+          {% if recent.status == IN_QUEUE %}
+            {# At this time this is only used for bumping the queue for puzzles that are in the queue. #}
+            <pm-puzzle-original-actions view="message" puzzle-id="{{ recent.puzzle_id }}" status="{{ recent.status }}"></pm-puzzle-original-actions>
+            {% endif %}
+          {% endif %}
+        </div>
       </div>
-    </div>
+    </pm-puzzle-status-reload>
 
     {% if not recent.is_original %}
     <p class="pm-Preview-statusNote">

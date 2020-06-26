@@ -30,6 +30,7 @@ export interface BitMovementData {
 
 // event types that the stream service will send
 enum EventType {
+  invalid = "invalid",
   ping = "ping",
   move = "move",
   // The 'message' is the default if no event type was set
@@ -104,6 +105,12 @@ class PuzzleStream {
     const eventSource = new EventSource(`/stream/puzzle/${puzzleId}/`, {
       withCredentials: false,
     });
+    window.addEventListener("beforeunload", this.handleUnload.bind(this));
+    eventSource.addEventListener(
+      EventType.invalid,
+      this.handleInvalidEvent.bind(this),
+      false
+    );
     eventSource.addEventListener(
       EventType.ping,
       this.handlePingEvent.bind(this),
@@ -145,6 +152,11 @@ class PuzzleStream {
     window.clearTimeout(this.pingIntervalId);
 
     this.eventSource.removeEventListener(
+      EventType.invalid,
+      this.handleInvalidEvent,
+      false
+    );
+    this.eventSource.removeEventListener(
       EventType.ping,
       this.handlePingEvent,
       false
@@ -173,6 +185,11 @@ class PuzzleStream {
     this.eventSource.close();
   }
 
+  private handleUnload() {
+    // Close the connection when the visitor leaves the page.
+    this.eventSource.close();
+  }
+
   private handleStateChange(state) {
     switch (state.value) {
       case "connecting":
@@ -194,6 +211,9 @@ class PuzzleStream {
       case "connected":
         state.actions.forEach((action) => {
           switch (action.type) {
+            case "destroyEventSource":
+              this.destroyEventSource();
+              break;
             case "sendPing":
               // Start sending a ping to server with the default PING_INTERVAL.
               this.sendPing();
@@ -241,12 +261,26 @@ class PuzzleStream {
         });
         break;
       case "invalid":
+        state.actions.forEach((action) => {
+          switch (action.type) {
+            case "destroyEventSource":
+              this.destroyEventSource();
+              break;
+            case "broadcastPuzzleStatus":
+              this.broadcastPuzzleStatus();
+              break;
+          }
+        });
         break;
       default:
         break;
     }
   }
 
+  private handleInvalidEvent() {
+    // any = MessageEvent
+    this.puzzleStreamService.send("INVALID");
+  }
   private handlePingEvent(messageEvent: any) {
     // any = MessageEvent
     if (!this.playerId) {
@@ -268,12 +302,34 @@ class PuzzleStream {
     pong
       .patch<PongResponse>({ token: this.pingToken })
       .then((response) => {
-        if (response && response.name === "success" && response.data) {
-          this.broadcast(puzzlePingTopic, response.data.latency);
+        if (response) {
+          switch (response.name) {
+            case "success":
+              this.broadcast(
+                puzzlePingTopic,
+                response.data && response.data.latency
+              );
+              break;
+            case "ignored":
+              // do nothing
+              break;
+            case "invalid":
+              this.puzzleStreamService.send("INVALID");
+              break;
+            case "error":
+              this.puzzleStreamService.send("ERROR");
+              break;
+            default:
+              break;
+          }
+        } else {
+          this.puzzleStreamService.send("ERROR");
         }
       })
       .catch((err) => {
         console.error("error sending pong", err);
+        // TODO: handle invalid
+        this.puzzleStreamService.send("ERROR");
         // TODO: ignore error with sending ping?
       });
   }
@@ -368,7 +424,7 @@ class PuzzleStream {
         this.puzzleStreamService.send("ERROR");
         break;
       case EventSource.CLOSED:
-        console.error("puzzle stream closed.", error);
+        console.error("puzzle stream closed.", error, this.puzzleStatus);
         if (this.puzzleStatus === undefined) {
           // The connection could have been closed because of a failure to
           // connect.
@@ -384,7 +440,6 @@ class PuzzleStream {
         }
         break;
       default:
-        console.log("handleErrorEvent", error);
         this.puzzleStreamService.send("ERROR");
         break;
     }
@@ -408,14 +463,33 @@ class PuzzleStream {
     const ping = new FetchService(`/newapi/ping/puzzle/${this.puzzleId}/`);
     ping
       .postForm({})
-      .catch((err) => {
-        console.error("error sending ping", err);
-        this.puzzleStreamService.send("PING_ERROR");
-      })
-      .finally(() => {
+      .then(() => {
         this.pingIntervalId = window.setTimeout(() => {
           this.puzzleStreamService.send("PING");
         }, interval);
+      })
+      .catch((err) => {
+        if (err) {
+          switch (err.name) {
+            case "invalid":
+              this.puzzleStreamService.send("INVALID");
+              break;
+            case "error":
+              console.error("error sending ping", err);
+              this.puzzleStreamService.send("ERROR");
+              break;
+            default:
+              console.error("error sending ping", err);
+              this.puzzleStreamService.send("ERROR");
+              break;
+          }
+        } else {
+          console.error("error sending ping", err);
+          this.puzzleStreamService.send("PING_ERROR");
+          this.pingIntervalId = window.setTimeout(() => {
+            this.puzzleStreamService.send("PING");
+          }, interval);
+        }
       });
   }
 }
@@ -452,7 +526,7 @@ class StreamService {
           break;
         case EventSource.CLOSED:
           existingPuzzleStream.disconnect();
-          console.log("Existing puzzle stream is closed. Reconnecting");
+          //console.log("Existing puzzle stream is closed. Reconnecting");
           break;
         default:
           console.error("wat?", existingPuzzleStream);
