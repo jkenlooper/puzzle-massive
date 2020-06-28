@@ -21,9 +21,9 @@ Group=dev
 WorkingDirectory=$SRCDIR
 HERE
 if test "${ENVIRONMENT}" == 'development'; then
-echo "ExecStart=${SRCDIR}bin/chill serve"
+echo "ExecStart=${SRCDIR}bin/chill serve --readonly"
 else
-echo "ExecStart=${SRCDIR}bin/chill serve"
+echo "ExecStart=${SRCDIR}bin/chill serve --readonly"
 fi
 cat <<HERE
 

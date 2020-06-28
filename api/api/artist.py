@@ -11,7 +11,6 @@ import os
 import sys
 from docopt import docopt
 
-from flask import current_app
 from rq import Worker, Queue, Connection
 
 from api.app import make_app

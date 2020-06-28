@@ -3,7 +3,6 @@ import multiprocessing
 
 import gunicorn.app.base
 
-from api.tools import loadConfig, get_redis_connection
 from stream.app import make_app
 
 
