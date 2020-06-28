@@ -112,10 +112,27 @@ class AutoRebuildCompletedPuzzle(Task):
                 (result, col_names) = rowify(
                     cur.execute(
                         read_query_file("select_random_puzzle_to_rebuild.sql"),
-                        {"status": COMPLETED, "low": low, "high": high},
+                        {
+                            "status": COMPLETED,
+                            "low": max(0, low - 500),
+                            "high": high + 500,
+                        },
                     ).fetchall(),
                     cur.description,
                 )
+                if not result:
+                    # try again with wider range of puzzle piece counts
+                    (result, col_names) = rowify(
+                        cur.execute(
+                            read_query_file("select_random_puzzle_to_rebuild.sql"),
+                            {
+                                "status": COMPLETED,
+                                "low": max(0, low - 2000),
+                                "high": high + 2000,
+                            },
+                        ).fetchall(),
+                        cur.description,
+                    )
                 if result:
                     for completed_puzzle in result:
                         puzzle = completed_puzzle["id"]
