@@ -9,7 +9,19 @@ from flask_sse import sse
 from api.app import db, redis_connection
 from api.user import user_not_banned, user_id_from_ip
 from api.database import fetch_query_string, rowify
-from api.constants import ACTIVE
+from api.constants import (
+    ACTIVE,
+    IN_QUEUE,
+    COMPLETED,
+    FROZEN,
+    BUGGY_UNLISTED,
+    NEEDS_MODERATION,
+    REBUILD,
+    IN_RENDER_QUEUE,
+    RENDERING,
+    RENDERING_FAILED,
+    MAINTENANCE,
+)
 
 # Set ping token expire to be a little over 5 minutes
 PING_EXPIRE = 300 + 60
@@ -50,26 +62,42 @@ class PingPuzzleView(MethodView):
 
         # Validate the puzzle_id
         result = cur.execute(
-            fetch_query_string("select_viewable_puzzle_id.sql"),
+            fetch_query_string("select-all-from-puzzle-by-puzzle_id.sql"),
             {"puzzle_id": puzzle_id},
         ).fetchall()
         if not result:
-            response["message"] = "Invalid puzzle id."
-            response["name"] = "error"
+            response["message"] = "Puzzle not available"
+            response["name"] = "invalid"
             cur.close()
-            db.commit()
             return make_response(json.jsonify(response), 400)
         else:
             (result, col_names) = rowify(result, cur.description)
             puzzle = result[0].get("puzzle")
             status = result[0].get("status")
-            if status != ACTIVE:
-                response["message"] = "Puzzle not active"
+            if status not in (
+                ACTIVE,
+                IN_QUEUE,
+                COMPLETED,
+                FROZEN,
+                BUGGY_UNLISTED,
+                NEEDS_MODERATION,
+                REBUILD,
+                IN_RENDER_QUEUE,
+                RENDERING,
+                RENDERING_FAILED,
+                MAINTENANCE,
+            ):
+                response["message"] = "Puzzle no longer valid"
                 response["name"] = "invalid"
                 cur.close()
-                db.commit()
+                sse.publish(
+                    "Puzzle no longer valid",
+                    type="invalid",
+                    channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id),
+                )
                 return make_response(json.jsonify(response), 200)
 
+        cur.close()
         # publish to the puzzle channel the ping with the user id.  This will
         # allow that player to determine their latency.
         token = uuid.uuid4().hex[:4]
@@ -85,8 +113,6 @@ class PingPuzzleView(MethodView):
         response["message"] = "ping accepted"
         response["name"] = "accepted"
         response = make_response(json.jsonify(response), 202)
-        cur.close()
-        db.commit()
         return response
 
     def patch(self, puzzle_id):
@@ -121,26 +147,42 @@ class PingPuzzleView(MethodView):
 
         # Validate the puzzle_id
         result = cur.execute(
-            fetch_query_string("select_viewable_puzzle_id.sql"),
+            fetch_query_string("select-all-from-puzzle-by-puzzle_id.sql"),
             {"puzzle_id": puzzle_id},
         ).fetchall()
         if not result:
-            response["message"] = "Invalid puzzle id."
-            response["name"] = "error"
+            response["message"] = "Puzzle not available"
+            response["name"] = "invalid"
             cur.close()
-            db.commit()
             return make_response(json.jsonify(response), 400)
         else:
             (result, col_names) = rowify(result, cur.description)
             puzzle = result[0].get("puzzle")
             status = result[0].get("status")
-            if status != ACTIVE:
-                response["message"] = "Puzzle not active"
+            if status not in (
+                ACTIVE,
+                IN_QUEUE,
+                COMPLETED,
+                FROZEN,
+                BUGGY_UNLISTED,
+                NEEDS_MODERATION,
+                REBUILD,
+                IN_RENDER_QUEUE,
+                RENDERING,
+                RENDERING_FAILED,
+                MAINTENANCE,
+            ):
+                response["message"] = "Puzzle no longer valid"
                 response["name"] = "invalid"
                 cur.close()
-                db.commit()
+                sse.publish(
+                    "Puzzle no longer valid",
+                    type="invalid",
+                    channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id),
+                )
                 return make_response(json.jsonify(response), 200)
 
+        cur.close()
         # Determine latency for the player and record timestamp in sorted set.
         pingtoken_key = get_pingtoken_key(puzzle, user, token)
         ping_start = redis_connection.get(pingtoken_key)

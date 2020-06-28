@@ -33,6 +33,7 @@ import "./response-message";
 import "./site-wide-message";
 import "./swatch.css";
 import "./home-intro.css";
+import "./puzzle-status-reload";
 
 import "./frontpage";
 import "./profilepage";

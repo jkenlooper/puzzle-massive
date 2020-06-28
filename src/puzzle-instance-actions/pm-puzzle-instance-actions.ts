@@ -2,6 +2,7 @@ import { html, render } from "lit-html";
 //import { classMap } from "lit-html/directives/class-map.js";
 import userDetailsService from "../site/user-details.service";
 import "./puzzle-instance-actions.css";
+import { Status } from "../site/puzzle-images.service";
 
 import {
   puzzleDetailsService,
@@ -262,7 +263,8 @@ customElements.define(
           ? this.puzzleDetails.deleteDisabledMessage
           : "",
         isProcessing:
-          !!this.puzzleDetails && this.status != this.puzzleDetails.status,
+          (!!this.puzzleDetails && this.status !== this.puzzleDetails.status) ||
+          this.status === Status.MAINTENANCE,
         actionHandler: {
           handleEvent: this.handleAction.bind(this),
           capture: true,

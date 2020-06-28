@@ -7,7 +7,19 @@ from flask_sse import sse
 
 from api.flask_secure_cookie import SecureCookie
 from api.database import fetch_query_string, rowify
-from api.constants import ACTIVE, BUGGY_UNLISTED, MAINTENANCE
+from api.constants import (
+    ACTIVE,
+    IN_QUEUE,
+    COMPLETED,
+    FROZEN,
+    BUGGY_UNLISTED,
+    NEEDS_MODERATION,
+    REBUILD,
+    IN_RENDER_QUEUE,
+    RENDERING,
+    RENDERING_FAILED,
+    MAINTENANCE,
+)
 from api.user import user_id_from_ip
 from api.tools import get_db, files_loader
 
@@ -58,7 +70,7 @@ def make_app(config=None, **kw):
 
     @sse.before_request
     def check_puzzle_status():
-        response = {"message": "", "name": "error"}
+        # response = {"message": "", "name": "error"}
         channel_name = request.args.get("channel")
         if channel_name == None:
             abort(400)
@@ -77,7 +89,7 @@ def make_app(config=None, **kw):
 
             # Validate the puzzle_id
             result = cur.execute(
-                fetch_query_string("select_viewable_puzzle_id.sql"),
+                fetch_query_string("select-all-from-puzzle-by-puzzle_id.sql"),
                 {"puzzle_id": puzzle_id},
             ).fetchall()
             if not result:
@@ -86,12 +98,30 @@ def make_app(config=None, **kw):
                 (result, col_names) = rowify(result, cur.description)
                 puzzle = result[0].get("puzzle")
                 status = result[0].get("status")
-                if status not in (ACTIVE, BUGGY_UNLISTED, MAINTENANCE):
-                    response["message"] = "Puzzle not active"
-                    response["name"] = "invalid"
-                    abort(make_response(json.jsonify(response), 400))
+                if status not in (
+                    ACTIVE,
+                    IN_QUEUE,
+                    COMPLETED,
+                    FROZEN,
+                    BUGGY_UNLISTED,
+                    NEEDS_MODERATION,
+                    REBUILD,
+                    IN_RENDER_QUEUE,
+                    RENDERING,
+                    RENDERING_FAILED,
+                    MAINTENANCE,
+                ):
+                    # response["message"] = "Puzzle not active"
+                    # response["name"] = "invalid"
+                    # abort(make_response(json.jsonify(response), 400))
+                    sse.publish(
+                        "Puzzle no longer valid",
+                        type="invalid",
+                        channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id),
+                    )
 
-                return None
+                # return None
+            return None
         else:
             abort(400)
 

@@ -29,7 +29,7 @@ from api.tools import loadConfig, deletePieceDataFromRedis
 from api.constants import MAINTENANCE
 
 
-def transfer(puzzle, cleanup=True):
+def transfer(puzzle, cleanup=True, skip_status_update=False):
     """
     Transfer the puzzle data from Redis to the database. If the cleanup flag is
     set the Redis data for the puzzle will be removed afterward.
@@ -53,22 +53,23 @@ def transfer(puzzle, cleanup=True):
     puzzle_data = result[0]
 
     puzzle_previous_status = puzzle_data["status"]
-    r = requests.patch(
-        "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
-            HOSTAPI=current_app.config["HOSTAPI"],
-            PORTAPI=current_app.config["PORTAPI"],
-            puzzle_id=puzzle_data["puzzle_id"],
-        ),
-        json={"status": MAINTENANCE,},
-    )
-    if r.status_code != 200:
-        # TODO: Raise an error here and let the caller decide how to handle it.
-        current_app.logger.warning(
-            "Puzzle details api error when setting status to maintenance {}".format(
-                puzzle_data["puzzle_id"]
-            )
+    if not skip_status_update:
+        r = requests.patch(
+            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                HOSTAPI=current_app.config["HOSTAPI"],
+                PORTAPI=current_app.config["PORTAPI"],
+                puzzle_id=puzzle_data["puzzle_id"],
+            ),
+            json={"status": MAINTENANCE,},
         )
-        return
+        if r.status_code != 200:
+            # TODO: Raise an error here and let the caller decide how to handle it.
+            current_app.logger.warning(
+                "Puzzle details api error when setting status to maintenance {}".format(
+                    puzzle_data["puzzle_id"]
+                )
+            )
+            return
 
     (all_pieces, col_names) = rowify(
         cur.execute(
@@ -134,18 +135,19 @@ def transfer(puzzle, cleanup=True):
 
     cur.close()
 
-    r = requests.patch(
-        "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
-            HOSTAPI=current_app.config["HOSTAPI"],
-            PORTAPI=current_app.config["PORTAPI"],
-            puzzle_id=puzzle_data["puzzle_id"],
-        ),
-        json={"status": puzzle_previous_status,},
-    )
-    if r.status_code != 200:
-        # TODO: Raise an error here and let the caller decide how to handle it.
-        current_app.logger.warning("Puzzle details api error")
-        return
+    if not skip_status_update:
+        r = requests.patch(
+            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                HOSTAPI=current_app.config["HOSTAPI"],
+                PORTAPI=current_app.config["PORTAPI"],
+                puzzle_id=puzzle_data["puzzle_id"],
+            ),
+            json={"status": puzzle_previous_status,},
+        )
+        if r.status_code != 200:
+            # TODO: Raise an error here and let the caller decide how to handle it.
+            current_app.logger.warning("Puzzle details api error")
+            return
 
 
 def transferOldest(target_memory):

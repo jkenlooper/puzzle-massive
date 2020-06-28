@@ -148,7 +148,7 @@ class PuzzlePiecesView(MethodView):
             job = current_app.cleanupqueue.enqueue_call(
                 func="api.jobs.convertPiecesToDB.transfer",
                 args=(puzzle,),
-                kwargs={"cleanup": True},
+                kwargs={"cleanup": True, "skip_status_update": True},
                 result_ttl=0,
             )
 
