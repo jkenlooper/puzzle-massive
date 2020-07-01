@@ -244,7 +244,7 @@ class RemoveOldPZQActivity(Task):
             count = redis_connection.zremrangebyscore(
                 "pzq_activity:{queue_name}".format(queue_name=queue_name),
                 0,
-                int(time.time()) - 300,
+                int(time()) - 300,
             )
             made_change = True if count else False
         if made_change:
