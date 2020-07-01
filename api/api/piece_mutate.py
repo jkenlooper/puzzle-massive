@@ -71,6 +71,9 @@ class PieceMutateProcess:
 
         self._load_related_pieces()
 
+        # TODO: return early if piece move would be invalid (piece proximity,
+        # etc.)
+
         self._set_can_join_adjacent_piece()
 
         msg = ""

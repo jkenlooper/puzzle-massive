@@ -27,11 +27,11 @@ if test "${COMMAND}" == 'stop'; then
 fi
 
 # Skipping the puzzle-massive-cache-purge.service since it is activated by path
-# Skipping divulger and worker since they are not needed at the moment.
+# Skipping divulger since it is not needed at the moment.
 # puzzle-massive-divulger \
-# puzzle-massive-worker \
 for app in puzzle-massive-chill \
   puzzle-massive-api \
+  puzzle-massive-worker \
   puzzle-massive-stream \
   puzzle-massive-artist \
   puzzle-massive-scheduler \

@@ -61,8 +61,6 @@ def make_app(config=None, database_writable=False, **kw):
 
     app.cleanupqueue = Queue("puzzle_cleanup", connection=redis_connection)
     app.createqueue = Queue("puzzle_create", connection=redis_connection)
-    # Skipping worker since it is not needed at the moment.
-    # app.singleworkerqueue = Queue("puzzle_updates", connection=redis_connection)
 
     @app.teardown_appcontext
     def teardown_db(exception):

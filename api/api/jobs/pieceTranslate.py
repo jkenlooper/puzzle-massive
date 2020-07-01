@@ -10,8 +10,9 @@ import sys
 
 from flask import current_app
 from flask_sse import sse
+import requests
 
-from api.app import redis_connection, db
+from api.app import redis_connection
 from api.database import rowify, fetch_query_string
 from api.tools import (
     formatPieceMovementString,
@@ -110,28 +111,30 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
 
             redis_connection.incr("batchpoints:{user}".format(user=user), amount=earns)
 
-        # TODO: Optimize by using redis for puzzle status
         if complete:
             current_app.logger.info(
                 "puzzle {puzzle_id} is complete".format(
                     puzzle_id=puzzleData["puzzle_id"]
                 )
             )
-            cur = db.cursor()
 
-            cur.execute(
-                fetch_query_string("update_puzzle_status_for_puzzle.sql"),
-                {"puzzle": puzzle, "status": COMPLETED},
+            r = requests.patch(
+                "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                    HOSTAPI=current_app.config["HOSTAPI"],
+                    PORTAPI=current_app.config["PORTAPI"],
+                    puzzle_id=puzzleData["puzzle_id"],
+                ),
+                json={
+                    "status": COMPLETED,
+                    "m_date": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()),
+                    "queue": QUEUE_END_OF_LINE,
+                },
             )
-            cur.execute(
-                fetch_query_string("update_puzzle_m_date_to_now.sql"),
-                {"puzzle": puzzle, "modified": now},
-            )
-            cur.execute(
-                fetch_query_string("update_puzzle_queue_for_puzzle.sql"),
-                {"puzzle": puzzle, "queue": QUEUE_END_OF_LINE},
-            )
-            db.commit()
+            if r.status_code != 200:
+                raise Exception(
+                    "Puzzle details api error when updating puzzle to be complete"
+                )
+
             sse.publish(
                 "status:{}".format(COMPLETED),
                 channel="puzzle:{puzzle_id}".format(puzzle_id=puzzleData["puzzle_id"]),
@@ -147,9 +150,6 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
                 current_app.config.get("PURGEURLLIST"),
             )
 
-            db.commit()
-            cur.close()
-
         # return topic and msg mostly for testing
         return (msg, karma_change)
 
@@ -159,6 +159,24 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
 
     karma_key = init_karma_key(redis_connection, puzzle, ip)
     karma = int(redis_connection.get(karma_key))
+
+    pc_puzzle_piece_key = "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
+
+    # check if piece can be moved
+    (piece_status, has_y) = redis_connection.hmget(pc_puzzle_piece_key, ["s", "y"],)
+    if has_y == None:
+        err_msg = {"msg": "piece not available", "type": "missing"}
+        return (err_msg, 0)
+
+    if piece_status == "1":
+        # immovable
+        err_msg = {
+            "msg": "piece can't be moved",
+            "type": "immovable",
+            "expires": now + 5,
+            "timeout": 5,
+        }
+        return (err_msg, 0)
 
     # Restrict piece to within table boundaries
     if x < 0:
@@ -170,13 +188,14 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
     if y > puzzleData["table_height"]:
         y = puzzleData["table_height"]
 
-    pc_puzzle_piece_key = "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
+    # TODO: move inexact piece stack check from publish.py to here.
 
     # Get the puzzle piece origin position
     # TODO: Handle the potential error if the hmget here gets a None value for x and y.
-    (originX, originY) = list(
-        map(int, redis_connection.hmget(pc_puzzle_piece_key, ["x", "y"]),)
-    )
+    # TODO: originX and originY no longer needed?
+    # (originX, originY) = list(
+    #    map(int, redis_connection.hmget(pc_puzzle_piece_key, ["x", "y"]),)
+    # )
     piece_mutate_process = PieceMutateProcess(
         redis_connection, puzzle, piece, x, y, r, piece_count=puzzleData.get("pieces")
     )

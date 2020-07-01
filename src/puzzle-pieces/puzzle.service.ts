@@ -59,6 +59,7 @@ enum PieceMoveErrorTypes {
   piecequeue = "piecequeue",
   piecelock = "piecelock",
   invalid = "invalid",
+  error = "error",
   missing = "missing",
   expiredtoken = "expiredtoken",
   bannedusers = "bannedusers",
@@ -290,9 +291,9 @@ class PuzzleService {
               break;
             default:
               if (!responseObj.timeout) {
-                const expire = new Date().getTime() / 1000 + 10;
+                const expire = new Date().getTime() / 1000 + 5;
                 responseObj.expires = expire;
-                responseObj.timeout = 10;
+                responseObj.timeout = 5;
               }
               self._broadcast(pieceMoveBlocked, responseObj);
               break;
@@ -383,6 +384,7 @@ class PuzzleService {
             responseObj = JSON.parse(patchError.response);
           } catch (err) {
             responseObj = {
+              msg: "Unable to move that piece at this time.",
               reason: patchError.response,
             };
           }
@@ -395,6 +397,28 @@ class PuzzleService {
               r: origin.r,
             });
           } else {
+            switch (responseObj.type) {
+              case PieceMoveErrorTypes.invalid:
+              case PieceMoveErrorTypes.missing:
+              case PieceMoveErrorTypes.error:
+              case PieceMoveErrorTypes.bannedusers:
+              case PieceMoveErrorTypes.expiredtoken:
+              case PieceMoveErrorTypes.blockedplayer:
+                self._broadcast(pieceMoveBlocked, responseObj);
+                break;
+              case PieceMoveErrorTypes.invalidpiecemove:
+              case PieceMoveErrorTypes.proximity:
+                // Skip broadcasting these errors so no alert message is shown.
+                break;
+              default:
+                if (!responseObj.timeout) {
+                  const expire = new Date().getTime() / 1000 + 5;
+                  responseObj.expires = expire;
+                  responseObj.timeout = 5;
+                }
+                self._broadcast(pieceMoveBlocked, responseObj);
+                break;
+            }
             const pieceMovementData: PieceMovementData = {
               id: id,
               x: origin.x,

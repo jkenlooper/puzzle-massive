@@ -202,11 +202,11 @@ cp api/puzzle-massive-janitor.service "${SYSTEMDDIR}"
 systemctl start puzzle-massive-janitor || echo "can't start service"
 systemctl enable puzzle-massive-janitor || echo "can't enable service"
 
-# Skipping divulger and worker since they are not needed at the moment.
-#cp api/puzzle-massive-worker.service "${SYSTEMDDIR}"
-#systemctl start puzzle-massive-worker || echo "can't start service"
-#systemctl enable puzzle-massive-worker || echo "can't enable service"
-#
+cp api/puzzle-massive-worker.service "${SYSTEMDDIR}"
+systemctl start puzzle-massive-worker || echo "can't start service"
+systemctl enable puzzle-massive-worker || echo "can't enable service"
+
+# Skipping divulger since it is not needed at the moment.
 #cp divulger/puzzle-massive-divulger.service "${SYSTEMDDIR}"
 #systemctl start puzzle-massive-divulger || echo "can't start service"
 #systemctl enable puzzle-massive-divulger || echo "can't enable service"

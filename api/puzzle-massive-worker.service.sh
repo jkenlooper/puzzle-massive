@@ -19,7 +19,7 @@ After=puzzle-massive-api.service
 User=dev
 Group=dev
 WorkingDirectory=$SRCDIR
-ExecStart=${SRCDIR}bin/puzzle-massive-worker site.cfg serve
+ExecStart=${SRCDIR}bin/puzzle-massive-worker pzq_1
 
 [Install]
 WantedBy=multi-user.target

@@ -384,7 +384,7 @@ customElements.define(
     }
 
     onMoveBlocked(data) {
-      console.log("move blocked data", data);
+      //console.log("move blocked data", data);
       if (data.msg) {
         this.message = data.msg;
       } else {

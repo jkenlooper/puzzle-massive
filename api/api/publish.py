@@ -8,12 +8,14 @@ import sys
 import time
 import random
 import uuid
+from subprocess import Popen
 
 from flask import current_app, make_response, request, json, url_for, redirect
 from flask.views import MethodView
 from werkzeug.exceptions import HTTPException
 from flask_sse import sse
 from redis.exceptions import WatchError
+from rq import Worker, Queue
 
 from api.app import db, redis_connection
 from api.database import fetch_query_string, rowify
@@ -151,24 +153,29 @@ class PuzzlePieceTokenView(MethodView):
         mark = request.args.get("mark", "000")[:3]
         now = int(time.time())
 
-        # Start db operations
-        cur = db.cursor()
-        # validate the puzzle_id
-        result = cur.execute(
-            fetch_query_string("select_puzzle_and_piece_status_for_token.sql"),
-            {"puzzle_id": puzzle_id, "piece": piece},
-        ).fetchall()
-        if not result:
-            # 400 if puzzle does not exist or piece is not found
-            # Only puzzles in ACTIVE state can be mutated
-            err_msg = {
-                "msg": "puzzle is not ready at this time. Please reload the page.",
-                "type": "puzzleimmutable",
-            }
+        pzq_key = "pzq:{puzzle_id}".format(puzzle_id=puzzle_id)
+        puzzle = redis_connection.hget(pzq_key, "puzzle")
+        if not puzzle:
+            # Start db operations
+            cur = db.cursor()
+            # validate the puzzle_id
+            result = cur.execute(
+                fetch_query_string("select_puzzle_and_piece.sql"),
+                {"puzzle_id": puzzle_id},
+            ).fetchall()
+            if not result:
+                # 400 if puzzle does not exist or piece is not found
+                # Only puzzles in ACTIVE state can be mutated
+                err_msg = {
+                    "msg": "puzzle is not ready at this time. Please reload the page.",
+                    "type": "puzzleimmutable",
+                }
+                cur.close()
+                return make_response(encoder.encode(err_msg), 400)
+            (result, col_names) = rowify(result, cur.description)
             cur.close()
-            return make_response(encoder.encode(err_msg), 400)
-        (result, col_names) = rowify(result, cur.description)
-        puzzle = result[0]["puzzle"]
+            puzzle_data = result[0]
+            puzzle = puzzle_data["puzzle"]
 
         (piece_status, has_y) = redis_connection.hmget(
             "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), ["s", "y"]
@@ -181,12 +188,10 @@ class PuzzlePieceTokenView(MethodView):
                 "msg": "puzzle pieces can't be moved at this time. Please reload the page.",
                 "type": "puzzleimmutable",
             }
-            cur.close()
             return make_response(encoder.encode(err_msg), 400)
 
         if piece_status == "1":
             # immovable
-            cur.close()
             err_msg = {
                 "msg": "piece can't be moved",
                 "type": "immovable",
@@ -203,7 +208,6 @@ class PuzzlePieceTokenView(MethodView):
             err_msg = get_blockedplayers_err_msg(
                 blockedplayers_expires, blockedplayers_expires - now
             )
-            cur.close()
             return make_response(encoder.encode(err_msg), 429)
 
         puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
@@ -225,7 +229,6 @@ class PuzzlePieceTokenView(MethodView):
                     err_msg[
                         "reason"
                     ] = "Concurrent piece movements on this puzzle from the same player are not allowed."
-                    cur.close()
                     return make_response(encoder.encode(err_msg), 429)
 
                 else:
@@ -243,6 +246,7 @@ class PuzzlePieceTokenView(MethodView):
                         # Check if player has enough dots to generate a new
                         # player and if so add to err_msg to signal client to
                         # request a new player
+                        cur = db.cursor()
                         dots = cur.execute(
                             "select points from User where id = :id and points >= :cost + :startpoints;",
                             {
@@ -260,7 +264,7 @@ class PuzzlePieceTokenView(MethodView):
                                 "msg": "Create a new player?",
                                 "url": "/newapi{}".format(url_for("split-player")),
                             }
-                    cur.close()
+                        cur.close()
                     return make_response(encoder.encode(err_msg), 409)
 
         piece_token_queue_key = get_puzzle_piece_token_queue_key(puzzle, piece)
@@ -284,7 +288,6 @@ class PuzzlePieceTokenView(MethodView):
                 "expires": now + TOKEN_LOCK_TIMEOUT,
                 "timeout": TOKEN_LOCK_TIMEOUT,
             }
-            cur.close()
             return make_response(encoder.encode(err_msg), 409)
 
         # Check if token on piece is still owned by another player
@@ -311,7 +314,6 @@ class PuzzlePieceTokenView(MethodView):
                         "expires": now + TOKEN_LOCK_TIMEOUT,
                         "timeout": TOKEN_LOCK_TIMEOUT,
                     }
-                    cur.close()
                     return make_response(encoder.encode(err_msg), 409)
 
         # Remove player from the piece token queue
@@ -351,7 +353,6 @@ class PuzzlePieceTokenView(MethodView):
             "lock": now + TOKEN_LOCK_TIMEOUT,
             "expires": now + TOKEN_EXPIRE_TIMEOUT,
         }
-        cur.close()
         return encoder.encode(response)
 
 
@@ -434,25 +435,54 @@ class PuzzlePiecesMovePublishView(MethodView):
         y = args.get("y")
         r = args.get("r")
 
-        # Start db operations
-        cur = db.cursor()
-        # validate the puzzle_id
-        result = cur.execute(
-            fetch_query_string("select_puzzle_id_by_puzzle_id.sql"),
-            {"puzzle_id": puzzle_id},
-        ).fetchall()
-        if not result:
-            # 404 if puzzle does not exist
-            err_msg = {
-                "msg": "Puzzle does not exist",
-                "type": "missing",
-                "expires": now + 5,
-                "timeout": 5,
-            }
+        timestamp_now = int(time.time())
+
+        pzq_key = "pzq:{puzzle_id}".format(puzzle_id=puzzle_id)
+        pzq_fields = [
+            "puzzle",
+            "table_width",
+            "table_height",
+            "permission",
+            "pieces",
+            "q",
+        ]
+        puzzle_data = dict(zip(pzq_fields, redis_connection.hmget(pzq_key, pzq_fields)))
+        puzzle = puzzle_data.get("puzzle")
+        if puzzle == None:
+            # Start db operations
+            cur = db.cursor()
+            # validate the puzzle_id
+            result = cur.execute(
+                fetch_query_string("select_puzzle_and_piece.sql"),
+                {"puzzle_id": puzzle_id},
+            ).fetchall()
+            if not result:
+                err_msg = {"msg": "puzzle not available", "type": "missing"}
+                cur.close()
+                return make_response(encoder.encode(err_msg), 404)
+            (result, col_names) = rowify(result, cur.description)
             cur.close()
-            return make_response(encoder.encode(err_msg), 404)
-        (result, col_names) = rowify(result, cur.description)
-        puzzle = result[0]["puzzle"]
+            puzzle_data = result[0]
+            redis_connection.hmset(
+                pzq_key,
+                {
+                    "puzzle": puzzle_data["puzzle"],
+                    "table_width": puzzle_data["table_width"],
+                    "table_height": puzzle_data["table_height"],
+                    "permission": puzzle_data["permission"],
+                    "pieces": puzzle_data["pieces"],
+                    # "q": "piece_translate_a",
+                },
+            )
+            redis_connection.expire(pzq_key, 300)
+        else:
+            puzzle_data["puzzle"] = int(puzzle_data["puzzle"])
+            puzzle_data["table_width"] = int(puzzle_data["table_width"])
+            puzzle_data["table_height"] = int(puzzle_data["table_height"])
+            puzzle_data["permission"] = int(puzzle_data["permission"])
+            puzzle_data["pieces"] = int(puzzle_data["pieces"])
+        puzzle = puzzle_data["puzzle"]
+        puzzle_data["puzzle_id"] = puzzle_id
 
         # Token is to make sure puzzle is still in sync.
         # validate the token
@@ -464,7 +494,6 @@ class PuzzlePiecesMovePublishView(MethodView):
                 "expires": now + 5,
                 "timeout": 5,
             }
-            cur.close()
             return make_response(encoder.encode(err_msg), 400)
         puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
         # print("token key: {}".format(puzzle_piece_token_key))
@@ -477,19 +506,16 @@ class PuzzlePiecesMovePublishView(MethodView):
                 # print("token invalid {} != {}".format(token, valid_token))
                 err_msg = increase_ban_time(user, TOKEN_INVALID_BAN_TIME_INCR)
                 err_msg["reason"] = "Token is invalid"
-                cur.close()
                 return make_response(encoder.encode(err_msg), 409)
             if player != other_player:
                 # print("player invalid {} != {}".format(player, other_player))
                 err_msg = increase_ban_time(user, TOKEN_INVALID_BAN_TIME_INCR)
                 err_msg["reason"] = "Player is invalid"
-                cur.close()
                 return make_response(encoder.encode(err_msg), 409)
         else:
             # Token has expired
             # print("token expired")
             err_msg = {"msg": "Token has expired", "type": "expiredtoken", "reason": ""}
-            cur.close()
             return make_response(encoder.encode(err_msg), 409)
 
         # Expire the token at the lock timeout since it shouldn't be used again
@@ -498,66 +524,48 @@ class PuzzlePiecesMovePublishView(MethodView):
 
         err_msg = bump_count(user)
         if err_msg.get("type") == "bannedusers":
-            cur.close()
             return make_response(encoder.encode(err_msg), 429)
 
-        result = cur.execute(
-            fetch_query_string("select_puzzle_and_piece.sql"), {"puzzle_id": puzzle_id},
-        ).fetchall()
-        if not result:
-            # 404 if puzzle or piece does not exist
-            err_msg = {"msg": "puzzle not available", "type": "missing"}
-            cur.close()
-            return make_response(encoder.encode(err_msg), 404)
+        ## check if piece can be moved
+        # (piece_status, has_y) = redis_connection.hmget(
+        #    "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece),
+        #    ["s", "y"],
+        # )
+        # if has_y == None:
+        #    err_msg = {"msg": "piece not available", "type": "missing"}
+        #    return make_response(encoder.encode(err_msg), 404)
 
-        (result, col_names) = rowify(result, cur.description)
-        puzzle_piece = result[0]
-
-        # check if piece can be moved
-        (piece_status, has_y) = redis_connection.hmget(
-            "pc:{puzzle}:{piece}".format(puzzle=puzzle_piece["puzzle"], piece=piece),
-            ["s", "y"],
-        )
-        if has_y == None:
-            err_msg = {"msg": "piece not available", "type": "missing"}
-            cur.close()
-            return make_response(encoder.encode(err_msg), 404)
-
-        if piece_status == "1":
-            # immovable
-            err_msg = {
-                "msg": "piece can't be moved",
-                "type": "immovable",
-                "expires": now + 5,
-                "timeout": 5,
-            }
-            cur.close()
-            return make_response(encoder.encode(err_msg), 400)
+        # if piece_status == "1":
+        #    # immovable
+        #    err_msg = {
+        #        "msg": "piece can't be moved",
+        #        "type": "immovable",
+        #        "expires": now + 5,
+        #        "timeout": 5,
+        #    }
+        #    return make_response(encoder.encode(err_msg), 400)
 
         # check if piece will be moved to within boundaries
-        if x and (x < 0 or x > puzzle_piece["table_width"]):
+        if x and (x < 0 or x > puzzle_data["table_width"]):
             err_msg = {
                 "msg": "Piece movement out of bounds",
                 "type": "invalidpiecemove",
                 "expires": now + 5,
                 "timeout": 5,
             }
-            cur.close()
             return make_response(encoder.encode(err_msg), 400)
-        if y and (y < 0 or y > puzzle_piece["table_height"]):
+        if y and (y < 0 or y > puzzle_data["table_height"]):
             err_msg = {
                 "msg": "Piece movement out of bounds",
                 "type": "invalidpiecemove",
                 "expires": now + 5,
                 "timeout": 5,
             }
-            cur.close()
             return make_response(encoder.encode(err_msg), 400)
 
-        puzzle = puzzle_piece["puzzle"]
+        # puzzle = puzzle_data["puzzle"]
 
         # Set the rounded timestamp
-        timestamp_now = int(time.time())
         rounded_timestamp = timestamp_now - (
             timestamp_now % PIECE_MOVEMENT_RATE_TIMEOUT
         )
@@ -652,9 +660,49 @@ class PuzzlePiecesMovePublishView(MethodView):
                 err_msg["karma"] = get_public_karma_points(
                     redis_connection, ip, user, puzzle
                 )
-                cur.close()
                 return make_response(encoder.encode(err_msg), 429)
 
+        if puzzle_data.get("q") == None or not redis_connection.sismember(
+            "pzq_register", puzzle_data.get("q")
+        ):
+            # Assign this puzzle to a piece translate worker queue with the
+            # least amount of activity.
+            queue_names = list(redis_connection.smembers("pzq_register"))
+            if len(queue_names) == 0:
+                current_app.logger.error(
+                    "No workers found for piece translate queues (pzq_register)"
+                )
+                return make_response(
+                    encoder.encode(
+                        {
+                            "msg": "Server error",
+                            "type": "error",
+                            "reason": "No workers",
+                            "expires": now + 5,
+                            "timeout": 5,
+                        }
+                    ),
+                    500,
+                )
+            queue_name = queue_names[0]
+            with redis_connection.pipeline(transaction=True) as pipe:
+                for qn in queue_names:
+                    pipe.zcount(
+                        "pzq_activity:{queue_name}".format(queue_name=qn),
+                        timestamp_now - 300,
+                        timestamp_now,
+                    )
+                least_active_queue = None
+                count = None
+                for (qn, activity_count) in zip(queue_names, pipe.execute()):
+                    if count is None or activity_count < count:
+                        queue_name = qn
+                        count = activity_count
+
+            redis_connection.hset(pzq_key, "q", queue_name)
+            puzzle_data["q"] = queue_name
+
+        # TODO: move this to pieceTranslate
         # Check if there are too many pieces stacked. Slightly less exact from
         # what pieceTranslate does.  This includes immovable pieces, and the
         # pieces own group which would normally be filtered out when checking
@@ -699,8 +747,7 @@ class PuzzlePiecesMovePublishView(MethodView):
             err_msg["karma"] = get_public_karma_points(
                 redis_connection, ip, user, puzzle
             )
-
-            cur.close()
+            # TODO: should publish a message so only the user will get the message
             return make_response(encoder.encode(err_msg), 400)
 
         # Record hot spot (not exact)
@@ -721,54 +768,53 @@ class PuzzlePiecesMovePublishView(MethodView):
                 karma = redis_connection.decr(karma_key)
             karma_change -= 1
 
-        # Push to queue for further processing by a single worker.
-        # job = current_app.singleworkerqueue.enqueue_call(
-        #    func="api.jobs.pieceTranslate.translate",
-        #    args=(
-        #        ip,
-        #        user,
-        #        puzzle_piece,
-        #        piece,
-        #        x,
-        #        y,
-        #        r,
-        #        karma_change,
-        #    ),
-        #    result_ttl=0,
-        #    timeout=2,
-        #    ttl=None,
-        # )
+        pz_translate_queue = Queue(puzzle_data.get("q"), connection=redis_connection)
 
-        attemptPieceMovement = 0
-        while attemptPieceMovement < 13:
-            try:
-                (msg, karma_change) = pieceTranslate.translate(
-                    ip, user, puzzle_piece, piece, x, y, r, karma_change,
-                )
-                break
-            except (PieceMutateError, WatchError):
-                attemptPieceMovement = attemptPieceMovement + 1
-                print(sys.exc_info()[0])
-                print("piece mutate error {}".format(attemptPieceMovement))
-                time.sleep(random.randint(1, 100) / 100)
-                # The app isn't configured to handle this at the moment.
-                # time.sleep(random.randint(1, 100) / 100)
-                # Another player has moved a piece in the same group while the
-                # pieceTranslate was processing.
-            except:
-                print("other error", sys.exc_info()[0])
-                raise
-                # time.sleep(1)
-                # return make_response(encoder.encode({"msg": "boing"}), 200)
-        if attemptPieceMovement >= 13:
-            err_msg = {
-                "msg": "Try again",
-                "type": "piecegrouperror",
-                "reason": "Conflict with piece group",
-                "timeout": 3,
-            }
-            cur.close()
-            return make_response(encoder.encode(err_msg), 409)
+        # Push to queue for further processing by a single worker.
+        # Record timestamp of queue activity
+
+        redis_connection.zadd(
+            "pzq_activity:{queue_name}".format(queue_name=puzzle_data["q"]),
+            {timestamp_now: timestamp_now},
+        )
+        job = pz_translate_queue.enqueue_call(
+            func="api.jobs.pieceTranslate.translate",
+            args=(ip, user, puzzle_data, piece, x, y, r, karma_change,),
+            result_ttl=0,
+            timeout=10,
+            ttl=None,
+        )
+
+        # TODO: Move this to the pieceTranslate job
+        # attemptPieceMovement = 0
+        # while attemptPieceMovement < 13:
+        #    try:
+        #        (msg, karma_change) = pieceTranslate.translate(
+        #            ip, user, puzzle_data, piece, x, y, r, karma_change,
+        #        )
+        #        break
+        #    except (PieceMutateError, WatchError):
+        #        attemptPieceMovement = attemptPieceMovement + 1
+        #        current_app.logger.debug(sys.exc_info()[0])
+        #        current_app.logger.debug("piece mutate error {}".format(attemptPieceMovement))
+        #        time.sleep(random.randint(1, 100) / 100)
+        #        # The app isn't configured to handle this at the moment.
+        #        # time.sleep(random.randint(1, 100) / 100)
+        #        # Another player has moved a piece in the same group while the
+        #        # pieceTranslate was processing.
+        #    except:
+        #        current_app.logger.debug("other error {}".format(sys.exc_info()[0]))
+        #        raise
+        #        # time.sleep(1)
+        #        # return make_response(encoder.encode({"msg": "boing"}), 200)
+        # if attemptPieceMovement >= 13:
+        #    err_msg = {
+        #        "msg": "Try again",
+        #        "type": "piecegrouperror",
+        #        "reason": "Conflict with piece group",
+        #        "timeout": 3,
+        #    }
+        #    return make_response(encoder.encode(err_msg), 409)
 
         # publish just the bit movement so it matches what this player did
         msg = formatBitMovementString(user, x, y)
@@ -780,5 +826,4 @@ class PuzzlePiecesMovePublishView(MethodView):
 
         karma = get_public_karma_points(redis_connection, ip, user, puzzle)
         response = {"karma": karma, "karmaChange": karma_change, "id": piece}
-        cur.close()
         return encoder.encode(response)
