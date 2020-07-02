@@ -216,7 +216,7 @@ class PuzzleStream {
               break;
             case "sendPing":
               // Start sending a ping to server with the default PING_INTERVAL.
-              this.sendPing();
+              this.sendPing(4000);
               break;
             case "broadcastPlayerLatency":
               this.broadcastPlayerLatency();

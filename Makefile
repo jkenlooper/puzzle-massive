@@ -102,6 +102,10 @@ objects += api/puzzle-massive-api.service
 api/puzzle-massive-api.service: api/puzzle-massive-api.service.sh
 	./$< $(ENVIRONMENT) $(project_dir) > $@
 
+objects += api/puzzle-massive-publish.service
+api/puzzle-massive-publish.service: api/puzzle-massive-publish.service.sh
+	./$< $(ENVIRONMENT) $(project_dir) > $@
+
 objects += api/puzzle-massive-artist.service
 api/puzzle-massive-artist.service: api/puzzle-massive-artist.service.sh
 	./$< $(project_dir) > $@

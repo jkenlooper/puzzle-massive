@@ -29,11 +29,16 @@ from api.tools import loadConfig, deletePieceDataFromRedis
 from api.constants import MAINTENANCE
 
 
-def transfer(puzzle, cleanup=True, skip_status_update=False):
+def transfer(puzzle, cleanup=True, skip_status_update=False, delay=0):
     """
     Transfer the puzzle data from Redis to the database. If the cleanup flag is
     set the Redis data for the puzzle will be removed afterward.
     """
+    if delay:
+        # Delaying helps avoid issues for players that are moving the last piece
+        # of the puzzle as someone else completes it.
+        current_app.logger.info("Delaying puzzle transfer for {} seconds".format(delay))
+        time.sleep(delay)
     current_app.logger.info("transferring puzzle: {0}".format(puzzle))
     cur = db.cursor()
 

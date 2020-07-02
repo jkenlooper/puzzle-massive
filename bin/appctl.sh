@@ -31,6 +31,7 @@ fi
 # puzzle-massive-divulger \
 for app in puzzle-massive-chill \
   puzzle-massive-api \
+  puzzle-massive-publish \
   puzzle-massive-worker \
   puzzle-massive-stream \
   puzzle-massive-artist \

@@ -402,10 +402,10 @@ class PuzzleService {
               case PieceMoveErrorTypes.missing:
               case PieceMoveErrorTypes.error:
               case PieceMoveErrorTypes.bannedusers:
-              case PieceMoveErrorTypes.expiredtoken:
               case PieceMoveErrorTypes.blockedplayer:
                 self._broadcast(pieceMoveBlocked, responseObj);
                 break;
+              case PieceMoveErrorTypes.expiredtoken: // TODO: should handle expiredtoken better
               case PieceMoveErrorTypes.invalidpiecemove:
               case PieceMoveErrorTypes.proximity:
                 // Skip broadcasting these errors so no alert message is shown.

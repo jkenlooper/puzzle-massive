@@ -23,6 +23,9 @@ HOST='127.0.0.1'
 # The HOSTAPI should not be externally available.
 # Keep HOSTAPI as localhost (127.0.0.1)
 HOSTAPI='127.0.0.1'
+# The HOSTPUBLISH should not be externally available.
+# Keep HOSTPUBLISH as localhost (127.0.0.1)
+HOSTPUBLISH='127.0.0.1'
 HOSTDIVULGER='127.0.0.1'
 HOSTSTREAM='127.0.0.1'
 HOSTREDIS='127.0.0.1'
@@ -56,7 +59,9 @@ PORT = $PORTCHILL
 # The HOSTAPI should not be externally available.
 # Keep HOSTAPI as localhost (127.0.0.1)
 HOSTAPI = '$HOSTAPI'
+HOSTPUBLISH = '$HOSTPUBLISH'
 PORTAPI = $PORTAPI
+PORTPUBLISH = $PORTPUBLISH
 
 # The other app for divulging piece movements
 HOSTDIVULGER = '$HOSTDIVULGER'

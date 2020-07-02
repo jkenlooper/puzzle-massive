@@ -194,6 +194,10 @@ cp api/puzzle-massive-api.service "${SYSTEMDDIR}"
 systemctl start puzzle-massive-api || echo "can't start service"
 systemctl enable puzzle-massive-api || echo "can't enable service"
 
+cp api/puzzle-massive-publish.service "${SYSTEMDDIR}"
+systemctl start puzzle-massive-publish || echo "can't start service"
+systemctl enable puzzle-massive-publish || echo "can't enable service"
+
 cp api/puzzle-massive-artist.service "${SYSTEMDDIR}"
 systemctl start puzzle-massive-artist || echo "can't start service"
 systemctl enable puzzle-massive-artist || echo "can't enable service"

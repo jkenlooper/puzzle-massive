@@ -7,10 +7,12 @@ import os.path
 import math
 import time
 import sys
+import random
 
 from flask import current_app
 from flask_sse import sse
 import requests
+from redis.exceptions import WatchError
 
 from api.app import redis_connection
 from api.database import rowify, fetch_query_string
@@ -20,7 +22,7 @@ from api.tools import (
     purge_route_from_nginx_cache,
 )
 from api.constants import COMPLETED, QUEUE_END_OF_LINE, PRIVATE, SKILL_LEVEL_RANGES
-from api.piece_mutate import PieceMutateProcess
+from api.piece_mutate import PieceMutateProcess, PieceMutateError
 
 KARMA_POINTS_EXPIRE = 3600  # hour in seconds
 RECENT_POINTS_EXPIRE = 7200
@@ -48,7 +50,36 @@ def get_earned_points(pieces, permission=None):
     return len(skill_level_intervals)
 
 
-def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
+def attempt_piece_movement(ip, user, puzzleData, piece, x, y, r, karma_change):
+    attemptPieceMovement = 0
+    while attemptPieceMovement < 13:
+        try:
+            (msg, karma_change) = translate(
+                ip, user, puzzleData, piece, x, y, r, karma_change,
+            )
+            break
+        except (PieceMutateError, WatchError):
+            attemptPieceMovement = attemptPieceMovement + 1
+            current_app.logger.debug(sys.exc_info()[0])
+            current_app.logger.debug(
+                "piece mutate error {}".format(attemptPieceMovement)
+            )
+            time.sleep(random.randint(1, 100) / 100)
+        except:
+            current_app.logger.debug("other error {}".format(sys.exc_info()[0]))
+            raise
+    if attemptPieceMovement >= 13:
+        err_msg = {
+            "msg": "Try again",
+            "type": "piecegrouperror",
+            "reason": "Conflict with piece group",
+            "timeout": 3,
+        }
+        return (err_msg, 0)
+    return (msg, karma_change)
+
+
+def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
     def publishMessage(msg, karma_change, points=0, complete=False):
         # print(topic)
         # print(msg)
@@ -140,7 +171,10 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, db_file=None):
                 channel="puzzle:{puzzle_id}".format(puzzle_id=puzzleData["puzzle_id"]),
             )
             job = current_app.cleanupqueue.enqueue_call(
-                func="api.jobs.convertPiecesToDB.transfer", args=(puzzle,), result_ttl=0
+                func="api.jobs.convertPiecesToDB.transfer",
+                args=(puzzle,),
+                kwargs={"delay": 10},
+                result_ttl=0,
             )
 
             purge_route_from_nginx_cache(

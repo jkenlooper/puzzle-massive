@@ -397,6 +397,9 @@ class UserSession:
         self.api_host = "http://localhost:{PORTAPI}".format(
             PORTAPI=current_app.config["PORTAPI"]
         )
+        self.publish_host = "http://localhost:{PORTPUBLISH}".format(
+            PORTPUBLISH=current_app.config["PORTPUBLISH"]
+        )
 
         # get test user
         current_user_id = requests.get(
@@ -405,9 +408,14 @@ class UserSession:
         self.shareduser_cookie = current_user_id.cookies["shareduser"]
         self.shareduser = int(current_user_id.content)
 
-    def get_data(self, route):
+    def get_data(self, route, host):
+        if host == "api":
+            _host = self.api_host
+        elif host == "publish":
+            _host = self.publish_host
+
         r = requests.get(
-            "".join([self.api_host, route]),
+            "".join([_host, route]),
             cookies={"shareduser": self.shareduser_cookie},
             headers=self.headers,
         )
@@ -437,11 +445,16 @@ class UserSession:
             return
         return data
 
-    def patch_data(self, route, payload={}, headers={}):
+    def patch_data(self, route, host, payload={}, headers={}):
+        if host == "api":
+            _host = self.api_host
+        elif host == "publish":
+            _host = self.publish_host
+
         my_headers = self.headers.copy()
         my_headers.update(headers)
         r = requests.patch(
-            "".join([self.api_host, route]),
+            "".join([_host, route]),
             data=payload,
             cookies={"shareduser": self.shareduser_cookie},
             headers=my_headers,
@@ -452,9 +465,9 @@ class UserSession:
                 data = r.json()
             except ValueError as err:
                 time.sleep(1)
-                print(r.text)
+                # print(r.text)
                 return
-            print(data.get("msg"))
+            # print(data.get("msg"))
             if data.get("timeout"):
                 time.sleep(data.get("timeout", 1))
             return
@@ -486,7 +499,7 @@ class PuzzlePieces:
         self.puzzle = puzzle
         self.puzzle_id = puzzle_id
         self.puzzle_pieces = self.user_session.get_data(
-            "/puzzle-pieces/{0}/".format(self.puzzle_id)
+            "/puzzle-pieces/{0}/".format(self.puzzle_id), "api"
         )
         self.table_width = table_width
         self.table_height = table_height
@@ -505,18 +518,21 @@ class PuzzlePieces:
         piece_id = choice(self.movable_pieces)
         x = randint(0, self.table_width - 100)
         y = randint(0, self.table_height - 100)
+        start = time.perf_counter()
         piece_token = self.user_session.get_data(
             "/puzzle/{puzzle_id}/piece/{piece_id}/token/?mark={mark}".format(
                 puzzle_id=self.puzzle_id,
                 piece_id=piece_id,
                 mark=self.puzzle_pieces["mark"],
-            )
+            ),
+            "publish",
         )
         if piece_token and piece_token.get("token"):
             puzzle_pieces_move = self.user_session.patch_data(
                 "/puzzle/{puzzle_id}/piece/{piece_id}/move/".format(
                     puzzle_id=self.puzzle_id, piece_id=piece_id
                 ),
+                "publish",
                 payload={"x": x, "y": y},
                 headers={"Token": piece_token["token"]},
             )
@@ -525,11 +541,13 @@ class PuzzlePieces:
                     raise Exception("boing")
                 # Reset karma:puzzle:ip redis key when it gets low
                 if puzzle_pieces_move["karma"] < 2:
-                    print("resetting karma for {ip}".format(ip=self.user_session.ip))
+                    # print("resetting karma for {ip}".format(ip=self.user_session.ip))
                     karma_key = init_karma_key(
                         redis_connection, self.puzzle, self.user_session.ip
                     )
                     redis_connection.delete(karma_key)
+        end = time.perf_counter()
+        print(end - start)
 
 
 class PuzzleActivityJob:
@@ -554,7 +572,7 @@ class PuzzleActivityJob:
             self.puzzle_details["table_width"],
             self.puzzle_details["table_height"],
         )
-        puzzle_pieces.move_random_pieces_with_delay(delay=1, max_delay=10)
+        puzzle_pieces.move_random_pieces_with_delay(delay=0.01, max_delay=0.1)
 
 
 def simulate_puzzle_activity(puzzle_ids, count=1):
@@ -564,7 +582,7 @@ def simulate_puzzle_activity(puzzle_ids, count=1):
 
     user_session = UserSession(ip="127.0.0.1")
 
-    gallery_puzzle_list = user_session.get_data("/gallery-puzzle-list/")
+    gallery_puzzle_list = user_session.get_data("/gallery-puzzle-list/", "api")
 
     listed_puzzle_ids = [x["puzzle_id"] for x in gallery_puzzle_list["puzzles"]]
     _puzzle_ids = puzzle_ids or listed_puzzle_ids

@@ -8,7 +8,7 @@ api/api
 api/requirements.txt
 api/setup.py
 api/puzzle-massive-api.service.sh
-api/puzzle-massive-api.service.sh
+api/puzzle-massive-publish.service.sh
 api/puzzle-massive-artist.service.sh
 api/puzzle-massive-janitor.service.sh
 api/puzzle-massive-worker.service.sh

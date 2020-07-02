@@ -1,3 +1,16 @@
+"""Publish - Piece Movement Publish
+
+Usage: publish serve [--config <file>]
+       publish --help
+       publish --version
+
+Options:
+  -h --help         Show this screen.
+  --config <file>   Set config file. [default: site.cfg]
+
+Subcommands:
+    serve   - Starts a daemon web server.
+"""
 from __future__ import absolute_import
 from __future__ import division
 from builtins import str
@@ -9,21 +22,28 @@ import time
 import random
 import uuid
 from subprocess import Popen
+import multiprocessing
+from docopt import docopt
+import os
 
-from flask import current_app, make_response, request, json, url_for, redirect
+import gunicorn.app.base
+from flask import current_app, make_response, request, json, url_for, redirect, Flask, g
 from flask.views import MethodView
 from werkzeug.exceptions import HTTPException
 from flask_sse import sse
 from redis.exceptions import WatchError
 from rq import Worker, Queue
 
+from api.flask_secure_cookie import SecureCookie
 from api.app import db, redis_connection
 from api.database import fetch_query_string, rowify
 from api.tools import (
+    loadConfig,
     formatPieceMovementString,
     formatBitMovementString,
     init_karma_key,
     get_public_karma_points,
+    files_loader,
 )
 
 from api.constants import (
@@ -64,6 +84,55 @@ PIECE_TRANSLATE_EXCEEDED_REASON = "Piece moves exceeded {PIECE_TRANSLATE_MAX_COU
 TOKEN_EXPIRE_TIMEOUT = 60 * 5
 TOKEN_LOCK_TIMEOUT = 5
 TOKEN_INVALID_BAN_TIME_INCR = 15
+
+
+class PublishApp(Flask):
+    "Publish App"
+
+
+def make_app(config=None, database_writable=False, **kw):
+    app = PublishApp("publish")
+    app.config_file = config
+
+    if config:
+        config_file = (
+            config if config[0] == os.sep else os.path.join(os.getcwd(), config)
+        )
+        app.config.from_pyfile(config_file)
+
+    app.config.update(kw, database_writable=database_writable)
+
+    # Cookie secret value will be read from app.config.
+    # If it does not exist, an exception will be thrown.
+    #
+    # You can also set the cookie secret in the SecureCookie initializer:
+    # secure_cookie = SecureCookie(app, cookie_secret="MySecret")
+    #
+    app.secure_cookie = SecureCookie(app, cookie_secret=kw["cookie_secret"])
+
+    app.queries = files_loader("queries")
+
+    @app.teardown_appcontext
+    def teardown_db(exception):
+        db = getattr(g, "_database", None)
+        if db is not None:
+            db.close()
+
+    # import the views and sockets
+    from api.publish import PuzzlePiecesMovePublishView, PuzzlePieceTokenView
+
+    # register the views
+
+    app.add_url_rule(
+        "/puzzle/<puzzle_id>/piece/<int:piece>/move/",
+        view_func=PuzzlePiecesMovePublishView.as_view("puzzle-pieces-move"),
+    )
+    app.add_url_rule(
+        "/puzzle/<puzzle_id>/piece/<int:piece>/token/",
+        view_func=PuzzlePieceTokenView.as_view("puzzle-piece-token"),
+    )
+
+    return app
 
 
 def bump_count(user):
@@ -119,11 +188,6 @@ def get_puzzle_piece_token_key(puzzle, piece):
 
 def get_puzzle_piece_token_queue_key(puzzle, piece):
     return "pqtoken:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
-
-
-class PaymentRequired(HTTPException):
-    code = 402
-    description = "<p>Payment required.</p>"
 
 
 class PuzzlePieceTokenView(MethodView):
@@ -471,7 +535,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                     "table_height": puzzle_data["table_height"],
                     "permission": puzzle_data["permission"],
                     "pieces": puzzle_data["pieces"],
-                    # "q": "piece_translate_a",
+                    # "q": "", # q is set later
                 },
             )
             redis_connection.expire(pzq_key, 300)
@@ -526,6 +590,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         if err_msg.get("type") == "bannedusers":
             return make_response(encoder.encode(err_msg), 429)
 
+        # TODO: has this moved elsewhere?
         ## check if piece can be moved
         # (piece_status, has_y) = redis_connection.hmget(
         #    "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece),
@@ -562,8 +627,6 @@ class PuzzlePiecesMovePublishView(MethodView):
                 "timeout": 5,
             }
             return make_response(encoder.encode(err_msg), 400)
-
-        # puzzle = puzzle_data["puzzle"]
 
         # Set the rounded timestamp
         rounded_timestamp = timestamp_now - (
@@ -778,43 +841,12 @@ class PuzzlePiecesMovePublishView(MethodView):
             {timestamp_now: timestamp_now},
         )
         job = pz_translate_queue.enqueue_call(
-            func="api.jobs.pieceTranslate.translate",
+            func="api.jobs.pieceTranslate.attempt_piece_movement",
             args=(ip, user, puzzle_data, piece, x, y, r, karma_change,),
             result_ttl=0,
             timeout=10,
             ttl=None,
         )
-
-        # TODO: Move this to the pieceTranslate job
-        # attemptPieceMovement = 0
-        # while attemptPieceMovement < 13:
-        #    try:
-        #        (msg, karma_change) = pieceTranslate.translate(
-        #            ip, user, puzzle_data, piece, x, y, r, karma_change,
-        #        )
-        #        break
-        #    except (PieceMutateError, WatchError):
-        #        attemptPieceMovement = attemptPieceMovement + 1
-        #        current_app.logger.debug(sys.exc_info()[0])
-        #        current_app.logger.debug("piece mutate error {}".format(attemptPieceMovement))
-        #        time.sleep(random.randint(1, 100) / 100)
-        #        # The app isn't configured to handle this at the moment.
-        #        # time.sleep(random.randint(1, 100) / 100)
-        #        # Another player has moved a piece in the same group while the
-        #        # pieceTranslate was processing.
-        #    except:
-        #        current_app.logger.debug("other error {}".format(sys.exc_info()[0]))
-        #        raise
-        #        # time.sleep(1)
-        #        # return make_response(encoder.encode({"msg": "boing"}), 200)
-        # if attemptPieceMovement >= 13:
-        #    err_msg = {
-        #        "msg": "Try again",
-        #        "type": "piecegrouperror",
-        #        "reason": "Conflict with piece group",
-        #        "timeout": 3,
-        #    }
-        #    return make_response(encoder.encode(err_msg), 409)
 
         # publish just the bit movement so it matches what this player did
         msg = formatBitMovementString(user, x, y)
@@ -827,3 +859,69 @@ class PuzzlePiecesMovePublishView(MethodView):
         karma = get_public_karma_points(redis_connection, ip, user, puzzle)
         response = {"karma": karma, "karmaChange": karma_change, "id": piece}
         return encoder.encode(response)
+
+
+class StreamGunicornBase(gunicorn.app.base.BaseApplication):
+    def __init__(self, app, options=None):
+        self.options = options or {}
+        self.application = app
+        super().__init__()
+
+    def load_config(self):
+        config = {
+            key: value
+            for key, value in self.options.items()
+            if key in self.cfg.settings and value is not None
+        }
+        for key, value in config.items():
+            self.cfg.set(key.lower(), value)
+
+    def load(self):
+        return self.application
+
+
+def number_of_workers():
+    return (multiprocessing.cpu_count() * 2) + 1
+
+
+def serve(config_file, cookie_secret):
+    app = make_app(
+        config=config_file, cookie_secret=cookie_secret, database_writable=False
+    )
+    host = app.config.get("HOSTPUBLISH")
+    port = app.config.get("PORTPUBLISH")
+
+    debug = app.config.get("DEBUG")
+
+    app.logger.info(u"Serving on {host}:{port}".format(**locals()))
+    app.logger.info(u"Debug mode is {debug}".format(**locals()))
+
+    options = {
+        "loglevel": "info" if not debug else "debug",
+        "timeout": 5,
+        "bind": "%s:%s" % (host, port),
+        "worker_class": "gevent",
+        "workers": number_of_workers(),
+        "reload": debug,
+        "preload_app": True,
+        # Restart workers after this many requests just in case there are memory leaks
+        "max_requests": 1000,
+        "max_requests_jitter": 50,
+    }
+    app = StreamGunicornBase(app, options).run()
+
+
+def main():
+    ""
+    args = docopt(__doc__, version="0.0")
+    config_file = args["--config"]
+
+    appconfig = loadConfig(config_file)
+    cookie_secret = appconfig.get("SECURE_COOKIE_SECRET")
+
+    if args["serve"]:
+        serve(config_file, cookie_secret=cookie_secret)
+
+
+if __name__ == "__main__":
+    main()

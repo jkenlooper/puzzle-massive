@@ -55,6 +55,10 @@ systemctl stop puzzle-massive-api
 systemctl disable puzzle-massive-api
 rm -f "${SYSTEMDDIR}puzzle-massive-api.service";
 
+systemctl stop puzzle-massive-publish
+systemctl disable puzzle-massive-publish
+rm -f "${SYSTEMDDIR}puzzle-massive-publish.service";
+
 systemctl stop puzzle-massive-artist
 systemctl disable puzzle-massive-artist
 rm -f "${SYSTEMDDIR}puzzle-massive-artist.service";
