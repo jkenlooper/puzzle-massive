@@ -37,6 +37,7 @@ from rq import Worker, Queue
 from api.flask_secure_cookie import SecureCookie
 from api.app import db, redis_connection
 from api.database import fetch_query_string, rowify
+from api.jobs.pieceTranslate import attempt_piece_movement
 from api.tools import (
     loadConfig,
     formatPieceMovementString,
@@ -831,22 +832,41 @@ class PuzzlePiecesMovePublishView(MethodView):
                 karma = redis_connection.decr(karma_key)
             karma_change -= 1
 
-        pz_translate_queue = Queue(puzzle_data.get("q"), connection=redis_connection)
+        use_queue = True
+        if not use_queue:
+            (msg, karma_change) = attempt_piece_movement(
+                ip, user, puzzle_data, piece, x, y, r, karma_change,
+            )
+        else:
+            pz_translate_queue = Queue(
+                puzzle_data.get("q"), connection=redis_connection
+            )
 
-        # Push to queue for further processing by a single worker.
-        # Record timestamp of queue activity
+            # Push to queue for further processing by a single worker.
+            # Record timestamp of queue activity
 
-        redis_connection.zadd(
-            "pzq_activity:{queue_name}".format(queue_name=puzzle_data["q"]),
-            {timestamp_now: timestamp_now},
-        )
-        job = pz_translate_queue.enqueue_call(
-            func="api.jobs.pieceTranslate.attempt_piece_movement",
-            args=(ip, user, puzzle_data, piece, x, y, r, karma_change,),
-            result_ttl=0,
-            timeout=10,
-            ttl=None,
-        )
+            redis_connection.zadd(
+                "pzq_activity:{queue_name}".format(queue_name=puzzle_data["q"]),
+                {timestamp_now: timestamp_now},
+            )
+            job = pz_translate_queue.enqueue_call(
+                func="api.jobs.pieceTranslate.attempt_piece_movement",
+                args=(ip, user, puzzle_data, piece, x, y, r, karma_change,),
+                result_ttl=1,
+                timeout=10,
+                ttl=None,
+                failure_ttl=1,
+            )
+            if current_app.config["DEBUG"] and job.get_status() == "queued":
+                try:
+                    job_q = job.get_position()
+                    if job_q:
+                        current_app.logger.debug(
+                            "piece movement job in position: {}".format(job_q)
+                        )
+                except ValueError as err:
+                    # Job may not be queued when get_position is called.
+                    pass
 
         # publish just the bit movement so it matches what this player did
         msg = formatBitMovementString(user, x, y)

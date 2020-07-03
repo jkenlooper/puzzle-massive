@@ -38,7 +38,7 @@ from flask import current_app
 
 from api.app import db, redis_connection, make_app
 from api.tools import loadConfig, init_karma_key
-from api.user import generate_user_login
+from api.user import generate_user_login, user_id_from_ip
 from api.constants import (
     ACTIVE,
     CLASSIC,
@@ -401,10 +401,21 @@ class UserSession:
             PORTPUBLISH=current_app.config["PORTPUBLISH"]
         )
 
+        cur = db.cursor()
+        result = cur.execute(
+            read_query_file("select-user-id-by-ip-and-no-password.sql"), {"ip": ip}
+        ).fetchall()
+        if result:
+            (result, col_names) = rowify(result, cur.description)
+            shareduser = result[0]["id"]
+            redis_connection.zrem("bannedusers", shareduser)
+        cur.close()
+
         # get test user
         current_user_id = requests.get(
             "{0}/current-user-id/".format(self.api_host), headers=self.headers
         )
+        # print('ip {} and {}'.format(ip, current_user_id.cookies))
         self.shareduser_cookie = current_user_id.cookies["shareduser"]
         self.shareduser = int(current_user_id.content)
 
@@ -426,9 +437,11 @@ class UserSession:
                 time.sleep(1)
                 print(r.text)
                 return
-            print(data.get("msg"))
+            # print(data.get("msg"))
             if data.get("timeout"):
-                time.sleep(data.get("timeout", 1))
+                # time.sleep(data.get("timeout", 1))
+                time.sleep(1)
+                raise Exception("timeout")
             return
         try:
             data = r.json()
@@ -465,11 +478,12 @@ class UserSession:
                 data = r.json()
             except ValueError as err:
                 time.sleep(1)
-                # print(r.text)
+                print(r.text)
                 return
             # print(data.get("msg"))
             if data.get("timeout"):
-                time.sleep(data.get("timeout", 1))
+                # time.sleep(data.get("timeout", 1))
+                raise Exception("timeout")
             return
         try:
             data = r.json()
@@ -498,6 +512,10 @@ class PuzzlePieces:
         self.user_session = user_session
         self.puzzle = puzzle
         self.puzzle_id = puzzle_id
+
+        karma_key = init_karma_key(redis_connection, self.puzzle, self.user_session.ip)
+        redis_connection.delete(karma_key)
+
         self.puzzle_pieces = self.user_session.get_data(
             "/puzzle-pieces/{0}/".format(self.puzzle_id), "api"
         )
@@ -519,23 +537,42 @@ class PuzzlePieces:
         x = randint(0, self.table_width - 100)
         y = randint(0, self.table_height - 100)
         start = time.perf_counter()
-        piece_token = self.user_session.get_data(
-            "/puzzle/{puzzle_id}/piece/{piece_id}/token/?mark={mark}".format(
-                puzzle_id=self.puzzle_id,
-                piece_id=piece_id,
-                mark=self.puzzle_pieces["mark"],
-            ),
-            "publish",
-        )
-        if piece_token and piece_token.get("token"):
-            puzzle_pieces_move = self.user_session.patch_data(
-                "/puzzle/{puzzle_id}/piece/{piece_id}/move/".format(
-                    puzzle_id=self.puzzle_id, piece_id=piece_id
+        piece_token = None
+        try:
+            piece_token = self.user_session.get_data(
+                "/puzzle/{puzzle_id}/piece/{piece_id}/token/?mark={mark}".format(
+                    puzzle_id=self.puzzle_id,
+                    piece_id=piece_id,
+                    mark=self.puzzle_pieces["mark"],
                 ),
                 "publish",
-                payload={"x": x, "y": y},
-                headers={"Token": piece_token["token"]},
             )
+        except Exception as err:
+            print("resetting karma for {ip}".format(ip=self.user_session.ip))
+            karma_key = init_karma_key(
+                redis_connection, self.puzzle, self.user_session.ip
+            )
+            redis_connection.delete(karma_key)
+            redis_connection.zrem("bannedusers", self.user_session.shareduser)
+
+        if piece_token and piece_token.get("token"):
+            puzzle_pieces_move = None
+            try:
+                puzzle_pieces_move = self.user_session.patch_data(
+                    "/puzzle/{puzzle_id}/piece/{piece_id}/move/".format(
+                        puzzle_id=self.puzzle_id, piece_id=piece_id
+                    ),
+                    "publish",
+                    payload={"x": x, "y": y},
+                    headers={"Token": piece_token["token"]},
+                )
+            except Exception as err:
+                print("resetting karma for {ip}".format(ip=self.user_session.ip))
+                karma_key = init_karma_key(
+                    redis_connection, self.puzzle, self.user_session.ip
+                )
+                redis_connection.delete(karma_key)
+                redis_connection.zrem("bannedusers", self.user_session.shareduser)
             if puzzle_pieces_move:
                 if puzzle_pieces_move.get("msg") == "boing":
                     raise Exception("boing")
@@ -554,6 +591,7 @@ class PuzzleActivityJob:
     def __init__(self, puzzle_id, ip):
         self.puzzle_id = puzzle_id
         self.ip = ip
+        self.user_session = UserSession(ip=self.ip)
         cur = db.cursor()
         result = cur.execute(
             "select id, table_width, table_height from Puzzle where puzzle_id = :puzzle_id;",
@@ -564,31 +602,37 @@ class PuzzleActivityJob:
         cur.close()
 
     def run(self):
-        user_session = UserSession(ip=self.ip)
         puzzle_pieces = PuzzlePieces(
-            user_session,
+            self.user_session,
             self.puzzle_details["id"],
             self.puzzle_id,
             self.puzzle_details["table_width"],
             self.puzzle_details["table_height"],
         )
-        puzzle_pieces.move_random_pieces_with_delay(delay=0.01, max_delay=0.1)
+        puzzle_pieces.move_random_pieces_with_delay(delay=0.01, max_delay=1)
 
 
 def simulate_puzzle_activity(puzzle_ids, count=1):
     """
 
     """
+    cur = db.cursor()
+    result = cur.execute(
+        "select distinct ip from User order by random() limit 1;",
+    ).fetchone()
+    if not result:
+        print("Add players first")
+        return
 
-    user_session = UserSession(ip="127.0.0.1")
+    user_session = UserSession(ip=result[0])
 
     gallery_puzzle_list = user_session.get_data("/gallery-puzzle-list/", "api")
 
     listed_puzzle_ids = [x["puzzle_id"] for x in gallery_puzzle_list["puzzles"]]
     _puzzle_ids = puzzle_ids or listed_puzzle_ids
-    cur = db.cursor()
+
     result = cur.execute(
-        "select distinct ip from User order by score desc limit :count;",
+        "select distinct ip from User order by id desc limit :count;",
         {"count": int(count * len(_puzzle_ids))},
     ).fetchall()
     if not result:
@@ -601,6 +645,7 @@ def simulate_puzzle_activity(puzzle_ids, count=1):
     while players:
         for puzzle_id in puzzle_ids or listed_puzzle_ids:
             ip = players.pop()
+            user_session = UserSession(ip=ip)
             puzzle_activity_job = PuzzleActivityJob(puzzle_id, ip)
             jobs.append(multiprocessing.Process(target=puzzle_activity_job.run))
             if not players:
