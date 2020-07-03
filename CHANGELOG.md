@@ -21,6 +21,13 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
+## [Unreleased] - ...
+
+### Changed
+
+- Optimized piece movement requests and moved piece movement latency to
+  secondary menu on puzzle page.
+
 ## [2.8.1] - 2020-06-23
 
 ### Changed
