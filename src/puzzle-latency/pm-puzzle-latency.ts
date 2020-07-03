@@ -47,7 +47,8 @@ customElements.define(
     template(data: TemplateData) {
       return html`
         <div class="pm-PuzzleLatency">
-          latency: ${data.latency}
+          <small class="pm-PuzzleLatency-label">latency:</small>
+          <span class="pm-PuzzleLatency-value">${data.latency}</span>
         </div>
       `;
     }

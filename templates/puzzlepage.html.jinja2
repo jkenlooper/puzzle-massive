@@ -214,6 +214,12 @@
           stuff like karma status, player list, etc.
         -->
         <!-- TODO: add player list -->
+
+        <div class="u-paddingLeftXs u-marginLeftAuto">
+          {%- if puzzle.status in (ACTIVE, BUGGY_UNLISTED) %}
+          <pm-puzzle-latency puzzle-id="{{ puzzle.puzzle_id }}"></pm-puzzle-latency>
+          {%- endif %}
+        </div>
         {% endif %}
 
   {% endblock %}
@@ -290,9 +296,6 @@
                 puzzle-id="{{ puzzle.puzzle_id }}"
                 status="{{ puzzle.status }}">
                 <div slot="outline-bottom-content">
-                  {%- if puzzle.status in (ACTIVE, BUGGY_UNLISTED) %}
-                  <pm-puzzle-latency puzzle-id="{{ puzzle.puzzle_id }}"></pm-puzzle-latency>
-                  {%- endif %}
                 </div>
               </pm-puzzle-pieces>
               <pm-puzzle-bits></pm-puzzle-bits>

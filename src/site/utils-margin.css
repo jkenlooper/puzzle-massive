@@ -1,0 +1,10 @@
+/* Used to align content to the right or left mostly. Use the
+ * suitcss-utils-spacing when needing actual pixel values other then auto.
+ */
+
+.u-marginLeftAuto {
+  margin-left: auto;
+}
+.u-marginRightAuto {
+  margin-right: auto;
+}
