@@ -12,5 +12,6 @@ journalctl --follow \
   _SYSTEMD_UNIT=puzzle-massive-backup-db.timer \
   _SYSTEMD_UNIT=puzzle-massive-backup-db.service \
   _SYSTEMD_UNIT=puzzle-massive-worker.service \
+  _SYSTEMD_UNIT=puzzle-massive-publish.service \
   _SYSTEMD_UNIT=puzzle-massive-janitor.service
 

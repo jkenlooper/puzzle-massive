@@ -44,7 +44,7 @@ def main():
             # Register the queue name
             redis_connection.sadd("pzq_register", queue_name)
 
-            worker.work()
+            worker.work(logging_level="WARN")
 
             # TODO: Use a pipe and find all puzzles that have set the 'q' to this
             # queue before removing the registered queue.
