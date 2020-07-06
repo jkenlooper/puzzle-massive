@@ -1,5 +1,4 @@
 from api.tools import formatPieceMovementString
-import time
 
 
 class PieceMutateError(Exception):
@@ -29,7 +28,6 @@ class PieceMutateProcess:
         piece_count=0,
     ):
         ""
-        time.sleep(5)
         self.redis_connection = redis_connection
         self.puzzle = puzzle
         self.piece = piece
