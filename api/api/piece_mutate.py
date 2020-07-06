@@ -1,4 +1,5 @@
 from api.tools import formatPieceMovementString
+import time
 
 
 class PieceMutateError(Exception):
@@ -28,6 +29,7 @@ class PieceMutateProcess:
         piece_count=0,
     ):
         ""
+        time.sleep(5)
         self.redis_connection = redis_connection
         self.puzzle = puzzle
         self.piece = piece
@@ -71,9 +73,6 @@ class PieceMutateProcess:
 
         self._load_related_pieces()
 
-        # TODO: return early if piece move would be invalid (piece proximity,
-        # etc.)
-
         self._set_can_join_adjacent_piece()
 
         msg = ""
@@ -89,11 +88,18 @@ class PieceMutateProcess:
             # Put back to buffered mode since the watch was called.
             pipe.multi()
 
-            # TODO: update the piece and it's piece group
-            if len(self.pieces_in_proximity_to_target) >= 4:
+            if 13 >= len(self.pieces_in_proximity_to_target) >= 4:
+                # Too many pieces within proximity of this piece, mark piece as
+                # stacked.
                 msg = self._stack_pieces(pipe)
                 status = "stacked"
+            elif len(self.pieces_in_proximity_to_target) > 13:
+                # Too many pieces within proximity of this piece, reject piece
+                # movement.
+                msg = self._reject_pieces(pipe)
+                status = "stacked"
             else:
+                # Update the piece and it's piece group
                 msg = self._reset_pieces_in_proximity_stacked_status(pipe)
                 if self.can_join_adjacent_piece == None:
                     msg += self._move_pieces(pipe)
@@ -341,6 +347,17 @@ class PieceMutateProcess:
             new_target_y = adjacent_piece_props["y"] - offset_from_piece_y
             self._update_target_position(new_target_x, new_target_y)
             break
+
+    def _reject_pieces(self, pipe):
+        "Revert piece movment back to origin."
+        lines = []
+        msg = ""
+        lines.append(
+            formatPieceMovementString(self.piece, x=self.origin_x, y=self.origin_y)
+        )
+        msg += "\n".join(lines)
+        msg += "\n"
+        return msg
 
     def _stack_pieces(self, pipe):
         "When too many pieces are within proximity to each other, skip trying to join any of them and mark them as stacked"

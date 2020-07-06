@@ -771,63 +771,9 @@ class PuzzlePiecesMovePublishView(MethodView):
             redis_connection.hset(pzq_key, "q", queue_name)
             puzzle_data["q"] = queue_name
 
-        # TODO: move this to pieceTranslate
-        # Check if there are too many pieces stacked. Slightly less exact from
-        # what pieceTranslate does.  This includes immovable pieces, and the
-        # pieces own group which would normally be filtered out when checking
-        # if the piece can be joined.
-        (pieceWidth, pieceHeight) = list(
-            map(
-                int,
-                redis_connection.hmget(
-                    "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), ["w", "h"]
-                ),
-            )
-        )
-        toleranceX = min(pieceWidth, 200)
-        toleranceY = min(pieceHeight, 200)
-        proximityX = set(
-            map(
-                int,
-                redis_connection.zrangebyscore(
-                    "pcx:{puzzle}".format(puzzle=puzzle),
-                    x - toleranceX,
-                    x + toleranceX,
-                ),
-            )
-        )
-        proximityY = set(
-            map(
-                int,
-                redis_connection.zrangebyscore(
-                    "pcy:{puzzle}".format(puzzle=puzzle),
-                    y - toleranceY,
-                    y + toleranceY,
-                ),
-            )
-        )
-        piecesInProximity = set.intersection(proximityX, proximityY)
-        if len(piecesInProximity) >= 13:
-            if karma > MIN_KARMA:
-                karma = redis_connection.decr(karma_key, amount=STACK_PENALTY)
-            err_msg = get_too_many_pieces_in_proximity_err_msg(
-                piece, list(piecesInProximity)
-            )
-            err_msg["karma"] = get_public_karma_points(
-                redis_connection, ip, user, puzzle
-            )
-            # TODO: should publish a message so only the user will get the message
-            return make_response(encoder.encode(err_msg), 400)
-
         # Record hot spot (not exact)
-        # TODO: remove timestamp from key and rely on expire setting
-        rounded_timestamp_hotspot = timestamp_now - (timestamp_now % HOTSPOT_EXPIRE)
-        hotspot_area_key = "hotspot:{puzzle}:{user}:{timestamp}:{x}:{y}".format(
-            puzzle=puzzle,
-            user=user,
-            timestamp=rounded_timestamp_hotspot,
-            x=x - (x % 200),
-            y=y - (y % 200),
+        hotspot_area_key = "hotspot:{puzzle}:{user}:{x}:{y}".format(
+            puzzle=puzzle, user=user, x=x - (x % 200), y=y - (y % 200),
         )
         hotspot_count = redis_connection.incr(hotspot_area_key)
         if hotspot_count == 1:

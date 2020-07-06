@@ -10,7 +10,7 @@ import * as Hammer from "hammerjs";
 
 import { rgbToHsl } from "../site/utilities";
 import hashColorService from "../hash-color/hash-color.service";
-import { puzzleService, PieceData } from "./puzzle.service";
+import { puzzleService, PieceData, KarmaData } from "./puzzle.service";
 import { streamService } from "./stream.service";
 import { Status } from "../site/puzzle-images.service";
 
@@ -124,6 +124,11 @@ customElements.define(
           this.onPuzzleStatus.bind(this),
           this.instanceId
         );
+        streamService.subscribe(
+          "karma/updated",
+          this.onKarmaUpdated.bind(this),
+          `karmaUpdated ${this.instanceId}`
+        );
 
         puzzleService.connect();
         puzzleService.subscribe(
@@ -211,6 +216,10 @@ customElements.define(
           this.blocked = true;
           break;
       }
+    }
+
+    onKarmaUpdated(data: KarmaData) {
+      this.renderPieceKarma(null, data);
     }
 
     onMoveBlocked(data) {
@@ -367,6 +376,24 @@ customElements.define(
       puzzleService.unSelectPiece(data.id);
     }
 
+    renderPieceKarma($piece: HTMLElement | null, karmaData: KarmaData) {
+      let $_piece: HTMLElement | null =
+        $piece || this.$collection.querySelector("#p-" + karmaData.id);
+      // Toggle the is-up, is-down class when karma has changed
+      if ($_piece !== null && karmaData.karmaChange) {
+        if (karmaData.karmaChange > 0) {
+          $_piece.classList.add("is-up");
+        } else {
+          $_piece.classList.add("is-down");
+        }
+        window.setTimeout(function cleanupKarma() {
+          if ($_piece) {
+            $_piece.classList.remove("is-up", "is-down");
+          }
+        }, 5000);
+      }
+    }
+
     // update DOM for array of pieces
     renderPieces(pieces: Array<PieceData>) {
       let tmp: undefined | DocumentFragment; // = document.createDocumentFragment();
@@ -422,17 +449,12 @@ customElements.define(
         }
 
         // Toggle the is-up, is-down class when karma has changed
-        if (piece.karmaChange) {
-          if (piece.karmaChange > 0) {
-            $piece.classList.add("is-up");
-          } else {
-            $piece.classList.add("is-down");
-          }
-          window.setTimeout(function cleanupKarma() {
-            if ($piece) {
-              $piece.classList.remove("is-up", "is-down");
-            }
-          }, 5000);
+        if ($piece && piece.karmaChange) {
+          this.renderPieceKarma($piece, <KarmaData>{
+            id: piece.id,
+            karma: piece.karma,
+            karmaChange: piece.karmaChange,
+          });
           piece.karmaChange = false;
         }
       });

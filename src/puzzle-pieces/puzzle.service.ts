@@ -49,7 +49,7 @@ interface Pieces {
 export interface KarmaData {
   id: number;
   karma: number;
-  karmaChange: boolean;
+  karmaChange: number | boolean;
 }
 
 enum PieceMoveErrorTypes {
@@ -206,7 +206,7 @@ class PuzzleService {
   private onKarmaUpdate(data: KarmaData) {
     let piece = this.pieces[data.id];
     Object.assign(piece, data);
-    this._broadcast(piecesMutate, [piece]);
+    //this._broadcast(piecesMutate, [piece]);
     this._broadcast(karmaUpdated, data);
   }
 
@@ -452,17 +452,24 @@ class PuzzleService {
                 r: data.r,
               };
               self.onPieceMoveRejected(pieceMovementData);
+              self.onKarmaUpdate(<KarmaData>{
+                id: id,
+                karma: pieceMovementData.karma,
+                karmaChange: -1,
+              });
             },
           });
         },
-        success: function (d) {
-          self.onKarmaUpdate(d);
-        },
-        complete: () => {
-          let piece = self.pieces[id];
-          piece.pending = false;
-          self._broadcast(piecesMutate, [piece]);
-        },
+        // The puzzle stream will update the pending status instead of waiting
+        // for a successful response.
+        //success: function (d) {
+        //  console.log("skip success", d);
+        //},
+        //complete: () => {
+        //  let piece = self.pieces[id];
+        //  piece.pending = false;
+        //  self._broadcast(piecesMutate, [piece]);
+        //},
       });
     };
   }

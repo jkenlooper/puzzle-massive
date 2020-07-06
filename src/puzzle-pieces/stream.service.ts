@@ -6,6 +6,7 @@ import {
   puzzleStreamMachine,
   RECONNECT_INTERVAL,
 } from "./puzzle-stream-machine";
+import { KarmaData } from "../puzzle-pieces/puzzle.service";
 import userDetailsService from "../site/user-details.service";
 import { Status } from "../site/puzzle-images.service";
 
@@ -33,6 +34,7 @@ enum EventType {
   invalid = "invalid",
   ping = "ping",
   move = "move",
+  karma = "karma",
   // The 'message' is the default if no event type was set
   message = "message",
   // Connection is open
@@ -59,12 +61,14 @@ interface PuzzleStreamMap {
 
 type SocketStatusCallback = (data: any) => any;
 type PieceUpdateCallback = (data: PieceMovementData) => any;
+type KarmaUpdatedCallback = (data: KarmaData) => any;
 type PingCallback = (data: string) => any;
 type PuzzleStatusCallback = (status: Status) => any;
 const socketDisconnected = Symbol("socket/disconnected");
 const socketConnected = Symbol("socket/connected");
 const socketReconnecting = Symbol("socket/reconnecting");
 const pieceUpdate = Symbol("piece/update");
+const karmaUpdated = Symbol("karma/updated");
 const puzzlePingTopic = Symbol("puzzle/ping");
 const puzzlePingErrorTopic = Symbol("puzzle/ping/error");
 const puzzleStatusTopic = Symbol("puzzle/status");
@@ -73,6 +77,7 @@ const topics = {
   "socket/connected": socketConnected,
   "socket/reconnecting": socketReconnecting,
   "piece/update": pieceUpdate,
+  "karma/updated": karmaUpdated,
   "puzzle/ping": puzzlePingTopic,
   "puzzle/ping/error": puzzlePingErrorTopic,
   "puzzle/status": puzzleStatusTopic,
@@ -122,6 +127,11 @@ class PuzzleStream {
       false
     );
     eventSource.addEventListener(
+      EventType.karma,
+      this.handleKarmaEvent.bind(this),
+      false
+    );
+    eventSource.addEventListener(
       EventType.message,
       this.handleMessageEvent.bind(this),
       false
@@ -164,6 +174,11 @@ class PuzzleStream {
     this.eventSource.removeEventListener(
       EventType.move,
       this.handleMoveEvent,
+      false
+    );
+    this.eventSource.removeEventListener(
+      EventType.move,
+      this.handleKarmaEvent,
       false
     );
     this.eventSource.removeEventListener(
@@ -382,6 +397,24 @@ class PuzzleStream {
     });
   }
 
+  private handleKarmaEvent(message: any) {
+    if (message.data && typeof message.data === "string") {
+      const [_player, _piece, _karma, _karma_change] = message.data
+        .split(":")
+        .map((item) => {
+          return Number(item);
+        });
+      if (_player === this.playerId && _karma_change) {
+        const karmaData: KarmaData = {
+          id: _piece,
+          karma: _karma,
+          karmaChange: _karma_change,
+        };
+        this.broadcast(karmaUpdated, karmaData);
+      }
+    }
+  }
+
   private handleMessageEvent(message: any) {
     //console.log("message from event source", message);
     if (message.data && message.data.startsWith("status:")) {
@@ -507,6 +540,7 @@ class StreamService {
   [socketConnected]: Map<string, SocketStatusCallback> = new Map();
   [socketReconnecting]: Map<string, SocketStatusCallback> = new Map();
   [pieceUpdate]: Map<string, PieceUpdateCallback> = new Map();
+  [karmaUpdated]: Map<string, KarmaUpdatedCallback> = new Map();
   [puzzlePingTopic]: Map<string, PingCallback> = new Map();
   [puzzlePingErrorTopic]: Map<string, SocketStatusCallback> = new Map();
   [puzzleStatusTopic]: Map<string, PuzzleStatusCallback> = new Map();
@@ -555,6 +589,7 @@ class StreamService {
     fn:
       | SocketStatusCallback
       | PieceUpdateCallback
+      | KarmaUpdatedCallback
       | PingCallback
       | PuzzleStatusCallback,
     id: string

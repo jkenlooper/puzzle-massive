@@ -80,7 +80,7 @@ def attempt_piece_movement(ip, user, puzzleData, piece, x, y, r, karma_change):
 
 
 def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
-    def publishMessage(msg, karma_change, points=0, complete=False):
+    def publishMessage(msg, karma_change, karma, points=0, complete=False):
         # print(topic)
         # print(msg)
         sse.publish(
@@ -92,9 +92,6 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
         now = int(time.time())
 
         redis_connection.zadd("pcupdates", {puzzle: now})
-
-        # TODO:
-        # return (topic, msg)
 
         # bump the m_date for this player on the puzzle and timeline
         redis_connection.zadd("timeline:{puzzle}".format(puzzle=puzzle), {user: now})
@@ -149,6 +146,11 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
                 )
             )
 
+            sse.publish(
+                "status:{}".format(COMPLETED),
+                channel="puzzle:{puzzle_id}".format(puzzle_id=puzzleData["puzzle_id"]),
+            )
+
             r = requests.patch(
                 "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
                     HOSTAPI=current_app.config["HOSTAPI"],
@@ -165,15 +167,10 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
                 raise Exception(
                     "Puzzle details api error when updating puzzle to be complete"
                 )
-
-            sse.publish(
-                "status:{}".format(COMPLETED),
-                channel="puzzle:{puzzle_id}".format(puzzle_id=puzzleData["puzzle_id"]),
-            )
             job = current_app.cleanupqueue.enqueue_call(
                 func="api.jobs.convertPiecesToDB.transfer",
                 args=(puzzle,),
-                kwargs={"delay": 10},
+                kwargs={"delay": 0},
                 result_ttl=0,
             )
 
@@ -182,6 +179,15 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
                     puzzle_id=puzzleData["puzzle_id"]
                 ),
                 current_app.config.get("PURGEURLLIST"),
+            )
+
+        if karma_change:
+            sse.publish(
+                "{user}:{piece}:{karma}:{karma_change}".format(
+                    user=user, piece=piece, karma=karma, karma_change=karma_change
+                ),
+                type="karma",
+                channel="puzzle:{puzzle_id}".format(puzzle_id=puzzleData["puzzle_id"]),
             )
 
         # return topic and msg mostly for testing
@@ -222,14 +228,6 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
     if y > puzzleData["table_height"]:
         y = puzzleData["table_height"]
 
-    # TODO: move inexact piece stack check from publish.py to here.
-
-    # Get the puzzle piece origin position
-    # TODO: Handle the potential error if the hmget here gets a None value for x and y.
-    # TODO: originX and originY no longer needed?
-    # (originX, originY) = list(
-    #    map(int, redis_connection.hmget(pc_puzzle_piece_key, ["x", "y"]),)
-    # )
     piece_mutate_process = PieceMutateProcess(
         redis_connection, puzzle, piece, x, y, r, piece_count=puzzleData.get("pieces")
     )
@@ -241,7 +239,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
             redis_connection.decr(karma_key)
         karma_change -= 1
 
-        return publishMessage(msg, karma_change,)
+        return publishMessage(msg, karma_change, karma)
     elif status == "moved":
         if (
             len(piece_mutate_process.all_other_pieces_in_piece_group)
@@ -250,14 +248,14 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
             if karma > MIN_KARMA:
                 redis_connection.decr(karma_key)
             karma_change -= 1
-        return publishMessage(msg, karma_change,)
+        return publishMessage(msg, karma_change, karma)
     elif status == "joined":
-        return publishMessage(msg, karma_change, points=4, complete=False,)
+        return publishMessage(msg, karma_change, karma, points=4, complete=False,)
 
     elif status == "completed":
-        return publishMessage(msg, karma_change, points=4, complete=True,)
+        return publishMessage(msg, karma_change, karma, points=4, complete=True,)
     else:
         pass
 
     # TODO: handle failed status
-    return publishMessage(msg, karma_change,)
+    return publishMessage(msg, karma_change, karma)

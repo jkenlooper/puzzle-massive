@@ -36,7 +36,8 @@ def transfer(puzzle, cleanup=True, skip_status_update=False, delay=0):
     """
     if delay:
         # Delaying helps avoid issues for players that are moving the last piece
-        # of the puzzle as someone else completes it.
+        # of the puzzle as someone else completes it. TODO: Verify that delaying
+        # puzzle transfer is still needed to avoid last piece issues.
         current_app.logger.info("Delaying puzzle transfer for {} seconds".format(delay))
         time.sleep(delay)
     current_app.logger.info("transferring puzzle: {0}".format(puzzle))
