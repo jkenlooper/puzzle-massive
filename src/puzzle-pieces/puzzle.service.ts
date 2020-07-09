@@ -465,11 +465,11 @@ class PuzzleService {
         //success: function (d) {
         //  console.log("skip success", d);
         //},
-        //complete: () => {
-        //  let piece = self.pieces[id];
-        //  piece.pending = false;
-        //  self._broadcast(piecesMutate, [piece]);
-        //},
+        complete: () => {
+          let piece = self.pieces[id];
+          piece.pending = false;
+          self._broadcast(piecesMutate, [piece]);
+        },
       });
     };
   }
