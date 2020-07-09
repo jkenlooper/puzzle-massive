@@ -1,5 +1,6 @@
 // TODO: WIP
 import { createMachine } from "@xstate/fsm";
+import { puzzlePieceMachineDefinition } from "./puzzle-piece-machine-definition";
 
 type PuzzlePieceState =
   | {
@@ -40,16 +41,4 @@ export const puzzlePieceMachine = createMachine<
   PuzzlePieceContext,
   PuzzlePieceEvent,
   PuzzlePieceState
->({
-  id: "puzzle-piece",
-  initial: "unknown",
-  context: {},
-  states: {
-    unknown: {},
-    active: {},
-    pending: {},
-    immovable: {},
-    queued: {},
-    movable: {},
-  },
-});
+>(puzzlePieceMachineDefinition);
