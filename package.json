@@ -13,13 +13,12 @@
     "email": "puzzle-bug@massive.xyz"
   },
   "license": "AGPL-3.0-only",
-  "type": "module",
   "scripts": {
     "prettier": "prettier",
     "eslint": "eslint",
     "stylelint": "stylelint",
     "tapetest": "tsc --project . --outDir tests --module commonjs && tape \"tests/**/*.spec.js\"",
-    "test": "mocha --experimental-modules --recursive 'src/**/*.spec.js'",
+    "test": "mocha --recursive 'src/**/*.spec.mjs'",
     "prebuild": "npm run transform-design-tokens",
     "build": "webpack --mode=production",
     "predebug": "npm run transform-design-tokens",

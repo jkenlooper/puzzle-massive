@@ -14,7 +14,7 @@ trim_trailing_whitespace = true
 indent_size = 2
 indent_style = space
 
-[*.{js,ts}]
+[*.{mjs,js,ts}]
 indent_size = 2
 indent_style = space
 

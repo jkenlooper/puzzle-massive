@@ -111,7 +111,7 @@ class PuzzlePiecesView(MethodView):
 
         # The 'rotate' field is not public. It is for the true orientation of the piece.
         # The 'r' field is the mutable rotation of the piece.
-        publicPieceProperties = ("x", "y", "r", "s", "w", "h", "b")
+        publicPieceProperties = ("x", "y", "r", "s", "g", "w", "h", "b")
 
         with redis_connection.pipeline(transaction=True) as pipe:
             for item in all_pieces:

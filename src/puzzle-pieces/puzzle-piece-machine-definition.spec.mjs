@@ -2,7 +2,7 @@ import mocha from "mocha";
 import chai from "chai";
 import xstate from "@xstate/fsm";
 
-import { puzzlePieceMachineDefinition } from "./puzzle-piece-machine-definition.js";
+import puzzlePieceMachineDefinition from "./puzzle-piece-machine-definition.mjs";
 
 const defaultPieceContext = {
   id: 1,
@@ -10,6 +10,7 @@ const defaultPieceContext = {
   x: 1,
   y: 1,
   r: 1,
+  g: 1,
   w: 20,
   h: 20,
   b: 1,
