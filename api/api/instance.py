@@ -63,13 +63,15 @@ class CreatePuzzleInstanceView(MethodView):
             abort(400)
         fork = bool(fork == 1)
 
-        # Check permission
+        # Validate permission
         permission = int(args.get("permission", PUBLIC))
         if permission not in (PUBLIC, PRIVATE):
             abort(400)
         if fork:
             # All copies of puzzles are unlisted
             permission = PRIVATE
+        # Note that the permission value is updated to be unlisted later on if
+        # the source puzzle is unlisted based on source puzzle data.
 
         user = int(
             current_app.secure_cookie.get(u"user")
@@ -139,6 +141,12 @@ class CreatePuzzleInstanceView(MethodView):
 
         (result, col_names) = rowify(result, cur.description)
         source_puzzle_data = result[0]
+
+        # Set the permission of new puzzle to be unlisted if source puzzle is
+        # that way. The form should have this field as disabled if the source
+        # puzzle is unlisted; which would mean it isn't sent as a parameter.
+        if source_puzzle_data["permission"] == PRIVATE:
+            permission = PRIVATE
 
         puzzle_id = generate_new_puzzle_id(source_puzzle_data["name"])
 
