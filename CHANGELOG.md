@@ -21,6 +21,12 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
+## [2.8.2] - 2020-07-16
+
+### Fixed
+
+- New instances of unlisted puzzles remain unlisted.
+
 ## [2.8.1] - 2020-06-23
 
 ### Changed
