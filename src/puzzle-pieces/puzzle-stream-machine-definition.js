@@ -6,23 +6,24 @@ export const RECONNECT_INTERVAL = 5 * 1000;
 export const RECONNECT_TIMEOUT = 2 * 60 * 1000;
 
 const MAX_PING_COUNT = 15;
+const defaultContext = {
+  pingCount: 0,
+  reconnectCount: 0,
+};
 export const puzzleStreamMachineDefinition = {
   id: "puzzle-stream",
   initial: "connecting",
-  context: {
-    pingCount: 0,
-    reconnectCount: 0,
-  },
+  context: defaultContext,
   states: {
     connecting: {
       entry: [
         "sendPing",
         assign({
-          pingCount: (context) => {
-            return context.pingCount + 1;
+          pingCount: (context = defaultContext) => {
+            return context["pingCount"] + 1;
           },
-          reconnectCount: (context) => {
-            return context.reconnectCount + 1;
+          reconnectCount: (context = defaultContext) => {
+            return context["reconnectCount"] + 1;
           },
         }),
       ],

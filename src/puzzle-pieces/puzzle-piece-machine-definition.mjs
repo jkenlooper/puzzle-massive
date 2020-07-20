@@ -8,6 +8,7 @@ function isImmovable(context) {
 function isMovable(context) {
   return context.s !== IMMOVABLE;
 }
+/*
 const mutablePieceProperties = ["x", "y", "r", "s", "g"];
 const immutablePieceProperties = ["id", "w", "h", "b"];
 const pieceContext = ["token", "groupActive"];
@@ -17,10 +18,26 @@ const properties = pieceContext
     acc[key] = undefined;
     return acc;
   }, {});
+  */
 const puzzlePieceMachineDefinition = {
   id: "puzzle-piece",
   initial: "unknown",
-  context: properties,
+  context: {
+    // mutable piece properties
+    x: undefined,
+    y: undefined,
+    r: undefined,
+    s: undefined,
+    g: undefined,
+    // immutable piece properties
+    id: undefined,
+    w: undefined,
+    h: undefined,
+    b: undefined,
+    // context
+    token: undefined,
+    groupActive: undefined,
+  },
   states: {
     unknown: {
       // Immediately transition to the next state
