@@ -14,12 +14,27 @@ import { puzzleService, PieceData, KarmaData } from "./puzzle.service";
 import { streamService } from "./stream.service";
 import { Status } from "../site/puzzle-images.service";
 
-import template from "./puzzle-pieces.html";
-import style from "./puzzle-pieces.css";
+import "./puzzle-pieces.css";
 
 const html = `
-  <style>${style}</style>
-  ${template}
+  <div class="pm-PuzzlePieces">
+    <div class="pm-PuzzlePieces-collection"></div>
+    <div class="pm-PuzzlePieces-dropZone"></div>
+    <div class="pm-PuzzlePieces-outlineContainer" id="puzzle-outline">
+      <div class="pm-PuzzlePieces-outline">
+        <div class="pm-PuzzlePieces-outlineTop">
+          <div class="pm-PuzzlePieces-outlineTopContent">
+            <slot name="outline-top-content"></slot>
+          </div>
+        </div>
+        <div class="pm-PuzzlePieces-outlineBottom">
+          <div class="pm-PuzzlePieces-outlineBottomContent">
+            <slot name="outline-bottom-content"></slot>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   `;
 const tag = "pm-puzzle-pieces";
 let lastInstanceId = 0;

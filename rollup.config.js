@@ -3,6 +3,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import { terser } from "rollup-plugin-terser";
 import typescript from "@rollup/plugin-typescript";
+import url from "@rollup/plugin-url";
 import postcss from "rollup-plugin-postcss";
 import postcssImport from "postcss-import";
 import postcssURL from "postcss-url";
@@ -13,24 +14,43 @@ const isProduction =
   !process.env.ROLLUP_WATCH && process.env.NODE_ENV === "production";
 
 export default {
-  input: "src/index.js",
+  external: [
+    //"alpinejs"
+  ],
+  //input: "src/index.js",
+  input: {
+    app: "src/index.js",
+    //admin: "src/admin/index.js",
+  },
   output: {
-    file: "dist/bundle.js",
+    entryFileNames: "[name].bundle.js",
+    dir: "dist",
     format: "module",
     sourcemap: true,
   },
   plugins: [
     postcss({
+      //to: "dist/app.bundle.css",
+      sourceMap: !isProduction,
       extract: true,
       minimize: isProduction,
       plugins: [
-        postcssImport(/*{ root: loader.resourcePath }*/),
+        postcssImport({ root: "src/" }),
         postcssCustomMedia(),
-        postcssURL(),
+        postcssURL({
+          url: "copy",
+          basePath: "./",
+          assetsPath: "dist",
+        }),
         postcssPresetEnv(),
       ],
     }),
     nodeResolve(),
+    url({
+      include: ["**/*.svg"],
+      limit: 0,
+      fileName: "[name][extname]",
+    }),
     typescript(),
     resolve(), // tells Rollup how to find date-fns in node_modules
     commonjs(), // converts date-fns to ES modules
