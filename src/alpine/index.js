@@ -1,3 +1,3 @@
-import "alpinejs";
+//import "alpinejs";
 
 import "./alpine.css";

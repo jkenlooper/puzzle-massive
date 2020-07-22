@@ -14,10 +14,7 @@ const isProduction =
   !process.env.ROLLUP_WATCH && process.env.NODE_ENV === "production";
 
 export default {
-  external: [
-    //"alpinejs"
-  ],
-  //input: "src/index.js",
+  external: ["alpinejs", "hammerjs", "modernizr", "reqwest"],
   input: {
     app: "src/index.js",
     //admin: "src/admin/index.js",
@@ -27,10 +24,13 @@ export default {
     dir: "dist",
     format: "module",
     sourcemap: true,
+    globals: {
+      hammerjs: "Hammer",
+    },
   },
   plugins: [
     postcss({
-      //to: "dist/app.bundle.css",
+      to: "dist/app.bundle.css",
       sourceMap: !isProduction,
       extract: true,
       minimize: isProduction,
@@ -52,24 +52,13 @@ export default {
       fileName: "[name][extname]",
     }),
     typescript(),
-    resolve(), // tells Rollup how to find date-fns in node_modules
-    commonjs(), // converts date-fns to ES modules
-    isProduction && terser(), // minify, but only in production
+    resolve(),
+    commonjs(),
+    isProduction &&
+      terser({
+        compress: {
+          drop_console: true,
+        },
+      }), // minify, but only in production
   ],
 };
-
-/*
-require("file-loader?name=[name].[ext]!not-supported-browser-message.js");
-
-require("file-loader?name=[name].[ext]!../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js");
-require("file-loader?name=bundles/[name].[ext]!../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-ce.js");
-require("file-loader?name=bundles/[name].[ext]!../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-sd-ce-pf.js");
-require("file-loader?name=bundles/[name].[ext]!../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-sd-ce.js");
-require("file-loader?name=bundles/[name].[ext]!../node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-sd.js");
-
-require("file-loader?name=[name].[ext]!../node_modules/hammerjs/hammer.min.js");
-require("file-loader?name=[name].[ext]!../node_modules/lazysizes/lazysizes.min.js");
-require("file-loader?name=[name].[ext]!../node_modules/reqwest/reqwest.min.js");
-require("file-loader?name=[name].[ext]!./modernizr.build.min.js");
-
-*/

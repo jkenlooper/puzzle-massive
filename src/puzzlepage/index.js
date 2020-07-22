@@ -22,5 +22,5 @@ if (previewButton && previewBox) {
 
 const scrollJumpElement = document.querySelector("[scroll-jump]");
 if (scrollJumpElement) {
-  ScrollJump(scrollJumpElement);
+  ScrollJump();
 }

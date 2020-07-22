@@ -77,7 +77,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  justify-content: start;
+  justify-content: flex-start;
   padding: 15px 0;
 }
 

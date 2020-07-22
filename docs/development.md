@@ -377,9 +377,9 @@ python api/api/test_puzzle_details.py TestInternalPuzzleDetailsView.test_missing
 
 The javascript and CSS files in the `dist/` directory are built from the source
 files in `src/` by running the `npm run build` command from your local machine. This uses
-[webpack](https://webpack.js.org/) and is configured with the
-`webpack.config.js`. The entry file is `src/index.js` and following that the
-main app bundle (`app.bundle.js`, `app.css`) is built from
+[rollup](http://rollupjs.org/) and is configured with the
+`rollup.config.js`. The entry file is `src/index.js` and following that the
+main app bundle (`app.bundle.js`, `app.bundle.css`) is built from
 `src/app.js`.
 
 The source files for javascript and CSS are organized mostly as components. The

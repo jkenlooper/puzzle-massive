@@ -66,5 +66,5 @@
     "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */
   },
   "include": ["src"],
-  "exclude": []
+  "exclude": ["src/lib", "src/not-supported-browser-message.js"]
 }

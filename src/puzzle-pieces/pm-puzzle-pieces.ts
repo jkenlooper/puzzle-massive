@@ -1,4 +1,5 @@
-import * as Hammer from "hammerjs";
+//import * as Hammer from "hammerjs";
+//import Hammer from "hammerjs";
 
 // TODO: Exercise for the developer; refactor this mess of old javascript into
 // a more manageable state.  Should start with unit test coverage.  There is

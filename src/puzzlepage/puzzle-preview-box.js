@@ -1,4 +1,4 @@
-import Hammer from "hammerjs";
+//import Hammer from "hammerjs";
 
 export default (button, element) => {
   let _button = button;
@@ -15,7 +15,7 @@ export default (button, element) => {
     _element.style.transform = "translate(" + x + "px, " + y + "px)";
   }
 
-  function toggle(e) {
+  function toggle() {
     model.visible = !model.visible;
     _element.style.display = (model.visible && "block") || "none";
   }
