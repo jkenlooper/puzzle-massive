@@ -68,19 +68,14 @@ customElements.define(
       super();
       const self = this;
       this.instanceId = PmPuzzlePieces._instanceId;
-      const shadowRoot = this.attachShadow({ mode: "open" });
-      shadowRoot.innerHTML = `<style>@import '${this.getAttribute(
-        "resources"
-      )}';></style>'${html}`;
+      this.innerHTML = html;
       this.$collection = <HTMLElement>(
-        shadowRoot.querySelector(".pm-PuzzlePieces-collection")
+        this.querySelector(".pm-PuzzlePieces-collection")
       );
       this.$dropZone = <HTMLElement>(
-        shadowRoot.querySelector(".pm-PuzzlePieces-dropZone")
+        this.querySelector(".pm-PuzzlePieces-dropZone")
       );
-      this.$container = <HTMLElement>(
-        shadowRoot.querySelector(".pm-PuzzlePieces")
-      );
+      this.$container = <HTMLElement>this.querySelector(".pm-PuzzlePieces");
       this.$slabMassive = this.parentElement;
       const withinSlabMassive = this.$slabMassive.tagName === "SLAB-MASSIVE";
 
