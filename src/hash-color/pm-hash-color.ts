@@ -1,4 +1,4 @@
-import * as Modernizr from "modernizr";
+//import * as Modernizr from "modernizr";
 import { html, render } from "lit-html";
 
 import hashColorService from "./hash-color.service";

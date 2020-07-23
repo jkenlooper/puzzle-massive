@@ -1,4 +1,5 @@
-import * as Hammer from "hammerjs";
+//import * as Hammer from "hammerjs";
+//import Hammer from "hammerjs";
 
 // TODO: Exercise for the developer; refactor this mess of old javascript into
 // a more manageable state.  Should start with unit test coverage.  There is
@@ -14,12 +15,27 @@ import { puzzleService, PieceData, KarmaData } from "./puzzle.service";
 import { streamService } from "./stream.service";
 import { Status } from "../site/puzzle-images.service";
 
-import template from "./puzzle-pieces.html";
-import style from "./puzzle-pieces.css";
+import "./puzzle-pieces.css";
 
 const html = `
-  <style>${style}</style>
-  ${template}
+  <div class="pm-PuzzlePieces">
+    <div class="pm-PuzzlePieces-collection"></div>
+    <div class="pm-PuzzlePieces-dropZone"></div>
+    <div class="pm-PuzzlePieces-outlineContainer" id="puzzle-outline">
+      <div class="pm-PuzzlePieces-outline">
+        <div class="pm-PuzzlePieces-outlineTop">
+          <div class="pm-PuzzlePieces-outlineTopContent">
+            <slot name="outline-top-content"></slot>
+          </div>
+        </div>
+        <div class="pm-PuzzlePieces-outlineBottom">
+          <div class="pm-PuzzlePieces-outlineBottomContent">
+            <slot name="outline-bottom-content"></slot>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   `;
 const tag = "pm-puzzle-pieces";
 let lastInstanceId = 0;
@@ -52,19 +68,14 @@ customElements.define(
       super();
       const self = this;
       this.instanceId = PmPuzzlePieces._instanceId;
-      const shadowRoot = this.attachShadow({ mode: "open" });
-      shadowRoot.innerHTML = `<style>@import '${this.getAttribute(
-        "resources"
-      )}';></style>'${html}`;
+      this.innerHTML = html;
       this.$collection = <HTMLElement>(
-        shadowRoot.querySelector(".pm-PuzzlePieces-collection")
+        this.querySelector(".pm-PuzzlePieces-collection")
       );
       this.$dropZone = <HTMLElement>(
-        shadowRoot.querySelector(".pm-PuzzlePieces-dropZone")
+        this.querySelector(".pm-PuzzlePieces-dropZone")
       );
-      this.$container = <HTMLElement>(
-        shadowRoot.querySelector(".pm-PuzzlePieces")
-      );
+      this.$container = <HTMLElement>this.querySelector(".pm-PuzzlePieces");
       this.$slabMassive = this.parentElement;
       const withinSlabMassive = this.$slabMassive.tagName === "SLAB-MASSIVE";
 

@@ -1,6 +1,6 @@
 import "./jump-point-marker.css";
 
-export default (element) => {
+export default () => {
   // TODO: When setting a jump point attach a number to the DOM at that point
   // let _element = element
   let jumpPoints = {};

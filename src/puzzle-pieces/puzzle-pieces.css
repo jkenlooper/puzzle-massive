@@ -1,8 +1,3 @@
-:host {
-  display: block;
-  position: relative;
-}
-
 .pm-PuzzlePieces {
   position: absolute;
   top: 0;

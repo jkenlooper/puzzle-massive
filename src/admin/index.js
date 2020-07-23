@@ -1,3 +1,5 @@
+/** @module admin */
+
 import "./admin.css";
 
 import "../player-bit";
