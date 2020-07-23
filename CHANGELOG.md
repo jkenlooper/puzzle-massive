@@ -27,6 +27,7 @@ Types of changes
 
 - Optimized piece movement requests and moved piece movement latency to
   secondary menu on puzzle page.
+- Switched build to use rollup instead of webpack.
 
 ## [2.8.2] - 2020-07-16
 
