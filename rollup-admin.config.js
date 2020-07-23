@@ -15,7 +15,7 @@ const isProduction =
 export default {
   external: ["alpinejs", "hammerjs", "modernizr", "reqwest"],
   input: {
-    app: "src/index.js",
+    admin: "src/admin/index.js",
   },
   output: {
     entryFileNames: "[name].bundle.js",
@@ -28,7 +28,7 @@ export default {
   },
   plugins: [
     postcss({
-      to: "dist/app.bundle.css",
+      to: "dist/admin.bundle.css",
       sourceMap: !isProduction,
       extract: true,
       minimize: isProduction,

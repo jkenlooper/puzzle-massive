@@ -3,6 +3,8 @@
 rm -rf dist
 mkdir -p dist
 
+npm run rollup -- -c rollup-admin.config.js
+
 npm run rollup -- node_modules/alpinejs/dist/alpine.js --file dist/alpine.js --format es --silent --plugin rollup-plugin-terser
 
 npm run rollup -- src/not-supported-browser-message.js --file dist/not-supported-browser-message.js --format iife --plugin rollup-plugin-terser

@@ -5,10 +5,10 @@
  * script that uploads those files to the development machine.
  */
 
-const child_process = require("child_process");
+import child_process from "child_process";
 
 // watchpack is used in webpack as well.
-const Watchpack = require("watchpack");
+import Watchpack from "watchpack";
 
 const wp = new Watchpack({
   aggregateTimeout: 300,
