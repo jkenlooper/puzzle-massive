@@ -81,7 +81,7 @@
     "jsdoc": "^3.6.4",
     "lint-staged": "^10.2.9",
     "mocha": "^8.0.1",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "optimist": "^0.6.1",
     "postcss": "^7.0.32",
     "postcss-custom-media": "^7.0.8",
