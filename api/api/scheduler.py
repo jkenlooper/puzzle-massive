@@ -141,13 +141,17 @@ class AutoRebuildCompletedPuzzle(Task):
                             "found puzzle {id}".format(**completed_puzzle)
                         )
                         # Update puzzle status to be REBUILD and change the piece count
-                        pieces = random.randint(
-                            max(
-                                int(current_app.config["MINIMUM_PIECE_COUNT"]),
-                                max(completed_puzzle["pieces"] - 400, low),
+                        low_range = max(
+                            int(current_app.config["MINIMUM_PIECE_COUNT"]),
+                            min(
+                                max(low, (high - 400)),
+                                max(low, (completed_puzzle["pieces"] - 400)),
                             ),
-                            min(high - 1, completed_puzzle["pieces"] + 400),
                         )
+                        high_range = min(
+                            high, max((low + 400), (completed_puzzle["pieces"] + 400))
+                        )
+                        pieces = random.randint(low_range, high_range)
                         r = requests.patch(
                             "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
                                 HOSTAPI=current_app.config["HOSTAPI"],
