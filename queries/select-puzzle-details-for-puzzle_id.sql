@@ -11,6 +11,7 @@ p.m_date,
 strftime('%Y-%m-%d %H:%M', p.m_date, '+7 hours') as redo_date,
 strftime('%s', p.m_date, '+7 hours') >= strftime('%s', 'now') as is_recent,
 strftime('%s', p.m_date, '+4 days') <= strftime('%s', 'now') as is_old,
+u.id == p.owner as is_owner,
 pi.original == pi.instance as is_original
 FROM Puzzle as p
 JOIN PuzzleInstance as pi on (p.id = pi.instance)

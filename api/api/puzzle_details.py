@@ -48,31 +48,37 @@ class PuzzleInstanceDetailsView(MethodView):
         delete_penalty = 0
         can_delete = True
         delete_disabled_message = ""
-        if puzzleData["status"] not in (
-            COMPLETED,
-            RENDERING_FAILED,
-            BUGGY_UNLISTED,
-            MAINTENANCE,
-        ):
-            delete_penalty = min(
-                current_app.config["MAX_POINT_COST_FOR_DELETING"],
-                max(current_app.config["MINIMUM_PIECE_COUNT"], puzzleData["pieces"]),
-            )
-            can_delete = puzzleData["user_points"] >= delete_penalty
-            # Waive the delete penalty if the m_date for the puzzle is old
-            if not puzzleData["m_date"]:
-                # Puzzles without an m_date may have been created before the
-                # change to pieceRenderer that set an initial m_date or the
-                # puzzle failed to render.
-                can_delete = True
-                delete_penalty = -1
-            elif puzzleData["is_old"]:
-                # A puzzle with an older m_date should be allowed to be deleted
-                # without the delete penalty.
-                can_delete = True
-                delete_penalty = -1
-            if not can_delete:
-                delete_disabled_message = "Not enough dots to delete this puzzle"
+        if not puzzleData["is_owner"]:
+            can_delete = False
+        else:
+            if puzzleData["status"] not in (
+                COMPLETED,
+                RENDERING_FAILED,
+                BUGGY_UNLISTED,
+                MAINTENANCE,
+            ):
+                delete_penalty = min(
+                    current_app.config["MAX_POINT_COST_FOR_DELETING"],
+                    max(
+                        current_app.config["MINIMUM_PIECE_COUNT"], puzzleData["pieces"]
+                    ),
+                )
+                # Handle issue if user_points is None
+                can_delete = int(puzzleData["user_points"] or "0") >= delete_penalty
+                # Waive the delete penalty if the m_date for the puzzle is old
+                if not puzzleData["m_date"]:
+                    # Puzzles without an m_date may have been created before the
+                    # change to pieceRenderer that set an initial m_date or the
+                    # puzzle failed to render.
+                    can_delete = True
+                    delete_penalty = -1
+                elif puzzleData["is_old"]:
+                    # A puzzle with an older m_date should be allowed to be deleted
+                    # without the delete penalty.
+                    can_delete = True
+                    delete_penalty = -1
+                if not can_delete:
+                    delete_disabled_message = "Not enough dots to delete this puzzle"
         return (delete_penalty, can_delete, delete_disabled_message)
 
     def patch(self, puzzle_id):
