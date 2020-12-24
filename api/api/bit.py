@@ -114,7 +114,9 @@ class ClaimBitView(MethodView):
         else:
             user = int(user)
 
-        data["message"] = "Bit icon claimed."
+        data["message"] = "Bit icon claimed by using {} of your dots.".format(
+            current_app.config["POINT_COST_FOR_CHANGING_BIT"]
+        )
         data["name"] = "success"
         response = make_response(json.jsonify(data), 200)
 
@@ -124,6 +126,13 @@ class ClaimBitView(MethodView):
         # Claim the bit icon
         cur.execute(
             fetch_query_string("update_bit_icon_user.sql"), {"user": user, "icon": icon}
+        )
+        cur.execute(
+            fetch_query_string("decrease-user-points.sql"),
+            {
+                "points": current_app.config["POINT_COST_FOR_CHANGING_BIT"],
+                "user": user,
+            },
         )
 
         cur.close()

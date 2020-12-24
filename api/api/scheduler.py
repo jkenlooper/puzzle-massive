@@ -788,6 +788,8 @@ def main():
 
         else:
             try:
+                current_app.logger.info("Delaying start of initial task by 20 seconds.")
+                sleep(20)
                 all_tasks()
             except requests.exceptions.ConnectionError as err:
                 current_app.logger.warning(

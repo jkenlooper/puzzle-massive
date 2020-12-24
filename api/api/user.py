@@ -420,6 +420,8 @@ class UserDetailsView(MethodView):
         (result, col_names) = rowify(result, cur.description)
         user_details = result[0]
         user_details["isShareduser"] = is_shareduser
+        user_details["score"] = user_details["score"] or 0
+        user_details["dots"] = user_details["dots"] or 0
 
         extend_cookie = False
         if user_details["will_expire_cookie"] != 0:

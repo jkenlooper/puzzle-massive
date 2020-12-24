@@ -13,7 +13,7 @@ interface TemplateData {
   message: string;
   limit: number;
   bits: string[];
-  dots: number;
+  hasDotRequirement: boolean;
   hasResponseMessage: boolean;
   responseMessage: string;
   responseName: string;
@@ -75,14 +75,6 @@ customElements.define(
       // Set the limit from the limit attribute
       const limit = this.attributes.getNamedItem("limit");
       this.limit = limit ? parseInt(limit.value) : limitBits;
-
-      // need to get bits on the subscribe callback
-      userDetailsService.subscribe(() => {
-        PmChooseBit.getBits(this, this.limit);
-        userDetailsService.unsubscribe(this.instanceId);
-      }, this.instanceId);
-
-      this.render();
     }
 
     handleClickMore() {
@@ -105,15 +97,18 @@ customElements.define(
         `;
       }
 
-      if (!data.dots) {
-        return html``;
-      }
-
       return html`
         <div class="pm-ChooseBit">
           <p class="pm-ChooseBit-message">
             <strong>${data.message}</strong>
           </p>
+          ${data.hasDotRequirement
+            ? ""
+            : html`
+                <p class="pm-ChooseBit-message">
+                  Not enough dots to choose a bit icon.
+                </p>
+              `}
           <div class="pm-ChooseBit-items">
             ${items()}
           </div>
@@ -167,7 +162,11 @@ customElements.define(
                 (item) => {
                   return html`
                     <span class="pm-ChooseBit-item" role="list-item">
-                      <button class="Button" @click=${claimBit.bind(self)}>
+                      <button
+                        class="Button"
+                        ?disabled=${!data.hasDotRequirement}
+                        @click=${claimBit.bind(self)}
+                      >
                         <img
                           src="${self.mediaPath}bit-icons/64-${item}.png"
                           width="64"
@@ -210,7 +209,7 @@ customElements.define(
 
     get data(): TemplateData {
       return {
-        dots: userDetailsService.userDetails.dots,
+        hasDotRequirement: userDetailsService.userDetails.dots > 100,
         isLoading: this.isLoading,
         isReloading: this.isReloading,
         hasError: this.hasError,
@@ -225,6 +224,16 @@ customElements.define(
 
     render() {
       render(this.template(this.data), this);
+    }
+
+    connectedCallback() {
+      // need to get bits on the subscribe callback
+      userDetailsService.subscribe(() => {
+        PmChooseBit.getBits(this, this.limit);
+        userDetailsService.unsubscribe(this.instanceId);
+      }, this.instanceId);
+
+      this.render();
     }
   }
 );
