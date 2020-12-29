@@ -226,24 +226,48 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
         y = puzzleData["table_height"]
 
     piece_mutate_process = PieceMutateProcess(
-        redis_connection, puzzle, piece, x, y, r, piece_count=puzzleData.get("pieces")
+        redis_connection,
+        puzzle,
+        piece,
+        x,
+        y,
+        r,
+        piece_count=puzzleData.get("pieces"),
+        puzzle_rules=current_app.config["PUZZLE_RULES"],
     )
     (msg, status) = piece_mutate_process.start()
 
     if status == "stacked":
         # Decrease karma since stacking
-        if karma > MIN_KARMA:
-            redis_connection.decr(karma_key)
-        karma_change -= 1
-
-        return publishMessage(msg, karma_change, karma)
-    elif status == "moved":
         if (
-            len(piece_mutate_process.all_other_pieces_in_piece_group)
-            > PIECE_GROUP_MOVE_MAX_BEFORE_PENALTY
+            len(
+                {"all", "karma_stacked"}.intersection(
+                    current_app.config["PUZZLE_RULES"]
+                )
+            )
+            > 0
         ):
             if karma > MIN_KARMA:
                 redis_connection.decr(karma_key)
+
+        return publishMessage(msg, karma_change, karma)
+    elif status == "moved":
+        # Decrease karma since moving large group of pieces
+        if (
+            len(
+                {"all", "karma_piece_group_move_max"}.intersection(
+                    current_app.config["PUZZLE_RULES"]
+                )
+            )
+            > 0
+        ):
+            if (
+                len(piece_mutate_process.all_other_pieces_in_piece_group)
+                > PIECE_GROUP_MOVE_MAX_BEFORE_PENALTY
+            ):
+                if karma > MIN_KARMA:
+                    redis_connection.decr(karma_key)
+                karma_change -= 1
             karma_change -= 1
         return publishMessage(msg, karma_change, karma)
     elif status == "joined":

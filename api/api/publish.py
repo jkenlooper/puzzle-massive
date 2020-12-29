@@ -285,6 +285,39 @@ class PuzzlePieceTokenView(MethodView):
             )
             return make_response(encoder.encode(err_msg), 429)
 
+        def move_bit_icon_to_piece():
+            # Claim the piece by showing the bit icon next to it.
+            (x, y) = list(
+                map(
+                    int,
+                    redis_connection.hmget(
+                        "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece),
+                        ["x", "y"],
+                    ),
+                )
+            )
+            msg = formatBitMovementString(user, x, y)
+
+            sse.publish(
+                msg,
+                type="move",
+                channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id),
+            )
+
+        validate_token = (
+            len({"all", "valid_token"}.intersection(current_app.config["PUZZLE_RULES"]))
+            > 0
+        )
+
+        if not validate_token:
+            move_bit_icon_to_piece()
+            response = {
+                "token": "---",
+                "lock": now + TOKEN_LOCK_TIMEOUT,
+                "expires": now + TOKEN_EXPIRE_TIMEOUT,
+            }
+            return encoder.encode(response)
+
         puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
 
         # Check if player already has a token for this puzzle. This would mean
@@ -409,20 +442,7 @@ class PuzzlePieceTokenView(MethodView):
             ex=TOKEN_LOCK_TIMEOUT,
         )
 
-        # Claim the piece by showing the bit icon next to it.
-        (x, y) = list(
-            map(
-                int,
-                redis_connection.hmget(
-                    "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), ["x", "y"]
-                ),
-            )
-        )
-        msg = formatBitMovementString(user, x, y)
-
-        sse.publish(
-            msg, type="move", channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id)
-        )
+        move_bit_icon_to_piece()
 
         end = time.perf_counter()
         duration = end - start
@@ -578,34 +598,52 @@ class PuzzlePiecesMovePublishView(MethodView):
             return make_response(encoder.encode(err_msg), 400)
         puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
         # print("token key: {}".format(puzzle_piece_token_key))
-        token_and_player = redis_connection.get(puzzle_piece_token_key)
-        if token_and_player:
-            player = user
-            (valid_token, other_player) = token_and_player.split(":")
-            other_player = int(other_player)
-            if token != valid_token:
-                # print("token invalid {} != {}".format(token, valid_token))
-                err_msg = increase_ban_time(user, TOKEN_INVALID_BAN_TIME_INCR)
-                err_msg["reason"] = "Token is invalid"
+        validate_token = (
+            len({"all", "valid_token"}.intersection(current_app.config["PUZZLE_RULES"]))
+            > 0
+        )
+        if validate_token:
+            token_and_player = redis_connection.get(puzzle_piece_token_key)
+            if token_and_player:
+                player = user
+                (valid_token, other_player) = token_and_player.split(":")
+                other_player = int(other_player)
+                if token != valid_token:
+                    # print("token invalid {} != {}".format(token, valid_token))
+                    err_msg = increase_ban_time(user, TOKEN_INVALID_BAN_TIME_INCR)
+                    err_msg["reason"] = "Token is invalid"
+                    return make_response(encoder.encode(err_msg), 409)
+                if player != other_player:
+                    # print("player invalid {} != {}".format(player, other_player))
+                    err_msg = increase_ban_time(user, TOKEN_INVALID_BAN_TIME_INCR)
+                    err_msg["reason"] = "Player is invalid"
+                    return make_response(encoder.encode(err_msg), 409)
+            else:
+                # Token has expired
+                # print("token expired")
+                err_msg = {
+                    "msg": "Token has expired",
+                    "type": "expiredtoken",
+                    "reason": "",
+                }
                 return make_response(encoder.encode(err_msg), 409)
-            if player != other_player:
-                # print("player invalid {} != {}".format(player, other_player))
-                err_msg = increase_ban_time(user, TOKEN_INVALID_BAN_TIME_INCR)
-                err_msg["reason"] = "Player is invalid"
-                return make_response(encoder.encode(err_msg), 409)
-        else:
-            # Token has expired
-            # print("token expired")
-            err_msg = {"msg": "Token has expired", "type": "expiredtoken", "reason": ""}
-            return make_response(encoder.encode(err_msg), 409)
 
         # Expire the token at the lock timeout since it shouldn't be used again
-        redis_connection.delete(puzzle_piece_token_key)
-        redis_connection.delete("token:{}".format(user))
+        if validate_token:
+            redis_connection.delete(puzzle_piece_token_key)
+            redis_connection.delete("token:{}".format(user))
 
-        err_msg = bump_count(user)
-        if err_msg.get("type") == "bannedusers":
-            return make_response(encoder.encode(err_msg), 429)
+        if (
+            len(
+                {"all", "piece_translate_rate"}.intersection(
+                    current_app.config["PUZZLE_RULES"]
+                )
+            )
+            > 0
+        ):
+            err_msg = bump_count(user)
+            if err_msg.get("type") == "bannedusers":
+                return make_response(encoder.encode(err_msg), 429)
 
         # TODO: has this moved elsewhere?
         ## check if piece can be moved

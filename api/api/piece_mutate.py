@@ -27,6 +27,7 @@ class PieceMutateProcess:
         target_x,
         target_y,
         target_r,
+        puzzle_rules={"all"},
         piece_count=0,
     ):
         ""
@@ -36,6 +37,7 @@ class PieceMutateProcess:
         self.target_x = target_x
         self.target_y = target_y
         self.target_r = target_r
+        self.puzzle_rules = puzzle_rules
         self.piece_count = piece_count
 
         self.watched_keys = set()
@@ -90,19 +92,34 @@ class PieceMutateProcess:
             # Put back to buffered mode since the watch was called.
             pipe.multi()
 
-            if 13 >= len(self.pieces_in_proximity_to_target) >= 4:
+            if (
+                len({"all", "stack_pieces"}.intersection(self.puzzle_rules)) > 0
+                and 13 >= len(self.pieces_in_proximity_to_target) >= 4
+            ):
                 # Too many pieces within proximity of this piece, mark piece as
                 # stacked.
                 msg = self._stack_pieces(pipe)
                 status = "stacked"
-            elif len(self.pieces_in_proximity_to_target) > 13:
+            elif (
+                len({"all", "max_stack_pieces"}.intersection(self.puzzle_rules)) > 0
+                and len(self.pieces_in_proximity_to_target) > 13
+            ):
                 # Too many pieces within proximity of this piece, reject piece
                 # movement.
                 msg = self._reject_pieces(pipe)
                 status = "stacked"
             else:
                 # Update the piece and it's piece group
-                msg = self._reset_pieces_in_proximity_stacked_status(pipe)
+                msg = "\n"
+                if (
+                    len(
+                        {"all", "max_stack_pieces", "stack_pieces"}.intersection(
+                            self.puzzle_rules
+                        )
+                    )
+                    > 0
+                ):
+                    msg = self._reset_pieces_in_proximity_stacked_status(pipe)
                 if self.can_join_adjacent_piece == None:
                     msg += self._move_pieces(pipe)
                     status = "moved"
@@ -216,9 +233,17 @@ class PieceMutateProcess:
                 map(self._int_piece_properties, pc_puzzle_adjacent_piece_properties)
             )
 
-            self.pieces_in_proximity_to_target = self._get_pieces_in_proximity_to_target(
-                pcx_puzzle, pcy_puzzle, pcfixed_puzzle, pcg_puzzle_g
-            )
+            if (
+                len(
+                    {"all", "max_stack_pieces", "stack_pieces"}.intersection(
+                        self.puzzle_rules
+                    )
+                )
+                > 0
+            ):
+                self.pieces_in_proximity_to_target = self._get_pieces_in_proximity_to_target(
+                    pcx_puzzle, pcy_puzzle, pcfixed_puzzle, pcg_puzzle_g
+                )
             # Get Adjacent Piece Properties
             self.adjacent_piece_properties = dict(
                 list(zip(adjacent_pieces_list, pc_puzzle_adjacent_piece_properties))
