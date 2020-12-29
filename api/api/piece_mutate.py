@@ -1,5 +1,7 @@
 from api.tools import formatPieceMovementString
 
+PIECE_MOVE_TIMEOUT = 4
+
 
 class PieceMutateError(Exception):
     """
@@ -39,9 +41,11 @@ class PieceMutateProcess:
         self.watched_keys = set()
 
         self.pzm_puzzle_key = "pzm:{puzzle}".format(puzzle=puzzle)
+        self.pzq_next_key = "pzq_next:{puzzle}".format(puzzle=puzzle)
         # Bump the pzm id when preparing to mutate the puzzle.
         self.puzzle_mutation_id = self.redis_connection.incr(self.pzm_puzzle_key)
-        self.redis_connection.expire(self.pzm_puzzle_key, 60)
+        self.redis_connection.expire(self.pzm_puzzle_key, PIECE_MOVE_TIMEOUT + 2)
+        self.redis_connection.expire(self.pzq_next_key, PIECE_MOVE_TIMEOUT + 2)
         self.watched_keys.add(self.pzm_puzzle_key)
 
         self.pc_puzzle_piece_key = "pc:{puzzle}:{piece}".format(

@@ -100,8 +100,8 @@ cat <<HERE
 
 # Dropping these IP limits for now.
 #limit_conn_zone \$binary_remote_addr zone=addr:1m;
-#limit_req_zone \$binary_remote_addr zone=piece_move_limit_per_ip:1m rate=60r/m;
-#limit_req_zone \$binary_remote_addr zone=piece_token_limit_per_ip:1m rate=60r/m;
+limit_req_zone \$server_name zone=piece_move_limit:1m rate=100r/s;
+limit_req_zone \$binary_remote_addr zone=piece_token_limit_per_ip:1m rate=20r/s;
 
 limit_req_zone \$binary_remote_addr zone=puzzle_upload_limit_per_ip:1m rate=3r/m;
 limit_req_zone \$binary_remote_addr zone=puzzle_list_limit_per_ip:1m rate=30r/m;
@@ -710,9 +710,11 @@ cat <<HEREORIGINSERVER
     # TODO: not sure why keepalive_timeout was set to 0 before.
     #keepalive_timeout 0;
 
-    # Dropping IP limits for now.
-    #limit_req zone=piece_token_limit_per_ip burst=60 nodelay;
-    #limit_req_status 429;
+    # Limit rate for an IP to prevent hitting 503 errors. Burst is set at 40
+    # with the 20 requests a second rate. (1000/20) * 40 = 2 seconds. Which will
+    # give at most a 2 second delay before dropping requests with 429 error.
+    limit_req zone=piece_token_limit_per_ip burst=40;
+    limit_req_status 429;
 
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
@@ -723,19 +725,17 @@ cat <<HEREORIGINSERVER
   }
 
   location ~* ^/newapi/puzzle/.*/piece/.*/move/ {
-    # Limit to max of 4 simultaneous puzzle piece moves per ip addr
-    #limit_conn   addr 4;
-    # Not exactly sure why, but setting it to 4 will not allow more then 3 players on a single IP.
-    # This is set to 40 to allow at most 39 players on one IP
     # Dropping IP addr limits for now.
     #limit_conn   addr 40;
 
     # TODO: not sure why keepalive_timeout was set to 0 before.
     #keepalive_timeout 0;
 
-    # Dropping IP limits for now.
-    #limit_req zone=piece_move_limit_per_ip burst=60 nodelay;
-    #limit_req_status 429;
+    # (1000/100) * 400 = 4 seconds max delay on requests before dropping them
+    # with a 503 error. Each subsequent request is delayed 10ms. This rate limit
+    # is server wide, but the token limit is on the IP address.
+    limit_req zone=piece_move_limit burst=400;
+    limit_req_status 503;
 
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;

@@ -51,24 +51,13 @@ def get_earned_points(pieces, permission=None):
 
 
 def attempt_piece_movement(ip, user, puzzleData, piece, x, y, r, karma_change):
-    attemptPieceMovement = 0
-    while attemptPieceMovement < 13:
-        try:
-            (msg, karma_change) = translate(
-                ip, user, puzzleData, piece, x, y, r, karma_change,
-            )
-            break
-        except (PieceMutateError, WatchError):
-            attemptPieceMovement = attemptPieceMovement + 1
-            current_app.logger.debug(sys.exc_info()[0])
-            current_app.logger.debug(
-                "piece mutate error {}".format(attemptPieceMovement)
-            )
-            time.sleep(random.randint(1, 100) / 100)
-        except:
-            current_app.logger.debug("other error {}".format(sys.exc_info()[0]))
-            raise
-    if attemptPieceMovement >= 13:
+    try:
+        (msg, karma_change) = translate(
+            ip, user, puzzleData, piece, x, y, r, karma_change,
+        )
+    except (PieceMutateError, WatchError):
+        current_app.logger.debug(sys.exc_info()[0])
+        current_app.logger.warning("piece mutate error")
         err_msg = {
             "msg": "Try again",
             "type": "piecegrouperror",
@@ -76,10 +65,15 @@ def attempt_piece_movement(ip, user, puzzleData, piece, x, y, r, karma_change):
             "timeout": 3,
         }
         return (err_msg, 0)
+    except:
+        current_app.logger.warning("other error {}".format(sys.exc_info()[0]))
+        raise
     return (msg, karma_change)
 
 
 def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
+    start = time.perf_counter()
+
     def publishMessage(msg, karma_change, karma, points=0, complete=False):
         # print(topic)
         # print(msg)
@@ -191,6 +185,9 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
             )
 
         # return topic and msg mostly for testing
+        end = time.perf_counter()
+        duration = end - start
+        redis_connection.rpush("testdata:translate", duration)
         return (msg, karma_change)
 
     p = ""

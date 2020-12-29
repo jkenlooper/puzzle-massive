@@ -87,6 +87,9 @@ PIECE_TRANSLATE_EXCEEDED_REASON = "Piece moves exceeded {PIECE_TRANSLATE_MAX_COU
     **locals()
 )
 
+# How many seconds to try to move a piece before it times out.
+PIECE_MOVE_TIMEOUT = 4
+
 TOKEN_EXPIRE_TIMEOUT = 60 * 5
 TOKEN_LOCK_TIMEOUT = 5
 TOKEN_INVALID_BAN_TIME_INCR = 15
@@ -144,7 +147,7 @@ def make_app(config=None, database_writable=False, **kw):
 def bump_count(user):
     """
     Bump the count for pieces moved for the user.
-    The nginx conf has a 60r/m with a burst of 60 on this route. The goal here
+    The nginx conf may also have rate limits on this route. The goal here
     is to ban user if the piece movement rate continues to max out at this rate.
     """
     timestamp_now = int(time.time())
@@ -204,8 +207,9 @@ class PuzzlePieceTokenView(MethodView):
     decorators = [user_not_banned]
 
     def get(self, puzzle_id, piece):
+        start = time.perf_counter()
         ip = request.headers.get("X-Real-IP")
-        user = current_app.secure_cookie.get(u"user") or user_id_from_ip(ip)
+        user = current_app.secure_cookie.get("user") or user_id_from_ip(ip)
         if user == None:
             err_msg = {
                 "msg": "Please reload the page.",
@@ -215,8 +219,8 @@ class PuzzlePieceTokenView(MethodView):
             }
             response = make_response(encoder.encode(err_msg), 400)
             expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
-            current_app.secure_cookie.set(u"user", "", response, expires=expires)
-            current_app.secure_cookie.set(u"shareduser", "", response, expires=expires)
+            current_app.secure_cookie.set("user", "", response, expires=expires)
+            current_app.secure_cookie.set("shareduser", "", response, expires=expires)
             return response
 
         user = int(user)
@@ -227,6 +231,7 @@ class PuzzlePieceTokenView(MethodView):
         puzzle = redis_connection.hget(pzq_key, "puzzle")
         if not puzzle:
             # Start db operations
+            current_app.logger.debug("no puzzle; fetch puzzle")
             cur = db.cursor()
             # validate the puzzle_id
             result = cur.execute(
@@ -311,11 +316,12 @@ class PuzzlePieceTokenView(MethodView):
                         "timeout": TOKEN_LOCK_TIMEOUT,
                     }
 
-                    uses_cookies = current_app.secure_cookie.get(u"ot")
+                    uses_cookies = current_app.secure_cookie.get("ot")
                     if uses_cookies:
                         # Check if player has enough dots to generate a new
                         # player and if so add to err_msg to signal client to
                         # request a new player
+                        current_app.logger.debug("sameplayerconcurrent split player")
                         cur = db.cursor()
                         dots = cur.execute(
                             "select points from User where id = :id and points >= :cost + :startpoints;",
@@ -418,6 +424,9 @@ class PuzzlePieceTokenView(MethodView):
             msg, type="move", channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id)
         )
 
+        end = time.perf_counter()
+        duration = end - start
+        redis_connection.rpush("testdata:token", duration)
         response = {
             "token": token,
             "lock": now + TOKEN_LOCK_TIMEOUT,
@@ -457,8 +466,9 @@ class PuzzlePiecesMovePublishView(MethodView):
         y
         r
         """
+        start = time.perf_counter()
         ip = request.headers.get("X-Real-IP")
-        user = int(current_app.secure_cookie.get(u"user") or user_id_from_ip(ip))
+        user = int(current_app.secure_cookie.get("user") or user_id_from_ip(ip))
         now = int(time.time())
 
         # validate the args and headers
@@ -521,6 +531,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         if puzzle == None:
             # Start db operations
             cur = db.cursor()
+            current_app.logger.debug("No puzzle; fetch")
             # validate the puzzle_id
             result = cur.execute(
                 fetch_query_string("select_puzzle_and_piece.sql"),
@@ -731,45 +742,47 @@ class PuzzlePiecesMovePublishView(MethodView):
                 )
                 return make_response(encoder.encode(err_msg), 429)
 
-        if puzzle_data.get("q") == None or not redis_connection.sismember(
-            "pzq_register", puzzle_data.get("q")
-        ):
-            # Assign this puzzle to a piece translate worker queue with the
-            # least amount of activity.
-            queue_names = list(redis_connection.smembers("pzq_register"))
-            if len(queue_names) == 0:
-                current_app.logger.error(
-                    "No workers found for piece translate queues (pzq_register)"
-                )
-                return make_response(
-                    encoder.encode(
-                        {
-                            "msg": "Server error",
-                            "type": "error",
-                            "reason": "No workers",
-                            "expires": now + 5,
-                            "timeout": 5,
-                        }
-                    ),
-                    500,
-                )
-            queue_name = queue_names[0]
-            with redis_connection.pipeline(transaction=True) as pipe:
-                for qn in queue_names:
-                    pipe.zcount(
-                        "pzq_activity:{queue_name}".format(queue_name=qn),
-                        timestamp_now - 300,
-                        timestamp_now,
+        use_queue = False
+        if use_queue:
+            if puzzle_data.get("q") == None or not redis_connection.sismember(
+                "pzq_register", puzzle_data.get("q")
+            ):
+                # Assign this puzzle to a piece translate worker queue with the
+                # least amount of activity.
+                queue_names = list(redis_connection.smembers("pzq_register"))
+                if len(queue_names) == 0:
+                    current_app.logger.error(
+                        "No workers found for piece translate queues (pzq_register)"
                     )
-                least_active_queue = None
-                count = None
-                for (qn, activity_count) in zip(queue_names, pipe.execute()):
-                    if count is None or activity_count < count:
-                        queue_name = qn
-                        count = activity_count
+                    return make_response(
+                        encoder.encode(
+                            {
+                                "msg": "Server error",
+                                "type": "error",
+                                "reason": "No workers",
+                                "expires": now + 5,
+                                "timeout": 5,
+                            }
+                        ),
+                        500,
+                    )
+                queue_name = queue_names[0]
+                with redis_connection.pipeline(transaction=True) as pipe:
+                    for qn in queue_names:
+                        pipe.zcount(
+                            "pzq_activity:{queue_name}".format(queue_name=qn),
+                            timestamp_now - 300,
+                            timestamp_now,
+                        )
+                    least_active_queue = None
+                    count = None
+                    for (qn, activity_count) in zip(queue_names, pipe.execute()):
+                        if count is None or activity_count < count:
+                            queue_name = qn
+                            count = activity_count
 
-            redis_connection.hset(pzq_key, "q", queue_name)
-            puzzle_data["q"] = queue_name
+                redis_connection.hset(pzq_key, "q", queue_name)
+                puzzle_data["q"] = queue_name
 
         # Record hot spot (not exact)
         hotspot_area_key = "hotspot:{puzzle}:{user}:{x}:{y}".format(
@@ -783,12 +796,56 @@ class PuzzlePiecesMovePublishView(MethodView):
                 karma = redis_connection.decr(karma_key)
             karma_change -= 1
 
-        use_queue = True
+        end = time.perf_counter()
+        duration = end - start
+        redis_connection.rpush("testdata:publish", duration)
+
+        substart = time.perf_counter()
         if not use_queue:
-            (msg, karma_change) = attempt_piece_movement(
-                ip, user, puzzle_data, piece, x, y, r, karma_change,
+            # Use a custom built and managed queue to prevent multiple processes
+            # from running the attempt_piece_movement concurrently on the same
+            # puzzle.
+            pzm_puzzle_key = "pzm:{puzzle}".format(puzzle=puzzle)
+            pzq_next_key = "pzq_next:{puzzle}".format(puzzle=puzzle)
+            # A piece_mutate process bumps the pzm by 2; begin phase and end
+            # phase.
+            pzq_next = redis_connection.incr(pzq_next_key, amount=2)
+            # Set the expire in case it fails to reach expire in attempt_piece_movement.
+            redis_connection.expire(pzq_next_key, PIECE_MOVE_TIMEOUT + 2)
+
+            attempt_count = 0
+            attempt_timestamp = time.time()
+            timeout = attempt_timestamp + PIECE_MOVE_TIMEOUT
+            while attempt_timestamp < timeout:
+                pzm_current = int(redis_connection.get(pzm_puzzle_key) or "0")
+                if pzm_current == pzq_next - 2:
+                    (msg, karma_change) = attempt_piece_movement(
+                        ip, user, puzzle_data, piece, x, y, r, karma_change,
+                    )
+                    break
+                current_app.logger.debug(f"pzm_current is {pzm_current}")
+                attempt_timestamp = time.time()
+                attempt_count = attempt_count + 1
+                time.sleep(0.01)
+
+            current_app.logger.debug(
+                f"Puzzle ({puzzle}) piece move attempts: {attempt_count}"
             )
+            if attempt_timestamp >= timeout:
+                current_app.logger.warn(
+                    f"Puzzle {puzzle} is too active. Attempt piece move timed out after trying {attempt_count} times."
+                )
+                err_msg = {
+                    "msg": "Piece movement timed out.",
+                    "type": "error",
+                    "reason": "Puzzle is too active",
+                    "timeout": PIECE_MOVE_TIMEOUT,
+                }
+                pzm_current = int(redis_connection.get(pzm_puzzle_key) or "0")
+                return make_response(encoder.encode(err_msg), 503,)
         else:
+            # TODO: Don't use a queue here. Creating a queue actually takes
+            # longer then processing the piece movment.
             pz_translate_queue = Queue(
                 puzzle_data.get("q"), connection=redis_connection
             )
@@ -818,6 +875,10 @@ class PuzzlePiecesMovePublishView(MethodView):
                 except ValueError as err:
                     # Job may not be queued when get_position is called.
                     pass
+
+        subend = time.perf_counter()
+        subduration = subend - substart
+        redis_connection.rpush("testdata:move", subduration)
 
         # publish just the bit movement so it matches what this player did
         msg = formatBitMovementString(user, x, y)
@@ -852,7 +913,8 @@ class StreamGunicornBase(gunicorn.app.base.BaseApplication):
 
 
 def number_of_workers():
-    return (multiprocessing.cpu_count() * 2) + 1
+    return 2
+    # return (multiprocessing.cpu_count() * 2) + 1
 
 
 def serve(config_file, cookie_secret):
@@ -864,8 +926,8 @@ def serve(config_file, cookie_secret):
 
     debug = app.config.get("DEBUG")
 
-    app.logger.info(u"Serving on {host}:{port}".format(**locals()))
-    app.logger.info(u"Debug mode is {debug}".format(**locals()))
+    app.logger.info("Serving on {host}:{port}".format(**locals()))
+    app.logger.info("Debug mode is {debug}".format(**locals()))
 
     options = {
         "loglevel": "info" if not debug else "debug",

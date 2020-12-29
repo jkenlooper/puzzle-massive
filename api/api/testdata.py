@@ -235,7 +235,7 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
         )
 
         db.commit()
-        print("pieces: {pieces} {puzzle_id}".format(**locals()))
+        current_app.logger.info("pieces: {pieces} {puzzle_id}".format(**locals()))
 
     puzzles = rowify(
         cur.execute(
@@ -244,7 +244,7 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
         ).fetchall(),
         cur.description,
     )[0]
-    print("found {0} puzzles to render".format(len(puzzles)))
+    current_app.logger.info("found {0} puzzles to render".format(len(puzzles)))
 
     # push each puzzle to artist job queue
     for puzzle in puzzles:
@@ -290,7 +290,7 @@ def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
                 },
             ).fetchall()
             if not result:
-                print("no puzzle found")
+                current_app.logger.warn("no puzzle found")
                 continue
 
             (result, col_names) = rowify(result, cur.description)
@@ -378,7 +378,7 @@ def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
             )
 
             db.commit()
-            print("pieces: {pieces} {puzzle_id}".format(**locals()))
+            current_app.logger.info("pieces: {pieces} {puzzle_id}".format(**locals()))
 
             job = current_app.createqueue.enqueue_call(
                 func="api.jobs.pieceRenderer.render",
@@ -435,7 +435,7 @@ class UserSession:
                 data = r.json()
             except ValueError as err:
                 time.sleep(1)
-                print(r.text)
+                current_app.logger.debug(r.text)
                 return
             # print(data.get("msg"))
             if data.get("timeout"):
@@ -446,11 +446,11 @@ class UserSession:
         try:
             data = r.json()
         except ValueError as err:
-            print("ERROR reading json: {}".format(err))
-            print(r.text)
+            current_app.logger.debug("ERROR reading json: {}".format(err))
+            current_app.logger.debug(r.text)
             return
         if r.status_code >= 400:
-            print(
+            current_app.logger.debug(
                 "ERROR: {status_code} {url}".format(
                     status_code=r.status_code, url=r.url
                 )
@@ -478,7 +478,7 @@ class UserSession:
                 data = r.json()
             except ValueError as err:
                 time.sleep(1)
-                print(r.text)
+                current_app.logger.debug(r.text)
                 return
             # print(data.get("msg"))
             if data.get("timeout"):
@@ -488,11 +488,11 @@ class UserSession:
         try:
             data = r.json()
         except ValueError as err:
-            print("ERROR reading json: {}".format(err))
-            print(r.text)
+            current_app.logger.debug("ERROR reading json: {}".format(err))
+            current_app.logger.debug(r.text)
             return
         if r.status_code >= 400:
-            print(
+            current_app.logger.debug(
                 "ERROR: {status_code} {url}".format(
                     status_code=r.status_code, url=r.url
                 )
@@ -500,7 +500,7 @@ class UserSession:
             if r.status_code == 429:
                 timeout = data.get("timeout")
                 if timeout:
-                    print("timeout {}".format(timeout))
+                    current_app.logger.debug("timeout {}".format(timeout))
                     time.sleep(timeout)
                 return
             return
@@ -548,7 +548,7 @@ class PuzzlePieces:
                 "publish",
             )
         except Exception as err:
-            print("resetting karma for {ip}".format(ip=self.user_session.ip))
+            # ("resetting karma for {ip}".format(ip=self.user_session.ip))
             karma_key = init_karma_key(
                 redis_connection, self.puzzle, self.user_session.ip
             )
@@ -567,7 +567,7 @@ class PuzzlePieces:
                     headers={"Token": piece_token["token"]},
                 )
             except Exception as err:
-                print("resetting karma for {ip}".format(ip=self.user_session.ip))
+                # current_app.logger.debug("resetting karma for {ip}".format(ip=self.user_session.ip))
                 karma_key = init_karma_key(
                     redis_connection, self.puzzle, self.user_session.ip
                 )
@@ -584,7 +584,35 @@ class PuzzlePieces:
                     )
                     redis_connection.delete(karma_key)
         end = time.perf_counter()
-        print(end - start)
+        duration = end - start
+        redis_connection.rpush("testdata:pa", duration)
+
+
+class PuzzleActivityJobStats:
+    def run(self):
+        interval = 30
+        key_list = [
+            "testdata:pa",
+            "testdata:token",
+            "testdata:publish",
+            "testdata:translate",
+            "testdata:move",
+        ]
+        for key in key_list:
+            redis_connection.delete(key)
+        while True:
+            for key in key_list:
+                duration_list = redis_connection.lrange(key, 0, -1)
+                duration_list_count = len(duration_list)
+                redis_connection.ltrim(key, duration_list_count, -1)
+                if duration_list_count:
+                    avg = sum(map(float, duration_list)) / float(duration_list_count)
+                    piece_moves_per_second = duration_list_count / interval
+                    current_app.logger.info(
+                        f"count: {duration_list_count}\n {key} per second: {piece_moves_per_second}\n average latency: {avg}"
+                    )
+            current_app.logger.info("\n")
+            time.sleep(interval)
 
 
 class PuzzleActivityJob:
@@ -621,7 +649,7 @@ def simulate_puzzle_activity(puzzle_ids, count=1):
         "select distinct ip from User order by random() limit 1;",
     ).fetchone()
     if not result:
-        print("Add players first")
+        current_app.logger.warn("Add players first")
         return
 
     user_session = UserSession(ip=result[0])
@@ -633,10 +661,10 @@ def simulate_puzzle_activity(puzzle_ids, count=1):
 
     result = cur.execute(
         "select distinct ip from User order by id desc limit :count;",
-        {"count": int(count * len(_puzzle_ids))},
+        {"count": int(count)},
     ).fetchall()
     if not result:
-        print("Add players first")
+        current_app.logger.warn("Add players first")
         return
     players = [x[0] for x in result]
     cur.close()
@@ -651,6 +679,8 @@ def simulate_puzzle_activity(puzzle_ids, count=1):
             if not players:
                 break
 
+    puzzle_activity_job_stats = PuzzleActivityJobStats()
+    jobs.append(multiprocessing.Process(target=puzzle_activity_job_stats.run))
     for job in jobs:
         job.start()
 
@@ -677,11 +707,11 @@ def main():
 
     with app.app_context():
         if args.get("players"):
-            print("Creating {} players".format(count))
+            current_app.logger.info("Creating {} players".format(count))
             generate_users(count)
 
         elif args.get("puzzles"):
-            print(
+            current_app.logger.info(
                 "Creating {count} puzzles at {size} with up to {max_pieces} pieces".format(
                     count=count, size=size, max_pieces=max_pieces, min_pieces=min_pieces
                 )
@@ -691,7 +721,7 @@ def main():
             )
 
         elif args.get("instances"):
-            print(
+            current_app.logger.info(
                 "Creating {count} puzzle instances with up to {max_pieces} pieces".format(
                     count=count, max_pieces=max_pieces, min_pieces=min_pieces
                 )
@@ -701,7 +731,7 @@ def main():
             )
 
         elif args.get("activity"):
-            print("Simulating puzzle activity")
+            current_app.logger.info("Simulating puzzle activity")
             puzzle_ids = []
             if puzzles:
                 puzzle_ids = puzzles.split(",")
