@@ -697,45 +697,65 @@ class PuzzlePiecesMovePublishView(MethodView):
 
         points_key = "points:{user}".format(user=user)
 
-        # Decrease recent points if this is a new puzzle that user hasn't moved pieces on yet in the last hour
-        pzrate_key = "pzrate:{user}:{today}".format(
-            user=user, today=datetime.date.today().isoformat()
-        )
-        if redis_connection.sadd(pzrate_key, puzzle) == 1:
-            # New puzzle that player hasn't moved a piece on in the last hour.
-            redis_connection.expire(pzrate_key, HOUR)
-            recent_points = int(redis_connection.get(points_key) or "0")
-            if recent_points > 0:
-                redis_connection.decr(points_key)
+        if (
+            len(
+                {"all", "puzzle_open_rate"}.intersection(
+                    current_app.config["PUZZLE_RULES"]
+                )
+            )
+            > 0
+        ):
+            # Decrease recent points if this is a new puzzle that user hasn't moved pieces on yet in the last hour
+            pzrate_key = "pzrate:{user}:{today}".format(
+                user=user, today=datetime.date.today().isoformat()
+            )
+            if redis_connection.sadd(pzrate_key, puzzle) == 1:
+                # New puzzle that player hasn't moved a piece on in the last hour.
+                redis_connection.expire(pzrate_key, HOUR)
+                recent_points = int(redis_connection.get(points_key) or "0")
+                if recent_points > 0:
+                    redis_connection.decr(points_key)
 
-        # Decrease karma if piece movement rate has passed threshold
-        # TODO: remove timestamp from key and depend on expire setting
-        pcrate_key = "pcrate:{puzzle}:{user}:{timestamp}".format(
-            puzzle=puzzle, user=user, timestamp=rounded_timestamp
-        )
-        if redis_connection.setnx(pcrate_key, 1):
-            redis_connection.expire(pcrate_key, PIECE_MOVEMENT_RATE_TIMEOUT)
-        else:
-            moves = redis_connection.incr(pcrate_key)
-            if moves > PIECE_MOVEMENT_RATE_LIMIT:
-                # print 'decrease because piece movement rate limit reached.'
+        if (
+            len(
+                {"all", "piece_move_rate"}.intersection(
+                    current_app.config["PUZZLE_RULES"]
+                )
+            )
+            > 0
+        ):
+            # Decrease karma if piece movement rate has passed threshold
+            # TODO: remove timestamp from key and depend on expire setting
+            pcrate_key = "pcrate:{puzzle}:{user}:{timestamp}".format(
+                puzzle=puzzle, user=user, timestamp=rounded_timestamp
+            )
+            if redis_connection.setnx(pcrate_key, 1):
+                redis_connection.expire(pcrate_key, PIECE_MOVEMENT_RATE_TIMEOUT)
+            else:
+                moves = redis_connection.incr(pcrate_key)
+                if moves > PIECE_MOVEMENT_RATE_LIMIT:
+                    # print 'decrease because piece movement rate limit reached.'
+                    if karma > MIN_KARMA:
+                        karma = redis_connection.decr(karma_key)
+                    karma_change -= 1
+
+        if (
+            len({"all", "hot_piece"}.intersection(current_app.config["PUZZLE_RULES"]))
+            > 0
+        ):
+            # Decrease karma when moving the same piece again within a minute
+            # TODO: remove timestamp from key and depend on expire setting
+            hotpc_key = "hotpc:{puzzle}:{user}:{piece}:{timestamp}".format(
+                puzzle=puzzle, user=user, piece=piece, timestamp=rounded_timestamp
+            )
+            recent_move_count = redis_connection.incr(hotpc_key)
+            if recent_move_count == 1:
+                redis_connection.expire(hotpc_key, PIECE_MOVEMENT_RATE_TIMEOUT)
+
+            if recent_move_count > MOVES_BEFORE_PENALTY:
                 if karma > MIN_KARMA:
                     karma = redis_connection.decr(karma_key)
                 karma_change -= 1
-
-        # Decrease karma when moving the same piece again within a minute
-        # TODO: remove timestamp from key and depend on expire setting
-        hotpc_key = "hotpc:{puzzle}:{user}:{piece}:{timestamp}".format(
-            puzzle=puzzle, user=user, piece=piece, timestamp=rounded_timestamp
-        )
-        recent_move_count = redis_connection.incr(hotpc_key)
-        if recent_move_count == 1:
-            redis_connection.expire(hotpc_key, PIECE_MOVEMENT_RATE_TIMEOUT)
-
-        if recent_move_count > MOVES_BEFORE_PENALTY:
-            if karma > MIN_KARMA:
-                karma = redis_connection.decr(karma_key)
-            karma_change -= 1
 
         if int(karma) <= 0:
             # Decrease recent points for a piece move that decreased karma
@@ -822,17 +842,21 @@ class PuzzlePiecesMovePublishView(MethodView):
                 redis_connection.hset(pzq_key, "q", queue_name)
                 puzzle_data["q"] = queue_name
 
-        # Record hot spot (not exact)
-        hotspot_area_key = "hotspot:{puzzle}:{user}:{x}:{y}".format(
-            puzzle=puzzle, user=user, x=x - (x % 200), y=y - (y % 200),
-        )
-        hotspot_count = redis_connection.incr(hotspot_area_key)
-        if hotspot_count == 1:
-            redis_connection.expire(hotspot_area_key, HOTSPOT_EXPIRE)
-        if hotspot_count > HOTSPOT_LIMIT:
-            if karma > MIN_KARMA:
-                karma = redis_connection.decr(karma_key)
-            karma_change -= 1
+        if (
+            len({"all", "hot_spot"}.intersection(current_app.config["PUZZLE_RULES"]))
+            > 0
+        ):
+            # Record hot spot (not exact)
+            hotspot_area_key = "hotspot:{puzzle}:{user}:{x}:{y}".format(
+                puzzle=puzzle, user=user, x=x - (x % 200), y=y - (y % 200),
+            )
+            hotspot_count = redis_connection.incr(hotspot_area_key)
+            if hotspot_count == 1:
+                redis_connection.expire(hotspot_area_key, HOTSPOT_EXPIRE)
+            if hotspot_count > HOTSPOT_LIMIT:
+                if karma > MIN_KARMA:
+                    karma = redis_connection.decr(karma_key)
+                karma_change -= 1
 
         end = time.perf_counter()
         duration = end - start
@@ -882,8 +906,8 @@ class PuzzlePiecesMovePublishView(MethodView):
                 pzm_current = int(redis_connection.get(pzm_puzzle_key) or "0")
                 return make_response(encoder.encode(err_msg), 503,)
         else:
-            # TODO: Don't use a queue here. Creating a queue actually takes
-            # longer then processing the piece movment.
+            # Don't use a queue here. Creating a queue actually takes longer
+            # then processing the piece movment.
             pz_translate_queue = Queue(
                 puzzle_data.get("q"), connection=redis_connection
             )

@@ -11,6 +11,9 @@ INTERNALIP=$6
 CACHEDIR=$7
 STATE=$8
 
+# Defaults in case not defined in .env
+PUZZLE_RULES='all'
+
 # shellcheck source=/dev/null
 source "$PORTREGISTRY"
 
@@ -20,6 +23,7 @@ source .env
 DATE=$(date)
 
 DEBUG=$(./bin/site-cfg.py site.cfg DEBUG || echo 'False')
+PUZZLE_RULES=$(./bin/site-cfg.py site.cfg PUZZLE_RULES || echo ${PUZZLE_RULES})
 
 # Load snippet confs
 file_ssl_params_conf=$(cat web/ssl_params.conf)
@@ -94,14 +98,26 @@ HERENOCERTS
   fi
 }
 
+USE_PIECE_PUBLISH_LIMIT=0
+if [[ "$PUZZLE_RULES" =~ (^|[^[:alnum:]_])(all|nginx_piece_publish_limit)([^[:alnum:]_]|$) ]]; then
+  USE_PIECE_PUBLISH_LIMIT=1;
+fi
+
 cat <<HERE
 # File generated from $0
 # on ${DATE}
 
 # Dropping these IP limits for now.
 #limit_conn_zone \$binary_remote_addr zone=addr:1m;
+
+HERE
+if test USE_PIECE_PUBLISH_LIMIT -eq 1; then
+cat <<HERELIMITREQZONE
 limit_req_zone \$server_name zone=piece_move_limit:1m rate=100r/s;
 limit_req_zone \$binary_remote_addr zone=piece_token_limit_per_ip:1m rate=20r/s;
+HERELIMITREQZONE
+fi
+cat <<HERE
 
 limit_req_zone \$binary_remote_addr zone=puzzle_upload_limit_per_ip:1m rate=3r/m;
 limit_req_zone \$binary_remote_addr zone=puzzle_list_limit_per_ip:1m rate=30r/m;
@@ -710,12 +726,18 @@ cat <<HEREORIGINSERVER
     # TODO: not sure why keepalive_timeout was set to 0 before.
     #keepalive_timeout 0;
 
+HEREORIGINSERVER
+if test USE_PIECE_PUBLISH_LIMIT -eq 1; then
+cat <<HEREPIECETOKENLIMIT
     # Limit rate for an IP to prevent hitting 503 errors. Burst is set at 40
     # with the 20 requests a second rate. (1000/20) * 40 = 2 seconds. Which will
     # give at most a 2 second delay before dropping requests with 429 error.
     limit_req zone=piece_token_limit_per_ip burst=40;
     limit_req_status 429;
 
+HEREPIECETOKENLIMIT
+fi
+cat <<HEREORIGINSERVER
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -731,12 +753,18 @@ cat <<HEREORIGINSERVER
     # TODO: not sure why keepalive_timeout was set to 0 before.
     #keepalive_timeout 0;
 
+HEREORIGINSERVER
+if test USE_PIECE_PUBLISH_LIMIT -eq 1; then
+cat <<HEREPIECEMOVELIMIT
     # (1000/100) * 400 = 4 seconds max delay on requests before dropping them
     # with a 503 error. Each subsequent request is delayed 10ms. This rate limit
     # is server wide, but the token limit is on the IP address.
     limit_req zone=piece_move_limit burst=400;
     limit_req_status 503;
 
+HEREPIECEMOVELIMIT
+fi
+cat <<HEREORIGINSERVER
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;

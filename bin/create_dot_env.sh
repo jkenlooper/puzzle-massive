@@ -26,24 +26,72 @@ while getopts ":h" opt; do
 done;
 shift "$((OPTIND-1))";
 
-read -p "Enter some random text for secure cookie: " SECURE_COOKIE_SECRET;
-read -p "What is your favorite muppet character (should be one word): " MUPPET_CHARACTER;
-echo ""
+# Defaults
+SECURE_COOKIE_SECRET="chocolate chip"
+MUPPET_CHARACTER="rizzo"
+PUZZLE_RULES="all"
+UNSPLASH_APPLICATION_ID=""
+UNSPLASH_APPLICATION_NAME=""
+UNSPLASH_SECRET=""
 
 if [ -f .env ]; then
+  source .env
   mv --backup=numbered .env .env.bak
 fi
+
+read -e -p "
+Enter some random text for secure cookie:
+
+" -i "${SECURE_COOKIE_SECRET}" SECURE_COOKIE_SECRET;
+
+read -e -p "
+What is your favorite muppet character (should be one word):
+
+" -i "${MUPPET_CHARACTER}" MUPPET_CHARACTER;
+
+PUZZLE_RULES_HELP_TEXT="
+# Enable rules to prevent players from messing up puzzles for others. These
+# rules limit stacking pieces, moving lots of pieces at once, moving pieces to
+# the same area, validating the token, etc..
+# Set to 'all' to enable all rules
+# Leave blank to disable all rules
+# Or add only some rules (separate each with a space and no quotes):
+# 'valid_token' to validate token for piece moves
+# 'piece_translate_rate' to limit piece move rate per user
+# 'max_stack_pieces' to limit how many pieces can be stacked
+# 'stack_pieces' to limit joining pieces when stacked
+# 'karma_stacked' decrease karma when stacking pieces
+# 'karma_piece_group_move_max' decrease karma when moving large groups of pieces
+# 'puzzle_open_rate' to limit how many puzzles can be opened within an hour
+# 'piece_move_rate' to limit how many pieces can be moved within a minute or so
+# 'hot_piece' to limit moving the same piece again within a minute or so
+# 'hot_spot' to limit moving pieces to the same area within 30 seconds
+# 'nginx_piece_publish_limit' to use piece move rate limits on nginx web server
+"
+read -e -p "${PUZZLE_RULES_HELP_TEXT}
+" -i "${PUZZLE_RULES}" PUZZLE_RULES;
+
+UNSPLASH_HELP_TEXT="
+# It is recommended to set up an account on [Unsplash](https://unsplash.com/). An
+# app will need to be created in order to get the application id and such. See
+# [Unsplash Image API](https://unsplash.com/developers).
+# Leave these blank if not using images from Unsplash.
+"
+echo "${UNSPLASH_HELP_TEXT}"
+read -e -p "Unsplash application ID:
+" -i "${UNSPLASH_APPLICATION_ID}" UNSPLASH_APPLICATION_ID;
+read -e -p "Unsplash application name:
+" -i "${UNSPLASH_APPLICATION_NAME}" UNSPLASH_APPLICATION_NAME;
+read -e -p "Unsplash secret:
+" -i "${UNSPLASH_SECRET}" UNSPLASH_SECRET;
 
 (
 cat <<HERE
 
-# It is recommended to set up an account on [Unsplash](https://unsplash.com/). An
-# app will need to be created in order to get the application id and such. See
-# [Unsplash Image API](https://unsplash.com/developers). Leave blank if not using
-# images from Unsplash.
-UNSPLASH_APPLICATION_ID=
-UNSPLASH_APPLICATION_NAME=
-UNSPLASH_SECRET=
+${UNSPLASH_HELP_TEXT}
+UNSPLASH_APPLICATION_ID='${UNSPLASH_APPLICATION_ID}'
+UNSPLASH_APPLICATION_NAME='${UNSPLASH_APPLICATION_NAME}'
+UNSPLASH_SECRET='${UNSPLASH_SECRET}'
 
 # Set these to something unique for the app. The NEW_PUZZLE_CONTRIB sets the URL
 # used for directly submitting photos for puzzles. Eventually the puzzle
@@ -64,6 +112,10 @@ SMTP_USER='user@localhost'
 SMTP_PASSWORD='somepassword'
 EMAIL_SENDER='sender@localhost'
 EMAIL_MODERATOR='moderator@localhost'
+
+${PUZZLE_RULES_HELP_TEXT}
+PUZZLE_RULES="${PUZZLE_RULES}"
+
 DOMAIN_NAME='puzzle.massive.xyz'
 HERE
 ) > .env

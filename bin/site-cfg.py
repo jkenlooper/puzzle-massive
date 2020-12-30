@@ -16,7 +16,10 @@ def main():
     config = loadConfig(config_file)
     value = config[name]
 
-    print(value)
+    if isinstance(value, (str, int, float, bool)):
+        print(value)
+    elif isinstance(value, (list, set)):
+        print(" ".join(map(str, value)))
 
 
 if __name__ == "__main__":
