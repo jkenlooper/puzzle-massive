@@ -383,6 +383,7 @@ class PuzzlePieceTokenView(MethodView):
             # Append this player to a queue for getting the next token. This
             # will prevent the player with the lock from continually locking the
             # same piece.
+            # TODO: use pipe here for these 2
             redis_connection.zadd(piece_token_queue_key, {user: now})
             queue_rank = redis_connection.zrank(piece_token_queue_key, user)
         redis_connection.expire(piece_token_queue_key, TOKEN_LOCK_TIMEOUT + 5)
@@ -645,27 +646,7 @@ class PuzzlePiecesMovePublishView(MethodView):
             if err_msg.get("type") == "bannedusers":
                 return make_response(encoder.encode(err_msg), 429)
 
-        # TODO: has this moved elsewhere?
-        ## check if piece can be moved
-        # (piece_status, has_y) = redis_connection.hmget(
-        #    "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece),
-        #    ["s", "y"],
-        # )
-        # if has_y == None:
-        #    err_msg = {"msg": "piece not available", "type": "missing"}
-        #    return make_response(encoder.encode(err_msg), 404)
-
-        # if piece_status == "1":
-        #    # immovable
-        #    err_msg = {
-        #        "msg": "piece can't be moved",
-        #        "type": "immovable",
-        #        "expires": now + 5,
-        #        "timeout": 5,
-        #    }
-        #    return make_response(encoder.encode(err_msg), 400)
-
-        # check if piece will be moved to within boundaries
+        # Check if piece will be moved to within boundaries
         if x and (x < 0 or x > puzzle_data["table_width"]):
             err_msg = {
                 "msg": "Piece movement out of bounds",
@@ -678,6 +659,24 @@ class PuzzlePiecesMovePublishView(MethodView):
             err_msg = {
                 "msg": "Piece movement out of bounds",
                 "type": "invalidpiecemove",
+                "expires": now + 5,
+                "timeout": 5,
+            }
+            return make_response(encoder.encode(err_msg), 400)
+
+        # Check again if piece can be moved and hasn't changed since getting token
+        (piece_status, has_y) = redis_connection.hmget(
+            "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), ["s", "y"],
+        )
+        if has_y == None:
+            err_msg = {"msg": "piece not available", "type": "missing"}
+            return make_response(encoder.encode(err_msg), 404)
+
+        if piece_status == "1":
+            # immovable
+            err_msg = {
+                "msg": "piece can't be moved",
+                "type": "immovable",
                 "expires": now + 5,
                 "timeout": 5,
             }
@@ -903,7 +902,6 @@ class PuzzlePiecesMovePublishView(MethodView):
                     "reason": "Puzzle is too active",
                     "timeout": PIECE_MOVE_TIMEOUT,
                 }
-                pzm_current = int(redis_connection.get(pzm_puzzle_key) or "0")
                 return make_response(encoder.encode(err_msg), 503,)
         else:
             # Don't use a queue here. Creating a queue actually takes longer
@@ -942,10 +940,22 @@ class PuzzlePiecesMovePublishView(MethodView):
         subduration = subend - substart
         redis_connection.rpush("testdata:move", subduration)
 
+        # Check msg for error or if piece can't be moved
+        if not isinstance(msg, str):
+            if isinstance(msg, dict):
+                return make_response(encoder.encode(msg), 400)
+            else:
+                current_app.logger.warning("Unknown error: {}".format(msg))
+                return make_response(
+                    encoder.encode({"msg": msg, "type": "error", "timeout": 3}), 500
+                )
+
         # publish just the bit movement so it matches what this player did
-        msg = formatBitMovementString(user, x, y)
+        bitmsg = formatBitMovementString(user, x, y)
         sse.publish(
-            msg, type="move", channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id)
+            bitmsg,
+            type="move",
+            channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id),
         )
 
         karma_change = False if karma_change == 0 else karma_change
