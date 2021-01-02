@@ -82,6 +82,22 @@
   box-shadow: none;
 }
 
+/* shadowPiece */
+.s {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 8;
+  transition: none;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  opacity: 1;
+}
+.s.s {
+  background: var(--pm-PuzzlePieces-shadowColor);
+  filter: brightness(85%) blur(5px);
+}
+
 .pm-PuzzlePieces-collection {
 }
 

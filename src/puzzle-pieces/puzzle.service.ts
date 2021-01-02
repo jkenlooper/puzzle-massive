@@ -79,23 +79,32 @@ export interface PieceMoveError {
 // For now this is set to one to prevent feature creep
 const maxSelectedPieces = 1;
 
+type PiecesMutateCallback = (data: Array<PieceData>) => any;
+type PiecesShadowMutateCallback = (data: Array<PieceData>) => any;
 type PiecesUpdateCallback = (data: Array<PieceData>) => any;
 type KarmaUpdatedCallback = (data: KarmaData) => any;
 type PieceMoveRejectedCallback = (data: PieceData) => any;
 type PieceMoveBlockedCallback = (data: PieceMoveError) => any;
 type PiecesInfoToggleMovableCallback = (toggle: any) => any;
+type PiecesInfoPauseResumeCallback = (pause: any) => any;
 const piecesMutate = Symbol("pieces/mutate");
+const piecesShadowMutate = Symbol("pieces/shadow-mutate");
+const piecesUpdate = Symbol("pieces/update");
 const karmaUpdated = Symbol("karma/updated");
 const pieceMoveRejected = Symbol("piece/move/rejected");
 const pieceMoveBlocked = Symbol("piece/move/blocked");
 const piecesInfoToggleMovable = Symbol("pieces/info/toggle-movable");
+const piecesInfoPauseResume = Symbol("pieces/info/pause-resume");
 
 const topics = {
   "pieces/mutate": piecesMutate,
+  "pieces/shadow-mutate": piecesShadowMutate,
+  "pieces/update": piecesUpdate,
   "karma/updated": karmaUpdated,
   "piece/move/rejected": pieceMoveRejected,
   "piece/move/blocked": pieceMoveBlocked,
   "pieces/info/toggle-movable": piecesInfoToggleMovable,
+  "pieces/info/pause-resume": piecesInfoPauseResume,
 };
 
 interface MoveRequestData {
@@ -121,14 +130,21 @@ class PuzzleService {
   private selectedPieces: Array<number> = [];
   private instanceId = "puzzleService";
   private _showMovable = false;
+  private _piecesPaused = false;
 
-  [piecesMutate]: Map<string, PiecesUpdateCallback> = new Map();
+  [piecesMutate]: Map<string, PiecesMutateCallback> = new Map();
+  [piecesShadowMutate]: Map<string, PiecesShadowMutateCallback> = new Map();
+  [piecesUpdate]: Map<string, PiecesUpdateCallback> = new Map();
   [karmaUpdated]: Map<string, KarmaUpdatedCallback> = new Map();
   [pieceMoveRejected]: Map<string, PieceMoveRejectedCallback> = new Map();
   [pieceMoveBlocked]: Map<string, PieceMoveBlockedCallback> = new Map();
   [piecesInfoToggleMovable]: Map<
     string,
     PiecesInfoToggleMovableCallback
+  > = new Map();
+  [piecesInfoPauseResume]: Map<
+    string,
+    PiecesInfoPauseResumeCallback
   > = new Map();
   constructor() {}
   //private handlePieceStateChange(state) {
@@ -200,7 +216,7 @@ class PuzzleService {
     piece.x = x / scale - piece.w / 2;
     piece.y = y / scale - piece.h / 2;
 
-    this._broadcast(piecesMutate, [piece]);
+    this._broadcast(piecesUpdate, [piece]);
   }
 
   private onKarmaUpdate(data: KarmaData) {
@@ -219,10 +235,13 @@ class PuzzleService {
   subscribe(
     topicString: string,
     fn:
+      | PiecesMutateCallback
+      | PiecesShadowMutateCallback
       | PiecesUpdateCallback
       | KarmaUpdatedCallback
       | PieceMoveRejectedCallback
-      | PiecesInfoToggleMovableCallback,
+      | PiecesInfoToggleMovableCallback
+      | PiecesInfoPauseResumeCallback,
     id: string
   ) {
     const topic = topics[topicString];
@@ -497,6 +516,7 @@ class PuzzleService {
   }
 
   selectPiece(pieceID) {
+    this.togglePieceMovements(true);
     // TODO: move selectPiece to pm-puzzle-pieces?
     const index = this.selectedPieces.indexOf(pieceID);
     if (index === -1) {
@@ -540,7 +560,7 @@ class PuzzleService {
       // queue.
       this.pieces[pieceID].pieceMovementId = this.token(pieceID, this.mark);
     }
-    this._broadcast(piecesMutate, [this.pieces[pieceID]]);
+    this._broadcast(piecesUpdate, [this.pieces[pieceID]]);
   }
 
   dropSelectedPieces(x, y, scale) {
@@ -557,9 +577,10 @@ class PuzzleService {
     const pieces = this.selectedPieces.map((pieceID) => {
       return this.pieces[pieceID];
     });
-    this._broadcast(piecesMutate, pieces);
+    this._broadcast(piecesUpdate, pieces);
 
     // Send the updates
+    this.togglePieceMovements(false);
     this.selectedPieces.forEach((pieceID) => {
       let piece = this.pieces[pieceID];
       this.move(
@@ -585,7 +606,17 @@ class PuzzleService {
     this._broadcast(piecesInfoToggleMovable, this._showMovable);
   }
 
+  get piecesPaused() {
+    return this._piecesPaused;
+  }
+
+  togglePieceMovements(pause: boolean) {
+    this._piecesPaused = pause;
+    this._broadcast(piecesInfoPauseResume, this._piecesPaused);
+  }
+
   private onPieceUpdate(data: PieceMovementData) {
+    // TODO: rename
     let piece = this.pieces[data.id];
     if (piece.pending) {
       this.unSelectPiece(data.id);
@@ -593,6 +624,9 @@ class PuzzleService {
     piece = Object.assign(piece, data);
     piece.pending = false;
     this._broadcast(piecesMutate, [piece]);
+    if (this.piecesPaused) {
+      this._broadcast(piecesShadowMutate, [piece]);
+    }
   }
 
   private onPieceMoveRejected(data: PieceMovementData) {

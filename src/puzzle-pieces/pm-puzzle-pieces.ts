@@ -63,11 +63,16 @@ customElements.define(
     private blocked: boolean = false;
     private blockedTimer: number = 0;
     private blockedTimeout: number | undefined;
+    private piecesPaused: boolean = false;
+    private renderPiecesBuffer: Array<PieceData>;
+    private batchRenderPiecesTimeout: number | undefined;
+    //private pauseStop: number = 0;
 
     constructor() {
       super();
       const self = this;
       this.instanceId = PmPuzzlePieces._instanceId;
+      this.renderPiecesBuffer = [];
       this.innerHTML = html;
       this.$collection = <HTMLElement>(
         this.querySelector(".pm-PuzzlePieces-collection")
@@ -144,6 +149,16 @@ customElements.define(
         puzzleService.connect();
         puzzleService.subscribe(
           "pieces/mutate",
+          this.batchRenderPieces.bind(this),
+          this.instanceId
+        );
+        puzzleService.subscribe(
+          "pieces/shadow-mutate",
+          this.renderShadowPieces.bind(this),
+          this.instanceId
+        );
+        puzzleService.subscribe(
+          "pieces/update",
           this.renderPieces.bind(this),
           this.instanceId
         );
@@ -157,6 +172,11 @@ customElements.define(
         puzzleService.subscribe(
           "pieces/info/toggle-movable",
           this.onToggleMovable.bind(this),
+          this.instanceId
+        );
+        puzzleService.subscribe(
+          "pieces/info/pause-resume",
+          this.onPiecesPauseResume.bind(this),
           this.instanceId
         );
       }
@@ -405,6 +425,35 @@ customElements.define(
       }
     }
 
+    batchRenderPieces(pieces: Array<PieceData>) {
+      if (!this.piecesPaused) {
+        window.clearTimeout(this.batchRenderPiecesTimeout);
+        this.batchRenderPiecesTimeout = undefined;
+        let _buffer = this.renderPiecesBuffer.concat(pieces);
+        this.renderPiecesBuffer = [];
+        this.renderPieces(_buffer);
+        return;
+      }
+      this.renderPiecesBuffer = this.renderPiecesBuffer.concat(pieces);
+      if (this.batchRenderPiecesTimeout === undefined) {
+        let _buffer = this.renderPiecesBuffer.concat();
+        this.renderPiecesBuffer = [];
+        this.renderPieces(_buffer);
+        //this.pauseStop = Date.now() + 15000;
+        this.batchRenderPiecesTimeout = window.setTimeout(() => {
+          puzzleService.togglePieceMovements(false);
+          if (this.renderPiecesBuffer.length === 0) {
+            this.batchRenderPiecesTimeout = undefined;
+            return;
+          }
+          let _buffer = this.renderPiecesBuffer.concat();
+          this.renderPiecesBuffer = [];
+          this.renderPieces(_buffer);
+          this.batchRenderPiecesTimeout = undefined;
+        }, 15000);
+      }
+    }
+
     // update DOM for array of pieces
     renderPieces(pieces: Array<PieceData>) {
       let tmp: undefined | DocumentFragment; // = document.createDocumentFragment();
@@ -476,8 +525,96 @@ customElements.define(
       //console.log("render pieces", endTime.getTime() - startTime.getTime());
     }
 
+    // Update DOM for array of shadow pieces
+    renderShadowPieces(pieces: Array<PieceData>) {
+      let tmp: undefined | DocumentFragment; // = document.createDocumentFragment();
+      //const startTime = new Date();
+      pieces.forEach((piece) => {
+        const pieceID = piece.id;
+        let $piece = <HTMLElement | null>(
+          this.$collection.querySelector(".s-" + pieceID)
+        );
+        if (!$piece) {
+          if (tmp === undefined) {
+            tmp = document.createDocumentFragment();
+          }
+          $piece = document.createElement("div");
+          $piece.classList.add("s");
+          $piece.classList.add("s-" + pieceID);
+          $piece.classList.add("pc-" + pieceID);
+          // Grab current transform from real piece
+          let $realPiece = <HTMLElement | null>(
+            this.$collection.querySelector("#p-" + pieceID)
+          );
+          if ($realPiece) {
+            const realPieceStyle = window.getComputedStyle($realPiece);
+            const bbox = $realPiece.getBoundingClientRect();
+            $piece.style.transform = realPieceStyle.transform + " scale(1.2)";
+            //$piece.style.transitionDuration =
+            //  Math.max(this.pauseStop - Date.now(), 0) + "ms";
+            // Using a mask of the piece shape is too confusing visually.
+            //$piece.style.maskImage = realPieceStyle.backgroundImage;
+            //$piece.style.maskPosition = realPieceStyle.backgroundPosition;
+            if (bbox) {
+              $piece.setAttribute("x", String(bbox.left));
+              $piece.setAttribute("y", String(bbox.top));
+            }
+          }
+          tmp.appendChild($piece);
+        }
+      });
+      if (tmp !== undefined && tmp.children.length) {
+        this.$collection.appendChild(tmp);
+      }
+
+      // Moving the shadow around is also too confusing visually.
+      //window.setTimeout(() => {
+      //  pieces.forEach((piece) => {
+      //    const pieceID = piece.id;
+      //    let $piece = <HTMLElement | null>(
+      //      this.$collection.querySelector(".s-" + pieceID)
+      //    );
+      //    if ($piece) {
+      //      // Move the piece
+      //      if (piece.x !== undefined) {
+      //        const originX = parseFloat($piece.getAttribute("x") || "0");
+      //        const originY = parseFloat($piece.getAttribute("y") || "0");
+      //        $piece.style.marginLeft = piece.x < originX ? "-50px" : "+50px";
+      //        $piece.style.marginTop = piece.y < originY ? "-50px" : "+50px";
+      //        /*
+      //        $piece.style.transform = `translate3d(${piece.x}px, ${
+      //          piece.y
+      //        }px, 0)
+      //          rotate(${360 - piece.r === 360 ? 0 : 360 - piece.r}deg)`;
+      //        */
+      //      }
+      //    }
+      //  });
+      //}, 100);
+    }
+    removeShadowPieces() {
+      const shadowPieces = this.$collection.querySelectorAll(".s");
+      window.setTimeout(() => {
+        // Delay removing them so the transition can complete first
+        for (const sp of shadowPieces.values()) {
+          try {
+            sp.remove();
+          } catch (error) {
+            // ignore errors here
+          }
+        }
+      }, 800);
+    }
+
     onToggleMovable(showMovable: boolean) {
       this.$container.classList.toggle("show-movable", showMovable);
+    }
+
+    onPiecesPauseResume(pause: boolean) {
+      this.piecesPaused = pause;
+      if (!this.piecesPaused) {
+        this.removeShadowPieces();
+      }
     }
 
     updateForegroundAndBackgroundColors() {
@@ -505,6 +642,7 @@ customElements.define(
         let contrast = light > 50 ? 0 : 100;
         this.$container.style.color = `hsla(0,0%,${contrast}%,1)`;
       }
+      this.$container.style.setProperty("--pm-PuzzlePieces-shadowColor", hash);
     }
 
     // Fires when an instance was inserted into the document.
@@ -516,6 +654,8 @@ customElements.define(
       streamService.unsubscribe("piece/update", this.instanceId);
       streamService.unsubscribe("puzzle/status", this.instanceId);
       puzzleService.unsubscribe("pieces/mutate", this.instanceId);
+      puzzleService.unsubscribe("pieces/shadow-mutate", this.instanceId);
+      puzzleService.unsubscribe("pieces/update", this.instanceId);
       puzzleService.unsubscribe(
         "piece/move/rejected",
         `pieceFollow ${this.draggedPieceID} ${this.instanceId}`
