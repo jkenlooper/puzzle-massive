@@ -31,6 +31,9 @@ MAX_RECENT_POINTS = 25
 MAX_KARMA = 25
 MIN_KARMA = int(old_div(MAX_KARMA, 2)) * -1  # -12
 
+# How many seconds to try to move a piece before it times out.
+PIECE_MOVE_TIMEOUT = 4
+
 skill_level_intervals = list(map(lambda x: x[1], SKILL_LEVEL_RANGES))
 skill_level_intervals.sort()
 
@@ -68,6 +71,14 @@ def attempt_piece_movement(ip, user, puzzleData, piece, x, y, r, karma_change):
     except:
         current_app.logger.warning("other error {}".format(sys.exc_info()[0]))
         raise
+
+    finally:
+        current_app.logger.debug("bump pzq_current")
+        pzq_current_key = "pzq_current:{puzzle}".format(puzzle=puzzleData["puzzle"])
+        pzq_next_key = "pzq_next:{puzzle}".format(puzzle=puzzleData["puzzle"])
+        redis_connection.incr(pzq_current_key, amount=1)
+        redis_connection.expire(pzq_current_key, PIECE_MOVE_TIMEOUT + 2)
+        redis_connection.expire(pzq_next_key, PIECE_MOVE_TIMEOUT + 2)
     return (msg, karma_change)
 
 

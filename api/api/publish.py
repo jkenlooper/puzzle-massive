@@ -866,25 +866,33 @@ class PuzzlePiecesMovePublishView(MethodView):
             # Use a custom built and managed queue to prevent multiple processes
             # from running the attempt_piece_movement concurrently on the same
             # puzzle.
-            pzm_puzzle_key = "pzm:{puzzle}".format(puzzle=puzzle)
+            pzq_current_key = "pzq_current:{puzzle}".format(puzzle=puzzle)
             pzq_next_key = "pzq_next:{puzzle}".format(puzzle=puzzle)
-            # A piece_mutate process bumps the pzm by 2; begin phase and end
-            # phase.
-            pzq_next = redis_connection.incr(pzq_next_key, amount=2)
+            # The attempt_piece_movement bumps the pzq_current by 1
+            pzq_next = redis_connection.incr(pzq_next_key, amount=1)
             # Set the expire in case it fails to reach expire in attempt_piece_movement.
+            redis_connection.expire(pzq_current_key, PIECE_MOVE_TIMEOUT + 2)
             redis_connection.expire(pzq_next_key, PIECE_MOVE_TIMEOUT + 2)
 
             attempt_count = 0
             attempt_timestamp = time.time()
             timeout = attempt_timestamp + PIECE_MOVE_TIMEOUT
             while attempt_timestamp < timeout:
-                pzm_current = int(redis_connection.get(pzm_puzzle_key) or "0")
-                if pzm_current == pzq_next - 2:
+                pzq_current = int(redis_connection.get(pzq_current_key) or "0")
+                if pzq_current == pzq_next - 1:
                     (msg, karma_change) = attempt_piece_movement(
-                        ip, user, puzzle_data, piece, x, y, r, karma_change,
+                        # TODO: handle PieceMutateError, WatchError
+                        ip,
+                        user,
+                        puzzle_data,
+                        piece,
+                        x,
+                        y,
+                        r,
+                        karma_change,
                     )
                     break
-                current_app.logger.debug(f"pzm_current is {pzm_current}")
+                current_app.logger.debug(f"pzq_current is {pzq_current}")
                 attempt_timestamp = time.time()
                 attempt_count = attempt_count + 1
                 time.sleep(0.01)
