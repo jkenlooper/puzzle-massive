@@ -10,6 +10,7 @@ interface PieceMovement {
   piece: number;
   inProcess: boolean;
   token?: string;
+  snap?: string;
   tokenRequest?: Function;
   moveRequest?: Function;
   fail?: boolean;
@@ -280,6 +281,7 @@ class PuzzleService {
       })
         .then((data) => {
           pieceMovement.token = data.token;
+          pieceMovement.snap = data.snap;
         })
         .fail((data) => {
           let responseObj;
@@ -396,7 +398,7 @@ class PuzzleService {
         method: "PATCH",
         type: "json",
         data: data,
-        headers: { Token: pieceMovement.token },
+        headers: { Token: pieceMovement.token, Snap: pieceMovement.snap },
         error: function handlePatchError(patchError) {
           let responseObj;
           try {

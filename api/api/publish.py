@@ -90,6 +90,12 @@ PIECE_TRANSLATE_EXCEEDED_REASON = "Piece moves exceeded {PIECE_TRANSLATE_MAX_COU
 # How many seconds to try to move a piece before it times out.
 PIECE_MOVE_TIMEOUT = 4
 
+# The player can pause piece movements on their end for this max time in seconds.
+# Also update in puzzle-pieces/pm-puzzle-pieces.ts
+MAX_PAUSE_PIECES_TIMEOUT = 15
+
+PIECE_JOIN_TOLERANCE = 100
+
 TOKEN_EXPIRE_TIMEOUT = 60 * 5
 TOKEN_LOCK_TIMEOUT = 5
 TOKEN_INVALID_BAN_TIME_INCR = 15
@@ -199,6 +205,30 @@ def get_puzzle_piece_token_queue_key(puzzle, piece):
     return "pqtoken:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
 
 
+def _int_piece_properties(piece_properties):
+    ""
+    int_props = ("x", "y", "r", "w", "h", "rotate", "g")
+    for (k, v) in piece_properties.items():
+        if k in int_props:
+            if v != None:
+                piece_properties[k] = int(v)
+    return piece_properties
+
+
+def _get_adjacent_pieces_list(piece_properties):
+    "Get adjacent pieces list"
+    return list(
+        map(
+            int,
+            [
+                x
+                for x in list(piece_properties.keys())
+                if x not in ("x", "y", "r", "w", "h", "b", "rotate", "g", "s")
+            ],
+        )
+    )
+
+
 class PuzzlePieceTokenView(MethodView):
     """
     player gets token after mousedown.  /puzzle/<puzzle_id>/piece/<int:piece>/token/
@@ -252,11 +282,12 @@ class PuzzlePieceTokenView(MethodView):
             puzzle_data = result[0]
             puzzle = puzzle_data["puzzle"]
 
-        (piece_status, has_y) = redis_connection.hmget(
-            "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), ["s", "y"]
+        pc_puzzle_piece_key = "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
+        piece_properties = _int_piece_properties(
+            redis_connection.hgetall(pc_puzzle_piece_key)
         )
 
-        if has_y == None:
+        if piece_properties.get("y") == None:
             # 400 if puzzle does not exist or piece is not found
             # Only puzzles in ACTIVE state can be mutated
             err_msg = {
@@ -265,7 +296,7 @@ class PuzzlePieceTokenView(MethodView):
             }
             return make_response(encoder.encode(err_msg), 400)
 
-        if piece_status == "1":
+        if piece_properties.get("s") == "1":
             # immovable
             err_msg = {
                 "msg": "piece can't be moved",
@@ -304,6 +335,66 @@ class PuzzlePieceTokenView(MethodView):
                 channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id),
             )
 
+        # Snapshot of adjacent pieces at time of token request
+        snapshot_id = None
+        adjacent_pieces_list = _get_adjacent_pieces_list(piece_properties)
+        adjacent_piece_properties = None
+        adjacent_property_list = ["x", "y", "r", "g", "s", str(piece)]
+        pzq_current_key = "pzq_current:{puzzle}".format(puzzle=puzzle)
+        with redis_connection.pipeline(transaction=True) as pipe:
+            for adjacent_piece in adjacent_pieces_list:
+                pc_puzzle_adjacent_piece_key = "pc:{puzzle}:{adjacent_piece}".format(
+                    puzzle=puzzle, adjacent_piece=adjacent_piece
+                )
+                pipe.hmget(pc_puzzle_adjacent_piece_key, adjacent_property_list)
+            pipe.get(pzq_current_key)
+            results = pipe.execute()
+            pzq_current = "0"
+            if not isinstance(results[-1], list):
+                pzq_current = results.pop() or pzq_current
+            adjacent_properties = dict(
+                zip(
+                    adjacent_pieces_list,
+                    map(lambda x: dict(zip(adjacent_property_list, x)), results),
+                )
+            )
+            snapshot = []
+            for a_piece, a_props in adjacent_properties.items():
+                # skip any that are immovable
+                if a_props.get("s") == "1":
+                    continue
+                # skip any that are in the same group
+                if a_props.get("g") != None and a_props.get(
+                    "g"
+                ) == piece_properties.get("g"):
+                    continue
+                # skip any that don't have offsets (adjacent edge piece)
+                if not a_props.get(str(piece)):
+                    continue
+                if a_props.get("g") == None:
+                    a_props["g"] = ""
+                snapshot.append(
+                    "_".join(
+                        [
+                            str(a_piece),
+                            a_props.get("x", ""),
+                            a_props.get("y", ""),
+                            a_props.get("r", ""),
+                            a_props.get(str(piece), ""),
+                            # a_props.get("g")
+                        ]
+                    )
+                )
+
+            if len(snapshot):
+                snapshot_id = uuid.uuid4().hex[:8]
+                snapshot_key = f"snap:{snapshot_id}"
+                snapshot.insert(0, pzq_current)
+                redis_connection.set(snapshot_key, ":".join(snapshot))
+                redis_connection.expire(
+                    snapshot_key, MAX_PAUSE_PIECES_TIMEOUT + (PIECE_MOVE_TIMEOUT + 2)
+                )
+
         validate_token = (
             len({"all", "valid_token"}.intersection(current_app.config["PUZZLE_RULES"]))
             > 0
@@ -316,6 +407,8 @@ class PuzzlePieceTokenView(MethodView):
                 "lock": now + TOKEN_LOCK_TIMEOUT,
                 "expires": now + TOKEN_EXPIRE_TIMEOUT,
             }
+            if snapshot_id:
+                response["snap"] = snapshot_id
             return encoder.encode(response)
 
         puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
@@ -453,6 +546,8 @@ class PuzzlePieceTokenView(MethodView):
             "lock": now + TOKEN_LOCK_TIMEOUT,
             "expires": now + TOKEN_EXPIRE_TIMEOUT,
         }
+        if snapshot_id:
+            response["snap"] = snapshot_id
         return encoder.encode(response)
 
 
@@ -535,6 +630,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         x = args.get("x")
         y = args.get("y")
         r = args.get("r")
+        snapshot_id = request.headers.get("Snap")
 
         timestamp_now = int(time.time())
 
@@ -880,8 +976,113 @@ class PuzzlePiecesMovePublishView(MethodView):
             while attempt_timestamp < timeout:
                 pzq_current = int(redis_connection.get(pzq_current_key) or "0")
                 if pzq_current == pzq_next - 1:
+                    try:
+                        snapshot_msg = None
+                        snapshot_karma_change = False
+                        if snapshot_id:
+                            snapshot_key = f"snap:{snapshot_id}"
+                            snapshot = redis_connection.get(snapshot_key)
+                            if snapshot:
+                                snapshot_list = snapshot.split(":")
+                                snapshot_pzq = int(snapshot_list.pop(0))
+                                if snapshot_pzq != pzq_current:
+                                    # Check if any adjacent pieces are within range of x, y, r
+                                    # Within that list check if any have moved
+                                    # With the first one that has moved that was within range attempt piece movement on that by using adjusted x, y, r
+                                    snaps = list(
+                                        map(lambda x: x.split("_"), snapshot_list)
+                                    )
+                                    adjacent_piece_ids = list(
+                                        map(lambda x: int(x[0]), snaps)
+                                    )
+                                    adjacent_piece_props_snaps = list(
+                                        map(lambda x: x[1:], snaps)
+                                    )
+                                    property_list = [
+                                        "x",
+                                        "y",
+                                        "r",
+                                        # "g"
+                                    ]
+                                    results = []
+                                    with redis_connection.pipeline(
+                                        transaction=True
+                                    ) as pipe:
+                                        for adjacent_piece_id in adjacent_piece_ids:
+                                            pc_puzzle_adjacent_piece_key = (
+                                                f"pc:{puzzle}:{adjacent_piece_id}"
+                                            )
+                                            pipe.hmget(
+                                                pc_puzzle_adjacent_piece_key,
+                                                property_list,
+                                            )
+                                        results = pipe.execute()
+                                    for (
+                                        a_id,
+                                        snapshot_adjacent,
+                                        updated_adjacent,
+                                    ) in zip(
+                                        adjacent_piece_ids,
+                                        adjacent_piece_props_snaps,
+                                        results,
+                                    ):
+                                        updated_adjacent = list(
+                                            map(
+                                                lambda x: x
+                                                if isinstance(x, str)
+                                                else "",
+                                                updated_adjacent,
+                                            )
+                                        )
+                                        adjacent_offset = snapshot_adjacent.pop()
+                                        if (
+                                            snapshot_adjacent != updated_adjacent
+                                        ) and adjacent_offset:
+                                            (a_offset_x, a_offset_y) = map(
+                                                int, adjacent_offset.split(",")
+                                            )
+                                            (a_snap_x, a_snap_y) = map(
+                                                int, snapshot_adjacent[:2]
+                                            )
+                                            # Check if the x,y is within range of the adjacent piece that has moved
+                                            if (
+                                                abs((a_snap_x + a_offset_x) - x)
+                                                <= PIECE_JOIN_TOLERANCE
+                                                and abs((a_snap_y + a_offset_y) - y)
+                                                <= PIECE_JOIN_TOLERANCE
+                                            ):
+                                                (a_moved_x, a_moved_y) = map(
+                                                    int, updated_adjacent[:2]
+                                                )
+                                                # Decrease pzq_current since it is moving an extra piece out of turn
+                                                redis_connection.decr(
+                                                    pzq_current_key, amount=1
+                                                )
+                                                (
+                                                    snapshot_msg,
+                                                    snapshot_karma_change,
+                                                ) = attempt_piece_movement(
+                                                    ip,
+                                                    user,
+                                                    puzzle_data,
+                                                    piece,
+                                                    a_moved_x + a_offset_x,
+                                                    a_moved_y + a_offset_y,
+                                                    r,
+                                                    karma_change,
+                                                )
+                                                break
+                    except:
+                        pzq_current = int(redis_connection.get(pzq_current_key) or "0")
+                        if pzq_current == pzq_next - 1:
+                            # skip this piece move attempt
+                            redis_connection.incr(pzq_current_key, amount=1)
+                        current_app.logger.warning(
+                            "results123 other error {}".format(sys.exc_info()[0])
+                        )
+                        raise
+
                     (msg, karma_change) = attempt_piece_movement(
-                        # TODO: handle PieceMutateError, WatchError
                         ip,
                         user,
                         puzzle_data,
@@ -889,13 +1090,15 @@ class PuzzlePiecesMovePublishView(MethodView):
                         x,
                         y,
                         r,
-                        karma_change,
+                        karma_change or snapshot_karma_change,
                     )
+                    if isinstance(snapshot_msg, str) and isinstance(msg, str):
+                        msg = snapshot_msg + msg
                     break
                 current_app.logger.debug(f"pzq_current is {pzq_current}")
                 attempt_timestamp = time.time()
                 attempt_count = attempt_count + 1
-                time.sleep(0.01)
+                time.sleep(0.02)
 
             current_app.logger.debug(
                 f"Puzzle ({puzzle}) piece move attempts: {attempt_count}"

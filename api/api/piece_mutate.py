@@ -1,6 +1,7 @@
 from api.tools import formatPieceMovementString
 
 PIECE_MOVE_TIMEOUT = 4
+PIECE_JOIN_TOLERANCE = 100
 
 
 class PieceMutateError(Exception):
@@ -327,7 +328,7 @@ class PieceMutateProcess:
 
     def _set_can_join_adjacent_piece(self):
         "Determine if the piece can be joined to any of the adjacent pieces"
-        tolerance = int(100 / 2)
+        tolerance = int(PIECE_JOIN_TOLERANCE / 2)
 
         # Check if piece is close enough to any adjacent piece
         piece_group = self.piece_properties.get("g", None)
