@@ -111,7 +111,7 @@ cat <<HERE
 #limit_conn_zone \$binary_remote_addr zone=addr:1m;
 
 HERE
-if test USE_PIECE_PUBLISH_LIMIT -eq 1; then
+if test $USE_PIECE_PUBLISH_LIMIT -eq 1; then
 cat <<HERELIMITREQZONE
 limit_req_zone \$server_name zone=piece_move_limit:1m rate=100r/s;
 limit_req_zone \$binary_remote_addr zone=piece_token_limit_per_ip:1m rate=20r/s;
@@ -727,7 +727,7 @@ cat <<HEREORIGINSERVER
     #keepalive_timeout 0;
 
 HEREORIGINSERVER
-if test USE_PIECE_PUBLISH_LIMIT -eq 1; then
+if test $USE_PIECE_PUBLISH_LIMIT -eq 1; then
 cat <<HEREPIECETOKENLIMIT
     # Limit rate for an IP to prevent hitting 503 errors. Burst is set at 40
     # with the 20 requests a second rate. (1000/20) * 40 = 2 seconds. Which will
@@ -754,7 +754,7 @@ cat <<HEREORIGINSERVER
     #keepalive_timeout 0;
 
 HEREORIGINSERVER
-if test USE_PIECE_PUBLISH_LIMIT -eq 1; then
+if test $USE_PIECE_PUBLISH_LIMIT -eq 1; then
 cat <<HEREPIECEMOVELIMIT
     # (1000/100) * 400 = 4 seconds max delay on requests before dropping them
     # with a 503 error. Each subsequent request is delayed 10ms. This rate limit
