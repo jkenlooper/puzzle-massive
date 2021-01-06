@@ -1,8 +1,5 @@
 from api.tools import formatPieceMovementString
 
-PIECE_MOVE_TIMEOUT = 4
-PIECE_JOIN_TOLERANCE = 100
-
 
 class PieceMutateError(Exception):
     """
@@ -29,6 +26,8 @@ class PieceMutateProcess:
         target_y,
         target_r,
         puzzle_rules={"all"},
+        piece_move_timeout=4,
+        piece_join_tolerance=100,
         piece_count=0,
     ):
         ""
@@ -39,6 +38,8 @@ class PieceMutateProcess:
         self.target_y = target_y
         self.target_r = target_r
         self.puzzle_rules = puzzle_rules
+        self.piece_move_timeout = piece_move_timeout
+        self.piece_join_tolerance = piece_join_tolerance
         self.piece_count = piece_count
 
         self.watched_keys = set()
@@ -46,7 +47,7 @@ class PieceMutateProcess:
         self.pzm_puzzle_key = "pzm:{puzzle}".format(puzzle=puzzle)
         # Bump the pzm id when preparing to mutate the puzzle.
         self.puzzle_mutation_id = self.redis_connection.incr(self.pzm_puzzle_key)
-        self.redis_connection.expire(self.pzm_puzzle_key, PIECE_MOVE_TIMEOUT + 2)
+        self.redis_connection.expire(self.pzm_puzzle_key, piece_move_timeout + 2)
         self.watched_keys.add(self.pzm_puzzle_key)
 
         self.pc_puzzle_piece_key = "pc:{puzzle}:{piece}".format(
@@ -328,7 +329,7 @@ class PieceMutateProcess:
 
     def _set_can_join_adjacent_piece(self):
         "Determine if the piece can be joined to any of the adjacent pieces"
-        tolerance = int(PIECE_JOIN_TOLERANCE / 2)
+        tolerance = int(self.piece_join_tolerance / 2)
 
         # Check if piece is close enough to any adjacent piece
         piece_group = self.piece_properties.get("g", None)

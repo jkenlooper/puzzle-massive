@@ -1,5 +1,6 @@
 //import reqwest from "reqwest";
 //import { interpret } from "@xstate/fsm";
+import FetchService from "../site/fetch.service";
 import { streamService, PieceMovementData } from "./stream.service";
 //import { puzzlePieceMachine } from "./puzzle-piece-machine";
 
@@ -20,6 +21,18 @@ interface PieceMovements {
   [index: string]: PieceMovement;
 }
 
+interface UnprocessedPieceData {
+  id: number;
+  x: string;
+  y: string;
+  r: string;
+  g: string | null;
+  s: string | null;
+  w: string;
+  h: string;
+  b: string;
+}
+
 interface DefaultPiece {
   g?: number;
   x: number;
@@ -36,7 +49,7 @@ export interface PieceData extends DefaultPiece {
   id: number;
   active?: boolean;
   pending?: boolean;
-  status: string; // TODO: use when move to a state machine
+  status?: string; // TODO: use when move to a state machine
   karma?: number | boolean; // response from move request
   karmaChange?: number | boolean; // response from move request
   origin?: any; // updated after piece movements
@@ -108,6 +121,12 @@ const topics = {
   "pieces/info/pause-resume": piecesInfoPauseResume,
 };
 
+interface UnprocessedPuzzlePiecesData {
+  positions: Array<UnprocessedPieceData>;
+  timestamp: string;
+  mark: string;
+}
+
 interface MoveRequestData {
   x: number;
   y: number;
@@ -132,6 +151,7 @@ class PuzzleService {
   private instanceId = "puzzleService";
   private _showMovable = false;
   private _piecesPaused = false;
+  public isWaitingOnMoveRequest = false;
 
   [piecesMutate]: Map<string, PiecesMutateCallback> = new Map();
   [piecesShadowMutate]: Map<string, PiecesShadowMutateCallback> = new Map();
@@ -155,50 +175,48 @@ class PuzzleService {
   //  }
   //}
 
-  init(puzzleId) {
+  init(puzzleId): Promise<PieceData[]> {
     streamService.subscribe(
       "piece/update",
       this.onPieceUpdate.bind(this),
       this.instanceId
     );
     this.puzzleId = puzzleId;
-    return fetchPieces(this.puzzleId).then((data) => {
-      let pieceData = JSON.parse(data);
-      this.mark = pieceData.mark;
-      pieceData.positions.forEach((piece) => {
-        // set status
-        Object.keys(piece)
-          .filter((key) => {
-            return pieceAttrsThatAreInt.includes(key);
-          })
-          .forEach((key) => {
-            piece[key] = Number(piece[key]);
-          });
-        const defaultPiece: DefaultPiece = {
-          x: 0,
-          y: 0,
-          r: 0,
-          s: null,
-          b: 1,
-          w: 1,
-          h: 1,
-        };
-        // TODO:
-        //puzzlePieceService = interpret(puzzlePieceMachine).start();
-        // TODO: the pm-puzzle-pieces would subscribe?
-        //puzzlePieceService.subscribe(this.handlePieceStateChange.bind(this));
-        this.pieces[piece.id] = Object.assign(defaultPiece, piece);
-      });
-      this.piecesTimestamp = pieceData.timestamp.timestamp;
-      return Object.values(this.pieces);
-    });
 
-    function fetchPieces(puzzleId) {
-      return reqwest({
-        url: `/newapi/puzzle-pieces/${puzzleId}/`,
-        method: "get",
+    const fetchPuzzlePiecesService = new FetchService(
+      `/newapi/puzzle-pieces/${puzzleId}/`
+    );
+    return fetchPuzzlePiecesService
+      .get<UnprocessedPuzzlePiecesData>()
+      .then((pieceData) => {
+        this.mark = pieceData.mark;
+        pieceData.positions.forEach((piece) => {
+          // set status
+          Object.keys(piece)
+            .filter((key) => {
+              return pieceAttrsThatAreInt.includes(key);
+            })
+            .forEach((key) => {
+              piece[key] = Number(piece[key]);
+            });
+          const defaultPiece: DefaultPiece = {
+            x: 0,
+            y: 0,
+            r: 0,
+            s: null,
+            b: 1,
+            w: 1,
+            h: 1,
+          };
+          // TODO:
+          //puzzlePieceService = interpret(puzzlePieceMachine).start();
+          // TODO: the pm-puzzle-pieces would subscribe?
+          //puzzlePieceService.subscribe(this.handlePieceStateChange.bind(this));
+          this.pieces[piece.id] = Object.assign(defaultPiece, piece);
+        });
+        this.piecesTimestamp = pieceData.timestamp;
+        return Object.values(this.pieces);
       });
-    }
   }
   connect() {
     streamService.connect(this.puzzleId);
@@ -383,6 +401,7 @@ class PuzzleService {
       return;
     }
 
+    this.isWaitingOnMoveRequest = true;
     pieceMovement.moveRequest = function moveRequest() {
       x = Math.round(Number(x));
       y = Math.round(Number(y));
@@ -484,13 +503,59 @@ class PuzzleService {
         },
         // The puzzle stream will update the pending status instead of waiting
         // for a successful response.
-        //success: function (d) {
-        //  console.log("skip success", d);
-        //},
+        success: function () {
+          //console.log("skip success", d);
+          /*
+          if (!d.msg || typeof d.msg != "string") {
+            return;
+          }
+          const lines = d.msg.split("\n");
+          const _processed_pieces: Array<PieceData> = [];
+          lines.forEach((line) => {
+            const values = line.split(":");
+            if (values.length === 7) {
+              // puzzle_id, piece_id, x, y, r, parent, status
+              const pieceData: PieceMovementData = {
+                id: Number(values[1]),
+              };
+              if (values[5] !== "") {
+                pieceData.parent = Number(values[5]);
+              }
+              if (values[6] !== "") {
+                // s for stacked
+                pieceData.s = Number(values[6]);
+              }
+              if (values[2] !== "") {
+                pieceData.x = Number(values[2]);
+              }
+              if (values[3] !== "") {
+                pieceData.y = Number(values[3]);
+              }
+
+              let piece = self.pieces[pieceData.id];
+              piece = Object.assign(piece, pieceData);
+              _processed_pieces.push(piece);
+            }
+          });
+          console.log("processed pieces", _processed_pieces);
+          self._broadcast(piecesUpdate, _processed_pieces);
+          */
+          /*
+          _processed_pieces.forEach((pieceData) => {
+            let piece = self.pieces[pieceData.id];
+            piece.active = false;
+          });
+          */
+        },
         complete: () => {
-          let piece = self.pieces[id];
-          piece.pending = false;
-          self._broadcast(piecesMutate, [piece]);
+          self.isWaitingOnMoveRequest = false;
+          //let piece = self.pieces[id];
+          //piece.pending = false;
+          // Make all pieces inactive
+          //Object.values(self.pieces).forEach((piece) => {
+          //  piece.active = false;
+          //});
+          //self._broadcast(piecesUpdate, Object.values(self.pieces));
         },
       });
     };

@@ -443,12 +443,14 @@ class UserSession:
                 time.sleep(1)
                 raise Exception("timeout")
             return
-        try:
-            data = r.json()
-        except ValueError as err:
-            current_app.logger.debug("ERROR reading json: {}".format(err))
-            current_app.logger.debug(r.text)
-            return
+        data = {}
+        if r.text:
+            try:
+                data = r.json()
+            except ValueError as err:
+                current_app.logger.debug("ERROR reading json: {}".format(err))
+                current_app.logger.debug(r.text)
+                return
         if r.status_code >= 400:
             current_app.logger.debug(
                 "ERROR: {status_code} {url}".format(
@@ -473,6 +475,7 @@ class UserSession:
             headers=my_headers,
         )
 
+        data = {}
         if r.status_code in (429, 409):
             try:
                 data = r.json()
@@ -485,12 +488,13 @@ class UserSession:
                 # time.sleep(data.get("timeout", 1))
                 raise Exception("timeout")
             return
-        try:
-            data = r.json()
-        except ValueError as err:
-            current_app.logger.debug("ERROR reading json: {}".format(err))
-            current_app.logger.debug(r.text)
-            return
+        if r.text:
+            try:
+                data = r.json()
+            except ValueError as err:
+                current_app.logger.debug("ERROR reading json: {}".format(err))
+                current_app.logger.debug(r.text)
+                return
         if r.status_code >= 400:
             current_app.logger.debug(
                 "ERROR: {status_code} {url}".format(
@@ -637,7 +641,7 @@ class PuzzleActivityJob:
             self.puzzle_details["table_width"],
             self.puzzle_details["table_height"],
         )
-        puzzle_pieces.move_random_pieces_with_delay(delay=0.01, max_delay=1)
+        puzzle_pieces.move_random_pieces_with_delay(delay=1, max_delay=10)
 
 
 def simulate_puzzle_activity(puzzle_ids, count=1):

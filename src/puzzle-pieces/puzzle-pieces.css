@@ -14,9 +14,6 @@
   z-index: 10;
   transition: transform 0.8s linear;
   background-repeat: no-repeat;
-  /*
-   * TODO: experiment with changing the timing to allow grabbing pieces easier.
-   */
   transition-timing-function: cubic-bezier(0.96, -0.08, 0.71, -0.53);
   transition-duration: 1.2s;
 }
@@ -35,8 +32,6 @@
 
 .p.is-pending,
 .pm-PuzzlePieces.show-movable .p.is-pending,
-.p.is-active,
-.pm-PuzzlePieces.show-movable .p.is-active,
 .pm-PuzzlePieces.show-movable .p.is-dragging {
   z-index: 13;
   box-shadow: 0px 0px 100px 0px currentColor;

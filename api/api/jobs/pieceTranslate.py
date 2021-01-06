@@ -31,9 +31,6 @@ MAX_RECENT_POINTS = 25
 MAX_KARMA = 25
 MIN_KARMA = int(old_div(MAX_KARMA, 2)) * -1  # -12
 
-# How many seconds to try to move a piece before it times out.
-PIECE_MOVE_TIMEOUT = 4
-
 skill_level_intervals = list(map(lambda x: x[1], SKILL_LEVEL_RANGES))
 skill_level_intervals.sort()
 
@@ -76,14 +73,15 @@ def attempt_piece_movement(ip, user, puzzleData, piece, x, y, r, karma_change):
         current_app.logger.debug("bump pzq_current")
         pzq_current_key = "pzq_current:{puzzle}".format(puzzle=puzzleData["puzzle"])
         pzq_next_key = "pzq_next:{puzzle}".format(puzzle=puzzleData["puzzle"])
+        piece_move_timeout = current_app.config["PIECE_MOVE_TIMEOUT"]
         redis_connection.incr(pzq_current_key, amount=1)
-        redis_connection.expire(pzq_current_key, PIECE_MOVE_TIMEOUT + 2)
-        redis_connection.expire(pzq_next_key, PIECE_MOVE_TIMEOUT + 2)
+        redis_connection.expire(pzq_current_key, piece_move_timeout + 2)
+        redis_connection.expire(pzq_next_key, piece_move_timeout + 2)
     return (msg, karma_change)
 
 
 def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
-    start = time.perf_counter()
+    # start = time.perf_counter()
 
     def publishMessage(msg, karma_change, karma, points=0, complete=False):
         # print(topic)
@@ -195,10 +193,10 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
                 channel="puzzle:{puzzle_id}".format(puzzle_id=puzzleData["puzzle_id"]),
             )
 
+        # end = time.perf_counter()
+        # duration = end - start
+        # redis_connection.rpush("testdata:translate", duration)
         # return topic and msg mostly for testing
-        end = time.perf_counter()
-        duration = end - start
-        redis_connection.rpush("testdata:translate", duration)
         return (msg, karma_change)
 
     p = ""
@@ -245,6 +243,8 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
         r,
         piece_count=puzzleData.get("pieces"),
         puzzle_rules=current_app.config["PUZZLE_RULES"],
+        piece_move_timeout=current_app.config["PIECE_MOVE_TIMEOUT"],
+        piece_join_tolerance=current_app.config["PIECE_JOIN_TOLERANCE"],
     )
     (msg, status) = piece_mutate_process.start()
 
@@ -278,8 +278,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
             ):
                 if karma > MIN_KARMA:
                     redis_connection.decr(karma_key)
-                karma_change -= 1
-            karma_change -= 1
+                    karma_change -= 1
         return publishMessage(msg, karma_change, karma)
     elif status == "joined":
         return publishMessage(msg, karma_change, karma, points=4, complete=False,)

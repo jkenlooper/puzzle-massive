@@ -52,7 +52,7 @@ def generate_user_login():
 
 def user_id_from_ip(ip, skip_generate=True):
     current_app.logger.debug(f"user_id_from_ip {ip}")
-    start = time.perf_counter()
+    # start = time.perf_counter()
     cur = db.cursor()
 
     shareduser = current_app.secure_cookie.get("shareduser")
@@ -65,8 +65,8 @@ def user_id_from_ip(ip, skip_generate=True):
         ).fetchall()
         if result:
             cur.close()
-            end = time.perf_counter()
-            current_app.logger.debug("end 1 user_id_from_ip {}".format(end - start))
+            # end = time.perf_counter()
+            # current_app.logger.debug("end 1 user_id_from_ip {}".format(end - start))
             return int(shareduser)
 
     # Handle players that had a cookie in their browser, but then deleted it.
@@ -81,8 +81,8 @@ def user_id_from_ip(ip, skip_generate=True):
     if not result:
         if skip_generate:
             cur.close()
-            end = time.perf_counter()
-            current_app.logger.debug("end 2 user_id_from_ip {}".format(end - start))
+            # end = time.perf_counter()
+            # current_app.logger.debug("end 2 user_id_from_ip {}".format(end - start))
             return None
         login = generate_user_login()
         cur.execute(
@@ -106,8 +106,8 @@ def user_id_from_ip(ip, skip_generate=True):
         user_id = result[0]["id"]
 
     cur.close()
-    end = time.perf_counter()
-    current_app.logger.debug("end 3 user_id_from_ip {}".format(end - start))
+    # end = time.perf_counter()
+    # current_app.logger.debug("end 3 user_id_from_ip {}".format(end - start))
     return user_id
 
 
@@ -118,7 +118,7 @@ def user_not_banned(f):
         ip = request.headers.get("X-Real-IP")
         user = current_app.secure_cookie.get("user") or user_id_from_ip(ip)
         current_app.logger.debug(f"user_not_banned")
-        start = time.perf_counter()
+        # start = time.perf_counter()
         if not user == None:
             user = int(user)
             banneduser_score = redis_connection.zscore("bannedusers", user)
@@ -137,14 +137,14 @@ def user_not_banned(f):
                                 "timeout": banneduser_score - now,
                             }
                         )
-                    end = time.perf_counter()
-                    current_app.logger.debug(
-                        "end 1 user_not_banned {}".format(end - start)
-                    )
+                    # end = time.perf_counter()
+                    # current_app.logger.debug(
+                    #    "end 1 user_not_banned {}".format(end - start)
+                    # )
                     return make_response(response, 429)
 
-        end = time.perf_counter()
-        current_app.logger.debug("end 2 user_not_banned {}".format(end - start))
+        # end = time.perf_counter()
+        # current_app.logger.debug("end 2 user_not_banned {}".format(end - start))
         return f(*args, **kwargs)
 
     return decorator

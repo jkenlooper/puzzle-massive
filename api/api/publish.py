@@ -62,8 +62,6 @@ from api.jobs import pieceTranslate
 from api.piece_mutate import PieceMutateError
 from api.user import user_id_from_ip, user_not_banned, increase_ban_time
 
-encoder = json.JSONEncoder(indent=2, sort_keys=True)
-
 HOUR = 3600  # hour in seconds
 MINUTE = 60  # minute in seconds
 
@@ -86,15 +84,6 @@ PIECE_TRANSLATE_BAN_TIME_INCR = 60 * 5
 PIECE_TRANSLATE_EXCEEDED_REASON = "Piece moves exceeded {PIECE_TRANSLATE_MAX_COUNT} in {PIECE_TRANSLATE_RATE_TIMEOUT} seconds".format(
     **locals()
 )
-
-# How many seconds to try to move a piece before it times out.
-PIECE_MOVE_TIMEOUT = 4
-
-# The player can pause piece movements on their end for this max time in seconds.
-# Also update in puzzle-pieces/pm-puzzle-pieces.ts
-MAX_PAUSE_PIECES_TIMEOUT = 15
-
-PIECE_JOIN_TOLERANCE = 100
 
 TOKEN_EXPIRE_TIMEOUT = 60 * 5
 TOKEN_LOCK_TIMEOUT = 5
@@ -237,7 +226,7 @@ class PuzzlePieceTokenView(MethodView):
     decorators = [user_not_banned]
 
     def get(self, puzzle_id, piece):
-        start = time.perf_counter()
+        # start = time.perf_counter()
         ip = request.headers.get("X-Real-IP")
         user = current_app.secure_cookie.get("user") or user_id_from_ip(ip)
         if user == None:
@@ -247,7 +236,7 @@ class PuzzlePieceTokenView(MethodView):
                 "type": "puzzlereload",
                 "timeout": 300,
             }
-            response = make_response(encoder.encode(err_msg), 400)
+            response = make_response(json.jsonify(err_msg), 400)
             expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
             current_app.secure_cookie.set("user", "", response, expires=expires)
             current_app.secure_cookie.set("shareduser", "", response, expires=expires)
@@ -276,7 +265,7 @@ class PuzzlePieceTokenView(MethodView):
                     "type": "puzzleimmutable",
                 }
                 cur.close()
-                return make_response(encoder.encode(err_msg), 400)
+                return make_response(json.jsonify(err_msg), 400)
             (result, col_names) = rowify(result, cur.description)
             cur.close()
             puzzle_data = result[0]
@@ -294,7 +283,7 @@ class PuzzlePieceTokenView(MethodView):
                 "msg": "puzzle pieces can't be moved at this time. Please reload the page.",
                 "type": "puzzleimmutable",
             }
-            return make_response(encoder.encode(err_msg), 400)
+            return make_response(json.jsonify(err_msg), 400)
 
         if piece_properties.get("s") == "1":
             # immovable
@@ -304,7 +293,7 @@ class PuzzlePieceTokenView(MethodView):
                 "expires": now + 5,
                 "timeout": 5,
             }
-            return make_response(encoder.encode(err_msg), 400)
+            return make_response(json.jsonify(err_msg), 400)
 
         blockedplayers_for_puzzle_key = "blockedplayers:{puzzle}".format(puzzle=puzzle)
         blockedplayers_expires = redis_connection.zscore(
@@ -314,7 +303,7 @@ class PuzzlePieceTokenView(MethodView):
             err_msg = get_blockedplayers_err_msg(
                 blockedplayers_expires, blockedplayers_expires - now
             )
-            return make_response(encoder.encode(err_msg), 429)
+            return make_response(json.jsonify(err_msg), 429)
 
         def move_bit_icon_to_piece():
             # Claim the piece by showing the bit icon next to it.
@@ -392,7 +381,9 @@ class PuzzlePieceTokenView(MethodView):
                 snapshot.insert(0, pzq_current)
                 redis_connection.set(snapshot_key, ":".join(snapshot))
                 redis_connection.expire(
-                    snapshot_key, MAX_PAUSE_PIECES_TIMEOUT + (PIECE_MOVE_TIMEOUT + 2)
+                    snapshot_key,
+                    current_app.config["MAX_PAUSE_PIECES_TIMEOUT"]
+                    + (current_app.config["PIECE_MOVE_TIMEOUT"] + 2),
                 )
 
         validate_token = (
@@ -409,7 +400,7 @@ class PuzzlePieceTokenView(MethodView):
             }
             if snapshot_id:
                 response["snap"] = snapshot_id
-            return encoder.encode(response)
+            return make_response(json.jsonify(response), 200)
 
         puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
 
@@ -430,7 +421,7 @@ class PuzzlePieceTokenView(MethodView):
                     err_msg[
                         "reason"
                     ] = "Concurrent piece movements on this puzzle from the same player are not allowed."
-                    return make_response(encoder.encode(err_msg), 429)
+                    return make_response(json.jsonify(err_msg), 429)
 
                 else:
                     # Block the player from selecting pieces on this puzzle
@@ -467,7 +458,7 @@ class PuzzlePieceTokenView(MethodView):
                                 "url": "/newapi{}".format(url_for("split-player")),
                             }
                         cur.close()
-                    return make_response(encoder.encode(err_msg), 409)
+                    return make_response(json.jsonify(err_msg), 409)
 
         piece_token_queue_key = get_puzzle_piece_token_queue_key(puzzle, piece)
         queue_rank = redis_connection.zrank(piece_token_queue_key, user)
@@ -491,7 +482,7 @@ class PuzzlePieceTokenView(MethodView):
                 "expires": now + TOKEN_LOCK_TIMEOUT,
                 "timeout": TOKEN_LOCK_TIMEOUT,
             }
-            return make_response(encoder.encode(err_msg), 409)
+            return make_response(json.jsonify(err_msg), 409)
 
         # Check if token on piece is still owned by another player
         existing_token_and_player = redis_connection.get(puzzle_piece_token_key)
@@ -517,7 +508,7 @@ class PuzzlePieceTokenView(MethodView):
                         "expires": now + TOKEN_LOCK_TIMEOUT,
                         "timeout": TOKEN_LOCK_TIMEOUT,
                     }
-                    return make_response(encoder.encode(err_msg), 409)
+                    return make_response(json.jsonify(err_msg), 409)
 
         # Remove player from the piece token queue
         redis_connection.zrem(piece_token_queue_key, user)
@@ -538,9 +529,9 @@ class PuzzlePieceTokenView(MethodView):
 
         move_bit_icon_to_piece()
 
-        end = time.perf_counter()
-        duration = end - start
-        redis_connection.rpush("testdata:token", duration)
+        # end = time.perf_counter()
+        # duration = end - start
+        # redis_connection.rpush("testdata:token", duration)
         response = {
             "token": token,
             "lock": now + TOKEN_LOCK_TIMEOUT,
@@ -548,7 +539,7 @@ class PuzzlePieceTokenView(MethodView):
         }
         if snapshot_id:
             response["snap"] = snapshot_id
-        return encoder.encode(response)
+        return make_response(json.jsonify(response), 200)
 
 
 class PuzzlePiecesMovePublishView(MethodView):
@@ -582,7 +573,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         y
         r
         """
-        start = time.perf_counter()
+        # start = time.perf_counter()
         ip = request.headers.get("X-Real-IP")
         user = int(current_app.secure_cookie.get("user") or user_id_from_ip(ip))
         now = int(time.time())
@@ -602,7 +593,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                 "expires": now + 5,
                 "timeout": 5,
             }
-            return make_response(encoder.encode(err_msg), 400)
+            return make_response(json.jsonify(err_msg), 400)
         # check if args are only in acceptable set
         if len(self.ACCEPTABLE_ARGS.intersection(set(args.keys()))) != len(
             list(args.keys())
@@ -613,7 +604,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                 "expires": now + 5,
                 "timeout": 5,
             }
-            return make_response(encoder.encode(err_msg), 400)
+            return make_response(json.jsonify(err_msg), 400)
         # validate that all values are int
         for key, value in list(args.items()):
             if not isinstance(value, int):
@@ -626,7 +617,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                         "expires": now + 5,
                         "timeout": 5,
                     }
-                    return make_response(encoder.encode(err_msg), 400)
+                    return make_response(json.jsonify(err_msg), 400)
         x = args.get("x")
         y = args.get("y")
         r = args.get("r")
@@ -657,7 +648,7 @@ class PuzzlePiecesMovePublishView(MethodView):
             if not result:
                 err_msg = {"msg": "puzzle not available", "type": "missing"}
                 cur.close()
-                return make_response(encoder.encode(err_msg), 404)
+                return make_response(json.jsonify(err_msg), 404)
             (result, col_names) = rowify(result, cur.description)
             cur.close()
             puzzle_data = result[0]
@@ -692,7 +683,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                 "expires": now + 5,
                 "timeout": 5,
             }
-            return make_response(encoder.encode(err_msg), 400)
+            return make_response(json.jsonify(err_msg), 400)
         puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
         # print("token key: {}".format(puzzle_piece_token_key))
         validate_token = (
@@ -709,12 +700,12 @@ class PuzzlePiecesMovePublishView(MethodView):
                     # print("token invalid {} != {}".format(token, valid_token))
                     err_msg = increase_ban_time(user, TOKEN_INVALID_BAN_TIME_INCR)
                     err_msg["reason"] = "Token is invalid"
-                    return make_response(encoder.encode(err_msg), 409)
+                    return make_response(json.jsonify(err_msg), 409)
                 if player != other_player:
                     # print("player invalid {} != {}".format(player, other_player))
                     err_msg = increase_ban_time(user, TOKEN_INVALID_BAN_TIME_INCR)
                     err_msg["reason"] = "Player is invalid"
-                    return make_response(encoder.encode(err_msg), 409)
+                    return make_response(json.jsonify(err_msg), 409)
             else:
                 # Token has expired
                 # print("token expired")
@@ -723,7 +714,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                     "type": "expiredtoken",
                     "reason": "",
                 }
-                return make_response(encoder.encode(err_msg), 409)
+                return make_response(json.jsonify(err_msg), 409)
 
         # Expire the token at the lock timeout since it shouldn't be used again
         if validate_token:
@@ -740,7 +731,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         ):
             err_msg = bump_count(user)
             if err_msg.get("type") == "bannedusers":
-                return make_response(encoder.encode(err_msg), 429)
+                return make_response(json.jsonify(err_msg), 429)
 
         # Check if piece will be moved to within boundaries
         if x and (x < 0 or x > puzzle_data["table_width"]):
@@ -750,7 +741,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                 "expires": now + 5,
                 "timeout": 5,
             }
-            return make_response(encoder.encode(err_msg), 400)
+            return make_response(json.jsonify(err_msg), 400)
         if y and (y < 0 or y > puzzle_data["table_height"]):
             err_msg = {
                 "msg": "Piece movement out of bounds",
@@ -758,7 +749,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                 "expires": now + 5,
                 "timeout": 5,
             }
-            return make_response(encoder.encode(err_msg), 400)
+            return make_response(json.jsonify(err_msg), 400)
 
         # Check again if piece can be moved and hasn't changed since getting token
         (piece_status, has_y) = redis_connection.hmget(
@@ -766,7 +757,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         )
         if has_y == None:
             err_msg = {"msg": "piece not available", "type": "missing"}
-            return make_response(encoder.encode(err_msg), 404)
+            return make_response(json.jsonify(err_msg), 404)
 
         if piece_status == "1":
             # immovable
@@ -776,7 +767,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                 "expires": now + 5,
                 "timeout": 5,
             }
-            return make_response(encoder.encode(err_msg), 400)
+            return make_response(json.jsonify(err_msg), 400)
 
         # Set the rounded timestamp
         rounded_timestamp = timestamp_now - (
@@ -893,7 +884,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                 err_msg["karma"] = get_public_karma_points(
                     redis_connection, ip, user, puzzle
                 )
-                return make_response(encoder.encode(err_msg), 429)
+                return make_response(json.jsonify(err_msg), 429)
 
         use_queue = False
         if use_queue:
@@ -908,7 +899,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                         "No workers found for piece translate queues (pzq_register)"
                     )
                     return make_response(
-                        encoder.encode(
+                        json.jsonify(
                             {
                                 "msg": "Server error",
                                 "type": "error",
@@ -953,11 +944,12 @@ class PuzzlePiecesMovePublishView(MethodView):
                     karma = redis_connection.decr(karma_key)
                 karma_change -= 1
 
-        end = time.perf_counter()
-        duration = end - start
-        redis_connection.rpush("testdata:publish", duration)
+        # end = time.perf_counter()
+        # duration = end - start
+        # redis_connection.rpush("testdata:publish", duration)
 
-        substart = time.perf_counter()
+        # substart = time.perf_counter()
+        piece_move_timeout = current_app.config["PIECE_MOVE_TIMEOUT"]
         if not use_queue:
             # Use a custom built and managed queue to prevent multiple processes
             # from running the attempt_piece_movement concurrently on the same
@@ -967,12 +959,12 @@ class PuzzlePiecesMovePublishView(MethodView):
             # The attempt_piece_movement bumps the pzq_current by 1
             pzq_next = redis_connection.incr(pzq_next_key, amount=1)
             # Set the expire in case it fails to reach expire in attempt_piece_movement.
-            redis_connection.expire(pzq_current_key, PIECE_MOVE_TIMEOUT + 2)
-            redis_connection.expire(pzq_next_key, PIECE_MOVE_TIMEOUT + 2)
+            redis_connection.expire(pzq_current_key, piece_move_timeout + 2)
+            redis_connection.expire(pzq_next_key, piece_move_timeout + 2)
 
             attempt_count = 0
             attempt_timestamp = time.time()
-            timeout = attempt_timestamp + PIECE_MOVE_TIMEOUT
+            timeout = attempt_timestamp + piece_move_timeout
             while attempt_timestamp < timeout:
                 pzq_current = int(redis_connection.get(pzq_current_key) or "0")
                 if pzq_current == pzq_next - 1:
@@ -1045,11 +1037,14 @@ class PuzzlePiecesMovePublishView(MethodView):
                                                 int, snapshot_adjacent[:2]
                                             )
                                             # Check if the x,y is within range of the adjacent piece that has moved
+                                            piece_join_tolerance = current_app.config[
+                                                "PIECE_JOIN_TOLERANCE"
+                                            ]
                                             if (
                                                 abs((a_snap_x + a_offset_x) - x)
-                                                <= PIECE_JOIN_TOLERANCE
+                                                <= piece_join_tolerance
                                                 and abs((a_snap_y + a_offset_y) - y)
-                                                <= PIECE_JOIN_TOLERANCE
+                                                <= piece_join_tolerance
                                             ):
                                                 (a_moved_x, a_moved_y) = map(
                                                     int, updated_adjacent[:2]
@@ -1111,9 +1106,9 @@ class PuzzlePiecesMovePublishView(MethodView):
                     "msg": "Piece movement timed out.",
                     "type": "error",
                     "reason": "Puzzle is too active",
-                    "timeout": PIECE_MOVE_TIMEOUT,
+                    "timeout": piece_move_timeout,
                 }
-                return make_response(encoder.encode(err_msg), 503,)
+                return make_response(json.jsonify(err_msg), 503,)
         else:
             # Don't use a queue here. Creating a queue actually takes longer
             # then processing the piece movment.
@@ -1147,18 +1142,18 @@ class PuzzlePiecesMovePublishView(MethodView):
                     # Job may not be queued when get_position is called.
                     pass
 
-        subend = time.perf_counter()
-        subduration = subend - substart
-        redis_connection.rpush("testdata:move", subduration)
+        # subend = time.perf_counter()
+        # subduration = subend - substart
+        # redis_connection.rpush("testdata:move", subduration)
 
         # Check msg for error or if piece can't be moved
         if not isinstance(msg, str):
             if isinstance(msg, dict):
-                return make_response(encoder.encode(msg), 400)
+                return make_response(json.jsonify(msg), 400)
             else:
                 current_app.logger.warning("Unknown error: {}".format(msg))
                 return make_response(
-                    encoder.encode({"msg": msg, "type": "error", "timeout": 3}), 500
+                    json.jsonify({"msg": msg, "type": "error", "timeout": 3}), 500
                 )
 
         # publish just the bit movement so it matches what this player did
@@ -1169,11 +1164,7 @@ class PuzzlePiecesMovePublishView(MethodView):
             channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id),
         )
 
-        karma_change = False if karma_change == 0 else karma_change
-
-        karma = get_public_karma_points(redis_connection, ip, user, puzzle)
-        response = {"karma": karma, "karmaChange": karma_change, "id": piece}
-        return encoder.encode(response)
+        return make_response("", 204)
 
 
 class StreamGunicornBase(gunicorn.app.base.BaseApplication):

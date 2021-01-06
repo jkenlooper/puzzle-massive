@@ -291,6 +291,7 @@
               <pm-puzzle-pieces
                 style="display: block; position: relative; width:{{ puzzle.table_width + 100 }}px; height:{{ puzzle.table_height + 100 }}px;background-color: {{ puzzle.bg_color }}; --pm-PuzzlePieces-shadowColor: {{ puzzle.bg_color }};"
                 puzzle-id="{{ puzzle.puzzle_id }}"
+                max-pause-pieces-timeout="{{ config.MAX_PAUSE_PIECES_TIMEOUT or 0 }}"
                 status="{{ puzzle.status }}">
                 <div slot="outline-bottom-content">
                 </div>

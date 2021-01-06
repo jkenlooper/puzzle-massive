@@ -17,10 +17,6 @@ import { Status } from "../site/puzzle-images.service";
 
 import "./puzzle-pieces.css";
 
-// The player can pause piece movements on their end for this max time in seconds.
-// Also update in api/publish.py
-const MAX_PAUSE_PIECES_TIMEOUT = 15;
-
 const html = `
   <div class="pm-PuzzlePieces">
     <div class="pm-PuzzlePieces-collection"></div>
@@ -52,6 +48,7 @@ customElements.define(
     }
     private instanceId: string;
     private puzzleId: string;
+    private maxPausePiecesTimeout: number;
     private puzzleStatus: Status | undefined;
     $collection: HTMLElement;
     $dropZone: HTMLElement;
@@ -90,6 +87,14 @@ customElements.define(
 
       const puzzleId = this.attributes.getNamedItem("puzzle-id");
       this.puzzleId = puzzleId ? puzzleId.value : "";
+
+      // The player can pause piece movements on their end for this max time in seconds.
+      const maxPausePiecesTimeout = this.attributes.getNamedItem(
+        "max-pause-pieces-timeout"
+      );
+      this.maxPausePiecesTimeout = parseFloat(
+        maxPausePiecesTimeout ? maxPausePiecesTimeout.value : "0"
+      );
 
       const puzzleStatus = this.attributes.getNamedItem("status");
       this.puzzleStatus = puzzleStatus
@@ -443,7 +448,7 @@ customElements.define(
         let _buffer = this.renderPiecesBuffer.concat();
         this.renderPiecesBuffer = [];
         this.renderPieces(_buffer);
-        //this.pauseStop = Date.now() + MAX_PAUSE_PIECES_TIMEOUT * 1000;
+        //this.pauseStop = Date.now() + this.maxPausePiecesTimeout * 1000;
         this.batchRenderPiecesTimeout = window.setTimeout(() => {
           puzzleService.togglePieceMovements(false);
           if (this.renderPiecesBuffer.length === 0) {
@@ -454,7 +459,7 @@ customElements.define(
           this.renderPiecesBuffer = [];
           this.renderPieces(_buffer);
           this.batchRenderPiecesTimeout = undefined;
-        }, MAX_PAUSE_PIECES_TIMEOUT * 1000);
+        }, this.maxPausePiecesTimeout * 1000);
       }
     }
 
@@ -500,7 +505,7 @@ customElements.define(
         }
 
         // Toggle the is-active class
-        if (piece.active) {
+        if (piece.active || puzzleService.isWaitingOnMoveRequest) {
           $piece.classList.add("is-active");
         } else {
           $piece.classList.remove("is-active");

@@ -225,6 +225,14 @@ POINT_COST_FOR_CHANGING_BIT = 100
 POINT_COST_FOR_CHANGING_NAME = 100
 NEW_USER_STARTING_POINTS = 1300
 POINTS_CAP = 15000
+# How many seconds to try to move a piece before it times out.
+PIECE_MOVE_TIMEOUT = 4
+# The player can pause piece movements on their end for this max time in seconds.
+MAX_PAUSE_PIECES_TIMEOUT = 15
+# Tolerance in pixels that pieces need to be within when checking if they join.
+# Set at 100 pixels for players with a touch device since the accuracy is around
+# 50 pixels. 50 to the left + 50 to the right for example.
+PIECE_JOIN_TOLERANCE = 100
 
 # See PUZZLE_RULES_HELP_TEXT in bin/create_dot_env.sh
 PUZZLE_RULES = set("${PUZZLE_RULES}".split(" "))

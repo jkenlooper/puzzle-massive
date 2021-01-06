@@ -17,8 +17,6 @@ from .user import user_id_from_ip, increase_ban_time
 
 from .constants import COMPLETED
 
-encoder = json.JSONEncoder(indent=2, sort_keys=True)
-
 # How many puzzles a user can open within this many seconds before being banned.
 # Allow 10 puzzles to be open within 100 seconds.
 PUZZLE_VIEW_RATE_TIMEOUT = 100
@@ -152,9 +150,7 @@ class PuzzlePiecesView(MethodView):
                 result_ttl=0,
             )
 
-        return encoder.encode(pieceData)
-        # TODO: update js code to properly handle json mimetype
-        # return make_response(json.jsonify(pieceData), 200)
+        return make_response(json.jsonify(pieceData), 200)
 
 
 immutable_attrs = {
