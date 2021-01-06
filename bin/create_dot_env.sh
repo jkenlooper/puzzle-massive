@@ -66,6 +66,7 @@ PUZZLE_RULES_HELP_TEXT="
 # 'piece_move_rate' to limit how many pieces can be moved within a minute or so
 # 'hot_piece' to limit moving the same piece again within a minute or so
 # 'hot_spot' to limit moving pieces to the same area within 30 seconds
+# 'too_active' decrease karma on piece move when server responds with 503 error
 # 'nginx_piece_publish_limit' to use piece move rate limits on nginx web server
 "
 read -e -p "${PUZZLE_RULES_HELP_TEXT}

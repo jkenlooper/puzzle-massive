@@ -1095,6 +1095,17 @@ class PuzzlePiecesMovePublishView(MethodView):
                 attempt_count = attempt_count + 1
                 time.sleep(0.02)
 
+                # Decrease karma here to potentially block a player that
+                # continually tries to move pieces when a puzzle is too active.
+                if (
+                    len(
+                        {"all", "too_active"}.intersection(
+                            current_app.config["PUZZLE_RULES"]
+                        )
+                    )
+                    > 0
+                ) and karma > MIN_KARMA:
+                    karma = redis_connection.decr(karma_key)
             current_app.logger.debug(
                 f"Puzzle ({puzzle}) piece move attempts: {attempt_count}"
             )
