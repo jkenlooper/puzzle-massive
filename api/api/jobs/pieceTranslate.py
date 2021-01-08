@@ -15,9 +15,7 @@ import requests
 from redis.exceptions import WatchError
 
 from api.app import redis_connection
-from api.database import rowify, fetch_query_string
 from api.tools import (
-    formatPieceMovementString,
     init_karma_key,
     purge_route_from_nginx_cache,
 )

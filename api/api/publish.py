@@ -38,6 +38,7 @@ from werkzeug.exceptions import HTTPException
 from flask_sse import sse
 from redis.exceptions import WatchError
 from rq import Worker, Queue
+import requests
 
 from api.flask_secure_cookie import SecureCookie
 from api.app import db, redis_connection
@@ -249,27 +250,36 @@ class PuzzlePieceTokenView(MethodView):
         pzq_key = "pzq:{puzzle_id}".format(puzzle_id=puzzle_id)
         puzzle = redis_connection.hget(pzq_key, "puzzle")
         if not puzzle:
-            # Start db operations
             current_app.logger.debug("no puzzle; fetch puzzle")
-            cur = db.cursor()
-            # validate the puzzle_id
-            result = cur.execute(
-                fetch_query_string("select_puzzle_and_piece.sql"),
-                {"puzzle_id": puzzle_id},
-            ).fetchall()
-            if not result:
-                # 400 if puzzle does not exist or piece is not found
-                # Only puzzles in ACTIVE state can be mutated
+            r = requests.get(
+                "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                    HOSTAPI=current_app.config["HOSTAPI"],
+                    PORTAPI=current_app.config["PORTAPI"],
+                    puzzle_id=puzzle_id,
+                ),
+            )
+            if r.status_code >= 400:
+                # 400 if puzzle does not exist
                 err_msg = {
                     "msg": "puzzle is not ready at this time. Please reload the page.",
                     "type": "puzzleimmutable",
                 }
-                cur.close()
+                return make_response(json.jsonify(err_msg), r.status_code)
+            try:
+                result = r.json()
+            except ValueError as err:
+                err_msg = {
+                    "msg": "puzzle is not ready at this time. Please reload the page.",
+                    "type": "puzzleimmutable",
+                }
+                return make_response(json.jsonify(err_msg), 500)
+            if result.get("status") not in (ACTIVE, BUGGY_UNLISTED):
+                err_msg = {
+                    "msg": "puzzle is not ready at this time. Please reload the page.",
+                    "type": "puzzleimmutable",
+                }
                 return make_response(json.jsonify(err_msg), 400)
-            (result, col_names) = rowify(result, cur.description)
-            cur.close()
-            puzzle_data = result[0]
-            puzzle = puzzle_data["puzzle"]
+            puzzle = result["id"]
 
         pc_puzzle_piece_key = "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
         piece_properties = _int_piece_properties(
@@ -637,21 +647,28 @@ class PuzzlePiecesMovePublishView(MethodView):
         puzzle_data = dict(zip(pzq_fields, redis_connection.hmget(pzq_key, pzq_fields)))
         puzzle = puzzle_data.get("puzzle")
         if puzzle == None:
-            # Start db operations
-            cur = db.cursor()
             current_app.logger.debug("No puzzle; fetch")
-            # validate the puzzle_id
-            result = cur.execute(
-                fetch_query_string("select_puzzle_and_piece.sql"),
-                {"puzzle_id": puzzle_id},
-            ).fetchall()
-            if not result:
+            r = requests.get(
+                "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                    HOSTAPI=current_app.config["HOSTAPI"],
+                    PORTAPI=current_app.config["PORTAPI"],
+                    puzzle_id=puzzle_id,
+                ),
+            )
+            if r.status_code >= 400:
                 err_msg = {"msg": "puzzle not available", "type": "missing"}
-                cur.close()
+                return make_response(json.jsonify(err_msg), r.status_code)
+            try:
+                result = r.json()
+            except ValueError as err:
+                err_msg = {"msg": "puzzle not available", "type": "missing"}
+                return make_response(json.jsonify(err_msg), 500)
+            if result.get("status") not in (ACTIVE, BUGGY_UNLISTED):
+                err_msg = {"msg": "puzzle not available", "type": "missing"}
                 return make_response(json.jsonify(err_msg), 404)
-            (result, col_names) = rowify(result, cur.description)
-            cur.close()
-            puzzle_data = result[0]
+            puzzle_data = result
+            puzzle_data["puzzle"] = result["id"]
+
             redis_connection.hmset(
                 pzq_key,
                 {

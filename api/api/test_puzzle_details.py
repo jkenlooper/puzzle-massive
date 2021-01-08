@@ -119,6 +119,28 @@ class TestInternalPuzzleDetailsView(PuzzleTestCase):
                 (result, col_names) = rowify(result, cur.description)
                 self.assertEqual(result[0], self.puzzle_data)
 
+    def test_get_puzzle_details(self):
+        "Should get the puzzle details"
+        with self.app.app_context():
+            with self.app.test_client() as c:
+                rv = c.get(
+                    "/internal/puzzle/{puzzle_id}/details/".format(
+                        puzzle_id=self.puzzle_id
+                    )
+                )
+                self.assertEqual(200, rv.status_code)
+                self.assertEqual(self.puzzle_data, rv.json)
+
+                cur = self.db.cursor()
+                result = cur.execute(
+                    fetch_query_string(
+                        "select-internal-puzzle-details-for-puzzle_id.sql"
+                    ),
+                    {"puzzle_id": self.puzzle_id,},
+                ).fetchall()
+                (result, col_names) = rowify(result, cur.description)
+                self.assertEqual(result[0], self.puzzle_data)
+
 
 if __name__ == "__main__":
     unittest.main()

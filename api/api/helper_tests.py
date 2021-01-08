@@ -26,6 +26,7 @@ import api.puzzle_file
 class APITestCase(unittest.TestCase):
     def setUp(self):
         self.tmp_db = tempfile.NamedTemporaryFile()
+        self.tmp_purge_list = tempfile.NamedTemporaryFile()
         self.tmp_puzzle_resources = tempfile.mkdtemp()
         self.tmp_puzzle_archive = tempfile.mkdtemp()
         cookie_secret = "oatmeal"
@@ -41,6 +42,7 @@ class APITestCase(unittest.TestCase):
             TESTING=True,  # Ignore wal journal_mode requirement
             PUZZLE_RESOURCES=self.tmp_puzzle_resources,
             PUZZLE_ARCHIVE=self.tmp_puzzle_archive,
+            PURGEURLLIST=self.tmp_purge_list.name,
             MINIMUM_PIECE_COUNT=20,
             MAX_POINT_COST_FOR_REBUILDING=1000,
             MAX_POINT_COST_FOR_DELETING=1000,

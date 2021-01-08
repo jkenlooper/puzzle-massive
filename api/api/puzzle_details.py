@@ -24,8 +24,6 @@ from api.constants import (
     PUBLIC,
 )
 
-encoder = json.JSONEncoder(indent=2, sort_keys=True)
-
 ORIGINAL_ACTIONS = ("bump",)
 
 INSTANCE_ACTIONS = ("delete", "freeze", "unfreeze", "reset")
@@ -111,7 +109,7 @@ class PuzzleInstanceDetailsView(MethodView):
                 "msg": "No puzzle found",
             }
             cur.close()
-            return make_response(encoder.encode(err_msg), 400)
+            return make_response(json.jsonify(err_msg), 400)
         (result, col_names) = rowify(result, cur.description)
         puzzleData = result[0]
 
@@ -152,7 +150,7 @@ class PuzzleInstanceDetailsView(MethodView):
             if not can_delete:
                 response = {"msg": delete_disabled_message}
                 cur.close()
-                return make_response(encoder.encode(response), 400)
+                return make_response(json.jsonify(response), 400)
 
             if delete_penalty > 0:
                 cur.execute(
@@ -235,7 +233,7 @@ class PuzzleInstanceDetailsView(MethodView):
 
                 response = {"msg": "Only unlisted puzzle instances can be reset"}
                 cur.close()
-                return make_response(encoder.encode(response), 400)
+                return make_response(json.jsonify(response), 400)
 
             if puzzleData.get("status") not in (
                 ACTIVE,
@@ -247,7 +245,7 @@ class PuzzleInstanceDetailsView(MethodView):
                     "msg": "Puzzle is not in acceptable state in order to be reset"
                 }
                 cur.close()
-                return make_response(encoder.encode(response), 400)
+                return make_response(json.jsonify(response), 400)
 
             if puzzleData.get("status") != ACTIVE:
                 # Only update the response status if puzzle status is changing.
@@ -267,7 +265,7 @@ class PuzzleInstanceDetailsView(MethodView):
             "/chill/site/front/{puzzle_id}/".format(puzzle_id=puzzle_id),
             current_app.config.get("PURGEURLLIST"),
         )
-        return make_response(encoder.encode(response), 202)
+        return make_response(json.jsonify(response), 202)
 
     def get(self, puzzle_id):
         """
@@ -296,7 +294,7 @@ class PuzzleInstanceDetailsView(MethodView):
                 "msg": "No puzzle found",
             }
             cur.close()
-            return make_response(encoder.encode(err_msg), 400)
+            return make_response(json.jsonify(err_msg), 400)
         (result, col_names) = rowify(result, cur.description)
         puzzleData = result[0]
 
@@ -326,7 +324,7 @@ class PuzzleInstanceDetailsView(MethodView):
             "status": puzzleData.get("status", -99),
         }
         cur.close()
-        return encoder.encode(response)
+        return json.jsonify(response)
 
 
 class PuzzleOriginalDetailsView(MethodView):
@@ -405,7 +403,7 @@ class PuzzleOriginalDetailsView(MethodView):
                 "msg": "No puzzle found",
             }
             cur.close()
-            return make_response(encoder.encode(err_msg), 400)
+            return make_response(json.jsonify(err_msg), 400)
         (result, col_names) = rowify(result, cur.description)
         puzzleData = result[0]
 
@@ -431,7 +429,7 @@ class PuzzleOriginalDetailsView(MethodView):
             ).fetchone()
             if not player_points_result:
                 cur.close()
-                return make_response(encoder.encode({}), 400)
+                return make_response(json.jsonify({}), 400)
 
             # bump any puzzle that is currently at QUEUE_WINNING_BID to be QUEUE_BUMPED_BID
             cur.execute(
@@ -452,7 +450,7 @@ class PuzzleOriginalDetailsView(MethodView):
 
         else:
             cur.close()
-            return make_response(encoder.encode({}), 400)
+            return make_response(json.jsonify({}), 400)
 
         cur.close()
 
@@ -460,7 +458,7 @@ class PuzzleOriginalDetailsView(MethodView):
             "/chill/site/front/{puzzle_id}/".format(puzzle_id=puzzle_id),
             current_app.config.get("PURGEURLLIST"),
         )
-        return make_response(encoder.encode(response), 202)
+        return make_response(json.jsonify(response), 202)
 
     def get(self, puzzle_id):
         """
@@ -486,7 +484,7 @@ class PuzzleOriginalDetailsView(MethodView):
                 "msg": "No puzzle found",
             }
             cur.close()
-            return make_response(encoder.encode(err_msg), 400)
+            return make_response(json.jsonify(err_msg), 400)
         (result, col_names) = rowify(result, cur.description)
         puzzleData = result[0]
 
@@ -501,12 +499,19 @@ class PuzzleOriginalDetailsView(MethodView):
             "status": puzzleData.get("status", -99),
         }
         cur.close()
-        return encoder.encode(response)
+        return json.jsonify(response, 200)
 
 
 class InternalPuzzleDetailsView(MethodView):
     """
     """
+
+    def get(self, puzzle_id):
+        result = get_puzzle_details(puzzle_id)
+        if result["status_code"] >= 400:
+            return make_response(json.jsonify(result), result["status_code"])
+
+        return make_response(json.jsonify(result["result"]), result["status_code"])
 
     def patch(self, puzzle_id):
         data = request.get_json(silent=True)
@@ -522,6 +527,26 @@ class InternalPuzzleDetailsView(MethodView):
                 current_app.config.get("PURGEURLLIST"),
             )
         return make_response(json.jsonify(response_msg), response_msg["status_code"])
+
+
+def get_puzzle_details(puzzle_id):
+    ""
+    cur = db.cursor()
+    # validate the puzzle_id
+    result = cur.execute(
+        fetch_query_string("select-internal-puzzle-details-for-puzzle_id.sql"),
+        {"puzzle_id": puzzle_id},
+    ).fetchall()
+    if not result:
+        # 404 if puzzle does not exist
+        err_msg = {"msg": "No puzzle found", "status_code": 404}
+        cur.close()
+        return err_msg
+    (result, col_names) = rowify(result, cur.description)
+    puzzle_details = result[0]
+    cur.close()
+    msg = {"result": puzzle_details, "msg": "Success", "status_code": 200}
+    return msg
 
 
 def update_puzzle_details(puzzle_id, data):
