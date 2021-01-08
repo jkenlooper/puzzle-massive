@@ -30,6 +30,7 @@ import hashlib
 import subprocess
 from random import randint, choice, random
 import multiprocessing
+from logging.config import dictConfig
 
 import requests
 from rq import Queue
@@ -441,16 +442,9 @@ class UserSession:
             if data.get("timeout"):
                 # time.sleep(data.get("timeout", 1))
                 time.sleep(1)
-                raise Exception("timeout")
+                raise Exception(data.get("type"))
             return
         data = {}
-        if r.text:
-            try:
-                data = r.json()
-            except ValueError as err:
-                current_app.logger.debug("ERROR reading json: {}".format(err))
-                current_app.logger.debug(r.text)
-                return
         if r.status_code >= 400:
             current_app.logger.debug(
                 "ERROR: {status_code} {url}".format(
@@ -458,6 +452,13 @@ class UserSession:
                 )
             )
             return
+        if r.status_code >= 200:
+            try:
+                data = r.json()
+            except ValueError as err:
+                current_app.logger.debug("ERROR reading json: {}".format(err))
+                current_app.logger.debug(r.text)
+                return
         return data
 
     def patch_data(self, route, host, payload={}, headers={}):
@@ -488,13 +489,11 @@ class UserSession:
                 # time.sleep(data.get("timeout", 1))
                 raise Exception("timeout")
             return
-        if r.text:
-            try:
-                data = r.json()
-            except ValueError as err:
-                current_app.logger.debug("ERROR reading json: {}".format(err))
-                current_app.logger.debug(r.text)
-                return
+        if r.status_code == 503:
+            data = r.json()
+            raise Exception("too_active")
+        if r.status_code == 204:
+            return
         if r.status_code >= 400:
             current_app.logger.debug(
                 "ERROR: {status_code} {url}".format(
@@ -508,6 +507,13 @@ class UserSession:
                     time.sleep(timeout)
                 return
             return
+        if r.status_code >= 200:
+            try:
+                data = r.json()
+            except ValueError as err:
+                current_app.logger.debug("ERROR reading json: {}".format(err))
+                current_app.logger.debug(r.text)
+                return
         return data
 
 
@@ -558,6 +564,14 @@ class PuzzlePieces:
             )
             redis_connection.delete(karma_key)
             redis_connection.zrem("bannedusers", self.user_session.shareduser)
+            # current_app.logger.debug(f"get token error: {err}")
+            if str(err) == "blockedplayer":
+                blockedplayers_for_puzzle_key = "blockedplayers:{puzzle}".format(
+                    puzzle=self.puzzle
+                )
+                # current_app.logger.debug("clear out {}".format(blockedplayers_for_puzzle_key))
+                redis_connection.delete(blockedplayers_for_puzzle_key)
+            return
 
         if piece_token and piece_token.get("token"):
             puzzle_pieces_move = None
@@ -571,12 +585,18 @@ class PuzzlePieces:
                     headers={"Token": piece_token["token"]},
                 )
             except Exception as err:
-                # current_app.logger.debug("resetting karma for {ip}".format(ip=self.user_session.ip))
-                karma_key = init_karma_key(
-                    redis_connection, self.puzzle, self.user_session.ip
-                )
-                redis_connection.delete(karma_key)
-                redis_connection.zrem("bannedusers", self.user_session.shareduser)
+                if str(err) == "too_active":
+                    redis_connection.incr("testdata:too_active")
+                    time.sleep(30)
+                else:
+                    # current_app.logger.debug('move exception {}'.format(err))
+                    # current_app.logger.debug("resetting karma for {ip}".format(ip=self.user_session.ip))
+                    karma_key = init_karma_key(
+                        redis_connection, self.puzzle, self.user_session.ip
+                    )
+                    redis_connection.delete(karma_key)
+                    redis_connection.zrem("bannedusers", self.user_session.shareduser)
+                return
             if puzzle_pieces_move:
                 if puzzle_pieces_move.get("msg") == "boing":
                     raise Exception("boing")
@@ -587,9 +607,11 @@ class PuzzlePieces:
                         redis_connection, self.puzzle, self.user_session.ip
                     )
                     redis_connection.delete(karma_key)
-        end = time.perf_counter()
-        duration = end - start
-        redis_connection.rpush("testdata:pa", duration)
+            else:
+                # empty response (204) means success
+                end = time.perf_counter()
+                duration = end - start
+                redis_connection.rpush("testdata:pa", duration)
 
 
 class PuzzleActivityJobStats:
@@ -613,9 +635,18 @@ class PuzzleActivityJobStats:
                     avg = sum(map(float, duration_list)) / float(duration_list_count)
                     piece_moves_per_second = duration_list_count / interval
                     current_app.logger.info(
-                        f"count: {duration_list_count}\n {key} per second: {piece_moves_per_second}\n average latency: {avg}"
+                        f"""
+{key}
+count: {duration_list_count}
+per second: {piece_moves_per_second}
+average latency: {avg}"""
                     )
-            current_app.logger.info("\n")
+            too_active_count = int(redis_connection.get("testdata:too_active") or "0")
+            if too_active_count:
+                current_app.logger.info(
+                    "too active error count: {}".format(too_active_count)
+                )
+                redis_connection.decr("testdata:too_active", amount=too_active_count)
             time.sleep(interval)
 
 
@@ -632,6 +663,7 @@ class PuzzleActivityJob:
         (result, col_names) = rowify(result, cur.description)
         self.puzzle_details = result[0]
         cur.close()
+        redis_connection.delete("testdata:too_active")
 
     def run(self):
         puzzle_pieces = PuzzlePieces(
@@ -641,7 +673,7 @@ class PuzzleActivityJob:
             self.puzzle_details["table_width"],
             self.puzzle_details["table_height"],
         )
-        puzzle_pieces.move_random_pieces_with_delay(delay=1, max_delay=10)
+        puzzle_pieces.move_random_pieces_with_delay(delay=0.01, max_delay=0.05)
 
 
 def simulate_puzzle_activity(puzzle_ids, count=1):
@@ -690,6 +722,7 @@ def simulate_puzzle_activity(puzzle_ids, count=1):
 
     for job in jobs:
         job.join()
+        time.sleep(0.1)
 
 
 def main():
@@ -705,6 +738,24 @@ def main():
     min_pieces = int(args.get("--min-pieces"))
     puzzles = args.get("--puzzles")
 
+    dictConfig(
+        {
+            "version": 1,
+            "formatters": {
+                "default": {
+                    "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
+                }
+            },
+            "handlers": {
+                "wsgi": {
+                    "class": "logging.StreamHandler",
+                    "stream": "ext://flask.logging.wsgi_errors_stream",
+                    "formatter": "default",
+                }
+            },
+            "root": {"level": "INFO", "handlers": ["wsgi"]},
+        }
+    )
     app = make_app(
         config=config_file, cookie_secret=cookie_secret, database_writable=True
     )
