@@ -117,6 +117,7 @@ def make_app(config=None, database_writable=False, **kw):
 
     app.queries = files_loader("queries")
 
+    # TODO: Still calling db since using user_id_from_ip
     @app.teardown_appcontext
     def teardown_db(exception):
         db = getattr(g, "_database", None)
@@ -449,25 +450,29 @@ class PuzzlePieceTokenView(MethodView):
                         # player and if so add to err_msg to signal client to
                         # request a new player
                         current_app.logger.debug("sameplayerconcurrent split player")
-                        cur = db.cursor()
-                        dots = cur.execute(
-                            "select points from User where id = :id and points >= :cost + :startpoints;",
-                            {
-                                "id": user,
-                                "cost": current_app.config[
-                                    "POINT_COST_FOR_CHANGING_BIT"
-                                ],
-                                "startpoints": current_app.config[
-                                    "NEW_USER_STARTING_POINTS"
-                                ],
-                            },
-                        ).fetchone()
-                        if result:
+                        r = requests.get(
+                            "http://{HOSTAPI}:{PORTAPI}/internal/user/{user}/details/".format(
+                                HOSTAPI=current_app.config["HOSTAPI"],
+                                PORTAPI=current_app.config["PORTAPI"],
+                                user=user,
+                            ),
+                        )
+                        if r.status_code >= 400:
+                            return make_response(json.jsonify(err_msg), r.status_code)
+                        try:
+                            result = r.json()
+                        except ValueError as err:
+                            return make_response(json.jsonify(err_msg), 500)
+                        if (
+                            result.get("points")
+                            >= current_app.config["POINT_COST_FOR_CHANGING_BIT"]
+                            + current_app.config["NEW_USER_STARTING_POINTS"]
+                        ):
                             err_msg["action"] = {
                                 "msg": "Create a new player?",
                                 "url": "/newapi{}".format(url_for("split-player")),
                             }
-                        cur.close()
+
                     return make_response(json.jsonify(err_msg), 409)
 
         piece_token_queue_key = get_puzzle_piece_token_queue_key(puzzle, piece)

@@ -103,6 +103,7 @@ def make_app(config=None, database_writable=False, **kw):
         UserLoginView,
         ClaimUserByTokenView,
         SplitPlayer,
+        InternalUserDetailsView,
         AdminBlockedPlayersList,
         AdminBannedUserList,
         BanishSelf,
@@ -313,6 +314,10 @@ def make_app(config=None, database_writable=False, **kw):
     app.add_url_rule(
         "/internal/tasks/<task_name>/start/",
         view_func=InternalTasksStartView.as_view("internal-tasks-start"),
+    )
+    app.add_url_rule(
+        "/internal/user/<user>/details/",
+        view_func=InternalUserDetailsView.as_view("internal-user-details"),
     )
 
     return app

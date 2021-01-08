@@ -731,6 +731,26 @@ class ClaimUserByTokenView(MethodView):
         return response
 
 
+class InternalUserDetailsView(MethodView):
+    """
+    """
+
+    def get(self, user):
+        cur = db.cursor()
+        result = cur.execute(
+            fetch_query_string("select-user-details-by-id.sql"), {"id": user,},
+        ).fetchall()
+        if not result:
+            err_msg = {
+                "msg": "No user found",
+            }
+            cur.close()
+            return make_response(json.jsonify(err_msg), 404)
+        (result, col_names) = rowify(result, cur.description)
+        user_details = result[0]
+        return make_response(json.jsonify(user_details), 200)
+
+
 class AdminBlockedPlayersList(MethodView):
     """
     ip:
