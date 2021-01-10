@@ -23,8 +23,6 @@ LITTLE_MORE_THAN_A_DAY = (60 * 60 * 24) + random.randint(3023, 3600 * 14)
 MAX_BAN_TIME = LITTLE_LESS_THAN_A_WEEK
 HONEY_POT_BAN_TIME = LITTLE_MORE_THAN_A_DAY
 
-encoder = json.JSONEncoder(indent=2, sort_keys=True)
-
 
 def generate_password():
     "Create a random string for use as password. Return as cleartext and encrypted."
@@ -130,7 +128,7 @@ def user_not_banned(f):
                     # movements.
                     response = ". . . please wait . . ."
                     if "application/json" in request.headers.get("Accept"):
-                        response = encoder.encode(
+                        response = json.jsonify(
                             {
                                 "msg": response,
                                 "expires": banneduser_score,
@@ -256,7 +254,7 @@ class GenerateAnonymousLogin(MethodView):
 
         cur.close()
         data = {"bit": "".join(["", "/puzzle-api/bit/", user_data["login"], p_string])}
-        return encoder.encode(data)
+        return make_response(json.jsonify(data), 200)
 
 
 class GenerateAnonymousLoginByToken(MethodView):
@@ -507,7 +505,7 @@ class UserDetailsView(MethodView):
         cur.close()
 
         # extend the cookie
-        response = make_response(encoder.encode(user_details), 200)
+        response = make_response(json.jsonify(user_details), 200)
         if extend_cookie:
             # Only set user cookie if it exists
             if current_app.secure_cookie.get("user"):
@@ -788,7 +786,7 @@ class AdminBlockedPlayersList(MethodView):
             # sorted by asc so the last will be the highest
             blocked[ip][user]["recent_points"] = recent_points
 
-        return encoder.encode(blocked)
+        return json.jsonify(blocked)
 
 
 class AdminBannedUserList(MethodView):
@@ -808,7 +806,7 @@ class AdminBannedUserList(MethodView):
         for (user, timestamp) in bannedusers:
             banned[user] = {"timestamp": timestamp}
 
-        return encoder.encode(banned)
+        return json.jsonify(banned)
 
     def post(self):
         "Cleanup banned users"

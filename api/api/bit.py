@@ -15,8 +15,6 @@ from api.user import (
 )
 from api.tools import purge_route_from_nginx_cache
 
-encoder = json.JSONEncoder(indent=2, sort_keys=True)
-
 
 class ChooseBitView(MethodView):
     """Choose a bit"""
@@ -52,7 +50,7 @@ class ChooseBitView(MethodView):
         (result, col_names) = rowify(result, cur.description)
         bits = [x["icon"] for x in result]
 
-        response = make_response(encoder.encode({"data": bits}), 200)
+        response = make_response(json.jsonify({"data": bits}), 200)
         if save_cookie:
             current_app.secure_cookie.set(
                 u"ot", str(offset_seconds), response, expires_days=1

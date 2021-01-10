@@ -48,12 +48,13 @@ class PuzzlePieceView(MethodView):
         redis_connection.delete("token:{}".format(user))
 
         # Fetch just the piece properties
-        publicPieceProperties = ("x", "y", "rotate", "s", "w", "h", "b")
+        # The 'rotate' field is not public. It is for the true orientation of the piece.
+        # The 'r' field is the mutable rotation of the piece.
+        publicPieceProperties = ("x", "y", "r", "s", "g", "w", "h", "b")
         pieceProperties = redis_connection.hmget(
             "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece),
             *publicPieceProperties
         )
         pieceData = dict(list(zip(publicPieceProperties, pieceProperties)))
-        return encoder.encode(pieceData)
-        # TODO: update js code to properly handle json mimetype
-        # return make_response(json.jsonify(pieceData), 200)
+        pieceData["id"] = piece
+        return make_response(json.jsonify(pieceData), 200)

@@ -66,13 +66,17 @@ class FetchService {
     });
   }
 
-  patch<T>(data): Promise<T> {
+  patch<T>(data, headers?): Promise<T> {
+    const _headers = {
+      "Content-Type": "application/json",
+    };
+    if (headers) {
+      Object.assign(_headers, headers);
+    }
     return fetch(this.url, {
       method: "PATCH",
       credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: _headers,
       body: JSON.stringify(data),
     }).then((response: Response) => {
       if (!response.ok) {

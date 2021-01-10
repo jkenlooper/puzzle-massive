@@ -238,13 +238,6 @@ class PuzzleService {
     this._broadcast(piecesUpdate, [piece]);
   }
 
-  private onKarmaUpdate(data: KarmaData) {
-    let piece = this.pieces[data.id];
-    Object.assign(piece, data);
-    //this._broadcast(piecesMutate, [piece]);
-    this._broadcast(karmaUpdated, data);
-  }
-
   private _broadcast(topic: symbol, data?: any) {
     this[topic].forEach((fn /*, id*/) => {
       fn(data);
@@ -365,31 +358,30 @@ class PuzzleService {
     }
     //pieceMovement.fail = true
     pieceMovement.moveRequest = function cancelMoveRequest() {
-      return reqwest({
-        url: `/newapi/puzzle/${puzzleId}/piece/${id}/`,
-        method: "GET",
-        type: "json",
-        error: function handleGetError() {
+      const fetchPuzzlePieceService = new FetchService(
+        `/newapi/puzzle/${puzzleId}/piece/${id}/`
+      );
+      return fetchPuzzlePieceService
+        .get<UnprocessedPieceData>()
+        .then((pieceData) => {
+          const pieceMovementData: PieceMovementData = {
+            id: id,
+            x: parseInt(pieceData.x),
+            y: parseInt(pieceData.y),
+            r: parseInt(pieceData.r),
+          };
+          self.onPieceMoveRejected(pieceMovementData);
+        })
+        .catch(() => {
           if (origin) {
-            const pieceMovementData: PieceMovementData = {
+            self.onPieceMoveRejected({
               id: id,
               x: origin.x,
               y: origin.y,
               r: origin.r,
-            };
-            self.onPieceMoveRejected(pieceMovementData);
+            });
           }
-        },
-        success: function handlePieceInfo(data) {
-          const pieceMovementData: PieceMovementData = {
-            id: id,
-            x: data.x,
-            y: data.y,
-            r: data.r,
-          };
-          self.onPieceMoveRejected(pieceMovementData);
-        },
-      });
+        });
     };
   }
 
@@ -470,12 +462,21 @@ class PuzzleService {
             self.onPieceMoveRejected(pieceMovementData);
           }
           // Reject with piece info from server and fallback to origin if that also fails
-          return reqwest({
-            url: `/newapi/puzzle/${puzzleId}/piece/${id}/`,
-            method: "GET",
-            type: "json",
-            data: data,
-            error: function handleGetError() {
+          const fetchPuzzlePieceService = new FetchService(
+            `/newapi/puzzle/${puzzleId}/piece/${id}/`
+          );
+          return fetchPuzzlePieceService
+            .get<UnprocessedPieceData>()
+            .then((pieceData) => {
+              const pieceMovementData: PieceMovementData = {
+                id: id,
+                x: parseInt(pieceData.x),
+                y: parseInt(pieceData.y),
+                r: parseInt(pieceData.r),
+              };
+              self.onPieceMoveRejected(pieceMovementData);
+            })
+            .catch(() => {
               if (origin) {
                 self.onPieceMoveRejected({
                   id: id,
@@ -484,22 +485,7 @@ class PuzzleService {
                   r: origin.r,
                 });
               }
-            },
-            success: function handlePieceInfo(data) {
-              const pieceMovementData: PieceMovementData = {
-                id: id,
-                x: data.x,
-                y: data.y,
-                r: data.r,
-              };
-              self.onPieceMoveRejected(pieceMovementData);
-              self.onKarmaUpdate(<KarmaData>{
-                id: id,
-                karma: pieceMovementData.karma,
-                karmaChange: -1,
-              });
-            },
-          });
+            });
         },
         // The puzzle stream will update the pending status instead of waiting
         // for a successful response.
@@ -700,6 +686,7 @@ class PuzzleService {
     let piece = this.pieces[data.id];
     piece.x = data.x || piece.origin.x;
     piece.y = data.y || piece.origin.y;
+    piece.pending = false;
     piece.active = false;
     this._broadcast(pieceMoveRejected, data);
     this._broadcast(piecesMutate, [piece]);
