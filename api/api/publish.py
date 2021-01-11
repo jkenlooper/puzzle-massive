@@ -1233,6 +1233,8 @@ def serve(config_file, cookie_secret):
 
     debug = app.config.get("DEBUG")
 
+    app.cleanupqueue = Queue("puzzle_cleanup", connection=redis_connection)
+
     app.logger.info("Serving on {host}:{port}".format(**locals()))
     app.logger.info("Debug mode is {debug}".format(**locals()))
 
