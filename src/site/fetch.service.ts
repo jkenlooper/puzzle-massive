@@ -87,6 +87,34 @@ class FetchService {
       });
     });
   }
+
+  patchNoContent(data, headers?): Promise<void | undefined> {
+    const _headers = {
+      "Content-Type": "application/json",
+    };
+    if (headers) {
+      Object.assign(_headers, headers);
+    }
+    return fetch(this.url, {
+      method: "PATCH",
+      credentials: "same-origin",
+      headers: _headers,
+      body: JSON.stringify(data),
+    }).then((response: Response) => {
+      if (!response.ok) {
+        return response.json().then((body: any) => {
+          return Promise.reject({
+            body: body,
+            status: response.status,
+          });
+        });
+      }
+      if (response.status === 204) {
+        return Promise.resolve();
+      }
+      throw new Error(response.statusText);
+    });
+  }
 }
 
 export default FetchService;

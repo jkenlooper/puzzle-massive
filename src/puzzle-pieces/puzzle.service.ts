@@ -404,22 +404,20 @@ class PuzzleService {
         data.r = r;
       }
 
-      return reqwest({
-        url: `/newapi/puzzle/${puzzleId}/piece/${id}/move/`,
-        method: "PATCH",
-        type: "json",
-        data: data,
-        headers: { Token: pieceMovement.token, Snap: pieceMovement.snap },
-        error: function handlePatchError(patchError) {
-          let responseObj;
-          try {
-            responseObj = JSON.parse(patchError.response);
-          } catch (err) {
-            responseObj = {
-              msg: "Unable to move that piece at this time.",
-              reason: patchError.response,
-            };
-          }
+      const movePuzzlePieceService = new FetchService(
+        `/newapi/puzzle/${puzzleId}/piece/${id}/move/`
+      );
+      return movePuzzlePieceService
+        .patchNoContent(data, {
+          Token: pieceMovement.token,
+          Snap: pieceMovement.snap,
+        })
+        .catch((patchError) => {
+          //responseObj = {
+          //  msg: "Unable to move that piece at this time.",
+          //  reason: patchError.response,
+          //};
+          const responseObj = patchError.body;
           if (patchError.status === 429) {
             self._broadcast(pieceMoveBlocked, responseObj);
             self.onPieceMoveRejected({
@@ -486,64 +484,10 @@ class PuzzleService {
                 });
               }
             });
-        },
-        // The puzzle stream will update the pending status instead of waiting
-        // for a successful response.
-        success: function () {
-          //console.log("skip success", d);
-          /*
-          if (!d.msg || typeof d.msg != "string") {
-            return;
-          }
-          const lines = d.msg.split("\n");
-          const _processed_pieces: Array<PieceData> = [];
-          lines.forEach((line) => {
-            const values = line.split(":");
-            if (values.length === 7) {
-              // puzzle_id, piece_id, x, y, r, parent, status
-              const pieceData: PieceMovementData = {
-                id: Number(values[1]),
-              };
-              if (values[5] !== "") {
-                pieceData.parent = Number(values[5]);
-              }
-              if (values[6] !== "") {
-                // s for stacked
-                pieceData.s = Number(values[6]);
-              }
-              if (values[2] !== "") {
-                pieceData.x = Number(values[2]);
-              }
-              if (values[3] !== "") {
-                pieceData.y = Number(values[3]);
-              }
-
-              let piece = self.pieces[pieceData.id];
-              piece = Object.assign(piece, pieceData);
-              _processed_pieces.push(piece);
-            }
-          });
-          console.log("processed pieces", _processed_pieces);
-          self._broadcast(piecesUpdate, _processed_pieces);
-          */
-          /*
-          _processed_pieces.forEach((pieceData) => {
-            let piece = self.pieces[pieceData.id];
-            piece.active = false;
-          });
-          */
-        },
-        complete: () => {
+        })
+        .finally(() => {
           self.isWaitingOnMoveRequest = false;
-          //let piece = self.pieces[id];
-          //piece.pending = false;
-          // Make all pieces inactive
-          //Object.values(self.pieces).forEach((piece) => {
-          //  piece.active = false;
-          //});
-          //self._broadcast(piecesUpdate, Object.values(self.pieces));
-        },
-      });
+        });
     };
   }
 
@@ -729,7 +673,7 @@ class PuzzleService {
           } else if (hasMoveRequest) {
             // ready to send movement
             const moveRequest = <Function>pieceMovement.moveRequest;
-            moveRequest().always(() => {
+            moveRequest().finally(() => {
               pieceMovement.moveRequest = undefined;
               this.pieceMovementQueue.shift();
               delete this.pieceMovements[pieceMovementId];
