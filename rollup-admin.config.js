@@ -13,7 +13,7 @@ const isProduction =
   !process.env.ROLLUP_WATCH && process.env.NODE_ENV === "production";
 
 export default {
-  external: ["alpinejs", "hammerjs", "modernizr", "reqwest"],
+  external: ["alpinejs", "hammerjs", "modernizr"],
   input: {
     admin: "src/admin/index.js",
   },

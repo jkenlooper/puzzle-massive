@@ -51,7 +51,6 @@
     "lit-element": "^2.4.0",
     "main.css": "^2.1.0",
     "normalize.css": "^8.0.1",
-    "reqwest": "~2.0.5",
     "rxjs": "^6.6.3",
     "rxjs-compat": "^6.6.3",
     "slab-massive": "^0.4.1",

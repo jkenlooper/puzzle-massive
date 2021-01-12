@@ -22,5 +22,4 @@ cp src/modernizr.build.min.js \
   node_modules/hammerjs/hammer.min.js \
   node_modules/hammerjs/hammer.min.js.map \
   node_modules/lazysizes/lazysizes.min.js \
-  node_modules/reqwest/reqwest.min.js \
   dist/

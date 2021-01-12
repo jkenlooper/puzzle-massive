@@ -50,7 +50,6 @@ config.externals = {
   lazysizes: "lazysizes",
   "slab-massive.js": "slabMassive",
   hammerjs: "Hammer",
-  reqwest: "reqwest",
   modernizr: "Modernizr",
   alpine: "alpine",
 };
