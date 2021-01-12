@@ -133,6 +133,7 @@ def user_not_banned(f):
                                 "msg": response,
                                 "expires": banneduser_score,
                                 "timeout": banneduser_score - now,
+                                "type": "bannedusers",
                             }
                         )
                     # end = time.perf_counter()

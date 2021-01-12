@@ -90,6 +90,30 @@ export interface PieceMoveError {
   action: any; // {msg: string, url: string}
 }
 
+interface TokenData {
+  token: string;
+  lock: number;
+  expires: number;
+  snap?: string;
+}
+enum TokenRequestErrorTypes {
+  puzzlereload = "puzzlereload",
+  puzzleimmutable = "puzzleimmutable",
+  immovable = "immovable",
+  sameplayerconcurrent = "sameplayerconcurrent",
+  bannedusers = "bannedusers",
+  piecequeue = "piecequeue",
+  piecelock = "piecelock",
+}
+export interface TokenRequestError {
+  msg: string;
+  type: TokenRequestErrorTypes;
+  expires: number;
+  timeout: number;
+  reason: string;
+  action: any; // {msg: string, url: string}
+}
+
 // For now this is set to one to prevent feature creep
 const maxSelectedPieces = 1;
 
@@ -134,6 +158,31 @@ interface MoveRequestData {
 }
 
 const pieceAttrsThatAreInt = ["g", "x", "y", "r", "s", "b", "w", "h", "rotate"];
+
+class TokenRequestService {
+  url: string;
+
+  constructor(url: string) {
+    this.url = url;
+  }
+
+  get<T>(): Promise<T> {
+    return fetch(this.url, {
+      method: "GET",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).then((response: Response) => {
+      return response.json().then((data: T) => {
+        if (!response.ok) {
+          return Promise.reject(data);
+        }
+        return data;
+      });
+    });
+  }
+}
 
 let _pieceMovementId = 0;
 
@@ -284,41 +333,45 @@ class PuzzleService {
     };
 
     pieceMovement.tokenRequest = function tokenRequest() {
-      return reqwest({
-        url: `/newapi/puzzle/${puzzleId}/piece/${piece}/token/`,
-        data: { mark: mark },
-        method: "get",
-        type: "json",
-      })
-        .then((data) => {
-          pieceMovement.token = data.token;
-          pieceMovement.snap = data.snap;
+      const tokenRequestService = new TokenRequestService(
+        `/newapi/puzzle/${puzzleId}/piece/${piece}/token/?mark=${mark}`
+      );
+      return tokenRequestService
+        .get<TokenData>()
+        .then((tokenData) => {
+          pieceMovement.token = tokenData.token;
+          pieceMovement.snap = tokenData.snap;
         })
-        .fail((data) => {
-          let responseObj;
-          try {
-            responseObj = JSON.parse(data.response);
-          } catch (err) {
-            responseObj = {
-              msg: "Unable to move that piece at this time.",
-              reason: data.status,
-            };
-          }
+        .catch((responseObj: TokenRequestError) => {
+          //let responseObj;
+          //try {
+          //  responseObj = JSON.parse(tokenError.response);
+          //} catch (err) {
+          //  responseObj = {
+          //    msg: "Unable to move that piece at this time.",
+          //    reason: tokenError.status,
+          //  };
+          //}
           switch (responseObj.type) {
-            case PieceMoveErrorTypes.piecelock:
-            case PieceMoveErrorTypes.piecequeue:
+            case TokenRequestErrorTypes.piecelock:
+            case TokenRequestErrorTypes.piecequeue:
               // TODO: If piece is locked then publish a 'piece/move/delayed' instead of blocked.
               // TODO: Set a timeout and clear if piece is moved.  Maybe
               // auto-scroll to the moved piece?
               break;
-            case PieceMoveErrorTypes.sameplayerconcurrent:
-              if (responseObj.action) {
-                reqwest({ url: responseObj.action.url, method: "POST" });
+            case TokenRequestErrorTypes.sameplayerconcurrent:
+              if (responseObj.action && responseObj.action.url) {
+                fetch(responseObj.action.url, {
+                  method: "POST",
+                  credentials: "same-origin",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                });
               }
               break;
-            case PieceMoveErrorTypes.bannedusers:
-            case PieceMoveErrorTypes.expiredtoken:
-            case PieceMoveErrorTypes.puzzleimmutable:
+            case TokenRequestErrorTypes.bannedusers:
+            case TokenRequestErrorTypes.puzzleimmutable:
               self._broadcast(pieceMoveBlocked, responseObj);
               break;
             default:
@@ -666,7 +719,7 @@ class PuzzleService {
           if (hasTokenRequest) {
             // need token
             const tokenRequest = <Function>pieceMovement.tokenRequest;
-            tokenRequest().always(() => {
+            tokenRequest().finally(() => {
               pieceMovement.tokenRequest = undefined;
               pieceMovement.inProcess = false;
             });
