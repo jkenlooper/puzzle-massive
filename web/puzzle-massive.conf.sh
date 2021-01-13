@@ -123,8 +123,6 @@ limit_req_zone \$binary_remote_addr zone=puzzle_upload_limit_per_ip:1m rate=3r/m
 limit_req_zone \$binary_remote_addr zone=puzzle_list_limit_per_ip:1m rate=30r/m;
 limit_req_zone \$binary_remote_addr zone=player_email_register_limit_per_ip:1m rate=1r/m;
 
-limit_req_zone \$binary_remote_addr zone=chill_puzzle_limit_per_ip:1m rate=30r/m;
-
 # Most of the time these requests will be cached and not be rate limited.
 # 10 requests a second = 100ms
 limit_req_zone \$server_name zone=chill_site_internal_limit:1m rate=10r/s;
@@ -196,7 +194,7 @@ cat <<HEREBEUP
   ~/chill/site/claim-player/.* off;
   ~/chill/site/reset-login/.* off;
   ~/chill/site/bit-icons/.* 1y;
-  ~/chill/site/puzzle/.* off;
+  ~/chill/site/puzzle/.* 10s;
   ~/chill/site/front/.* 1m;
   ~/chill/site/api/.* 1m;
   ~/chill/site/puzzle-list/.* 60m;
@@ -216,6 +214,7 @@ cat <<HEREBEUP
   /.well-known/.* off;
   /newapi/gallery-puzzle-list/ 1m;
   ~/newapi/puzzle-list/.* 5m;
+  ~/newapi/puzzle-pieces/.* 10s;
   # Safeguard for no cache on player-puzzle-list
   /newapi/player-puzzle-list/ off;
 }
@@ -664,6 +663,19 @@ server {
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
+  location ~* ^/newapi/puzzle-pieces/.*\$ {
+    expires \$cache_expire;
+    add_header Cache-Control "public";
+
+    proxy_pass_header Server;
+    proxy_set_header  X-Real-IP  \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_pass http://localhost:${PORTAPI};
+    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
+
+    rewrite ^/newapi/(.*)\$ /\$1 break;
+  }
+
   location = /newapi/puzzle-list/ {
     expires \$cache_expire;
     add_header Cache-Control "public";
@@ -775,10 +787,6 @@ cat <<HEREORIGINSERVER
 
   location ~* ^/chill/site/puzzle/.*\$ {
     expires \$cache_expire;
-
-    # Allow loading up to 15 puzzles with each request being delayed by
-    # 2 seconds.
-    limit_req zone=chill_puzzle_limit_per_ip burst=15;
 
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;

@@ -245,7 +245,11 @@ class PuzzlePieceTokenView(MethodView):
             return response
 
         user = int(user)
-        mark = request.args.get("mark", "000")[:3]
+        mark = request.args.get("mark")
+        if not isinstance(mark, str) or len(mark) != 10:
+            return make_response(
+                json.jsonify({"msg": "invalid args", "type": "invalid",}), 400
+            )
         now = int(time.time())
 
         pzq_key = "pzq:{puzzle_id}".format(puzzle_id=puzzle_id)

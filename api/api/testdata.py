@@ -529,6 +529,7 @@ class PuzzlePieces:
         self.puzzle_pieces = self.user_session.get_data(
             "/puzzle-pieces/{0}/".format(self.puzzle_id), "api"
         )
+        self.mark = uuid4().hex[:10]
         self.table_width = table_width
         self.table_height = table_height
         self.movable_pieces = [
@@ -551,9 +552,7 @@ class PuzzlePieces:
         try:
             piece_token = self.user_session.get_data(
                 "/puzzle/{puzzle_id}/piece/{piece_id}/token/?mark={mark}".format(
-                    puzzle_id=self.puzzle_id,
-                    piece_id=piece_id,
-                    mark=self.puzzle_pieces["mark"],
+                    puzzle_id=self.puzzle_id, piece_id=piece_id, mark=self.mark,
                 ),
                 "publish",
             )

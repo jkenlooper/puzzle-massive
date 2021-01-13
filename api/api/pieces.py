@@ -13,51 +13,19 @@ from .app import db, redis_connection
 from .database import fetch_query_string, rowify
 from .tools import formatPieceMovementString
 from .jobs.convertPiecesToRedis import convert
-from .user import user_id_from_ip, increase_ban_time
 
 from .constants import COMPLETED
-
-# How many puzzles a user can open within this many seconds before being banned.
-# Allow 10 puzzles to be open within 100 seconds.
-PUZZLE_VIEW_RATE_TIMEOUT = 100
-PUZZLE_VIEW_MAX_COUNT = 10
-BAN_TIME_INCR_FOR_EACH = 60 * 5
 
 
 class PuzzlePiecesView(MethodView):
     """
-    Gets piece data for a puzzle.  The user is never banned from getting pieces,
-    but loading pieces too often can get the user on the banned list.
+    Gets piece data for a puzzle.  The user is never banned from getting pieces
+    and this response is cached for 10 seconds by nginx.
     """
-
-    def bump_count(self, user):
-        """
-        Bump the count for puzzle loaded for this user.
-        Note that this is different when a player moves a piece on a puzzle
-        that they just opened. The recent points in karma just prevents abuse
-        from humans.
-        """
-        timestamp_now = int(time.time())
-        rounded_timestamp = timestamp_now - (timestamp_now % PUZZLE_VIEW_RATE_TIMEOUT)
-
-        # TODO: optimize the timestamp used here by truncating to last digits based
-        # on the expiration of the key.
-        puzzle_view_rate_key = "pvrate:{user}:{timestamp}".format(
-            user=user, timestamp=rounded_timestamp
-        )
-        if redis_connection.setnx(puzzle_view_rate_key, 1):
-            redis_connection.expire(puzzle_view_rate_key, PUZZLE_VIEW_RATE_TIMEOUT)
-        else:
-            count = redis_connection.incr(puzzle_view_rate_key)
-            if count > PUZZLE_VIEW_MAX_COUNT:
-                increase_ban_time(user, BAN_TIME_INCR_FOR_EACH)
 
     def get(self, puzzle_id):
         ""
-        ip = request.headers.get("X-Real-IP")
-        user = int(current_app.secure_cookie.get(u"user") or user_id_from_ip(ip))
-        self.bump_count(user)
-
+        timestamp_now = int(time.time())
         cur = db.cursor()
         result = cur.execute(
             fetch_query_string("select_viewable_puzzle_id.sql"),
@@ -132,10 +100,7 @@ class PuzzlePiecesView(MethodView):
 
         pieceData = {
             "positions": pieces,
-            "timestamp": "",
-            "mark": uuid.uuid4().hex[
-                :3
-            ],  # Used to differentiate any requests for a user session (handle double-clicking pieces)
+            "timestamp": timestamp_now,
         }
 
         cur.close()

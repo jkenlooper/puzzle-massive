@@ -1,4 +1,5 @@
 //import { interpret } from "@xstate/fsm";
+import { nanoid } from "nanoid/non-secure";
 import FetchService from "../site/fetch.service";
 import { streamService, PieceMovementData } from "./stream.service";
 //import { puzzlePieceMachine } from "./puzzle-piece-machine";
@@ -146,8 +147,7 @@ const topics = {
 
 interface UnprocessedPuzzlePiecesData {
   positions: Array<UnprocessedPieceData>;
-  timestamp: string;
-  mark: string;
+  timestamp: number;
 }
 
 interface MoveRequestData {
@@ -193,7 +193,7 @@ class PuzzleService {
   private pieceMovementProcessInterval: number | undefined = undefined;
   private pieces: Pieces = {};
   // @ts-ignore: piecesTimestamp will be used in the future
-  private piecesTimestamp = "";
+  private piecesTimestamp = 0;
   private mark: string = "";
   private selectedPieces: Array<number> = [];
   private instanceId = "puzzleService";
@@ -237,7 +237,7 @@ class PuzzleService {
     return fetchPuzzlePiecesService
       .get<UnprocessedPuzzlePiecesData>()
       .then((pieceData) => {
-        this.mark = pieceData.mark;
+        this.mark = nanoid(10);
         pieceData.positions.forEach((piece) => {
           // set status
           Object.keys(piece)

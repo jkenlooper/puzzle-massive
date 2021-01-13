@@ -50,6 +50,7 @@
     "lazysizes": "^5.2.2",
     "lit-element": "^2.4.0",
     "main.css": "^2.1.0",
+    "nanoid": "^3.1.20",
     "normalize.css": "^8.0.1",
     "rxjs": "^6.6.3",
     "rxjs-compat": "^6.6.3",
