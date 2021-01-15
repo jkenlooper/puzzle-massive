@@ -49,7 +49,6 @@ from api.tools import (
     formatPieceMovementString,
     formatBitMovementString,
     init_karma_key,
-    get_public_karma_points,
     files_loader,
 )
 
@@ -67,8 +66,6 @@ HOUR = 3600  # hour in seconds
 MINUTE = 60  # minute in seconds
 
 BLOCKEDPLAYER_EXPIRE_TIMEOUT = HOUR
-MAX_KARMA = 25
-MIN_KARMA = int(old_div(MAX_KARMA, 2)) * -1  # -12
 MOVES_BEFORE_PENALTY = 12
 STACK_PENALTY = 1
 HOTSPOT_EXPIRE = 30
@@ -310,6 +307,7 @@ class PuzzlePieceTokenView(MethodView):
             }
             return make_response(json.jsonify(err_msg), 400)
 
+        # TODO: remove old entries in blockedplayers:{puzzle}
         blockedplayers_for_puzzle_key = "blockedplayers:{puzzle}".format(puzzle=puzzle)
         blockedplayers_expires = redis_connection.zscore(
             blockedplayers_for_puzzle_key, user
@@ -578,8 +576,6 @@ class PuzzlePiecesMovePublishView(MethodView):
 
     * Publish bit movment
     * Start piece translate logic
-
-    Return karma amount
     """
 
     decorators = [user_not_banned]
@@ -656,7 +652,6 @@ class PuzzlePiecesMovePublishView(MethodView):
         puzzle_data = dict(zip(pzq_fields, redis_connection.hmget(pzq_key, pzq_fields)))
         puzzle = puzzle_data.get("puzzle")
         if puzzle == None:
-            current_app.logger.debug("No puzzle; fetch")
             r = requests.get(
                 "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
                     HOSTAPI=current_app.config["HOSTAPI"],
@@ -711,7 +706,6 @@ class PuzzlePiecesMovePublishView(MethodView):
             }
             return make_response(json.jsonify(err_msg), 400)
         puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
-        # print("token key: {}".format(puzzle_piece_token_key))
         validate_token = (
             len({"all", "valid_token"}.intersection(current_app.config["PUZZLE_RULES"]))
             > 0
@@ -723,18 +717,14 @@ class PuzzlePiecesMovePublishView(MethodView):
                 (valid_token, other_player) = token_and_player.split(":")
                 other_player = int(other_player)
                 if token != valid_token:
-                    # print("token invalid {} != {}".format(token, valid_token))
                     err_msg = increase_ban_time(user, TOKEN_INVALID_BAN_TIME_INCR)
                     err_msg["reason"] = "Token is invalid"
                     return make_response(json.jsonify(err_msg), 409)
                 if player != other_player:
-                    # print("player invalid {} != {}".format(player, other_player))
                     err_msg = increase_ban_time(user, TOKEN_INVALID_BAN_TIME_INCR)
                     err_msg["reason"] = "Player is invalid"
                     return make_response(json.jsonify(err_msg), 409)
             else:
-                # Token has expired
-                # print("token expired")
                 err_msg = {
                     "msg": "Token has expired",
                     "type": "expiredtoken",
@@ -800,14 +790,16 @@ class PuzzlePiecesMovePublishView(MethodView):
             timestamp_now % PIECE_MOVEMENT_RATE_TIMEOUT
         )
 
-        # Update karma
-        karma_key = init_karma_key(redis_connection, puzzle, ip)
-        # Set a limit to minimum karma so other players on the network can still play
-        karma = max(MIN_KARMA, int(redis_connection.get(karma_key)))
-        # initial_karma = max(0, min(100/2, karma))
-        karma_change = 0
-
         points_key = "points:{user}".format(user=user)
+        recent_points = int(redis_connection.get(points_key) or "0")
+
+        karma_key = init_karma_key(redis_connection, puzzle, ip, current_app.config)
+        # Set a limit to minimum karma so other players on the network can still play
+        karma = max(0, int(redis_connection.get(karma_key)))
+        karma_change = 0
+        current_app.logger.debug(
+            f"user: {user} ip: {ip} karma: {karma} recent_points {recent_points}"
+        )
 
         if (
             len(
@@ -824,7 +816,6 @@ class PuzzlePiecesMovePublishView(MethodView):
             if redis_connection.sadd(pzrate_key, puzzle) == 1:
                 # New puzzle that player hasn't moved a piece on in the last hour.
                 redis_connection.expire(pzrate_key, HOUR)
-                recent_points = int(redis_connection.get(points_key) or "0")
                 if recent_points > 0:
                     redis_connection.decr(points_key)
 
@@ -847,7 +838,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                 moves = redis_connection.incr(pcrate_key)
                 if moves > PIECE_MOVEMENT_RATE_LIMIT:
                     # print 'decrease because piece movement rate limit reached.'
-                    if karma > MIN_KARMA:
+                    if karma > 0:
                         karma = redis_connection.decr(karma_key)
                     karma_change -= 1
 
@@ -865,19 +856,31 @@ class PuzzlePiecesMovePublishView(MethodView):
                 redis_connection.expire(hotpc_key, PIECE_MOVEMENT_RATE_TIMEOUT)
 
             if recent_move_count > MOVES_BEFORE_PENALTY:
-                if karma > MIN_KARMA:
+                if karma > 0:
                     karma = redis_connection.decr(karma_key)
                 karma_change -= 1
 
-        if int(karma) <= 0:
-            # Decrease recent points for a piece move that decreased karma
-            recent_points = (
-                redis_connection.decr(points_key, amount=abs(karma_change))
-                if karma_change < 0
-                else int(redis_connection.get(points_key) or 0)
+        if (
+            len({"all", "hot_spot"}.intersection(current_app.config["PUZZLE_RULES"]))
+            > 0
+        ):
+            # Record hot spot (not exact)
+            hotspot_area_key = "hotspot:{puzzle}:{user}:{x}:{y}".format(
+                puzzle=puzzle, user=user, x=x - (x % 200), y=y - (y % 200),
             )
-            redis_connection.set(points_key, max(0, recent_points))
-            if int(karma) + recent_points <= 0:
+            hotspot_count = redis_connection.incr(hotspot_area_key)
+            if hotspot_count == 1:
+                redis_connection.expire(hotspot_area_key, HOTSPOT_EXPIRE)
+            if hotspot_count > HOTSPOT_LIMIT:
+                if karma > 0:
+                    karma = redis_connection.decr(karma_key)
+                karma_change -= 1
+
+        if karma <= 0:
+            # Decrease recent points for a piece move that decreased karma
+            if recent_points > 0 and karma_change < 0:
+                recent_points = redis_connection.decr(points_key)
+            if karma + recent_points <= 0:
                 expires = now + BLOCKEDPLAYER_EXPIRE_TIMEOUT
                 blockedplayers_for_puzzle_key = "blockedplayers:{puzzle}".format(
                     puzzle=puzzle
@@ -892,26 +895,22 @@ class PuzzlePiecesMovePublishView(MethodView):
                 # Reset the karma for the player
                 redis_connection.delete(karma_key)
 
-                # TODO: drop these keys
-                redis_connection.zadd(
-                    "blockedplayers",
-                    {"{ip}-{user}".format(ip=ip, user=user): int(time.time())},
-                )
-                redis_connection.zadd(
-                    "blockedplayers:puzzle",
-                    {
-                        "{ip}-{user}-{puzzle}".format(
-                            ip=ip, user=user, puzzle=puzzle
-                        ): int(recent_points)
-                    },
-                )
-
                 err_msg = get_blockedplayers_err_msg(expires, expires - now)
-                err_msg["karma"] = get_public_karma_points(
-                    redis_connection, ip, user, puzzle
+                sse.publish(
+                    "{user}:{piece}:{karma}:{karma_change}".format(
+                        user=user,
+                        piece=piece,
+                        karma=karma + recent_points,
+                        karma_change=karma_change,
+                    ),
+                    type="karma",
+                    channel="puzzle:{puzzle_id}".format(
+                        puzzle_id=puzzle_data["puzzle_id"]
+                    ),
                 )
                 return make_response(json.jsonify(err_msg), 429)
 
+        # TODO: delete dead code for using pzq_register and pzq_activity
         use_queue = False
         if use_queue:
             if puzzle_data.get("q") == None or not redis_connection.sismember(
@@ -953,22 +952,6 @@ class PuzzlePiecesMovePublishView(MethodView):
 
                 redis_connection.hset(pzq_key, "q", queue_name)
                 puzzle_data["q"] = queue_name
-
-        if (
-            len({"all", "hot_spot"}.intersection(current_app.config["PUZZLE_RULES"]))
-            > 0
-        ):
-            # Record hot spot (not exact)
-            hotspot_area_key = "hotspot:{puzzle}:{user}:{x}:{y}".format(
-                puzzle=puzzle, user=user, x=x - (x % 200), y=y - (y % 200),
-            )
-            hotspot_count = redis_connection.incr(hotspot_area_key)
-            if hotspot_count == 1:
-                redis_connection.expire(hotspot_area_key, HOTSPOT_EXPIRE)
-            if hotspot_count > HOTSPOT_LIMIT:
-                if karma > MIN_KARMA:
-                    karma = redis_connection.decr(karma_key)
-                karma_change -= 1
 
         # end = time.perf_counter()
         # duration = end - start
@@ -1091,6 +1074,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                                                     a_moved_y + a_offset_y,
                                                     r,
                                                     karma_change,
+                                                    karma,
                                                 )
                                                 break
                     except:
@@ -1112,6 +1096,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                         y,
                         r,
                         karma_change or snapshot_karma_change,
+                        karma,
                     )
                     if isinstance(snapshot_msg, str) and isinstance(msg, str):
                         msg = snapshot_msg + msg
@@ -1130,8 +1115,9 @@ class PuzzlePiecesMovePublishView(MethodView):
                         )
                     )
                     > 0
-                ) and karma > MIN_KARMA:
+                ) and karma > 0:
                     karma = redis_connection.decr(karma_key)
+                    karma_change -= 1
             current_app.logger.debug(
                 f"Puzzle ({puzzle}) piece move attempts: {attempt_count}"
             )

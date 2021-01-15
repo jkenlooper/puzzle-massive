@@ -23,6 +23,10 @@ Types of changes
 
 ## [Unreleased] - ...
 
+### Removed
+
+- Redis keys that were used for tracking blocked players: "blockedplayers" and "blockedplayers:puzzle"
+
 ### Changed
 
 - Optimized piece movement requests and moved piece movement latency to

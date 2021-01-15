@@ -104,7 +104,6 @@ def make_app(config=None, database_writable=False, **kw):
         ClaimUserByTokenView,
         SplitPlayer,
         InternalUserDetailsView,
-        AdminBlockedPlayersList,
         AdminBannedUserList,
         BanishSelf,
     )
@@ -267,10 +266,6 @@ def make_app(config=None, database_writable=False, **kw):
         view_func=AdminPuzzlePromoteSuggestedView.as_view(
             "admin-puzzle-promote-suggested"
         ),
-    )
-    app.add_url_rule(
-        "/admin/player/blocked/",
-        view_func=AdminBlockedPlayersList.as_view("admin-player-blocked"),
     )
     app.add_url_rule(
         "/admin/user/banned/",

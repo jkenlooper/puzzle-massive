@@ -11,8 +11,8 @@
 
 import { rgbToHsl } from "../site/utilities";
 import hashColorService from "../hash-color/hash-color.service";
-import { puzzleService, PieceData, KarmaData } from "./puzzle.service";
-import { streamService } from "./stream.service";
+import { puzzleService, PieceData } from "./puzzle.service";
+import { streamService, KarmaData } from "./stream.service";
 import { Status } from "../site/puzzle-images.service";
 
 import "./puzzle-pieces.css";
@@ -423,7 +423,8 @@ customElements.define(
       if ($_piece !== null && karmaData.karmaChange) {
         if (karmaData.karmaChange > 0) {
           $_piece.classList.add("is-up");
-        } else {
+        } else if (karmaData.karmaChange < 0 && karmaData.karma < 18) {
+          // Only show is-down icon if risk of player being blocked.
           $_piece.classList.add("is-down");
         }
         window.setTimeout(function cleanupKarma() {
@@ -515,16 +516,6 @@ customElements.define(
           $piece.classList.add("is-pending");
         } else {
           $piece.classList.remove("is-pending");
-        }
-
-        // Toggle the is-up, is-down class when karma has changed
-        if ($piece && piece.karmaChange) {
-          this.renderPieceKarma($piece, <KarmaData>{
-            id: piece.id,
-            karma: piece.karma,
-            karmaChange: piece.karmaChange,
-          });
-          piece.karmaChange = false;
         }
       });
       if (tmp !== undefined && tmp.children.length) {

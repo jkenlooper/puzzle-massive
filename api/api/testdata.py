@@ -523,7 +523,9 @@ class PuzzlePieces:
         self.puzzle = puzzle
         self.puzzle_id = puzzle_id
 
-        karma_key = init_karma_key(redis_connection, self.puzzle, self.user_session.ip)
+        karma_key = init_karma_key(
+            redis_connection, self.puzzle, self.user_session.ip, current_app.config
+        )
         redis_connection.delete(karma_key)
 
         self.puzzle_pieces = self.user_session.get_data(
@@ -559,7 +561,7 @@ class PuzzlePieces:
         except Exception as err:
             # ("resetting karma for {ip}".format(ip=self.user_session.ip))
             karma_key = init_karma_key(
-                redis_connection, self.puzzle, self.user_session.ip
+                redis_connection, self.puzzle, self.user_session.ip, current_app.config
             )
             redis_connection.delete(karma_key)
             redis_connection.zrem("bannedusers", self.user_session.shareduser)
@@ -591,7 +593,10 @@ class PuzzlePieces:
                     # current_app.logger.debug('move exception {}'.format(err))
                     # current_app.logger.debug("resetting karma for {ip}".format(ip=self.user_session.ip))
                     karma_key = init_karma_key(
-                        redis_connection, self.puzzle, self.user_session.ip
+                        redis_connection,
+                        self.puzzle,
+                        self.user_session.ip,
+                        current_app.config,
                     )
                     redis_connection.delete(karma_key)
                     redis_connection.zrem("bannedusers", self.user_session.shareduser)
@@ -603,7 +608,10 @@ class PuzzlePieces:
                 if puzzle_pieces_move["karma"] < 2:
                     # print("resetting karma for {ip}".format(ip=self.user_session.ip))
                     karma_key = init_karma_key(
-                        redis_connection, self.puzzle, self.user_session.ip
+                        redis_connection,
+                        self.puzzle,
+                        self.user_session.ip,
+                        current_app.config,
                     )
                     redis_connection.delete(karma_key)
             else:

@@ -1,8 +1,7 @@
 import { html, render } from "lit-html";
 import { classMap } from "lit-html/directives/class-map.js";
 
-import { puzzleService, KarmaData } from "../puzzle-pieces/puzzle.service";
-import { streamService } from "../puzzle-pieces/stream.service";
+import { streamService, KarmaData } from "../puzzle-pieces/stream.service";
 
 import "./puzzle-karma-alert.css";
 
@@ -31,18 +30,8 @@ customElements.define(
       super();
       this.instanceId = PmPuzzleKarmaAlert._instanceId;
 
-      puzzleService.subscribe(
-        "karma/updated",
-        this.updateKarmaValue.bind(this),
-        this.instanceId
-      );
       streamService.subscribe(
         "karma/updated",
-        this.updateKarmaValue.bind(this),
-        this.instanceId
-      );
-      puzzleService.subscribe(
-        "piece/move/rejected",
         this.updateKarmaValue.bind(this),
         this.instanceId
       );
@@ -96,9 +85,7 @@ customElements.define(
     }
 
     disconnectedCallback() {
-      puzzleService.unsubscribe("karma/updated", this.instanceId);
       streamService.unsubscribe("karma/updated", this.instanceId);
-      puzzleService.unsubscribe("piece/move/rejected", this.instanceId);
     }
   }
 );

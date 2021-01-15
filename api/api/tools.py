@@ -73,18 +73,19 @@ def formatBitMovementString(user_id, x="", y=""):
     return u":{user_id}:{x}:{y}".format(**locals())
 
 
-def init_karma_key(redis_connection, puzzle, ip):
+def init_karma_key(redis_connection, puzzle, ip, app_config):
     """
     Initialize the karma value and expiration if not set.
     """
     karma_key = "karma:{puzzle}:{ip}".format(puzzle=puzzle, ip=ip)
-    if redis_connection.setnx(karma_key, INITIAL_KARMA):
-        redis_connection.expire(karma_key, HOUR)
+    if redis_connection.setnx(karma_key, app_config["INITIAL_KARMA"]):
+        redis_connection.expire(karma_key, app_config["KARMA_POINTS_EXPIRE"])
     return karma_key
 
 
-def get_public_karma_points(redis_connection, ip, user, puzzle):
-    karma_key = init_karma_key(redis_connection, puzzle, ip)
+def get_public_karma_points(redis_connection, ip, user, puzzle, app_config):
+    # TODO: return sum of recent points and karma points
+    karma_key = init_karma_key(redis_connection, puzzle, ip, app_config)
     points_key = "points:{user}".format(user=user)
     recent_points = min(old_div(100, 2), int(redis_connection.get(points_key) or 0))
     karma = min(old_div(100, 2), int(redis_connection.get(karma_key)))

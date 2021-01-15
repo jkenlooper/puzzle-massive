@@ -750,46 +750,6 @@ class InternalUserDetailsView(MethodView):
         return make_response(json.jsonify(user_details), 200)
 
 
-class AdminBlockedPlayersList(MethodView):
-    """
-    ip:
-        user:
-            timestamp:
-            recent_points:
-            puzzles: []
-    """
-
-    def get(self):
-        blocked = {}
-
-        blockedplayers = redis_connection.zrevrange(
-            "blockedplayers", 0, -1, withscores=True
-        )
-        blockedplayers_puzzle = redis_connection.zrange(
-            "blockedplayers:puzzle", 0, -1, withscores=True
-        )
-
-        # Add ip -> user -> timestamp
-        for (ip_user, timestamp) in blockedplayers:
-            (ip, user) = ip_user.split("-")
-            if not blocked.get(ip):
-                blocked[ip] = {}
-            blocked[ip][user] = {"timestamp": timestamp}
-
-        # Set puzzles and recent points
-        for (ip_user_puzzle, recent_points) in blockedplayers_puzzle:
-            (ip, user, puzzle) = ip_user_puzzle.split("-")
-            if not blocked[ip][user].get("puzzles"):
-                blocked[ip][user]["puzzles"] = []
-            blocked[ip][user]["puzzles"].append(
-                {"puzzle": puzzle, "points": recent_points}
-            )
-            # sorted by asc so the last will be the highest
-            blocked[ip][user]["recent_points"] = recent_points
-
-        return json.jsonify(blocked)
-
-
 class AdminBannedUserList(MethodView):
     """
     user:

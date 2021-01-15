@@ -217,6 +217,14 @@ EMAIL_SENDER="${EMAIL_SENDER}"
 EMAIL_MODERATOR="${EMAIL_MODERATOR}"
 
 # Puzzle settings
+# The karma points shown to a player is the sum of recent_points and karma points.
+# Recent points are per player
+MAX_RECENT_POINTS = 25
+RECENT_POINTS_EXPIRE = 1209600 # 14 days
+# Karma points are per puzzle for the players on that network
+INITIAL_KARMA = 10
+MAX_KARMA = 25
+KARMA_POINTS_EXPIRE = 3600  # hour in seconds
 MINIMUM_PIECE_COUNT = 20
 MAX_POINT_COST_FOR_REBUILDING = 1000
 MAX_POINT_COST_FOR_DELETING = 1000

@@ -1,8 +1,10 @@
+/* 1. Default to not show karma alert status if above karma-level. */
+
 .pm-PuzzleKarmaAlert-status {
   display: none;
   color: black;
   pointer-events: none;
-  opacity: 0.5;
+  opacity: 0; /* 1 */
   position: fixed;
   top: 100vh;
   left: 100vw;
@@ -32,4 +34,7 @@
   opacity: 0.7;
   box-shadow: 0 0 0px 0px black;
   background-color: black;
+}
+.pm-PuzzleKarmaAlert-status[data-karma-level="2"] {
+  opacity: 0.5;
 }

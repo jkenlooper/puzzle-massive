@@ -23,11 +23,7 @@ from api.constants import COMPLETED, QUEUE_END_OF_LINE, PRIVATE, SKILL_LEVEL_RAN
 from api.piece_mutate import PieceMutateProcess, PieceMutateError
 
 KARMA_POINTS_EXPIRE = 3600  # hour in seconds
-RECENT_POINTS_EXPIRE = 7200
 PIECE_GROUP_MOVE_MAX_BEFORE_PENALTY = 5
-MAX_RECENT_POINTS = 25
-MAX_KARMA = 25
-MIN_KARMA = int(old_div(MAX_KARMA, 2)) * -1  # -12
 
 skill_level_intervals = list(map(lambda x: x[1], SKILL_LEVEL_RANGES))
 skill_level_intervals.sort()
@@ -48,10 +44,10 @@ def get_earned_points(pieces, permission=None):
     return len(skill_level_intervals)
 
 
-def attempt_piece_movement(ip, user, puzzleData, piece, x, y, r, karma_change):
+def attempt_piece_movement(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
     try:
         (msg, karma_change) = translate(
-            ip, user, puzzleData, piece, x, y, r, karma_change,
+            ip, user, puzzleData, piece, x, y, r, karma_change, karma
         )
     except (PieceMutateError, WatchError):
         current_app.logger.debug(sys.exc_info()[0])
@@ -78,7 +74,7 @@ def attempt_piece_movement(ip, user, puzzleData, piece, x, y, r, karma_change):
     return (msg, karma_change)
 
 
-def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
+def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
     # start = time.perf_counter()
 
     def publishMessage(msg, karma_change, karma, points=0, complete=False):
@@ -91,6 +87,10 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
         )
 
         now = int(time.time())
+        points_key = "points:{user}".format(user=user)
+        recent_points = int(redis_connection.get(points_key) or 0)
+        if karma_change < 0 and karma <= 0 and recent_points > 0:
+            redis_connection.decr(points_key)
 
         redis_connection.zadd("pcupdates", {puzzle: now})
 
@@ -111,32 +111,31 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
                 amount=points,
             )
             redis_connection.zincrby("rank", amount=1, value=user)
-            points_key = "points:{user}".format(user=user)
             pieces = int(puzzleData["pieces"])
             # Skip increasing dots if puzzle is private
             earns = get_earned_points(pieces, permission=puzzleData.get("permission"))
 
-            karma = int(redis_connection.get(karma_key))
+            # karma = int(redis_connection.get(karma_key))
             ## Max out recent points
-            # if earns != 0:
-            #    recent_points = int(redis_connection.get(points_key) or 0)
-            #    if karma + 1 + recent_points + earns < MAX_KARMA:
-            #        redis_connection.incr(points_key, amount=earns)
+            if (
+                earns != 0
+                and karma >= current_app.config["MAX_KARMA"]
+                and recent_points < current_app.config["MAX_RECENT_POINTS"]
+            ):
+                recent_points = redis_connection.incr(points_key)
             # Doing small puzzles doesn't increase recent points, just extends points expiration.
-            redis_connection.expire(points_key, RECENT_POINTS_EXPIRE)
+            redis_connection.expire(
+                points_key, current_app.config["RECENT_POINTS_EXPIRE"]
+            )
 
-            karma_change += 1
             # Extend the karma points expiration since it has increased
-            redis_connection.expire(karma_key, KARMA_POINTS_EXPIRE)
+            redis_connection.expire(
+                karma_key, current_app.config["KARMA_POINTS_EXPIRE"]
+            )
             # Max out karma
-            if karma < MAX_KARMA:
-                redis_connection.incr(karma_key)
-            else:
-                # Max out points
-                if earns != 0:
-                    recent_points = int(redis_connection.get(points_key) or 0)
-                    if recent_points + earns <= MAX_RECENT_POINTS:
-                        redis_connection.incr(points_key, amount=earns)
+            if karma < current_app.config["MAX_KARMA"]:
+                karma = redis_connection.incr(karma_key)
+                karma_change += 1
 
             redis_connection.incr("batchpoints:{user}".format(user=user), amount=earns)
 
@@ -185,7 +184,10 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
         if karma_change:
             sse.publish(
                 "{user}:{piece}:{karma}:{karma_change}".format(
-                    user=user, piece=piece, karma=karma, karma_change=karma_change
+                    user=user,
+                    piece=piece,
+                    karma=karma + recent_points,
+                    karma_change=karma_change,
                 ),
                 type="karma",
                 channel="puzzle:{puzzle_id}".format(puzzle_id=puzzleData["puzzle_id"]),
@@ -197,12 +199,9 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
         # return topic and msg mostly for testing
         return (msg, karma_change)
 
-    p = ""
-    points = 0
     puzzle = puzzleData["puzzle"]
 
-    karma_key = init_karma_key(redis_connection, puzzle, ip)
-    karma = int(redis_connection.get(karma_key))
+    karma_key = "karma:{puzzle}:{ip}".format(puzzle=puzzle, ip=ip)
 
     pc_puzzle_piece_key = "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
 
@@ -256,8 +255,9 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
             )
             > 0
         ):
-            if karma > MIN_KARMA:
-                redis_connection.decr(karma_key)
+            if karma > 0:
+                karma = redis_connection.decr(karma_key)
+            karma_change -= 1
 
         return publishMessage(msg, karma_change, karma)
     elif status == "moved":
@@ -274,9 +274,9 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change):
                 len(piece_mutate_process.all_other_pieces_in_piece_group)
                 > PIECE_GROUP_MOVE_MAX_BEFORE_PENALTY
             ):
-                if karma > MIN_KARMA:
-                    redis_connection.decr(karma_key)
-                    karma_change -= 1
+                if karma > 0:
+                    karma = redis_connection.decr(karma_key)
+                karma_change -= 1
         return publishMessage(msg, karma_change, karma)
     elif status == "joined":
         return publishMessage(msg, karma_change, karma, points=4, complete=False,)

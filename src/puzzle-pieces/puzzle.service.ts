@@ -50,20 +50,12 @@ export interface PieceData extends DefaultPiece {
   active?: boolean;
   pending?: boolean;
   status?: string; // TODO: use when move to a state machine
-  karma?: number | boolean; // response from move request
-  karmaChange?: number | boolean; // response from move request
   origin?: any; // updated after piece movements
   pieceMovementId?: number; // updated after piece movements
 }
 
 interface Pieces {
   [index: number]: PieceData;
-}
-
-export interface KarmaData {
-  id: number;
-  karma: number;
-  karmaChange: number | boolean;
 }
 
 enum PieceMoveErrorTypes {
@@ -120,7 +112,6 @@ const maxSelectedPieces = 1;
 type PiecesMutateCallback = (data: Array<PieceData>) => any;
 type PiecesShadowMutateCallback = (data: Array<PieceData>) => any;
 type PiecesUpdateCallback = (data: Array<PieceData>) => any;
-type KarmaUpdatedCallback = (data: KarmaData) => any;
 type PieceMoveRejectedCallback = (data: PieceData) => any;
 type PieceMoveBlockedCallback = (data: PieceMoveError) => any;
 type PiecesInfoToggleMovableCallback = (toggle: any) => any;
@@ -128,7 +119,6 @@ type PiecesInfoPauseResumeCallback = (pause: any) => any;
 const piecesMutate = Symbol("pieces/mutate");
 const piecesShadowMutate = Symbol("pieces/shadow-mutate");
 const piecesUpdate = Symbol("pieces/update");
-const karmaUpdated = Symbol("karma/updated");
 const pieceMoveRejected = Symbol("piece/move/rejected");
 const pieceMoveBlocked = Symbol("piece/move/blocked");
 const piecesInfoToggleMovable = Symbol("pieces/info/toggle-movable");
@@ -138,7 +128,6 @@ const topics = {
   "pieces/mutate": piecesMutate,
   "pieces/shadow-mutate": piecesShadowMutate,
   "pieces/update": piecesUpdate,
-  "karma/updated": karmaUpdated,
   "piece/move/rejected": pieceMoveRejected,
   "piece/move/blocked": pieceMoveBlocked,
   "pieces/info/toggle-movable": piecesInfoToggleMovable,
@@ -204,7 +193,6 @@ class PuzzleService {
   [piecesMutate]: Map<string, PiecesMutateCallback> = new Map();
   [piecesShadowMutate]: Map<string, PiecesShadowMutateCallback> = new Map();
   [piecesUpdate]: Map<string, PiecesUpdateCallback> = new Map();
-  [karmaUpdated]: Map<string, KarmaUpdatedCallback> = new Map();
   [pieceMoveRejected]: Map<string, PieceMoveRejectedCallback> = new Map();
   [pieceMoveBlocked]: Map<string, PieceMoveBlockedCallback> = new Map();
   [piecesInfoToggleMovable]: Map<
@@ -298,7 +286,6 @@ class PuzzleService {
       | PiecesMutateCallback
       | PiecesShadowMutateCallback
       | PiecesUpdateCallback
-      | KarmaUpdatedCallback
       | PieceMoveRejectedCallback
       | PiecesInfoToggleMovableCallback
       | PiecesInfoPauseResumeCallback,
@@ -469,47 +456,51 @@ class PuzzleService {
           //  msg: "Unable to move that piece at this time.",
           //  reason: patchError.response,
           //};
-          const responseObj = patchError.body;
-          if (patchError.status === 429) {
-            self._broadcast(pieceMoveBlocked, responseObj);
-            self.onPieceMoveRejected({
-              id: id,
-              x: origin.x,
-              y: origin.y,
-              r: origin.r,
-            });
+          debugger;
+          if (!patchError.body) {
+            console.error(patchError);
           } else {
-            switch (responseObj.type) {
-              case PieceMoveErrorTypes.invalid:
-              case PieceMoveErrorTypes.missing:
-              case PieceMoveErrorTypes.error:
-              case PieceMoveErrorTypes.bannedusers:
-              case PieceMoveErrorTypes.blockedplayer:
-                self._broadcast(pieceMoveBlocked, responseObj);
-                break;
-              case PieceMoveErrorTypes.expiredtoken: // TODO: should handle expiredtoken better
-              case PieceMoveErrorTypes.immovable: // piece may have become immovable after token request
-              case PieceMoveErrorTypes.invalidpiecemove:
-              case PieceMoveErrorTypes.proximity:
-                // Skip broadcasting these errors so no alert message is shown.
-                break;
-              default:
-                if (!responseObj.timeout) {
-                  const expire = new Date().getTime() / 1000 + 5;
-                  responseObj.expires = expire;
-                  responseObj.timeout = 5;
-                }
-                self._broadcast(pieceMoveBlocked, responseObj);
-                break;
+            const responseObj = patchError.body;
+            if (patchError.status === 429) {
+              self._broadcast(pieceMoveBlocked, responseObj);
+              self.onPieceMoveRejected({
+                id: id,
+                x: origin.x,
+                y: origin.y,
+                r: origin.r,
+              });
+            } else {
+              switch (responseObj.type) {
+                case PieceMoveErrorTypes.invalid:
+                case PieceMoveErrorTypes.missing:
+                case PieceMoveErrorTypes.error:
+                case PieceMoveErrorTypes.bannedusers:
+                case PieceMoveErrorTypes.blockedplayer:
+                  self._broadcast(pieceMoveBlocked, responseObj);
+                  break;
+                case PieceMoveErrorTypes.expiredtoken: // TODO: should handle expiredtoken better
+                case PieceMoveErrorTypes.immovable: // piece may have become immovable after token request
+                case PieceMoveErrorTypes.invalidpiecemove:
+                case PieceMoveErrorTypes.proximity:
+                  // Skip broadcasting these errors so no alert message is shown.
+                  break;
+                default:
+                  if (!responseObj.timeout) {
+                    const expire = new Date().getTime() / 1000 + 5;
+                    responseObj.expires = expire;
+                    responseObj.timeout = 5;
+                  }
+                  self._broadcast(pieceMoveBlocked, responseObj);
+                  break;
+              }
+              const pieceMovementData: PieceMovementData = {
+                id: id,
+                x: origin.x,
+                y: origin.y,
+                r: origin.r,
+              };
+              self.onPieceMoveRejected(pieceMovementData);
             }
-            const pieceMovementData: PieceMovementData = {
-              id: id,
-              x: origin.x,
-              y: origin.y,
-              r: origin.r,
-              karma: responseObj.karma,
-            };
-            self.onPieceMoveRejected(pieceMovementData);
           }
           // Reject with piece info from server and fallback to origin if that also fails
           const fetchPuzzlePieceService = new FetchService(
@@ -571,7 +562,6 @@ class PuzzleService {
     if (index === -1) {
       // add the pieceID to the end of the array
       this.selectedPieces.push(pieceID);
-      this.pieces[pieceID].karma = false; // TODO: why set to false?
       // TODO: status is set to active
       this.pieces[pieceID].active = true;
       this.pieces[pieceID].origin = {

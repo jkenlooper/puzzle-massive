@@ -6,12 +6,17 @@ import {
   puzzleStreamMachine,
   RECONNECT_INTERVAL,
 } from "./puzzle-stream-machine";
-import { KarmaData } from "../puzzle-pieces/puzzle.service";
 import userDetailsService from "../site/user-details.service";
 import { Status } from "../site/puzzle-images.service";
 
 // Set ping interval to be one less minute than 5.
 const PING_INTERVAL = 4 * 60 * 1000;
+
+export interface KarmaData {
+  id: number;
+  karma: number;
+  karmaChange: number | boolean;
+}
 
 export interface PieceMovementData {
   id: number;
@@ -20,7 +25,6 @@ export interface PieceMovementData {
   x?: number;
   y?: number;
   r?: number;
-  karma?: number; // from PuzzleService piece/move/rejected
 }
 
 export interface BitMovementData {

@@ -229,6 +229,7 @@ class BumpMinimumDotsForPlayers(Task):
             self.log_task()
 
 
+# TODO: remove dead code
 class RemoveOldPZQActivity(Task):
     "Remove older puzzle piece movement activity for worker queues"
     interval = 300 * 2
@@ -694,6 +695,7 @@ class SendDigestEmailForAdmin(Task):
 task_registry = [
     AutoRebuildCompletedPuzzle,
     BumpMinimumDotsForPlayers,
+    # TODO: remove dead code
     RemoveOldPZQActivity,
     UpdateModifiedDateOnPuzzle,
     UpdatePlayer,
