@@ -506,7 +506,7 @@ customElements.define(
         }
 
         // Toggle the is-active class
-        if (piece.active || puzzleService.isWaitingOnMoveRequest) {
+        if (piece.active || puzzleService.isWaitingOnMoveRequest !== false) {
           $piece.classList.add("is-active");
         } else {
           $piece.classList.remove("is-active");

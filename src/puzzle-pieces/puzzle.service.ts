@@ -188,7 +188,8 @@ class PuzzleService {
   private instanceId = "puzzleService";
   private _showMovable = false;
   private _piecesPaused = false;
-  public isWaitingOnMoveRequest = false;
+  public isWaitingOnMoveRequest: number | boolean = false;
+  private resetTimeoutForOnMoveRequest: undefined | number;
 
   [piecesMutate]: Map<string, PiecesMutateCallback> = new Map();
   [piecesShadowMutate]: Map<string, PiecesShadowMutateCallback> = new Map();
@@ -432,7 +433,6 @@ class PuzzleService {
       return;
     }
 
-    this.isWaitingOnMoveRequest = true;
     pieceMovement.moveRequest = function moveRequest() {
       x = Math.round(Number(x));
       y = Math.round(Number(y));
@@ -527,9 +527,6 @@ class PuzzleService {
                 });
               }
             });
-        })
-        .finally(() => {
-          self.isWaitingOnMoveRequest = false;
         });
     };
   }
@@ -603,6 +600,7 @@ class PuzzleService {
   }
 
   dropSelectedPieces(x, y, scale) {
+    this.isWaitingOnMoveRequest = this.selectedPieces[0];
     // Update piece locations
     this.selectedPieces.forEach((pieceID) => {
       let piece = this.pieces[pieceID];
@@ -619,17 +617,20 @@ class PuzzleService {
     this._broadcast(piecesUpdate, pieces);
 
     // Send the updates
-    this.togglePieceMovements(false);
-    this.selectedPieces.forEach((pieceID) => {
-      let piece = this.pieces[pieceID];
-      this.move(
-        pieceID,
-        piece.x,
-        piece.y,
-        "-",
-        piece.origin,
-        piece.pieceMovementId
-      );
+    Promise.allSettled(
+      this.selectedPieces.map((pieceID) => {
+        let piece = this.pieces[pieceID];
+        return this.move(
+          pieceID,
+          piece.x,
+          piece.y,
+          "-",
+          piece.origin,
+          piece.pieceMovementId
+        );
+      })
+    ).then(() => {
+      this.togglePieceMovements(false);
     });
 
     // Reset the selectedPieces
@@ -665,6 +666,12 @@ class PuzzleService {
     this._broadcast(piecesMutate, [piece]);
     if (this.piecesPaused) {
       this._broadcast(piecesShadowMutate, [piece]);
+    }
+    if (data.id === this.isWaitingOnMoveRequest) {
+      window.clearTimeout(this.resetTimeoutForOnMoveRequest);
+      this.resetTimeoutForOnMoveRequest = window.setTimeout(() => {
+        this.isWaitingOnMoveRequest = false;
+      }, 1);
     }
   }
 

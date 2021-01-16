@@ -396,7 +396,8 @@ customElements.define(
       if (data.expires && typeof data.expires === "number") {
         const expireDate = new Date(data.expires * 1000);
         this.reason =
-          this.reason + ` Expires: ${expireDate.toLocaleTimeString()}`;
+          this.reason +
+          ` Expires: ${expireDate.toLocaleDateString()} ${expireDate.toLocaleTimeString()}`;
       }
 
       if (data.timeout && typeof data.timeout === "number") {

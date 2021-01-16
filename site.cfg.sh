@@ -225,6 +225,23 @@ RECENT_POINTS_EXPIRE = 1209600 # 14 days
 INITIAL_KARMA = 10
 MAX_KARMA = 25
 KARMA_POINTS_EXPIRE = 3600  # hour in seconds
+# Timeouts in seconds for each time a player gets blocked on a puzzle. These are
+# network specific (IP address) and will reset (expire) on the last item in the
+# list. For example, the first time a player gets down to 0 karma and gets
+# blocked for a puzzle they will need to wait 30 seconds until being able to
+# move pieces on that puzzle. The next time a player on that same network gets
+# blocked on a puzzle they will need to wait 300 seconds. If no players on that
+# network are blocked on a puzzle after the last timeout (3 days) the list is
+# reset and the next player that gets blocked will again be for 30 seconds.
+# The last item in this list should always be the longest.
+BLOCKEDPLAYER_EXPIRE_TIMEOUTS = [
+    30,             # 30 seconds
+    300,            # 5 minutes
+    3600,           # 1 hour
+    3600 * 3,       # 3 hours
+    3600 * 24,      # 1 day
+    3600 * 24 * 3,  # 3 days
+]
 MINIMUM_PIECE_COUNT = 20
 MAX_POINT_COST_FOR_REBUILDING = 1000
 MAX_POINT_COST_FOR_DELETING = 1000

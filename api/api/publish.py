@@ -65,7 +65,6 @@ from api.user import user_id_from_ip, user_not_banned, increase_ban_time
 HOUR = 3600  # hour in seconds
 MINUTE = 60  # minute in seconds
 
-BLOCKEDPLAYER_EXPIRE_TIMEOUT = HOUR
 MOVES_BEFORE_PENALTY = 12
 STACK_PENALTY = 1
 HOTSPOT_EXPIRE = 30
@@ -588,6 +587,35 @@ class PuzzlePiecesMovePublishView(MethodView):
         y
         r
         """
+
+        def _blockplayer():
+            timeouts = current_app.config["BLOCKEDPLAYER_EXPIRE_TIMEOUTS"]
+            blocked_count_ip_key = f"blocked:{ip}"
+            expire_index = max(0, redis_connection.incr(blocked_count_ip_key) - 1)
+            redis_connection.expire(blocked_count_ip_key, timeouts[-1])
+            timeout = timeouts[min(expire_index, len(timeouts) - 1)]
+            expires = now + timeout
+            blockedplayers_for_puzzle_key = "blockedplayers:{puzzle}".format(
+                puzzle=puzzle
+            )
+            # Add the player to the blocked players list for the puzzle and
+            # extend the expiration of the key.
+            redis_connection.zadd(blockedplayers_for_puzzle_key, {user: expires})
+            redis_connection.expire(blockedplayers_for_puzzle_key, timeouts[-1])
+
+            err_msg = get_blockedplayers_err_msg(expires, expires - now)
+            sse.publish(
+                "{user}:{piece}:{karma}:{karma_change}".format(
+                    user=user,
+                    piece=piece,
+                    karma=karma + recent_points,
+                    karma_change=karma_change,
+                ),
+                type="karma",
+                channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_data["puzzle_id"]),
+            )
+            return make_response(json.jsonify(err_msg), 429)
+
         # start = time.perf_counter()
         ip = request.headers.get("X-Real-IP")
         user = int(current_app.secure_cookie.get("user") or user_id_from_ip(ip))
@@ -794,8 +822,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         recent_points = int(redis_connection.get(points_key) or "0")
 
         karma_key = init_karma_key(redis_connection, puzzle, ip, current_app.config)
-        # Set a limit to minimum karma so other players on the network can still play
-        karma = max(0, int(redis_connection.get(karma_key)))
+        karma = int(redis_connection.get(karma_key))
         karma_change = 0
         current_app.logger.debug(
             f"user: {user} ip: {ip} karma: {karma} recent_points {recent_points}"
@@ -876,39 +903,12 @@ class PuzzlePiecesMovePublishView(MethodView):
                     karma = redis_connection.decr(karma_key)
                 karma_change -= 1
 
-        if karma <= 0:
+        if karma_change < 0:
             # Decrease recent points for a piece move that decreased karma
             if recent_points > 0 and karma_change < 0:
                 recent_points = redis_connection.decr(points_key)
             if karma + recent_points <= 0:
-                expires = now + BLOCKEDPLAYER_EXPIRE_TIMEOUT
-                blockedplayers_for_puzzle_key = "blockedplayers:{puzzle}".format(
-                    puzzle=puzzle
-                )
-                # Add the player to the blocked players list for the puzzle and
-                # extend the expiration of the key.
-                redis_connection.zadd(blockedplayers_for_puzzle_key, {user: expires})
-                redis_connection.expire(
-                    blockedplayers_for_puzzle_key, BLOCKEDPLAYER_EXPIRE_TIMEOUT
-                )
-
-                # Reset the karma for the player
-                redis_connection.delete(karma_key)
-
-                err_msg = get_blockedplayers_err_msg(expires, expires - now)
-                sse.publish(
-                    "{user}:{piece}:{karma}:{karma_change}".format(
-                        user=user,
-                        piece=piece,
-                        karma=karma + recent_points,
-                        karma_change=karma_change,
-                    ),
-                    type="karma",
-                    channel="puzzle:{puzzle_id}".format(
-                        puzzle_id=puzzle_data["puzzle_id"]
-                    ),
-                )
-                return make_response(json.jsonify(err_msg), 429)
+                return _blockplayer()
 
         # TODO: delete dead code for using pzq_register and pzq_activity
         use_queue = False
@@ -1186,6 +1186,10 @@ class PuzzlePiecesMovePublishView(MethodView):
             type="move",
             channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id),
         )
+
+        if karma_change < 0:
+            if karma + recent_points <= 0:
+                return _blockplayer()
 
         return make_response("", 204)
 
