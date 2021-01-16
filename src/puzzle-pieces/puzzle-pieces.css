@@ -22,6 +22,9 @@
     0 0 0 20px rgba(255, 255, 255, 0.8);
 }
 
+.p.is-active {
+  transition-duration: 0s;
+}
 .p--dark.is-active {
 }
 
@@ -29,14 +32,7 @@
 }
 
 .p.is-pending,
-.p.is-active,
-.p.is-dragging {
-  transition-duration: 0s;
-}
-
-.p.is-pending,
-.pm-PuzzlePieces.show-movable .p.is-pending,
-.pm-PuzzlePieces.show-movable .p.is-dragging {
+.pm-PuzzlePieces.show-movable .p.is-pending {
   z-index: 13;
   box-shadow: 0px 0px 100px 0px currentColor;
 }
@@ -80,6 +76,18 @@
   border-radius: 5%;
   color: red;
   content: "-";
+}
+
+.p.is-dragging {
+  transition-duration: 0s;
+  z-index: 15;
+}
+
+.p.is-dragging .pm-PuzzlePieces.show-movable .p.is-dragging {
+  z-index: 15;
+}
+.pm-PuzzlePieces.show-movable .p.is-dragging {
+  box-shadow: 0px 0px 100px 0px currentColor;
 }
 
 /* shadowPiece */

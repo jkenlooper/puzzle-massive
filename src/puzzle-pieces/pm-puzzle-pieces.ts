@@ -517,6 +517,12 @@ customElements.define(
         } else {
           $piece.classList.remove("is-pending");
         }
+        // Toggle the is-dragging class
+        if (piece.dragging) {
+          $piece.classList.add("is-dragging");
+        } else {
+          $piece.classList.remove("is-dragging");
+        }
       });
       if (tmp !== undefined && tmp.children.length) {
         this.$collection.appendChild(tmp);

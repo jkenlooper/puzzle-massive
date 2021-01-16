@@ -48,6 +48,7 @@ interface DefaultPiece {
 export interface PieceData extends DefaultPiece {
   id: number;
   active?: boolean;
+  dragging?: boolean;
   pending?: boolean;
   status?: string; // TODO: use when move to a state machine
   origin?: any; // updated after piece movements
@@ -456,7 +457,6 @@ class PuzzleService {
           //  msg: "Unable to move that piece at this time.",
           //  reason: patchError.response,
           //};
-          debugger;
           if (!patchError.body) {
             console.error(patchError);
           } else {
@@ -544,6 +544,7 @@ class PuzzleService {
       // remove the pieceID from the array
       this.selectedPieces.splice(index, 1);
       this.pieces[pieceID].active = false;
+      this.pieces[pieceID].dragging = false;
       this.cancelMove(
         pieceID,
         this.pieces[pieceID].origin,
@@ -561,6 +562,7 @@ class PuzzleService {
       this.selectedPieces.push(pieceID);
       // TODO: status is set to active
       this.pieces[pieceID].active = true;
+      this.pieces[pieceID].dragging = true;
       this.pieces[pieceID].origin = {
         x: this.pieces[pieceID].x,
         y: this.pieces[pieceID].y,
@@ -608,6 +610,7 @@ class PuzzleService {
       piece.y = y / scale - piece.h / 2;
       piece.pending = true;
       piece.active = false;
+      piece.dragging = false;
     });
 
     // Display the updates
