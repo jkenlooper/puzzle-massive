@@ -675,7 +675,6 @@ class PuzzlePiecesMovePublishView(MethodView):
             "table_height",
             "permission",
             "pieces",
-            "q",
         ]
         puzzle_data = dict(zip(pzq_fields, redis_connection.hmget(pzq_key, pzq_fields)))
         puzzle = puzzle_data.get("puzzle")
@@ -709,7 +708,6 @@ class PuzzlePiecesMovePublishView(MethodView):
                     "table_height": puzzle_data["table_height"],
                     "permission": puzzle_data["permission"],
                     "pieces": puzzle_data["pieces"],
-                    # "q": "", # q is set later
                 },
             )
             redis_connection.expire(pzq_key, 300)
@@ -910,260 +908,176 @@ class PuzzlePiecesMovePublishView(MethodView):
             if karma + recent_points <= 0:
                 return _blockplayer()
 
-        # TODO: delete dead code for using pzq_register and pzq_activity
-        use_queue = False
-        if use_queue:
-            if puzzle_data.get("q") == None or not redis_connection.sismember(
-                "pzq_register", puzzle_data.get("q")
-            ):
-                # Assign this puzzle to a piece translate worker queue with the
-                # least amount of activity.
-                queue_names = list(redis_connection.smembers("pzq_register"))
-                if len(queue_names) == 0:
-                    current_app.logger.error(
-                        "No workers found for piece translate queues (pzq_register)"
-                    )
-                    return make_response(
-                        json.jsonify(
-                            {
-                                "msg": "Server error",
-                                "type": "error",
-                                "reason": "No workers",
-                                "expires": now + 5,
-                                "timeout": 5,
-                            }
-                        ),
-                        500,
-                    )
-                queue_name = queue_names[0]
-                with redis_connection.pipeline(transaction=True) as pipe:
-                    for qn in queue_names:
-                        pipe.zcount(
-                            "pzq_activity:{queue_name}".format(queue_name=qn),
-                            timestamp_now - 300,
-                            timestamp_now,
-                        )
-                    least_active_queue = None
-                    count = None
-                    for (qn, activity_count) in zip(queue_names, pipe.execute()):
-                        if count is None or activity_count < count:
-                            queue_name = qn
-                            count = activity_count
-
-                redis_connection.hset(pzq_key, "q", queue_name)
-                puzzle_data["q"] = queue_name
-
         # end = time.perf_counter()
         # duration = end - start
         # redis_connection.rpush("testdata:publish", duration)
 
         # substart = time.perf_counter()
         piece_move_timeout = current_app.config["PIECE_MOVE_TIMEOUT"]
-        if not use_queue:
-            # Use a custom built and managed queue to prevent multiple processes
-            # from running the attempt_piece_movement concurrently on the same
-            # puzzle.
-            pzq_current_key = "pzq_current:{puzzle}".format(puzzle=puzzle)
-            pzq_next_key = "pzq_next:{puzzle}".format(puzzle=puzzle)
-            # The attempt_piece_movement bumps the pzq_current by 1
-            pzq_next = redis_connection.incr(pzq_next_key, amount=1)
-            # Set the expire in case it fails to reach expire in attempt_piece_movement.
-            redis_connection.expire(pzq_current_key, piece_move_timeout + 2)
-            redis_connection.expire(pzq_next_key, piece_move_timeout + 2)
 
-            attempt_count = 0
-            attempt_timestamp = time.time()
-            timeout = attempt_timestamp + piece_move_timeout
-            while attempt_timestamp < timeout:
-                pzq_current = int(redis_connection.get(pzq_current_key) or "0")
-                if pzq_current == pzq_next - 1:
-                    try:
-                        snapshot_msg = None
-                        snapshot_karma_change = False
-                        if snapshot_id:
-                            snapshot_key = f"snap:{snapshot_id}"
-                            snapshot = redis_connection.get(snapshot_key)
-                            if snapshot:
-                                snapshot_list = snapshot.split(":")
-                                snapshot_pzq = int(snapshot_list.pop(0))
-                                if snapshot_pzq != pzq_current:
-                                    # Check if any adjacent pieces are within range of x, y, r
-                                    # Within that list check if any have moved
-                                    # With the first one that has moved that was within range attempt piece movement on that by using adjusted x, y, r
-                                    snaps = list(
-                                        map(lambda x: x.split("_"), snapshot_list)
-                                    )
-                                    adjacent_piece_ids = list(
-                                        map(lambda x: int(x[0]), snaps)
-                                    )
-                                    adjacent_piece_props_snaps = list(
-                                        map(lambda x: x[1:], snaps)
-                                    )
-                                    property_list = [
-                                        "x",
-                                        "y",
-                                        "r",
-                                        # "g"
-                                    ]
-                                    results = []
-                                    with redis_connection.pipeline(
-                                        transaction=True
-                                    ) as pipe:
-                                        for adjacent_piece_id in adjacent_piece_ids:
-                                            pc_puzzle_adjacent_piece_key = (
-                                                f"pc:{puzzle}:{adjacent_piece_id}"
-                                            )
-                                            pipe.hmget(
-                                                pc_puzzle_adjacent_piece_key,
-                                                property_list,
-                                            )
-                                        results = pipe.execute()
-                                    for (
-                                        a_id,
-                                        snapshot_adjacent,
-                                        updated_adjacent,
-                                    ) in zip(
-                                        adjacent_piece_ids,
-                                        adjacent_piece_props_snaps,
-                                        results,
-                                    ):
-                                        updated_adjacent = list(
-                                            map(
-                                                lambda x: x
-                                                if isinstance(x, str)
-                                                else "",
-                                                updated_adjacent,
-                                            )
-                                        )
-                                        adjacent_offset = snapshot_adjacent.pop()
-                                        if (
-                                            snapshot_adjacent != updated_adjacent
-                                        ) and adjacent_offset:
-                                            (a_offset_x, a_offset_y) = map(
-                                                int, adjacent_offset.split(",")
-                                            )
-                                            (a_snap_x, a_snap_y) = map(
-                                                int, snapshot_adjacent[:2]
-                                            )
-                                            # Check if the x,y is within range of the adjacent piece that has moved
-                                            piece_join_tolerance = current_app.config[
-                                                "PIECE_JOIN_TOLERANCE"
-                                            ]
-                                            if (
-                                                abs((a_snap_x + a_offset_x) - x)
-                                                <= piece_join_tolerance
-                                                and abs((a_snap_y + a_offset_y) - y)
-                                                <= piece_join_tolerance
-                                            ):
-                                                (a_moved_x, a_moved_y) = map(
-                                                    int, updated_adjacent[:2]
-                                                )
-                                                # Decrease pzq_current since it is moving an extra piece out of turn
-                                                redis_connection.decr(
-                                                    pzq_current_key, amount=1
-                                                )
-                                                (
-                                                    snapshot_msg,
-                                                    snapshot_karma_change,
-                                                ) = attempt_piece_movement(
-                                                    ip,
-                                                    user,
-                                                    puzzle_data,
-                                                    piece,
-                                                    a_moved_x + a_offset_x,
-                                                    a_moved_y + a_offset_y,
-                                                    r,
-                                                    karma_change,
-                                                    karma,
-                                                )
-                                                break
-                    except:
-                        pzq_current = int(redis_connection.get(pzq_current_key) or "0")
-                        if pzq_current == pzq_next - 1:
-                            # skip this piece move attempt
-                            redis_connection.incr(pzq_current_key, amount=1)
-                        current_app.logger.warning(
-                            "results123 other error {}".format(sys.exc_info()[0])
-                        )
-                        raise
+        # Use a custom built and managed queue to prevent multiple processes
+        # from running the attempt_piece_movement concurrently on the same
+        # puzzle.
+        pzq_current_key = "pzq_current:{puzzle}".format(puzzle=puzzle)
+        pzq_next_key = "pzq_next:{puzzle}".format(puzzle=puzzle)
+        # The attempt_piece_movement bumps the pzq_current by 1
+        pzq_next = redis_connection.incr(pzq_next_key, amount=1)
+        # Set the expire in case it fails to reach expire in attempt_piece_movement.
+        redis_connection.expire(pzq_current_key, piece_move_timeout + 2)
+        redis_connection.expire(pzq_next_key, piece_move_timeout + 2)
 
-                    (msg, karma_change) = attempt_piece_movement(
-                        ip,
-                        user,
-                        puzzle_data,
-                        piece,
-                        x,
-                        y,
-                        r,
-                        karma_change or snapshot_karma_change,
-                        karma,
-                    )
-                    if isinstance(snapshot_msg, str) and isinstance(msg, str):
-                        msg = snapshot_msg + msg
-                    break
-                current_app.logger.debug(f"pzq_current is {pzq_current}")
-                attempt_timestamp = time.time()
-                attempt_count = attempt_count + 1
-                time.sleep(0.02)
-
-                # Decrease karma here to potentially block a player that
-                # continually tries to move pieces when a puzzle is too active.
-                if (
-                    len(
-                        {"all", "too_active"}.intersection(
-                            current_app.config["PUZZLE_RULES"]
-                        )
-                    )
-                    > 0
-                ) and karma > 0:
-                    karma = redis_connection.decr(karma_key)
-                    karma_change -= 1
-            current_app.logger.debug(
-                f"Puzzle ({puzzle}) piece move attempts: {attempt_count}"
-            )
-            if attempt_timestamp >= timeout:
-                current_app.logger.warn(
-                    f"Puzzle {puzzle} is too active. Attempt piece move timed out after trying {attempt_count} times."
-                )
-                err_msg = {
-                    "msg": "Piece movement timed out.",
-                    "type": "error",
-                    "reason": "Puzzle is too active",
-                    "timeout": piece_move_timeout,
-                }
-                return make_response(json.jsonify(err_msg), 503,)
-        else:
-            # Don't use a queue here. Creating a queue actually takes longer
-            # then processing the piece movment.
-            pz_translate_queue = Queue(
-                puzzle_data.get("q"), connection=redis_connection
-            )
-
-            # Push to queue for further processing by a single worker.
-            # Record timestamp of queue activity
-
-            redis_connection.zadd(
-                "pzq_activity:{queue_name}".format(queue_name=puzzle_data["q"]),
-                {timestamp_now: timestamp_now},
-            )
-            job = pz_translate_queue.enqueue_call(
-                func="api.jobs.pieceTranslate.attempt_piece_movement",
-                args=(ip, user, puzzle_data, piece, x, y, r, karma_change,),
-                result_ttl=1,
-                timeout=10,
-                ttl=None,
-                failure_ttl=1,
-            )
-            if current_app.config["DEBUG"] and job.get_status() == "queued":
+        attempt_count = 0
+        attempt_timestamp = time.time()
+        timeout = attempt_timestamp + piece_move_timeout
+        while attempt_timestamp < timeout:
+            pzq_current = int(redis_connection.get(pzq_current_key) or "0")
+            if pzq_current == pzq_next - 1:
                 try:
-                    job_q = job.get_position()
-                    if job_q:
-                        current_app.logger.debug(
-                            "piece movement job in position: {}".format(job_q)
-                        )
-                except ValueError as err:
-                    # Job may not be queued when get_position is called.
-                    pass
+                    snapshot_msg = None
+                    snapshot_karma_change = False
+                    if snapshot_id:
+                        snapshot_key = f"snap:{snapshot_id}"
+                        snapshot = redis_connection.get(snapshot_key)
+                        if snapshot:
+                            snapshot_list = snapshot.split(":")
+                            snapshot_pzq = int(snapshot_list.pop(0))
+                            if snapshot_pzq != pzq_current:
+                                # Check if any adjacent pieces are within range of x, y, r
+                                # Within that list check if any have moved
+                                # With the first one that has moved that was within range attempt piece movement on that by using adjusted x, y, r
+                                snaps = list(map(lambda x: x.split("_"), snapshot_list))
+                                adjacent_piece_ids = list(
+                                    map(lambda x: int(x[0]), snaps)
+                                )
+                                adjacent_piece_props_snaps = list(
+                                    map(lambda x: x[1:], snaps)
+                                )
+                                property_list = [
+                                    "x",
+                                    "y",
+                                    "r",
+                                    # "g"
+                                ]
+                                results = []
+                                with redis_connection.pipeline(
+                                    transaction=True
+                                ) as pipe:
+                                    for adjacent_piece_id in adjacent_piece_ids:
+                                        pc_puzzle_adjacent_piece_key = (
+                                            f"pc:{puzzle}:{adjacent_piece_id}"
+                                        )
+                                        pipe.hmget(
+                                            pc_puzzle_adjacent_piece_key, property_list,
+                                        )
+                                    results = pipe.execute()
+                                for (a_id, snapshot_adjacent, updated_adjacent,) in zip(
+                                    adjacent_piece_ids,
+                                    adjacent_piece_props_snaps,
+                                    results,
+                                ):
+                                    updated_adjacent = list(
+                                        map(
+                                            lambda x: x if isinstance(x, str) else "",
+                                            updated_adjacent,
+                                        )
+                                    )
+                                    adjacent_offset = snapshot_adjacent.pop()
+                                    if (
+                                        snapshot_adjacent != updated_adjacent
+                                    ) and adjacent_offset:
+                                        (a_offset_x, a_offset_y) = map(
+                                            int, adjacent_offset.split(",")
+                                        )
+                                        (a_snap_x, a_snap_y) = map(
+                                            int, snapshot_adjacent[:2]
+                                        )
+                                        # Check if the x,y is within range of the adjacent piece that has moved
+                                        piece_join_tolerance = current_app.config[
+                                            "PIECE_JOIN_TOLERANCE"
+                                        ]
+                                        if (
+                                            abs((a_snap_x + a_offset_x) - x)
+                                            <= piece_join_tolerance
+                                            and abs((a_snap_y + a_offset_y) - y)
+                                            <= piece_join_tolerance
+                                        ):
+                                            (a_moved_x, a_moved_y) = map(
+                                                int, updated_adjacent[:2]
+                                            )
+                                            # Decrease pzq_current since it is moving an extra piece out of turn
+                                            redis_connection.decr(
+                                                pzq_current_key, amount=1
+                                            )
+                                            (
+                                                snapshot_msg,
+                                                snapshot_karma_change,
+                                            ) = attempt_piece_movement(
+                                                ip,
+                                                user,
+                                                puzzle_data,
+                                                piece,
+                                                a_moved_x + a_offset_x,
+                                                a_moved_y + a_offset_y,
+                                                r,
+                                                karma_change,
+                                                karma,
+                                            )
+                                            break
+                except:
+                    pzq_current = int(redis_connection.get(pzq_current_key) or "0")
+                    if pzq_current == pzq_next - 1:
+                        # skip this piece move attempt
+                        redis_connection.incr(pzq_current_key, amount=1)
+                    current_app.logger.warning(
+                        "results123 other error {}".format(sys.exc_info()[0])
+                    )
+                    raise
+
+                (msg, karma_change) = attempt_piece_movement(
+                    ip,
+                    user,
+                    puzzle_data,
+                    piece,
+                    x,
+                    y,
+                    r,
+                    karma_change or snapshot_karma_change,
+                    karma,
+                )
+                if isinstance(snapshot_msg, str) and isinstance(msg, str):
+                    msg = snapshot_msg + msg
+                break
+            current_app.logger.debug(f"pzq_current is {pzq_current}")
+            attempt_timestamp = time.time()
+            attempt_count = attempt_count + 1
+            time.sleep(0.02)
+
+            # Decrease karma here to potentially block a player that
+            # continually tries to move pieces when a puzzle is too active.
+            if (
+                len(
+                    {"all", "too_active"}.intersection(
+                        current_app.config["PUZZLE_RULES"]
+                    )
+                )
+                > 0
+            ) and karma > 0:
+                karma = redis_connection.decr(karma_key)
+                karma_change -= 1
+        current_app.logger.debug(
+            f"Puzzle ({puzzle}) piece move attempts: {attempt_count}"
+        )
+        if attempt_timestamp >= timeout:
+            current_app.logger.warn(
+                f"Puzzle {puzzle} is too active. Attempt piece move timed out after trying {attempt_count} times."
+            )
+            err_msg = {
+                "msg": "Piece movement timed out.",
+                "type": "error",
+                "reason": "Puzzle is too active",
+                "timeout": piece_move_timeout,
+            }
+            return make_response(json.jsonify(err_msg), 503,)
 
         # subend = time.perf_counter()
         # subduration = subend - substart

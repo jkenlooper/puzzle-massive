@@ -41,15 +41,8 @@ class PuzzlePiecesView(MethodView):
         puzzle = result[0].get("puzzle")
         status = result[0].get("status")
 
-        # TODO: if puzzle is not in redis then create a job to convert and respond with a 202 Accepted
-        # if job is already active for this request respond with 202 Accepted
-
         # Load the piece data from sqlite on demand
         if not redis_connection.zscore("pcupdates", puzzle):
-            # if not redis_connection.exists('pc:{puzzle}:0'.format(puzzle=puzzle)):
-            # TODO: publish the job to the worker queue
-            # Respond with 202
-
             # Check redis memory usage and create cleanup job if it's past a threshold
             memory = redis_connection.info(section="memory")
             current_app.logger.info("used_memory: {used_memory_human}".format(**memory))

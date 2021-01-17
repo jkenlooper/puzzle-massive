@@ -18,7 +18,6 @@
 /api/puzzle-massive-api.service
 /api/puzzle-massive-artist.service
 /api/puzzle-massive-janitor.service
-/api/puzzle-massive-worker.service
 /api/puzzle-massive-scheduler.service
 /api/puzzle-massive-cache-purge.path
 /api/puzzle-massive-cache-purge.service

@@ -83,16 +83,6 @@ def init_karma_key(redis_connection, puzzle, ip, app_config):
     return karma_key
 
 
-def get_public_karma_points(redis_connection, ip, user, puzzle, app_config):
-    # TODO: return sum of recent points and karma points
-    karma_key = init_karma_key(redis_connection, puzzle, ip, app_config)
-    points_key = "points:{user}".format(user=user)
-    recent_points = min(old_div(100, 2), int(redis_connection.get(points_key) or 0))
-    karma = min(old_div(100, 2), int(redis_connection.get(karma_key)))
-    karma = max(0, min(old_div(100, 2), karma + recent_points))
-    return karma
-
-
 def deletePieceDataFromRedis(redis_connection, puzzle, all_pieces):
     groups = set()
     pzm_puzzle_key = "pzm:{puzzle}".format(puzzle=puzzle)

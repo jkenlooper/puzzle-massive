@@ -340,9 +340,6 @@ puzzle-massive-testdata instances --count=10 --min-pieces=20 --pieces=500;
 puzzle-massive-testdata puzzles --count=1 --pieces=2000 --size=3800x3500\!;
 ```
 
-<!-- TODO: Add section for running multiple workers that can either work on
-a single queue or different queues. -->
-
 <!-- TODO: Add a visual of how the different apps are currently set up. Should
 show the current limitations of the sqlite database and any apps that use it
 (have read access) are required to be on the same server. -->

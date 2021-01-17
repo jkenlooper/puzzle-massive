@@ -229,33 +229,6 @@ class BumpMinimumDotsForPlayers(Task):
             self.log_task()
 
 
-# TODO: remove dead code
-class RemoveOldPZQActivity(Task):
-    "Remove older puzzle piece movement activity for worker queues"
-    interval = 300 * 2
-
-    def __init__(self, id=None):
-        super().__init__(id, __class__.__name__)
-
-    def do_task(self):
-        super().do_task()
-
-        queue_names = list(redis_connection.smembers("pzq_register"))
-        made_change = False
-        for queue_name in queue_names:
-            current_app.logger.debug(
-                "Removing old piece movement activity for queue '{}'".format(queue_name)
-            )
-            count = redis_connection.zremrangebyscore(
-                "pzq_activity:{queue_name}".format(queue_name=queue_name),
-                0,
-                int(time()) - 300,
-            )
-            made_change = True if count else False
-        if made_change:
-            self.log_task()
-
-
 class UpdateModifiedDateOnPuzzle(Task):
     "Update the m_date for all recently updated puzzles based on pcupdates redis sorted set"
     interval = 15
@@ -695,8 +668,6 @@ class SendDigestEmailForAdmin(Task):
 task_registry = [
     AutoRebuildCompletedPuzzle,
     BumpMinimumDotsForPlayers,
-    # TODO: remove dead code
-    RemoveOldPZQActivity,
     UpdateModifiedDateOnPuzzle,
     UpdatePlayer,
     UpdatePuzzleStats,

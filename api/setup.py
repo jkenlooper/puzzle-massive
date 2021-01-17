@@ -19,7 +19,6 @@ setuptools.setup(
             "puzzle-massive-api = api.script:main",
             "puzzle-massive-janitor = api.janitor:main",
             "puzzle-massive-publish = api.publish:main",
-            "puzzle-massive-worker = api.worker:main",
             "puzzle-massive-artist = api.artist:main",
             "puzzle-massive-scheduler = api.scheduler:main",
             "puzzle-massive-testdata = api.testdata:main",
