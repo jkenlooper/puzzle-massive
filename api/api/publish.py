@@ -1050,6 +1050,8 @@ class PuzzlePiecesMovePublishView(MethodView):
             current_app.logger.debug(f"pzq_current is {pzq_current}")
             attempt_timestamp = time.time()
             attempt_count = attempt_count + 1
+            # TODO: The sleep time should be set based on an average time it
+            # takes to process piece movements.
             time.sleep(0.02)
 
             # Decrease karma here to potentially block a player that
