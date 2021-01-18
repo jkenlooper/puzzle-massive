@@ -276,8 +276,6 @@ class GalleryPuzzleListView(MethodView):
     """
     """
 
-    decorators = [user_not_banned]
-
     def get(self):
         """
         /newapi/gallery-puzzle-list/

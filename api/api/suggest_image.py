@@ -18,7 +18,8 @@ from .user import user_not_banned
 
 class SuggestImageView(MethodView):
     """
-    Handle suggest image form uploads
+    Handle suggest image form uploads.
+    Only the first 100 chars of the link and description are sent in the email message.
     """
 
     decorators = [user_not_banned]
@@ -49,10 +50,10 @@ class SuggestImageView(MethodView):
         # if permission != PUBLIC:
         #    permission = PUBLIC
 
-        description = escape(args.get("description", "").strip())[:1000]
+        description = escape(args.get("description", "").strip())[:100]
 
         # Check link and validate
-        link = url_fix(args.get("link", "").strip())[:1000]
+        link = url_fix(args.get("link", "").strip())[:100]
 
         if not link and not description:
             abort(400)

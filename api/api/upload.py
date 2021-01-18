@@ -7,6 +7,7 @@ import hashlib
 import threading
 import requests
 import subprocess
+import tempfile
 
 import sqlite3
 from PIL import Image
@@ -92,39 +93,39 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
         os.mkdir(puzzle_dir)
 
         # Convert the uploaded file to jpg
-        upload_file_path = os.path.join(puzzle_dir, filename)
-        upload_file.save(upload_file_path)
+        with tempfile.NamedTemporaryFile() as temp_upload_file:
+            upload_file.save(temp_upload_file)
 
-        # verify the image file format
-        identify_format = subprocess.check_output(
-            ["identify", "-format", "%m", upload_file_path], encoding="utf-8"
-        )
-        identify_format = identify_format.lower()
-        if identify_format not in ALLOWED_EXTENSIONS:
-            os.unlink(upload_file_path)
-            os.rmdir(puzzle_dir)
-            cur.close()
-            abort(400)
-
-        # Abort if imagemagick fails converting the image to jpg
-        try:
-            subprocess.check_call(
-                [
-                    "convert",
-                    upload_file_path,
-                    "-quality",
-                    "85%",
-                    "-format",
-                    "jpg",
-                    os.path.join(puzzle_dir, "original.jpg"),
-                ]
+            # verify the image file format
+            identify_format = subprocess.check_output(
+                ["identify", "-format", "%m", temp_upload_file.name], encoding="utf-8"
             )
-        except subprocess.CalledProcessError:
-            os.unlink(upload_file_path)
-            os.rmdir(puzzle_dir)
-            cur.close()
-            abort(400)
-        os.unlink(upload_file_path)
+            identify_format = identify_format.lower()
+            current_app.logger.debug(
+                f"identify_format {identify_format} in {ALLOWED_EXTENSIONS}"
+            )
+            if identify_format not in ALLOWED_EXTENSIONS:
+                os.rmdir(puzzle_dir)
+                cur.close()
+                abort(400)
+
+            # Abort if imagemagick fails converting the image to jpg
+            try:
+                subprocess.check_call(
+                    [
+                        "convert",
+                        temp_upload_file.name,
+                        "-quality",
+                        "85%",
+                        "-format",
+                        "jpg",
+                        os.path.join(puzzle_dir, "original.jpg"),
+                    ]
+                )
+            except subprocess.CalledProcessError:
+                os.rmdir(puzzle_dir)
+                cur.close()
+                abort(400)
 
         # The preview_full image is only created in the pieceRender process.
 
@@ -221,7 +222,7 @@ class PuzzleUploadView(MethodView):
         bg_color = check_bg_color(args.get("bg_color", "#808080")[:50])
 
         user = int(
-            current_app.secure_cookie.get(u"user")
+            current_app.secure_cookie.get("user")
             or user_id_from_ip(request.headers.get("X-Real-IP"))
         )
 
