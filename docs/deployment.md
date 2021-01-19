@@ -218,7 +218,9 @@ on the old server and copy all the data over to the new puzzle-massive-green ser
     printf 'Updating...' > /srv/puzzle-massive/root/puzzle-massive-message.html;
     sudo ./bin/appctl.sh stop;
     sudo ./bin/clear_nginx_cache.sh;
+    ./bin/puzzle-massive-api serve &
     ./bin/backup.sh -c;
+    fg # and ctrl-c to stop the puzzle-massive-api serve process
     ```
 
 2.  On the **new server** (puzzle-massive-green) the files from the old server will be copied over with

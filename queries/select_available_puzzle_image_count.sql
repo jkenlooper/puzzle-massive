@@ -22,6 +22,6 @@ and is_active in {active_status}
 and is_original in {original_type}
 and p.status in {status}
 and p.pieces >= :pieces_min
-and p.pieces <= :pieces_max
+and p.pieces < :pieces_max
 ) as puzzle_list
 ;

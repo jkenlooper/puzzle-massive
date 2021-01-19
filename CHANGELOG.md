@@ -33,6 +33,12 @@ Types of changes
   secondary menu on puzzle page.
 - Switched build to use rollup instead of webpack.
 
+### Fixed
+
+- Duplicate puzzles showing up in gallery puzzle list that were from Unsplash.
+  This fix requires executing the data fix sql:
+  [data-fix-2.8.2-to-2.9.0.sql](queries/data-fix-2.8.2-to-2.9.0.sql)
+
 ## [2.8.2] - 2020-07-16
 
 ### Fixed

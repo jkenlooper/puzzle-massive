@@ -166,14 +166,16 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
         },
     )
 
-    cur.execute(
-        fetch_query_string("add-puzzle-file.sql"),
-        {
-            "puzzle": puzzle,
-            "name": "preview_full",
-            "url": "/resources/{0}/preview_full.jpg".format(puzzle_id),
-        },
-    )
+    # The preview_full image is created in the unsplash_image_thread.
+    if not unsplash_match:
+        cur.execute(
+            fetch_query_string("add-puzzle-file.sql"),
+            {
+                "puzzle": puzzle,
+                "name": "preview_full",
+                "url": "/resources/{0}/preview_full.jpg".format(puzzle_id),
+            },
+        )
 
     classic_variant = cur.execute(
         fetch_query_string("select-puzzle-variant-id-for-slug.sql"), {"slug": CLASSIC}

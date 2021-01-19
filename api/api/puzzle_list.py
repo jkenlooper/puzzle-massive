@@ -310,4 +310,4 @@ class GalleryPuzzleListView(MethodView):
 
         cur.close()
 
-        return json.jsonify(response)
+        return make_response(json.jsonify(response), 200)

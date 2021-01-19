@@ -34,7 +34,7 @@ and is_active in {active_status}
 and is_original in {original_type}
 and p.status in {status}
 and p.pieces >= :pieces_min
-and p.pieces <= :pieces_max
+and p.pieces < :pieces_max
 
 order by p.queue, p.m_date is not null, strftime('%s','now') - strftime('%s', p.m_date) desc -- FILO for m_date
 
