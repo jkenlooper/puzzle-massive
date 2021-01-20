@@ -154,6 +154,9 @@ def make_app(config=None, database_writable=False, **kw):
         "/puzzle-pieces/<puzzle_id>/",
         view_func=PuzzlePiecesView.as_view("puzzle-pieces"),
     )
+    # TODO: add route to get the last puzzle piece movement data for the last 10
+    # seconds.
+
     # The puzzle-reset route is removed for now in favor of using
     # puzzle-rebuild. Keeping this here in case future updates need to implement
     # a way of resetting a puzzle.

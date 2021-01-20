@@ -23,15 +23,36 @@ Types of changes
 
 ## [Unreleased] - ...
 
+Improved how players can move pieces on a puzzle that is seeing lots of activity.
+
 ### Removed
 
 - Redis keys that were used for tracking blocked players: "blockedplayers" and "blockedplayers:puzzle"
+- Limits on puzzle pieces requests have been dropped in favor of caching the
+  response
 
 ### Changed
 
 - Optimized piece movement requests and moved piece movement latency to
   secondary menu on puzzle page.
 - Switched build to use rollup instead of webpack.
+- Show reload button when puzzle status changes
+- Get wider range of puzzles when auto rebuilding
+- Move latency info to secondary menu
+- Hide puzzle karma points after passing threshold
+- Reimplement dot cost for changing bit icon
+- Puzzle piece movement is handled by separate process
+- Puzzle piece transition uses a 'sneeze' effect for pieces moved by other players
+- Increase blocked player timeouts each time a player reaches 0 karma points
+- Hide player list for non recent players
+
+### Added
+
+- Puzzle rules configuration in the site.cfg
+- Other piece movements are temporarily paused for that player when they are moving
+  a piece. This allows the player to better join pieces that may have been
+  moved by others.
+- Shadows on pieces that have moved while paused
 
 ### Fixed
 
