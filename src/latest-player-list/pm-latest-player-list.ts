@@ -105,7 +105,7 @@ customElements.define(
                   <div
                     class="pm-LatestPlayerList-group pm-LatestPlayerList-group--lastHour"
                   >
-                    <details>
+                    <details ?open=${data.players.lastHour.length === 1}>
                       <summary>
                         ${data.players.lastHour.length > 1
                           ? data.players.lastHour.length
@@ -127,7 +127,7 @@ customElements.define(
                   <div
                     class="pm-LatestPlayerList-group pm-LatestPlayerList-group--lastSevenHours"
                   >
-                    <details>
+                    <details ?open=${data.players.lastSevenHours.length === 1}>
                       <summary>
                         ${data.players.lastSevenHours.length > 1
                           ? data.players.lastSevenHours.length
@@ -149,7 +149,7 @@ customElements.define(
                   <div
                     class="pm-LatestPlayerList-group pm-LatestPlayerList-group--rest"
                   >
-                    <details>
+                    <details ?open=${data.players.rest.length === 1}>
                       <summary>
                         ${data.players.rest.length === 1
                           ? html`players ${data.players.rest[0].timeSince} ago`
