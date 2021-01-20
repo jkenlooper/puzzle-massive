@@ -216,6 +216,14 @@ SMTP_PASSWORD="${SMTP_PASSWORD}"
 EMAIL_SENDER="${EMAIL_SENDER}"
 EMAIL_MODERATOR="${EMAIL_MODERATOR}"
 
+# The publish worker count is the number of workers that will handle piece
+# movement requests. Set to None to be based on cpu count.
+PUBLISH_WORKER_COUNT = 2
+
+# The stream worker count is the number of workers that will handle connections
+# to the stream. Set to None to be based on cpu count.
+STREAM_WORKER_COUNT = 2
+
 # Puzzle settings
 # The karma points shown to a player is the sum of recent_points and karma points.
 # Recent points are per player

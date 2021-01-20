@@ -6,6 +6,7 @@ journalctl --follow \
   _SYSTEMD_UNIT=puzzle-massive-api.service \
   _SYSTEMD_UNIT=puzzle-massive-artist.service \
   _SYSTEMD_UNIT=puzzle-massive-divulger.service \
+  _SYSTEMD_UNIT=puzzle-massive-stream.service \
   _SYSTEMD_UNIT=puzzle-massive-scheduler.service \
   _SYSTEMD_UNIT=puzzle-massive-cache-purge.path \
   _SYSTEMD_UNIT=puzzle-massive-cache-purge.service \

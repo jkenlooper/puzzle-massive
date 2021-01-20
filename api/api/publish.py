@@ -282,6 +282,7 @@ class PuzzlePieceTokenView(MethodView):
                 return make_response(json.jsonify(err_msg), 400)
             puzzle = result["id"]
 
+        puzzle = int(puzzle)
         pc_puzzle_piece_key = "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
         piece_properties = _int_piece_properties(
             redis_connection.hgetall(pc_puzzle_piece_key)
@@ -717,7 +718,7 @@ class PuzzlePiecesMovePublishView(MethodView):
             puzzle_data["table_height"] = int(puzzle_data["table_height"])
             puzzle_data["permission"] = int(puzzle_data["permission"])
             puzzle_data["pieces"] = int(puzzle_data["pieces"])
-        puzzle = puzzle_data["puzzle"]
+        puzzle = int(puzzle_data["puzzle"])
         puzzle_data["puzzle_id"] = puzzle_id
 
         # Token is to make sure puzzle is still in sync.
@@ -1130,8 +1131,7 @@ class StreamGunicornBase(gunicorn.app.base.BaseApplication):
 
 
 def number_of_workers():
-    return 2
-    # return (multiprocessing.cpu_count() * 2) + 1
+    return (multiprocessing.cpu_count() * 2) + 1
 
 
 def serve(config_file, cookie_secret):
@@ -1153,7 +1153,7 @@ def serve(config_file, cookie_secret):
         "timeout": 5,
         "bind": "%s:%s" % (host, port),
         "worker_class": "gevent",
-        "workers": number_of_workers(),
+        "workers": app.config.get("PUBLISH_WORKER_COUNT", number_of_workers()),
         "reload": debug,
         "preload_app": True,
         # Restart workers after this many requests just in case there are memory leaks

@@ -1,12 +1,10 @@
 import os
 import logging
 
-from werkzeug.local import LocalProxy
-from flask import Flask, g, request, current_app, make_response, abort, json
+from flask import Flask, request, current_app, abort
 from flask_sse import sse
+import requests
 
-from api.flask_secure_cookie import SecureCookie
-from api.database import fetch_query_string, rowify
 from api.constants import (
     ACTIVE,
     IN_QUEUE,
@@ -20,22 +18,10 @@ from api.constants import (
     RENDERING_FAILED,
     MAINTENANCE,
 )
-from api.user import user_id_from_ip
-from api.tools import get_db, files_loader
 
 
 class StreamApp(Flask):
     "Stream App"
-
-
-def set_db():
-    db = getattr(g, "_database", None)
-    if db is None:
-        db = g._database = get_db(current_app.config)
-    return db
-
-
-db = LocalProxy(set_db)
 
 
 def make_app(config=None, **kw):
@@ -49,24 +35,21 @@ def make_app(config=None, **kw):
 
     app.config.update(kw)
 
-    app.secure_cookie = SecureCookie(
-        app, cookie_secret=app.config.get("SECURE_COOKIE_SECRET")
-    )
-    app.queries = files_loader("queries")
-
-    @app.teardown_appcontext
-    def teardown_db(exception):
-        db = getattr(g, "_database", None)
-        if db is not None:
-            db.close()
-
     @app.errorhandler(400)
     def invalid_request(error):
         return "Not valid", 400
 
     @app.errorhandler(403)
-    def invalid_request(error):
+    def forbidden_request(error):
         return "No access", 403
+
+    @app.errorhandler(404)
+    def notfound_request(error):
+        return "Not found", 404
+
+    @app.errorhandler(500)
+    def error_request(error):
+        return "Error", 500
 
     @sse.before_request
     def check_puzzle_status():
@@ -77,50 +60,34 @@ def make_app(config=None, **kw):
         elif channel_name.startswith("puzzle:"):
             puzzle_id = channel_name[len("puzzle:") :]
 
-            # check if player is logged in
-            user = current_app.secure_cookie.get(
-                u"user"
-            ) or current_app.secure_cookie.get(u"shareduser")
-            if user == None:
-                abort(403)
-            user = int(user)
-
-            cur = db.cursor()
-
-            # Validate the puzzle_id
-            result = cur.execute(
-                fetch_query_string("select-all-from-puzzle-by-puzzle_id.sql"),
-                {"puzzle_id": puzzle_id},
-            ).fetchall()
-            if not result:
+            r = requests.get(
+                "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                    HOSTAPI=current_app.config["HOSTAPI"],
+                    PORTAPI=current_app.config["PORTAPI"],
+                    puzzle_id=puzzle_id,
+                ),
+            )
+            if r.status_code >= 400:
+                abort(r.status_code)
+            try:
+                result = r.json()
+            except ValueError as err:
+                abort(500)
+            if result.get("status") not in (
+                ACTIVE,
+                IN_QUEUE,
+                COMPLETED,
+                FROZEN,
+                BUGGY_UNLISTED,
+                NEEDS_MODERATION,
+                REBUILD,
+                IN_RENDER_QUEUE,
+                RENDERING,
+                RENDERING_FAILED,
+                MAINTENANCE,
+            ):
                 abort(400)
-            else:
-                (result, col_names) = rowify(result, cur.description)
-                puzzle = result[0].get("puzzle")
-                status = result[0].get("status")
-                if status not in (
-                    ACTIVE,
-                    IN_QUEUE,
-                    COMPLETED,
-                    FROZEN,
-                    BUGGY_UNLISTED,
-                    NEEDS_MODERATION,
-                    REBUILD,
-                    IN_RENDER_QUEUE,
-                    RENDERING,
-                    RENDERING_FAILED,
-                    MAINTENANCE,
-                ):
-                    # response["message"] = "Puzzle not active"
-                    # response["name"] = "invalid"
-                    # abort(make_response(json.jsonify(response), 400))
-                    sse.publish(
-                        "Puzzle no longer valid",
-                        type="invalid",
-                        channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_id),
-                    )
 
-                # return None
             return None
         else:
             abort(400)

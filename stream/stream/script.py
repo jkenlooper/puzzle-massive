@@ -52,7 +52,7 @@ def main():
         "timeout": 300,  # 5 minutes
         "bind": "%s:%s" % (host, port),
         "worker_class": "gevent",
-        "workers": number_of_workers(),
+        "workers": app.config.get("STREAM_WORKER_COUNT", number_of_workers()),
         "reload": debug,
         "preload_app": True,
         # Restart workers after this many requests just in case there are memory leaks
