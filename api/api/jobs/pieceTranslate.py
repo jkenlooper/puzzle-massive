@@ -38,7 +38,7 @@ def get_earned_points(pieces, permission=None):
     """
     if permission is not None and permission == PRIVATE:
         return 0
-    for level, max_pieces in enumerate(skill_level_intervals):
+    for level, max_pieces in enumerate(skill_level_intervals, 1):
         if pieces < max_pieces:
             return level
     return len(skill_level_intervals)

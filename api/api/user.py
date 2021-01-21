@@ -496,8 +496,7 @@ class UserDetailsView(MethodView):
                 fetch_query_string("select-minimum-points-for-user.sql"),
                 {
                     "user": user,
-                    "points": current_app.config["NEW_USER_STARTING_POINTS"]
-                    + current_app.config["POINT_COST_FOR_CHANGING_BIT"],
+                    "points": current_app.config["MINIMUM_TO_CLAIM_ACCOUNT"],
                 },
             ).fetchone()
             if result:
@@ -559,11 +558,7 @@ class SplitPlayer(MethodView):
         # TODO: what prevents a player from creating a lot of splits?
         result = cur.execute(
             fetch_query_string("select-minimum-points-for-user.sql"),
-            {
-                "user": user,
-                "points": current_app.config["NEW_USER_STARTING_POINTS"]
-                + current_app.config["POINT_COST_FOR_CHANGING_BIT"],
-            },
+            {"user": user, "points": current_app.config["MINIMUM_TO_CLAIM_ACCOUNT"],},
         ).fetchone()
         if not result:
             cur.close()
