@@ -129,7 +129,7 @@ customElements.define(
         this.orderBy && this.orderBy.length ? this.orderBy[0] : "m_date";
 
       if (piecesMin === piecesMax) {
-        return new Promise((resolve) => {
+        return new Promise<void>((resolve) => {
           this.isLoadingPuzzles = false;
           this.render();
           resolve();
@@ -164,7 +164,7 @@ customElements.define(
           const timePassed = timeEnd.getTime() - timeStart.getTime();
           const delay = Math.max(minDelay - timePassed, 0);
           window.setTimeout(() => this.burstCount--, delay * this.burstCount);
-          return new Promise((resolve) => {
+          return new Promise<void>((resolve) => {
             if (this.burstCount >= burst && delay > 0) {
               window.setTimeout(() => {
                 resolve();
