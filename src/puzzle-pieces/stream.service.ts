@@ -361,6 +361,12 @@ class PuzzleStream {
     }
   }
 
+  injectMoves(message: string) {
+    this.handleMoveEvent({
+      data: message,
+    });
+  }
+
   private handleMoveEvent(messageEvent: any) {
     // any = MessageEvent
     const textline = messageEvent.data;
@@ -613,6 +619,10 @@ class StreamService {
     }
     // remove fn from listeners
     this[topic].delete(id);
+  }
+
+  injectMoves(puzzleId: string, message: string) {
+    this.puzzleStreams[puzzleId].injectMoves(message);
   }
 }
 export const streamService = new StreamService();

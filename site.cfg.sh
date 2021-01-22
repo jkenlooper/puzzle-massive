@@ -224,6 +224,9 @@ PUBLISH_WORKER_COUNT = 2
 # to the stream. Set to None to be based on cpu count.
 STREAM_WORKER_COUNT = 2
 
+# Cache time to live for puzzle pieces requests. This value is in seconds.
+PUZZLE_PIECES_CACHE_TTL = 20
+
 # Puzzle settings
 # The karma points shown to a player is the sum of recent_points and karma points.
 # Recent points are per player

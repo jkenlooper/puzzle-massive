@@ -59,6 +59,11 @@ interface Pieces {
   [index: number]: PieceData;
 }
 
+export interface PieceInitData {
+  pieces: Array<PieceData>;
+  timestamp: string;
+}
+
 enum PieceMoveErrorTypes {
   puzzleimmutable = "puzzleimmutable",
   sameplayerconcurrent = "sameplayerconcurrent",
@@ -137,7 +142,7 @@ const topics = {
 
 interface UnprocessedPuzzlePiecesData {
   positions: Array<UnprocessedPieceData>;
-  timestamp: number;
+  timestamp: string;
 }
 
 interface MoveRequestData {
@@ -183,7 +188,7 @@ class PuzzleService {
   private pieceMovementProcessInterval: number | undefined = undefined;
   private pieces: Pieces = {};
   // @ts-ignore: piecesTimestamp will be used in the future
-  private piecesTimestamp = 0;
+  private piecesTimestamp = "";
   private mark: string = "";
   private selectedPieces: Array<number> = [];
   private instanceId = "puzzleService";
@@ -213,7 +218,7 @@ class PuzzleService {
   //  }
   //}
 
-  init(puzzleId): Promise<PieceData[]> {
+  init(puzzleId): Promise<PieceInitData> {
     streamService.subscribe(
       "piece/update",
       this.onPieceUpdate.bind(this),
@@ -253,7 +258,10 @@ class PuzzleService {
           this.pieces[piece.id] = Object.assign(defaultPiece, piece);
         });
         this.piecesTimestamp = pieceData.timestamp;
-        return Object.values(this.pieces);
+        return <PieceInitData>{
+          pieces: Object.values(this.pieces),
+          timestamp: this.piecesTimestamp,
+        };
       });
   }
   connect() {

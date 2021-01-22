@@ -24,6 +24,7 @@ DATE=$(date)
 
 DEBUG=$(./bin/site-cfg.py site.cfg DEBUG || echo 'False')
 PUZZLE_RULES=$(./bin/site-cfg.py site.cfg PUZZLE_RULES || echo ${PUZZLE_RULES})
+PUZZLE_PIECES_CACHE_TTL=$(./bin/site-cfg.py site.cfg PUZZLE_PIECES_CACHE_TTL || echo 0)
 
 # Load snippet confs
 file_ssl_params_conf=$(cat web/ssl_params.conf)
@@ -214,7 +215,8 @@ cat <<HEREBEUP
   /.well-known/.* off;
   /newapi/gallery-puzzle-list/ 1m;
   ~/newapi/puzzle-list/.* 5m;
-  ~/newapi/puzzle-pieces/.* 10s;
+  ~/newapi/puzzle-pieces/.* ${PUZZLE_PIECES_CACHE_TTL}s;
+  ~/puzzle-piece-updates/.* off;
   # Safeguard for no cache on player-puzzle-list
   /newapi/player-puzzle-list/ off;
 }

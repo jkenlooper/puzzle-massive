@@ -53,6 +53,7 @@ Improved how players can move pieces on a puzzle that is seeing lots of activity
   a piece. This allows the player to better join pieces that may have been
   moved by others.
 - Shadows on pieces that have moved while paused
+- Pieces data is cached and another endpoint is used to get any new piece movements since then.
 
 ### Fixed
 

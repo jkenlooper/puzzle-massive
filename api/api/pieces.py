@@ -77,7 +77,7 @@ class PuzzlePiecesView(MethodView):
                 piece = item.get("id")
                 pipe.hmget(
                     "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece),
-                    *publicPieceProperties
+                    *publicPieceProperties,
                 )
             allPublicPieceProperties = pipe.execute()
 
@@ -91,9 +91,12 @@ class PuzzlePiecesView(MethodView):
             piece = item.get("id")
             pieces[piece]["id"] = piece
 
+        stamp = redis_connection.get(f"pzstamp:{puzzle}")
+        if not stamp:
+            stamp = uuid.uuid4().hex[:8]
         pieceData = {
             "positions": pieces,
-            "timestamp": timestamp_now,
+            "timestamp": stamp,
         }
 
         cur.close()
@@ -107,8 +110,35 @@ class PuzzlePiecesView(MethodView):
                 kwargs={"cleanup": True, "skip_status_update": True},
                 result_ttl=0,
             )
+        else:
+            # Initialize a list to temporarily store any piece movements while
+            # the pieces request is cached.
+            piece_cache_ttl = current_app.config.get("PUZZLE_PIECES_CACHE_TTL")
+            if piece_cache_ttl:
+                pcu_key = f"pcu:{stamp}"
+                redis_connection.rpush(pcu_key, "")
+                redis_connection.expire(pcu_key, piece_cache_ttl + 10)
+                redis_connection.set(f"pzstamp:{puzzle}", stamp, ex=piece_cache_ttl)
 
         return make_response(json.jsonify(pieceData), 200)
+
+
+class PuzzlePieceUpdatesView(MethodView):
+    """
+    """
+
+    def get(self, stamp):
+        ""
+        piece_cache_ttl = current_app.config.get("PUZZLE_PIECES_CACHE_TTL")
+        if not piece_cache_ttl:
+            return make_response("", 204)
+
+        pcu_key = f"pcu:{stamp}"
+        piece_updates = redis_connection.lrange(pcu_key, 0, -1)
+        if len(piece_updates) == 0:
+            return make_response("", 204)
+
+        return make_response("\n".join(piece_updates), 200)
 
 
 immutable_attrs = {

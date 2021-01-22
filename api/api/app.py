@@ -84,7 +84,11 @@ def make_app(config=None, database_writable=False, **kw):
 
     # import the views and sockets
     from api.piece import PuzzlePieceView
-    from api.pieces import PuzzlePiecesView, InternalPuzzlePiecesView
+    from api.pieces import (
+        PuzzlePiecesView,
+        PuzzlePieceUpdatesView,
+        InternalPuzzlePiecesView,
+    )
     from api.puzzle_file import InternalPuzzleFileView
     from api.timeline import InternalPuzzleTimelineView
 
@@ -154,8 +158,10 @@ def make_app(config=None, database_writable=False, **kw):
         "/puzzle-pieces/<puzzle_id>/",
         view_func=PuzzlePiecesView.as_view("puzzle-pieces"),
     )
-    # TODO: add route to get the last puzzle piece movement data for the last 10
-    # seconds.
+    app.add_url_rule(
+        "/puzzle-piece-updates/<stamp>/",
+        view_func=PuzzlePieceUpdatesView.as_view("puzzle-piece-updates"),
+    )
 
     # The puzzle-reset route is removed for now in favor of using
     # puzzle-rebuild. Keeping this here in case future updates need to implement

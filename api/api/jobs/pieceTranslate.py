@@ -80,6 +80,11 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
     def publishMessage(msg, karma_change, karma, points=0, complete=False):
         # print(topic)
         # print(msg)
+        if current_app.config.get("PUZZLE_PIECES_CACHE_TTL"):
+            stamp = redis_connection.get(f"pzstamp:{puzzle}")
+            if stamp:
+                pcu_key = f"pcu:{stamp}"
+                redis_connection.rpushx(pcu_key, msg)
         sse.publish(
             msg,
             type="move",

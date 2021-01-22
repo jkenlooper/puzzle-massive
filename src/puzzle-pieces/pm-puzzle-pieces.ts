@@ -13,6 +13,7 @@ import { rgbToHsl } from "../site/utilities";
 import hashColorService from "../hash-color/hash-color.service";
 import { puzzleService, PieceData } from "./puzzle.service";
 import { streamService, KarmaData } from "./stream.service";
+import FetchService from "../site/fetch.service";
 import { Status } from "../site/puzzle-images.service";
 
 import "./puzzle-pieces.css";
@@ -131,8 +132,17 @@ customElements.define(
       // of the puzzle is active.
       puzzleService
         .init(this.puzzleId)
-        .then((pieceData) => {
-          this.renderPieces(pieceData);
+        .then((obj) => {
+          this.renderPieces(obj.pieces);
+          // Request any piece updates since the timestamp
+          const pieceUpdatesService = new FetchService(
+            `/newapi/puzzle-piece-updates/${obj.timestamp}/`
+          );
+          return pieceUpdatesService.getText().then((data) => {
+            if (data) {
+              streamService.injectMoves(this.puzzleId, data);
+            }
+          });
         })
         .catch((err) => {
           console.error(err);
