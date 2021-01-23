@@ -2,25 +2,31 @@
 
 set -eu -o pipefail
 
-# https://certbot.eff.org/lets-encrypt/ubuntubionic-nginx
+# Get the DOMAIN_NAME
+source .env
+
+# https://certbot.eff.org/lets-encrypt/ubuntufocal-nginx
+
+# Ensure that your version of snapd is up to date
+snap install core
+snap refresh core
+
+# Remove any previous install if applicable
+apt-get remove certbot
+
+# Install Certbot
+snap install --classic certbot
+
+# Prepare the Certbot command
+ln -s /snap/bin/certbot /usr/bin/certbot
 
 # /srv/puzzle-massive/
 SRVDIR=$1
 
-# Add Certbot PPA
-apt-get update
-apt-get install --yes software-properties-common
-add-apt-repository universe
-add-apt-repository ppa:certbot/certbot
-apt-get update
-
-# Install Certbot
-apt-get install --yes certbot python-certbot-nginx
-
 # Get the cert and place it in the /.well-known/ location from webroot.
 certbot certonly \
   --webroot --webroot-path "${SRVDIR}root/" \
-  --domain puzzle.massive.xyz
+  --domain ${DOMAIN_NAME}
 
 # The Certbot packages on your system come with a cron job or systemd timer that
 # will renew your certificates automatically before they expire. You will not
@@ -29,7 +35,7 @@ certbot certonly \
 # - /etc/crontab/
 # - /etc/cron.*/*
 # - systemctl list-timers
-echo "Testing automatic certbot cert renewel"
+echo "Testing automatic certbot cert renewal"
 certbot renew --dry-run
 
 # Signal that the certs should now exist.

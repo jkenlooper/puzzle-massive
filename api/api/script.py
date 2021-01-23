@@ -15,6 +15,9 @@ Subcommands:
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from gevent import monkey
+
+monkey.patch_all()
 from docopt import docopt
 
 from .app import make_app
@@ -54,7 +57,8 @@ def run(config_file, cookie_secret):
 
 
 def serve(config_file, cookie_secret):
-    from gevent import pywsgi, signal
+    from gevent import pywsgi, signal_handler
+    import signal
 
     app = make_app(
         config=config_file, cookie_secret=cookie_secret, database_writable=True
@@ -73,6 +77,6 @@ def serve(config_file, cookie_secret):
 
         exit(signal.SIGTERM)
 
-    signal(signal.SIGTERM, shutdown)
-    signal(signal.SIGINT, shutdown)
+    signal_handler(signal.SIGTERM, shutdown)
+    signal_handler(signal.SIGINT, shutdown)
     server.serve_forever(stop_timeout=10)

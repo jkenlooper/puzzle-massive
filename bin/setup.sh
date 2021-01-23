@@ -10,6 +10,8 @@ apt-get --yes install \
   nginx \
   apache2-utils \
   cron \
+  make \
+  gcc \
   curl
 
 # Adds the `convert` command which is used to convert source-media/ images to
@@ -17,15 +19,11 @@ apt-get --yes install \
 apt-get --yes install imagemagick
 
 apt-get --yes install \
-  python \
-  python-dev \
+  python3 \
   python3-dev \
-  python-pip \
-  python-numpy \
-  sqlite3 \
-  libpq-dev \
-  python-psycopg2 \
-  virtualenv
+  python3-venv \
+  python3-numpy \
+  sqlite3
 
 apt-get --yes install \
   awstats
@@ -37,19 +35,18 @@ apt-get --yes install libssl-dev
 # Install support for Pillow
 apt-get --yes install python3-pil
 # TODO: Are these libs still needed if installing python3-pil?
-apt-get --yes install libtiff5-dev libjpeg8-dev zlib1g-dev libfreetype6-dev liblcms2-dev libwebp-dev tcl8.5-dev tk8.5-dev python-tk
+#apt-get --yes install libtiff5-dev libjpeg8-dev zlib1g-dev libfreetype6-dev liblcms2-dev libwebp-dev tcl8.5-dev tk8.5-dev python3-tk
 
 apt-get --yes install libsqlite3-dev
 
 # Dependencies for piecemaker
 apt-get --yes install optipng
-curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
-apt-get install -y nodejs # also installs npm
+curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+apt-get install -y nodejs
 
-apt-get --yes install potrace libffi-dev python-libxml2 libxml2-dev python3-lxml python-xcffib
+apt-get --yes install potrace libffi-dev libxml2-dev python3-lxml python3-xcffib
 apt-get --yes install libcairo2-dev
-apt-get --yes install python-cairo
-# TODO: install python3-cairo instead?
+apt-get --yes install python3-cairo
 npm install -g svgo
 
 

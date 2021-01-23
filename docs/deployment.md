@@ -39,7 +39,7 @@ been uploaded to the home directory.
 ### Steps
 
 1.  Stop the running apps and backup the db. The deactivate command is done to
-    deactivate the python virtualenv. A backup of the database is made just as
+    deactivate the python virtual environment. A backup of the database is made just as
     a cautionary measure and is left in the folder. The backup.sh script
     also moves data out of redis and into the database.
 
@@ -80,11 +80,11 @@ been uploaded to the home directory.
 
     ```bash
     cd /usr/local/src/puzzle-massive;
-    virtualenv . -p python3;
+    python3 -m venv .;
     source bin/activate;
-    make ENVIRONMENT=production && \
+    make ENVIRONMENT=production;
     sudo make ENVIRONMENT=production install;
-    sudo nginx -t && \
+    sudo nginx -t;
     sudo systemctl reload nginx;
     printf '' > /srv/puzzle-massive/root/puzzle-massive-message.html;
     sudo ./bin/clear_nginx_cache.sh;
@@ -137,7 +137,7 @@ by the public.
 
     ```bash
     cd /usr/local/src/puzzle-massive/;
-    virtualenv . -p python3;
+    python3 -m venv .;
     source bin/activate;
     make ENVIRONMENT=production;
     sudo make ENVIRONMENT=production install;
@@ -163,7 +163,7 @@ by the public.
     own [web/default.conf]().
 
     ```bash
-    sudo nginx -t && \
+    sudo nginx -t;
     sudo systemctl reload nginx
     ```
 
@@ -178,7 +178,7 @@ by the public.
     sudo bin/provision-certbot.sh /srv/puzzle-massive/
     make ENVIRONMENT=production;
     sudo make ENVIRONMENT=production install;
-    sudo nginx -t && \
+    sudo nginx -t;
     sudo systemctl reload nginx
     ```
 

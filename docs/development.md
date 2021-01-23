@@ -5,7 +5,7 @@ following these (super awesome) instructions. This is necessary in order to
 create a dist file (`make dist`) for deploying to a production server.
 
 Written for a Linux machine that is Debian based. Only tested on
-[Ubuntu 18.04.4 LTS (Bionic Beaver)](http://releases.ubuntu.com/18.04/).
+[Ubuntu 20.04 LTS (Focal Fossa)](http://releases.ubuntu.com/20.04/).
 It is recommended to use a virtual machine of some sort to keep dependencies for
 the Puzzle Massive services isolated and manageable. Some virtualization
 software suggestions are listed below.
@@ -23,7 +23,7 @@ software suggestions are listed below.
   </dd>
   <dt>development machine</dt>
   <dd>
-  The Ubuntu 18 machine that will be setup to run the Puzzle Massive services.
+  The Ubuntu machine that will be setup to run the Puzzle Massive services.
   Source files will be uploaded to it from the local machine each time they
   change. This is commonly a virtual machine, but can be localhost. You should
   have ssh access to it and have permissions to add a dev user.
@@ -67,7 +67,7 @@ After cloning or forking the git repo
 and `cd` to that directory.
 
 The instructions shown here assume that you are logged into a Linux system
-(`uname -o`) and are running Ubuntu 18 (`lsb_release -a`).
+(`uname -o`) and are running Ubuntu (`lsb_release -a`).
 
 ### Create `dev` user and project source directory
 
@@ -143,8 +143,9 @@ sudo ./bin/setup.sh;
 
 # Fix permissions on home .config and .npm directories because of sudo npm
 # install command used in setup.sh script.
-sudo chown -R dev:dev ~/.config
-sudo chown -R dev:dev ~/.npm
+# TODO: no longer needed?
+#sudo chown -R dev:dev ~/.config
+#sudo chown -R dev:dev ~/.npm
 ```
 
 ### Create local SSL certs (optional)
@@ -189,7 +190,7 @@ command if still logged into development machine).
 The website apps are managed as
 [systemd](https://freedesktop.org/wiki/Software/systemd/) services.
 The service config files are created by running `make` and installed with
-`sudo make install`. It is recommended to use Python's `virtualenv . -p python3`
+`sudo make install`. It is recommended to use Python's `python3 -m venv .`
 and activating each time for a new shell with `source bin/activate` before
 running `make`.
 
@@ -208,7 +209,7 @@ Run these on the local machine from within the project's directory.
 
 ```bash
 # Install Node Version Manager (nvm)
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash;
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash
 source ~/.bashrc;
 
 # Install and use the version set in .nvmrc
@@ -219,13 +220,12 @@ nvm use;
 ### Initialize the project
 
 On the local machine install dependencies for prettier and black. These tools
-are needed to autoformat the changed code before committing. The `virtualenv`
-can be installed on your local machine with a package manager
-(`sudo apt-get install virtualenv`).
+are needed to autoformat the changed code before committing.
+Create a python virtual environment with `python3 -m venv .` .
 
 ```bash
 # Setup to use a virtual python environment
-virtualenv . -p python3;
+python3 -m venv .
 source bin/activate;
 
 # Install black to format python code when developing
@@ -277,7 +277,7 @@ ssh dev@local-puzzle-massive;
 cd /usr/local/src/puzzle-massive/;
 
 # Setup to use a virtual python environment
-virtualenv . -p python3;
+python3 -m venv .
 source bin/activate;
 
 # Makes the initial development version

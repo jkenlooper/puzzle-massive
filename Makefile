@@ -8,7 +8,7 @@ SHELL := bash
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_dir := $(dir $(mkfile_path))
 
-# Local pip is used by creating virtualenv and running `source ./bin/activate`
+# Local pip is used by creating a python virtual environment and running `source ./bin/activate`
 
 # Set to tmp/ when debugging the install
 # make PREFIXDIR=${PWD}/tmp inspect.SRVDIR
@@ -41,14 +41,11 @@ TAG := $(shell cat package.json | python -c 'import sys, json; print(json.load(s
 inspect.%:
 	@echo $($*)
 
-ifeq ($(shell which virtualenv),)
-$(error run "./bin/setup.sh" to install virtualenv)
-endif
 ifeq ($(shell ls bin/activate),)
-$(error run "virtualenv . -p python3")
+$(error No bin/activate found. Run "'virtualenv . -p python3' or 'python3 -m venv .' to create a python virtual environment")
 endif
 ifneq ($(shell which pip),$(project_dir)bin/pip)
-$(warning run "source bin/activate" to activate the virtualenv. Using $(shell which pip). Ignore this warning if using sudo make install.)
+$(warning run "source bin/activate" to activate the python virtual environment. Using $(shell which pip). Ignore this warning if using sudo make install.)
 endif
 
 
