@@ -33,7 +33,7 @@ suggested puzzle {{puzzle.puzzle_id}}
       <div>
         <input type="number"
                min="{{ config.MINIMUM_PIECE_COUNT }}"
-               max="50000"
+               max="{{ config.MAXIMUM_PIECE_COUNT }}"
                id="pieces" name="pieces" value="{{ puzzle.pieces }}">
       </div>
     </div>

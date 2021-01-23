@@ -218,7 +218,11 @@ class PuzzleUploadView(MethodView):
             pieces = int(args.get("pieces", current_app.config["MINIMUM_PIECE_COUNT"]))
         except ValueError as err:
             abort(400)
-        if pieces < current_app.config["MINIMUM_PIECE_COUNT"]:
+        if (
+            not current_app.config["MINIMUM_PIECE_COUNT"]
+            <= pieces
+            <= current_app.config["MAXIMUM_PIECE_COUNT"]
+        ):
             abort(400)
 
         bg_color = check_bg_color(args.get("bg_color", "#808080")[:50])
@@ -268,7 +272,11 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
             pieces = int(args.get("pieces", current_app.config["MINIMUM_PIECE_COUNT"]))
         except ValueError as err:
             abort(400)
-        if pieces < current_app.config["MINIMUM_PIECE_COUNT"]:
+        if (
+            not current_app.config["MINIMUM_PIECE_COUNT"]
+            <= pieces
+            <= current_app.config["MAXIMUM_PIECE_COUNT"]
+        ):
             abort(400)
 
         bg_color = check_bg_color(args.get("bg_color", "#808080")[:50])
