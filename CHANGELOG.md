@@ -21,7 +21,7 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
-## [Unreleased] - ...
+## [2.9.0] - 2020-01-23
 
 Improved how players can move pieces on a puzzle that is seeing lots of activity.
 
