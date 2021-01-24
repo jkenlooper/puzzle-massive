@@ -20,6 +20,10 @@ export interface PuzzleOriginalDetails {
 }
 
 class PuzzleDetailsService {
+  private _puzzleOriginalDetailsCache:
+    | Promise<PuzzleOriginalDetails>
+    | undefined;
+
   constructor() {}
 
   getPuzzleInstanceDetails(puzzleId: string): Promise<PuzzleInstanceDetails> {
@@ -53,15 +57,25 @@ class PuzzleDetailsService {
   }
 
   getPuzzleOriginalDetails(puzzleId: string): Promise<PuzzleOriginalDetails> {
+    if (this._puzzleOriginalDetailsCache) {
+      return Promise.resolve(this._puzzleOriginalDetailsCache);
+    }
     const puzzleDetailsService = new FetchService(
       `/newapi/puzzle-original-details/${puzzleId}/`
     );
 
-    return puzzleDetailsService
+    this._puzzleOriginalDetailsCache = puzzleDetailsService
       .get<PuzzleOriginalDetails>()
       .then((puzzleDetails) => {
         return puzzleDetails;
+      })
+      .finally(() => {
+        window.setTimeout(() => {
+          // Invalidate the cache
+          this._puzzleOriginalDetailsCache = undefined;
+        }, 1000);
       });
+    return this._puzzleOriginalDetailsCache;
   }
 
   patchPuzzleOriginalDetails(

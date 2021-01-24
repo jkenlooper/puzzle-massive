@@ -214,6 +214,9 @@ cat <<HEREBEUP
   /site.webmanifest 1d;
   /.well-known/.* off;
   /newapi/gallery-puzzle-list/ 1m;
+  /newapi/player-stats/ 1m;
+  ~/newapi/puzzle-stats/.*?/active-player-count/ 10s;
+  ~/newapi/puzzle-stats/.*?/ 10s;
   ~/newapi/puzzle-list/.* 5m;
   ~/newapi/puzzle-pieces/.* ${PUZZLE_PIECES_CACHE_TTL}s;
   ~/puzzle-piece-updates/.* off;
@@ -664,6 +667,32 @@ server {
     proxy_pass http://localhost:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
+
+  location /newapi/player-stats/ {
+    expires \$cache_expire;
+    add_header Cache-Control "public";
+
+    proxy_pass_header Server;
+    proxy_set_header  X-Real-IP  \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
+    proxy_pass http://localhost:${PORTAPI};
+    rewrite ^/newapi/(.*)\$ /\$1 break;
+  }
+
+  location ~* ^/newapi/puzzle-stats/.*\$ {
+    # Includes puzzle-stats/.*/active-player-count/ as well.
+    expires \$cache_expire;
+    add_header Cache-Control "public";
+
+    proxy_pass_header Server;
+    proxy_set_header  X-Real-IP  \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
+    proxy_pass http://localhost:${PORTAPI};
+    rewrite ^/newapi/(.*)\$ /\$1 break;
+  }
+
 
   location ~* ^/newapi/puzzle-pieces/.*\$ {
     expires \$cache_expire;

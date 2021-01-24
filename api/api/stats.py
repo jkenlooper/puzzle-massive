@@ -80,8 +80,6 @@ class PuzzleStatsView(MethodView):
     Return statistics on a puzzle.
     """
 
-    decorators = [user_not_banned]
-
     def get(self, puzzle_id):
         ""
         cur = db.cursor()
@@ -133,12 +131,8 @@ class PuzzleActiveCountView(MethodView):
     Return active player count on a puzzle.
     """
 
-    decorators = [user_not_banned]
-
     def get(self, puzzle_id):
         ""
-        ip = request.headers.get("X-Real-IP")
-        user = int(current_app.secure_cookie.get(u"user") or user_id_from_ip(ip))
         cur = db.cursor()
         result = cur.execute(
             fetch_query_string("select_viewable_puzzle_id.sql"),
@@ -163,17 +157,17 @@ class PuzzleActiveCountView(MethodView):
         player_active_count = {"now": now, "count": count}
 
         cur.close()
-        return json.jsonify(player_active_count)
+        return make_response(json.jsonify(player_active_count), 200)
 
 
 class PlayerStatsView(MethodView):
     ""
-
-    decorators = [user_not_banned]
 
     def get(self):
         ""
         now = int(time.time())
         since = now - ACTIVE_RANGE
         total_active_player_count = redis_connection.zcount("timeline", since, "+inf")
-        return json.jsonify({"totalActivePlayers": total_active_player_count})
+        return make_response(
+            json.jsonify({"totalActivePlayers": total_active_player_count}), 200
+        )

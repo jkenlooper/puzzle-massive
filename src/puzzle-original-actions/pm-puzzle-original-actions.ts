@@ -68,11 +68,6 @@ customElements.define(
       } else {
         this.view = viewAttr.value;
       }
-
-      userDetailsService.subscribe(
-        this._setPuzzleData.bind(this),
-        this.instanceId
-      );
     }
 
     _setPuzzleData() {
@@ -144,9 +139,7 @@ customElements.define(
             break;
           case "message":
             renderedView = html`
-              <p>
-                Processing last action that has updated the puzzle status.
-              </p>
+              <p>Processing last action that has updated the puzzle status.</p>
             `;
             break;
         }
@@ -179,11 +172,7 @@ customElements.define(
                     ${data.highestBid} dots.
                   </p>
                 `
-              : html`
-                  <p>
-                    ${data.bumpDisabledMessage}
-                  </p>
-                `}
+              : html` <p>${data.bumpDisabledMessage}</p> `}
           `;
           break;
       }
@@ -214,6 +203,13 @@ customElements.define(
 
     render() {
       render(this.template(this.data), this);
+    }
+
+    connectedCallback() {
+      userDetailsService.subscribe(
+        this._setPuzzleData.bind(this),
+        this.instanceId
+      );
     }
 
     disconnectedCallback() {
