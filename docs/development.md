@@ -279,6 +279,7 @@ cd /usr/local/src/puzzle-massive/;
 # Setup to use a virtual python environment
 python3 -m venv .
 source bin/activate;
+pip install wheel;
 
 # Makes the initial development version
 make;
