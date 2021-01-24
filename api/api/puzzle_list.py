@@ -227,7 +227,7 @@ class PuzzleListView(MethodView):
 
         cur.close()
 
-        return json.jsonify(response)
+        return make_response(json.jsonify(response), 200)
 
 
 class PlayerPuzzleListView(MethodView):
@@ -269,7 +269,7 @@ class PlayerPuzzleListView(MethodView):
 
         cur.close()
 
-        return json.jsonify(response)
+        return make_response(json.jsonify(response), 200)
 
 
 class GalleryPuzzleListView(MethodView):

@@ -324,7 +324,7 @@ class PuzzleInstanceDetailsView(MethodView):
             "status": puzzleData.get("status", -99),
         }
         cur.close()
-        return json.jsonify(response)
+        return make_response(json.jsonify(response), 200)
 
 
 class PuzzleOriginalDetailsView(MethodView):
@@ -499,7 +499,7 @@ class PuzzleOriginalDetailsView(MethodView):
             "status": puzzleData.get("status", -99),
         }
         cur.close()
-        return json.jsonify(response, 200)
+        return make_response(json.jsonify(response), 200)
 
 
 class InternalPuzzleDetailsView(MethodView):
