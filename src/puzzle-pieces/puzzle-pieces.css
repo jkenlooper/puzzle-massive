@@ -12,8 +12,8 @@
   top: 0;
   left: 0;
   z-index: 10;
-  transition: transform 0.8s linear;
   background-repeat: no-repeat;
+  transition-property: transform;
   transition-timing-function: cubic-bezier(0.96, -0.08, 0.71, -0.53);
   transition-duration: 1.2s;
 }
