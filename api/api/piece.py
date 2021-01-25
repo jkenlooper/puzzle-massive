@@ -41,12 +41,6 @@ class PuzzlePieceView(MethodView):
         if not redis_connection.zscore("pcupdates", puzzle):
             abort(400)
 
-        # Expire the token at the lock timeout since it shouldn't be used again
-        redis_connection.delete(
-            "pctoken:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
-        )
-        redis_connection.delete("token:{}".format(user))
-
         # Fetch just the piece properties
         # The 'rotate' field is not public. It is for the true orientation of the piece.
         # The 'r' field is the mutable rotation of the piece.

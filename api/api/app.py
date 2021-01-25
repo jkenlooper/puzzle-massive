@@ -106,7 +106,6 @@ def make_app(config=None, database_writable=False, **kw):
         UserLogoutView,
         UserLoginView,
         ClaimUserByTokenView,
-        SplitPlayer,
         InternalUserDetailsView,
         AdminBannedUserList,
         BanishSelf,
@@ -199,7 +198,6 @@ def make_app(config=None, database_writable=False, **kw):
         ),
     )
 
-    app.add_url_rule("/split-player/", view_func=SplitPlayer.as_view("split-player"))
     app.add_url_rule("/user-logout/", view_func=UserLogoutView.as_view("user-logout"))
     # NGINX rewritten from /puzzle-api/bit/<bitLink>/
     app.add_url_rule(

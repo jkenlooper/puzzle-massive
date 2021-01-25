@@ -415,78 +415,30 @@ class PuzzlePieceTokenView(MethodView):
                 response["snap"] = snapshot_id
             return make_response(json.jsonify(response), 200)
 
-        puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
-
-        # Check if player already has a token for this puzzle. This would mean
-        # that the player tried moving another piece before the locked piece
+        # Check if user already has a token for this puzzle. This would mean
+        # that the user tried moving another piece before the locked piece
         # finished moving.
-        existing_token = redis_connection.get("token:{}".format(user))
+        existing_token = redis_connection.get(f"t:{mark}")
         if existing_token:
-            (player_puzzle, player_piece, player_mark) = existing_token.split(":")
-            player_puzzle = int(player_puzzle)
-            player_piece = int(player_piece)
-            if player_puzzle == puzzle:
-                # Temporary ban the player when clicking a piece and not
-                # dropping it before clicking another piece.
-                if player_mark == mark:
-                    # Ban the user for a few seconds
-                    err_msg = increase_ban_time(user, TOKEN_LOCK_TIMEOUT)
-                    err_msg[
-                        "reason"
-                    ] = "Concurrent piece movements on this puzzle from the same player are not allowed."
-                    return make_response(json.jsonify(err_msg), 429)
-
-                else:
-                    # Block the player from selecting pieces on this puzzle
-                    err_msg = {
-                        "msg": "Please wait or do a different puzzle. New players on the same network will be sharing the same bit icon.  Please register as a separate player once enough dots are earned to select a new bit icon.",
-                        "type": "sameplayerconcurrent",
-                        "reason": "Concurrent piece movements on this puzzle from the same player are not allowed.",
-                        "expires": now + TOKEN_LOCK_TIMEOUT,
-                        "timeout": TOKEN_LOCK_TIMEOUT,
-                    }
-
-                    uses_cookies = current_app.secure_cookie.get("ot")
-                    if uses_cookies:
-                        # Check if player has enough dots to generate a new
-                        # player and if so add to err_msg to signal client to
-                        # request a new player
-                        current_app.logger.debug("sameplayerconcurrent split player")
-                        r = requests.get(
-                            "http://{HOSTAPI}:{PORTAPI}/internal/user/{user}/details/".format(
-                                HOSTAPI=current_app.config["HOSTAPI"],
-                                PORTAPI=current_app.config["PORTAPI"],
-                                user=user,
-                            ),
-                        )
-                        if r.status_code >= 400:
-                            return make_response(json.jsonify(err_msg), r.status_code)
-                        try:
-                            result = r.json()
-                        except ValueError as err:
-                            return make_response(json.jsonify(err_msg), 500)
-                        if (
-                            result.get("points")
-                            >= current_app.config["POINT_COST_FOR_CHANGING_BIT"]
-                            + current_app.config["NEW_USER_STARTING_POINTS"]
-                        ):
-                            err_msg["action"] = {
-                                "msg": "Create a new player?",
-                                "url": "/newapi{}".format(url_for("split-player")),
-                            }
-
-                    return make_response(json.jsonify(err_msg), 409)
+            # Temporary ban the player when clicking a piece and not
+            # dropping it before clicking another piece.
+            # Ban the user for a few seconds
+            err_msg = increase_ban_time(user, TOKEN_LOCK_TIMEOUT)
+            err_msg[
+                "reason"
+            ] = "Concurrent piece movements on this puzzle from the same player are not allowed."
+            return make_response(json.jsonify(err_msg), 429)
 
         piece_token_queue_key = get_puzzle_piece_token_queue_key(puzzle, piece)
-        queue_rank = redis_connection.zrank(piece_token_queue_key, user)
+        queue_rank = redis_connection.zrank(piece_token_queue_key, mark)
 
         if queue_rank == None:
             # Append this player to a queue for getting the next token. This
             # will prevent the player with the lock from continually locking the
             # same piece.
             # TODO: use pipe here for these 2
-            redis_connection.zadd(piece_token_queue_key, {user: now})
-            queue_rank = redis_connection.zrank(piece_token_queue_key, user)
+            redis_connection.zadd(piece_token_queue_key, {mark: now})
+            queue_rank = redis_connection.zrank(piece_token_queue_key, mark)
         redis_connection.expire(piece_token_queue_key, TOKEN_LOCK_TIMEOUT + 5)
 
         # Check if token on piece is in a queue and if the player requesting it
@@ -501,47 +453,42 @@ class PuzzlePieceTokenView(MethodView):
             }
             return make_response(json.jsonify(err_msg), 409)
 
-        # Check if token on piece is still owned by another player
-        existing_token_and_player = redis_connection.get(puzzle_piece_token_key)
-        if existing_token_and_player:
-            (other_token, other_player) = existing_token_and_player.split(":")
-            other_player = int(other_player)
-            puzzle_and_piece = redis_connection.get("token:{}".format(other_player))
-            # Check if there is a lock on this piece by other player
-            if puzzle_and_piece:
-                (other_puzzle, other_piece, other_mark) = puzzle_and_piece.split(":")
+        # Check if token on piece is still owned by another user
+        puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
+        existing_token_and_mark = redis_connection.get(puzzle_piece_token_key)
+        if existing_token_and_mark:
+            (other_token, other_mark) = existing_token_and_mark.split(":")
+            puzzle_and_piece_and_user = redis_connection.get(f"t:{other_mark}")
+            # Check if there is a lock on this piece by other user
+            if puzzle_and_piece_and_user:
+                (
+                    other_puzzle,
+                    other_piece,
+                    other_user,
+                ) = puzzle_and_piece_and_user.split(":")
                 other_puzzle = int(other_puzzle)
                 other_piece = int(other_piece)
-                if (
-                    other_puzzle == puzzle
-                    and other_piece == piece
-                    and other_player != user
-                ):
-                    # Other player has a lock on this piece
+                other_user = int(other_user)
+                if other_puzzle == puzzle and other_piece == piece:
+                    # Other user has a lock on this piece
                     err_msg = {
                         "msg": "Another player is moving this piece",
                         "type": "piecelock",
                         "reason": "Piece locked",
-                        "expires": now + TOKEN_LOCK_TIMEOUT,
-                        "timeout": TOKEN_LOCK_TIMEOUT,
                     }
                     return make_response(json.jsonify(err_msg), 409)
 
         # Remove player from the piece token queue
-        redis_connection.zrem(piece_token_queue_key, user)
+        redis_connection.zrem(piece_token_queue_key, mark)
 
         # This piece is up for grabs since it has been more then 5 seconds since
         # another player has grabbed it.
-        token = uuid.uuid4().hex
+        token = uuid.uuid4().hex[:8]
         redis_connection.set(
-            puzzle_piece_token_key,
-            "{token}:{user}".format(token=token, user=user),
-            ex=TOKEN_EXPIRE_TIMEOUT,
+            puzzle_piece_token_key, f"{token}:{mark}", ex=TOKEN_EXPIRE_TIMEOUT,
         )
         redis_connection.set(
-            "token:{}".format(user),
-            "{puzzle}:{piece}:{mark}".format(puzzle=puzzle, piece=piece, mark=mark),
-            ex=TOKEN_LOCK_TIMEOUT,
+            f"t:{mark}", f"{puzzle}:{piece}:{user}", ex=TOKEN_LOCK_TIMEOUT,
         )
 
         move_bit_icon_to_piece()
@@ -578,7 +525,6 @@ class PuzzlePiecesMovePublishView(MethodView):
     * Start piece translate logic
     """
 
-    decorators = [user_not_banned]
     ACCEPTABLE_ARGS = set(["x", "y", "r"])
 
     def patch(self, puzzle_id, piece):
@@ -617,9 +563,12 @@ class PuzzlePiecesMovePublishView(MethodView):
             )
             return make_response(json.jsonify(err_msg), 429)
 
-        # start = time.perf_counter()
         ip = request.headers.get("X-Real-IP")
-        user = int(current_app.secure_cookie.get("user") or user_id_from_ip(ip))
+        validate_token = (
+            len({"all", "valid_token"}.intersection(current_app.config["PUZZLE_RULES"]))
+            > 0
+        )
+        user = None
         now = int(time.time())
 
         # validate the args and headers
@@ -667,6 +616,35 @@ class PuzzlePiecesMovePublishView(MethodView):
         r = args.get("r")
         snapshot_id = request.headers.get("Snap")
 
+        # Token is to make sure puzzle is still in sync.
+        # validate the token
+        token = request.headers.get("Token")
+        if not token:
+            err_msg = {
+                "msg": "Missing token",
+                "type": "missing",
+                "expires": now + 5,
+                "timeout": 5,
+            }
+            return make_response(json.jsonify(err_msg), 400)
+
+        mark = request.headers.get("Mark")
+        if not mark:
+            err_msg = {
+                "msg": "Missing mark",
+                "type": "missing",
+                "expires": now + 5,
+                "timeout": 5,
+            }
+            return make_response(json.jsonify(err_msg), 400)
+
+        existing_token = redis_connection.get(f"t:{mark}")
+        if validate_token and existing_token:
+            (m_puzzle, m_piece, m_user) = existing_token.split(":")
+            user = int(m_user)
+        else:
+            user = int(current_app.secure_cookie.get("user") or user_id_from_ip(ip))
+
         timestamp_now = int(time.time())
 
         pzq_key = "pzq:{puzzle_id}".format(puzzle_id=puzzle_id)
@@ -680,18 +658,18 @@ class PuzzlePiecesMovePublishView(MethodView):
         puzzle_data = dict(zip(pzq_fields, redis_connection.hmget(pzq_key, pzq_fields)))
         puzzle = puzzle_data.get("puzzle")
         if puzzle == None:
-            r = requests.get(
+            req = requests.get(
                 "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
                     HOSTAPI=current_app.config["HOSTAPI"],
                     PORTAPI=current_app.config["PORTAPI"],
                     puzzle_id=puzzle_id,
                 ),
             )
-            if r.status_code >= 400:
+            if req.status_code >= 400:
                 err_msg = {"msg": "puzzle not available", "type": "missing"}
-                return make_response(json.jsonify(err_msg), r.status_code)
+                return make_response(json.jsonify(err_msg), req.status_code)
             try:
-                result = r.json()
+                result = req.json()
             except ValueError as err:
                 err_msg = {"msg": "puzzle not available", "type": "missing"}
                 return make_response(json.jsonify(err_msg), 500)
@@ -721,33 +699,21 @@ class PuzzlePiecesMovePublishView(MethodView):
         puzzle = int(puzzle_data["puzzle"])
         puzzle_data["puzzle_id"] = puzzle_id
 
-        # Token is to make sure puzzle is still in sync.
-        # validate the token
-        token = request.headers.get("Token")
-        if not token:
-            err_msg = {
-                "msg": "Missing token",
-                "type": "missing",
-                "expires": now + 5,
-                "timeout": 5,
-            }
-            return make_response(json.jsonify(err_msg), 400)
         puzzle_piece_token_key = get_puzzle_piece_token_key(puzzle, piece)
         validate_token = (
             len({"all", "valid_token"}.intersection(current_app.config["PUZZLE_RULES"]))
             > 0
         )
         if validate_token:
-            token_and_player = redis_connection.get(puzzle_piece_token_key)
-            if token_and_player:
-                player = user
-                (valid_token, other_player) = token_and_player.split(":")
-                other_player = int(other_player)
+            token_and_mark = redis_connection.get(puzzle_piece_token_key)
+            if token_and_mark:
+                (valid_token, other_mark) = token_and_mark.split(":")
+                # other_user = int(other_user)
                 if token != valid_token:
                     err_msg = increase_ban_time(user, TOKEN_INVALID_BAN_TIME_INCR)
                     err_msg["reason"] = "Token is invalid"
                     return make_response(json.jsonify(err_msg), 409)
-                if player != other_player:
+                if mark != other_mark:
                     err_msg = increase_ban_time(user, TOKEN_INVALID_BAN_TIME_INCR)
                     err_msg["reason"] = "Player is invalid"
                     return make_response(json.jsonify(err_msg), 409)
@@ -759,10 +725,10 @@ class PuzzlePiecesMovePublishView(MethodView):
                 }
                 return make_response(json.jsonify(err_msg), 409)
 
-        # Expire the token at the lock timeout since it shouldn't be used again
+        # Expire the token since it shouldn't be used again
         if validate_token:
             redis_connection.delete(puzzle_piece_token_key)
-            redis_connection.delete("token:{}".format(user))
+            redis_connection.delete(f"t:{mark}")
 
         if (
             len(

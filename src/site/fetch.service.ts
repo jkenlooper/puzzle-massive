@@ -20,13 +20,17 @@ class FetchService {
     });
   }
 
-  get<T>(): Promise<T> {
+  get<T>(headers?): Promise<T> {
+    const _headers = {
+      "Content-Type": "application/json",
+    };
+    if (headers) {
+      Object.assign(_headers, headers);
+    }
     return fetch(this.url, {
       method: "GET",
       credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: _headers,
     }).then((response: Response) => {
       if (!response.ok) {
         throw new Error(response.statusText);

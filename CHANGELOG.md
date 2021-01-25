@@ -21,6 +21,12 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
+## [Unreleased] - ...
+
+### Changed
+
+- Drop limit for same player concurrent piece moves
+
 ## [2.9.1] - 2020-01-24
 
 ### Changed

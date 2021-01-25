@@ -66,7 +66,6 @@ export interface PieceInitData {
 
 enum PieceMoveErrorTypes {
   puzzleimmutable = "puzzleimmutable",
-  sameplayerconcurrent = "sameplayerconcurrent",
   immovable = "immovable",
   piecequeue = "piecequeue",
   piecelock = "piecelock",
@@ -98,7 +97,6 @@ enum TokenRequestErrorTypes {
   puzzlereload = "puzzlereload",
   puzzleimmutable = "puzzleimmutable",
   immovable = "immovable",
-  sameplayerconcurrent = "sameplayerconcurrent",
   bannedusers = "bannedusers",
   piecequeue = "piecequeue",
   piecelock = "piecelock",
@@ -355,17 +353,6 @@ class PuzzleService {
               // TODO: Set a timeout and clear if piece is moved.  Maybe
               // auto-scroll to the moved piece?
               break;
-            case TokenRequestErrorTypes.sameplayerconcurrent:
-              if (responseObj.action && responseObj.action.url) {
-                fetch(responseObj.action.url, {
-                  method: "POST",
-                  credentials: "same-origin",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                });
-              }
-              break;
             case TokenRequestErrorTypes.bannedusers:
             case TokenRequestErrorTypes.puzzleimmutable:
               self._broadcast(pieceMoveBlocked, responseObj);
@@ -411,7 +398,9 @@ class PuzzleService {
         `/newapi/puzzle/${puzzleId}/piece/${id}/`
       );
       return fetchPuzzlePieceService
-        .get<UnprocessedPieceData>()
+        .get<UnprocessedPieceData>({
+          Mark: self.mark,
+        })
         .then((pieceData) => {
           const pieceMovementData: PieceMovementData = {
             id: id,
@@ -459,6 +448,7 @@ class PuzzleService {
         .patchNoContent(data, {
           Token: pieceMovement.token,
           Snap: pieceMovement.snap,
+          Mark: self.mark,
         })
         .catch((patchError) => {
           //responseObj = {
@@ -515,7 +505,9 @@ class PuzzleService {
             `/newapi/puzzle/${puzzleId}/piece/${id}/`
           );
           return fetchPuzzlePieceService
-            .get<UnprocessedPieceData>()
+            .get<UnprocessedPieceData>({
+              Mark: self.mark,
+            })
             .then((pieceData) => {
               const pieceMovementData: PieceMovementData = {
                 id: id,

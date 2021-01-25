@@ -582,8 +582,8 @@ class PuzzlePieces:
                         puzzle_id=self.puzzle_id, piece_id=piece_id
                     ),
                     "publish",
-                    payload={"x": x, "y": y},
-                    headers={"Token": piece_token["token"]},
+                    payload={"x": x, "y": y, "r": 0},
+                    headers={"Token": piece_token["token"], "Mark": self.mark},
                 )
             except Exception as err:
                 if str(err) == "too_active":
@@ -680,7 +680,7 @@ class PuzzleActivityJob:
             self.puzzle_details["table_width"],
             self.puzzle_details["table_height"],
         )
-        puzzle_pieces.move_random_pieces_with_delay(delay=0.01, max_delay=0.05)
+        puzzle_pieces.move_random_pieces_with_delay(delay=0.001, max_delay=0.005)
 
 
 def simulate_puzzle_activity(puzzle_ids, count=1):
