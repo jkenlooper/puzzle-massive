@@ -89,6 +89,8 @@ PUZZLE_RULES_HELP_TEXT="
 # 'hot_spot' to limit moving pieces to the same area within 30 seconds
 # 'too_active' decrease karma on piece move when server responds with 503 error
 # 'nginx_piece_publish_limit' to use piece move rate limits on nginx web server
+# Example of a set of rules to use:
+# 'valid_token max_stack_pieces stack_pieces karma_stacked karma_piece_group_move_max puzzle_open_rate hot_piece hot_spot'
 "
 read -e -p "${PUZZLE_RULES_HELP_TEXT}
 " -i "${PUZZLE_RULES}" PUZZLE_RULES;

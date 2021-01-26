@@ -69,6 +69,7 @@ MOVES_BEFORE_PENALTY = 12
 STACK_PENALTY = 1
 HOTSPOT_EXPIRE = 30
 HOTSPOT_LIMIT = 10
+HOT_PIECE_MOVEMENT_RATE_TIMEOUT = 10
 PIECE_MOVEMENT_RATE_TIMEOUT = 100
 PIECE_MOVEMENT_RATE_LIMIT = 100
 
@@ -318,19 +319,9 @@ class PuzzlePieceTokenView(MethodView):
             )
             return make_response(json.jsonify(err_msg), 429)
 
-        def move_bit_icon_to_piece():
+        def move_bit_icon_to_piece(x, y):
             # Claim the piece by showing the bit icon next to it.
-            (x, y) = list(
-                map(
-                    int,
-                    redis_connection.hmget(
-                        "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece),
-                        ["x", "y"],
-                    ),
-                )
-            )
             msg = formatBitMovementString(user, x, y)
-
             sse.publish(
                 msg,
                 type="move",
@@ -343,7 +334,8 @@ class PuzzlePieceTokenView(MethodView):
         adjacent_piece_properties = None
         adjacent_property_list = ["x", "y", "r", "g", "s", str(piece)]
         pzq_current_key = "pzq_current:{puzzle}".format(puzzle=puzzle)
-        with redis_connection.pipeline(transaction=True) as pipe:
+        results = []
+        with redis_connection.pipeline(transaction=False) as pipe:
             for adjacent_piece in adjacent_pieces_list:
                 pc_puzzle_adjacent_piece_key = "pc:{puzzle}:{adjacent_piece}".format(
                     puzzle=puzzle, adjacent_piece=adjacent_piece
@@ -351,53 +343,53 @@ class PuzzlePieceTokenView(MethodView):
                 pipe.hmget(pc_puzzle_adjacent_piece_key, adjacent_property_list)
             pipe.get(pzq_current_key)
             results = pipe.execute()
-            pzq_current = "0"
-            if not isinstance(results[-1], list):
-                pzq_current = results.pop() or pzq_current
-            adjacent_properties = dict(
-                zip(
-                    adjacent_pieces_list,
-                    map(lambda x: dict(zip(adjacent_property_list, x)), results),
+        pzq_current = "0"
+        if not isinstance(results[-1], list):
+            pzq_current = results.pop() or pzq_current
+        adjacent_properties = dict(
+            zip(
+                adjacent_pieces_list,
+                map(lambda x: dict(zip(adjacent_property_list, x)), results),
+            )
+        )
+        snapshot = []
+        for a_piece, a_props in adjacent_properties.items():
+            # skip any that are immovable
+            if a_props.get("s") == "1":
+                continue
+            # skip any that are in the same group
+            if a_props.get("g") != None and a_props.get("g") == piece_properties.get(
+                "g"
+            ):
+                continue
+            # skip any that don't have offsets (adjacent edge piece)
+            if not a_props.get(str(piece)):
+                continue
+            if a_props.get("g") == None:
+                a_props["g"] = ""
+            snapshot.append(
+                "_".join(
+                    [
+                        str(a_piece),
+                        a_props.get("x", ""),
+                        a_props.get("y", ""),
+                        a_props.get("r", ""),
+                        a_props.get(str(piece), ""),
+                        # a_props.get("g")
+                    ]
                 )
             )
-            snapshot = []
-            for a_piece, a_props in adjacent_properties.items():
-                # skip any that are immovable
-                if a_props.get("s") == "1":
-                    continue
-                # skip any that are in the same group
-                if a_props.get("g") != None and a_props.get(
-                    "g"
-                ) == piece_properties.get("g"):
-                    continue
-                # skip any that don't have offsets (adjacent edge piece)
-                if not a_props.get(str(piece)):
-                    continue
-                if a_props.get("g") == None:
-                    a_props["g"] = ""
-                snapshot.append(
-                    "_".join(
-                        [
-                            str(a_piece),
-                            a_props.get("x", ""),
-                            a_props.get("y", ""),
-                            a_props.get("r", ""),
-                            a_props.get(str(piece), ""),
-                            # a_props.get("g")
-                        ]
-                    )
-                )
 
-            if len(snapshot):
-                snapshot_id = uuid.uuid4().hex[:8]
-                snapshot_key = f"snap:{snapshot_id}"
-                snapshot.insert(0, pzq_current)
-                redis_connection.set(snapshot_key, ":".join(snapshot))
-                redis_connection.expire(
-                    snapshot_key,
-                    current_app.config["MAX_PAUSE_PIECES_TIMEOUT"]
-                    + (current_app.config["PIECE_MOVE_TIMEOUT"] + 2),
-                )
+        if len(snapshot):
+            snapshot_id = uuid.uuid4().hex[:8]
+            snapshot_key = f"snap:{snapshot_id}"
+            snapshot.insert(0, pzq_current)
+            redis_connection.set(snapshot_key, ":".join(snapshot))
+            redis_connection.expire(
+                snapshot_key,
+                current_app.config["MAX_PAUSE_PIECES_TIMEOUT"]
+                + (current_app.config["PIECE_MOVE_TIMEOUT"] + 2),
+            )
 
         validate_token = (
             len({"all", "valid_token"}.intersection(current_app.config["PUZZLE_RULES"]))
@@ -405,7 +397,8 @@ class PuzzlePieceTokenView(MethodView):
         )
 
         if not validate_token:
-            move_bit_icon_to_piece()
+
+            move_bit_icon_to_piece(piece_properties.get("x"), piece_properties.get("y"))
             response = {
                 "token": "---",
                 "lock": now + TOKEN_LOCK_TIMEOUT,
@@ -478,20 +471,22 @@ class PuzzlePieceTokenView(MethodView):
                     }
                     return make_response(json.jsonify(err_msg), 409)
 
-        # Remove player from the piece token queue
-        redis_connection.zrem(piece_token_queue_key, mark)
-
         # This piece is up for grabs since it has been more then 5 seconds since
         # another player has grabbed it.
         token = uuid.uuid4().hex[:8]
-        redis_connection.set(
-            puzzle_piece_token_key, f"{token}:{mark}", ex=TOKEN_EXPIRE_TIMEOUT,
-        )
-        redis_connection.set(
-            f"t:{mark}", f"{puzzle}:{piece}:{user}", ex=TOKEN_LOCK_TIMEOUT,
-        )
+        with redis_connection.pipeline(transaction=False) as pipe:
+            # Remove player from the piece token queue
+            pipe.zrem(piece_token_queue_key, mark)
 
-        move_bit_icon_to_piece()
+            pipe.set(
+                puzzle_piece_token_key, f"{token}:{mark}", ex=TOKEN_EXPIRE_TIMEOUT,
+            )
+            pipe.set(
+                f"t:{mark}", f"{puzzle}:{piece}:{user}", ex=TOKEN_LOCK_TIMEOUT,
+            )
+            pipe.execute()
+
+        move_bit_icon_to_piece(piece_properties.get("x"), piece_properties.get("y"))
 
         # end = time.perf_counter()
         # duration = end - start
@@ -778,11 +773,6 @@ class PuzzlePiecesMovePublishView(MethodView):
             }
             return make_response(json.jsonify(err_msg), 400)
 
-        # Set the rounded timestamp
-        rounded_timestamp = timestamp_now - (
-            timestamp_now % PIECE_MOVEMENT_RATE_TIMEOUT
-        )
-
         points_key = "points:{user}".format(user=user)
         recent_points = int(redis_connection.get(points_key) or "0")
 
@@ -820,32 +810,23 @@ class PuzzlePiecesMovePublishView(MethodView):
             > 0
         ):
             # Decrease karma if piece movement rate has passed threshold
-            # TODO: remove timestamp from key and depend on expire setting
-            pcrate_key = "pcrate:{puzzle}:{user}:{timestamp}".format(
-                puzzle=puzzle, user=user, timestamp=rounded_timestamp
-            )
-            if redis_connection.setnx(pcrate_key, 1):
-                redis_connection.expire(pcrate_key, PIECE_MOVEMENT_RATE_TIMEOUT)
-            else:
-                moves = redis_connection.incr(pcrate_key)
-                if moves > PIECE_MOVEMENT_RATE_LIMIT:
-                    # print 'decrease because piece movement rate limit reached.'
-                    if karma > 0:
-                        karma = redis_connection.decr(karma_key)
-                    karma_change -= 1
+            pcrate_key = f"pcrate:{puzzle}:{user}"
+            moves = redis_connection.incr(pcrate_key)
+            redis_connection.expire(pcrate_key, PIECE_MOVEMENT_RATE_TIMEOUT)
+            if moves > PIECE_MOVEMENT_RATE_LIMIT:
+                if karma > 0:
+                    karma = redis_connection.decr(karma_key)
+                karma_change -= 1
 
         if (
             len({"all", "hot_piece"}.intersection(current_app.config["PUZZLE_RULES"]))
             > 0
         ):
-            # Decrease karma when moving the same piece again within a minute
-            # TODO: remove timestamp from key and depend on expire setting
-            hotpc_key = "hotpc:{puzzle}:{user}:{piece}:{timestamp}".format(
-                puzzle=puzzle, user=user, piece=piece, timestamp=rounded_timestamp
-            )
+            # Decrease karma when moving the same piece multiple times within
+            # a minute.
+            hotpc_key = f"hotpc:{puzzle}:{user}:{piece}"
             recent_move_count = redis_connection.incr(hotpc_key)
-            if recent_move_count == 1:
-                redis_connection.expire(hotpc_key, PIECE_MOVEMENT_RATE_TIMEOUT)
+            redis_connection.expire(hotpc_key, HOT_PIECE_MOVEMENT_RATE_TIMEOUT)
 
             if recent_move_count > MOVES_BEFORE_PENALTY:
                 if karma > 0:
@@ -861,8 +842,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                 puzzle=puzzle, user=user, x=x - (x % 200), y=y - (y % 200),
             )
             hotspot_count = redis_connection.incr(hotspot_area_key)
-            if hotspot_count == 1:
-                redis_connection.expire(hotspot_area_key, HOTSPOT_EXPIRE)
+            redis_connection.expire(hotspot_area_key, HOTSPOT_EXPIRE)
             if hotspot_count > HOTSPOT_LIMIT:
                 if karma > 0:
                     karma = redis_connection.decr(karma_key)
