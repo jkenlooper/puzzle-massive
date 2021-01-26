@@ -22,37 +22,43 @@
     0 0 0 20px rgba(255, 255, 255, 0.8);
 }
 
-.p.is-active {
+.pm-PuzzlePieces-collection.is-waitingOnMoveRequest .p {
   transition-duration: 0s;
 }
-.p--dark.is-active {
+
+.is-active.p {
+  /*transition-duration: 0s;*/
+}
+/*
+.p--dark.is-active.p {
 }
 
-.p--light.is-active {
+.p--light.is-active.p {
 }
+*/
 
-.p.is-pending,
-.pm-PuzzlePieces.show-movable .p.is-pending {
+.is-pending.p,
+.pm-PuzzlePieces.show-movable .is-pending.p {
   z-index: 13;
   box-shadow: 0px 0px 100px 0px currentColor;
 }
 
-.p.is-immovable {
+.is-immovable.p {
   z-index: 9;
   pointer-events: none;
 }
 
-.pm-PuzzlePieces.show-movable .p.is-immovable {
+.pm-PuzzlePieces.show-movable .is-immovable.p {
   box-shadow: none;
 }
 
-.p.is-up,
-.p.is-down {
+.is-up.p,
+.is-down.p {
   z-index: 14;
 }
 
-.p.is-up::before,
-.p.is-down::before {
+.is-up.p::before,
+.is-down.p::before {
   pointer-events: none;
   display: flex;
   align-items: center;
@@ -66,27 +72,25 @@
   font-weight: bold;
 }
 
-.p.is-up::before {
+.is-up.p::before {
   border-radius: 50%;
   color: green;
   content: "+";
 }
 
-.p.is-down::before {
+.is-down.p::before {
   border-radius: 5%;
   color: red;
   content: "-";
 }
 
-.p.is-dragging {
+.is-dragging.p {
   transition-duration: 0s;
   z-index: 15;
 }
 
-.p.is-dragging .pm-PuzzlePieces.show-movable .p.is-dragging {
+.pm-PuzzlePieces.show-movable .is-dragging.p {
   z-index: 15;
-}
-.pm-PuzzlePieces.show-movable .p.is-dragging {
   box-shadow: 0px 0px 100px 0px currentColor;
 }
 
