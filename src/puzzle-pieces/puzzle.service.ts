@@ -47,7 +47,7 @@ interface DefaultPiece {
 
 export interface PieceData extends DefaultPiece {
   id: number;
-  active?: boolean;
+  active?: boolean; // Not currently needed.
   dragging?: boolean;
   pending?: boolean;
   status?: string; // TODO: use when move to a state machine
@@ -658,23 +658,26 @@ class PuzzleService {
     this._broadcast(piecesInfoPauseResume, this._piecesPaused);
   }
 
-  private onPieceUpdate(data: PieceMovementData) {
+  private onPieceUpdate(data: Array<PieceMovementData>) {
     // TODO: rename
-    let piece = this.pieces[data.id];
-    if (piece.pending) {
-      this.unSelectPiece(data.id);
-    }
-    piece = Object.assign(piece, data);
-    piece.pending = false;
-    this._broadcast(piecesMutate, [piece]);
+    let pieceMovements = data.map((pieceMovementData) => {
+      let piece = this.pieces[pieceMovementData.id];
+      if (piece.pending) {
+        this.unSelectPiece(pieceMovementData.id);
+      }
+      if (pieceMovementData.id === this.isWaitingOnMoveRequest) {
+        window.clearTimeout(this.resetTimeoutForOnMoveRequest);
+        this.resetTimeoutForOnMoveRequest = window.setTimeout(() => {
+          this.isWaitingOnMoveRequest = false;
+        }, 1);
+      }
+      piece = Object.assign(piece, pieceMovementData);
+      piece.pending = false;
+      return piece;
+    });
+    this._broadcast(piecesMutate, pieceMovements);
     if (this.piecesPaused) {
-      this._broadcast(piecesShadowMutate, [piece]);
-    }
-    if (data.id === this.isWaitingOnMoveRequest) {
-      window.clearTimeout(this.resetTimeoutForOnMoveRequest);
-      this.resetTimeoutForOnMoveRequest = window.setTimeout(() => {
-        this.isWaitingOnMoveRequest = false;
-      }, 1);
+      this._broadcast(piecesShadowMutate, pieceMovements);
     }
   }
 
@@ -684,6 +687,9 @@ class PuzzleService {
     piece.y = data.y || piece.origin.y;
     piece.pending = false;
     piece.active = false;
+    if (data.id === this.isWaitingOnMoveRequest) {
+      this.isWaitingOnMoveRequest = false;
+    }
     this._broadcast(pieceMoveRejected, data);
     this._broadcast(piecesMutate, [piece]);
   }

@@ -371,6 +371,7 @@ class PuzzleStream {
     // any = MessageEvent
     const textline = messageEvent.data;
     const lines = textline.split("\n");
+    const pieceMoves: Array<PieceMovementData> = [];
     lines.forEach((line) => {
       const items = line.split(",");
       items.forEach((item) => {
@@ -394,7 +395,8 @@ class PuzzleStream {
             pieceData.y = Number(values[3]);
           }
           // TODO: Add pieceData.r from values[4] when rotate of pieces is enabled
-          this.broadcast(pieceUpdate, pieceData);
+          //this.broadcast(pieceUpdate, pieceData);
+          pieceMoves.push(pieceData);
         } else if (values.length === 4) {
           const bitData: BitMovementData = {
             id: parseInt(values[1]),
@@ -405,6 +407,9 @@ class PuzzleStream {
         }
       });
     });
+    if (pieceMoves.length) {
+      this.broadcast(pieceUpdate, pieceMoves);
+    }
   }
 
   private handleKarmaEvent(message: any) {

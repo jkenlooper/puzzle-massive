@@ -12,11 +12,15 @@
 import { rgbToHsl } from "../site/utilities";
 import hashColorService from "../hash-color/hash-color.service";
 import { puzzleService, PieceData } from "./puzzle.service";
-import { streamService, KarmaData } from "./stream.service";
+import { streamService, KarmaData, PieceMovementData } from "./stream.service";
 import FetchService from "../site/fetch.service";
 import { Status } from "../site/puzzle-images.service";
 
 import "./puzzle-pieces.css";
+
+interface PieceProps {
+  [index: number]: PieceData;
+}
 
 const html = `
   <div class="pm-PuzzlePieces">
@@ -41,6 +45,9 @@ const html = `
 const tag = "pm-puzzle-pieces";
 let lastInstanceId = 0;
 
+interface RenderedShadowPieces {
+  [index: number]: PieceData;
+}
 customElements.define(
   tag,
   class PmPuzzlePieces extends HTMLElement {
@@ -68,6 +75,9 @@ customElements.define(
     private piecesPaused: boolean = false;
     private renderPiecesBuffer: Array<PieceData>;
     private batchRenderPiecesTimeout: number | undefined;
+    private renderedShadowPieces: RenderedShadowPieces = {};
+    private isWaitingOnMoveRequestTimeout: number | undefined;
+    private removeShadowedPiecesTimeout: number | undefined;
     //private pauseStop: number = 0;
 
     constructor() {
@@ -138,11 +148,17 @@ customElements.define(
           const pieceUpdatesService = new FetchService(
             `/newapi/puzzle-piece-updates/${obj.timestamp}/`
           );
-          return pieceUpdatesService.getText().then((data) => {
-            if (data) {
-              streamService.injectMoves(this.puzzleId, data);
-            }
-          });
+          return pieceUpdatesService
+            .getText()
+            .then((data) => {
+              if (data) {
+                streamService.injectMoves(this.puzzleId, data);
+              }
+            })
+            .catch((err) => {
+              // Ignore errors when getting piece updates.
+              console.error(err);
+            });
         })
         .catch((err) => {
           console.error(err);
@@ -299,25 +315,27 @@ customElements.define(
       );
     }
 
-    stopFollowing(data) {
-      // TODO: clean this up when a state machine is used. Checking the
-      // classList for is-pending is not ideal.
-      if (
-        data.id === this.draggedPieceID &&
-        this.draggedPiece &&
-        this.draggedPiece.classList.contains("is-pending")
-      ) {
-        streamService.unsubscribe(
-          "piece/update",
-          `pieceFollow ${this.instanceId}`
-        );
+    stopFollowing(data: Array<PieceMovementData>) {
+      data.forEach((pieceMovementData) => {
+        // TODO: clean this up when a state machine is used. Checking the
+        // classList for is-pending is not ideal.
+        if (
+          pieceMovementData.id === this.draggedPieceID &&
+          this.draggedPiece &&
+          this.draggedPiece.classList.contains("is-pending")
+        ) {
+          streamService.unsubscribe(
+            "piece/update",
+            `pieceFollow ${this.instanceId}`
+          );
 
-        this.$slabMassive.removeEventListener(
-          "mousemove",
-          this.pieceFollow,
-          false
-        );
-      }
+          this.$slabMassive.removeEventListener(
+            "mousemove",
+            this.pieceFollow,
+            false
+          );
+        }
+      });
     }
 
     dropTap(ev) {
@@ -374,6 +392,8 @@ customElements.define(
           );
 
           // tap on piece
+          //window.clearTimeout(this.isWaitingOnMoveRequestTimeout);
+          //this.$collection.classList.add("is-waitingOnMoveRequest");
           puzzleService.selectPiece(id);
           this.$slabMassive.addEventListener(
             "mousemove",
@@ -446,38 +466,57 @@ customElements.define(
     }
 
     batchRenderPieces(pieces: Array<PieceData>) {
+      this.renderPiecesBuffer = this.renderPiecesBuffer.concat(pieces);
       if (!this.piecesPaused) {
         window.clearTimeout(this.batchRenderPiecesTimeout);
         this.batchRenderPiecesTimeout = undefined;
-        let _buffer = this.renderPiecesBuffer.concat(pieces);
+        let _buffer = this.renderPiecesBuffer.concat();
         this.renderPiecesBuffer = [];
         this.renderPieces(_buffer);
         return;
       }
-      this.renderPiecesBuffer = this.renderPiecesBuffer.concat(pieces);
       if (this.batchRenderPiecesTimeout === undefined) {
-        let _buffer = this.renderPiecesBuffer.concat();
-        this.renderPiecesBuffer = [];
-        this.renderPieces(_buffer);
+        //let _buffer = this.renderPiecesBuffer.concat();
+        //this.renderPiecesBuffer = [];
+        //this.renderPieces(_buffer);
         //this.pauseStop = Date.now() + this.maxPausePiecesTimeout * 1000;
         this.batchRenderPiecesTimeout = window.setTimeout(() => {
+          this.batchRenderPiecesTimeout = undefined;
           puzzleService.togglePieceMovements(false);
           if (this.renderPiecesBuffer.length === 0) {
-            this.batchRenderPiecesTimeout = undefined;
             return;
           }
           let _buffer = this.renderPiecesBuffer.concat();
           this.renderPiecesBuffer = [];
           this.renderPieces(_buffer);
-          this.batchRenderPiecesTimeout = undefined;
         }, this.maxPausePiecesTimeout * 1000);
       }
+    }
+
+    _reducePieces(pieces: Array<PieceData>) {
+      if (pieces.length > 1) {
+        const pieceProps: PieceProps = {};
+        pieces = Object.entries(
+          pieces.reduce((acc, piece) => {
+            if (acc[piece.id]) {
+              Object.assign(acc[piece.id], piece);
+            } else {
+              acc[piece.id] = piece;
+            }
+            return acc;
+          }, pieceProps)
+        ).map(([, piece]) => {
+          return piece;
+        });
+      }
+      return pieces;
     }
 
     // update DOM for array of pieces
     renderPieces(pieces: Array<PieceData>) {
       let tmp: undefined | DocumentFragment; // = document.createDocumentFragment();
       //const startTime = new Date();
+      pieces = this._reducePieces(pieces);
       pieces.forEach((piece) => {
         const pieceID = piece.id;
         let $piece = <HTMLElement | null>(
@@ -491,7 +530,8 @@ customElements.define(
           $piece.classList.add("p");
           $piece.setAttribute("id", "p-" + pieceID);
           $piece.classList.add("pc-" + pieceID);
-          $piece.classList.add("p--" + (piece.b === 0 ? "dark" : "light"));
+          // dark/light pieces not used at the moment.
+          //$piece.classList.add("p--" + (piece.b === 0 ? "dark" : "light"));
           tmp.appendChild($piece);
         }
 
@@ -516,7 +556,7 @@ customElements.define(
         }
 
         // Toggle the is-active class
-        if (piece.active || puzzleService.isWaitingOnMoveRequest !== false) {
+        if (piece.active) {
           $piece.classList.add("is-active");
         } else {
           $piece.classList.remove("is-active");
@@ -544,6 +584,14 @@ customElements.define(
     // Update DOM for array of shadow pieces
     renderShadowPieces(pieces: Array<PieceData>) {
       let tmp: undefined | DocumentFragment; // = document.createDocumentFragment();
+      const unrenderedShadowPieces: Array<PieceData> = [];
+      pieces = pieces.reduce((acc, piece) => {
+        if (!this.renderedShadowPieces[piece.id]) {
+          acc.push(piece);
+        }
+        return acc;
+      }, unrenderedShadowPieces);
+      pieces = this._reducePieces(pieces);
       //const startTime = new Date();
       pieces.forEach((piece) => {
         const pieceID = piece.id;
@@ -563,6 +611,7 @@ customElements.define(
             this.$collection.querySelector("#p-" + pieceID)
           );
           if ($realPiece) {
+            $realPiece.classList.add("is-shadowed");
             const realPieceStyle = window.getComputedStyle($realPiece);
             const bbox = $realPiece.getBoundingClientRect();
             $piece.style.transform = realPieceStyle.transform + " scale(1.2)";
@@ -578,6 +627,7 @@ customElements.define(
           }
           tmp.appendChild($piece);
         }
+        this.renderedShadowPieces[pieceID] = piece;
       });
       if (tmp !== undefined && tmp.children.length) {
         this.$collection.appendChild(tmp);
@@ -610,16 +660,24 @@ customElements.define(
     }
     removeShadowPieces() {
       const shadowPieces = this.$collection.querySelectorAll(".s");
-      window.setTimeout(() => {
-        // Delay removing them so the transition can complete first
-        for (const sp of shadowPieces.values()) {
-          try {
-            sp.remove();
-          } catch (error) {
-            // ignore errors here
-          }
+      for (const sp of shadowPieces.values()) {
+        try {
+          sp.remove();
+        } catch (error) {
+          // ignore errors here
         }
-      }, 800);
+      }
+      this.renderedShadowPieces = {};
+      // Delay removing is-shadowed so the transition can complete first
+      window.clearTimeout(this.removeShadowedPiecesTimeout);
+      this.removeShadowedPiecesTimeout = window.setTimeout(() => {
+        const shadowedPieces = this.$collection.querySelectorAll(
+          ".is-shadowed.p"
+        );
+        for (const sp of shadowedPieces.values()) {
+          sp.classList.remove("is-shadowed");
+        }
+      }, 1200);
     }
 
     onToggleMovable(showMovable: boolean) {
@@ -630,6 +688,14 @@ customElements.define(
       this.piecesPaused = pause;
       if (!this.piecesPaused) {
         this.removeShadowPieces();
+        window.clearTimeout(this.isWaitingOnMoveRequestTimeout);
+        this.isWaitingOnMoveRequestTimeout = window.setTimeout(() => {
+          this.$collection.classList.remove("is-waitingOnMoveRequest");
+        }, 1000);
+        //this.$collection.classList.remove("is-waitingOnMoveRequest");
+      } else {
+        window.clearTimeout(this.isWaitingOnMoveRequestTimeout);
+        this.$collection.classList.add("is-waitingOnMoveRequest");
       }
     }
 

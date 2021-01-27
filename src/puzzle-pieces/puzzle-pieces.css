@@ -25,9 +25,16 @@
 .pm-PuzzlePieces-collection.is-waitingOnMoveRequest .p {
   transition-duration: 0s;
 }
+.pm-PuzzlePieces-collection.is-waitingOnMoveRequest .is-shadowed.p {
+  transition-duration: 0.6s;
+  transition-timing-function: linear;
+}
 
 .is-active.p {
-  /*transition-duration: 0s;*/
+  transition-duration: 0s;
+}
+.pm-PuzzlePieces-collection.is-waitingOnMoveRequest .is-shadowed.is-active.p {
+  transition-duration: 0s;
 }
 /*
 .p--dark.is-active.p {
@@ -111,6 +118,8 @@
 }
 
 .pm-PuzzlePieces-collection {
+}
+.pm-PuzzlePieces-collection.is-waitingOnMoveRequest {
 }
 
 .pm-PuzzlePieces-dropZone {
