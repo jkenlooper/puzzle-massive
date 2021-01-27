@@ -140,7 +140,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
             # Max out karma
             if karma < current_app.config["MAX_KARMA"]:
                 karma = redis_connection.incr(karma_key)
-                karma_change += 1
+            karma_change += 1
 
             redis_connection.incr("batchpoints:{user}".format(user=user), amount=earns)
 

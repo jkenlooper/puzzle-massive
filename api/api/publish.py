@@ -225,7 +225,6 @@ class PuzzlePieceTokenView(MethodView):
     decorators = [user_not_banned]
 
     def get(self, puzzle_id, piece):
-        # start = time.perf_counter()
         ip = request.headers.get("X-Real-IP")
         user = current_app.secure_cookie.get("user") or user_id_from_ip(ip)
         if user == None:
@@ -423,16 +422,19 @@ class PuzzlePieceTokenView(MethodView):
             return make_response(json.jsonify(err_msg), 429)
 
         piece_token_queue_key = get_puzzle_piece_token_queue_key(puzzle, piece)
-        queue_rank = redis_connection.zrank(piece_token_queue_key, mark)
+        with redis_connection.pipeline(transaction=False) as pipe:
+            pipe.zrank(piece_token_queue_key, mark)
+            pipe.expire(piece_token_queue_key, TOKEN_LOCK_TIMEOUT + 5)
+            (queue_rank, _) = pipe.execute()
 
         if queue_rank == None:
             # Append this player to a queue for getting the next token. This
             # will prevent the player with the lock from continually locking the
             # same piece.
-            # TODO: use pipe here for these 2
-            redis_connection.zadd(piece_token_queue_key, {mark: now})
-            queue_rank = redis_connection.zrank(piece_token_queue_key, mark)
-        redis_connection.expire(piece_token_queue_key, TOKEN_LOCK_TIMEOUT + 5)
+            with redis_connection.pipeline(transaction=False) as pipe:
+                pipe.zadd(piece_token_queue_key, {mark: now})
+                pipe.zrank(piece_token_queue_key, mark)
+                (_, queue_rank) = pipe.execute()
 
         # Check if token on piece is in a queue and if the player requesting it
         # is the player that is next. Show an error message if not.
@@ -488,9 +490,6 @@ class PuzzlePieceTokenView(MethodView):
 
         move_bit_icon_to_piece(piece_properties.get("x"), piece_properties.get("y"))
 
-        # end = time.perf_counter()
-        # duration = end - start
-        # redis_connection.rpush("testdata:token", duration)
         response = {
             "token": token,
             "lock": now + TOKEN_LOCK_TIMEOUT,
@@ -855,11 +854,6 @@ class PuzzlePiecesMovePublishView(MethodView):
             if karma + recent_points <= 0:
                 return _blockplayer()
 
-        # end = time.perf_counter()
-        # duration = end - start
-        # redis_connection.rpush("testdata:publish", duration)
-
-        # substart = time.perf_counter()
         piece_move_timeout = current_app.config["PIECE_MOVE_TIMEOUT"]
 
         # Use a custom built and managed queue to prevent multiple processes
@@ -1027,10 +1021,6 @@ class PuzzlePiecesMovePublishView(MethodView):
                 "timeout": piece_move_timeout,
             }
             return make_response(json.jsonify(err_msg), 503,)
-
-        # subend = time.perf_counter()
-        # subduration = subend - substart
-        # redis_connection.rpush("testdata:move", subduration)
 
         # Check msg for error or if piece can't be moved
         if not isinstance(msg, str):
