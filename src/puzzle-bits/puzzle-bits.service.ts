@@ -7,6 +7,7 @@ export interface PlayerBit {
   y: number;
   lastUpdate: Date;
   active: boolean;
+  recent: boolean;
   ownBit: boolean;
 }
 interface PlayerBits {
@@ -15,15 +16,20 @@ interface PlayerBits {
 interface MoveTimeouts {
   [playerBitId: number]: number;
 }
+interface RecentTimeouts {
+  [playerBitId: number]: number;
+}
 type PlayerBitsCallback = () => any;
 
 const BitCacheTimeout = 25 * 60 * 1000; // 25 minutes
 const BitRecentTimeout = 5 * 60 * 1000; // 5 minutes in milliseconds
-const BitActiveTimeout = 5 * 1000; // 5 seconds in milliseconds
 
 class PuzzleBitsService {
   private bits: PlayerBits = {};
   private moveTimeouts: MoveTimeouts = {};
+  private recentTimeouts: RecentTimeouts = {};
+  private _bitActiveTimeoutMS = 5 * 1000;
+  private _bitRecentTimeoutMS = 60 * 1000;
   collection: Array<PlayerBit> = [];
   listeners: Map<string, PlayerBitsCallback> = new Map();
 
@@ -65,6 +71,7 @@ class PuzzleBitsService {
         y: 0,
         lastUpdate: new Date(),
         active: false,
+        recent: false,
         ownBit: true,
       };
       if (self.bits[playerId] === undefined) {
@@ -73,6 +80,13 @@ class PuzzleBitsService {
         Object.assign(self.bits[bit.id], bit);
       }
     }
+  }
+
+  setBitActiveTimeout(bitActiveTimeout: number) {
+    this._bitActiveTimeoutMS = bitActiveTimeout * 1000;
+  }
+  setBitRecentTimeout(bitRecentTimeout: number) {
+    this._bitRecentTimeoutMS = bitRecentTimeout * 1000;
   }
 
   static isRecent(now: Date, bit: PlayerBit) {
@@ -91,9 +105,11 @@ class PuzzleBitsService {
       {
         lastUpdate: new Date(),
         active: true,
+        recent: true,
       }
     );
     this.moveTimeouts[bitId] = setInactive(bitId);
+    this.recentTimeouts[bitId] = setNotRecent(bitId);
 
     this.bits[bitId] = bit;
 
@@ -106,7 +122,15 @@ class PuzzleBitsService {
         self.bits[playerBitId].active = false;
         self._updateCollection();
         self._broadcast();
-      }, BitActiveTimeout);
+      }, self._bitActiveTimeoutMS);
+    }
+    function setNotRecent(playerBitId: number) {
+      window.clearTimeout(self.recentTimeouts[playerBitId]);
+      return window.setTimeout(() => {
+        self.bits[playerBitId].recent = false;
+        self._updateCollection();
+        self._broadcast();
+      }, self._bitRecentTimeoutMS);
     }
   }
 

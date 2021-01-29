@@ -83,8 +83,6 @@ PIECE_TRANSLATE_EXCEEDED_REASON = "Piece moves exceeded {PIECE_TRANSLATE_MAX_COU
     **locals()
 )
 
-TOKEN_EXPIRE_TIMEOUT = 60 * 5
-TOKEN_LOCK_TIMEOUT = 5
 TOKEN_INVALID_BAN_TIME_INCR = 15
 
 
@@ -395,6 +393,8 @@ class PuzzlePieceTokenView(MethodView):
             > 0
         )
 
+        TOKEN_LOCK_TIMEOUT = current_app.config["TOKEN_LOCK_TIMEOUT"]
+        TOKEN_EXPIRE_TIMEOUT = current_app.config["TOKEN_EXPIRE_TIMEOUT"]
         if not validate_token:
 
             move_bit_icon_to_piece(piece_properties.get("x"), piece_properties.get("y"))

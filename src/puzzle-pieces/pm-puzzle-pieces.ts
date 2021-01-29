@@ -395,6 +395,7 @@ customElements.define(
           //window.clearTimeout(this.isWaitingOnMoveRequestTimeout);
           //this.$collection.classList.add("is-waitingOnMoveRequest");
           puzzleService.selectPiece(id);
+          this.pieceFollow(ev); // show initial tap by moving piece to center
           this.$slabMassive.addEventListener(
             "mousemove",
             this.pieceFollow,

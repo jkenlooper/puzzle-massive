@@ -26,6 +26,10 @@ Types of changes
 ### Changed
 
 - Drop limit for same player concurrent piece moves
+- Show ring around player bits when clicking on pieces
+- Replace box shadow around pending piece movement with an hourglass icon
+- Player bits stay on puzzle longer
+- Don't show own player bit on puzzles
 
 ## [2.9.1] - 2020-01-24
 

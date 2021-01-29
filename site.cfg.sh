@@ -262,6 +262,16 @@ MINIMUM_TO_CLAIM_ACCOUNT = NEW_USER_STARTING_POINTS + POINT_COST_FOR_CHANGING_BI
 PIECE_MOVE_TIMEOUT = 4
 # The player can pause piece movements on their end for this max time in seconds.
 MAX_PAUSE_PIECES_TIMEOUT = 15
+# The token lock timeout prevents other players from stealing pieces from the
+# player that clicked on it first. The player has this much time to finish their
+# piece movement before it can be taken from them by another player.
+TOKEN_LOCK_TIMEOUT = 5
+# Tokens that are used for piece movements are deleted after the piece has been
+# moved. The token expire timeout is the max time that the token will be valid.
+TOKEN_EXPIRE_TIMEOUT = 60 * 5
+# Hide player bits on a puzzle after this many seconds of them not moving
+# a piece.
+PLAYER_BIT_RECENT_ACTIVITY_TIMEOUT = 10
 # Tolerance in pixels that pieces need to be within when checking if they join.
 # Set at 100 pixels for players with a touch device since the accuracy is around
 # 50 pixels. 50 to the left + 50 to the right for example.
