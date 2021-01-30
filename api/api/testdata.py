@@ -518,17 +518,18 @@ class UserSession:
 
 
 class PuzzlePieces:
-    def __init__(self, user_session, puzzle, puzzle_id, table_width, table_height):
-        self.user_session = user_session
+    def __init__(self, user_sessions, puzzle, puzzle_id, table_width, table_height):
+        self.user_sessions = user_sessions
         self.puzzle = puzzle
         self.puzzle_id = puzzle_id
 
-        karma_key = init_karma_key(
-            redis_connection, self.puzzle, self.user_session.ip, current_app.config
-        )
-        redis_connection.delete(karma_key)
+        for user_session in self.user_sessions:
+            karma_key = init_karma_key(
+                redis_connection, self.puzzle, user_session.ip, current_app.config
+            )
+            redis_connection.delete(karma_key)
 
-        self.puzzle_pieces = self.user_session.get_data(
+        self.puzzle_pieces = self.user_sessions[0].get_data(
             "/puzzle-pieces/{0}/".format(self.puzzle_id), "api"
         )
         self.mark = uuid4().hex[:10]
@@ -541,18 +542,20 @@ class PuzzlePieces:
 
     def move_random_pieces_with_delay(self, delay=1, max_delay=10):
         while True:
-            random_delay = round((random() * (max_delay - delay)), 3) + delay
-            self.move_random_piece()
-            time.sleep(random_delay)
+            # random_delay = round((random() * (max_delay - delay)), 3) + delay
+            for user_session in self.user_sessions:
+                self.move_random_piece(user_session)
+            # time.sleep(random_delay)
+            time.sleep(delay)
 
-    def move_random_piece(self):
+    def move_random_piece(self, user_session):
         piece_id = choice(self.movable_pieces)
         x = randint(0, self.table_width - 100)
         y = randint(0, self.table_height - 100)
         start = time.perf_counter()
         piece_token = None
         try:
-            piece_token = self.user_session.get_data(
+            piece_token = user_session.get_data(
                 "/puzzle/{puzzle_id}/piece/{piece_id}/token/?mark={mark}".format(
                     puzzle_id=self.puzzle_id,
                     piece_id=piece_id,
@@ -561,12 +564,12 @@ class PuzzlePieces:
                 "publish",
             )
         except Exception as err:
-            # ("resetting karma for {ip}".format(ip=self.user_session.ip))
+            # ("resetting karma for {ip}".format(ip=user_session.ip))
             karma_key = init_karma_key(
-                redis_connection, self.puzzle, self.user_session.ip, current_app.config
+                redis_connection, self.puzzle, user_session.ip, current_app.config
             )
             redis_connection.delete(karma_key)
-            redis_connection.zrem("bannedusers", self.user_session.shareduser)
+            redis_connection.zrem("bannedusers", user_session.shareduser)
             # current_app.logger.debug(f"get token error: {err}")
             if str(err) == "blockedplayer":
                 blockedplayers_for_puzzle_key = "blockedplayers:{puzzle}".format(
@@ -579,7 +582,7 @@ class PuzzlePieces:
         if piece_token and piece_token.get("token"):
             puzzle_pieces_move = None
             try:
-                puzzle_pieces_move = self.user_session.patch_data(
+                puzzle_pieces_move = user_session.patch_data(
                     "/puzzle/{puzzle_id}/piece/{piece_id}/move/".format(
                         puzzle_id=self.puzzle_id, piece_id=piece_id
                     ),
@@ -593,26 +596,26 @@ class PuzzlePieces:
                     time.sleep(30)
                 else:
                     # current_app.logger.debug('move exception {}'.format(err))
-                    # current_app.logger.debug("resetting karma for {ip}".format(ip=self.user_session.ip))
+                    # current_app.logger.debug("resetting karma for {ip}".format(ip=user_session.ip))
                     karma_key = init_karma_key(
                         redis_connection,
                         self.puzzle,
-                        self.user_session.ip,
+                        user_session.ip,
                         current_app.config,
                     )
                     redis_connection.delete(karma_key)
-                    redis_connection.zrem("bannedusers", self.user_session.shareduser)
+                    redis_connection.zrem("bannedusers", user_session.shareduser)
                 return
             if puzzle_pieces_move:
                 if puzzle_pieces_move.get("msg") == "boing":
                     raise Exception("boing")
                 # Reset karma:puzzle:ip redis key when it gets low
                 if puzzle_pieces_move["karma"] < 2:
-                    # print("resetting karma for {ip}".format(ip=self.user_session.ip))
+                    # print("resetting karma for {ip}".format(ip=user_session.ip))
                     karma_key = init_karma_key(
                         redis_connection,
                         self.puzzle,
-                        self.user_session.ip,
+                        user_session.ip,
                         current_app.config,
                     )
                     redis_connection.delete(karma_key)
@@ -660,10 +663,10 @@ average latency: {avg}"""
 
 
 class PuzzleActivityJob:
-    def __init__(self, puzzle_id, ip):
+    def __init__(self, puzzle_id, ips):
         self.puzzle_id = puzzle_id
-        self.ip = ip
-        self.user_session = UserSession(ip=self.ip)
+        self.ips = ips
+        self.user_sessions = list(map(lambda ip: UserSession(ip=ip), self.ips))
         cur = db.cursor()
         result = cur.execute(
             "select id, table_width, table_height from Puzzle where puzzle_id = :puzzle_id;",
@@ -676,13 +679,13 @@ class PuzzleActivityJob:
 
     def run(self):
         puzzle_pieces = PuzzlePieces(
-            self.user_session,
+            self.user_sessions,
             self.puzzle_details["id"],
             self.puzzle_id,
             self.puzzle_details["table_width"],
             self.puzzle_details["table_height"],
         )
-        puzzle_pieces.move_random_pieces_with_delay(delay=1, max_delay=10)
+        puzzle_pieces.move_random_pieces_with_delay(delay=0.1, max_delay=0.1)
 
 
 def simulate_puzzle_activity(puzzle_ids, count=1):
@@ -715,14 +718,10 @@ def simulate_puzzle_activity(puzzle_ids, count=1):
     jobs = []
     puzzle_activity_job_stats = PuzzleActivityJobStats()
     jobs.append(multiprocessing.Process(target=puzzle_activity_job_stats.run))
-    while players:
-        for puzzle_id in puzzle_ids or listed_puzzle_ids:
-            ip = players.pop()
-            user_session = UserSession(ip=ip)
-            puzzle_activity_job = PuzzleActivityJob(puzzle_id, ip)
-            jobs.append(multiprocessing.Process(target=puzzle_activity_job.run))
-            if not players:
-                break
+
+    for puzzle_id in _puzzle_ids:
+        puzzle_activity_job = PuzzleActivityJob(puzzle_id, players)
+        jobs.append(multiprocessing.Process(target=puzzle_activity_job.run))
 
     for job in jobs:
         job.start()
