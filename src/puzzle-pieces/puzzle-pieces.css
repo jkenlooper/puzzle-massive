@@ -53,7 +53,6 @@
 }
 .is-pending.p::before {
   pointer-events: none;
-  border: 3px solid currentColor;
   color: currentColor;
   width: 1em;
   height: 1em;
@@ -70,13 +69,13 @@
 }
 .is-pending.p::after {
   pointer-events: none;
-  border: 3px solid currentColor;
   color: currentColor;
   width: 1em;
   height: 1em;
   font-size: 32px;
-  content: "⏳️";
-  line-height: 1;
+  content: "…";
+  line-height: 0.5;
+  font-weight: bold;
   text-align: center;
   transform: translate(-1em, -1em);
   border-radius: 20%;
@@ -140,17 +139,17 @@
 }
 .is-dragging.p::before {
   pointer-events: none;
-  border: 3px solid currentColor;
+  box-sizing: border-box;
   color: currentColor;
-  width: 1em;
-  height: 1em;
+  width: calc(1em - 6px);
+  height: calc(1em - 6px);
   font-size: 32px;
   content: "";
   transform: translate(-1em, -1em);
-  border-radius: 22%;
+  border-radius: 50%;
   position: absolute;
-  left: 0;
-  top: 0;
+  left: 3px;
+  top: 3px;
   display: block;
   background-color: currentColor;
   opacity: 0;
@@ -160,8 +159,9 @@
 }
 .is-dragging.p::after {
   pointer-events: none;
-  border: 3px solid currentColor;
+  border: 6px solid currentColor;
   color: currentColor;
+  box-sizing: border-box;
   width: 1em;
   height: 1em;
   font-size: 32px;
@@ -169,7 +169,7 @@
   line-height: 1;
   text-align: center;
   transform: translate(-1em, -1em);
-  border-radius: 20%;
+  border-radius: 50%;
   position: absolute;
   left: 0;
   top: 0;
