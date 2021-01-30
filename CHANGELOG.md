@@ -21,7 +21,7 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
-## [Unreleased] - ...
+## [2.9.2] - 2021-01-30
 
 ### Changed
 
@@ -31,7 +31,7 @@ Types of changes
 - Player bits stay on puzzle longer
 - Don't show own player bit on puzzles
 
-## [2.9.1] - 2020-01-24
+## [2.9.1] - 2021-01-24
 
 ### Changed
 
@@ -41,7 +41,7 @@ Types of changes
 
 - The 'bump' button on puzzles that were in the queue were missing
 
-## [2.9.0] - 2020-01-23
+## [2.9.0] - 2021-01-23
 
 Improved how players can move pieces on a puzzle that is seeing lots of activity.
 
