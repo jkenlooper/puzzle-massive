@@ -63,6 +63,7 @@ objects := site.cfg web/puzzle-massive.conf web/puzzle-massive--down.conf stats/
 	#openssl dhparam -out $@ 2048
 
 bin/chill: chill/requirements.txt requirements.txt
+	pip install wheel
 	pip install --upgrade --upgrade-strategy eager -r $<
 	touch $@;
 
@@ -83,14 +84,17 @@ db.dump.sql: site.cfg site-data.sql $(wildcard chill-*.yaml)
 
 # Also installs janitor, scheduler and artist
 bin/puzzle-massive-api: api/requirements.txt requirements.txt api/setup.py
+	pip install wheel
 	pip install --upgrade --upgrade-strategy eager -r $<
 	touch $@;
 
 bin/puzzle-massive-divulger: divulger/requirements.txt requirements.txt divulger/setup.py
+	pip install wheel
 	pip install --upgrade --upgrade-strategy eager -r $<
 	touch $@;
 
 bin/puzzle-massive-stream: stream/requirements.txt requirements.txt stream/setup.py
+	pip install wheel
 	pip install --upgrade --upgrade-strategy eager -r $<
 	touch $@;
 

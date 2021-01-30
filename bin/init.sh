@@ -33,4 +33,5 @@ su --command "chmod 600 ~/.ssh/authorized_keys" dev
 
 # Disable password authentication for ssh and only use public keys
 sed --in-place "s/^PasswordAuthentication yes$/PasswordAuthentication no/" /etc/ssh/sshd_config
+sed --in-place "s/^#PasswordAuthentication yes$/PasswordAuthentication no/" /etc/ssh/sshd_config
 systemctl reload sshd

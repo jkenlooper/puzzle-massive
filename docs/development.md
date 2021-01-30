@@ -140,12 +140,6 @@ cd /usr/local/src/puzzle-massive/;
 
 # Install other software dependencies with apt-get and npm.
 sudo ./bin/setup.sh;
-
-# Fix permissions on home .config and .npm directories because of sudo npm
-# install command used in setup.sh script.
-# TODO: no longer needed?
-#sudo chown -R dev:dev ~/.config
-#sudo chown -R dev:dev ~/.npm
 ```
 
 ### Create local SSL certs (optional)
@@ -229,7 +223,7 @@ python3 -m venv .
 source bin/activate;
 
 # Install black to format python code when developing
-pip install black;
+python3 -m pip install black;
 
 # Build the dist files for local development
 nvm use;
@@ -279,7 +273,6 @@ cd /usr/local/src/puzzle-massive/;
 # Setup to use a virtual python environment
 python3 -m venv .
 source bin/activate;
-pip install wheel;
 
 # Makes the initial development version
 make;

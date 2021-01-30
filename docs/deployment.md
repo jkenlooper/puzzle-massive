@@ -82,7 +82,6 @@ been uploaded to the home directory.
     cd /usr/local/src/puzzle-massive;
     python3 -m venv .;
     source bin/activate;
-    pip install wheel
     make ENVIRONMENT=production;
     sudo make ENVIRONMENT=production install;
     sudo nginx -t;
@@ -140,7 +139,6 @@ by the public.
     cd /usr/local/src/puzzle-massive/;
     python3 -m venv .;
     source bin/activate;
-    pip install wheel;
     make ENVIRONMENT=production;
     sudo make ENVIRONMENT=production install;
     sudo ./bin/appctl.sh stop;

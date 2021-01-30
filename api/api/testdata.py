@@ -554,7 +554,9 @@ class PuzzlePieces:
         try:
             piece_token = self.user_session.get_data(
                 "/puzzle/{puzzle_id}/piece/{piece_id}/token/?mark={mark}".format(
-                    puzzle_id=self.puzzle_id, piece_id=piece_id, mark=self.mark,
+                    puzzle_id=self.puzzle_id,
+                    piece_id=piece_id,
+                    mark=self.mark,
                 ),
                 "publish",
             )
@@ -680,13 +682,11 @@ class PuzzleActivityJob:
             self.puzzle_details["table_width"],
             self.puzzle_details["table_height"],
         )
-        puzzle_pieces.move_random_pieces_with_delay(delay=0.001, max_delay=0.005)
+        puzzle_pieces.move_random_pieces_with_delay(delay=1, max_delay=10)
 
 
 def simulate_puzzle_activity(puzzle_ids, count=1):
-    """
-
-    """
+    """"""
     cur = db.cursor()
     result = cur.execute(
         "select distinct ip from User order by random() limit 1;",
@@ -713,6 +713,8 @@ def simulate_puzzle_activity(puzzle_ids, count=1):
     cur.close()
 
     jobs = []
+    puzzle_activity_job_stats = PuzzleActivityJobStats()
+    jobs.append(multiprocessing.Process(target=puzzle_activity_job_stats.run))
     while players:
         for puzzle_id in puzzle_ids or listed_puzzle_ids:
             ip = players.pop()
@@ -722,8 +724,6 @@ def simulate_puzzle_activity(puzzle_ids, count=1):
             if not players:
                 break
 
-    puzzle_activity_job_stats = PuzzleActivityJobStats()
-    jobs.append(multiprocessing.Process(target=puzzle_activity_job_stats.run))
     for job in jobs:
         job.start()
 
