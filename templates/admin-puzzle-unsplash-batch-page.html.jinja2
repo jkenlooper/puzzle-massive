@@ -1,0 +1,41 @@
+{% extends 'admin-base.html.jinja2' %}
+
+{% block main %}
+
+        {% if not config.UNSPLASH_APPLICATION_ID %}
+        <p>
+          <strong>This site is not set up to use the Unsplash API.</strong>
+        </p>
+          {% else %}
+
+<form id="unsplash_batch" method="post" action="/newapi/admin/puzzle/unsplash-batch/">
+  <table>
+  <tr>
+  <th>Unlisted</th>
+  <th>Piece Count</th>
+  <th>Background Color</th>
+  <th>Unsplash Link</th>
+  </tr>
+
+  <tr>
+        <td>
+        <input type="checkbox" name="permission" value="-1">
+        </td>
+
+    <td>
+        <input type="number"
+               min="{{ config.MINIMUM_PIECE_COUNT }}"
+               max="{{ config.MAXIMUM_PIECE_COUNT }}"
+               name="pieces" value="500">
+      </td>
+    <td>
+      <input class="jscolor pm-UploadForm-colorPicker u-textCenter" type="text" name="bg_color" value="#cccccc">
+      </td>
+    <td>
+        <input type="text" name="link" placeholder="https://unsplash.com/photos/4nr59MLWI9E" maxlength="1000">
+      </td>
+    </tr>
+</form>
+        {% endif %}
+{% endblock %}
+
