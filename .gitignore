@@ -58,3 +58,10 @@
 
 /root/puzzle-massive-logo-600.jpg
 /root/puzzle-massive-logo-600.png
+
+/chill-data/*
+!/chill-data/styleguide.yaml
+!/chill-data/README.md
+
+/documents/other/*
+!/documents/other/README.md

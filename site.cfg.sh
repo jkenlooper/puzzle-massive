@@ -205,6 +205,9 @@ SUGGEST_IMAGE_LINK = "${SUGGEST_IMAGE_LINK}"
 
 SECURE_COOKIE_SECRET = "${SECURE_COOKIE_SECRET}"
 
+# Either production or development
+ENVIRONMENT="${ENVIRONMENT}"
+
 # Temporary until the puzzle contributor role exists
 NEW_PUZZLE_CONTRIB = "${NEW_PUZZLE_CONTRIB}"
 

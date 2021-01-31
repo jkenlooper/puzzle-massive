@@ -21,6 +21,16 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
+## [Unreleased] - ...
+
+## Changed
+
+- Specific content for a site is separated out into chill-data directory
+
+## Fixed
+
+- Styleguide page is added if in development environment
+
 ## [2.9.2] - 2021-01-30
 
 ### Changed

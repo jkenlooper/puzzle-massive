@@ -38,7 +38,7 @@ chill/requirements.txt
 chill/puzzle-massive-chill.service.sh
 site-data.sql
 chill-data.yaml
-chill-data-content-jake-hickenlooper.yaml
+chill-data
 dist
 divulger/README.md
 divulger/divulger
