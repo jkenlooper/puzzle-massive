@@ -1,0 +1,16 @@
+{% macro nav_link(link, label, label_aux='', icon='') -%}
+  <a href="{{ link }}" class="pm-Menu-navLink">
+    {%- if icon -%}
+      {%- if icon | length == 1 -%}
+        <span class="pm-Menu-characterIcon">{{ icon }}</span>
+      {%- else -%}
+        <pm-icon>{{ icon }}</pm-icon>
+      {%- endif -%}
+    {%- endif -%}
+    {{ label }}
+    {%- if label_aux -%}
+    <span class="pm-Menu-labelAux"> {{ label_aux }}</span>
+    {%- endif -%}
+  </a>
+{%- endmacro %}
+

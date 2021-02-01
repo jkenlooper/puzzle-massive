@@ -447,6 +447,16 @@ make;
 sudo make install;
 ```
 
+### Site specific chill data
+
+The site specific pages and other nav menu links no longer live in the Puzzle
+Massive source code. This allows for other custom sites to use puzzle-massive
+code, but include pages that are specific for that distribution. The
+`chill-data` directory is where these custom sites can include any site specific
+chill data yaml files. These chill data yaml files can also reference other
+templates, documents, and queries by adding files in the respective 'other'
+directory.
+
 ## Uninstalling the app
 
 Run the below commands to remove puzzle-massive from your

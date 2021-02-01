@@ -15,7 +15,7 @@
 
 <nav class="pm-Base-menu">
   <div class="pm-Base-menuPrimary">
-  {% include 'menu.html.jinja2' %}
+    {% from './menu.html.jinja2' import menu %}{{ menu() }}
   </div>
   <div class="pm-Base-menuSecondary">
   {% block secondarymenu %}

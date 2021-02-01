@@ -13,19 +13,11 @@
 
     <div class="pm-Footer-gridB">
       <nav class="pm-Footer-nav">
-        <a href="/d/about/">
-          About
-        </a>
-        <a href="/d/buy-stuff/">
-          Shop
-        </a>
-        <a href="/d/help/">
-          Help
-        </a>
-        <a href="/d/credits/">
-          Credits
-        </a>
-        <a href="/d/faq/">FAQs</a>
+
+        {#- Insert site specific footer-nav links. -#}
+        {{ '[chill route /internal/footer-nav/]'|shortcodes }}
+        {#- A 404 error HTML comment is inserted here if this route is not defined. -#}
+
       <a href="/">
         Recent Puzzle
       </a>
@@ -66,17 +58,33 @@
         <a href="https://github.com/jkenlooper/puzzle-massive/blob/master/LICENSE">GNU Affero General Public License v3.0</a>
       </p>
 
+      {#
+      The site isn't using Google Analytics and other third party tracking code.
+      Otherwise would need to show a message to the visitor stating that in
+      order to comply with GDPR requirements (as far as I understand them).
+      -#}
       <p>This site uses cookies for player logins.  Your information is not shared with third parties.</p>
     </div>
     {% if page and page.description == " Massively Multiplayer Online Jigsaw Puzzles" %}{{ config.M3|safe }}{% endif %}{# reality check #}
     <div class="pm-Footer-gridC">
       <p class="u-textRight">
-        <span class="u-block">
-        <strong>Puzzle Massive</strong> is an open source project.
-        </span>
-        <a href="{{ config.PACKAGEJSON.homepage }}">
-          {{ config.PACKAGEJSON.name }}
-          {{ config.VERSION }}
+        {#- Show a link to this site's source code in order to comply with the GNU Affero General Public License. -#}
+        {% if config.SITE_TITLE != 'Puzzle Massive' or config.SOURCE_CODE_LINK != 'https://github.com/jkenlooper/puzzle-massive/' %}
+          <a class="u-block" href="{{ config.SOURCE_CODE_LINK }}">Source code for <strong>{{ config.SITE_TITLE }}</strong></a>
+          <span class="u-block">
+           which is forked from Puzzle Massive.
+          </span>
+        {%- else -%}
+          <span class="u-block">
+          <strong>Puzzle Massive</strong> is an open source project.
+          </span>
+        {% endif %}
+          <span class="u-block">Version: {{ config.VERSION }}</span>
+        {#- The 'puzzle-massive' link here should always be to the Puzzle
+        Massive source code, but show this site's version from the package.json.
+        -#}
+        <a href="https://github.com/jkenlooper/puzzle-massive/">
+          puzzle-massive
         </a>
         <em class="u-block"><small>
         Massive assembly required.

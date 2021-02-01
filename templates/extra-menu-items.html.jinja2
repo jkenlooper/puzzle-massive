@@ -1,0 +1,5 @@
+{% from 'menu-nav-link.html.jinja2' import nav_link %}
+{% for item in menu_items %}
+  {{ nav_link(item.menu_items.link, item.menu_items.label, label_aux=item.menu_items.label_aux, icon=item.menu_items.icon) }}
+{% endfor %}
+

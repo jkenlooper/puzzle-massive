@@ -1,43 +1,20 @@
+{% from 'menu-nav-link.html.jinja2' import nav_link %}
+{% macro menu() %}
 <div class="pm-Menu">
   <details class="pm-Menu-details">
     <summary class="pm-Menu-summary"><pm-icon>menu</pm-icon> <span class="pm-Menu-labelAux">Menu</span></summary>
     <nav class="pm-Menu-nav">
-      <a href="/" class="pm-Menu-navLink">
-        <pm-icon>solution</pm-icon>
-        Recent<span class="pm-Menu-labelAux"> Puzzle</span>
-      </a>
-      <a href="/chill{{ url_for('.page_uri', uri='puzzle-list') }}" class="pm-Menu-navLink">
-        <pm-icon>search-images</pm-icon>
-        Search<span class="pm-Menu-labelAux"> For Puzzles</span>
-      </a>
+    {{ nav_link('/', 'Recent', label_aux='Puzzle', icon='solution') }}
+    {{ nav_link("/chill" + url_for('.page_uri', uri='puzzle-list'), 'Search', label_aux='For Puzzles', icon='search-images') }}
+    {{ nav_link("/chill" + url_for('.page_uri', uri='high-scores'), 'High Scores', icon='competition') }}
+    {{ nav_link("/chill" + url_for('.page_uri', uri='new-puzzle/submit'), 'Suggest Puzzle', label_aux='', icon='new-image') }}
 
-      <a href="/chill{{ url_for('.page_uri', uri='high-scores') }}" class="pm-Menu-navLink">
-        <pm-icon>competition</pm-icon>
-        <span class="pm-Menu-labelAux">High </span>Scores
-      </a>
-      {#
-      <a href="">
-        Competitions
-      </a>
-      #}
-      <a href="/chill{{ url_for('.page_uri', uri='new-puzzle/submit') }}" class="pm-Menu-navLink">
-        <pm-icon>new-image</pm-icon>
-        Suggest<span class="pm-Menu-labelAux"> Puzzle</span>
-      </a>
-      <a href="/d/buy-stuff/" class="pm-Menu-navLink">
-        <pm-icon>hamburger</pm-icon>
-        Shop
-      </a>
-      <a href="/d/help/" class="pm-Menu-navLink">
-        <span class="pm-Menu-characterIcon">?</span>
-        Help
-      </a>
+    {#- Insert site specific menu links. -#}
+    {{ '[chill route /internal/extra-menu-items/]'|shortcodes }}
+    {#- A 404 error HTML comment is inserted here if this route is not defined. -#}
 
-      <a href="/chill{{ url_for('.page_uri', uri='player') }}" class="pm-Menu-navLink">
-        <pm-icon>happy-lock</pm-icon>
-        <span class="pm-Menu-labelAux">Your Player </span>Profile
-      </a>
-
+    {{ nav_link("/chill" + url_for('.page_uri', uri='player'), 'Player Profile', label_aux='', icon='happy-lock') }}
     </nav>
   </details>
 </div>
+{%- endmacro %}

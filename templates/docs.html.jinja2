@@ -1,33 +1,14 @@
 {% extends 'base.html.jinja2' %}
 {% set ngModule = 'docspage' %}
 
-{% block secondarymenu %}
+{% block secondarymenu -%}
 
-  {%- if slug == 'faq' -%}
-  <span class="Button Button--plain is-disabled">FAQs</span>
-  {%- else -%}
-  <a class="Button Button--plain" href="/d/faq/">FAQs</a>
-  {%- endif -%}
+{#- Insert site specific secondary menu links. -#}
+{%- if secondarymenu_template -%}
+{%- include secondarymenu_template -%}
+{%- endif -%}
 
-  {%- if slug == 'about' -%}
-  <span class="Button Button--plain is-disabled">About</span>
-  {%- else -%}
-  <a class="Button Button--plain" href="/d/about/">About</a>
-  {%- endif -%}
-
-  {%- if slug == 'buy-stuff' -%}
-  <span class="Button Button--plain is-disabled">Shop</span>
-  {%- else -%}
-  <a class="Button Button--plain" href="/d/buy-stuff/">Shop</a>
-  {%- endif -%}
-
-  {%- if slug == 'help' -%}
-  <span class="Button Button--plain is-disabled">Help</span>
-  {%- else -%}
-  <a class="Button Button--plain" href="/d/help/">Help</a>
-  {%- endif -%}
-
-{% endblock %}
+{%- endblock %}
 
 {% block main %}
   <div class="pm-Doc">

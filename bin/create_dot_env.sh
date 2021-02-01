@@ -34,6 +34,8 @@ UNSPLASH_APPLICATION_ID=""
 UNSPLASH_APPLICATION_NAME=""
 UNSPLASH_SECRET=""
 DOMAIN_NAME='puzzle.massive.xyz'
+SITE_TITLE='Puzzle Massive'
+SOURCE_CODE_LINK='https://github.com/jkenlooper/puzzle-massive/'
 SUGGEST_IMAGE_LINK='https://any-website-for-uploading/'
 SMTP_HOST='localhost'
 SMTP_PORT='587'
@@ -158,6 +160,21 @@ to whatever for local development."
 read -e -p "Domain name to use for the puzzle website:
 " -i "${DOMAIN_NAME}" DOMAIN_NAME;
 
+echo "
+The site title when creating a custom site. This is used in the title of the
+website as well as in the footer."
+read -e -p "Site title to use for the puzzle website:
+" -i "${SITE_TITLE}" SITE_TITLE;
+
+echo "
+Link to the source code used for the custom site.  If you forked the
+puzzle-massive source code, then change this to be a link to that.  It is
+required to share the link to your source code to any visitors of your site in
+order to comply with the GNU Affero General Public License that the
+puzzle-massive source code is licensed under."
+read -e -p "Link to this project's source code:
+" -i "${SOURCE_CODE_LINK}" SOURCE_CODE_LINK;
+
 read -e -p "Suggest image link:
 " -i "${SUGGEST_IMAGE_LINK}" SUGGEST_IMAGE_LINK;
 
@@ -246,6 +263,8 @@ ${STREAM_WORKER_COUNT_HELP_TEXT}
 STREAM_WORKER_COUNT=${STREAM_WORKER_COUNT}
 
 DOMAIN_NAME="${DOMAIN_NAME}"
+SITE_TITLE="${SITE_TITLE}"
+SOURCE_CODE_LINK="${SOURCE_CODE_LINK}"
 M3="${M3}"
 HERE
 ) > .env

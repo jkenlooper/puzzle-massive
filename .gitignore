@@ -65,3 +65,7 @@
 
 /documents/other/*
 !/documents/other/README.md
+/queries/other/*
+!/queries/other/README.md
+/templates/other/*
+!/templates/other/README.md

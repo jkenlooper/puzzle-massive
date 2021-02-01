@@ -6,14 +6,14 @@ Title tag optimal length is around 60 characters.
 #}
 <title>
   {%- if _pagetitle %}{{ _pagetitle }} | {% endif -%}
-  {{ 'sitetitle.txt'|readfile|trim -}}
+  {{ config.SITE_TITLE }}
 </title>
 {% if _description -%}
 <meta name="description" content="{{ _description }}">
 {%- endif -%}
 
 {#- https://developers.facebook.com/docs/sharing/webmasters#markup -#}
-<meta property="og:type" content="website" /><meta property="og:site_name" content="{{ 'sitetitle.txt'|readfile|trim }}" />
+<meta property="og:type" content="website" /><meta property="og:site_name" content="{{ config.SITE_TITLE }}" />
 {%- if _pagetitle %}
 {#- og:title The title of your article without any branding such as your site name. -#}
 <meta property="og:title" content="{{ _pagetitle }}" />
@@ -40,7 +40,7 @@ At the minimum, you should use images that are 600 x 315.  -#}
 
 {#- TODO: Research twitter sharing meta tags.
 <meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="{{ 'sitetitle.txt'|readfile|trim }}" />
+<meta name="twitter:title" content="{{ config.SITE_TITLE }}" />
 <meta name="twitter:description" content="{{ _description }}" />
 <meta name="twitter:image" content="{{ url_for('send_media_file', _external=True, filename=_pageimage) }}" />
 -#}

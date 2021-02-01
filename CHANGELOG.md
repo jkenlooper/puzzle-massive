@@ -25,7 +25,8 @@ Types of changes
 
 ## Changed
 
-- Specific content for a site is separated out into chill-data directory
+- Specific content for a site is separated out into chill-data directory and
+  'other' directories in templates, queries, and documents.
 
 ## Fixed
 

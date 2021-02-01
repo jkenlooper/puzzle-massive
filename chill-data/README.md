@@ -9,3 +9,9 @@ find any file within this folder that matches `chill-*.yaml`.
 
 This script also loads the [styleguide.yaml](styleguide.yaml) if in the 'development'
 environment.
+
+## Other Templates, Queries, and Documents
+
+Within each templates, queries, and documents directory there is an 'other'
+directory that can be used for site specific files. These are not included in
+the Puzzle Massive source code.
