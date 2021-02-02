@@ -234,6 +234,12 @@ npm install;
 git submodule init;
 git submodule update;
 
+# If using site-specific-content then create symbolic links to that content from
+# that git submodule.
+(if [ -d site-specific-content ]; then \
+  cd site-specific-content && ./create-links-in-parent-dir.sh; \
+fi)
+
 # Build the dist files for local development
 npm run build;
 

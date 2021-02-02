@@ -51,6 +51,7 @@ rsync --archive \
   --relative \
   --recursive \
   --files-from=MANIFEST \
+  --copy-links \
   --exclude=.git \
   --exclude=.vagrant \
   --exclude=node_modules \
