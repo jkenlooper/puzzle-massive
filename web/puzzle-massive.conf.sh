@@ -13,6 +13,7 @@ STATE=$8
 
 # Defaults in case not defined in .env
 PUZZLE_RULES='all'
+HOME_PAGE_ROUTE='/chill/site/front/'
 
 # shellcheck source=/dev/null
 source "$PORTREGISTRY"
@@ -25,6 +26,7 @@ DATE=$(date)
 DEBUG=$(./bin/site-cfg.py site.cfg DEBUG || echo 'False')
 PUZZLE_RULES=$(./bin/site-cfg.py site.cfg PUZZLE_RULES || echo ${PUZZLE_RULES})
 PUZZLE_PIECES_CACHE_TTL=$(./bin/site-cfg.py site.cfg PUZZLE_PIECES_CACHE_TTL || echo 0)
+HOME_PAGE_ROUTE=$(./bin/site-cfg.py site.cfg HOME_PAGE_ROUTE || echo ${HOME_PAGE_ROUTE})
 
 # Load snippet confs
 file_ssl_params_conf=$(cat web/ssl_params.conf)
@@ -367,8 +369,8 @@ cat <<HERECACHESERVER
   # Temporary redirect document pages to allow robots to index them.
   rewrite ^/chill/site/(about|faq|help|credits|buy-stuff)/\$ /\$1/ redirect;
 
-  # Home page goes to the chill/site/front/ and strip query params
-  rewrite ^/\$ /chill/site/front/? last;
+  # Home page goes to the chill/site/front/ (the default) and strip query params
+  rewrite ^/\$ ${HOME_PAGE_ROUTE}? last;
 
   # Document pages go to /chill/site/ and strip query params
   rewrite ^/d/(.*)/\$ /chill/site/\$1/? last;

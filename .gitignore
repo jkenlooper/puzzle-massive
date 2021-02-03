@@ -2,6 +2,7 @@
 
 *.DS_Store
 /.env
+/.env.bak*
 /.eslintcache
 /.htpasswd
 /.has-certs

@@ -23,6 +23,11 @@ Types of changes
 
 ## [Unreleased] - ...
 
+## Added
+
+- The home page route can be configured to be something different then the most
+  recent puzzle.
+
 ## Changed
 
 - Specific content for a site is separated out into chill-data directory and

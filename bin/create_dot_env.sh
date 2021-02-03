@@ -36,6 +36,7 @@ UNSPLASH_SECRET=""
 DOMAIN_NAME='puzzle.massive.xyz'
 SITE_TITLE='Puzzle Massive'
 SOURCE_CODE_LINK='https://github.com/jkenlooper/puzzle-massive/'
+HOME_PAGE_ROUTE='/chill/site/front/'
 SUGGEST_IMAGE_LINK='https://any-website-for-uploading/'
 SMTP_HOST='localhost'
 SMTP_PORT='587'
@@ -175,6 +176,17 @@ puzzle-massive source code is licensed under."
 read -e -p "Link to this project's source code:
 " -i "${SOURCE_CODE_LINK}" SOURCE_CODE_LINK;
 
+echo "
+The home page which loads when visiting the root ('/').
+The NGINX web server will rewrite the URL '/' to this path. This can be
+a different document page defined in chill-data. Or it could be a puzzle page
+that already exists in which case it would be like:
+/chill/site/puzzle/asdf1234/scale/1/
+Use the default (/chill/site/front/) to have it be the most recent puzzle.
+"
+read -e -p "Set the homepage route to use:
+" -i "${HOME_PAGE_ROUTE}" HOME_PAGE_ROUTE;
+
 read -e -p "Suggest image link:
 " -i "${SUGGEST_IMAGE_LINK}" SUGGEST_IMAGE_LINK;
 
@@ -264,12 +276,10 @@ STREAM_WORKER_COUNT=${STREAM_WORKER_COUNT}
 
 DOMAIN_NAME="${DOMAIN_NAME}"
 SITE_TITLE="${SITE_TITLE}"
+HOME_PAGE_ROUTE="${HOME_PAGE_ROUTE}"
 SOURCE_CODE_LINK="${SOURCE_CODE_LINK}"
 M3="${M3}"
 HERE
 ) > .env
 
-echo "Created .env file with the below contents:"
-echo ""
-cat .env
-echo ""
+echo "Created .env file"
