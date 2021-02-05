@@ -1,12 +1,29 @@
 #!/usr/bin/env bash
-set -eu -o pipefail
 
-NAME=$1
+# Creates a bit-icon from text. Can use emoji or other unicode characters.
+
+set -o pipefail
+set -o errexit
+set -o nounset
+
+# Lazy way of passing the args.
+TEXT=$1
+NAME=$2
+GROUP=$3
 
 # lowercase
 output_file="${NAME,,}"
 # replace all spaces with '-' (pattern begins with '/' to match all)
 output_file="${output_file// /-}"
+# replace all non alphanumeric characters with a '_'
+output_file="${output_file//[^[:alnum:]]/_}"
 
-#make text icons:
-convert -size 8000x256 xc:transparent -pointsize 256 -stroke white -strokewidth 5 -gravity center -annotate +0+0 "${NAME}" -trim +repage -resize 256 "${output_file}.png";
+group="${GROUP,,}"
+group="${group//[^[:alnum:]]/_}"
+
+# Make text icons using imagemagick and pango:
+FONTSIZE=$((512 * 1024))
+convert -size 2000x2000 \
+    -gravity center \
+    pango:"<span size='${FONTSIZE}'>${TEXT}</span>" \
+    -trim +repage -resize 256 "bit-icons/${group}-${output_file}.png";

@@ -24,6 +24,7 @@ apt-get --yes install \
   python3-venv \
   python3-numpy \
   python3-pip \
+  python-is-python3 \
   sqlite3
 
 apt-get --yes install \

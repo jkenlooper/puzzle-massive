@@ -962,13 +962,6 @@ HEREBEDEVELOPMENT
 fi
 cat <<HEREORIGINSERVER
 
-  location /media/bit-icons/ {
-    expires \$cache_expire;
-    add_header Cache-Control "public";
-    root ${SRVDIR};
-    try_files \$uri \$uri =404;
-  }
-
   location ~* ^/resources/.*/(scale-100/raster.png|scale-100/raster.css|pzz.css|pieces.png)\$ {
     expires \$cache_expire;
     add_header Cache-Control "public";

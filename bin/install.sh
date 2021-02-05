@@ -51,13 +51,6 @@ echo "rsynced files in root/ to ${SRVDIR}root/";
 mkdir -p "${SRVDIR}resources/";
 chown -R dev:dev "${SRVDIR}resources/";
 
-if (test ! -d "${SRVDIR}media/bit-icons/"); then
-  echo "Adding the initial set of bit-icons to ${SRVDIR}media/bit-icons/";
-  mkdir -p "${SRVDIR}media/bit-icons/";
-  chown -R dev:dev "${SRVDIR}media/bit-icons/";
-  tar --directory="${SRVDIR}media/bit-icons/" -xz -f resources/bit-icons.tar.gz;
-fi
-
 # TODO: not using static files yet
 #FROZENTMP=$(mktemp -d);
 #tar --directory="${FROZENTMP}" --gunzip --extract -f frozen.tar.gz
@@ -82,7 +75,6 @@ echo "rsynced files in dist to ${SRVDIR}dist/";
 rsync --archive \
   --inplace \
   --delete \
-  --exclude=bit-icons \
   --itemize-changes \
   media/ "${SRVDIR}media/";
 echo "rsynced files in media to ${SRVDIR}media/";

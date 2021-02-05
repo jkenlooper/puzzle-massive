@@ -121,9 +121,6 @@ DOCUMENT_FOLDER = "documents"
 # having this set to anything.
 MEDIA_FOLDER = "media"
 
-# The bit-icons are served from a different directory.  Refer to the nginx conf.
-MEDIA_BIT_ICONS_FOLDER = "${SRVDIR}media/bit-icons"
-
 # The media path is where the files in the media folder will be accessible.  In
 # templates you can use the custom variable: 'media_path' which will have this
 # value.

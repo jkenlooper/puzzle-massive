@@ -23,6 +23,11 @@ Types of changes
 
 ## [Unreleased] - ...
 
+Bit icons have moved to a separate git repo and are no longer included in this
+git repo. The source-media/bit-icons/ has a Makefile to resize these as needed.
+
+If doing an in-place deployment then add `sudo apt -y install python-is-python3`.
+
 ## Added
 
 - The home page route can be configured to be something different then the most
@@ -32,10 +37,12 @@ Types of changes
 
 - Specific content for a site is separated out into chill-data directory and
   'other' directories in templates, queries, and documents.
+- Moved bit icons to puzzle-massive-content git repository.
 
 ## Fixed
 
 - Styleguide page is added if in development environment
+- Include python-is-python3 to make sure that sudo uses python 3.
 
 ## [2.9.2] - 2021-01-30
 
