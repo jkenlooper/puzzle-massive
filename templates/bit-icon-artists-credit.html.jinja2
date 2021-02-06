@@ -1,0 +1,11 @@
+<h3>Artists</h3>
+
+<ul>
+  {% for artist in artist_list %}
+    <li>
+      <a href="/chill{{ url_for('.page_uri', uri='bit-icons-artist/{}'.format(artist.slug_name)) }}">
+        {{ artist.name }}
+      </a>
+    </li>
+  {% endfor %}
+</ul>

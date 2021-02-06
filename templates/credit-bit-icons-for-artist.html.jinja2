@@ -6,8 +6,8 @@
 <span class="u-block">
   <strong>Icons used:</strong>
   <small>
-    {% for iconname in list %}
-    <a href="{{ url_for('send_media_file', filename='bit-icons/64-{}.png'.format(iconname or 'unknown-bit')) }}">{{ iconname }}</a>{% if not loop.last %},{% endif %}
+    {% for item in list %}
+    <a href="{{ url_for('send_media_file', filename='bit-icons/64-{}.png'.format(item.name or 'unknown-bit')) }}">{{ item.name }}</a>{% if not loop.last %},{% endif %}
     {% endfor %}
   </small>
 </span>

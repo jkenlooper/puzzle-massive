@@ -1,0 +1,15 @@
+{% from 'credit-bit-icons-for-artist.html.jinja2' import creditlist %}
+{% extends 'base.html.jinja2' %}
+{%- set _pagetitle = '{} | Bit Icons Artist'.format(artist.name) -%}
+
+{% block main %}
+<section  class="pm-Doc">
+
+{{ artist.artist_document|readfile|safe|shortcodes }}
+
+{% if bit_icons %}
+{{ creditlist(bit_icons) }}
+{% endif %}
+
+</section>
+{% endblock %}

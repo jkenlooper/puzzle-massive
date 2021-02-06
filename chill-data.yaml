@@ -87,14 +87,23 @@ value:
   order: '50'
   slug: credits
   title: Credits
+
 --- !ChillNode
-name: artist_martin_berube_bit_icons
-route: /artist/martin-berube/bit-icons/
-template: credit-bit-icons-for-martin-berube.html.jinja2
+name: internal_bit_icon_artists_credit
+route: /internal/bit-icon-artists-credit/
+template: bit-icon-artists-credit.html.jinja2
+value:
+  artist_list: _select-all-bit-icon-artists.sql
+
 --- !ChillNode
-name: artist_mackenzie_deragon_bit_icons
-route: /artist/mackenzie-deragon/bit-icons/
-template: credit-bit-icons-for-mackenzie-deragon.html.jinja2
+name: bit_icons_artist
+route: /bit-icons-artist/<slug_name>/
+template: bit-icons-artist-page.html.jinja2
+value:
+  artist: _select-bit-icon-artist-for-slug.sql
+  bit_icons: _select-bit-icons-for-artist-slug.sql
+
+
 --- !ChillNode
 name: homepage
 route: /front/
