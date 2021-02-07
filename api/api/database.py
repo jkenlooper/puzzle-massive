@@ -29,8 +29,7 @@ PUZZLE_CREATE_TABLE_LIST = (
 
 
 def init_db():
-    """Initialize a new database for testing purposes.
-    """
+    """Initialize a new database for testing purposes."""
     with current_app.app_context():
         # db = get_db()
         cur = db.cursor()
@@ -39,7 +38,7 @@ def init_db():
         query_files = list(PUZZLE_CREATE_TABLE_LIST)
         query_files.append("initial_puzzle_variant.sql")
         query_files.append("insert_initial_bit_expiration_round_2.sql")
-        query_files.append("insert_initial_bit_author_and_anon_user.sql")
+        query_files.append("insert_initial_anon_user.sql")
         for file_path in query_files:
             query = read_query_file(file_path)
             for statement in query.split(";"):

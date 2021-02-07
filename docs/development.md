@@ -292,6 +292,9 @@ sudo ./bin/appctl.sh stop;
 # Create the puzzle database tables and initial data
 python api/api/create_database.py site.cfg;
 
+# Update any bit icon authors and add new bit icons if applicable
+./bin/insert-or-replace-bit-icons.py
+
 # Test and reload the nginx configurations
 sudo nginx -t;
 sudo systemctl reload nginx;

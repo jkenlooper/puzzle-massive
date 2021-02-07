@@ -83,6 +83,10 @@ been uploaded to the home directory.
     python3 -m venv .;
     source bin/activate;
     make ENVIRONMENT=production;
+
+    # Update any bit icon authors and add new bit icons if applicable
+    ./bin/insert-or-replace-bit-icons.py
+
     sudo make ENVIRONMENT=production install;
     sudo nginx -t;
     sudo systemctl reload nginx;
@@ -145,6 +149,9 @@ by the public.
 
     # should be run as 'dev' user
     python api/api/create_database.py site.cfg;
+
+    # Update any bit icon authors and add new bit icons if applicable
+    ./bin/insert-or-replace-bit-icons.py
 
     sudo ./bin/appctl.sh start;
     ```
@@ -254,6 +261,10 @@ on the old server and copy all the data over to the new puzzle-massive-green ser
     zcat $DBDUMPFILE | sqlite3 /var/lib/puzzle-massive/sqlite3/db
     cat db.dump.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
     echo 'pragma journal_mode=wal' | sqlite3 /var/lib/puzzle-massive/sqlite3/db
+
+    # Update any bit icon authors and add new bit icons if applicable
+    ./bin/insert-or-replace-bit-icons.py
+
     ```
 
 4.  Copy the nginx logs (NGINXLOGDIR) found at: `/var/log/nginx/puzzle-massive/`

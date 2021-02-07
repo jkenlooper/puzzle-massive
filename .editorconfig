@@ -24,9 +24,15 @@ indent_style = space
 
 [*.md]
 trim_trailing_whitespace = false
+indent_size = 2
+indent_style = space
 
 [{.travis.yml,package.json}]
 # The indent size used in the `package.json` file cannot be changed
 # https://github.com/npm/npm/pull/3180#issuecomment-16336516
 indent_size = 2
+indent_style = space
+
+[*.py]
+indent_size = 4
 indent_style = space

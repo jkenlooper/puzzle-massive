@@ -23,6 +23,7 @@ bin/create-db-dump-sql.sh
 bin/deploy.sh
 bin/freeze.sh
 bin/init.sh
+bin/insert-or-replace-bit-icons.py
 bin/install.sh
 bin/log.sh
 bin/provision-certbot.sh

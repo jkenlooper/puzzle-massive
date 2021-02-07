@@ -67,7 +67,7 @@
 # puzzle-massive-content repo for it's bit icons. See the 'with-content' git
 # branch.
 /source-media/bit-icons/*.png
-/source-media/bit-icons/source-*.txt
+/source-media/bit-icons/source-*.yaml
 
 /chill-data/*
 !/chill-data/styleguide.yaml
