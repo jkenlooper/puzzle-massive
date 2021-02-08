@@ -3,12 +3,11 @@
   <strong>Icon Count:</strong>
   {{ list | length }}
 </span>
-<span class="u-block">
+
   <strong>Icons used:</strong>
-  <small>
-    {% for item in list %}
-    <a href="{{ url_for('send_media_file', filename='bit-icons/64-{}.png'.format(item.name or 'unknown-bit')) }}">{{ item.name }}</a>{% if not loop.last %},{% endif %}
-    {% endfor %}
-  </small>
-</span>
+    {%- for group_name in list|map(attribute='group_name')|unique -%}
+<div>
+			<img src="{{ url_for('send_media_file', filename='bit-icons/group-{}.jpg'.format(group_name)) }}">
+</div>
+    {%- endfor -%}
 {% endmacro %}

@@ -23,7 +23,8 @@ group="${group//[^[:alnum:]]/_}"
 
 # Make text icons using imagemagick and pango:
 FONTSIZE=$((512 * 1024))
-convert -size 2000x2000 \
-    -gravity center \
-    pango:"<span size='${FONTSIZE}'>${TEXT}</span>" \
-    -trim +repage -resize 256 "bit-icons/${group}-${output_file}.png";
+convert -size 4000x2000 \
+  -background transparent \
+  -gravity center \
+  pango:"<span size='${FONTSIZE}'>${TEXT}</span>" \
+  -trim +repage -resize 256x256 -extent 256x256 "bit-icons/${group}-${output_file}.png";

@@ -5,7 +5,11 @@
 
 .PHONY : all clean
 
-objects := $(patsubst source-media/bit-icons/%, media/bit-icons/64-%, $(wildcard source-media/bit-icons/*.png))
+bit_icons := $(patsubst source-media/bit-icons/%, media/bit-icons/64-%, $(wildcard source-media/bit-icons/*.png))
+
+bit_icon_groups := $(patsubst source-media/bit-icons/source-%.yaml, media/bit-icons/group-%.jpg, $(wildcard source-media/bit-icons/source-*.yaml))
+
+objects := $(bit_icons) $(bit_icon_groups)
 
 all : $(objects)
 
@@ -15,3 +19,10 @@ clean :
 media/bit-icons/64-%.png : source-media/bit-icons/%.png
 	convert $< -resize "64x64>" $@
 
+media/bit-icons/group-%.jpg : source-media/bit-icons/source-%.yaml media/bit-icons/64-%-*.png
+	montage media/bit-icons/64-$*-*.png \
+		-tile 18x18 \
+		-geometry 32x32+1+1 \
+		-background white \
+		$@
+	mogrify -trim +repage $@
