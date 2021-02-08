@@ -28,16 +28,20 @@ git repo. The source-media/bit-icons/ has a Makefile to resize these as needed.
 
 If doing an in-place deployment then add `sudo apt -y install python-is-python3`.
 
+Migrate script for this update: migrate_from_2_9_2_to_2_10_0.py
+
 ## Added
 
 - The home page route can be configured to be something different then the most
   recent puzzle.
+- A montage of all bit icons for each author will show on their bit icon author page.
 
 ## Changed
 
 - Specific content for a site is separated out into chill-data directory and
   'other' directories in templates, queries, and documents.
 - Moved bit icons to puzzle-massive-content git repository.
+- Credits page shows bit icon authors on separate pages
 
 ## Fixed
 

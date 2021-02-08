@@ -7,7 +7,7 @@
   <strong>Icons used:</strong>
     {%- for group_name in list|map(attribute='group_name')|unique -%}
 <div>
-			<img src="{{ url_for('send_media_file', filename='bit-icons/group-{}.jpg'.format(group_name)) }}">
+			<img class="u-imgResponsive" alt="montage of {{ group_name }} bit icons" src="{{ url_for('send_media_file', filename='bit-icons/group-{}.jpg'.format(group_name)) }}">
 </div>
     {%- endfor -%}
 {% endmacro %}

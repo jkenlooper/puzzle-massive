@@ -19,9 +19,9 @@ clean :
 media/bit-icons/64-%.png : source-media/bit-icons/%.png
 	convert $< -resize "64x64>" $@
 
-media/bit-icons/group-%.jpg : source-media/bit-icons/source-%.yaml media/bit-icons/64-%-*.png
+media/bit-icons/group-%.jpg : source-media/bit-icons/source-%.yaml $(wildcard media/bit-icons/64-%-*.png)
 	montage media/bit-icons/64-$*-*.png \
-		-tile 18x18 \
+		-tile 18x \
 		-geometry 32x32+1+1 \
 		-background white \
 		$@
