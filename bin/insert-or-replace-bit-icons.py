@@ -55,6 +55,22 @@ def add_bit_icons_in_file_system(db):
     db.commit()
 
 
+def update_bit_icon_expiration(db, bit_icon_expiration):
+    if not isinstance(bit_icon_expiration, dict):
+        raise Exception(
+            "BIT_ICON_EXPIRATION is not dict object: {}".format(bit_icon_expiration)
+        )
+    delete_query = read_query_file("delete_all_from_bit_expiration_table.sql")
+    insert_query = read_query_file("insert_bit_expiration.sql")
+    cur = db.cursor()
+    cur.execute(delete_query)
+    db.commit()
+    for score, extend in bit_icon_expiration.items():
+        cur.execute(insert_query, {"score": score, "extend": f"+{extend}"})
+    cur.close()
+    db.commit()
+
+
 def main():
     """"""
     config_file = "site.cfg"
@@ -65,6 +81,7 @@ def main():
     db = sqlite3.connect(db_file)
 
     add_bit_icons_in_file_system(db)
+    update_bit_icon_expiration(db, config["BIT_ICON_EXPIRATION"])
 
 
 if __name__ == "__main__":

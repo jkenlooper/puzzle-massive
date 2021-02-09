@@ -42,6 +42,7 @@ Migrate script for this update: migrate_from_2_9_2_to_2_10_0.py
   'other' directories in templates, queries, and documents.
 - Moved bit icons to puzzle-massive-content git repository.
 - Credits page shows bit icon authors on separate pages
+- Update bit icon expiration extend values
 
 ## Fixed
 

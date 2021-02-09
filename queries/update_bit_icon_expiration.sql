@@ -15,5 +15,5 @@ expiration = (
 ),
 last_viewed = datetime('now')
 WHERE user = :user
-and (last_viewed < datetime('now', '-50 minutes') or last_viewed isnull)
+and (last_viewed < datetime('now', '-1 day') or last_viewed isnull)
 ;

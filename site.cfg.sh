@@ -258,6 +258,8 @@ POINTS_CAP=${POINTS_CAP}
 # New players that are still on a shareduser account will need to have at least
 # this many points (dots) before they can claim their account.
 MINIMUM_TO_CLAIM_ACCOUNT = NEW_USER_STARTING_POINTS + POINT_COST_FOR_CHANGING_BIT
+# Bit icon expiration converted to an object
+BIT_ICON_EXPIRATION = dict(map(lambda x: [int(x[:x.index(':')]), x[1 + x.index(':'):].strip()], """${BIT_ICON_EXPIRATION}""".split(',')))
 # How many seconds to try to move a piece before it times out.
 PIECE_MOVE_TIMEOUT = 4
 # The player can pause piece movements on their end for this max time in seconds.
