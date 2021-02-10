@@ -2,6 +2,10 @@
 {% extends 'base.html.jinja2' %}
 {%- set _pagetitle = '{} | Bit Icons Artist'.format(artist.name) -%}
 
+{% block secondarymenu -%}
+<a class="Button Button--plain" href="/d/credits/">Credits</a>
+{%- endblock %}
+
 {% block main %}
 <section  class="pm-Doc">
 

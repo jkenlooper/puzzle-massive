@@ -1,6 +1,7 @@
 import { html, render } from "lit-html";
 import { classMap } from "lit-html/directives/class-map.js";
 import { styleMap } from "lit-html/directives/style-map.js";
+import { unsafeHTML } from "lit-html/directives/unsafe-html.js";
 
 import userDetailsService from "../site/user-details.service";
 import { colorForPlayer } from "../player-bit/player-bit-img.service";
@@ -16,6 +17,8 @@ interface TemplateData {
   profileLink: string;
   iconSrc: string;
   iconAlt: string;
+  iconAttribution: string;
+  showAttribution: boolean;
   bitBackground: string;
   hasIcon: boolean;
   userId: number;
@@ -48,6 +51,9 @@ customElements.define(
     private showName: boolean;
     private mediaPath: string;
     private isProcessingClaimUser: boolean = false;
+    private iconAttribution = "";
+    private showAttribution: boolean;
+    private deferGetAttribution: undefined | Promise<string>;
 
     constructor() {
       super();
@@ -68,6 +74,7 @@ customElements.define(
       this.showScore = this.hasAttribute("score");
       this.showDots = this.hasAttribute("dots");
       this.showName = this.hasAttribute("name");
+      this.showAttribution = this.hasAttribute("attribution");
     }
 
     template(data: TemplateData) {
@@ -118,11 +125,7 @@ customElements.define(
               `}
           ${data.username && data.showName
             ? data.usernameRejected
-              ? html`
-                  <s class="u-textCenter u-block">
-                    ${data.username}
-                  </s>
-                `
+              ? html` <s class="u-textCenter u-block"> ${data.username} </s> `
               : data.usernameApproved
               ? html`
                   <strong class="u-textCenter u-block">
@@ -130,9 +133,7 @@ customElements.define(
                   </strong>
                 `
               : html`
-                  <span class="u-textCenter u-block">
-                    ${data.username}
-                  </span>
+                  <span class="u-textCenter u-block"> ${data.username} </span>
                 `
             : ""}
           ${data.showScore
@@ -157,6 +158,11 @@ customElements.define(
                     `}
               `
             : html``}
+          ${data.showAttribution
+            ? html`<div class="u-textRight pm-profileBit-attribution">
+                ${unsafeHTML(data.iconAttribution)}
+              </div>`
+            : ""}
         </div>
       `;
     }
@@ -194,6 +200,8 @@ customElements.define(
         hasIcon: !!userDetailsService.userDetails.icon,
         iconSrc: `${this.mediaPath}bit-icons/64-${userDetailsService.userDetails.icon}.png`,
         bitBackground: userDetailsService.userDetails.bitBackground,
+        iconAttribution: this.iconAttribution,
+        showAttribution: this.showAttribution,
         userId: userDetailsService.userDetails.id || 0,
         username: userDetailsService.userDetails.name,
         usernameApproved: userDetailsService.userDetails.nameApproved,
@@ -209,9 +217,47 @@ customElements.define(
       };
     }
 
+    getAttribution(): Promise<string> {
+      if (this.deferGetAttribution) {
+        return Promise.resolve(this.deferGetAttribution);
+      } else {
+        this.deferGetAttribution = fetch(
+          `/chill/site/bit-icons-attribution/${userDetailsService.userDetails.icon}/`,
+          {
+            method: "GET",
+            credentials: "same-origin",
+            headers: {
+              "Content-Type": "text/html",
+            },
+          }
+        )
+          .then((response: Response) => {
+            if (response.ok) {
+              return response.text();
+            } else {
+              return "";
+            }
+          })
+          .catch(() => {
+            return "";
+          })
+          .finally(() => {
+            this.deferGetAttribution = undefined;
+          });
+        return this.deferGetAttribution;
+      }
+    }
+
     render() {
       //console.log("render", this.instanceId, this.data);
+      this.iconAttribution = "";
       render(this.template(this.data), this);
+      if (userDetailsService.userDetails.icon && this.showAttribution) {
+        this.getAttribution().then((text) => {
+          this.iconAttribution = text;
+          render(this.template(this.data), this);
+        });
+      }
     }
 
     connectedCallback() {

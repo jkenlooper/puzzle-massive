@@ -41,3 +41,11 @@ pm-profile-bit {
 .pm-profileBit-expired {
   color: var(--color-accent);
 }
+
+/*
+HTML content within this div (just plain HTML with no classes at this point)
+can be cached client-side for a day and server-side for a year.  Server side
+cache can be deleted by running the clear_nginx_cache.sh script of course.
+*/
+.pm-profileBit-attribution {
+}

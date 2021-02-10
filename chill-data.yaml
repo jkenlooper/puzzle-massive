@@ -71,6 +71,13 @@ name: biticonspartial
 route: /bit-icons/<iconname>/
 template: bit-icons-img.html.jinja2
 value: _select-iconname-for-route.sql
+
+--- !ChillNode
+name: bit_icons_attribution_partial
+route: /bit-icons-attribution/<iconname>/
+template: bit-icons-attribution.html.jinja2
+value: _select-bit-icon-attribution-for-iconname.sql
+
 --- !ChillNode
 name: footerpages_item
 route: /credits/

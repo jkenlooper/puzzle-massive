@@ -35,6 +35,7 @@ Migrate script for this update: migrate_from_2_9_2_to_2_10_0.py
 - The home page route can be configured to be something different then the most
   recent puzzle.
 - A montage of all bit icons for each author will show on their bit icon author page.
+- Show link back to bit icon author page for bit icons shown on player account page.
 
 ## Changed
 

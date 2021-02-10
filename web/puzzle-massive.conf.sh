@@ -154,6 +154,7 @@ cat <<HEREBEUP
   ~/chill/site/claim-player/.* off;
   ~/chill/site/reset-login/.* off;
   ~/chill/site/bit-icons/.* 1y; #TODO: internal only?
+  ~/chill/site/bit-icons-attribution/.* 1d;
   ~/chill/site/puzzle/.* off;
   ~/chill/site/front/.* -1;
   ~/chill/site/api/.* 1m;
@@ -197,6 +198,7 @@ cat <<HEREBEUP
   ~/chill/site/claim-player/.* off;
   ~/chill/site/reset-login/.* off;
   ~/chill/site/bit-icons/.* 1y;
+  ~/chill/site/bit-icons-attribution/.* 1y;
   ~/chill/site/puzzle/.* 10s;
   ~/chill/site/front/.* 1m;
   ~/chill/site/api/.* 1m;

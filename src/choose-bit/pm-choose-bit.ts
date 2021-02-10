@@ -109,9 +109,7 @@ customElements.define(
                   Not enough dots to choose a bit icon.
                 </p>
               `}
-          <div class="pm-ChooseBit-items">
-            ${items()}
-          </div>
+          <div class="pm-ChooseBit-items">${items()}</div>
           <div class="u-paddingTopSm u-paddingBottomSm u-textCenter">
             <button
               class="Button Button--primary"
