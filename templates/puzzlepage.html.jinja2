@@ -183,7 +183,7 @@
         {% endif %}
 
         {% if isPuzzleVisible %}
-        {% if preview_full.url != '' %}
+        {% if preview_full.url != '' and not feature_hidden_preview %}
         {# TODO: Convert to web component #}
         <span class="Button">
           <label>
@@ -277,7 +277,7 @@
       {% endif %}
         <div id="puzzlepage-main" class="pm-Puzzlepage-main {%- if scale != 0 %} pm-Puzzlepage-main--scaled{% endif %}">
             <div id="puzzle-container" style="display: none;" puzzle_id="{{ puzzle.puzzle_id }}">{# <!-- Used by puzzle-pieces js --> #}</div>
-            {% if preview_full.url != '' %}
+            {% if preview_full.url != '' and not feature_hidden_preview %}
             <div id="puzzle-preview-box"
                  class="pm-Puzzlepage-previewBox"
                  unselectable="on"

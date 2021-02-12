@@ -30,6 +30,7 @@ shift "$((OPTIND-1))";
 SECURE_COOKIE_SECRET="chocolate chip"
 MUPPET_CHARACTER="rizzo"
 PUZZLE_RULES="all"
+PUZZLE_FEATURES="all"
 UNSPLASH_APPLICATION_ID=""
 UNSPLASH_APPLICATION_NAME=""
 UNSPLASH_SECRET=""
@@ -105,6 +106,17 @@ PUZZLE_RULES_HELP_TEXT="
 "
 read -e -p "${PUZZLE_RULES_HELP_TEXT}
 " -i "${PUZZLE_RULES}" PUZZLE_RULES;
+
+PUZZLE_FEATURES_HELP_TEXT="
+# Enable puzzle features by listing each here.  See full list by querying the
+# database PuzzleFeature table for the 'slug' column.
+# Set to 'all' to enable all puzzle features and future ones.
+# Leave blank to disable all puzzle features.
+# Or add only some puzzle features (separate each with a space and no quotes).
+# Example: hidden-preview secret-message
+"
+read -e -p "${PUZZLE_FEATURES_HELP_TEXT}
+" -i "${PUZZLE_FEATURES}" PUZZLE_FEATURES;
 
 BLOCKEDPLAYER_EXPIRE_TIMEOUTS_HELP_TEXT="
 # Timeouts in seconds for each time a player gets blocked on a puzzle. These are
@@ -261,6 +273,9 @@ EMAIL_MODERATOR='${EMAIL_MODERATOR}'
 
 ${PUZZLE_RULES_HELP_TEXT}
 PUZZLE_RULES="${PUZZLE_RULES}"
+
+${PUZZLE_FEATURES_HELP_TEXT}
+PUZZLE_FEATURES="${PUZZLE_FEATURES}"
 
 ${BLOCKEDPLAYER_EXPIRE_TIMEOUTS_HELP_TEXT}
 BLOCKEDPLAYER_EXPIRE_TIMEOUTS="${BLOCKEDPLAYER_EXPIRE_TIMEOUTS}"

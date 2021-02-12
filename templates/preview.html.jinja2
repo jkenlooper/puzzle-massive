@@ -90,7 +90,7 @@
           {%- endif -%}
           <div class="pm-Preview-puzzleView {{ scale_variant }}">
             <div class="u-intrinisicRatio" style="--intrinsicRatio-width: {{width|int}}; --intrinsicRatio-height: {{height|int}};">
-              {%- if recent.url == '' -%}
+              {%- if recent.url == '' or feature_hidden_preview -%}
                 {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
               {%- else -%}
                 <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{recent.url|safe}}" alt="">
@@ -117,7 +117,7 @@
     {% else %}
     <div class="pm-Preview-puzzleView">
       <div class="u-intrinisicRatio" style="--intrinsicRatio-width: {{width|int}}; --intrinsicRatio-height: {{height|int}};">
-        {%- if recent.url == '' -%}
+        {%- if recent.url == '' or feature_hidden_preview -%}
           {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
         {%- else -%}
           <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{recent.url|safe}}" alt="">

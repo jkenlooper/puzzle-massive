@@ -3,7 +3,7 @@ from builtins import bytes
 import os
 import re
 import time
-import hashlib
+import uuid
 import threading
 import requests
 import subprocess
@@ -38,7 +38,9 @@ from api.tools import check_bg_color
 ALLOWED_EXTENSIONS = set(["jpg", "jpeg"])
 
 
-def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_file):
+def submit_puzzle(
+    pieces, bg_color, user, permission, description, link, upload_file, features=()
+):
     """
     Submit a puzzle to be reviewed.  Generates the puzzle_id and original.jpg.
     """
@@ -53,14 +55,9 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
             cur.close()
             abort(400)
 
-        d = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
         filename = unsplash_match.group(2)
-        u_id = "%s" % (
-            hashlib.sha224(bytes("%s%s" % (filename, d), "utf-8")).hexdigest()[0:9]
-        )
-        puzzle_id = "unsplash{filename}-mxyz-{u_id}".format(
-            filename=filename, u_id=u_id
-        )
+        u_id = uuid.uuid4.hex[:20]
+        puzzle_id = f"unsplash-mxyz-{u_id}"
 
         # Create puzzle dir
         puzzle_dir = os.path.join(current_app.config.get("PUZZLE_RESOURCES"), puzzle_id)
@@ -142,7 +139,8 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
         "permission": permission,
     }
     cur.execute(
-        fetch_query_string("insert_puzzle.sql"), d,
+        fetch_query_string("insert_puzzle.sql"),
+        d,
     )
     db.commit()
 
@@ -184,6 +182,37 @@ def submit_puzzle(pieces, bg_color, user, permission, description, link, upload_
         fetch_query_string("insert-puzzle-instance.sql"),
         {"original": puzzle, "instance": puzzle, "variant": classic_variant},
     )
+
+    # TODO: not tested yet.
+    result = cur.execute(
+        fetch_query_string("select-puzzle-features-enabled.sql"), {"enabled": 1}
+    ).fetchall()
+    if result:
+        (puzzle_features, _) = rowify(result, cur.description)
+        # Add puzzle features
+        for puzzle_feature in puzzle_features:
+            if (
+                puzzle_feature["slug"] == "hidden-preview"
+                and "hidden-preview" in features
+            ):
+                cur.execute(
+                    fetch_query_string(
+                        "add-puzzle-feature-to-puzzle-by-id--hidden-preview.sql"
+                    ),
+                    {"puzzle": puzzle, "puzzle_feature": puzzle_feature["id"]},
+                )
+            elif puzzle_feature["slug"] == "secret-message":
+                secret_message = "TODO: add secret message"
+                cur.execute(
+                    fetch_query_string(
+                        "add-puzzle-feature-to-puzzle-by-id--secret-message.sql"
+                    ),
+                    {
+                        "puzzle": puzzle,
+                        "puzzle_feature": puzzle_feature["id"],
+                        "message": secret_message,
+                    },
+                )
 
     db.commit()
     cur.close()
@@ -245,8 +274,17 @@ class PuzzleUploadView(MethodView):
 
         upload_file = request.files.get("upload_file", None)
 
+        features = set(args.get("features", []))
+
         puzzle_id = submit_puzzle(
-            pieces, bg_color, user, permission, description, link, upload_file
+            pieces,
+            bg_color,
+            user,
+            permission,
+            description,
+            link,
+            upload_file,
+            features=features,
         )
 
         return redirect("/chill/site/front/{0}/".format(puzzle_id), code=303)

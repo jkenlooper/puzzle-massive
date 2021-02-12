@@ -2,6 +2,7 @@
 set -eu -o pipefail
 
 ENVIRONMENT=$(./bin/site-cfg.py site.cfg ENVIRONMENT || echo 'production')
+PUZZLE_FEATURES=$(./bin/site-cfg.py site.cfg PUZZLE_FEATURES || echo 'all')
 
 # Create a tmpdb from `chill initdb` command and site-data.sql.
 # Create a copy of site.cfg as tmpsite.cfg to use the temporary database.
@@ -53,4 +54,22 @@ rm -f db.dump.sql;
 
 # Remove no longer needed temporary files.
 rm -f tmpdb tmpsite.cfg;
+
+# Features for puzzles that can be enabled for a puzzle site are listed here.
+# Each one uses the 'slug' as the feature with the name and description fields.
+# They are enabled via the site.cfg PUZZLE_FEATURES variable which is set via
+# the .env file.  Creating and updating features are done by executing these SQL
+# files.
+echo "Add or update puzzle features"
+cat queries/puzzle-feature-reset-enabled.sql \
+  queries/puzzle-feature--hidden-preview.sql \
+  queries/puzzle-feature--secret-message.sql \
+  >> db.dump.sql;
+
+for slug in hidden-preview secret-message; do
+  if [[ "$PUZZLE_FEATURES" =~ (^|[^[:alnum:]_])(all|${slug})([^[:alnum:]_]|$) ]]; then
+    echo "Enabling puzzle feature ${slug} in db.dump.sql"
+    cat queries/puzzle-feature-enable--${slug}.sql >> db.dump.sql;
+  fi
+done;
 

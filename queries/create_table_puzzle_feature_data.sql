@@ -18,13 +18,18 @@
 -- 4. A text message that is used by some features
 -- 5. Players can be a comma separated list of player ids or other formats
 -- 6. Pieces can be a comma separated list of piece ids or other formats
--- 7. An integer for general use; could be for enable/disable, limit count, etc.
+-- 7. An integer for general use could be for enable/disable, limit count, etc.
 create table PuzzleFeatureData (
     id integer primary key,
+    puzzle integer not null,
+    puzzle_feature integer not null,
     start_time text, -- 3
     stop_time text, -- 3
     message text, -- 4
     players text, -- 5
     pieces text, -- 6
     n integer default 0 not null, -- 7
+    foreign key ( puzzle ) references Puzzle ( id ) on delete cascade,
+    foreign key ( puzzle_feature ) references PuzzleFeature ( id ) on delete cascade,
+    unique (puzzle, puzzle_feature) on conflict replace
 );

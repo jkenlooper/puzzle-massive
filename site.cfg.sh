@@ -280,13 +280,10 @@ PLAYER_BIT_RECENT_ACTIVITY_TIMEOUT = 10
 PIECE_JOIN_TOLERANCE = 100
 
 # See PUZZLE_RULES_HELP_TEXT in bin/create_dot_env.sh
-PUZZLE_RULES = set("${PUZZLE_RULES}".split(" "))
+PUZZLE_RULES = set("${PUZZLE_RULES}".split())
 
-# Enable puzzle features
-# TODO: decide on format for this to capture slug, name, and description values.
-# Allow creating, updating, and removing features by changing this value. See
-# PuzzleFeature, Puzzle_PuzzleFeature, and PuzzleFeatureData tables.
-PUZZLE_FEATURES = ""
+# Enable puzzle features. See bin/create-db-dump-sql.sh
+PUZZLE_FEATURES=set("${PUZZLE_FEATURES}".split())
 
 DOMAIN_NAME = "${DOMAIN_NAME}"
 SITE_TITLE = "${SITE_TITLE}"

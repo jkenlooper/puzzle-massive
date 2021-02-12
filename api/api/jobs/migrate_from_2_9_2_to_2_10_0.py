@@ -29,9 +29,8 @@ if __name__ == "__main__":
     for filename in (
         "cleanup_migrate_from_2_9_2_to_2_10_0.sql",
         "alter_bit_author_for_migrate_from_2_9_2_to_2_10_0.sql",
-        "create_table_puzzle_feature_data.sql",
         "create_table_puzzle_feature.sql",
-        "create_table_puzzle_puzzle_feature.sql",
+        "create_table_puzzle_feature_data.sql",
     ):
         for statement in read_query_file(filename).split(";"):
             try:

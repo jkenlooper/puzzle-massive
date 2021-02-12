@@ -51,6 +51,7 @@ value:
     info: _frontpage-page-info-for-puzzle_id.sql
   parent_of_top_left: _select-puzzle-piece-top-left-parent.sql
   preview_full: _select-puzzle-resources-preview_full-by-puzzle_id.sql
+  feature_hidden_preview: select-frontpage-preview-feature-hidden-preview.sql
   puzzle: _select-puzzle-by-puzzle_id.sql
   puzzle_files: _select-puzzle-resources-by-puzzle_id.sql
 
@@ -135,6 +136,7 @@ value:
     chill_template: preview.html.jinja2
     chill_value:
       recent: _select-frontpage-preview.sql
+      feature_hidden_preview: select-frontpage-preview-feature-hidden-preview.sql
   puzzle_id: _route-pass-puzzle_id.sql
 --- !ChillNode
 name: admin_puzzle_page
