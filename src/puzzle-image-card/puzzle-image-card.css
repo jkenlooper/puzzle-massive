@@ -108,6 +108,12 @@
   border-radius: 3px;
   border: 1px solid var(--color-light);
 }
+.pm-PuzzleImageCard-imageUnknown {
+  width: 100%;
+  display: block;
+  border-radius: 3px;
+  border: 1px solid var(--color-light);
+}
 
 .pm-PuzzleImageCard-pieceCount {
   background-color: inherit;

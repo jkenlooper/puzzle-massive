@@ -46,6 +46,19 @@ ORDERBY = {ORDERBY_M_DATE, ORDERBY_PIECES, ORDERBY_QUEUE}
 page_size = 44
 
 
+def hidden_preview(puzzle_data):
+    if puzzle_data.get("has_hidden_preview"):
+        puzzle_data["src"] = ""
+        puzzle_data["title"] = ""
+        puzzle_data["author_link"] = ""
+        puzzle_data["author_name"] = ""
+        puzzle_data["source"] = ""
+        puzzle_data["license_source"] = ""
+        puzzle_data["license_name"] = ""
+        puzzle_data["license_title"] = ""
+    return puzzle_data
+
+
 def build_select_available_puzzle_sql(query_file, status, type):
     """
     The sqlite bind params don't support expanding lists, so doing this
@@ -107,8 +120,7 @@ def build_select_available_puzzle_sql(query_file, status, type):
 
 
 class PuzzleListView(MethodView):
-    """
-    """
+    """"""
 
     decorators = [user_not_banned]
 
@@ -179,7 +191,10 @@ class PuzzleListView(MethodView):
 
         result = cur.execute(
             select_available_puzzle_image_count,
-            {"pieces_min": pieces_min, "pieces_max": pieces_max,},
+            {
+                "pieces_min": pieces_min,
+                "pieces_max": pieces_max,
+            },
         ).fetchall()
         if result:
             puzzle_count = result[0][0]
@@ -216,6 +231,8 @@ class PuzzleListView(MethodView):
             (result, col_names) = rowify(result, cur.description)
             puzzle_list = result
 
+        puzzle_list = list(map(hidden_preview, puzzle_list))
+
         response = {
             "puzzles": puzzle_list,
             "totalPuzzleCount": total_puzzle_count,
@@ -231,8 +248,7 @@ class PuzzleListView(MethodView):
 
 
 class PlayerPuzzleListView(MethodView):
-    """
-    """
+    """"""
 
     decorators = [user_not_banned]
 
@@ -263,6 +279,7 @@ class PlayerPuzzleListView(MethodView):
                 filter(lambda puzzle: puzzle["puzzle_id"], result)
             ) + list(filter(lambda puzzle: not puzzle["puzzle_id"], result))
 
+        puzzle_list = list(map(hidden_preview, puzzle_list))
         response = {
             "puzzles": puzzle_list,
         }
@@ -273,8 +290,7 @@ class PlayerPuzzleListView(MethodView):
 
 
 class GalleryPuzzleListView(MethodView):
-    """
-    """
+    """"""
 
     def get(self):
         """
@@ -301,9 +317,11 @@ class GalleryPuzzleListView(MethodView):
             ).fetchall()
             if result:
                 (result, col_names) = rowify(result, cur.description)
+                result = list(map(hidden_preview, result))
                 puzzle_list = puzzle_list + result
 
         puzzle_list.sort(key=lambda x: x.get("seconds_from_now") or 1)
+
         response = {
             "puzzles": puzzle_list,
         }

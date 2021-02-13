@@ -90,7 +90,7 @@
           {%- endif -%}
           <div class="pm-Preview-puzzleView {{ scale_variant }}">
             <div class="u-intrinisicRatio" style="--intrinsicRatio-width: {{width|int}}; --intrinsicRatio-height: {{height|int}};">
-              {%- if recent.url == '' or feature_hidden_preview -%}
+              {%- if recent.url == '' or (feature_hidden_preview and recent.status != COMPLETED) -%}
                 {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
               {%- else -%}
                 <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{recent.url|safe}}" alt="">
@@ -117,7 +117,7 @@
     {% else %}
     <div class="pm-Preview-puzzleView">
       <div class="u-intrinisicRatio" style="--intrinsicRatio-width: {{width|int}}; --intrinsicRatio-height: {{height|int}};">
-        {%- if recent.url == '' or feature_hidden_preview -%}
+        {%- if recent.url == '' or (feature_hidden_preview and recent.status != COMPLETED) -%}
           {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
         {%- else -%}
           <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{recent.url|safe}}" alt="">
@@ -126,14 +126,14 @@
     </div>
     {%- endif -%}
 
-    {% if recent.link -%}
+    {% if recent.link and not (feature_hidden_preview or recent.status == COMPLETED) -%}
     <p class="pm-Preview-source u-textTruncate">
       Picture source:
       <a href="{{recent.link}}" rel="nofollow">{{recent.link|replace('http://', '')|replace('https://', '')}}</a>
     </p>
     {%- endif %}
 
-    {% if recent.attribution -%}
+    {% if recent.attribution and not (feature_hidden_preview or recent.status == COMPLETED) -%}
     <p class="pm-Preview-attribution">{{ '[chill route /internal/attribution/{}/ ]'.format(recent.attribution) }}</p>
     {%- endif %}
 
@@ -205,7 +205,9 @@
     <p class="pm-Preview-statusNote">
       Puzzle instance created by
       <pm-player-bit player="{{ recent.owner }}"></pm-player-bit>
+      {% if not feature_hidden_preview or recent.status == COMPLETED %}
       from this <a href="/chill{{ url_for('.page_uri', uri='front/{}'.format(recent.original_puzzle_id)) }}">original puzzle</a>
+      {%- endif -%}
     </p>
     {% endif %}
 

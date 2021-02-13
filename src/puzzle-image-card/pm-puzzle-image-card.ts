@@ -95,13 +95,43 @@ customElements.define(
               href=${`${data.frontFragmentHref}${data.puzzleId}/`}
             >
               <span class="u-intrinsicRatio1:1">
-                <img
-                  class="lazyload pm-PuzzleImageCard-image"
-                  width="160"
-                  height="160"
-                  data-src=${data.src}
-                  alt=""
-                />
+                ${!data.src
+                  ? html`
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        version="1.0"
+                        width="160"
+                        height="160"
+                        viewBox="0 0 160 160"
+                        class="pm-PuzzleImageCard-imageUnknown"
+                      >
+                        <rect
+                          x="0"
+                          y="0"
+                          width="160"
+                          height="160"
+                          fill="#000"
+                        />
+                        <text
+                          x="50%"
+                          y="50%"
+                          dominate-baseline="middle"
+                          text-anchor="middle"
+                          fill="#fff"
+                        >
+                          ?
+                        </text>
+                      </svg>
+                    `
+                  : html`
+                      <img
+                        class="lazyload pm-PuzzleImageCard-image"
+                        width="160"
+                        height="160"
+                        data-src=${data.src}
+                        alt=""
+                      />
+                    `}
               </span>
               <small class="pm-PuzzleImageCard-pieceCount">
                 ${data.pieces}
@@ -147,13 +177,37 @@ customElements.define(
                 <strong>${data.pieces}</strong>
                 <small>Pieces</small>
               </div>
-              <img
-                class="lazyload pm-PuzzleImageCard-image"
-                width="160"
-                height="160"
-                data-src=${data.src}
-                alt=""
-              />
+              ${!data.src
+                ? html`
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      version="1.0"
+                      width="160"
+                      height="160"
+                      viewBox="0 0 160 160"
+                      class="pm-PuzzleImageCard-imageUnknown"
+                    >
+                      <rect x="0" y="0" width="160" height="160" fill="#000" />
+                      <text
+                        x="50%"
+                        y="50%"
+                        dominate-baseline="middle"
+                        text-anchor="middle"
+                        fill="#fff"
+                      >
+                        ?
+                      </text>
+                    </svg>
+                  `
+                : html`
+                    <img
+                      class="lazyload pm-PuzzleImageCard-image"
+                      width="160"
+                      height="160"
+                      data-src=${data.src}
+                      alt=""
+                    />
+                  `}
               <em class="pm-PuzzleImageCard-status">${data.statusText}</em>
             </a>
 

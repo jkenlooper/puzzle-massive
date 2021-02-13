@@ -8,7 +8,10 @@ from werkzeug.utils import escape
 from werkzeug.urls import url_fix
 
 from api.app import db
-from api.database import rowify
+from api.database import (
+    rowify,
+    fetch_query_string,
+)
 from api.tools import check_bg_color
 from api.constants import SUGGESTED, PUBLIC
 from api.user import user_id_from_ip
@@ -28,6 +31,7 @@ class SuggestImageView(MethodView):
         args = {}
         if request.form:
             args.update(request.form.to_dict(flat=True))
+            args["features"] = set(request.form.getlist("features"))
 
         # Check pieces arg
         try:
@@ -54,7 +58,10 @@ class SuggestImageView(MethodView):
         # if permission != PUBLIC:
         #    permission = PUBLIC
 
-        description = escape(args.get("description", "").strip())[:100]
+        description = escape(args.get("description", "").strip())[:1000]
+
+        # Check secret_message
+        secret_message = escape(args.get("secret_message", ""))[:1000]
 
         # Check link and validate
         link = url_fix(args.get("link", "").strip())[:100]
@@ -63,6 +70,8 @@ class SuggestImageView(MethodView):
             abort(400)
 
         puzzle_id = uuid.uuid1().hex
+
+        features = set(args.get("features", []))
 
         cur = db.cursor()
         d = {
@@ -96,6 +105,49 @@ class SuggestImageView(MethodView):
         """,
             d,
         )
+        db.commit()
+
+        puzzle = rowify(
+            cur.execute(
+                fetch_query_string("select_puzzle_id_by_puzzle_id.sql"),
+                {"puzzle_id": puzzle_id},
+            ).fetchall(),
+            cur.description,
+        )[0][0]
+        puzzle = puzzle["puzzle"]
+
+        result = cur.execute(
+            fetch_query_string("select-puzzle-features-enabled.sql"), {"enabled": 1}
+        ).fetchall()
+        if result:
+            (puzzle_features, _) = rowify(result, cur.description)
+            # Add puzzle features
+            for puzzle_feature in puzzle_features:
+                if (
+                    puzzle_feature["slug"] == "hidden-preview"
+                    and "hidden-preview" in features
+                ):
+                    cur.execute(
+                        fetch_query_string(
+                            "add-puzzle-feature-to-puzzle-by-id--hidden-preview.sql"
+                        ),
+                        {"puzzle": puzzle, "puzzle_feature": puzzle_feature["id"]},
+                    )
+                elif (
+                    puzzle_feature["slug"] == "secret-message"
+                    and "secret-message" in features
+                ):
+                    cur.execute(
+                        fetch_query_string(
+                            "add-puzzle-feature-to-puzzle-by-id--secret-message.sql"
+                        ),
+                        {
+                            "puzzle": puzzle,
+                            "puzzle_feature": puzzle_feature["id"],
+                            "message": secret_message,
+                        },
+                    )
+
         db.commit()
         cur.close()
 

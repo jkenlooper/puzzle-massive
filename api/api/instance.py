@@ -3,6 +3,7 @@ import os
 
 from flask import current_app, redirect, make_response, abort, request
 from flask.views import MethodView
+from werkzeug.utils import escape
 
 from api.app import db
 from api.database import rowify, fetch_query_string, generate_new_puzzle_id
@@ -38,6 +39,7 @@ class CreatePuzzleInstanceView(MethodView):
         args = {}
         if request.form:
             args.update(request.form.to_dict(flat=True))
+            args["features"] = set(request.form.getlist("features"))
 
         # Check pieces arg
         try:
@@ -50,7 +52,10 @@ class CreatePuzzleInstanceView(MethodView):
         bg_color = check_bg_color(args.get("bg_color", "#808080")[:50])
 
         # Check description
-        instance_description = args.get("instance_description", "")
+        instance_description = escape(args.get("instance_description", ""))[:1000]
+
+        # Check secret_message
+        secret_message = escape(args.get("secret_message", ""))[:1000]
 
         # Check puzzle_id
         source_puzzle_id = args.get("puzzle_id")
@@ -173,7 +178,8 @@ class CreatePuzzleInstanceView(MethodView):
                 "permission": permission,
             }
             cur.execute(
-                fetch_query_string("insert_puzzle.sql"), d,
+                fetch_query_string("insert_puzzle.sql"),
+                d,
             )
         else:
             d = {
@@ -197,7 +203,8 @@ class CreatePuzzleInstanceView(MethodView):
                 "permission": permission,  # All copies of puzzles are unlisted
             }
             cur.execute(
-                fetch_query_string("insert_puzzle_instance_copy.sql"), d,
+                fetch_query_string("insert_puzzle_instance_copy.sql"),
+                d,
             )
         db.commit()
 
@@ -231,6 +238,39 @@ class CreatePuzzleInstanceView(MethodView):
             fetch_query_string("fill-user-puzzle-slot.sql"),
             {"player": user, "puzzle": puzzle},
         )
+
+        features = args.get("features")
+        result = cur.execute(
+            fetch_query_string("select-puzzle-features-enabled.sql"), {"enabled": 1}
+        ).fetchall()
+        if result:
+            (puzzle_features, _) = rowify(result, cur.description)
+            # Add puzzle features
+            for puzzle_feature in puzzle_features:
+                if (
+                    puzzle_feature["slug"] == "hidden-preview"
+                    and "hidden-preview" in features
+                ):
+                    cur.execute(
+                        fetch_query_string(
+                            "add-puzzle-feature-to-puzzle-by-id--hidden-preview.sql"
+                        ),
+                        {"puzzle": puzzle, "puzzle_feature": puzzle_feature["id"]},
+                    )
+                elif (
+                    puzzle_feature["slug"] == "secret-message"
+                    and "secret-message" in features
+                ):
+                    cur.execute(
+                        fetch_query_string(
+                            "add-puzzle-feature-to-puzzle-by-id--secret-message.sql"
+                        ),
+                        {
+                            "puzzle": puzzle,
+                            "puzzle_feature": puzzle_feature["id"],
+                            "message": secret_message,
+                        },
+                    )
 
         db.commit()
         cur.close()

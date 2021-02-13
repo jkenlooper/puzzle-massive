@@ -25,6 +25,13 @@
   }
 }
 
+.pm-UploadForm-row > :last-child {
+}
+@media (min-width: 600px) {
+  .pm-UploadForm-row > :last-child {
+    flex: 1;
+  }
+}
 .pm-UploadForm-row > :first-child:last-child {
 }
 @media (min-width: 600px) {

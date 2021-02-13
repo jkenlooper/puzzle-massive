@@ -15,7 +15,9 @@ a.author_name,
 a.source,
 l.source as license_source,
 l.name as license_name,
-l.title as license_title
+l.title as license_title,
+
+pfd.puzzle_feature is not null as has_hidden_preview
 
 from Puzzle as p
 left outer join User_Puzzle as up on (up.puzzle = p.id and up.player = p.owner)
@@ -24,6 +26,8 @@ left outer join Puzzle as p1 on (pi.original = p1.id)
 left outer join PuzzleFile as pf on (p1.id = pf.puzzle and pf.name = 'preview_full')
 left outer join Attribution as a on (a.id = pf.attribution)
 left outer join License as l on (l.id = a.license)
+left outer join PuzzleFeature as pzf on (pzf.slug = 'hidden-preview' and pzf.enabled = 1)
+left outer join PuzzleFeatureData as pfd on (pfd.puzzle = p.id and pfd.puzzle_feature = pzf.id)
 
 where p.owner = :player
 -- any of the puzzle status except deleted and suggested

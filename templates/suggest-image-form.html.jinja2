@@ -14,6 +14,12 @@ function form() {
     },
     link: "",
     description: "",
+    feature_hidden_preview: false,
+    secret_message: "",
+    feature_secret_message: false,
+    checkSecretMessage(ev) {
+        this.feature_secret_message = !!this.secret_message.trim()
+    },
   };
 }
 </script>
@@ -39,6 +45,42 @@ function form() {
       </label>
       <input id="bg_color" class="jscolor pm-UploadForm-colorPicker u-textCenter" type="text" name="bg_color" value="#484662">
     </div>
+
+    {% if 'hidden-preview' in config.PUZZLE_FEATURES or 'all' in config.PUZZLE_FEATURES %}
+    <div class="pm-UploadForm-row">
+      <label for="feature-hidden-preview">
+        Hide Preview Image
+      </label>
+      <div>
+        <input type="checkbox" id="feature-hidden-preview" name="features" value="hidden-preview" x-model="feature_hidden_preview">
+        <p>
+          Check this box to hide the preview image.  Any links to the original puzzle image will also not show until after the puzzle is complete.
+        </p>
+      </div>
+    </div>
+    {% endif %}
+
+    {# TODO: Secret message not fully implemented.
+    {% if 'secret-message' in config.PUZZLE_FEATURES or 'all' in config.PUZZLE_FEATURES %}
+    <div class="pm-UploadForm-row">
+      <label for="feature-secret-message">
+        Secret Message
+      </label>
+      <div>
+        <input id="feature-secret-message" type="checkbox" name="features" value="secret-message" x-model="feature_secret_message">
+        <div style="width: 100%" x-show="feature_secret_message">
+        <p>
+          <label for="secret-message">
+          Add a message to show to players when they complete the puzzle.
+          </label>
+        </p>
+        <textarea maxlength="1000" id="secret-message" name="secret_message" x-model="secret_message" x-on:input.debounce="checkSecretMessage"></textarea>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    #}
+
     <div class="pm-UploadForm-row">
       <label for="link">The website that the image is found on.</label>
       <div>

@@ -114,6 +114,7 @@
 {% set msg = "" %}
 {% set title = "" %}
 
+
 {% if puzzle.status not in (ACTIVE, COMPLETED, FROZEN, BUGGY_UNLISTED) %}
   {% set msg = "This puzzle has some problems." %}
   {% set title = "Problem with puzzle" %}

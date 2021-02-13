@@ -39,7 +39,15 @@ ALLOWED_EXTENSIONS = set(["jpg", "jpeg"])
 
 
 def submit_puzzle(
-    pieces, bg_color, user, permission, description, link, upload_file, features=()
+    pieces,
+    bg_color,
+    user,
+    permission,
+    description,
+    link,
+    upload_file,
+    secret_message="",
+    features=set(),
 ):
     """
     Submit a puzzle to be reviewed.  Generates the puzzle_id and original.jpg.
@@ -56,7 +64,7 @@ def submit_puzzle(
             abort(400)
 
         filename = unsplash_match.group(2)
-        u_id = uuid.uuid4.hex[:20]
+        u_id = uuid.uuid4().hex[:20]
         puzzle_id = f"unsplash-mxyz-{u_id}"
 
         # Create puzzle dir
@@ -183,7 +191,6 @@ def submit_puzzle(
         {"original": puzzle, "instance": puzzle, "variant": classic_variant},
     )
 
-    # TODO: not tested yet.
     result = cur.execute(
         fetch_query_string("select-puzzle-features-enabled.sql"), {"enabled": 1}
     ).fetchall()
@@ -201,8 +208,10 @@ def submit_puzzle(
                     ),
                     {"puzzle": puzzle, "puzzle_feature": puzzle_feature["id"]},
                 )
-            elif puzzle_feature["slug"] == "secret-message":
-                secret_message = "TODO: add secret message"
+            elif (
+                puzzle_feature["slug"] == "secret-message"
+                and "secret-message" in features
+            ):
                 cur.execute(
                     fetch_query_string(
                         "add-puzzle-feature-to-puzzle-by-id--secret-message.sql"
@@ -235,6 +244,7 @@ class PuzzleUploadView(MethodView):
         args = {}
         if request.form:
             args.update(request.form.to_dict(flat=True))
+            args["features"] = set(request.form.getlist("features"))
 
         # Only allow valid contributor
         if args.get("contributor", None) != current_app.config.get(
@@ -269,6 +279,9 @@ class PuzzleUploadView(MethodView):
 
         description = escape(args.get("description", ""))[:1000]
 
+        # Check secret_message
+        secret_message = escape(args.get("secret_message", ""))[:1000]
+
         # Check link and validate
         link = url_fix(args.get("link", ""))[:1000]
 
@@ -284,6 +297,7 @@ class PuzzleUploadView(MethodView):
             description,
             link,
             upload_file,
+            secret_message=secret_message,
             features=features,
         )
 
@@ -300,6 +314,7 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
         args = {}
         if request.form:
             args.update(request.form.to_dict(flat=True))
+            args["features"] = set(request.form.getlist("features"))
 
         puzzle_id = args.get("puzzle_id")
         if not puzzle_id:
@@ -327,6 +342,9 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
 
         description = escape(args.get("description", ""))[:1000]
 
+        # Check secret_message
+        secret_message = escape(args.get("secret_message", ""))[:1000]
+
         # Check link and validate
         link = url_fix(args.get("link", ""))[:1000]
 
@@ -343,8 +361,18 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
             abort(400)
         owner = result[0]
 
+        features = args.get("features")
+
         new_puzzle_id = submit_puzzle(
-            pieces, bg_color, owner, permission, description, link, upload_file
+            pieces,
+            bg_color,
+            owner,
+            permission,
+            description,
+            link,
+            upload_file,
+            secret_message=secret_message,
+            features=features,
         )
 
         # Update the status of this suggested puzzle to be the suggested done
@@ -356,7 +384,7 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
         db.commit()
         cur.close()
 
-        return redirect("/chill/site/front/{0}/".format(new_puzzle_id), code=303)
+        return redirect("/chill/site/admin/puzzle/suggested/", code=303)
 
 
 class UnsplashPuzzleThread(threading.Thread):

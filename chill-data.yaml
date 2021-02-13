@@ -189,6 +189,8 @@ value:
     description: Manage suggested puzzle data
     title: Suggested Puzzle
   puzzle: _select-suggested-puzzle-by-puzzle_id.sql
+  feature_hidden_preview: select-frontpage-preview-feature-hidden-preview.sql
+  feature_secret_message: select-secret-message-for-puzzle_id.sql
 --- !ChillNode
 name: suggested_puzzle_thank_you_page
 route: /suggested-puzzle-thank-you/
@@ -235,6 +237,7 @@ value:
     description: Create a new puzzle instance from the image.
     title: Create New Instance of a Puzzle
   puzzle: _select-frontpage-preview.sql
+  feature_hidden_preview: select-frontpage-preview-feature-hidden-preview.sql
   route: _route-pass-puzzle_id.sql
 --- !ChillNode
 name: internal_player_bit_for_id

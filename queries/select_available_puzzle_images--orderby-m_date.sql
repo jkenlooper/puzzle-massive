@@ -18,7 +18,9 @@ a.author_name,
 a.source,
 l.source as license_source,
 l.name as license_name,
-l.title as license_title
+l.title as license_title,
+
+pfd.puzzle_feature is not null as has_hidden_preview
 
 from Puzzle as p
 join PuzzleInstance as pi on (pi.instance = p.id)
@@ -26,6 +28,8 @@ join Puzzle as p1 on (pi.original = p1.id)
 join PuzzleFile as pf on (p1.id = pf.puzzle)
 left outer join Attribution as a on (a.id = pf.attribution)
 left outer join License as l on (l.id = a.license)
+left outer join PuzzleFeature as pzf on (pzf.slug = 'hidden-preview' and pzf.enabled = 1)
+left outer join PuzzleFeatureData as pfd on (pfd.puzzle = p.id and pfd.puzzle_feature = pzf.id)
 
 where pf.name == 'preview_full'
 and p.permission = 0 -- PUBLIC
