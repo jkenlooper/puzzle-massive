@@ -24,6 +24,12 @@ MAX_BAN_TIME = LITTLE_LESS_THAN_A_WEEK
 HONEY_POT_BAN_TIME = LITTLE_MORE_THAN_A_DAY
 
 
+def hidden_preview(puzzle_data):
+    if puzzle_data.get("has_hidden_preview"):
+        puzzle_data["src"] = ""
+    return puzzle_data
+
+
 def generate_password():
     "Create a random string for use as password. Return as cleartext and encrypted."
     timestamp = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
@@ -400,8 +406,7 @@ class UserLogoutView(MethodView):
 
 
 class UserDetailsView(MethodView):
-    """
-    """
+    """"""
 
     # after 14 days reset the expiration date of the cookie by setting will_expire_cookie
     # In select-user-details.sql the will_expire_cookie is set when it is within 7 days of expire date.
@@ -486,7 +491,9 @@ class UserDetailsView(MethodView):
                     }
 
                 if isinstance(puzzle_instance_list, list):
-                    puzzle_instance_list = list(map(set_urls, result))
+                    puzzle_instance_list = list(
+                        map(set_urls, map(hidden_preview, result))
+                    )
 
         user_details["puzzle_instance_list"] = puzzle_instance_list
 
@@ -630,11 +637,17 @@ class ClaimUserByTokenView(MethodView):
 
         cur.execute(
             fetch_query_string("update-player-account-email-verified.sql"),
-            {"player_id": user, "email_verified": 1,},
+            {
+                "player_id": user,
+                "email_verified": 1,
+            },
         )
         cur.execute(
             fetch_query_string("make-verified-email-unique.sql"),
-            {"player_id": user, "email": existing_player_data["email"],},
+            {
+                "player_id": user,
+                "email": existing_player_data["email"],
+            },
         )
 
         cur.close()
@@ -643,13 +656,15 @@ class ClaimUserByTokenView(MethodView):
 
 
 class InternalUserDetailsView(MethodView):
-    """
-    """
+    """"""
 
     def get(self, user):
         cur = db.cursor()
         result = cur.execute(
-            fetch_query_string("select-user-details-by-id.sql"), {"id": user,},
+            fetch_query_string("select-user-details-by-id.sql"),
+            {
+                "id": user,
+            },
         ).fetchall()
         if not result:
             err_msg = {

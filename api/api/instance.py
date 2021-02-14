@@ -79,7 +79,7 @@ class CreatePuzzleInstanceView(MethodView):
         # the source puzzle is unlisted based on source puzzle data.
 
         user = int(
-            current_app.secure_cookie.get(u"user")
+            current_app.secure_cookie.get("user")
             or user_id_from_ip(request.headers.get("X-Real-IP"))
         )
 
@@ -147,6 +147,15 @@ class CreatePuzzleInstanceView(MethodView):
         (result, col_names) = rowify(result, cur.description)
         source_puzzle_data = result[0]
 
+        result = cur.execute(
+            fetch_query_string("select-puzzle-features-for-puzzle_id.sql"),
+            {"puzzle_id": source_puzzle_id, "enabled": 1},
+        ).fetchall()
+        source_features = set()
+        if result:
+            (result, _) = rowify(result, cur.description)
+            source_features = set(map(lambda x: x["slug"], result))
+
         # Set the permission of new puzzle to be unlisted if source puzzle is
         # that way. The form should have this field as disabled if the source
         # puzzle is unlisted; which would mean it isn't sent as a parameter.
@@ -209,17 +218,18 @@ class CreatePuzzleInstanceView(MethodView):
         db.commit()
 
         result = cur.execute(
-            fetch_query_string("select-all-from-puzzle-by-puzzle_id.sql"),
+            fetch_query_string("select_puzzle_id_by_puzzle_id.sql"),
             {"puzzle_id": puzzle_id},
         ).fetchall()
         if not result:
             cur.close()
             db.commit()
+            current_app.logger.error(
+                f"Failed to get puzzle id from select_puzzle_id_by_puzzle_id.sql using {puzzle_id}"
+            )
             abort(500)
 
-        (result, col_names) = rowify(result, cur.description)
-        puzzle_data = result[0]
-        puzzle = puzzle_data["id"]
+        puzzle = result[0][0]
 
         classic_variant = cur.execute(
             fetch_query_string("select-puzzle-variant-id-for-slug.sql"),
@@ -247,10 +257,13 @@ class CreatePuzzleInstanceView(MethodView):
             (puzzle_features, _) = rowify(result, cur.description)
             # Add puzzle features
             for puzzle_feature in puzzle_features:
-                if (
-                    puzzle_feature["slug"] == "hidden-preview"
-                    and "hidden-preview" in features
+                if puzzle_feature[
+                    "slug"
+                ] == "hidden-preview" and "hidden-preview" in features.union(
+                    source_features
                 ):
+                    # If source puzzle had hidden-preview then this puzzle will
+                    # also.
                     cur.execute(
                         fetch_query_string(
                             "add-puzzle-feature-to-puzzle-by-id--hidden-preview.sql"
@@ -271,6 +284,23 @@ class CreatePuzzleInstanceView(MethodView):
                             "message": secret_message,
                         },
                     )
+
+        result = cur.execute(
+            fetch_query_string(
+                "select-all-and-preview_full-from-puzzle-by-puzzle_id.sql"
+            ),
+            {"puzzle_id": puzzle_id},
+        ).fetchall()
+        if not result:
+            cur.close()
+            db.commit()
+            current_app.logger.error(
+                f"Failed to get result from select-all-and-preview_full-from-puzzle-by-puzzle_id.sql using {puzzle_id}"
+            )
+            abort(500)
+
+        (result, col_names) = rowify(result, cur.description)
+        puzzle_data = result[0]
 
         db.commit()
         cur.close()

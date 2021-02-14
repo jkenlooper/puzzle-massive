@@ -22,4 +22,4 @@ from Puzzle as p
 JOIN PuzzleInstance as pi on (pi.instance = p.id)
 join Puzzle as p1 on (p1.id = pi.original)
 left outer JOIN PuzzleFile AS pf ON (pf.puzzle = p1.id and pf.name = 'preview_full') -- Get the original
-where p.status in (:IN_RENDER_QUEUE, :REBUILD) order by p.queue;
+where p.puzzle_id = :puzzle_id;

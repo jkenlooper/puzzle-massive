@@ -262,8 +262,8 @@ map \$request_uri \$hotlinking_policy {
 
   # og:image image that can be used when sharing links
   ~/.*puzzle-massive-logo.* 0;
-  ~/resources/.*/preview_full.jpg$ 0;
-  ~/resources/.*/preview_full.jpg\?.+$ 0;
+  ~/resources/.*/preview_full.*.jpg$ 0;
+  ~/resources/.*/preview_full.*.jpg\?.+$ 0;
 
   # files in root
   /favicon.ico 0;
@@ -970,7 +970,7 @@ cat <<HEREORIGINSERVER
     root ${SRVDIR};
     try_files \$uri \$uri =404;
   }
-  location ~* ^/resources/.*/(preview_full.jpg)\$ {
+  location ~* ^/resources/.*/(preview_full.*.jpg)\$ {
     expires \$cache_expire;
     add_header Cache-Control "public";
     root ${SRVDIR};

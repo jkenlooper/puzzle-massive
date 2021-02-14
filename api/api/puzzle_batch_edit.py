@@ -111,6 +111,10 @@ class AdminPuzzleBatchEditView(MethodView):
                 cur.execute(
                     fetch_query_string("delete_puzzle_timeline.sql"), {"puzzle": id}
                 )
+                cur.execute(
+                    fetch_query_string("remove-puzzle-from-all-user-puzzle-slots.sql"),
+                    {"puzzle": id},
+                )
                 redis_connection.delete("timeline:{puzzle}".format(puzzle=id))
                 redis_connection.delete("score:{puzzle}".format(puzzle=id))
             db.commit()

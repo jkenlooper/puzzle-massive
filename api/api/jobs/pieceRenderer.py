@@ -24,6 +24,7 @@ from random import randint
 import subprocess
 import time
 from docopt import docopt
+import uuid
 
 import sqlite3
 from PIL import Image
@@ -68,8 +69,7 @@ insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);
 
 
 def handle_render_fail(job, exception, exception_func, traceback):
-    """
-    """
+    """"""
     print("Handle render fail")
     for puzzle in job.args:
         set_render_fail_on_puzzle(puzzle)
@@ -96,7 +96,10 @@ def render_all():
 
     result = cur.execute(
         "select * from Puzzle where status in (:IN_RENDER_QUEUE, :REBUILD)",
-        {"IN_RENDER_QUEUE": IN_RENDER_QUEUE, "REBUILD": REBUILD,},
+        {
+            "IN_RENDER_QUEUE": IN_RENDER_QUEUE,
+            "REBUILD": REBUILD,
+        },
     ).fetchall()
     if not result:
         print("no puzzles found in render or rebuild queues")
@@ -178,7 +181,9 @@ def render(*args):
             )
             continue
 
-        puzzle_data = rowify(result, cur.description,)[0][0]
+        puzzle_data = rowify(result, cur.description,)[
+            0
+        ][0]
         if puzzle_data["status"] not in (IN_RENDER_QUEUE, REBUILD):
             current_app.logger.info(
                 "Puzzle {puzzle_id} no longer in rendering status; skipping.".format(
@@ -207,6 +212,7 @@ def render(*args):
             print("Error with puzzle instance {puzzle_id} ; skipping.".format(**puzzle))
             continue
         original_puzzle_id = result[0]
+        original_preview_full = result[1]
         puzzle_id = puzzle["puzzle_id"]
         original_puzzle_dir = os.path.join(
             current_app.config["PUZZLE_RESOURCES"], original_puzzle_id
@@ -214,7 +220,7 @@ def render(*args):
         puzzle_dir = os.path.join(current_app.config["PUZZLE_RESOURCES"], puzzle_id)
 
         # If it is being rebuilt then delete all the other resources.
-        cleanup(puzzle_id, ["original.jpg", "preview_full.jpg"])
+        cleanup(puzzle_id, ["original.jpg", os.path.basename(original_preview_full)])
 
         scaled_sizes = [
             100,
@@ -223,10 +229,11 @@ def render(*args):
         # Create the preview full if it is a new original puzzle. A puzzle is
         # considered to be 'new' if status was IN_RENDER_QUEUE and not REBUILD.
         # TODO: use requests.get to get original.jpg and run in another thread
+        preview_full_basename = os.path.basename(puzzle["preview_full"])
         if original_puzzle_id == puzzle_id and puzzle["status"] == IN_RENDER_QUEUE:
             im = Image.open(os.path.join(original_puzzle_dir, "original.jpg")).copy()
             im.thumbnail(size=(384, 384))
-            im.save(os.path.join(puzzle_dir, "preview_full.jpg"))
+            im.save(os.path.join(puzzle_dir, preview_full_basename))
             im.close()
 
         # TODO: get path of original.jpg via the PuzzleFile query
@@ -315,7 +322,11 @@ def render(*args):
                 PORTAPI=current_app.config["PORTAPI"],
                 puzzle_id=puzzle["puzzle_id"],
             ),
-            json={"pieces": piece_count, "table_width": tw, "table_height": th,},
+            json={
+                "pieces": piece_count,
+                "table_width": tw,
+                "table_height": th,
+            },
         )
         if r.status_code != 200:
             raise Exception("Puzzle details api error")
@@ -583,7 +594,9 @@ def render(*args):
                     puzzle_id=puzzle["puzzle_id"],
                     file_name=name,
                 ),
-                json={"url": url,},
+                json={
+                    "url": url,
+                },
             )
             if r.status_code != 200:
                 raise Exception(
@@ -596,7 +609,7 @@ def render(*args):
 
         keep_list = [
             "original.jpg",
-            "preview_full.jpg",
+            preview_full_basename,
             "resized-original.jpg",
             "scale-100",
             "raster.css",

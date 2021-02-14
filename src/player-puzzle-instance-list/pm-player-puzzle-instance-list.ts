@@ -103,12 +103,42 @@ customElements.define(
                     href=${puzzleInstanceItem.front_url}
                     title="player puzzle instance"
                   >
-                    <img
-                      width="50"
-                      height="50"
-                      src=${puzzleInstanceItem.src}
-                      alt=""
-                    />
+                    ${!puzzleInstanceItem.src
+                      ? html`
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            version="1.0"
+                            width="50"
+                            height="50"
+                            viewBox="0 0 50 50"
+                            class="pm-PlayerPuzzleInstanceList-imageUnknown"
+                          >
+                            <rect
+                              x="0"
+                              y="0"
+                              width="50"
+                              height="50"
+                              fill="#000"
+                            />
+                            <text
+                              x="50%"
+                              y="50%"
+                              dominate-baseline="middle"
+                              text-anchor="middle"
+                              fill="#fff"
+                            >
+                              ?
+                            </text>
+                          </svg>
+                        `
+                      : html`
+                          <img
+                            width="50"
+                            height="50"
+                            src=${puzzleInstanceItem.src}
+                            alt=""
+                          />
+                        `}
                   </a>
                 </li>
               `

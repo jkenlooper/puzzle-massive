@@ -45,6 +45,13 @@
   object-fit: cover;
   border: 1px solid var(--color-dark);
 }
+.pm-PlayerPuzzleInstanceList-imageUnknown {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 1px solid var(--color-dark);
+}
 
 .pm-PlayerPuzzleInstanceList-available {
   display: flex;

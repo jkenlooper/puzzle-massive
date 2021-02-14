@@ -174,12 +174,14 @@ def submit_puzzle(
 
     # The preview_full image is created in the unsplash_image_thread.
     if not unsplash_match:
+        slip = uuid.uuid4().hex[:4]
+        preview_full_slip = f"preview_full.{slip}.jpg"
         cur.execute(
             fetch_query_string("add-puzzle-file.sql"),
             {
                 "puzzle": puzzle,
                 "name": "preview_full",
-                "url": "/resources/{0}/preview_full.jpg".format(puzzle_id),
+                "url": f"/resources/{puzzle_id}/{preview_full_slip}",
             },
         )
 
