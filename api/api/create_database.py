@@ -4,7 +4,11 @@ import sys
 # from sqlalchemy import create_engine
 
 from api.tools import loadConfig
-from api.database import PUZZLE_CREATE_TABLE_LIST, read_query_file
+from api.database import (
+    PUZZLE_CREATE_TABLE_LIST,
+    read_query_file,
+    puzzle_features_init_list,
+)
 
 if __name__ == "__main__":
 
@@ -35,6 +39,13 @@ if __name__ == "__main__":
     ## Set initial licenses
     for statement in read_query_file("initial_licenses.sql").split(";"):
         cur.execute(statement, {"application_name": application_name})
+        db.commit()
+
+    ## Set puzzle features that are enabled
+    puzzle_features = config.get("PUZZLE_FEATURES", set())
+    print(f"Enabling puzzle features: {puzzle_features}")
+    for query_file in puzzle_features_init_list(puzzle_features):
+        cur.execute(read_query_file(query_file))
         db.commit()
 
     cur.close()

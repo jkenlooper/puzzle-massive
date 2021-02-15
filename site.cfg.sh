@@ -282,7 +282,8 @@ PIECE_JOIN_TOLERANCE = 100
 # See PUZZLE_RULES_HELP_TEXT in bin/create_dot_env.sh
 PUZZLE_RULES = set("${PUZZLE_RULES}".split())
 
-# Enable puzzle features. See bin/create-db-dump-sql.sh
+# Enable puzzle features. Run python3 api/api/update_enabled_puzzle_features.py
+# if this changes.
 PUZZLE_FEATURES=set("${PUZZLE_FEATURES}".split())
 
 DOMAIN_NAME = "${DOMAIN_NAME}"

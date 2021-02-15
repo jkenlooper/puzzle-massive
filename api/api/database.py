@@ -3,6 +3,7 @@ from builtins import zip, bytes
 import os
 import time
 import hashlib
+import re
 
 from flask import current_app
 from .app import db
@@ -28,6 +29,37 @@ PUZZLE_CREATE_TABLE_LIST = (
     "create_table_player_account.sql",
     "create_table_name_register.sql",
 )
+
+
+def puzzle_features_init_list(puzzle_features):
+    """
+    Features for puzzles that can be enabled for a puzzle site are listed here.
+    Each one uses the 'slug' as the feature with the name and description fields.
+    They are enabled via the site.cfg PUZZLE_FEATURES variable which is set via the
+    .env file.  Creating and updating features are done by executing these SQL
+    files.
+    """
+    all_feature_queries_init = [
+        "puzzle-feature-reset-enabled.sql",
+        "puzzle-feature--hidden-preview.sql",
+        "puzzle-feature--secret-message.sql",
+    ]
+    # The enable list will be filtered based on what is in PUZZLE_FEATURES set.
+    all_feature_queries_enable = [
+        "puzzle-feature-enable--hidden-preview.sql",
+        "puzzle-feature-enable--secret-message.sql",
+    ]
+
+    def is_feature_enabled(query_file):
+        m = re.match("puzzle-feature-enabled--(.*).sql", query_file)
+        if m:
+            return m.group(1) in puzzle_features or "all" in puzzle_features
+        else:
+            return False
+
+    return all_feature_queries_init + list(
+        filter(is_feature_enabled, all_feature_queries_enable)
+    )
 
 
 def init_db():

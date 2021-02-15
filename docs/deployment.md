@@ -87,6 +87,9 @@ been uploaded to the home directory.
     # Update any bit icon authors and add new bit icons if applicable
     ./bin/insert-or-replace-bit-icons.py
 
+    # Update the enabled puzzle features if applicable
+    python3 api/api/update_enabled_puzzle_features.py
+
     sudo make ENVIRONMENT=production install;
     sudo nginx -t;
     sudo systemctl reload nginx;
@@ -265,6 +268,8 @@ on the old server and copy all the data over to the new puzzle-massive-green ser
     # Update any bit icon authors and add new bit icons if applicable
     ./bin/insert-or-replace-bit-icons.py
 
+    # Update the enabled puzzle features if applicable
+    python3 api/api/update_enabled_puzzle_features.py
     ```
 
 4.  Copy the nginx logs (NGINXLOGDIR) found at: `/var/log/nginx/puzzle-massive/`
