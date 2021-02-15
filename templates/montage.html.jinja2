@@ -1,5 +1,5 @@
 {% from 'preview-unknown.html.jinja2' import preview_unknown %}
-{% macro montage(puzzles) -%}
+{% macro montage(puzzles, default_checked=False, itemwidth=100) -%}
 <div class="pma-Montage">
   <div class="pma-Montage-list" role="list">
     {% for item in puzzles %}
@@ -7,16 +7,16 @@
       {% set height = item.short if item.table_width > item.table_height else item.long %}
       {% set src = item.original if item.original else item.url %}
 
-      <div class="pma-Montage-listitem" role="listitem">
+      <div class="pma-Montage-listitem" role="listitem" style="width:{{ itemwidth }}px;">
         <label for="puzzle_id_{{item.puzzle_id}}">
 
           {% if src == '' %}
           {{ preview_unknown(width=width, height=height) }}
           {% else %}
-          <img class="lazyload" width="{{width|int}}" height="{{height|int}}" data-src="{{src}}" alt="">
+          <img class="lazyload" width="{{width|int}}" height="{{height|int}}" data-src="{{src}}" alt="" style="max-width:100%;height:auto;">
           {% endif %}
 
-          <input id="puzzle_id_{{item.puzzle_id}}" name="montage_puzzle_id" type="checkbox" value="{{item.puzzle_id}}">
+          <input id="puzzle_id_{{item.puzzle_id}}" name="montage_puzzle_id" type="checkbox" value="{{item.puzzle_id}}" {% if default_checked %}checked{% endif %}>
           {{item.pieces}}
         </label>
         <a class="u-textTruncate" href="/chill{{ url_for('.page_uri', uri='admin/puzzle/details/{0}'.format(item.puzzle_id)) }}">

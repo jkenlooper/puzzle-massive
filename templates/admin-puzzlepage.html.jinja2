@@ -38,18 +38,18 @@
       <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle/all') }}">
       All {{count_all}}
       </a>
-      <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle/completed') }}">
+      <span>
       Completed {{count_completed}}
-      </a>
+      </span>
       <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle/submitted') }}">
         Submitted {{count_submitted}}
       </a>
       <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle/suggested') }}">
         Suggested {{count_suggested}}
       </a>
-      <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle/rejected') }}">
+      <span>
         Rejected {{count_rejected}}
-      </a>
+      </span>
       <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle/renderqueue') }}">
         {% if count_render_queue > 0 %}
         Render Queue
@@ -65,9 +65,11 @@
         {% endif %}
       </a>
 
+      {# Drop render button as it is now automatic
       <a href="/newapi/admin/puzzle/render/">
         Render
       </a>
+      #}
       {#
       <a href="admin/puzzle/random/">
       auto generated
@@ -78,10 +80,12 @@
       #}
     </nav>
 
+    {# Not implemented
     <form class="pma-PuzzleActions-form" action="/chill{{ url_for('.page_uri', uri='admin/puzzle/puzzle_id') }}" method="GET">
     <label for="puzzle_id">Puzzle ID</label>
     <input id="puzzle_id" name="puzzle_id" placeholder="5720f1ee3a100" type="text">
     </form>
+    #}
   </div>
 
 
@@ -93,63 +97,74 @@
       TODO: javascript to hide reject reason input if reject action not selected
       TODO: javascript to hide delete reason input if delete action not selected
     #}
-    <form action="/newapi/admin/puzzle/batch-edit/" method="POST">
+    <form action="/newapi/admin/puzzle/batch-edit/" method="POST" x-ref="batchEditForm" x-data="batchEditData()">
+    <script>
+      function batchEditData() {
+        return {
+          action: "approve",
+        };
+      }
+    </script>
       <div>
-      <label>
-        <input type="radio" name="action" value="approve">
-        Approve
-      </label>
+        <label>
+          <input type="radio" name="action" value="approve" x-model="action">
+          Approve
+        </label>
       </div>
 
       <div>
-      <label>
-        <input type="radio" name="action" value="reject">
-        Reject
-      </label>
+        <label>
+          <input type="radio" name="action" value="reject" x-model="action">
+          Reject
+        </label>
 
-        Reject Reason
-      <label>
-        Failed License
-        <input type="radio" name="reject" value="license">
-      </label>
-      <label>
-        No Attribution
-        <input type="radio" name="reject" value="attribution">
-      </label>
-
-      </div>
-
-      <div>
-      <label>
-        <input type="radio" name="action" value="delete">
-        Delete
-      </label>
-
-        Delete Reason
-      <label>
-        License
-        <input type="radio" name="delete" value="license">
-      </label>
-      <label>
-        Inappropiate
-        <input type="radio" name="delete" value="inapt">
-      </label>
-      <label>
-        Old
-        <input type="radio" name="delete" value="old">
-      </label>
-      <label>
-        Request
-        <input type="radio" name="delete" value="request">
-      </label>
+        <div x-show="action === 'reject'">
+          Reject Reason:
+          <label>
+            Failed License
+            <input type="radio" name="reject" value="license">
+          </label>
+          <label>
+            No Attribution
+            <input type="radio" name="reject" value="attribution" checked>
+          </label>
+        </div>
 
       </div>
 
       <div>
-      <label>
-        <input type="radio" name="action" value="tag">
-        Tag
-      </label>
+        <label>
+          <input type="radio" name="action" value="delete" x-model="action">
+          Delete
+        </label>
+
+        <div x-show="action === 'delete'">
+          Delete Reason
+          <label>
+            License
+            <input type="radio" name="delete" value="license">
+          </label>
+          <label>
+            Inappropiate
+            <input type="radio" name="delete" value="inapt">
+          </label>
+          <label>
+            Old
+            <input type="radio" name="delete" value="old">
+          </label>
+          <label>
+            Request
+            <input type="radio" name="delete" value="request" checked>
+          </label>
+        </div>
+      </div>
+
+      {# TODO: tagging is not implemented yet.
+      <div>
+        <label>
+          <input type="radio" name="action" value="tag">
+          Tag
+        </label>
       </div>
 
       <div>
@@ -158,10 +173,12 @@
           <input type="text" name="tag">
         </label>
       </div>
+      #}
 
       <input type="reset">
       <input type="submit" value="Batch Edit">
       <em>Max count of puzzles to edit at a time is 20.</em>
+
       {% if puzzles is mapping -%}
         {% set puzzles = [puzzles] %}
       {%- endif %}
@@ -169,7 +186,7 @@
       {% if puzzles[0].status == -20 %}
         {{ suggested_list(puzzles) }}
       {% else %}
-        {{ montage(puzzles) }}
+        {{ montage(puzzles, default_checked=True, itemwidth=384) }}
       {% endif %}
 
     </form>

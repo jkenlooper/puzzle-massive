@@ -2,8 +2,8 @@ SELECT p.id, pf.name, pf.url, pfo.url as original, p.puzzle_id, p.permission, p.
 
 -- Find the short and long dimensions of the preview img by checking the table_width
 -- and table_height since the img width and height is not currently stored.
-round((min(CAST(p.table_width AS float), CAST(p.table_height AS float)) / max(CAST(p.table_width AS float), CAST(p.table_height AS float))) * 64) AS short,
-64.0 AS long
+round((min(CAST(p.table_width AS float), CAST(p.table_height AS float)) / max(CAST(p.table_width AS float), CAST(p.table_height AS float))) * 384) AS short,
+384.0 AS long
 
 FROM Puzzle AS p
 JOIN PuzzleInstance as pi on (pi.instance = p.id)

@@ -27,6 +27,7 @@
     {% block script %}
     <script src="{{ url_for('send_theme_file', filename='lazysizes.min.js') }}"></script>
     <script src="{{ url_for('send_theme_file', filename='admin.bundle.js') }}"></script>
+    <script type="module" src="{{ url_for('send_theme_file', filename='alpine.js') }}"></script>
 
     {% endblock %}
 

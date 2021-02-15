@@ -26,6 +26,9 @@ Types of changes
 Bit icons have moved to a separate git repo and are no longer included in this
 git repo. The source-media/bit-icons/ has a Makefile to resize these as needed.
 
+Setup for implementing new features for puzzles. Initial one is adding the
+hidden preview image for new puzzles.
+
 If doing an in-place deployment then add `sudo apt -y install python-is-python3`.
 
 Migrate script for this update: migrate_from_2_9_2_to_2_10_0.py
@@ -36,6 +39,7 @@ Migrate script for this update: migrate_from_2_9_2_to_2_10_0.py
   recent puzzle.
 - A montage of all bit icons for each author will show on their bit icon author page.
 - Show link back to bit icon author page for bit icons shown on player account page.
+- Allow new puzzles to have the option of hiding the preview image
 
 ## Changed
 

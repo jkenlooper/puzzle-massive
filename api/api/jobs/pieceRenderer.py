@@ -230,7 +230,11 @@ def render(*args):
         # considered to be 'new' if status was IN_RENDER_QUEUE and not REBUILD.
         # TODO: use requests.get to get original.jpg and run in another thread
         preview_full_basename = os.path.basename(puzzle["preview_full"])
-        if original_puzzle_id == puzzle_id and puzzle["status"] == IN_RENDER_QUEUE:
+        if (
+            original_puzzle_id == puzzle_id
+            and puzzle["status"] == IN_RENDER_QUEUE
+            and preview_full_basename.startswith("preview_full")
+        ):
             im = Image.open(os.path.join(original_puzzle_dir, "original.jpg")).copy()
             im.thumbnail(size=(384, 384))
             im.save(os.path.join(puzzle_dir, preview_full_basename))
