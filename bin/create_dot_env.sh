@@ -242,7 +242,7 @@ STREAM_WORKER_COUNT_HELP_TEXT="
 # to the stream. Set to None to be based on cpu count.
 "
 echo "${STREAM_WORKER_COUNT_HELP_TEXT}"
-read -e -p "publish worker count:
+read -e -p "stream worker count:
 " -i "${STREAM_WORKER_COUNT}" STREAM_WORKER_COUNT;
 
 

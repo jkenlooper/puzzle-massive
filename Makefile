@@ -44,8 +44,8 @@ inspect.%:
 ifeq ($(shell ls bin/activate),)
 $(error No bin/activate found. Run "'virtualenv . -p python3' or 'python3 -m venv .' to create a python virtual environment")
 endif
-ifneq ($(shell which pip),$(project_dir)bin/pip)
-$(warning run "source bin/activate" to activate the python virtual environment. Using $(shell which pip). Ignore this warning if using sudo make install.)
+ifneq ($(shell which python),$(project_dir)bin/python)
+$(warning run "source bin/activate" to activate the python virtual environment. Using $(shell which python). Ignore this warning if using sudo make install.)
 endif
 
 
