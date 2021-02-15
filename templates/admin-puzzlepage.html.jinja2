@@ -35,6 +35,10 @@
 
     <h2>Actions</h2>
     <nav class="pma-PuzzleActions-nav">
+      <a href="/chill{{ url_for('.page_uri', uri='new-puzzle/{}'.format(config.NEW_PUZZLE_CONTRIB)) }}">
+        Upload Puzzle Form
+      </a>
+
       <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle/all') }}">
       All {{count_all}}
       </a>
