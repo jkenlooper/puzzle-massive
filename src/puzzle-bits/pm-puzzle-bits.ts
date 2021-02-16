@@ -11,6 +11,7 @@ import "./puzzle-bits.css";
 interface TemplateData {
   collection: Array<PlayerBit>;
   fgcolor: string;
+  showOtherPlayerBits: boolean;
 }
 
 const tag = "pm-puzzle-bits";
@@ -24,11 +25,15 @@ customElements.define(
     }
     private instanceId: string;
     private fgcolor: string;
+    private showOtherPlayerBits: boolean;
     constructor() {
       super();
       this.instanceId = PmPuzzleBits._instanceId;
       const bgColorAttr = this.attributes.getNamedItem("bg-color");
       this.fgcolor = bgColorAttr ? bgColorAttr.value : "#000000";
+      this.showOtherPlayerBits = !!this.attributes.getNamedItem(
+        "show-other-player-bits"
+      );
       const bitActiveTimeoutAttr = this.attributes.getNamedItem(
         "bit-active-timeout"
       );
@@ -67,6 +72,9 @@ customElements.define(
             data.collection,
             (bit) => bit.id, // Key fn
             (bit) => {
+              if (!data.showOtherPlayerBits && !bit.ownBit) {
+                return "";
+              }
               return html`
                 <div
                   style=${styleMap({
@@ -122,6 +130,7 @@ customElements.define(
       return {
         collection: puzzleBitsService.collection,
         fgcolor: this.fgcolor,
+        showOtherPlayerBits: this.showOtherPlayerBits,
       };
     }
 

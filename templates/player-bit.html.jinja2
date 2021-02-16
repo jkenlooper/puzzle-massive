@@ -1,4 +1,5 @@
 {#- The string [[1234]] for the bit.player is replaced in javascript with the base 36 version. -#}
+{%- if bit.player -%}
 <span class="{% if not bit.icon %}hasNoBit {% endif %}pm-PlayerBit">
 {%- if not bit.icon -%}
 <span class="pm-PlayerBit-id">[[{{ bit.player }}]]</span>
@@ -11,3 +12,4 @@
 <strong class="pm-PlayerBit-bitName">{{ bit.name }}</strong>
 {%- endif -%}
 </span>
+{%- endif -%}

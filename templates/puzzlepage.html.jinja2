@@ -297,7 +297,12 @@
                 <div slot="outline-bottom-content">
                 </div>
               </pm-puzzle-pieces>
-              <pm-puzzle-bits recent-timeout="{{ config.PLAYER_BIT_RECENT_ACTIVITY_TIMEOUT }}" bit-active-timeout="{{ config.TOKEN_LOCK_TIMEOUT }}" bg-color="{{ puzzle.bg_color }}"></pm-puzzle-bits>
+              <pm-puzzle-bits
+                recent-timeout="{{ config.PLAYER_BIT_RECENT_ACTIVITY_TIMEOUT }}"
+                bit-active-timeout="{{ config.TOKEN_LOCK_TIMEOUT }}"
+                bg-color="{{ puzzle.bg_color }}"
+                {%- if config.SHOW_OTHER_PLAYER_BITS %} show-other-players{% endif -%}
+                {#- #}></pm-puzzle-bits>
             {%- endmacro %}
 
             {% if scale != 0 %}
