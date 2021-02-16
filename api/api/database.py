@@ -51,7 +51,7 @@ def puzzle_features_init_list(puzzle_features):
     ]
 
     def is_feature_enabled(query_file):
-        m = re.match("puzzle-feature-enabled--(.*).sql", query_file)
+        m = re.match("puzzle-feature-enable--(.*).sql", query_file)
         if m:
             return m.group(1) in puzzle_features or "all" in puzzle_features
         else:
