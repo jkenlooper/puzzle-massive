@@ -33,6 +33,10 @@
   {% endif -%}
 {% endif -%}
 
+{%- if (preview_full and preview_full.url == '') or feature_hidden_preview %}
+  {%- set _pageimage = '' -%}
+{% endif -%}
+
 {%- if _pageimage %}
   {%- if _pageimage.startswith('http') %}
     {%- set _pageimage_url = _pageimage %}

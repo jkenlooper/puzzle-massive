@@ -9,6 +9,7 @@ value:
     content: frontpage-content.html
     description: Massively Multiplayer Online Jigsaw Puzzles
     info: _frontpage-page-info-for-puzzle_id.sql
+  feature_hidden_preview: select-frontpage-preview-feature-hidden-preview.sql
 
 --- !ChillNode
 name: scorespage
