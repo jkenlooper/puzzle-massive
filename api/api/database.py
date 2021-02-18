@@ -71,6 +71,7 @@ def init_db():
         ## Create the new tables and populate with initial data
         query_files = list(PUZZLE_CREATE_TABLE_LIST)
         query_files.append("initial_puzzle_variant.sql")
+        query_files.append("insert_initial_admin_user.sql")
         query_files.append("insert_initial_anon_user.sql")
         for file_path in query_files:
             query = read_query_file(file_path)

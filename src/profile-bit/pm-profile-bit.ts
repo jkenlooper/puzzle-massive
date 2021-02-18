@@ -195,7 +195,7 @@ customElements.define(
           handleEvent: this.handleClickClaimUser.bind(this),
           capture: true,
         },
-        profileLink: `${this.player_profile_url}${userDetailsService.userDetails.login}/`,
+        profileLink: this.player_profile_url,
         iconAlt: "bit icon " + userDetailsService.userDetails.icon || "",
         hasIcon: !!userDetailsService.userDetails.icon,
         iconSrc: `${this.mediaPath}bit-icons/64-${userDetailsService.userDetails.icon}.png`,

@@ -31,6 +31,7 @@ if __name__ == "__main__":
         "alter_bit_author_for_migrate_from_2_9_2_to_2_10_0.sql",
         "create_table_puzzle_feature.sql",
         "create_table_puzzle_feature_data.sql",
+        "insert_initial_admin_user.sql",
     ):
         for statement in read_query_file(filename).split(";"):
             try:

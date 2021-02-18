@@ -16,6 +16,7 @@ from api.database import rowify, fetch_query_string
 
 LETTERS = "%s%s" % (string.ascii_letters, string.digits)
 
+ADMIN_USER_ID = 1
 ANONYMOUS_USER_ID = 2
 
 LITTLE_LESS_THAN_A_WEEK = (60 * 60 * 24 * 7) - random.randint(3023, 3600 * 14)
@@ -381,6 +382,37 @@ class UserLoginView(MethodView):
         else:
             # Invalid anon login; delete cookie just in case it's there
             current_app.secure_cookie.set("user", "", response, expires=expires)
+
+        cur.close()
+
+        return response
+
+
+class AdminUserLoginView(MethodView):
+    """
+    This endpoint should require authentication. See the location defined in the
+    nginx config.
+    Sets the user cookie to be '1' which is used for the admin player.
+    Redirects to the admin page.
+    """
+
+    def get(self):
+        cur = db.cursor()
+
+        response = make_response(redirect("/chill/site/admin/puzzle/"))
+
+        # Delete the shareduser cookie if it exists
+        expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
+        current_app.secure_cookie.set("shareduser", "", response, expires=expires)
+
+        current_app.secure_cookie.set(
+            "user", str(ADMIN_USER_ID), response, expires_days=365
+        )
+        cur.execute(
+            fetch_query_string("extend-cookie_expires-for-user.sql"),
+            {"id": ADMIN_USER_ID},
+        )
+        db.commit()
 
         cur.close()
 

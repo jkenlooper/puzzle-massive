@@ -366,6 +366,7 @@ cat <<HERECACHESERVER
   rewrite ^/chill/site/queue/(.*)\$ /chill/site/puzzle-list/ permanent;
 
   # temporary redirect player profile page
+  # TODO: remove redirect when implementing public player profile pages
   rewrite ^/chill/site/player/[^/]+/\$ /chill/site/player/ redirect;
 
   # Temporary redirect document pages to allow robots to index them.
@@ -578,6 +579,14 @@ cat <<HERECACHESERVER
     # Allow this content to be loaded in the error page iframe
     add_header X-Frame-Options ALLOW;
     rewrite ^/.* /puzzle-massive-message.html break;
+  }
+
+  # TODO: logout of auth basic doesn't work.  Closing the browser seems to be
+  # the only good method?
+  location = /admin-logout/ {
+    auth_basic "Restricted Content";
+    auth_basic_user_file  ${SRVDIR}.htpasswd;
+    return 401;
   }
 
   ${file_error_page_conf}

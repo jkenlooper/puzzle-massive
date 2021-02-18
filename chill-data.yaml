@@ -154,6 +154,7 @@ name: admin_puzzle_page_all
 route: /admin/puzzle/all/
 template: admin-puzzlepage.html.jinja2
 value:
+  slug: all
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
   puzzles: _select-admin-puzzles-all.sql
@@ -162,6 +163,7 @@ name: admin_puzzle_page_submitted
 route: /admin/puzzle/submitted/
 template: admin-puzzlepage.html.jinja2
 value:
+  slug: submitted
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
   puzzles: _select-admin-puzzles-needs-moderation.sql
@@ -170,6 +172,7 @@ name: admin_puzzle_page_renderqueue
 route: /admin/puzzle/renderqueue/
 template: admin-puzzlepage.html.jinja2
 value:
+  slug: renderqueue
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
   puzzles: _select-admin-puzzles-render.sql
@@ -178,6 +181,7 @@ name: admin_puzzle_page_suggested
 route: /admin/puzzle/suggested/
 template: admin-puzzlepage.html.jinja2
 value:
+  slug: suggested
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
   puzzles: _select-admin-puzzles-suggested.sql

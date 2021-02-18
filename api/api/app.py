@@ -105,6 +105,7 @@ def make_app(config=None, database_writable=False, **kw):
         GenerateAnonymousLoginByToken,
         UserLogoutView,
         UserLoginView,
+        AdminUserLoginView,
         ClaimUserByTokenView,
         InternalUserDetailsView,
         AdminBannedUserList,
@@ -203,6 +204,9 @@ def make_app(config=None, database_writable=False, **kw):
     app.add_url_rule(
         "/user-login/<anonymous_login>/", view_func=UserLoginView.as_view("user-login")
     )
+    app.add_url_rule(
+        "/admin/user-login/", view_func=AdminUserLoginView.as_view("admin-user-login")
+    )
     app.add_url_rule("/choose-bit/", view_func=ChooseBitView.as_view("choose-bit"))
     app.add_url_rule("/claim-bit/", view_func=ClaimBitView.as_view("claim-bit"))
     app.add_url_rule("/claim-user/", view_func=ClaimUserView.as_view("claim-user"))
@@ -253,7 +257,8 @@ def make_app(config=None, database_writable=False, **kw):
         view_func=PlayerEmailLoginResetView.as_view("player-email-login-reset"),
     )
     app.add_url_rule(
-        "/ping/puzzle/<puzzle_id>/", view_func=PingPuzzleView.as_view("ping-puzzle"),
+        "/ping/puzzle/<puzzle_id>/",
+        view_func=PingPuzzleView.as_view("ping-puzzle"),
     )
 
     # Requires user to press any key to continue

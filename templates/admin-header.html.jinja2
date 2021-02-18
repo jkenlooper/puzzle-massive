@@ -1,4 +1,9 @@
-Admin
+<div>
+<a href="/newapi/admin/user-login/">Login as admin player</a>
+|
+<pm-profile-bit style="display: inline-block;" media-path="{{ url_for('send_media_file', filename='') }}" player-profile-url="/chill{{ url_for('.page_uri', uri='player') }}"></pm-profile-bit>
+
+</div>
 <nav>
   {# <a href="/newapi/admin/user/banned/" target="_blank">Banned Players</a> | #}
   <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle') }}">Puzzles</a>
