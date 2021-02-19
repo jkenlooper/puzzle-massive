@@ -15,7 +15,9 @@
 <section>
   <h1>
       Puzzle Management
+   - {{ slug }}
   </h1>
+
 
   {# info on all admin/puzzle/* pages #}
   <div class="pma-PuzzleActions">
@@ -35,16 +37,22 @@
 
     <h2>Actions</h2>
     <nav class="pma-PuzzleActions-nav">
-      <a href="/chill{{ url_for('.page_uri', uri='new-puzzle/{}'.format(config.NEW_PUZZLE_CONTRIB)) }}">
+      <a target="_blank" href="/chill{{ url_for('.page_uri', uri='new-puzzle/{}'.format(config.NEW_PUZZLE_CONTRIB)) }}">
         Upload Puzzle Form
       </a>
 
-      <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle/all') }}">
-      All {{count_all}}
+      <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle/active') }}">
+      Active
       </a>
-      <span>
-      Completed {{count_completed}}
-      </span>
+      <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle/in_queue') }}">
+      In Queue
+      </a>
+      <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle/instances') }}">
+      Instances
+      </a>
+      <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle/completed') }}">
+      Completed {# TODO: not accurate {{count_completed}} #}
+      </a>
       <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle/submitted') }}">
         Submitted {{count_submitted}}
       </a>
@@ -187,10 +195,18 @@
         {% set puzzles = [puzzles] %}
       {%- endif %}
 
-      {% if puzzles[0].status == -20 %}
-        {{ suggested_list(puzzles) }}
-      {% else %}
+      {% if slug in ('active', 'in_queue', 'completed', 'instances') %}
+        {{ montage(puzzles, default_checked=False, itemwidth=128) }}
+
+      {% elif slug == 'submitted' %}
         {{ montage(puzzles, default_checked=True, itemwidth=384) }}
+
+      {% elif slug == 'renderqueue' %}
+        {{ montage(puzzles, default_checked=False, itemwidth=384) }}
+
+      {% elif slug == 'suggested' %}
+        {{ suggested_list(puzzles) }}
+
       {% endif %}
 
     </form>

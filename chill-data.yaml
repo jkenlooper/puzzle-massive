@@ -150,14 +150,41 @@ value:
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
 --- !ChillNode
-name: admin_puzzle_page_all
-route: /admin/puzzle/all/
+name: admin_puzzle_page_active
+route: /admin/puzzle/active/
 template: admin-puzzlepage.html.jinja2
 value:
-  slug: all
+  slug: active
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
-  puzzles: _select-admin-puzzles-all.sql
+  puzzles: _select-admin-puzzles-active.sql
+--- !ChillNode
+name: admin_puzzle_page_in_queue
+route: /admin/puzzle/in_queue/
+template: admin-puzzlepage.html.jinja2
+value:
+  slug: in_queue
+  admin_puzzle_menu:
+    puzzle_status_count: _select-puzzle-status-count.sql
+  puzzles: _select-admin-puzzles-in_queue.sql
+--- !ChillNode
+name: admin_puzzle_page_instances
+route: /admin/puzzle/instances/
+template: admin-puzzlepage.html.jinja2
+value:
+  slug: instances
+  admin_puzzle_menu:
+    puzzle_status_count: _select-puzzle-status-count.sql
+  puzzles: _select-admin-puzzle-instances.sql
+--- !ChillNode
+name: admin_puzzle_page_completed
+route: /admin/puzzle/completed/
+template: admin-puzzlepage.html.jinja2
+value:
+  slug: completed
+  admin_puzzle_menu:
+    puzzle_status_count: _select-puzzle-status-count.sql
+  puzzles: _select-admin-puzzles-completed.sql
 --- !ChillNode
 name: admin_puzzle_page_submitted
 route: /admin/puzzle/submitted/

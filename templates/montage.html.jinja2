@@ -8,24 +8,27 @@
       {% set src = item.original if item.original else item.url %}
 
       <div class="pma-Montage-listitem" role="listitem" style="width:{{ itemwidth }}px;">
+        <div>
         <label for="puzzle_id_{{item.puzzle_id}}">
+          <input id="puzzle_id_{{item.puzzle_id}}" name="montage_puzzle_id" type="checkbox" value="{{item.puzzle_id}}" {% if default_checked %}checked{% endif %}>
 
           {% if src == '' %}
           {{ preview_unknown(width=width, height=height) }}
           {% else %}
-          <img class="lazyload" width="{{width|int}}" height="{{height|int}}" data-src="{{src}}" alt="" style="max-width:100%;height:auto;">
+          <img class="u-block lazyload" width="{{width|int}}" height="{{height|int}}" data-src="{{src}}" alt="" style="max-width:100%;height:auto;">
           {% endif %}
-
-          <input id="puzzle_id_{{item.puzzle_id}}" name="montage_puzzle_id" type="checkbox" value="{{item.puzzle_id}}" {% if default_checked %}checked{% endif %}>
-          {{item.pieces}}
+          <small>pieces:</small>{{item.pieces}}
         </label>
-        <a class="u-textTruncate" href="/chill{{ url_for('.page_uri', uri='front/{0}'.format(item.puzzle_id)) }}">
+        </div>
+
+        <a class="u-textTruncate" target="_blank" href="/chill{{ url_for('.page_uri', uri='front/{0}'.format(item.puzzle_id)) }}">
           <small>
           {{item.status}}
           {{item.puzzle_id}}
           </small>
         </a>
-        {% if item.permission == -1 %}private{% endif %}
+        {% if item.permission == -1 %}<small class="u-block">private</small>{% endif %}
+        {% if item.has_hidden_preview %}<small class="u-block">hidden-preview</small>{% endif %}
       </div>
     {% endfor %}
   </div>
