@@ -52,6 +52,8 @@
 {# Puzzle is temporarily in maintenance mode. Usually when running a backup script. #}
 {% set MAINTENANCE  = -30 %}
 
+{% set PRIVATE = -1 %}
+
 {# Puzzle is visible if the puzzle is active or if the puzzle has recently been complete. #}
 {% set isPuzzleVisible = puzzle.status in (ACTIVE, COMPLETED, FROZEN, BUGGY_UNLISTED) and not (puzzle.status == COMPLETED and puzzle.is_recent != 1) %}
 
@@ -233,11 +235,15 @@
         <h1>{{ title }}</h1>
         {% if puzzle.status == COMPLETED and puzzle.is_recent == 1 %}
           <p>
-            This jigsaw puzzle has been recently completed.  {% if puzzle.is_original -%}
-            Anyone
-            {%- else -%}
-            Only the owner of this puzzle instance
-            {%- endif %} can rebuild it after {{ puzzle.redo_date }}.
+            {% if puzzle.permission == PRIVATE and puzzle.is_original %}
+              This unlisted jigsaw puzzle has been completed and cannot be rebuilt.  Only puzzle instances can be created from it.
+            {% else %}
+              This jigsaw puzzle has been recently completed.  {% if puzzle.is_original -%}
+              Anyone
+              {%- else -%}
+              Only the owner of this puzzle instance
+              {%- endif %} can rebuild it after {{ puzzle.redo_date }}.
+            {% endif %}
           </p>
         {% else %}
         <p>{{ msg }}
@@ -248,6 +254,9 @@
           {% else %}
             {% set piece_count = puzzle.pieces %}
           {% endif %}
+            {% if puzzle.permission == PRIVATE and puzzle.is_original %}
+              {# Original puzzles that were unlisted (private) should not be rebuilt. #}
+            {% else %}
         <pm-dot-require min="{{ config.MINIMUM_PIECE_COUNT }}" type="none">
           <pm-rebuild-form max-point-cost="{{ config.MAX_POINT_COST_FOR_REBUILDING }}"
                            new-user-starting-points="{{ config.NEW_USER_STARTING_POINTS }}"
@@ -260,6 +269,7 @@
                            >
           </pm-rebuild-form>
         </pm-dot-require>
+          {% endif %}
         {% endif %}
         {% endif %}
       {% endif %}

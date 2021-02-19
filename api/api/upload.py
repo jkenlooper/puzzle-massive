@@ -273,8 +273,6 @@ class PuzzleUploadView(MethodView):
             or user_id_from_ip(request.headers.get("X-Real-IP"))
         )
 
-        # All puzzles are public by default, but allow the player to set to
-        # PRIVATE if they have the role of membership.
         permission = int(args.get("permission", PUBLIC))
         if permission not in (PUBLIC, PRIVATE):
             permission = PUBLIC

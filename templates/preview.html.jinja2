@@ -19,6 +19,8 @@
 {% set RENDERING        = -6  %}
 {% set MAINTENANCE      = -30 %}
 
+{% set PRIVATE = -1 %}
+
 {% set QUEUE_WINNING_BID= 1   %}
 
 {% set width = recent.long if recent.table_width > recent.table_height else recent.short %}
@@ -104,7 +106,12 @@
               {%- if recent.status in (ACTIVE, BUGGY_UNLISTED) -%}
               Join
               {%- elif recent.status == COMPLETED and not recent.is_recent -%}
-              Rebuild
+                {%- if recent.permission == PRIVATE and recent.is_original -%}
+                  {#- Original puzzles that were unlisted (private) should not be rebuilt. -#}
+                  View
+                {%- else -%}
+                  Rebuild
+                {%- endif -%}
               {%- else -%}
               View
               {%- endif -%}
@@ -158,12 +165,16 @@
             <a class="Button" href="">Reload</a>
           {% else %}
             {% if recent.status == COMPLETED %}
+              {%- if recent.permission == PRIVATE and recent.is_original -%}
+              {# no rebuild for private puzzles that are original #}
+              {% else %}
               {% if not recent.is_recent -%}
               <pm-dot-require min="{{ config.MINIMUM_PIECE_COUNT }}" type="none">
                 <a class="Button Button--primary" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/0'.format(recent.puzzle_id)) }}">
                 Rebuild
                 </a>
               </pm-dot-require>
+              {% endif %}
               {% endif %}
             {% endif %}
             {% if recent.status in (ACTIVE, IN_QUEUE, COMPLETED, FROZEN) %}

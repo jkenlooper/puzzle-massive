@@ -78,6 +78,21 @@ function form() {
     #}
 
     <div class="pm-UploadForm-row">
+      <label for="permission">
+        Unlisted
+      </label>
+      <div>
+        <input type="checkbox" id="permission" name="permission" value="-1">
+        <p>
+          Check this box to <em>not</em> have this puzzle publicly listed on the
+          site. The original puzzle can then only be completed once and not
+          rebuilt. Puzzle instances can still be made from the original puzzle.
+        </p>
+        <p><em>Not all unlisted puzzles will be approved.</em></p>
+      </div>
+    </div>
+
+    <div class="pm-UploadForm-row">
       <label for="link">The website that the image is found on.</label>
       <div>
         <input id="link-field" style="width:100%" type="text" name="link" value="" placeholder="https://unsplash.com/photos/4nr59MLWI9E" maxlength="1000">

@@ -11,7 +11,7 @@ from PIL import Image
 from api.app import db, redis_connection
 
 from api.database import rowify, fetch_query_string
-from api.constants import REBUILD, COMPLETED, QUEUE_REBUILD
+from api.constants import REBUILD, COMPLETED, QUEUE_REBUILD, PRIVATE
 
 from api.user import user_id_from_ip, user_not_banned
 from api.jobs.convertPiecesToRedis import convert
@@ -74,6 +74,16 @@ class PuzzlePiecesRebuildView(MethodView):
             {"user": user, "puzzle": puzzle, "pieces": pieces},
         ).fetchall()
         if not userCanRebuildPuzzle:
+            cur.close()
+            abort(400)
+
+        if (
+            puzzleData["permission"] == PRIVATE
+            and puzzleData["original_puzzle_id"] == puzzleData["puzzle_id"]
+        ):
+            current_app.logger.warning(
+                "Original puzzles that are private can not be rebuilt"
+            )
             cur.close()
             abort(400)
 

@@ -13,7 +13,7 @@ from api.database import (
     fetch_query_string,
 )
 from api.tools import check_bg_color
-from api.constants import SUGGESTED, PUBLIC
+from api.constants import SUGGESTED, PUBLIC, PRIVATE
 from api.user import user_id_from_ip
 from api.notify import send_message
 from .user import user_not_banned
@@ -52,11 +52,9 @@ class SuggestImageView(MethodView):
             or user_id_from_ip(request.headers.get("X-Real-IP"))
         )
 
-        # All puzzles are public
-        permission = PUBLIC
-        # permission = int(args.get('permission', PUBLIC))
-        # if permission != PUBLIC:
-        #    permission = PUBLIC
+        permission = int(args.get("permission", PUBLIC))
+        if permission not in (PUBLIC, PRIVATE):
+            permission = PUBLIC
 
         description = escape(args.get("description", "").strip())[:1000]
 

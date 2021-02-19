@@ -40,6 +40,7 @@ Migrate script for this update: migrate_from_2_9_2_to_2_10_0.py
 - A montage of all bit icons for each author will show on their bit icon author page.
 - Show link back to bit icon author page for bit icons shown on player account page.
 - Allow new puzzles to have the option of hiding the preview image
+- Allow submitted and suggested puzzles to have the option of being private.
 
 ## Changed
 
@@ -48,6 +49,7 @@ Migrate script for this update: migrate_from_2_9_2_to_2_10_0.py
 - Moved bit icons to puzzle-massive-content git repository.
 - Credits page shows bit icon authors on separate pages
 - Update bit icon expiration extend values
+- Original puzzles that are unlisted can not be rebuilt
 
 ## Fixed
 
