@@ -235,7 +235,12 @@
     {% endif %}
     {% if recent.status == COMPLETED and recent.is_recent -%}
     <p class="pm-Preview-statusNote">
-    This jigsaw puzzle has been recently completed, it can be redone after {{ recent.redo_date }}.
+      This jigsaw puzzle has been recently completed
+      {%- if not (recent.permission == -1 and recent.is_original) -%}
+        {#- unlisted puzzles that are originals can not be rebuilt -#}
+        , it can be rebuilt after {{ recent.redo_date }}
+      {%- endif -%}
+    .
     </p>
     {% endif %}
     {% if recent.status == COMPLETED and not recent.is_recent -%}
