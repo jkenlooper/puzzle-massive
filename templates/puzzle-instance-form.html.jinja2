@@ -17,7 +17,7 @@ function puzzleInstanceForm() {
     return {
         copypuzzlepieces: false,
         pieces: {{ piece_count }},
-        {% if not feature_hidden_preview or puzzle.status == COMPLETED %}
+        {% if not feature_hidden_preview %}
         feature_hidden_preview: false,
         canPreviewBeVisible() { return true },
         {% else %}
