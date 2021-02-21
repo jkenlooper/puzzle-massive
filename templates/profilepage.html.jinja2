@@ -25,7 +25,9 @@
 
   <details class="u-marginTopMd u-marginBottomMd">
     <summary>Change Player Name</summary>
+    {% if config.POINT_COST_FOR_CHANGING_NAME %}
     <p>Changing the player name will cost {{ config.POINT_COST_FOR_CHANGING_NAME }} dots. <small><em>Every day your balance will be set to a minimum of {{ config.NEW_USER_STARTING_POINTS }} dots.</em></small></p>
+    {% endif %}
     <pm-dot-require min="{{ config.POINT_COST_FOR_CHANGING_NAME }}" type="blur">
       <p>
         The player name is <b>not</b> used when logging into your account
@@ -43,6 +45,7 @@
     <div class="pm-Profilepage-account">
       <h2>Account</h2>
       <div class="pm-Profilepage-accountActions">
+          {% if config.SMTP_HOST %}
           <details class="pm-Profilepage-emailRegister u-marginTopMd u-marginBottomMd">
             <summary>Register Your E-mail Address</summary>
             <p>
@@ -64,10 +67,11 @@
               #}
             </pm-player-email-register>
           </details>
+          {% endif %}
 
         <hr class="u-marginTopLg">
         <div class="pm-Profilepage-anonymousLogin u-marginTopLg u-marginBottomMd">
-          <pm-account></pm-account>
+          <pm-account {% if config.SMTP_HOST %}email-configured{% endif %}></pm-account>
         </div>
       </div>
     </div>

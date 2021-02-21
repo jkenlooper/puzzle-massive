@@ -9,6 +9,7 @@ interface TemplateData {
   isGeneratingLoginLink: boolean;
   hasBitLink: boolean;
   generateBitLink: Function;
+  hasEmailConfigured: boolean;
 }
 
 const tag = "pm-account";
@@ -24,10 +25,14 @@ customElements.define(
     private instanceId: string;
     private bitLink: string = "";
     private isGeneratingLoginLink: boolean = false;
+    private hasEmailConfigured: boolean = false;
 
     constructor() {
       super();
       this.instanceId = PmAccount._instanceId;
+      this.hasEmailConfigured = !!this.attributes.getNamedItem(
+        "email-configured"
+      );
       userDetailsService.subscribe(this.render.bind(this), this.instanceId);
       this.render();
     }
@@ -84,7 +89,8 @@ customElements.define(
                 </p>
                 <pm-logout-link></pm-logout-link>
               `
-            : html`
+            : data.hasEmailConfigured
+            ? html`
                 <p>
                   Existing players can reset their login link by e-mail:
                   <pm-login-by-email></pm-login-by-email>
@@ -93,7 +99,8 @@ customElements.define(
                     first.</em
                   >
                 </p>
-              `}
+              `
+            : ""}
         </div>
       `;
     }
@@ -104,6 +111,7 @@ customElements.define(
         hasBitLink: !!this.bitLink,
         generateBitLink: this.generateBitLink.bind(this),
         isGeneratingLoginLink: this.isGeneratingLoginLink,
+        hasEmailConfigured: this.hasEmailConfigured,
       };
     }
 
