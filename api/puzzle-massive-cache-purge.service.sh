@@ -11,7 +11,7 @@ source "$PORTREGISTRY"
 
 DATE=$(date)
 
-origin_server=http://localhost:${PORTORIGIN}
+origin_server=http://127.0.0.1:${PORTORIGIN}
 
 cat <<HERE
 

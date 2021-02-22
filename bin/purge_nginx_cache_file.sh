@@ -6,7 +6,7 @@
 # Set cache_url_list to a text file with each line being a cache_url to purge.
 cache_url_list=$1
 
-# http://localhost:6301
+# http://127.0.0.1:6301
 origin_server=$2
 
 # nginx cache dir
