@@ -32,7 +32,7 @@ customElements.define(
       const bgColorAttr = this.attributes.getNamedItem("bg-color");
       this.fgcolor = bgColorAttr ? bgColorAttr.value : "#000000";
       this.showOtherPlayerBits = !!this.attributes.getNamedItem(
-        "show-other-player-bits"
+        "show-other-players"
       );
       const bitActiveTimeoutAttr = this.attributes.getNamedItem(
         "bit-active-timeout"
