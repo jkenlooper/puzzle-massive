@@ -400,12 +400,13 @@ cat <<HERECACHESERVER
   # Ignore query params on pages so they are not part of the cache.
   rewrite ^/(d|chill/site)/(.*)/\$ /\$1/\$2/? last;
 
+  # Ignore query params on theme so they are not part of the cache.
+  # Rewrite to be served from dist directory
+  rewrite ^/theme/.*?/(.*)\$ /dist/\$1? last;
+
 HERECACHESERVER
 if test "${ENVIRONMENT}" != 'development'; then
 cat <<HERECACHESERVERPRODUCTION
-  # Ignore query params on theme for production so they are not part of the cache.
-  rewrite ^/(theme/.*)\$ /\$1? last;
-
   # Ignore query params on favicon.ico for production.
   rewrite ^/(favicon\.ico)\$ /\$1? last;
 
@@ -432,7 +433,7 @@ cat <<HERECACHESERVERUP
     proxy_cache pm_cache_zone;
     add_header X-Proxy-Cache \$upstream_cache_status;
     include proxy_params;
-    proxy_pass http://localhost:${PORTORIGIN};
+    proxy_pass http://127.0.0.1:${PORTORIGIN};
   }
 
   location ~* ^/newapi/(puzzle-upload|admin/puzzle/promote-suggested)/\$ {
@@ -448,7 +449,7 @@ cat <<HERECACHESERVERUP
     proxy_cache pm_cache_zone;
     add_header X-Proxy-Cache \$upstream_cache_status;
     include proxy_params;
-    proxy_pass http://localhost:${PORTORIGIN};
+    proxy_pass http://127.0.0.1:${PORTORIGIN};
   }
 
   location ~* ^/chill/site/puzzle/(.*/)?$ {
@@ -468,7 +469,7 @@ cat <<HERECACHESERVERUP
     proxy_cache pm_cache_zone;
     add_header X-Proxy-Cache \$upstream_cache_status;
     include proxy_params;
-    proxy_pass http://localhost:${PORTORIGIN};
+    proxy_pass http://127.0.0.1:${PORTORIGIN};
   }
 
   location = /chill/site/new-player/ {
@@ -487,7 +488,7 @@ cat <<HERECACHESERVERUP
     proxy_cache pm_cache_zone;
     add_header X-Proxy-Cache \$upstream_cache_status;
     include proxy_params;
-    proxy_pass http://localhost:${PORTORIGIN};
+    proxy_pass http://127.0.0.1:${PORTORIGIN};
   }
 
   # Skipping divulger since it is not needed at the moment.
@@ -495,7 +496,7 @@ cat <<HERECACHESERVERUP
   #  proxy_pass_header Server;
   #  proxy_set_header X-Real-IP  \$remote_addr;
   #  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-  #  proxy_pass http://localhost:${PORTDIVULGER};
+  #  proxy_pass http://127.0.0.1:${PORTDIVULGER};
 
   #  # Upgrade to support websockets
   #  proxy_http_version 1.1;
@@ -526,7 +527,7 @@ cat <<HERECACHESERVERUP
     # needed then.
     proxy_buffering off;
 
-    proxy_pass http://localhost:${PORTSTREAM};
+    proxy_pass http://127.0.0.1:${PORTSTREAM};
 
     # Channel is in the route, so /stream/puzzle/puzzle_id/ will go to: /stream?channel=puzzle:puzzle_id
     rewrite ^/stream/puzzle/([^/]+)/\$ /stream?channel=puzzle:\$1? break;
@@ -602,7 +603,7 @@ server {
   server_name localhost;
   listen      ${PORTORIGIN};
 
-  set_real_ip_from localhost;
+  set_real_ip_from 127.0.0.1;
   real_ip_header X-Real-IP;
   real_ip_recursive on;
 
@@ -636,8 +637,8 @@ server {
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_pass http://localhost:${PORTAPI};
-    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
+    proxy_pass http://127.0.0.1:${PORTAPI};
+    proxy_redirect http://127.0.0.1:${PORTAPI}/ http://\$host/;
 
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
@@ -652,8 +653,8 @@ server {
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
-    proxy_pass http://localhost:${PORTAPI};
+    proxy_redirect http://127.0.0.1:${PORTAPI}/ http://\$host/;
+    proxy_pass http://127.0.0.1:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
@@ -664,8 +665,8 @@ server {
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
-    proxy_pass http://localhost:${PORTAPI};
+    proxy_redirect http://127.0.0.1:${PORTAPI}/ http://\$host/;
+    proxy_pass http://127.0.0.1:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
@@ -676,8 +677,8 @@ server {
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
-    proxy_pass http://localhost:${PORTAPI};
+    proxy_redirect http://127.0.0.1:${PORTAPI}/ http://\$host/;
+    proxy_pass http://127.0.0.1:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
@@ -688,8 +689,8 @@ server {
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
-    proxy_pass http://localhost:${PORTAPI};
+    proxy_redirect http://127.0.0.1:${PORTAPI}/ http://\$host/;
+    proxy_pass http://127.0.0.1:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
@@ -701,8 +702,8 @@ server {
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
-    proxy_pass http://localhost:${PORTAPI};
+    proxy_redirect http://127.0.0.1:${PORTAPI}/ http://\$host/;
+    proxy_pass http://127.0.0.1:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
@@ -714,8 +715,8 @@ server {
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_pass http://localhost:${PORTAPI};
-    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
+    proxy_pass http://127.0.0.1:${PORTAPI};
+    proxy_redirect http://127.0.0.1:${PORTAPI}/ http://\$host/;
 
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
@@ -731,8 +732,8 @@ server {
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
-    proxy_pass http://localhost:${PORTAPI};
+    proxy_redirect http://127.0.0.1:${PORTAPI}/ http://\$host/;
+    proxy_pass http://127.0.0.1:${PORTAPI};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
@@ -750,8 +751,8 @@ server {
     #auth_basic_user_file ${SRVDIR}.htpasswd;
 
     #proxy_pass_header Server;
-    #proxy_pass http://localhost:${PORTAPI};
-    #proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
+    #proxy_pass http://127.0.0.1:${PORTAPI};
+    #proxy_redirect http://127.0.0.1:${PORTAPI}/ http://\$host/;
     #rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
@@ -773,8 +774,8 @@ cat <<HEREORIGINSERVER
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_pass http://localhost:${PORTAPI};
-    proxy_redirect http://localhost:${PORTAPI}/ http://\$host/;
+    proxy_pass http://127.0.0.1:${PORTAPI};
+    proxy_redirect http://127.0.0.1:${PORTAPI}/ http://\$host/;
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
@@ -797,8 +798,8 @@ cat <<HEREORIGINSERVER
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTPUBLISH}/ http://\$host/;
-    proxy_pass http://localhost:${PORTPUBLISH};
+    proxy_redirect http://127.0.0.1:${PORTPUBLISH}/ http://\$host/;
+    proxy_pass http://127.0.0.1:${PORTPUBLISH};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
@@ -824,8 +825,8 @@ cat <<HEREORIGINSERVER
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTPUBLISH}/ http://\$host/;
-    proxy_pass http://localhost:${PORTPUBLISH};
+    proxy_redirect http://127.0.0.1:${PORTPUBLISH}/ http://\$host/;
+    proxy_pass http://127.0.0.1:${PORTPUBLISH};
     rewrite ^/newapi/(.*)\$ /\$1 break;
   }
 
@@ -835,9 +836,9 @@ cat <<HEREORIGINSERVER
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTCHILL}/ http://\$host/;
+    proxy_redirect http://127.0.0.1:${PORTCHILL}/ http://\$host/;
 
-    proxy_pass http://localhost:${PORTCHILL};
+    proxy_pass http://127.0.0.1:${PORTCHILL};
 
     rewrite ^/chill/(.*)\$  /\$1 break;
   }
@@ -853,9 +854,9 @@ cat <<HEREORIGINSERVER
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTCHILL}/ http://\$host/;
+    proxy_redirect http://127.0.0.1:${PORTCHILL}/ http://\$host/;
 
-    proxy_pass http://localhost:${PORTCHILL};
+    proxy_pass http://127.0.0.1:${PORTCHILL};
 
     expires \$cache_expire;
     add_header Cache-Control "public";
@@ -868,16 +869,16 @@ cat <<HEREORIGINSERVER
       deny all;
     }
     # Location for /chill/theme/* /chill/media/* and others
-    # Note that in development the /chill/theme/ and /chill/media/ are used, but
-    # in production they argghhhhgghhhihfhghffhgghh.
+    # Note that in development, if the /chill/theme/ and /chill/media/ are used,
+    # the respon...argghhhhgghhhihfhghffhgghh.
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     expires \$cache_expire;
     add_header Cache-Control "public";
-    proxy_redirect http://localhost:${PORTCHILL}/ http://\$host/;
+    proxy_redirect http://127.0.0.1:${PORTCHILL}/ http://\$host/;
 
-    proxy_pass http://localhost:${PORTCHILL};
+    proxy_pass http://127.0.0.1:${PORTCHILL};
     rewrite ^/chill/(.*)\$  /\$1 break;
   }
 
@@ -888,12 +889,12 @@ cat <<HEREORIGINSERVER
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTCHILL}/ http://\$host/;
+    proxy_redirect http://127.0.0.1:${PORTCHILL}/ http://\$host/;
 
     expires \$cache_expire;
     add_header Cache-Control "public";
 
-    proxy_pass http://localhost:${PORTCHILL};
+    proxy_pass http://127.0.0.1:${PORTCHILL};
 
     rewrite ^/chill/(.*)\$  /\$1 break;
   }
@@ -905,12 +906,12 @@ cat <<HEREORIGINSERVER
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTCHILL}/ http://\$host/;
+    proxy_redirect http://127.0.0.1:${PORTCHILL}/ http://\$host/;
 
     expires \$cache_expire;
     add_header Cache-Control "public";
 
-    proxy_pass http://localhost:${PORTCHILL};
+    proxy_pass http://127.0.0.1:${PORTCHILL};
 
     rewrite ^/chill/(.*)\$  /\$1 break;
   }
@@ -932,9 +933,9 @@ cat <<HEREORIGINSERVER
     proxy_pass_header Server;
     proxy_set_header  X-Real-IP  \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_redirect http://localhost:${PORTCHILL}/ http://\$host/;
+    proxy_redirect http://127.0.0.1:${PORTCHILL}/ http://\$host/;
 
-    proxy_pass http://localhost:${PORTCHILL};
+    proxy_pass http://127.0.0.1:${PORTCHILL};
 
     auth_basic "Restricted Content";
     auth_basic_user_file ${SRVDIR}.htpasswd;
@@ -945,10 +946,11 @@ cat <<HEREORIGINSERVER
 HEREORIGINSERVER
 if test "${ENVIRONMENT}" != 'development'; then
 cat <<HEREBEPRODUCTION
-  location ~* ^/theme/.*?/(.*)\$ {
+  location /dist/ {
     expires \$cache_expire;
     add_header Cache-Control "public";
-    alias ${SRVDIR}dist/\$1;
+    root ${SRVDIR};
+    try_files \$uri \$uri =404;
   }
 
   location /media/ {
@@ -962,12 +964,18 @@ HEREBEPRODUCTION
 else
 
 cat <<HEREBEDEVELOPMENT
-  location /theme/ {
-    rewrite ^/theme/(.*)\$  /chill/theme/\$1;
+  location /dist/ {
+    expires \$cache_expire;
+    add_header Cache-Control "public";
+    root ${PWD}/;
+    try_files \$uri \$uri =404;
   }
 
   location /media/ {
-    rewrite ^/media/(.*)\$  /chill/media/\$1;
+    expires \$cache_expire;
+    add_header Cache-Control "public";
+    root ${PWD}/;
+    try_files \$uri \$uri =404;
   }
 HEREBEDEVELOPMENT
 fi
