@@ -1,4 +1,5 @@
 import smtplib
+import ssl
 from email.mime.text import MIMEText
 
 from flask import current_app
@@ -12,7 +13,7 @@ def send_message(to, subject, body, config):
     msg = MIMEText(body)
 
     host = config.get("SMTP_HOST")
-    port = config.get("SMTP_PORT")
+    port = int(config.get("SMTP_PORT", 0))
     user = config.get("SMTP_USER")
     password = config.get("SMTP_PASSWORD")
     sender = config.get("EMAIL_SENDER")
@@ -41,10 +42,15 @@ ${msg}
 
 """
     )
-    server = smtplib.SMTP()
-    server.connect(host, port)
-    server.starttls()
+
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+    server = smtplib.SMTP(host, port)
+    server.ehlo()
+    server.starttls(context=context)
+    server.ehlo()
+
     server.login(user, password)
 
     server.sendmail(sender, [to], msg.as_string())
+
     server.quit()
