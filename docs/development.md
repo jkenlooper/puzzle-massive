@@ -184,7 +184,7 @@ command if still logged into development machine).
 The website apps are managed as
 [systemd](https://freedesktop.org/wiki/Software/systemd/) services.
 The service config files are created by running `make` and installed with
-`sudo make install`. It is recommended to use Python's `python3 -m venv .`
+`sudo make install`. It is recommended to use Python's `python -m venv .`
 and activating each time for a new shell with `source bin/activate` before
 running `make`.
 
@@ -215,15 +215,15 @@ nvm use;
 
 On the local machine install dependencies for prettier and black. These tools
 are needed to autoformat the changed code before committing.
-Create a python virtual environment with `python3 -m venv .` .
+Create a python virtual environment with `python -m venv .` .
 
 ```bash
 # Setup to use a virtual python environment
-python3 -m venv .
+python -m venv .
 source bin/activate;
 
 # Install black to format python code when developing
-python3 -m pip install black;
+python -m pip install black;
 
 # Build the dist files for local development
 nvm use;
@@ -277,7 +277,7 @@ ssh dev@local-puzzle-massive;
 cd /usr/local/src/puzzle-massive/;
 
 # Setup to use a virtual python environment
-python3 -m venv .
+python -m venv .
 source bin/activate;
 
 # Makes the initial development version
@@ -293,7 +293,7 @@ sudo ./bin/appctl.sh stop;
 python api/api/create_database.py site.cfg;
 
 # Update any bit icon authors and add new bit icons if applicable
-./bin/insert-or-replace-bit-icons.py
+python api/api/jobs/insert-or-replace-bit-icons.py
 
 # Test and reload the nginx configurations
 sudo nginx -t;

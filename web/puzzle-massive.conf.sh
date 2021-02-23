@@ -23,10 +23,10 @@ source .env
 
 DATE=$(date)
 
-DEBUG=$(./bin/site-cfg.py site.cfg DEBUG || echo 'False')
-PUZZLE_RULES=$(./bin/site-cfg.py site.cfg PUZZLE_RULES || echo ${PUZZLE_RULES})
-PUZZLE_PIECES_CACHE_TTL=$(./bin/site-cfg.py site.cfg PUZZLE_PIECES_CACHE_TTL || echo 0)
-HOME_PAGE_ROUTE=$(./bin/site-cfg.py site.cfg HOME_PAGE_ROUTE || echo ${HOME_PAGE_ROUTE})
+DEBUG=$(./bin/puzzle-massive-site-cfg-echo site.cfg DEBUG || echo 'False')
+PUZZLE_RULES=$(./bin/puzzle-massive-site-cfg-echo site.cfg PUZZLE_RULES || echo ${PUZZLE_RULES})
+PUZZLE_PIECES_CACHE_TTL=$(./bin/puzzle-massive-site-cfg-echo site.cfg PUZZLE_PIECES_CACHE_TTL || echo 0)
+HOME_PAGE_ROUTE=$(./bin/puzzle-massive-site-cfg-echo site.cfg HOME_PAGE_ROUTE || echo ${HOME_PAGE_ROUTE})
 
 # Load snippet confs
 file_ssl_params_conf=$(cat web/ssl_params.conf)

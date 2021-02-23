@@ -13,7 +13,9 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
-    install_requires=["future",],
+    install_requires=[
+        "future",
+    ],
     entry_points={
         "console_scripts": [
             "puzzle-massive-api = api.script:main",
@@ -22,6 +24,7 @@ setuptools.setup(
             "puzzle-massive-artist = api.artist:main",
             "puzzle-massive-scheduler = api.scheduler:main",
             "puzzle-massive-testdata = api.testdata:main",
+            "puzzle-massive-site-cfg-echo = api.site_cfg_echo:main",
         ]
     },
 )

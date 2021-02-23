@@ -18,12 +18,12 @@ elif test "${COMMAND}" == 'stop'; then
     # Stop the stream first before other apps.
     echo "Waiting for the puzzle-massive-stream connections...";
     systemctl stop puzzle-massive-stream;
+    systemctl stop puzzle-massive-chill;
 fi
-systemctl reload nginx;
 if test "${COMMAND}" == 'stop'; then
     # Now that the app isn't accepting any outside requests; transfer piece data
     # to SQL database from redis database.
-    su dev -c "source bin/activate; python api/api/jobs/convertPiecesToDB.py;"
+    su dev -c "./bin/python api/api/jobs/convertPiecesToDB.py";
 fi
 
 # Skipping the puzzle-massive-cache-purge.service since it is activated by path

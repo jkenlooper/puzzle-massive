@@ -80,15 +80,15 @@ been uploaded to the home directory.
 
     ```bash
     cd /usr/local/src/puzzle-massive;
-    python3 -m venv .;
+    python -m venv .;
     source bin/activate;
     make ENVIRONMENT=production;
 
     # Update any bit icon authors and add new bit icons if applicable
-    ./bin/insert-or-replace-bit-icons.py
+    python api/api/jobs/insert-or-replace-bit-icons.py
 
     # Update the enabled puzzle features if applicable
-    python3 api/api/update_enabled_puzzle_features.py
+    python api/api/update_enabled_puzzle_features.py
 
     sudo make ENVIRONMENT=production install;
     sudo nginx -t;
@@ -144,7 +144,7 @@ by the public.
 
     ```bash
     cd /usr/local/src/puzzle-massive/;
-    python3 -m venv .;
+    python -m venv .;
     source bin/activate;
     make ENVIRONMENT=production;
     sudo make ENVIRONMENT=production install;
@@ -154,7 +154,7 @@ by the public.
     python api/api/create_database.py site.cfg;
 
     # Update any bit icon authors and add new bit icons if applicable
-    ./bin/insert-or-replace-bit-icons.py
+    python api/api/jobs/insert-or-replace-bit-icons.py
 
     sudo ./bin/appctl.sh start;
     ```
@@ -247,7 +247,7 @@ on the old server and copy all the data over to the new puzzle-massive-green ser
     sudo ./bin/clear_nginx_cache.sh;
 
     # Use `flushdb` on the new server to remove all keys on the redis database.
-    REDIS_DB=$(./bin/python bin/site-cfg.py site.cfg REDIS_DB);
+    REDIS_DB=$(./bin/puzzle-massive-site-cfg-echo site.cfg REDIS_DB);
     redis-cli -n ${REDIS_DB} flushdb
     ```
 
@@ -266,10 +266,10 @@ on the old server and copy all the data over to the new puzzle-massive-green ser
     echo 'pragma journal_mode=wal' | sqlite3 /var/lib/puzzle-massive/sqlite3/db
 
     # Update any bit icon authors and add new bit icons if applicable
-    ./bin/insert-or-replace-bit-icons.py
+    python api/api/jobs/insert-or-replace-bit-icons.py
 
     # Update the enabled puzzle features if applicable
-    python3 api/api/update_enabled_puzzle_features.py
+    python api/api/update_enabled_puzzle_features.py
     ```
 
 4.  Copy the nginx logs (NGINXLOGDIR) found at: `/var/log/nginx/puzzle-massive/`

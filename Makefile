@@ -8,6 +8,9 @@ SHELL := bash
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_dir := $(dir $(mkfile_path))
 
+PYTHON := $(project_dir)bin/python
+PIP := $(project_dir)bin/pip
+
 # Local pip is used by creating a python virtual environment and running `source ./bin/activate`
 
 # Set to tmp/ when debugging the install
@@ -35,7 +38,7 @@ IMAGEMAGICK_POLICY := $(PREFIXDIR)/etc/ImageMagick-6/policy.xml
 INTERNALIP := $(shell hostname -I | cut -d' ' -f1)
 
 # Get the version from the package.json
-TAG := $(shell cat package.json | python -c 'import sys, json; print(json.load(sys.stdin)["version"])')
+TAG := $(shell cat package.json | $(PYTHON) -c 'import sys, json; print(json.load(sys.stdin)["version"])')
 
 # For debugging what is set in variables
 inspect.%:
@@ -44,9 +47,9 @@ inspect.%:
 ifeq ($(shell ls bin/activate),)
 $(error No bin/activate found. Run "'virtualenv . -p python3' or 'python3 -m venv .' to create a python virtual environment")
 endif
-ifneq ($(shell which python),$(project_dir)bin/python)
-$(warning run "source bin/activate" to activate the python virtual environment. Using $(shell which python). Ignore this warning if using sudo make install.)
-endif
+#ifneq ($(shell which python),$(project_dir)bin/python)
+#$(warning run "source bin/activate" to activate the python virtual environment. Using $(shell which python). Ignore this warning if using sudo make install.)
+#endif
 
 
 # Always run.  Useful when target is like targetname.% .
@@ -63,8 +66,8 @@ objects := site.cfg web/puzzle-massive.conf web/puzzle-massive--down.conf stats/
 	#openssl dhparam -out $@ 2048
 
 bin/chill: chill/requirements.txt requirements.txt
-	pip install wheel
-	pip install --upgrade --upgrade-strategy eager -r $<
+	$(PIP) install wheel
+	$(PIP) install --upgrade --upgrade-strategy eager -r $<
 	touch $@;
 
 objects += chill/puzzle-massive-chill.service
@@ -84,18 +87,18 @@ db.dump.sql: site.cfg site-data.sql $(wildcard chill-*.yaml)
 
 # Also installs janitor, scheduler and artist
 bin/puzzle-massive-api: api/requirements.txt requirements.txt api/setup.py
-	pip install wheel
-	pip install --upgrade --upgrade-strategy eager -r $<
+	$(PIP) install wheel
+	$(PIP) install --upgrade --upgrade-strategy eager -r $<
 	touch $@;
 
 bin/puzzle-massive-divulger: divulger/requirements.txt requirements.txt divulger/setup.py
-	pip install wheel
-	pip install --upgrade --upgrade-strategy eager -r $<
+	$(PIP) install wheel
+	$(PIP) install --upgrade --upgrade-strategy eager -r $<
 	touch $@;
 
 bin/puzzle-massive-stream: stream/requirements.txt requirements.txt stream/setup.py
-	pip install wheel
-	pip install --upgrade --upgrade-strategy eager -r $<
+	$(PIP) install wheel
+	$(PIP) install --upgrade --upgrade-strategy eager -r $<
 	touch $@;
 
 
@@ -182,10 +185,10 @@ install:
 clean:
 	rm $(objects)
 	echo $(objects) | xargs rm -f
-	pip uninstall --yes -r chill/requirements.txt
-	pip uninstall --yes -r api/requirements.txt
-	pip uninstall --yes -r divulger/requirements.txt
-	pip uninstall --yes -r stream/requirements.txt
+	$(PIP) uninstall --yes -r chill/requirements.txt
+	$(PIP) uninstall --yes -r api/requirements.txt
+	$(PIP) uninstall --yes -r divulger/requirements.txt
+	$(PIP) uninstall --yes -r stream/requirements.txt
 	for mk in $(source_media_mk); do make -f $${mk} clean; done;
 
 # Remove files placed outside of src directory and uninstall app.
