@@ -15,7 +15,9 @@ git clone --recurse-submodules . "$TMPDIR";
 (
 cd "$TMPDIR";
 (if [ -d site-specific-content ]; then
-  cd site-specific-content && ./create-links-in-parent-dir.sh
+  cd site-specific-content
+  make
+  make install
 fi)
 
 # Use the node and npm that is set in .nvmrc

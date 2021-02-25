@@ -235,9 +235,12 @@ git submodule init;
 git submodule update;
 
 # If using site-specific-content then create symbolic links to that content from
-# that git submodule.
-(if [ -d site-specific-content ]; then \
-  cd site-specific-content && ./create-links-in-parent-dir.sh; \
+# that git submodule. A Makefile should be in the site-specific-content
+directory.
+(if [ -d site-specific-content ]; then
+  cd site-specific-content
+  make
+  make install
 fi)
 
 # Build the dist files for local development
