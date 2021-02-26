@@ -96,9 +96,7 @@ def init_db():
             {"name": "fake-eel", "author": 2},
             {"name": "fake-bug", "author": 2},
         ]
-        query = """
-        INSERT OR REPLACE INTO BitIcon (author, name) VALUES (:author, :name);
-        """
+        query = read_query_file("_insert_or_replace_bit_icon.sql")
         cur.executemany(query, each(bits))
         db.commit()
         cur.close()
