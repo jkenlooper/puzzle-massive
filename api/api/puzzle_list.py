@@ -5,7 +5,7 @@ from flask.views import MethodView
 
 from api.app import db
 from api.user import user_id_from_ip, user_not_banned
-from api.database import fetch_query_string, rowify, delete_puzzle_resources
+from api.database import fetch_query_string, rowify
 from api.constants import (
     ACTIVE,
     IN_QUEUE,

@@ -6,6 +6,7 @@ from flask.views import MethodView
 
 from api.app import db, redis_connection
 from api.database import rowify, fetch_query_string, delete_puzzle_resources
+from api.timeline import delete_puzzle_timeline
 from api.tools import purge_route_from_nginx_cache
 from api.constants import (
     ACTIVE,
@@ -108,15 +109,19 @@ class AdminPuzzleBatchEditView(MethodView):
                 cur.execute(
                     fetch_query_string("delete_piece_for_puzzle.sql"), {"puzzle": id}
                 )
-                cur.execute(
-                    fetch_query_string("delete_puzzle_timeline.sql"), {"puzzle": id}
-                )
+
+                msg = delete_puzzle_timeline(puzzle_id)
+                if msg.get("status_code") >= 400:
+                    current_app.logger.error(msg.get("msg"))
+                    current_app.logger.error(
+                        f"Failed delete of puzzle timeline for puzzle_id {puzzle_id}"
+                    )
+
                 cur.execute(
                     fetch_query_string("remove-puzzle-from-all-user-puzzle-slots.sql"),
                     {"puzzle": id},
                 )
-                redis_connection.delete("timeline:{puzzle}".format(puzzle=id))
-                redis_connection.delete("score:{puzzle}".format(puzzle=id))
+
             db.commit()
 
         def each(puzzle_ids):

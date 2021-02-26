@@ -6,6 +6,7 @@ from api.app import db, redis_connection
 from api.user import user_id_from_ip, user_not_banned
 from api.jobs import piece_reset
 from api.database import fetch_query_string, rowify, delete_puzzle_resources
+from api.timeline import delete_puzzle_timeline
 from api.tools import purge_route_from_nginx_cache
 from api.constants import (
     DELETED_REQUEST,
@@ -30,8 +31,7 @@ INSTANCE_ACTIONS = ("delete", "freeze", "unfreeze", "reset")
 
 
 class PuzzleInstanceDetailsView(MethodView):
-    """
-    """
+    """"""
 
     decorators = [user_not_banned]
 
@@ -81,7 +81,7 @@ class PuzzleInstanceDetailsView(MethodView):
 
     def patch(self, puzzle_id):
         ip = request.headers.get("X-Real-IP")
-        user = int(current_app.secure_cookie.get(u"user") or user_id_from_ip(ip))
+        user = int(current_app.secure_cookie.get("user") or user_id_from_ip(ip))
 
         # validate the args and headers
         args = {}
@@ -167,12 +167,14 @@ class PuzzleInstanceDetailsView(MethodView):
                 fetch_query_string("delete_piece_for_puzzle.sql"),
                 {"puzzle": puzzleData["id"]},
             )
-            cur.execute(
-                fetch_query_string("delete_puzzle_timeline.sql"),
-                {"puzzle": puzzleData["id"]},
-            )
-            redis_connection.delete("timeline:{puzzle}".format(puzzle=puzzleData["id"]))
-            redis_connection.delete("score:{puzzle}".format(puzzle=puzzleData["id"]))
+
+            msg = delete_puzzle_timeline(puzzle_id)
+            if msg.get("status_code") >= 400:
+                current_app.logger.error(msg.get("msg"))
+                current_app.logger.error(
+                    f"Failed delete of puzzle timeline for puzzle_id {puzzle_id}"
+                )
+
             cur.execute(
                 fetch_query_string("update_puzzle_status_for_puzzle.sql"),
                 {"status": DELETED_REQUEST, "puzzle": puzzleData["id"]},
@@ -269,17 +271,17 @@ class PuzzleInstanceDetailsView(MethodView):
 
     def get(self, puzzle_id):
         """
-  deletePenalty: number;
-  canFreeze: boolean;
-  canDelete: boolean;
-  canReset: boolean;
-  hasActions: boolean;
-  deleteDisabledMessage: string; //Not enough dots to delete this puzzle
-  isFrozen: boolean;
-  status: number;
+        deletePenalty: number;
+        canFreeze: boolean;
+        canDelete: boolean;
+        canReset: boolean;
+        hasActions: boolean;
+        deleteDisabledMessage: string; //Not enough dots to delete this puzzle
+        isFrozen: boolean;
+        status: number;
         """
         ip = request.headers.get("X-Real-IP")
-        user = int(current_app.secure_cookie.get(u"user") or user_id_from_ip(ip))
+        user = int(current_app.secure_cookie.get("user") or user_id_from_ip(ip))
 
         cur = db.cursor()
 
@@ -328,8 +330,7 @@ class PuzzleInstanceDetailsView(MethodView):
 
 
 class PuzzleOriginalDetailsView(MethodView):
-    """
-    """
+    """"""
 
     decorators = [user_not_banned]
 
@@ -375,7 +376,7 @@ class PuzzleOriginalDetailsView(MethodView):
 
     def patch(self, puzzle_id):
         ip = request.headers.get("X-Real-IP")
-        user = int(current_app.secure_cookie.get(u"user") or user_id_from_ip(ip))
+        user = int(current_app.secure_cookie.get("user") or user_id_from_ip(ip))
 
         # validate the args and headers
         args = {}
@@ -462,14 +463,14 @@ class PuzzleOriginalDetailsView(MethodView):
 
     def get(self, puzzle_id):
         """
-  highestBid: number;
-  canBump: boolean;
-  hasActions: boolean;
-  bumpDisabledMessage: string; //Not enough dots to delete this puzzle
-  status: number;
+        highestBid: number;
+        canBump: boolean;
+        hasActions: boolean;
+        bumpDisabledMessage: string; //Not enough dots to delete this puzzle
+        status: number;
         """
         ip = request.headers.get("X-Real-IP")
-        user = int(current_app.secure_cookie.get(u"user") or user_id_from_ip(ip))
+        user = int(current_app.secure_cookie.get("user") or user_id_from_ip(ip))
 
         cur = db.cursor()
 
@@ -503,8 +504,7 @@ class PuzzleOriginalDetailsView(MethodView):
 
 
 class InternalPuzzleDetailsView(MethodView):
-    """
-    """
+    """"""
 
     def get(self, puzzle_id):
         result = get_puzzle_details(puzzle_id)
@@ -600,7 +600,10 @@ def update_puzzle_details(puzzle_id, data):
     params.update(original_details, **data)
     # Can't modify the puzzle_id or id fields
     params.update({"puzzle_id": puzzle_id, "id": original_details["id"]})
-    result = cur.execute(fetch_query_string("patch_puzzle_details.sql"), params,)
+    result = cur.execute(
+        fetch_query_string("patch_puzzle_details.sql"),
+        params,
+    )
     cur.close()
     db.commit()
 

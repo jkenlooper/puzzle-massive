@@ -4,7 +4,7 @@ from flask import current_app, redirect, request, make_response, abort
 from flask.views import MethodView
 
 from api.app import db
-from api.database import rowify, fetch_query_string, delete_puzzle_resources
+from api.database import rowify, fetch_query_string
 from api.constants import USER_NAME_MAXLENGTH, EMAIL_MAXLENGTH
 from api.tools import normalize_name_from_display_name, purge_route_from_nginx_cache
 
@@ -79,7 +79,10 @@ class AdminPlayerDetailsEditView(MethodView):
 
         cur.execute(
             fetch_query_string("update-player-account-email-verified.sql"),
-            {"player_id": player, "email_verified": email_verified,},
+            {
+                "player_id": player,
+                "email_verified": email_verified,
+            },
         )
 
         cur.execute(
@@ -94,13 +97,17 @@ class AdminPlayerDetailsEditView(MethodView):
         if name == "":
             cur.execute(
                 fetch_query_string("remove-user-name-on-name-register-for-player.sql"),
-                {"player_id": player,},
+                {
+                    "player_id": player,
+                },
             )
         else:
             if existing_player_data["name"] != name:
                 result = cur.execute(
                     fetch_query_string("select-unclaimed-name-on-name-register.sql"),
-                    {"name": name,},
+                    {
+                        "name": name,
+                    },
                 ).fetchall()
                 if result:
                     (result, col_names) = rowify(result, cur.description)
@@ -113,13 +120,18 @@ class AdminPlayerDetailsEditView(MethodView):
                                 fetch_query_string(
                                     "remove-user-name-on-name-register-for-player.sql"
                                 ),
-                                {"player_id": player,},
+                                {
+                                    "player_id": player,
+                                },
                             )
                             cur.execute(
                                 fetch_query_string(
                                     "claim-rejected-user-name-on-name-register-for-player.sql"
                                 ),
-                                {"player_id": player, "name": name,},
+                                {
+                                    "player_id": player,
+                                    "name": name,
+                                },
                             )
                     else:
                         # name can be claimed
@@ -127,7 +139,9 @@ class AdminPlayerDetailsEditView(MethodView):
                             fetch_query_string(
                                 "remove-user-name-on-name-register-for-player.sql"
                             ),
-                            {"player_id": player,},
+                            {
+                                "player_id": player,
+                            },
                         )
                         cur.execute(
                             fetch_query_string(
@@ -147,7 +161,9 @@ class AdminPlayerDetailsEditView(MethodView):
                         fetch_query_string(
                             "remove-user-name-on-name-register-for-player.sql"
                         ),
-                        {"player_id": player,},
+                        {
+                            "player_id": player,
+                        },
                     )
                     cur.execute(
                         fetch_query_string(
@@ -164,13 +180,19 @@ class AdminPlayerDetailsEditView(MethodView):
         if existing_player_data["name_approved"] == 1 and name_approved == 0:
             # Place this name on reject list
             cur.execute(
-                fetch_query_string("reject-name-on-name-register.sql"), {"name": name,}
+                fetch_query_string("reject-name-on-name-register.sql"),
+                {
+                    "name": name,
+                },
             )
 
         if existing_player_data["name_approved"] == 0 and name_approved == 1:
             cur.execute(
                 fetch_query_string("update-user-name-approved.sql"),
-                {"player_id": player, "name_approved": name_approved,},
+                {
+                    "player_id": player,
+                    "name_approved": name_approved,
+                },
             )
 
         cur.close()

@@ -4,7 +4,7 @@ from flask import current_app, redirect, request, make_response, abort, json
 from flask.views import MethodView
 
 from api.app import db
-from api.database import rowify, fetch_query_string, delete_puzzle_resources
+from api.database import rowify, fetch_query_string
 from api.user import user_id_from_ip, user_not_banned
 from api.constants import USER_NAME_MAXLENGTH
 from api.tools import normalize_name_from_display_name, purge_route_from_nginx_cache
@@ -60,7 +60,8 @@ class AdminPlayerNameRegisterView(MethodView):
         for user in name_register_users:
             routes_to_purge.append("/chill/site/internal/player-bit/{}/".format(user))
         purge_route_from_nginx_cache(
-            "\n".join(routes_to_purge), current_app.config.get("PURGEURLLIST"),
+            "\n".join(routes_to_purge),
+            current_app.config.get("PURGEURLLIST"),
         )
 
         return redirect("/chill/site/admin/name-register-review/")
@@ -124,7 +125,9 @@ class PlayerNameRegisterView(MethodView):
                     fetch_query_string(
                         "remove-user-name-on-name-register-for-player.sql"
                     ),
-                    {"player_id": user,},
+                    {
+                        "player_id": user,
+                    },
                 )
                 cur.execute(
                     fetch_query_string("decrease-user-points.sql"),
@@ -153,7 +156,9 @@ class PlayerNameRegisterView(MethodView):
                             fetch_query_string(
                                 "remove-user-name-on-name-register-for-player.sql"
                             ),
-                            {"player_id": user,},
+                            {
+                                "player_id": user,
+                            },
                         )
 
                         # Also updates the display_name if casing has changed
@@ -194,7 +199,9 @@ class PlayerNameRegisterView(MethodView):
                         fetch_query_string(
                             "remove-user-name-on-name-register-for-player.sql"
                         ),
-                        {"player_id": user,},
+                        {
+                            "player_id": user,
+                        },
                     )
                     cur.execute(
                         fetch_query_string(

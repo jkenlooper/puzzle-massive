@@ -7,7 +7,7 @@ import time
 from flask import current_app, make_response, request, abort, json
 from flask.views import MethodView
 
-from api.app import db
+from api.app import redis_connection, db
 from api.database import rowify, fetch_query_string
 
 
@@ -87,6 +87,10 @@ def delete_puzzle_timeline(puzzle_id):
     )
     cur.close()
     db.commit()
+
+    redis_connection.delete("timeline:{puzzle}".format(puzzle=puzzle))
+    redis_connection.delete("score:{puzzle}".format(puzzle=puzzle))
+
     msg = {"rowcount": result.rowcount, "msg": "Deleted", "status_code": 200}
     return msg
 
