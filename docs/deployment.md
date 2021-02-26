@@ -36,6 +36,14 @@ patches to the running apps.
 SSH into the server as the 'dev' user after the versioned distribution file has
 been uploaded to the home directory.
 
+**Either follow the steps outlined below _or_ use the quick-deploy.sh script to do an
+in-place deployment.**
+
+```bash
+cd /usr/local/src/puzzle-massive;
+sudo ./bin/quick-deploy.sh /home/dev/puzzle-massive-2.x.x.tar.gz
+```
+
 ### Steps
 
 1.  Stop the running apps and backup the db. The deactivate command is done to

@@ -41,6 +41,9 @@ Migrate script for this update: migrate_from_2_9_2_to_2_10_0.py
 - Show link back to bit icon author page for bit icons shown on player account page.
 - Allow new puzzles to have the option of hiding the preview image
 - Allow submitted and suggested puzzles to have the option of being private.
+- Faster in-place deployments with quick-deploy.sh
+- (Content) Three letter animal and insect bit icons.
+- (Content) Generated bit icons from emoji characters
 
 ## Changed
 

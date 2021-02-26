@@ -50,7 +50,9 @@ su dev -c "printf 'Updating...' > /srv/puzzle-massive/root/puzzle-massive-messag
 ./bin/appctl.sh stop;
 systemctl start puzzle-massive-api;
 ./bin/clear_nginx_cache.sh -y;
+sleep 5
 su dev -c "./bin/backup.sh -c";
+sleep 5
 systemctl stop puzzle-massive-api;
 systemctl reload nginx;
 
@@ -88,6 +90,6 @@ make ENVIRONMENT=production install;
 nginx -t;
 systemctl reload nginx;
 su dev -c "printf '' > /srv/puzzle-massive/root/puzzle-massive-message.html";
-./bin/clear_nginx_cache.sh;
+./bin/clear_nginx_cache.sh -y;
 
 ./bin/appctl.sh status;
