@@ -17,16 +17,17 @@ cat <<HERE
 
 # File generated from $0
 # on ${DATE}
+# https://www.freedesktop.org/software/systemd/man/systemd.service.html
 
 [Unit]
 Description=Purges the cached URLs listed in urls-to-purge.txt
-After=network.target
+After=multi-user.target
 
 [Service]
+Type=exec
 User=www-data
 Group=www-data
 WorkingDirectory=$SRCDIR
-Type=simple
 ExecStart=${SRCDIR}bin/purge_nginx_cache_file.sh ${PURGEURLLIST} ${origin_server} ${CACHEDIR}
 
 [Install]

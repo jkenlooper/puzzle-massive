@@ -178,38 +178,38 @@ fi
 cp resources/imagemagick-policy.xml ${IMAGEMAGICK_POLICY}
 
 mkdir -p "${SYSTEMDDIR}"
-cp chill/puzzle-massive-chill.service "${SYSTEMDDIR}"
-systemctl start puzzle-massive-chill || echo "can't start service"
-systemctl enable puzzle-massive-chill || echo "can't enable service"
-
 cp api/puzzle-massive-api.service "${SYSTEMDDIR}"
 systemctl start puzzle-massive-api || echo "can't start service"
 systemctl enable puzzle-massive-api || echo "can't enable service"
-
-cp api/puzzle-massive-publish.service "${SYSTEMDDIR}"
-systemctl start puzzle-massive-publish || echo "can't start service"
-systemctl enable puzzle-massive-publish || echo "can't enable service"
-
-cp api/puzzle-massive-artist.service "${SYSTEMDDIR}"
-systemctl start puzzle-massive-artist || echo "can't start service"
-systemctl enable puzzle-massive-artist || echo "can't enable service"
-
-cp api/puzzle-massive-janitor.service "${SYSTEMDDIR}"
-systemctl start puzzle-massive-janitor || echo "can't start service"
-systemctl enable puzzle-massive-janitor || echo "can't enable service"
-
-# Skipping divulger since it is not needed at the moment.
-#cp divulger/puzzle-massive-divulger.service "${SYSTEMDDIR}"
-#systemctl start puzzle-massive-divulger || echo "can't start service"
-#systemctl enable puzzle-massive-divulger || echo "can't enable service"
 
 cp stream/puzzle-massive-stream.service "${SYSTEMDDIR}"
 systemctl start puzzle-massive-stream || echo "can't start service"
 systemctl enable puzzle-massive-stream || echo "can't enable service"
 
+cp api/puzzle-massive-publish.service "${SYSTEMDDIR}"
+systemctl start puzzle-massive-publish || echo "can't start service"
+systemctl enable puzzle-massive-publish || echo "can't enable service"
+
 cp api/puzzle-massive-scheduler.service "${SYSTEMDDIR}"
 systemctl start puzzle-massive-scheduler || echo "can't start service"
 systemctl enable puzzle-massive-scheduler || echo "can't enable service"
+
+cp chill/puzzle-massive-chill.service "${SYSTEMDDIR}"
+systemctl start puzzle-massive-chill || echo "can't start service"
+systemctl enable puzzle-massive-chill || echo "can't enable service"
+
+cp api/puzzle-massive-janitor.service "${SYSTEMDDIR}"
+systemctl start puzzle-massive-janitor || echo "can't start service"
+systemctl enable puzzle-massive-janitor || echo "can't enable service"
+
+cp api/puzzle-massive-artist.service "${SYSTEMDDIR}"
+systemctl start puzzle-massive-artist || echo "can't start service"
+systemctl enable puzzle-massive-artist || echo "can't enable service"
+
+# Skipping divulger since it is not needed at the moment.
+#cp divulger/puzzle-massive-divulger.service "${SYSTEMDDIR}"
+#systemctl start puzzle-massive-divulger || echo "can't start service"
+#systemctl enable puzzle-massive-divulger || echo "can't enable service"
 
 cp api/puzzle-massive-cache-purge.path "${SYSTEMDDIR}"
 cp api/puzzle-massive-cache-purge.service "${SYSTEMDDIR}"
@@ -224,3 +224,5 @@ systemctl start puzzle-massive-backup-db.timer || echo "can't start service"
 systemctl enable puzzle-massive-backup-db.timer || echo "can't enable service"
 systemctl start puzzle-massive-backup-db.service || echo "can't start service"
 systemctl enable puzzle-massive-backup-db.service || echo "can't enable service"
+
+systemctl reload nginx;

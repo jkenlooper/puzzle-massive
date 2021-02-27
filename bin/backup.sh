@@ -64,11 +64,15 @@ echo "Running one-off scheduler tasks to clean up any batched data";
 if [ -n "${1-}" ]; then
 DBDUMPFILE="$1";
 else
-    if [ -n "${WEEKDAY_BACKUP-}" ]; then
-        DBDUMPFILE="db-$(date --utc '+%a').dump.gz";
-    else
-        DBDUMPFILE="db-$(date --iso-8601 --utc).dump.gz";
-    fi;
+  if [ -n "${WEEKDAY_BACKUP-}" ]; then
+    DBDUMPFILE="db-$(date --utc '+%a').dump.gz";
+  else
+    DBDUMPFILE="db-$(date --iso-8601 --utc).dump.gz";
+    if [ -e "${BACKUP_DIRECTORY}/${DBDUMPFILE}" ]; then
+      DBDUMPFILE_bak="db-$(date --iso-8601 --utc).bak.dump.gz";
+      mv --backup=numbered "${BACKUP_DIRECTORY}/${DBDUMPFILE}" "${BACKUP_DIRECTORY}/${DBDUMPFILE_bak}"
+    fi
+  fi;
 fi;
 
 echo "";

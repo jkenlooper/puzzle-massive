@@ -10,13 +10,14 @@ cat <<HERE
 
 # File generated from $0
 # on ${DATE}
+# https://www.freedesktop.org/software/systemd/man/systemd.service.html
 
 [Unit]
 Description=Puzzle Massive backup database
-After=network.target
-After=puzzle-massive-api.service
+After=multi-user.target
 
 [Service]
+Type=exec
 User=dev
 Group=dev
 WorkingDirectory=$SRCDIR
