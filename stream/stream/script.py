@@ -58,6 +58,7 @@ def main():
         # Restart workers after this many requests just in case there are memory leaks
         "max_requests": 1000,
         "max_requests_jitter": 50,
+        "graceful_timeout": 5,
     }
     app = StreamGunicornBase(app, options).run()
 
