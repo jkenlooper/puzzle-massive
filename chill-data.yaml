@@ -224,6 +224,14 @@ value:
   feature_hidden_preview: select-frontpage-preview-feature-hidden-preview.sql
   feature_secret_message: select-secret-message-for-puzzle_id.sql
 --- !ChillNode
+name: admin_puzzle_page_unsplash_batch_add
+route: /admin/puzzle/unsplash-batch/
+template: admin-puzzle-unsplash-batch-page.html.jinja2
+value:
+  page:
+    description: Add Unsplash images for puzzles
+    title: Unsplash Batch Add
+--- !ChillNode
 name: suggested_puzzle_thank_you_page
 route: /suggested-puzzle-thank-you/
 template: docs.html.jinja2

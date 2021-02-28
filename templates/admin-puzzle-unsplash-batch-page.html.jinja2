@@ -2,40 +2,71 @@
 
 {% block main %}
 
-        {% if not config.UNSPLASH_APPLICATION_ID %}
-        <p>
-          <strong>This site is not set up to use the Unsplash API.</strong>
-        </p>
-          {% else %}
+  {% if not config.UNSPLASH_APPLICATION_ID %}
+  <p>
+    <strong>This site is not set up to use the Unsplash API.</strong>
+  </p>
+  {% else %}
+  <div>
+    <label for="unsplash-batch-drop">Unsplash Photo URLs</label>
+    <textarea rows=10 class="u-block" id="unsplash-batch-drop"></textarea>
+  </div>
+  <hr>
+    <form id="unsplash_batch" method="post" action="/newapi/admin/puzzle/unsplash-batch/">
+      <table>
+        <thead>
+          <tr>
+            <th>Unlisted</th>
 
-<form id="unsplash_batch" method="post" action="/newapi/admin/puzzle/unsplash-batch/">
-  <table>
-  <tr>
-  <th>Unlisted</th>
-  <th>Piece Count</th>
-  <th>Background Color</th>
-  <th>Unsplash Link</th>
-  </tr>
+            {% if 'hidden-preview' in config.PUZZLE_FEATURES or 'all' in config.PUZZLE_FEATURES %}
+              <th>Hide Preview</th>
+            {% endif %}
+            {# TODO: Secret message not fully implemented.
+            {% if 'secret-message' in config.PUZZLE_FEATURES or 'all' in config.PUZZLE_FEATURES %}
+            {% endif %}
+            #}
+            <th>Piece Count</th>
+            <th>Background Color</th>
+            <th>Unsplash Link</th>
+          </tr>
+        </thead>
 
-  <tr>
-        <td>
-        <input type="checkbox" name="permission" value="-1">
-        </td>
+        <tbody>
+          <tr>
+            <td>
+              <label class="u-block">
+                <input type="checkbox" name="permission" value="-1">
+              </label>
+            </td>
 
-    <td>
-        <input type="number"
-               min="{{ config.MINIMUM_PIECE_COUNT }}"
-               max="{{ config.MAXIMUM_PIECE_COUNT }}"
-               name="pieces" value="500">
-      </td>
-    <td>
-      <input class="jscolor pm-UploadForm-colorPicker u-textCenter" type="text" name="bg_color" value="#cccccc">
-      </td>
-    <td>
-        <input type="text" name="link" placeholder="https://unsplash.com/photos/4nr59MLWI9E" maxlength="1000">
-      </td>
-    </tr>
-</form>
-        {% endif %}
+            {% if 'hidden-preview' in config.PUZZLE_FEATURES or 'all' in config.PUZZLE_FEATURES %}
+              <td>
+                <label class="u-block">
+                  <input type="checkbox" name="features" value="hidden-preview">
+                </label>
+              </td>
+            {% endif %}
+            {# TODO: Secret message not fully implemented.
+            {% if 'secret-message' in config.PUZZLE_FEATURES or 'all' in config.PUZZLE_FEATURES %}
+            {% endif %}
+            #}
+
+            <td>
+              <input type="number"
+                     min="{{ config.MINIMUM_PIECE_COUNT }}"
+                     max="{{ config.MAXIMUM_PIECE_COUNT }}"
+                     name="pieces" value="{{ config.MINIMUM_PIECE_COUNT }}">
+            </td>
+            <td>
+              <input class="jscolor u-textCenter" type="text" name="bg_color" value="#484662">
+            </td>
+            <td>
+              <input type="text" name="link" placeholder="https://unsplash.com/photos/4nr59MLWI9E" maxlength="1000">
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </form>
+  {% endif %}
 {% endblock %}
 

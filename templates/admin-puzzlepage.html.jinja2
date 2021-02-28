@@ -40,6 +40,11 @@
       <a target="_blank" href="/chill{{ url_for('.page_uri', uri='new-puzzle/{}'.format(config.NEW_PUZZLE_CONTRIB)) }}">
         Upload Puzzle Form
       </a>
+      {% if config.UNSPLASH_APPLICATION_ID %}
+        <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle/unsplash-batch') }}">
+        Unsplash Batch Add
+        </a>
+      {% endif %}
 
       <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle/active') }}">
       Active
