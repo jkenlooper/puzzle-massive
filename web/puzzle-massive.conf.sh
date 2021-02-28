@@ -540,14 +540,14 @@ cat <<HERECACHESERVERDOWN
     if (\$hotlinking_policy) {
       return 444;
     }
-    try_files \$uri \$uri =404;
+    try_files \$uri =404;
   }
   location /media/ {
     if (\$hotlinking_policy) {
       return 444;
     }
     root ${SRVDIR};
-    try_files \$uri \$uri =404;
+    try_files \$uri =404;
   }
 
   location = / {
@@ -950,14 +950,14 @@ cat <<HEREBEPRODUCTION
     expires \$cache_expire;
     add_header Cache-Control "public";
     root ${SRVDIR};
-    try_files \$uri \$uri =404;
+    try_files \$uri =404;
   }
 
   location /media/ {
     expires \$cache_expire;
     add_header Cache-Control "public";
     root ${SRVDIR};
-    try_files \$uri \$uri =404;
+    try_files \$uri =404;
   }
 HEREBEPRODUCTION
 
@@ -968,14 +968,14 @@ cat <<HEREBEDEVELOPMENT
     expires \$cache_expire;
     add_header Cache-Control "public";
     root ${PWD}/;
-    try_files \$uri \$uri =404;
+    try_files \$uri =404;
   }
 
   location /media/ {
     expires \$cache_expire;
     add_header Cache-Control "public";
     root ${PWD}/;
-    try_files \$uri \$uri =404;
+    try_files \$uri =404;
   }
 HEREBEDEVELOPMENT
 fi
@@ -985,20 +985,20 @@ cat <<HEREORIGINSERVER
     expires \$cache_expire;
     add_header Cache-Control "public";
     root ${SRVDIR};
-    try_files \$uri \$uri =404;
+    try_files \$uri =404;
   }
   location ~* ^/resources/.*/(preview_full.*.jpg)\$ {
     expires \$cache_expire;
     add_header Cache-Control "public";
     root ${SRVDIR};
-    try_files \$uri \$uri =404;
+    try_files \$uri =404;
   }
   location ~* ^/resources/.*/(original.jpg)\$ {
     allow $INTERNALIP;
     allow 127.0.0.1;
     deny all;
     root ${SRVDIR};
-    try_files \$uri \$uri =404;
+    try_files \$uri =404;
   }
 
   ${file_error_page_conf}
