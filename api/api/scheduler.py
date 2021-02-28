@@ -276,18 +276,22 @@ class UpdateModifiedDateOnPuzzle(Task):
                         PORTAPI=current_app.config["PORTAPI"],
                         puzzle_id=puzzle_data["puzzle_id"],
                     ),
-                    json={"m_date": m_date,},
+                    json={
+                        "m_date": m_date,
+                    },
                 )
                 if r.status_code != 200:
                     current_app.logger.warning(
                         "Puzzle details api error. Could not update puzzle m_date to {m_date}. Skipping {puzzle_id}".format(
-                            m_date=m_date, puzzle_id=puzzle_data["puzzle_id"],
+                            m_date=m_date,
+                            puzzle_id=puzzle_data["puzzle_id"],
                         )
                     )
                     continue
                 current_app.logger.debug(
                     "Updated puzzle m_date {puzzle_id} {m_date}".format(
-                        m_date=m_date, puzzle_id=puzzle_data["puzzle_id"],
+                        m_date=m_date,
+                        puzzle_id=puzzle_data["puzzle_id"],
                     )
                 )
         if len(puzzles) > 0:
@@ -333,7 +337,11 @@ class UpdatePlayer(Task):
                     PORTAPI=current_app.config["PORTAPI"],
                     task_name="update_user_points_and_m_date",
                 ),
-                json={"player": user, "points": points, "score": score,},
+                json={
+                    "player": user,
+                    "points": points,
+                    "score": score,
+                },
             )
             if r.status_code != 200:
                 current_app.logger.warning(
@@ -348,7 +356,9 @@ class UpdatePlayer(Task):
                     PORTAPI=current_app.config["PORTAPI"],
                     task_name="update_bit_icon_expiration",
                 ),
-                json={"player": user,},
+                json={
+                    "player": user,
+                },
             )
             if r.status_code != 200:
                 current_app.logger.warning(
@@ -472,25 +482,43 @@ class UpdatePuzzleStats(Task):
             if result and len(result):
                 puzzle_list = list(map(lambda x: x[0], result))
                 for puzzle in puzzle_list:
-                    result = cur.execute(
-                        read_query_file(
-                            "select_user_score_and_timestamp_per_puzzle.sql"
-                        ),
-                        {"puzzle": puzzle},
-                    ).fetchall()
-                    if result and len(result):
+                    (result, _) = rowify(
+                        cur.execute(
+                            read_query_file("select_user_score_per_puzzle.sql"),
+                            {"puzzle": puzzle},
+                        ).fetchall(),
+                        cur.description,
+                    )
+                    if result:
                         current_app.logger.info(
-                            "Set puzzle ({0}) score and puzzle timeline on {1} players".format(
+                            "Set puzzle ({0}) score on {1} players".format(
                                 puzzle, len(result)
                             )
                         )
-                        user_score = dict(map(lambda x: [x[0], x[1]], result))
-                        user_timestamps = dict(map(lambda x: [x[0], int(x[2])], result))
-                        redis_connection.zadd(
-                            "timeline:{puzzle}".format(puzzle=puzzle), user_timestamps
+                        user_score = dict(
+                            map(lambda x: [x["player"], x["points"]], result)
                         )
                         redis_connection.zadd(
                             "score:{puzzle}".format(puzzle=puzzle), user_score
+                        )
+                    (result, _) = rowify(
+                        cur.execute(
+                            read_query_file("select_user_timestamp_per_puzzle.sql"),
+                            {"puzzle": puzzle},
+                        ).fetchall(),
+                        cur.description,
+                    )
+                    if result:
+                        current_app.logger.info(
+                            "Set puzzle ({0}) timeline on {1} players".format(
+                                puzzle, len(result)
+                            )
+                        )
+                        user_timestamps = dict(
+                            map(lambda x: [x["player"], int(x["timestamp"])], result)
+                        )
+                        redis_connection.zadd(
+                            "timeline:{puzzle}".format(puzzle=puzzle), user_timestamps
                         )
                 made_change = True
 
@@ -537,7 +565,8 @@ class UpdatePuzzleQueue(Task):
                 if r.status_code != 200:
                     current_app.logger.warning(
                         "Puzzle details api error. Could not update puzzle m_date to {m_date}. Skipping {puzzle_id}".format(
-                            m_date=m_date, puzzle_id=puzzle_data["puzzle_id"],
+                            m_date=m_date,
+                            puzzle_id=puzzle_data["puzzle_id"],
                         )
                     )
                     continue
@@ -748,7 +777,10 @@ def main():
     config = loadConfig(config_file)
     cookie_secret = config.get("SECURE_COOKIE_SECRET")
 
-    app = make_app(config=config_file, cookie_secret=cookie_secret,)
+    app = make_app(
+        config=config_file,
+        cookie_secret=cookie_secret,
+    )
 
     with app.app_context():
         # Check if running a one-off, otherwise just run main

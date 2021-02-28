@@ -1,6 +1,5 @@
 select player,
-sum(points) / 4 as points,
-strftime('%s', timestamp) as timestamp
+sum(points) / 4 as points
 from Timeline
 where puzzle = :puzzle
 and player not null
