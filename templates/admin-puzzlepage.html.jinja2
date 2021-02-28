@@ -92,37 +92,36 @@
       #}
     </nav>
 
-    {# Not implemented
-    <form class="pma-PuzzleActions-form" action="/chill{{ url_for('.page_uri', uri='admin/puzzle/puzzle_id') }}" method="GET">
-    <label for="puzzle_id">Puzzle ID</label>
-    <input id="puzzle_id" name="puzzle_id" placeholder="5720f1ee3a100" type="text">
-    </form>
-    #}
   </div>
 
 
     {# if it's a page that lists a bunch of puzzles #}
     {% if puzzles %}
     {#
-      TODO: javascript to select all and unselect all
       TODO: javascript to hide tag text input if tag action not selected
-      TODO: javascript to hide reject reason input if reject action not selected
-      TODO: javascript to hide delete reason input if delete action not selected
     #}
     <form action="/newapi/admin/puzzle/batch-edit/" method="POST" x-ref="batchEditForm" x-data="batchEditData()">
     <script>
       function batchEditData() {
         return {
           action: "approve",
+          toggle($event, checkboxName) {
+            let checkboxes = document.getElementsByName(checkboxName);
+              for (let checkbox in checkboxes) {
+                  checkboxes[checkbox].checked = $event.target.checked;
+              }
+          }
         };
       }
     </script>
+      {% if slug != 'suggested' %}
       <div>
         <label>
           <input type="radio" name="action" value="approve" x-model="action">
           Approve
         </label>
       </div>
+      {% endif %}
 
       <div>
         <label>
@@ -187,9 +186,17 @@
       </div>
       #}
 
-      <input type="reset">
+      <div>
+      <label>
+      <input type="checkbox" x-on:click="toggle($event, 'montage_puzzle_id')">
+      Toggle all
+      </label>
+      </div>
+
       <input type="submit" value="Batch Edit">
-      <em>Max count of puzzles to edit at a time is 20.</em>
+      {% if config.UNSPLASH_APPLICATION_ID %}
+      <em>Max count of Unsplash puzzles to approve at a time is 20.</em>
+      {% endif %}
 
       {% if puzzles is mapping -%}
         {% set puzzles = [puzzles] %}
