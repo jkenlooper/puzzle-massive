@@ -364,7 +364,9 @@
           <p>
   Puzzle instance created by
   <pm-player-bit player="{{ puzzle.owner }}"></pm-player-bit>
+      {% if not feature_hidden_preview or puzzle.status == COMPLETED %}
   from this <a href="/chill{{ url_for('.page_uri', uri='front/{}'.format(puzzle.original_puzzle_id)) }}">original puzzle</a>
+      {%- endif -%}
           </p>
           {% endif %}
     </div>
