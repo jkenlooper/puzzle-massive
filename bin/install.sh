@@ -225,4 +225,10 @@ systemctl enable puzzle-massive-backup-db.timer || echo "can't enable service"
 systemctl start puzzle-massive-backup-db.service || echo "can't start service"
 systemctl enable puzzle-massive-backup-db.service || echo "can't enable service"
 
+echo "Reloading service units and nginx"
+set -x
+systemctl daemon-reload
 systemctl reload nginx;
+set +x
+echo "Checking is-active status for services"
+./bin/appctl.sh is-active

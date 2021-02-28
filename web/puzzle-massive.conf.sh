@@ -590,6 +590,16 @@ cat <<HERECACHESERVER
     return 401;
   }
 
+  location /stats/ {
+    root   ${SRVDIR};
+    index  awstats.puzzle.massive.xyz.html;
+    auth_basic            "Restricted";
+    auth_basic_user_file  ${SRVDIR}.htpasswd;
+    access_log ${NGINXLOGDIR}access.awstats.log;
+    error_log ${NGINXLOGDIR}error.awstats.log;
+    try_files \$uri =404;
+  }
+
   ${file_error_page_conf}
 
   }
@@ -619,17 +629,7 @@ server {
   location / {
     expires \$cache_expire;
     add_header Cache-Control "public";
-    try_files \$uri \$uri =404;
-  }
-
-  location /stats/ {
-    root   ${SRVDIR}stats;
-    index  awstats.puzzle.massive.xyz.html;
-    auth_basic            "Restricted";
-    auth_basic_user_file  ${SRVDIR}.htpasswd;
-    access_log ${NGINXLOGDIR}access.awstats.log;
-    error_log ${NGINXLOGDIR}error.awstats.log;
-    rewrite ^/stats/(.*)\$  /\$1 break;
+    try_files \$uri =404;
   }
 
   location /newapi/ {

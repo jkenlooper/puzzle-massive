@@ -298,6 +298,9 @@ python api/api/create_database.py site.cfg;
 # Update any bit icon authors and add new bit icons if applicable
 python api/api/jobs/insert-or-replace-bit-icons.py
 
+# Update the enabled puzzle features if applicable
+python api/api/update_enabled_puzzle_features.py
+
 # Test and reload the nginx configurations
 sudo nginx -t;
 sudo systemctl reload nginx;
