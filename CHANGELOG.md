@@ -21,7 +21,7 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
-## [2.10.0] - 2021-02-28
+## [2.10.0] - 2021-03-02
 
 Bit icons have moved to a separate git repo and are no longer included in this
 git repo. The source-media/bit-icons/ has a Makefile to resize these as needed.

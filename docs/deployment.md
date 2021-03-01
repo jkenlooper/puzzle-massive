@@ -148,7 +148,27 @@ by the public.
     create these. At this point there is no need to SSH in to the server as the
     root user.
 
-4.  Now create the initial bare-bones version without any data as the dev user.
+4.  Copy the certificates listed on the old server (`sudo certbot certificates`)
+    to the new server. Skip this step if there is no old server to copy from.
+    Note that these should be first copied from the old server to the dev home
+    directory.
+
+    ```bash
+    sudo mkdir -p /etc/letsencrypt/live/puzzle.massive.xyz/
+    scp \
+      dev@puzzle-massive-blue:/home/dev/fullchain.pem \
+      /home/dev/
+    sudo cp /home/dev/fullchain.pem /etc/letsencrypt/live/puzzle.massive.xyz/
+    scp \
+      dev@puzzle-massive-blue:/home/dev/privkey.pem \
+      /home/dev/
+    sudo cp /home/dev/privkey.pem /etc/letsencrypt/live/puzzle.massive.xyz/
+    scp \
+      dev@puzzle-massive-blue:/usr/local/src/puzzle-massive/.has-certs \
+      /usr/local/src/puzzle-massive/
+    ```
+
+5.  Now create the initial bare-bones version without any data as the dev user.
 
     ```bash
     cd /usr/local/src/puzzle-massive/;
@@ -156,7 +176,7 @@ by the public.
     source bin/activate;
     make ENVIRONMENT=production;
     sudo make ENVIRONMENT=production install;
-    sudo ./bin/appctl.sh stop;
+    sudo ./bin/appctl.sh stop -f;
 
     # should be run as 'dev' user
     python api/api/create_database.py site.cfg;
@@ -167,7 +187,7 @@ by the public.
     sudo ./bin/appctl.sh start;
     ```
 
-5.  The logs can be followed with the `./bin/log.sh` command. It is just
+6.  The logs can be followed with the `./bin/log.sh` command. It is just
     a shortcut to doing the same with `journalctrl`.
 
     Check the status of the apps with this convenience command to `systemctl`.
@@ -176,7 +196,7 @@ by the public.
     sudo ./bin/appctl.sh status;
     ```
 
-6.  Test and reload the nginx config. If this is a new server you may need to
+7.  Test and reload the nginx config. If this is a new server you may need to
     remove the `/etc/nginx/sites-enabled/default` file. This site will include it's
     own [web/default.conf]().
 
@@ -185,7 +205,7 @@ by the public.
     sudo systemctl reload nginx
     ```
 
-7.  Set up the production server with TLS certs. [certbot](https://certbot.eff.org/)
+8.  Set up the production server with TLS certs. [certbot](https://certbot.eff.org/)
     is used to deploy [Let's Encrypt](https://letsencrypt.org/) certificates.
     This will initially fail if the server isn't accepting traffic at the domain
     name. The certs can be copied over from the live server later.
@@ -193,14 +213,14 @@ by the public.
     ```bash
     cd /usr/local/src/puzzle-massive/;
     source bin/activate;
-    sudo bin/provision-certbot.sh /srv/puzzle-massive/
+    sudo bin/provision-certbot.sh /srv/puzzle-massive/ || echo 'ignore error'
     make ENVIRONMENT=production;
     sudo make ENVIRONMENT=production install;
     sudo nginx -t;
     sudo systemctl reload nginx
     ```
 
-8.  Generate some random data and test.
+9.  Generate some random data and test.
 
     ```bash
     puzzle-massive-testdata players --count=100;
@@ -227,6 +247,51 @@ one (blue) having traffic. The new one (green) should be verified that everythin
 correctly by doing some integration testing. The next step is to stop the apps
 on the old server and copy all the data over to the new puzzle-massive-green server.
 
+1.  On the **new server** (puzzle-massive-green) the files from the old server will be copied over with
+    rsync. First step here is to stop the apps on the new server and remove the
+    initial db and any generated test puzzles.
+
+    ```bash
+    cd /usr/local/src/puzzle-massive/;
+    source bin/activate;
+    sudo ./bin/appctl.sh stop -f;
+    rm /var/lib/puzzle-massive/sqlite3/db*;
+    rm -rf /var/lib/puzzle-massive/archive/*
+    rm -rf /srv/puzzle-massive/resources/*;
+    sudo ./bin/clear_nginx_cache.sh;
+
+    # Use `flushdb` on the new server to remove all keys on the redis database.
+    REDIS_DB=$(./bin/puzzle-massive-site-cfg-echo site.cfg REDIS_DB);
+    redis-cli -n ${REDIS_DB} flushdb
+    ```
+
+2.  Copy the nginx logs (NGINXLOGDIR) found at: `/var/log/nginx/puzzle-massive/`
+
+    ```bash
+    rsync --archive --progress --itemize-changes \
+      dev@puzzle-massive-blue:/var/log/nginx/puzzle-massive \
+      /var/log/nginx/
+    ```
+
+3.  Copy the archive directory (ARCHIVEDIR): `/var/lib/puzzle-massive/archive/`
+
+    ```bash
+    rsync --archive --progress --itemize-changes \
+      dev@puzzle-massive-blue:/var/lib/puzzle-massive/archive \
+      /var/lib/puzzle-massive/
+    ```
+
+4.  Copy the resources directory (SRVDIR/resources) that contains the generated
+    puzzles:
+
+    ```bash
+    rsync --archive --progress --itemize-changes \
+      dev@puzzle-massive-blue:/srv/puzzle-massive/resources \
+      /srv/puzzle-massive/
+    ```
+
+Switch back to the **old server** (puzzle-massive-blue).
+
 1.  On the **old server** (puzzle-massive-blue) stop the apps and backup the data. The old
     server is left untouched in case something fails on the new server.
 
@@ -241,30 +306,28 @@ on the old server and copy all the data over to the new puzzle-massive-green ser
     fg # and ctrl-c to stop the puzzle-massive-api serve process
     ```
 
-2.  On the **new server** (puzzle-massive-green) the files from the old server will be copied over with
-    rsync. First step here is to stop the apps on the new server and remove the
-    initial db and any generated test puzzles.
+Switch over to the **new server** (puzzle-massive-green).
+
+1.  On the **new server** (puzzle-massive-green) the resource files from the old
+    server will be copied over again now that the new server is down.
+
+    Copy the backup db (db-YYYY-MM-DD.dump.gz) to the new server and replace the
+    other one (SQLITE_DATABASE_URI). This is assuming that ssh agent forwarding
+    is enabled for the puzzle-massive-blue host.
 
     ```bash
+    rsync --archive --progress --itemize-changes \
+      dev@puzzle-massive-blue:/var/log/nginx/puzzle-massive \
+      /var/log/nginx/
+    rsync --archive --progress --itemize-changes \
+      dev@puzzle-massive-blue:/var/lib/puzzle-massive/archive \
+      /var/lib/puzzle-massive/
+    rsync --archive --progress --itemize-changes \
+      dev@puzzle-massive-blue:/srv/puzzle-massive/resources \
+      /srv/puzzle-massive/
+
     cd /usr/local/src/puzzle-massive/;
     source bin/activate;
-    sudo ./bin/appctl.sh stop;
-    rm /var/lib/puzzle-massive/sqlite3/db*;
-    rm -rf /var/lib/puzzle-massive/archive/*
-    rm -rf /srv/puzzle-massive/resources/*;
-    sudo ./bin/clear_nginx_cache.sh;
-
-    # Use `flushdb` on the new server to remove all keys on the redis database.
-    REDIS_DB=$(./bin/puzzle-massive-site-cfg-echo site.cfg REDIS_DB);
-    redis-cli -n ${REDIS_DB} flushdb
-    ```
-
-3.  Copy the backup db (db-YYYY-MM-DD.dump.gz) to the new server and replace the
-    other one (SQLITE_DATABASE_URI). This is assuming that ssh agent forwarding
-    is enabled for the puzzle-blue host.
-
-    ```bash
-    cd /usr/local/src/puzzle-massive/;
     DBDUMPFILE="db-$(date +%F).dump.gz";
     rsync --archive --progress --itemize-changes \
       dev@puzzle-massive-blue:/usr/local/src/puzzle-massive/$DBDUMPFILE \
@@ -273,57 +336,17 @@ on the old server and copy all the data over to the new puzzle-massive-green ser
     cat db.dump.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
     echo 'pragma journal_mode=wal' | sqlite3 /var/lib/puzzle-massive/sqlite3/db
 
-    # Update any bit icon authors and add new bit icons if applicable
+    # Run any migrate scripts needed for this version update if applicable
+    python api/api/jobs/migrate_from_2_x_to_x.py site.cfg
+
+    # Update any bit icon authors and add new bit icons
     python api/api/jobs/insert-or-replace-bit-icons.py
 
-    # Update the enabled puzzle features if applicable
+    # Update the enabled puzzle features
     python api/api/update_enabled_puzzle_features.py
     ```
 
-4.  Copy the nginx logs (NGINXLOGDIR) found at: `/var/log/nginx/puzzle-massive/`
-
-    ```bash
-    rsync --archive --progress --itemize-changes \
-      dev@puzzle-massive-blue:/var/log/nginx/puzzle-massive \
-      /var/log/nginx/
-    ```
-
-5.  Copy the archive directory (ARCHIVEDIR): `/var/lib/puzzle-massive/archive/`
-
-    ```bash
-    rsync --archive --progress --itemize-changes \
-      dev@puzzle-blue:/var/lib/puzzle-massive/archive \
-      /var/lib/puzzle-massive/
-    ```
-
-6.  Copy the resources directory (SRVDIR/resources) that contains the generated
-    puzzles:
-
-    ```bash
-    rsync --archive --progress --itemize-changes \
-      dev@puzzle-blue:/srv/puzzle-massive/resources \
-      /srv/puzzle-massive/
-    ```
-
-7.  Copy the certificates listed on the old server (`sudo certbot certificates`) to the new server.
-
-    ```bash
-    scp \
-      dev@puzzle-massive-blue:/etc/letsencrypt/live/puzzle.massive.xyz/fullchain.pem \
-      /etc/letsencrypt/live/puzzle.massive.xyz/
-    scp \
-      dev@puzzle-massive-blue:/etc/letsencrypt/live/puzzle.massive.xyz/privkey.pem \
-      /etc/letsencrypt/live/puzzle.massive.xyz/
-    ```
-
-8.  Run any migrate scripts if required for this version bump. Follow any other
-    instructions for the migrate script if needed.
-
-    ```bash
-    python api/api/jobs/migrate_from_2_x.py site.cfg
-    ```
-
-9.  Start the new server and switch traffic over to it.
+2.  Start the new server and switch traffic over to it.
 
     After the old server data has been copied over, then start up the new server
     apps with the 'bin/appctl.sh' script. It is also good to monitor the logs to see
@@ -340,6 +363,19 @@ on the old server and copy all the data over to the new puzzle-massive-green ser
     Verify that the new version of the website is running correctly on
     puzzle-massive-green/. If everything checks out, then switch the traffic over to
     puzzle.massive.xyz/.
+
+3.  Finish setting up the production server with TLS certs. [certbot](https://certbot.eff.org/)
+    is used to deploy [Let's Encrypt](https://letsencrypt.org/) certificates.
+    The certs should have already been copied over from the old server. This
+    step is to enable the auto renewing of certs.
+
+    ```bash
+    cd /usr/local/src/puzzle-massive/;
+    source bin/activate;
+    sudo bin/provision-certbot.sh /srv/puzzle-massive/
+    sudo nginx -t;
+    sudo systemctl reload nginx
+    ```
 
 ## Removing the app from a server
 
