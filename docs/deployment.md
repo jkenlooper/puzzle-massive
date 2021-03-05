@@ -151,7 +151,9 @@ by the public.
 4.  Copy the certificates listed on the old server (`sudo certbot certificates`)
     to the new server. Skip this step if there is no old server to copy from.
     Note that these should be first copied from the old server to the dev home
-    directory.
+    directory. Note that this step is to just prevent downtime and the
+    /etc/letsencrypt/live/puzzle.massive.xyz/ directory will be removed when
+    running the bin/provision-certbot.sh script.
 
     ```bash
     sudo mkdir -p /etc/letsencrypt/live/puzzle.massive.xyz/
@@ -205,22 +207,7 @@ by the public.
     sudo systemctl reload nginx
     ```
 
-8.  Set up the production server with TLS certs. [certbot](https://certbot.eff.org/)
-    is used to deploy [Let's Encrypt](https://letsencrypt.org/) certificates.
-    This will initially fail if the server isn't accepting traffic at the domain
-    name. The certs can be copied over from the live server later.
-
-    ```bash
-    cd /usr/local/src/puzzle-massive/;
-    source bin/activate;
-    sudo bin/provision-certbot.sh /srv/puzzle-massive/ || echo 'ignore error'
-    make ENVIRONMENT=production;
-    sudo make ENVIRONMENT=production install;
-    sudo nginx -t;
-    sudo systemctl reload nginx
-    ```
-
-9.  Generate some random data and test.
+8.  Generate some random data and test.
 
     ```bash
     puzzle-massive-testdata players --count=100;
@@ -364,15 +351,21 @@ Switch over to the **new server** (puzzle-massive-green).
     puzzle-massive-green/. If everything checks out, then switch the traffic over to
     puzzle.massive.xyz/.
 
-3.  Finish setting up the production server with TLS certs. [certbot](https://certbot.eff.org/)
+3.  Set up the production server with TLS certs. [certbot](https://certbot.eff.org/)
     is used to deploy [Let's Encrypt](https://letsencrypt.org/) certificates.
-    The certs should have already been copied over from the old server. This
-    step is to enable the auto renewing of certs.
+    This will initially fail if the server isn't accepting traffic at the domain
+    name.
 
     ```bash
     cd /usr/local/src/puzzle-massive/;
     source bin/activate;
+    # Running make and make install can be skipped if .has-certs file exists
+    skip_make=$(test -e .has-certs && echo 1)
     sudo bin/provision-certbot.sh /srv/puzzle-massive/
+    if [ ! -n "$skip_make" ]; then
+        make ENVIRONMENT=production;
+        sudo make ENVIRONMENT=production install;
+    fi
     sudo nginx -t;
     sudo systemctl reload nginx
     ```

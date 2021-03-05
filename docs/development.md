@@ -290,7 +290,7 @@ make;
 sudo make install;
 
 # Stop the apps here since we need to update the database.
-sudo ./bin/appctl.sh stop;
+sudo ./bin/appctl.sh stop -f;
 
 # Create the puzzle database tables and initial data
 python api/api/create_database.py site.cfg;

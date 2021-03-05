@@ -5,6 +5,16 @@ set -eu -o pipefail
 # Get the DOMAIN_NAME
 source .env
 
+# Remove any previous copied certs that may exist before provisioning for the
+# first time. This prevents downtime if the certs were simply copied over from
+# a different server.
+if [ ! -n "$(command -v certbot)" ]; then
+  echo "certbot hasn't been provisioned before; checking if existing certs need to be removed in order for certbot to be configured correctly."
+  if [ -e /etc/letsencrypt/live/puzzle.massive.xyz ]; then
+    rm -rf --verbose /etc/letsencrypt/live/puzzle.massive.xyz
+  fi
+fi
+
 # https://certbot.eff.org/lets-encrypt/ubuntufocal-nginx
 
 # Ensure that your version of snapd is up to date
@@ -18,7 +28,9 @@ apt-get remove certbot
 snap install --classic certbot
 
 # Prepare the Certbot command
-ln -s /snap/bin/certbot /usr/bin/certbot
+if [ ! -e /usr/bin/certbot ]; then
+  ln -s /snap/bin/certbot /usr/bin/certbot
+fi
 
 # /srv/puzzle-massive/
 SRVDIR=$1

@@ -21,6 +21,13 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
+## [Unreleased] - ...
+
+## Fixed
+
+- Scripts around provisioning TLS certificates with the Let's Encrypt certbot
+  work better when doing blue/green deployments.
+
 ## [2.10.0] - 2021-03-02
 
 Bit icons have moved to a separate git repo and are no longer included in this
