@@ -19,7 +19,6 @@ from api.constants import (
     REBUILD,
     IN_RENDER_QUEUE,
     MAINTENANCE,
-    SKILL_LEVEL_RANGES,
     QUEUE_WINNING_BID,
     PRIVATE,
     PUBLIC,
@@ -361,7 +360,7 @@ class PuzzleOriginalDetailsView(MethodView):
         low, high = next(
             filter(
                 lambda x: x[0] <= puzzleData["pieces"] and x[1] > puzzleData["pieces"],
-                SKILL_LEVEL_RANGES,
+                current_app.config["SKILL_LEVEL_RANGES"],
             )
         )
         queue_count_result = cur.execute(
@@ -419,7 +418,7 @@ class PuzzleOriginalDetailsView(MethodView):
                 filter(
                     lambda x: x[0] <= puzzleData["pieces"]
                     and x[1] > puzzleData["pieces"],
-                    SKILL_LEVEL_RANGES,
+                    current_app.config["SKILL_LEVEL_RANGES"],
                 )
             )
 

@@ -15,7 +15,6 @@ from api.constants import (
     REBUILD,
     RENDERING,
     RENDERING_FAILED,
-    SKILL_LEVEL_RANGES,
 )
 
 STATUS_RECENT = "recent"
@@ -310,7 +309,7 @@ class GalleryPuzzleListView(MethodView):
         cur = db.cursor()
         puzzle_list = []
 
-        for low, high in SKILL_LEVEL_RANGES:
+        for low, high in current_app.config["SKILL_LEVEL_RANGES"]:
             result = cur.execute(
                 fetch_query_string("select_available_puzzle_images--gallery.sql"),
                 {"pieces_min": low, "pieces_max": high, "count": 2},

@@ -15,10 +15,6 @@ source "$PORTREGISTRY"
 
 source .env
 
-# The .env file has some environment variables that can be added if the app
-# requires them. Uncomment this line as well as the EXAMPLE_PUBLIC_KEY below.
-#source ".env"
-
 HOST='127.0.0.1'
 # The HOSTAPI should not be externally available.
 # Keep HOSTAPI as localhost (127.0.0.1)
@@ -245,9 +241,14 @@ KARMA_POINTS_EXPIRE = 3600  # hour in seconds
 # network are blocked on a puzzle after the last timeout (3 days) the list is
 # reset and the next player that gets blocked will again be for 30 seconds.
 # The last item in this list should always be the longest.
-BLOCKEDPLAYER_EXPIRE_TIMEOUTS = list(map(int,"${BLOCKEDPLAYER_EXPIRE_TIMEOUTS}".split(" ")))
+BLOCKEDPLAYER_EXPIRE_TIMEOUTS = list(map(int,"${BLOCKEDPLAYER_EXPIRE_TIMEOUTS}".split()))
 MINIMUM_PIECE_COUNT=${MINIMUM_PIECE_COUNT}
 MAXIMUM_PIECE_COUNT=${MAXIMUM_PIECE_COUNT}
+
+PUZZLE_PIECE_GROUPS = list(map(int,"${PUZZLE_PIECE_GROUPS}".split()))
+ACTIVE_PUZZLES_IN_PIECE_GROUPS = list(map(int,"${ACTIVE_PUZZLES_IN_PIECE_GROUPS}".split()))
+SKILL_LEVEL_RANGES = set(list(zip([0] + PUZZLE_PIECE_GROUPS, PUZZLE_PIECE_GROUPS)))
+
 MAX_POINT_COST_FOR_REBUILDING=${MAX_POINT_COST_FOR_REBUILDING}
 MAX_POINT_COST_FOR_DELETING=${MAX_POINT_COST_FOR_DELETING}
 BID_COST_PER_PUZZLE=${BID_COST_PER_PUZZLE}

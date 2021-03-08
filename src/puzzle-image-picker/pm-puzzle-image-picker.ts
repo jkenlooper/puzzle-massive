@@ -30,9 +30,6 @@ interface TemplateData {
   frontFragmentHref: undefined | string;
 }
 
-// piecesCountList should include ranges from SKILL_LEVEL_RANGES
-// The SKILL_LEVEL_RANGES is also copied in src/gallery/pm-gallery.ts
-const piecesCountList = [0, 100, 200, 400, 800, 1600, 2200, 4000, 10000, 60000];
 // Set a minimum delay to prevent getting a too many requests error (429).  The
 // puzzle-list endpoint is rate-limited per ip at one request every 2 seconds
 // with a burst/bucket of 20. The burst here is set to half of that limit and is
@@ -61,6 +58,7 @@ customElements.define(
     errorMessage: string = "";
     isLoadingPuzzles: boolean = false;
     burstCount: number = 0;
+    piecesCountList: Array<number> = [];
 
     filterStatus: undefined | Array<string>;
     filterPieces: undefined | Array<string>;
@@ -81,6 +79,19 @@ customElements.define(
         this.errorMessage = "No front-fragment-href has been set.";
       } else {
         this.frontFragmentHref = frontFragmentHref.value;
+      }
+      const piecesCountListAttr = this.attributes.getNamedItem(
+        "pieces-count-list"
+      );
+      if (!piecesCountListAttr || !piecesCountListAttr.value) {
+        this.hasError = true;
+        this.errorMessage = "Missing pieces-count-list attribute";
+      } else {
+        this.piecesCountList = piecesCountListAttr.value
+          .split(/\s+/)
+          .map((v) => {
+            return parseInt(v);
+          });
       }
 
       this.addEventListener(
@@ -284,7 +295,7 @@ customElements.define(
         pages: getPagesString(this.pageCount),
         currentPage: this.currentPage,
         totalPuzzleCount: this.totalPuzzleCount,
-        pieces: getPiecesString(this.maxPieces || 1000),
+        pieces: getPiecesString(this.maxPieces || 1000, this.piecesCountList),
         puzzleCountFiltered: this.puzzleCountFiltered,
         frontFragmentHref: this.frontFragmentHref,
       };
@@ -357,7 +368,10 @@ function getPagesString(pageCount: number): string {
   return `*${pages.join(", ")}`;
 }
 
-function getPiecesString(maxPieces: number): string {
+function getPiecesString(
+  maxPieces: number,
+  piecesCountList: Array<number>
+): string {
   const pieces: Array<number> = piecesCountList.filter((item) => {
     return item <= maxPieces;
   });

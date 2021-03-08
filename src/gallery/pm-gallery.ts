@@ -19,19 +19,6 @@ interface TemplateData {
   variant: string;
 }
 
-// Copied SKILL_LEVEL_RANGES from api/api/constants.py
-// Should also match src/puzzle-image-picker/pm-puzzle-image-picker.ts
-const SKILL_LEVEL_RANGES = [
-  [0, 100],
-  [100, 200],
-  [200, 400],
-  [400, 800],
-  [800, 1600],
-  [1600, 2200],
-  [2200, 4000],
-  [4000, 60000],
-];
-
 const tag = "pm-gallery";
 let lastInstanceId = 0;
 
@@ -50,6 +37,7 @@ customElements.define(
     errorMessage: string = "";
     isLoadingPuzzles: boolean = true;
     private variant: string = "card";
+    skillLevelRanges: Array<Array<number>> = [];
 
     constructor() {
       super();
@@ -63,6 +51,29 @@ customElements.define(
         this.errorMessage = "No front-fragment-href has been set.";
       } else {
         this.frontFragmentHref = frontFragmentHref.value;
+      }
+
+      const puzzlePieceGroupsAttr = this.attributes.getNamedItem(
+        "puzzle-piece-groups"
+      );
+      if (!puzzlePieceGroupsAttr || !puzzlePieceGroupsAttr.value) {
+        this.hasError = true;
+        this.errorMessage = "Missing puzzle-piece-groups attribute";
+      } else {
+        const puzzlePieceGroups = puzzlePieceGroupsAttr.value
+          .split(/\s+/)
+          .map((v) => {
+            return parseInt(v);
+          });
+        this.skillLevelRanges = puzzlePieceGroups.reduce(
+          (acc, v, index) => {
+            acc[index].push(v);
+            acc.push([v]);
+            return acc;
+          },
+          [[0]]
+        );
+        this.skillLevelRanges.pop();
       }
 
       const skipAttr = this.attributes.getNamedItem("skip") || "";
@@ -82,13 +93,13 @@ customElements.define(
         .then((puzzleList: GalleryPuzzleListResponse) => {
           // Filter out the skip puzzle and then select one puzzle from each
           // skill level range.
-          const selected_range = Array(SKILL_LEVEL_RANGES.length);
+          const selected_range = Array(this.skillLevelRanges.length);
           this.puzzles = puzzleList.puzzles
             .filter((puzzle) => {
               return puzzle.puzzle_id !== this.skipPuzzleId;
             })
             .filter((puzzle) => {
-              const levelIndex = SKILL_LEVEL_RANGES.findIndex((range) => {
+              const levelIndex = this.skillLevelRanges.findIndex((range) => {
                 return range[0] >= puzzle.pieces && puzzle.pieces < range[1];
               });
               if (selected_range[levelIndex]) {

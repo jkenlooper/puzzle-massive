@@ -31,7 +31,6 @@ from api.constants import (
     QUEUE_INACTIVE,
     REBUILD,
     COMPLETED,
-    SKILL_LEVEL_RANGES,
     QUEUE_END_OF_LINE,
 )
 from api.notify import send_message
@@ -103,7 +102,7 @@ class AutoRebuildCompletedPuzzle(Task):
         made_change = False
 
         cur = db.cursor()
-        for (low, high) in SKILL_LEVEL_RANGES:
+        for (low, high) in current_app.config["SKILL_LEVEL_RANGES"]:
             in_queue_puzzle_count = cur.execute(
                 read_query_file("get_in_queue_puzzle_count.sql"),
                 {"low": low, "high": high},
@@ -574,7 +573,8 @@ class UpdatePuzzleQueue(Task):
 
         # select all ACTIVE puzzles within each skill range
         skill_range_active_count = 2
-        for (low, high) in SKILL_LEVEL_RANGES:
+
+        for (low, high) in current_app.config["SKILL_LEVEL_RANGES"]:
             result = cur.execute(
                 read_query_file("count-active-puzzles-within-skill-range.sql"),
                 {"low": low, "high": high},

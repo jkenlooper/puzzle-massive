@@ -104,7 +104,7 @@
 {% endblock %}
 
 {% block secondarymenu %}
-  <pm-gallery variant="inline" skip="{{ page.info.puzzle_id }}" front-fragment-href="/chill{{ url_for('.page_uri', uri='front') }}"></pm-gallery>
+  <pm-gallery variant="inline" skip="{{ page.info.puzzle_id }}" front-fragment-href="/chill{{ url_for('.page_uri', uri='front') }}" puzzle-piece-groups="{{ config.PUZZLE_PIECE_GROUPS|join(' ') }}"></pm-gallery>
 {% endblock %}
 
 

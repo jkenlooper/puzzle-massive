@@ -32,6 +32,11 @@ Types of changes
 - Scripts around provisioning TLS certificates with the Let's Encrypt certbot
   work better when doing blue/green deployments.
 
+## Changed
+
+- The skill level ranges for puzzles are now configurable via updating the .env
+  file.
+
 ## [2.10.0] - 2021-03-02
 
 Bit icons have moved to a separate git repo and are no longer included in this

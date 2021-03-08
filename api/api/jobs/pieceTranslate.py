@@ -19,14 +19,11 @@ from api.tools import (
     init_karma_key,
     purge_route_from_nginx_cache,
 )
-from api.constants import COMPLETED, QUEUE_END_OF_LINE, PRIVATE, SKILL_LEVEL_RANGES
+from api.constants import COMPLETED, QUEUE_END_OF_LINE, PRIVATE
 from api.piece_mutate import PieceMutateProcess, PieceMutateError
 
 KARMA_POINTS_EXPIRE = 3600  # hour in seconds
 PIECE_GROUP_MOVE_MAX_BEFORE_PENALTY = 5
-
-skill_level_intervals = list(map(lambda x: x[1], SKILL_LEVEL_RANGES))
-skill_level_intervals.sort()
 
 
 def get_earned_points(pieces, permission=None):
@@ -38,6 +35,10 @@ def get_earned_points(pieces, permission=None):
     """
     if permission is not None and permission == PRIVATE:
         return 0
+    skill_level_intervals = list(
+        map(lambda x: x[1], current_app.config["SKILL_LEVEL_RANGES"])
+    )
+    skill_level_intervals.sort()
     for level, max_pieces in enumerate(skill_level_intervals, 1):
         if pieces < max_pieces:
             return level
@@ -211,7 +212,10 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
     pc_puzzle_piece_key = "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
 
     # check if piece can be moved
-    (piece_status, has_y) = redis_connection.hmget(pc_puzzle_piece_key, ["s", "y"],)
+    (piece_status, has_y) = redis_connection.hmget(
+        pc_puzzle_piece_key,
+        ["s", "y"],
+    )
     if has_y == None:
         err_msg = {"msg": "piece not available", "type": "missing"}
         return (err_msg, 0)
@@ -284,10 +288,22 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
                 karma_change -= 1
         return publishMessage(msg, karma_change, karma)
     elif status == "joined":
-        return publishMessage(msg, karma_change, karma, points=4, complete=False,)
+        return publishMessage(
+            msg,
+            karma_change,
+            karma,
+            points=4,
+            complete=False,
+        )
 
     elif status == "completed":
-        return publishMessage(msg, karma_change, karma, points=4, complete=True,)
+        return publishMessage(
+            msg,
+            karma_change,
+            karma,
+            points=4,
+            complete=True,
+        )
     else:
         pass
 
