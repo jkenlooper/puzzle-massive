@@ -95,7 +95,11 @@ def make_app(config=None, database_writable=False, **kw):
     # from api.reset import PuzzlePiecesResetView
     from api.rebuild import PuzzlePiecesRebuildView
     from api.instance import CreatePuzzleInstanceView
-    from api.upload import PuzzleUploadView, AdminPuzzlePromoteSuggestedView
+    from api.upload import (
+        PuzzleUploadView,
+        AdminPuzzlePromoteSuggestedView,
+        AdminPuzzleUnsplashBatchView,
+    )
     from api.suggest_image import SuggestImageView
     from api.render import RenderPuzzlesView
     from api.user import (
@@ -279,6 +283,11 @@ def make_app(config=None, database_writable=False, **kw):
             "admin-puzzle-promote-suggested"
         ),
     )
+    app.add_url_rule(
+        "/admin/puzzle/unsplash-batch/",
+        view_func=AdminPuzzleUnsplashBatchView.as_view("admin-puzzle-unsplash-batch"),
+    )
+
     app.add_url_rule(
         "/admin/user/banned/",
         view_func=AdminBannedUserList.as_view("admin-user-banned"),

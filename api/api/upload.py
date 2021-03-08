@@ -11,7 +11,7 @@ import tempfile
 
 import sqlite3
 from PIL import Image
-from flask import current_app, redirect, request, make_response, abort
+from flask import current_app, redirect, request, make_response, abort, json
 from flask.views import MethodView
 from werkzeug.utils import secure_filename, escape
 from werkzeug.urls import url_fix
@@ -385,6 +385,64 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
         cur.close()
 
         return redirect("/chill/site/admin/puzzle/suggested/", code=303)
+
+
+class AdminPuzzleUnsplashBatchView(MethodView):
+    ""
+
+    def post(self):
+        "Route is protected by basic auth in nginx"
+        args = {}
+        batch = []
+        user = int(
+            current_app.secure_cookie.get("user")
+            or user_id_from_ip(request.headers.get("X-Real-IP"))
+        )
+        if request.form:
+            args.update(request.form.to_dict(flat=True))
+            labels = ["unlisted", "hidden_preview", "link", "bg_color", "pieces"]
+            batch = list(
+                map(
+                    lambda x: dict(zip(labels, x)),
+                    list(zip(*list(map(request.form.getlist, labels)))),
+                )
+            )
+
+        for item in batch:
+            try:
+                pieces = int(
+                    item.get("pieces", current_app.config["MINIMUM_PIECE_COUNT"])
+                )
+            except ValueError as err:
+                abort(400)
+            if (
+                not current_app.config["MINIMUM_PIECE_COUNT"]
+                <= pieces
+                <= current_app.config["MAXIMUM_PIECE_COUNT"]
+            ):
+                abort(400)
+            bg_color = check_bg_color(item.get("bg_color", "#808080")[:50])
+            permission = PUBLIC if item.get("unlisted", "false") == "false" else PRIVATE
+            description = ""
+            link = url_fix(item.get("link", ""))[:1000]
+            secret_message = escape(item.get("secret_message", ""))[:1000]
+            features = set()
+            if item.get("hidden_preview", "false") != "false":
+                features.add("hidden-preview")
+
+            puzzle_id = submit_puzzle(
+                pieces,
+                bg_color,
+                user,
+                permission,
+                description,
+                link,
+                upload_file=None,
+                secret_message=secret_message,
+                features=features,
+            )
+
+        return redirect("/chill/site/player-puzzle-list/", code=303)
 
 
 class UnsplashPuzzleThread(threading.Thread):

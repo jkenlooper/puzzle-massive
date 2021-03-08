@@ -23,6 +23,10 @@ Types of changes
 
 ## [Unreleased] - ...
 
+## Added
+
+- Unsplash batch upload form on admin page.
+
 ## Fixed
 
 - Scripts around provisioning TLS certificates with the Let's Encrypt certbot
