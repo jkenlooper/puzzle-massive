@@ -38,6 +38,7 @@ Types of changes
 
 - The skill level ranges for puzzles are now configurable via updating the .env
   file.
+- Minimum puzzle counts that are used for scheduler tasks are now configurable.
 
 ## [2.10.0] - 2021-03-02
 

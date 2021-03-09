@@ -102,12 +102,21 @@ class AutoRebuildCompletedPuzzle(Task):
         made_change = False
 
         cur = db.cursor()
-        for (low, high) in current_app.config["SKILL_LEVEL_RANGES"]:
+        in_queue_puzzles_in_piece_groups = current_app.config[
+            "MINIMUM_IN_QUEUE_PUZZLES_IN_PIECE_GROUPS"
+        ].copy()
+        in_queue_puzzles_in_piece_groups.reverse()
+        for (low, high, minimum_count) in map(
+            lambda x: (x[0], x[1], in_queue_puzzles_in_piece_groups.pop()),
+            current_app.config["SKILL_LEVEL_RANGES"],
+        ):
+            if minimum_count == 0:
+                continue
             in_queue_puzzle_count = cur.execute(
                 read_query_file("get_in_queue_puzzle_count.sql"),
                 {"low": low, "high": high},
             ).fetchone()[0]
-            if in_queue_puzzle_count <= self.minimum_count:
+            if in_queue_puzzle_count <= minimum_count:
                 (result, col_names) = rowify(
                     cur.execute(
                         read_query_file("select_random_puzzle_to_rebuild.sql"),
@@ -572,9 +581,15 @@ class UpdatePuzzleQueue(Task):
                 made_change = True
 
         # select all ACTIVE puzzles within each skill range
-        skill_range_active_count = 2
+        active_puzzles_in_piece_groups = current_app.config[
+            "ACTIVE_PUZZLES_IN_PIECE_GROUPS"
+        ].copy()
+        active_puzzles_in_piece_groups.reverse()
 
-        for (low, high) in current_app.config["SKILL_LEVEL_RANGES"]:
+        for (low, high, skill_range_active_count) in map(
+            lambda x: (x[0], x[1], active_puzzles_in_piece_groups.pop()),
+            current_app.config["SKILL_LEVEL_RANGES"],
+        ):
             result = cur.execute(
                 read_query_file("count-active-puzzles-within-skill-range.sql"),
                 {"low": low, "high": high},
