@@ -31,6 +31,8 @@ Types of changes
 
 - Scripts around provisioning TLS certificates with the Let's Encrypt certbot
   work better when doing blue/green deployments.
+- Auto rebuild query correctly gets the preview_full of the puzzle it is
+  rebuilding.
 
 ## Changed
 
