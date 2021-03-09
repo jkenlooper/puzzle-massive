@@ -23,11 +23,11 @@ from api.constants import (
     DELETED_INAPT,
     DELETED_OLD,
     DELETED_REQUEST,
+    PRIVATE,
 )
 
 
-# TODO: add another action for "rebuild"
-ACTIONS = ("approve", "reject", "delete", "tag")
+ACTIONS = ("approve", "rebuild", "reject", "delete", "edit", "tag")
 
 
 class AdminPuzzleBatchEditView(MethodView):
@@ -59,13 +59,17 @@ class AdminPuzzleBatchEditView(MethodView):
         if action == "delete" and delete not in ("license", "inapt", "old", "request"):
             abort(400)
 
+        edit = args.get("edit")
+        if action == "edit" and edit not in ("private",):
+            abort(400)
+
         # abort if tag value not set
         tag = args.get("tag")
         if action == "tag" and not tag:
             abort(400)
 
         puzzle_ids = request.form.getlist("montage_puzzle_id")
-        if len(puzzle_ids) == 0 or len(puzzle_ids) > 20:
+        if len(puzzle_ids) == 0:
             abort(400)
         if not isinstance(puzzle_ids, list):
             puzzle_ids = [puzzle_ids]
@@ -74,10 +78,10 @@ class AdminPuzzleBatchEditView(MethodView):
         status = None
 
         if action == "approve":
-            # TODO: May need to be set to REBUILD if it is an existing puzzle,
-            # otherwise the preview_full.jpg will be recreated.  Use new
-            # "rebuild" action instead of just "approve".
             status = IN_RENDER_QUEUE
+
+        if action == "rebuild":
+            status = REBUILD
 
         if action == "reject":
             if reject == "license":
@@ -124,15 +128,29 @@ class AdminPuzzleBatchEditView(MethodView):
 
             db.commit()
 
+        if action == "edit":
+            if edit == "private":
+
+                def each(puzzle_ids):
+                    for puzzle_id in puzzle_ids:
+                        yield {"puzzle_id": puzzle_id, "permission": PRIVATE}
+
+                cur.executemany(
+                    fetch_query_string("update_puzzle_permission_for_puzzle_id.sql"),
+                    each(puzzle_ids),
+                )
+                db.commit()
+
         def each(puzzle_ids):
             for puzzle_id in puzzle_ids:
                 yield {"puzzle_id": puzzle_id, "status": status}
 
-        cur.executemany(
-            fetch_query_string("update_puzzle_status_for_puzzle_id.sql"),
-            each(puzzle_ids),
-        )
-        db.commit()
+        if status is not None:
+            cur.executemany(
+                fetch_query_string("update_puzzle_status_for_puzzle_id.sql"),
+                each(puzzle_ids),
+            )
+            db.commit()
 
         for puzzle_id in puzzle_ids:
             purge_route_from_nginx_cache(
@@ -140,7 +158,7 @@ class AdminPuzzleBatchEditView(MethodView):
                 current_app.config.get("PURGEURLLIST"),
             )
 
-        if action == "approve":
+        if action in ("approve", "rebuild"):
             puzzles = rowify(
                 cur.execute(
                     fetch_query_string("select-puzzles-in-render-queue.sql"),
@@ -148,7 +166,7 @@ class AdminPuzzleBatchEditView(MethodView):
                 ).fetchall(),
                 cur.description,
             )[0]
-            print("found {0} puzzles to render".format(len(puzzles)))
+            print("found {0} puzzles to render or rebuild".format(len(puzzles)))
 
             # push each puzzle to artist job queue
             for puzzle in puzzles:

@@ -119,11 +119,19 @@
         };
       }
     </script>
-      {% if slug != 'suggested' %}
+      {% if slug == 'submitted' %}
       <div>
         <label>
           <input type="radio" name="action" value="approve" x-model="action">
           Approve
+        </label>
+      </div>
+      {% endif %}
+      {% if slug == 'completed' %}
+      <div>
+        <label>
+          <input type="radio" name="action" value="rebuild" x-model="action">
+          Rebuild
         </label>
       </div>
       {% endif %}
@@ -172,6 +180,24 @@
             Request
             <input type="radio" name="delete" value="request" checked>
           </label>
+        </div>
+      </div>
+
+      <div>
+        <label>
+          <input type="radio" name="action" value="edit" x-model="action">
+          Edit
+        </label>
+
+        <div x-show="action === 'edit'">
+          Attributes
+          {% if slug in ('active', 'in_queue', 'instances', 'submitted') %}
+          {# Completed puzzles may have had their pieces removed, so shouldn't move them to be private. #}
+          <label>
+            Make Unlisted
+            <input type="radio" name="edit" value="private">
+          </label>
+          {% endif %}
         </div>
       </div>
 
