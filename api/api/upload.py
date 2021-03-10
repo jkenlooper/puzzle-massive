@@ -31,7 +31,7 @@ from api.constants import (
     CLASSIC,
     QUEUE_NEW,
 )
-from api.user import user_id_from_ip, user_not_banned
+from api.user import user_id_from_ip, user_not_banned, ANONYMOUS_USER_ID
 from api.tools import check_bg_color
 
 # Not allowing anything other then jpg to protect against potential picture bombs.
@@ -272,6 +272,17 @@ class PuzzleUploadView(MethodView):
             current_app.secure_cookie.get("user")
             or user_id_from_ip(request.headers.get("X-Real-IP"))
         )
+        cur = db.cursor()
+        results = cur.execute(
+            fetch_query_string("select-user-details-by-id.sql"),
+            {"id": user},
+        ).fetchone()
+        if not result:
+            # Safe guard against when the user is not in the database. Usually
+            # happens in development environments when switching and dropping
+            # databases happens often.
+            user = ANONYMOUS_USER_ID
+        cur.close()
 
         permission = int(args.get("permission", PUBLIC))
         if permission not in (PUBLIC, PRIVATE):
@@ -359,7 +370,12 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
         if not result:
             cur.close()
             abort(400)
-        owner = result[0]
+        owner = int(result[0])
+        if owner == 0:
+            # Safe guard against when the user is not in the database. Usually
+            # happens in development environments when switching and dropping
+            # databases happens often.
+            owner = ANONYMOUS_USER_ID
 
         features = args.get("features")
 
@@ -394,10 +410,23 @@ class AdminPuzzleUnsplashBatchView(MethodView):
         "Route is protected by basic auth in nginx"
         args = {}
         batch = []
+
         user = int(
             current_app.secure_cookie.get("user")
             or user_id_from_ip(request.headers.get("X-Real-IP"))
         )
+        cur = db.cursor()
+        results = cur.execute(
+            fetch_query_string("select-user-details-by-id.sql"),
+            {"id": user},
+        ).fetchone()
+        if not result:
+            # Safe guard against when the user is not in the database. Usually
+            # happens in development environments when switching and dropping
+            # databases happens often.
+            user = ANONYMOUS_USER_ID
+        cur.close()
+
         if request.form:
             args.update(request.form.to_dict(flat=True))
             labels = ["unlisted", "hidden_preview", "link", "bg_color", "pieces"]
