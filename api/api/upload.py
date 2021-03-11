@@ -273,7 +273,7 @@ class PuzzleUploadView(MethodView):
             or user_id_from_ip(request.headers.get("X-Real-IP"))
         )
         cur = db.cursor()
-        results = cur.execute(
+        result = cur.execute(
             fetch_query_string("select-user-details-by-id.sql"),
             {"id": user},
         ).fetchone()
@@ -416,7 +416,7 @@ class AdminPuzzleUnsplashBatchView(MethodView):
             or user_id_from_ip(request.headers.get("X-Real-IP"))
         )
         cur = db.cursor()
-        results = cur.execute(
+        result = cur.execute(
             fetch_query_string("select-user-details-by-id.sql"),
             {"id": user},
         ).fetchone()
