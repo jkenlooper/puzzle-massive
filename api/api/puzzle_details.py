@@ -254,9 +254,9 @@ class PuzzleInstanceDetailsView(MethodView):
                 # the active puzzle status will have an empty response status.
                 response = {"status": ACTIVE}
 
-            job = current_app.cleanupqueue.enqueue_call(
-                func="api.jobs.piece_reset.reset_puzzle_pieces_and_handle_errors",
-                args=([puzzleData.get("id")]),
+            job = current_app.cleanupqueue.enqueue(
+                "api.jobs.piece_reset.reset_puzzle_pieces_and_handle_errors",
+                puzzleData.get("id"),
                 result_ttl=0,
             )
 

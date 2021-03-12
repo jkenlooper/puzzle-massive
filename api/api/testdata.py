@@ -250,9 +250,9 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
     # push each puzzle to artist job queue
     for puzzle in puzzles:
         # push puzzle to artist job queue
-        job = current_app.createqueue.enqueue_call(
-            func="api.jobs.pieceRenderer.render",
-            args=([puzzle]),
+        job = current_app.createqueue.enqueue(
+            "api.jobs.pieceRenderer.render",
+            [puzzle],
             result_ttl=0,
             timeout="24h",
         )
@@ -381,9 +381,9 @@ def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
             db.commit()
             current_app.logger.info("pieces: {pieces} {puzzle_id}".format(**locals()))
 
-            job = current_app.createqueue.enqueue_call(
-                func="api.jobs.pieceRenderer.render",
-                args=([puzzleData]),
+            job = current_app.createqueue.enqueue(
+                "api.jobs.pieceRenderer.render",
+                [puzzleData],
                 result_ttl=0,
                 timeout="24h",
             )

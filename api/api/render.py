@@ -9,8 +9,7 @@ from api.constants import IN_RENDER_QUEUE, REBUILD
 
 
 class RenderPuzzlesView(MethodView):
-    """
-    """
+    """"""
 
     def get(self):
         "Route is protected by basic auth in nginx"
@@ -31,9 +30,9 @@ class RenderPuzzlesView(MethodView):
 
         # push each puzzle to artist job queue
         for puzzle in puzzles:
-            job = current_app.createqueue.enqueue_call(
-                func="api.jobs.pieceRenderer.render",
-                args=([puzzle]),
+            job = current_app.createqueue.enqueue(
+                "api.jobs.pieceRenderer.render",
+                [puzzle],
                 result_ttl=0,
                 timeout="24h",
             )

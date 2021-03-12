@@ -51,9 +51,9 @@ class PuzzlePiecesView(MethodView):
                 target_memory = maxmemory * 0.5
                 if memory.get("used_memory") > target_memory:
                     # push to queue for further processing
-                    job = current_app.cleanupqueue.enqueue_call(
-                        func="api.jobs.convertPiecesToDB.transferOldest",
-                        args=(target_memory,),
+                    job = current_app.cleanupqueue.enqueue(
+                        "api.jobs.convertPiecesToDB.transferOldest",
+                        target_memory,
                         result_ttl=0,
                     )
 
@@ -104,10 +104,11 @@ class PuzzlePiecesView(MethodView):
         if status == COMPLETED:
             # transfer completed puzzles back out
             current_app.logger.info("transfer {0}".format(puzzle))
-            job = current_app.cleanupqueue.enqueue_call(
-                func="api.jobs.convertPiecesToDB.transfer",
-                args=(puzzle,),
-                kwargs={"cleanup": True, "skip_status_update": True},
+            job = current_app.cleanupqueue.enqueue(
+                "api.jobs.convertPiecesToDB.transfer",
+                puzzle,
+                cleanup=True,
+                skip_status_update=True,
                 result_ttl=0,
             )
         else:
@@ -124,8 +125,7 @@ class PuzzlePiecesView(MethodView):
 
 
 class PuzzlePieceUpdatesView(MethodView):
-    """
-    """
+    """"""
 
     def get(self, stamp):
         ""
@@ -164,8 +164,7 @@ piece_attrs = immutable_attrs.union(mutable_attrs)
 
 
 def update_puzzle_pieces(puzzle_id, piece_properties):
-    """
-    """
+    """"""
 
     if not isinstance(piece_properties, list):
         err_msg = {"msg": "piece_properties should be list", "status_code": 400}
@@ -214,7 +213,8 @@ def update_puzzle_pieces(puzzle_id, piece_properties):
     _piece_properties = list(map(set_attrs, filter(is_different, piece_properties)))
 
     cur.executemany(
-        fetch_query_string("update_piece_props_for_puzzle.sql"), _piece_properties,
+        fetch_query_string("update_piece_props_for_puzzle.sql"),
+        _piece_properties,
     )
     db.commit()
     cur.close()
@@ -271,8 +271,7 @@ def add_puzzle_pieces(puzzle_id, piece_properties):
 
 
 def delete_puzzle_pieces(puzzle_id):
-    """
-    """
+    """"""
 
     cur = db.cursor()
     result = cur.execute(
@@ -307,7 +306,9 @@ class InternalPuzzlePiecesView(MethodView):
         if not data:
             err_msg = {"msg": "No JSON data sent", "status_code": 400}
             return make_response(json.jsonify(err_msg), err_msg["status_code"])
-        if not {"piece_properties",}.issuperset(data.keys()):
+        if not {
+            "piece_properties",
+        }.issuperset(data.keys()):
             err_msg = {"msg": "Extra fields in JSON data were sent", "status_code": 400}
             return make_response(json.jsonify(err_msg), err_msg["status_code"])
         response_msg = add_puzzle_pieces(puzzle_id, data["piece_properties"])
@@ -321,7 +322,9 @@ class InternalPuzzlePiecesView(MethodView):
         if not data:
             err_msg = {"msg": "No JSON data sent", "status_code": 400}
             return make_response(json.jsonify(err_msg), err_msg["status_code"])
-        if not {"piece_properties",}.issuperset(data.keys()):
+        if not {
+            "piece_properties",
+        }.issuperset(data.keys()):
             err_msg = {"msg": "Extra fields in JSON data were sent", "status_code": 400}
             return make_response(json.jsonify(err_msg), err_msg["status_code"])
 

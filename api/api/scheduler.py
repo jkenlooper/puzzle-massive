@@ -194,9 +194,9 @@ class AutoRebuildCompletedPuzzle(Task):
                         )
                         deletePieceDataFromRedis(redis_connection, puzzle, all_pieces)
 
-                        job = self.queue.enqueue_call(
-                            func="api.jobs.pieceRenderer.render",
-                            args=([completed_puzzle]),
+                        job = self.queue.enqueue(
+                            "api.jobs.pieceRenderer.render",
+                            [completed_puzzle],
                             result_ttl=0,
                             timeout="24h",
                         )

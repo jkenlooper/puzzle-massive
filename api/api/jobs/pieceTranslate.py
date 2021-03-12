@@ -173,10 +173,10 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
                 raise Exception(
                     "Puzzle details api error when updating puzzle to be complete"
                 )
-            job = current_app.cleanupqueue.enqueue_call(
-                func="api.jobs.convertPiecesToDB.transfer",
-                args=(puzzle,),
-                kwargs={"delay": 0},
+            job = current_app.cleanupqueue.enqueue(
+                "api.jobs.convertPiecesToDB.transfer",
+                puzzle,
+                delay=5,
                 result_ttl=0,
             )
 

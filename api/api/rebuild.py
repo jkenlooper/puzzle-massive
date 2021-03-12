@@ -150,16 +150,16 @@ class PuzzlePiecesRebuildView(MethodView):
         cur.close()
         deletePieceDataFromRedis(redis_connection, puzzle, all_pieces)
 
-        job = current_app.createqueue.enqueue_call(
-            func="api.jobs.pieceRenderer.render",
-            args=([puzzleData]),
+        job = current_app.createqueue.enqueue(
+            "api.jobs.pieceRenderer.render",
+            [puzzleData],
             result_ttl=0,
             timeout="24h",
         )
 
-        job = current_app.cleanupqueue.enqueue_call(
-            func="api.jobs.timeline_archive.archive_and_clear",
-            kwargs=({"puzzle": puzzle}),
+        job = current_app.cleanupqueue.enqueue(
+            "api.jobs.timeline_archive.archive_and_clear",
+            puzzle,
             result_ttl=0,
             timeout="24h",
         )

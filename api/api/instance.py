@@ -306,17 +306,18 @@ class CreatePuzzleInstanceView(MethodView):
         cur.close()
 
         if not fork:
-            job = current_app.createqueue.enqueue_call(
-                func="api.jobs.pieceRenderer.render",
-                args=([puzzle_data]),
+            job = current_app.createqueue.enqueue(
+                "api.jobs.pieceRenderer.render",
+                [puzzle_data],
                 result_ttl=0,
                 timeout="24h",
             )
         else:
             # Copy existing puzzle
-            job = current_app.cleanupqueue.enqueue_call(
-                func="api.jobs.piece_forker.fork_puzzle_pieces",
-                args=([source_puzzle_data, puzzle_data]),
+            job = current_app.cleanupqueue.enqueue(
+                "api.jobs.piece_forker.fork_puzzle_pieces",
+                source_puzzle_data,
+                puzzle_data,
                 result_ttl=0,
             )
 

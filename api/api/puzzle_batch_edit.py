@@ -170,9 +170,9 @@ class AdminPuzzleBatchEditView(MethodView):
 
             # push each puzzle to artist job queue
             for puzzle in puzzles:
-                job = current_app.createqueue.enqueue_call(
-                    func="api.jobs.pieceRenderer.render",
-                    args=([puzzle]),
+                job = current_app.createqueue.enqueue(
+                    "api.jobs.pieceRenderer.render",
+                    [puzzle],
                     result_ttl=0,
                     timeout="24h",
                 )
