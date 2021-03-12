@@ -79,6 +79,7 @@
 {# if the puzzle has been deleted the page.info may not be available. #}
 {% block ogimage %}
 {% if page.info and page.info.url is string and page.info.url %}
+{% if page.info.status != NEEDS_MODERATION %}
   {% if page.info.url.startswith('/') %}
   <meta property="og:image" content="http://{{ config.DOMAIN_NAME }}{{ page.info.url }}" />
   {% else %}
@@ -89,6 +90,7 @@
   <meta property="og:image:type" content="image/jpeg" />
   <meta property="og:image:width" content="{{width|int}}" />
   <meta property="og:image:height" content="{{height|int}}" />
+{% endif %}
 {% else %}
 {{ super() }}
 {% endif %}
@@ -110,9 +112,20 @@
 
 {% block main %}
 {% if not page.info.pieces %}
-<div class="pm-Frontpage">
+<div class="pm-Doc">
+  <h1>{{ _pagetitle }}</h1>
   <p>
+  {% if page.info.status == NEEDS_MODERATION %}
+    This may take a day or so until a moderator can approve this puzzle.
+  {% elif page.info.status in (REBUILD, IN_RENDER_QUEUE) %}
+    Please check back in a little while. Puzzles take a little longer to render if there are a lot of pieces and puzzles are only rendered one at a time.
+  {% elif page.info.status == RENDERING %}
+    Please check back in a little while. Puzzles take a little longer to render if there are a lot of pieces.
+  {% elif page.info.status == MAINTENANCE %}
+    Please check back in a bit. This puzzle should be available shortly.
+  {% else %}
     This jigsaw puzzle is not available. Please choose a different one.
+  {% endif %}
   </p>
 </div>
 {% else %}

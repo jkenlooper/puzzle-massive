@@ -26,6 +26,22 @@
 {% set width = recent.long if recent.table_width > recent.table_height else recent.short %}
 {% set height = recent.short if recent.table_width > recent.table_height else recent.long %}
 
+{% macro puzzle_view(scale_variant="") %}
+    <div class="pm-Preview-puzzleView {{ scale_variant }}">
+      <div class="u-intrinisicRatio" style="--intrinsicRatio-width: {{width|int}}; --intrinsicRatio-height: {{height|int}};">
+        {%- if recent.url == '' or (feature_hidden_preview and recent.status != COMPLETED) -%}
+          {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
+        {%- else -%}
+          {%- if recent.status == NEEDS_MODERATION -%}
+            {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
+          {%- else -%}
+          <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{recent.url|safe}}" alt="">
+          {%- endif -%}
+        {%- endif -%}
+      </div>
+    </div>
+{% endmacro %}
+
 <div class="pm-Preview">
 
   <div class="pm-Preview-puzzle">
@@ -90,15 +106,9 @@
           {%- if scale == 1 -%}
           <span class="pm-Preview-puzzleViewIcon u-elevation1"><pm-icon>minimize-sprite</pm-icon></span>
           {%- endif -%}
-          <div class="pm-Preview-puzzleView {{ scale_variant }}">
-            <div class="u-intrinisicRatio" style="--intrinsicRatio-width: {{width|int}}; --intrinsicRatio-height: {{height|int}};">
-              {%- if recent.url == '' or (feature_hidden_preview and recent.status != COMPLETED) -%}
-                {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
-              {%- else -%}
-                <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{recent.url|safe}}" alt="">
-              {%- endif -%}
-            </div>
-          </div>
+
+          {{ puzzle_view(scale_variant=scale_variant) }}
+
           <div class="pm-Preview-activePlayerCount">
             <pm-active-player-count
               puzzle-id="{{ recent.puzzle_id }}"></pm-active-player-count>
@@ -122,15 +132,9 @@
       {#- The script is inlined right after the input so no need to wait for DOMContentLoad. -#}
       <script>{% include 'toggle-scale-variant.js.jinja2' %}</script>
     {% else %}
-    <div class="pm-Preview-puzzleView">
-      <div class="u-intrinisicRatio" style="--intrinsicRatio-width: {{width|int}}; --intrinsicRatio-height: {{height|int}};">
-        {%- if recent.url == '' or (feature_hidden_preview and recent.status != COMPLETED) -%}
-          {{ preview_unknown(width=width, height=height, class="pm-Preview-img", style="font-size:3em;") }}
-        {%- else -%}
-          <img class="pm-Preview-img" width="{{width|int}}" height="{{height|int}}" src="{{recent.url|safe}}" alt="">
-        {%- endif -%}
-      </div>
-    </div>
+
+      {{ puzzle_view() }}
+
     {%- endif -%}
 
     {% if recent.link and not (feature_hidden_preview or recent.status == COMPLETED) -%}

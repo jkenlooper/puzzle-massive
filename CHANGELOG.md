@@ -26,6 +26,7 @@ Types of changes
 ## Added
 
 - Unsplash batch upload form on admin page.
+- Site config setting to auto approve submitted puzzles
 
 ## Fixed
 

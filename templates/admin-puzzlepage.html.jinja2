@@ -119,11 +119,15 @@
         };
       }
     </script>
-      {% if slug == 'submitted' %}
+      {% if slug in ('submitted', 'renderqueue') %}
       <div>
         <label>
           <input type="radio" name="action" value="approve" x-model="action">
+          {% if slug == 'submitted' %}
           Approve
+          {% elif slug == 'renderqueue' %}
+          Render
+          {% endif %}
         </label>
       </div>
       {% endif %}
@@ -240,7 +244,7 @@
         {{ montage(puzzles, default_checked=True, itemwidth=384) }}
 
       {% elif slug == 'renderqueue' %}
-        {{ montage(puzzles, default_checked=False, itemwidth=384) }}
+        {{ montage(puzzles, default_checked=True, itemwidth=384) }}
 
       {% elif slug == 'suggested' %}
         {{ suggested_list(puzzles) }}

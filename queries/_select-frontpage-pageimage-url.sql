@@ -14,4 +14,6 @@ join PuzzleInstance as pi on (pi.instance = p.id)
 join Puzzle as p1 on (p1.id = pi.original)
 where pf.name == 'preview_full'
 and p.puzzle_id = :puzzle_id
+AND p.status not in (0, -1, -2, -10, -11, -12, -20, -21)
+-- NEEDS_MODERATION FAILED_LICENSE NO_ATTRIBUTION DELETED_LICENSE DELETED_INAPT DELETED_OLD SUGGESTED SUGGESTED_DONE
 group by p.id;

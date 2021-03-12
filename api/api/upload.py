@@ -26,6 +26,8 @@ from api.database import (
 from api.constants import (
     COMPLETED,
     NEEDS_MODERATION,
+    IN_RENDER_QUEUE,
+    REBUILD,
     PRIVATE,
     PUBLIC,
     CLASSIC,
@@ -36,6 +38,8 @@ from api.tools import check_bg_color
 
 # Not allowing anything other then jpg to protect against potential picture bombs.
 ALLOWED_EXTENSIONS = set(["jpg", "jpeg"])
+
+unsplash_url_regex = r"^(http://|https://)?unsplash.com/photos/([^/]+)"
 
 
 def submit_puzzle(
@@ -57,7 +61,7 @@ def submit_puzzle(
     puzzle_id = None
     cur = db.cursor()
 
-    unsplash_match = re.search(r"^(http://|https://)?unsplash.com/photos/([^/]+)", link)
+    unsplash_match = re.search(unsplash_url_regex, link)
     if link and unsplash_match:
         if not current_app.config.get("UNSPLASH_APPLICATION_ID"):
             cur.close()
@@ -132,8 +136,6 @@ def submit_puzzle(
                 cur.close()
                 abort(400)
 
-        # The preview_full image is only created in the pieceRender process.
-
     d = {
         "puzzle_id": puzzle_id,
         "pieces": pieces,
@@ -143,7 +145,9 @@ def submit_puzzle(
         "bg_color": bg_color,
         "owner": user,
         "queue": QUEUE_NEW,
-        "status": NEEDS_MODERATION,
+        "status": NEEDS_MODERATION
+        if not current_app.config["AUTO_APPROVE_PUZZLES"]
+        else IN_RENDER_QUEUE,
         "permission": permission,
     }
     cur.execute(
@@ -184,6 +188,10 @@ def submit_puzzle(
                 "url": f"/resources/{puzzle_id}/{preview_full_slip}",
             },
         )
+        im = Image.open(os.path.join(puzzle_dir, "original.jpg")).copy()
+        im.thumbnail(size=(384, 384))
+        im.save(os.path.join(puzzle_dir, preview_full_slip))
+        im.close()
 
     classic_variant = cur.execute(
         fetch_query_string("select-puzzle-variant-id-for-slug.sql"), {"slug": CLASSIC}
@@ -311,6 +319,30 @@ class PuzzleUploadView(MethodView):
             secret_message=secret_message,
             features=features,
         )
+
+        # TODO AUTO_APPROVE_PUZZLES only works for non Unsplash photos at the moment.
+        if current_app.config["AUTO_APPROVE_PUZZLES"] and not re.search(
+            unsplash_url_regex, link
+        ):
+            cur = db.cursor()
+            puzzles = rowify(
+                cur.execute(
+                    fetch_query_string("select-puzzles-in-render-queue.sql"),
+                    {"IN_RENDER_QUEUE": IN_RENDER_QUEUE, "REBUILD": REBUILD},
+                ).fetchall(),
+                cur.description,
+            )[0]
+            cur.close()
+            print("found {0} puzzles to render or rebuild".format(len(puzzles)))
+
+            # push each puzzle to artist job queue
+            for puzzle in puzzles:
+                job = current_app.createqueue.enqueue_call(
+                    func="api.jobs.pieceRenderer.render",
+                    args=([puzzle]),
+                    result_ttl=0,
+                    timeout="24h",
+                )
 
         return redirect("/chill/site/front/{0}/".format(puzzle_id), code=303)
 

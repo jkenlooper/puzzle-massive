@@ -29,6 +29,7 @@ shift "$((OPTIND-1))";
 # Defaults
 SECURE_COOKIE_SECRET="chocolate chip"
 MUPPET_CHARACTER="rizzo"
+AUTO_APPROVE_PUZZLES="y"
 PUZZLE_RULES="all"
 PUZZLE_FEATURES="all"
 UNSPLASH_APPLICATION_ID=""
@@ -80,10 +81,17 @@ Enter some random text for secure cookie:
 
 " -i "${SECURE_COOKIE_SECRET}" SECURE_COOKIE_SECRET;
 
+if [ -n "${NEW_PUZZLE_CONTRIB}" ]; then
+    MUPPET_CHARACTER=${NEW_PUZZLE_CONTRIB}
+fi
 read -e -p "
 What is your favorite muppet character (should be one word):
 
 " -i "${MUPPET_CHARACTER}" MUPPET_CHARACTER;
+
+read -e -p "
+Auto approve uploaded puzzles [y/n]:
+" -i "${AUTO_APPROVE_PUZZLES}" AUTO_APPROVE_PUZZLES;
 
 PUZZLE_RULES_HELP_TEXT="
 # Enable rules to prevent players from messing up puzzles for others. These
@@ -283,6 +291,8 @@ SMTP_USER='${SMTP_USER}'
 SMTP_PASSWORD='${SMTP_PASSWORD}'
 EMAIL_SENDER='${EMAIL_SENDER}'
 EMAIL_MODERATOR='${EMAIL_MODERATOR}'
+
+AUTO_APPROVE_PUZZLES='${AUTO_APPROVE_PUZZLES}'
 
 ${PUZZLE_RULES_HELP_TEXT}
 PUZZLE_RULES="${PUZZLE_RULES}"

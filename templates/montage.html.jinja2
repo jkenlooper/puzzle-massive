@@ -5,7 +5,7 @@
     {% for item in puzzles %}
       {% set width = item.long if item.table_width > item.table_height else item.short %}
       {% set height = item.short if item.table_width > item.table_height else item.long %}
-      {% set src = item.original if item.original else item.url %}
+      {% set src = item.url if item.url else '' %}
 
       <div class="pma-Montage-listitem" role="listitem" style="width:{{ itemwidth }}px;">
         <div>

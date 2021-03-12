@@ -281,6 +281,8 @@ PLAYER_BIT_RECENT_ACTIVITY_TIMEOUT = 10
 # 50 pixels. 50 to the left + 50 to the right for example.
 PIECE_JOIN_TOLERANCE = 100
 
+AUTO_APPROVE_PUZZLES=True if "${AUTO_APPROVE_PUZZLES}".lower() == "y" else False
+
 # See PUZZLE_RULES_HELP_TEXT in bin/create_dot_env.sh
 PUZZLE_RULES = set("${PUZZLE_RULES}".split())
 

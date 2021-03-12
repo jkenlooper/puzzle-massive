@@ -226,22 +226,10 @@ def render(*args):
             100,
         ]
 
-        # Create the preview full if it is a new original puzzle. A puzzle is
-        # considered to be 'new' if status was IN_RENDER_QUEUE and not REBUILD.
-        # TODO: use requests.get to get original.jpg and run in another thread
         preview_full_basename = os.path.basename(puzzle["preview_full"])
-        if (
-            original_puzzle_id == puzzle_id
-            and puzzle["status"] == IN_RENDER_QUEUE
-            and preview_full_basename.startswith("preview_full")
-        ):
-            im = Image.open(os.path.join(original_puzzle_dir, "original.jpg")).copy()
-            im.thumbnail(size=(384, 384))
-            im.save(os.path.join(puzzle_dir, preview_full_basename))
-            im.close()
 
         # TODO: get path of original.jpg via the PuzzleFile query
-        # TODO: use requests.get to get original.jpg and run in another thread
+        # TODO: use requests.get to get original.jpg
         imagefile = os.path.join(original_puzzle_dir, "original.jpg")
 
         im = Image.open(imagefile)
