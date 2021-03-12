@@ -5,6 +5,7 @@ template: front.html.jinja2
 value:
   description_txt_file: sitewide-description.txt
   content: _select-frontpage-pageimage-url.sql
+  canonical_path: /
   page:
     content: frontpage-content.html
     description: Massively Multiplayer Online Jigsaw Puzzles
@@ -47,6 +48,7 @@ template: puzzlepage.html.jinja2
 value:
   args: _select-args-for-puzzlepage.sql
   content: _select-frontpage-pageimage-url.sql
+  canonical_path: /
   page:
     description: puzzle assembly
     info: _frontpage-page-info-for-puzzle_id.sql
