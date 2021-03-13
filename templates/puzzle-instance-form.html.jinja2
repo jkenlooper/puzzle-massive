@@ -48,8 +48,8 @@ function puzzleInstanceForm() {
         Image
       </span>
       <div>
-        {% if puzzle.link -%}
-        <small class="pm-Preview-source u-textTruncate">
+        {% if puzzle.link and (not feature_hidden_preview or puzzle.status == COMPLETED) -%}
+        <small class="pm-Preview-source u-textTruncate u-block">
           Picture source:
         <a href="{{puzzle.link}}" rel="nofollow">
           {{puzzle.link|replace('http://', '')|replace('https://', '')}}

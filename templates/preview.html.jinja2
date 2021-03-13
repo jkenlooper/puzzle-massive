@@ -137,14 +137,14 @@
 
     {%- endif -%}
 
-    {% if recent.link and not (feature_hidden_preview or recent.status == COMPLETED) -%}
+    {% if recent.link and (not feature_hidden_preview or recent.status == COMPLETED) -%}
     <p class="pm-Preview-source u-textTruncate">
       Picture source:
       <a href="{{recent.link}}" rel="nofollow">{{recent.link|replace('http://', '')|replace('https://', '')}}</a>
     </p>
     {%- endif %}
 
-    {% if recent.attribution and not (feature_hidden_preview or recent.status == COMPLETED) -%}
+    {% if recent.attribution and (not feature_hidden_preview or recent.status == COMPLETED) -%}
     <p class="pm-Preview-attribution">{{ '[chill route /internal/attribution/{}/ ]'.format(recent.attribution) }}</p>
     {%- endif %}
 

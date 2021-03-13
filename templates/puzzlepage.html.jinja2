@@ -351,7 +351,7 @@
         </label>
       </div>
       <p>
-        {% if puzzle.link %}
+        {% if puzzle.link and (not feature_hidden_preview or puzzle.status == COMPLETED) -%}
         <span class="u-textTruncate">
           Picture source: <a href="{{ puzzle.link }}" rel="nofollow" target="_blank">{{ puzzle.link }}</a>
         </span>
