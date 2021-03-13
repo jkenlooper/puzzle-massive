@@ -154,14 +154,14 @@ class PuzzlePiecesRebuildView(MethodView):
             "api.jobs.pieceRenderer.render",
             [puzzleData],
             result_ttl=0,
-            timeout="24h",
+            job_timeout="24h",
         )
 
         job = current_app.cleanupqueue.enqueue(
             "api.jobs.timeline_archive.archive_and_clear",
             puzzle,
             result_ttl=0,
-            timeout="24h",
+            job_timeout="24h",
         )
 
         purge_route_from_nginx_cache(

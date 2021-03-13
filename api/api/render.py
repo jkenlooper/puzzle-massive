@@ -34,7 +34,7 @@ class RenderPuzzlesView(MethodView):
                 "api.jobs.pieceRenderer.render",
                 [puzzle],
                 result_ttl=0,
-                timeout="24h",
+                job_timeout="24h",
             )
 
         response = make_response(

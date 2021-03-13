@@ -198,7 +198,7 @@ class AutoRebuildCompletedPuzzle(Task):
                             "api.jobs.pieceRenderer.render",
                             [completed_puzzle],
                             result_ttl=0,
-                            timeout="24h",
+                            job_timeout="24h",
                         )
 
                         archive_and_clear(puzzle)

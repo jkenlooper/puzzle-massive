@@ -333,8 +333,6 @@ class InternalPuzzlePiecesView(MethodView):
 
     def delete(self, puzzle_id):
         ""
-        # api/api/jobs/pieceRenderer.py render
-        # internal-puzzle-pieces "delete from Piece where puzzle = :puzzle"
         data = request.get_json(silent=True)
         response_msg = delete_puzzle_pieces(puzzle_id)
 

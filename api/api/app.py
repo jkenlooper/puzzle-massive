@@ -61,6 +61,7 @@ def make_app(config=None, database_writable=False, **kw):
 
     app.cleanupqueue = Queue("puzzle_cleanup", connection=redis_connection)
     app.createqueue = Queue("puzzle_create", connection=redis_connection)
+    app.unsplashqueue = Queue("unsplash_image_fetch", connection=redis_connection)
 
     @app.teardown_appcontext
     def teardown_db(exception):

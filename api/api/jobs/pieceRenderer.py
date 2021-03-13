@@ -157,7 +157,7 @@ def list_all():
                 print("{pieces} pieces, ({id}) {puzzle_id}".format(**puzzle))
 
 
-def render(*args):
+def render(puzzles):
     """
     Render any puzzles that are in the render queue.
     Each puzzle should exist in the Puzzle db with the IN_RENDER_QUEUE or REBUILD status
@@ -168,7 +168,7 @@ def render(*args):
     # TODO: update preview image in PuzzleFile?
     cur = db.cursor()
 
-    for puzzle in args:
+    for puzzle in puzzles:
         current_app.logger.info("Rendering puzzle: {puzzle_id}".format(**puzzle))
 
         result = cur.execute(

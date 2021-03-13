@@ -254,7 +254,7 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
             "api.jobs.pieceRenderer.render",
             [puzzle],
             result_ttl=0,
-            timeout="24h",
+            job_timeout="24h",
         )
 
     cur.close()
@@ -385,7 +385,7 @@ def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
                 "api.jobs.pieceRenderer.render",
                 [puzzleData],
                 result_ttl=0,
-                timeout="24h",
+                job_timeout="24h",
             )
     cur.close()
 

@@ -66,7 +66,9 @@ def transfer(puzzle, cleanup=True, skip_status_update=False, delay=0):
                 PORTAPI=current_app.config["PORTAPI"],
                 puzzle_id=puzzle_data["puzzle_id"],
             ),
-            json={"status": MAINTENANCE,},
+            json={
+                "status": MAINTENANCE,
+            },
         )
         if r.status_code != 200:
             # TODO: Raise an error here and let the caller decide how to handle it.
@@ -148,7 +150,9 @@ def transfer(puzzle, cleanup=True, skip_status_update=False, delay=0):
                 PORTAPI=current_app.config["PORTAPI"],
                 puzzle_id=puzzle_data["puzzle_id"],
             ),
-            json={"status": puzzle_previous_status,},
+            json={
+                "status": puzzle_previous_status,
+            },
         )
         if r.status_code != 200:
             # TODO: Raise an error here and let the caller decide how to handle it.
@@ -188,11 +192,6 @@ def transferAll(cleanup=False):
         memory = redis_connection.info(section="memory")
         if cleanup:
             current_app.logger.info("used_memory: {used_memory_human}".format(**memory))
-
-
-def handle_fail(job, exception, exception_func, traceback):
-    # TODO: handle fail for janitor; see handle_render_fail of pieceRenderer.py
-    current_app.logger.info("Handle janitor fail {0}".format(job.args[0]))
 
 
 if __name__ == "__main__":

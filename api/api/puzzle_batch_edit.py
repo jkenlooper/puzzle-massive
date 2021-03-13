@@ -174,7 +174,7 @@ class AdminPuzzleBatchEditView(MethodView):
                     "api.jobs.pieceRenderer.render",
                     [puzzle],
                     result_ttl=0,
-                    timeout="24h",
+                    job_timeout="24h",
                 )
 
         # TODO: if action in ('reject', 'delete'): #Also apply to any puzzle instances

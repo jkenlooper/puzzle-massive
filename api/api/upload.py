@@ -2,29 +2,23 @@ from __future__ import print_function
 from builtins import bytes
 import os
 import re
-import time
 import uuid
-import threading
-import requests
 import subprocess
 import tempfile
 
-import sqlite3
 from PIL import Image
-from flask import current_app, redirect, request, make_response, abort, json
+from flask import current_app, redirect, request, abort
 from flask.views import MethodView
 from werkzeug.utils import secure_filename, escape
 from werkzeug.urls import url_fix
 
-from api.app import redis_connection, db, make_app
+from api.app import redis_connection, db
 from api.database import (
     rowify,
     fetch_query_string,
-    read_query_file,
     generate_new_puzzle_id,
 )
 from api.constants import (
-    COMPLETED,
     NEEDS_MODERATION,
     IN_RENDER_QUEUE,
     REBUILD,
@@ -56,13 +50,13 @@ def submit_puzzle(
     """
     Submit a puzzle to be reviewed.  Generates the puzzle_id and original.jpg.
     """
-    unsplash_image_thread = None
 
     puzzle_id = None
     cur = db.cursor()
 
     unsplash_match = re.search(unsplash_url_regex, link)
-    if link and unsplash_match:
+    is_unsplash_link = True if link and unsplash_match else False
+    if is_unsplash_link:
         if not current_app.config.get("UNSPLASH_APPLICATION_ID"):
             cur.close()
             abort(400)
@@ -75,14 +69,6 @@ def submit_puzzle(
         puzzle_dir = os.path.join(current_app.config.get("PUZZLE_RESOURCES"), puzzle_id)
         os.mkdir(puzzle_dir)
 
-        # Download the unsplash image
-        unsplash_image_thread = UnsplashPuzzleThread(
-            puzzle_id,
-            filename,
-            description,
-            current_app.config_file,
-            current_app.config.get("SECURE_COOKIE_SECRET"),
-        )
     else:
         if not upload_file:
             cur.close()
@@ -176,8 +162,7 @@ def submit_puzzle(
         },
     )
 
-    # The preview_full image is created in the unsplash_image_thread.
-    if not unsplash_match:
+    if not is_unsplash_link:
         slip = uuid.uuid4().hex[:4]
         preview_full_slip = f"preview_full.{slip}.jpg"
         cur.execute(
@@ -236,9 +221,18 @@ def submit_puzzle(
     db.commit()
     cur.close()
 
-    if unsplash_image_thread:
+    if is_unsplash_link:
+        # TODO: push to artist queue to enqueue_in(timedelta(seconds=10))
+        # https://python-rq.org/docs/scheduling/
         # Go download the unsplash image and update the db
-        unsplash_image_thread.start()
+        job = current_app.unsplashqueue.enqueue(
+            "api.jobs.unsplash_image.add_photo_to_puzzle",
+            puzzle_id,
+            filename,
+            description,
+            result_ttl=0,
+            job_timeout="24h",
+        )
 
     return puzzle_id
 
@@ -341,7 +335,7 @@ class PuzzleUploadView(MethodView):
                     "api.jobs.pieceRenderer.render",
                     [puzzle],
                     result_ttl=0,
-                    timeout="24h",
+                    job_timeout="24h",
                 )
 
         return redirect("/chill/site/front/{0}/".format(puzzle_id), code=303)
@@ -504,121 +498,3 @@ class AdminPuzzleUnsplashBatchView(MethodView):
             )
 
         return redirect("/chill/site/player-puzzle-list/", code=303)
-
-
-class UnsplashPuzzleThread(threading.Thread):
-    def __init__(self, puzzle_id, photo, description, config_file, cookie_secret):
-        threading.Thread.__init__(self)
-        self.puzzle_id = puzzle_id
-        self.photo = photo
-        self.description = description
-
-        self.app = make_app(config=config_file, cookie_secret=cookie_secret)
-
-        self.application_id = (self.app.config.get("UNSPLASH_APPLICATION_ID"),)
-        self.puzzle_resources = self.app.config.get("PUZZLE_RESOURCES")
-        self.application_name = self.app.config.get("UNSPLASH_APPLICATION_NAME")
-
-    def run(self):
-        with self.app.app_context():
-            r = requests.get(
-                "https://api.unsplash.com/photos/%s" % self.photo,
-                params={
-                    "client_id": self.application_id,
-                    "w": 384,
-                    "h": 384,
-                    "fit": "max",
-                },
-                headers={"Accept-Version": "v1"},
-            )
-            data = r.json()
-
-            self.add_puzzle(data)
-
-    def add_puzzle(self, data):
-        cur = db.cursor()
-
-        # Don't use unsplash description if puzzle already has one
-        description = (
-            self.description
-            if self.description
-            else escape(data.get("description", None))
-        )
-
-        puzzle_dir = os.path.join(self.puzzle_resources, self.puzzle_id)
-        filename = os.path.join(puzzle_dir, "original.jpg")
-        f = open(filename, "w+b")
-
-        links = data.get("links")
-        if not links:
-            raise Exception("Unsplash returned no links")
-        download = links.get("download")
-        if not download:
-            raise Exception("Unsplash returned no download")
-        r = requests.get(download)
-        f.write(r.content)
-        f.close()
-
-        r = requests.patch(
-            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
-                HOSTAPI=self.app.config["HOSTAPI"],
-                PORTAPI=self.app.config["PORTAPI"],
-                puzzle_id=self.puzzle_id,
-            ),
-            json={"link": "", "description": description},
-        )
-        if r.status_code != 200:
-            raise Exception(
-                "Puzzle details api error when setting link and description on unsplash photo upload {}".format(
-                    self.puzzle_id
-                )
-            )
-
-        puzzle = rowify(
-            cur.execute(
-                read_query_file("select_puzzle_id_by_puzzle_id.sql"),
-                {"puzzle_id": self.puzzle_id},
-            ).fetchall(),
-            cur.description,
-        )[0][0]["puzzle"]
-
-        # Set preview full url and fallback to small
-        preview_full_url = data.get("urls", {}).get(
-            "custom", data.get("urls", {}).get("small")
-        )
-        # Use the max version to keep the image ratio and not crop it.
-        preview_full_url = re.sub("fit=crop", "fit=max", preview_full_url)
-
-        # Not using url_fix on the user.links.html since it garbles the '@'.
-        r = requests.post(
-            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/files/{file_name}/".format(
-                HOSTAPI=self.app.config["HOSTAPI"],
-                PORTAPI=self.app.config["PORTAPI"],
-                puzzle_id=self.puzzle_id,
-                file_name="preview_full",
-            ),
-            json={
-                "attribution": {
-                    "title": "Photo",
-                    "author_link": "{user_link}?utm_source={application_name}&utm_medium=referral".format(
-                        user_link=data.get("user").get("links").get("html"),
-                        application_name=self.application_name,
-                    ),
-                    "author_name": data.get("user").get("name"),
-                    "source": "{photo_link}?utm_source={application_name}&utm_medium=referral".format(
-                        photo_link=data.get("links").get("html"),
-                        application_name=self.application_name,
-                    ),
-                    "license_name": "unsplash",
-                },
-                "url": preview_full_url,
-            },
-        )
-        if r.status_code != 200:
-            raise Exception(
-                "Puzzle file api error when setting attribution and url for unsplash preview_full {}".format(
-                    self.puzzle_id
-                )
-            )
-
-        cur.close()

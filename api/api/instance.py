@@ -310,7 +310,7 @@ class CreatePuzzleInstanceView(MethodView):
                 "api.jobs.pieceRenderer.render",
                 [puzzle_data],
                 result_ttl=0,
-                timeout="24h",
+                job_timeout="24h",
             )
         else:
             # Copy existing puzzle
