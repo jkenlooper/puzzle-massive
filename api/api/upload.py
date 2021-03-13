@@ -12,7 +12,7 @@ from flask.views import MethodView
 from werkzeug.utils import secure_filename, escape
 from werkzeug.urls import url_fix
 
-from api.app import redis_connection, db
+from api.app import db
 from api.database import (
     rowify,
     fetch_query_string,

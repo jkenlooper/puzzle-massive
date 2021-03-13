@@ -229,9 +229,6 @@
       </div>
 
       <input type="submit" value="Batch Edit">
-      {% if config.UNSPLASH_APPLICATION_ID %}
-      <em>Max count of Unsplash puzzles to approve at a time is 20.</em>
-      {% endif %}
 
       {% if puzzles is mapping -%}
         {% set puzzles = [puzzles] %}
