@@ -8,6 +8,7 @@ import math
 import time
 import sys
 import random
+from datetime import timedelta
 
 from flask import current_app
 from flask_sse import sse
@@ -173,10 +174,20 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
                 raise Exception(
                     "Puzzle details api error when updating puzzle to be complete"
                 )
-            job = current_app.cleanupqueue.enqueue(
+            # Delaying helps avoid issues for players that are moving the last
+            # piece of the puzzle as someone else completes it.
+            delay = (
+                current_app.config["MAX_PAUSE_PIECES_TIMEOUT"]
+                + current_app.config["PIECE_MOVE_TIMEOUT"]
+                + 2
+            )
+            current_app.logger.info(
+                f"Delaying puzzle transfer on completed puzzle ({puzzleData['puzzle_id']}) for {delay} seconds"
+            )
+            job = current_app.cleanupqueue.enqueue_in(
+                timedelta(seconds=delay),
                 "api.jobs.convertPiecesToDB.transfer",
                 puzzle,
-                delay=5,
                 result_ttl=0,
             )
 
