@@ -25,13 +25,12 @@
         unsplashBatchDrop: "",
         unsplashURLList: [],
         getUnsplashURLList() {
-        console.log('getUnsplashURLList')
           const uniqueUnsplashURLs = new Set(this.unsplashBatchDrop.split(/\s+/)
-            .map(sanitizeURL)
             .filter((photoURL) => {
               return photoURL.length > unsplashPhotosBaseURL.length + 3
                 && photoURL.startsWith(unsplashPhotosBaseURL);
             })
+            .map(sanitizeURL)
             .map((unsplashPhotoURL) => {
               return unsplashPhotoURL.replace(normalizePhotoURL, '$1')
             })
@@ -108,7 +107,7 @@
               <input class="u-textCenter" type="color" name="bg_color" value="#484662">
             </td>
             <td>
-              <a x-bind:href="item.href"><small x-text="item.href"></small></a>
+              <a x-bind:href="item.href" target="_blank"><small x-text="item.href"></small></a>
               <input type="hidden" name="link" x-bind:value="item.href">
             </td>
           </tr>
