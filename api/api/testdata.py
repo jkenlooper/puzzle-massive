@@ -3,7 +3,7 @@
 Usage: puzzle-massive-testdata players [--count=<n>] [--config <file>]
        puzzle-massive-testdata puzzles [--count=<n>] [--pieces=<n>] [--min-pieces=<n>] [--size=<s>] [--config <file>]
        puzzle-massive-testdata instances [--count=<n>] [--pieces=<n>] [--min-pieces=<n>] [--config <file>]
-       puzzle-massive-testdata activity [--puzzles=<list>] [--count=<n>] [--config <file>]
+       puzzle-massive-testdata activity [--puzzles=<list>] [--count=<n>] [--delay=<f>] [--config <file>]
        puzzle-massive-testdata --help
 
 Options:
@@ -14,6 +14,7 @@ Options:
     --pieces=<n>      Piece count max [default: 9]
     --min-pieces=<n>  Piece count min [default: 0]
     --puzzles=<list>  Comma separated list of puzzle ids
+    --delay=<n>       Max delay in seconds [default: 0.1]
 
 Subcommands:
     players     - Generate some random player data
@@ -542,11 +543,10 @@ class PuzzlePieces:
 
     def move_random_pieces_with_delay(self, delay=1, max_delay=10):
         while True:
-            # random_delay = round((random() * (max_delay - delay)), 3) + delay
+            random_delay = round((random() * (max_delay - delay)), 3) + delay
             for user_session in self.user_sessions:
                 self.move_random_piece(user_session)
-            # time.sleep(random_delay)
-            time.sleep(delay)
+                time.sleep(random_delay / len(self.user_sessions))
 
     def move_random_piece(self, user_session):
         piece_id = choice(self.movable_pieces)
@@ -663,9 +663,10 @@ average latency: {avg}"""
 
 
 class PuzzleActivityJob:
-    def __init__(self, puzzle_id, ips):
+    def __init__(self, puzzle_id, ips, max_delay=0.1):
         self.puzzle_id = puzzle_id
         self.ips = ips
+        self.max_delay = max_delay
         self.user_sessions = list(map(lambda ip: UserSession(ip=ip), self.ips))
         cur = db.cursor()
         result = cur.execute(
@@ -685,10 +686,10 @@ class PuzzleActivityJob:
             self.puzzle_details["table_width"],
             self.puzzle_details["table_height"],
         )
-        puzzle_pieces.move_random_pieces_with_delay(delay=0.1, max_delay=0.1)
+        puzzle_pieces.move_random_pieces_with_delay(delay=0.1, max_delay=self.max_delay)
 
 
-def simulate_puzzle_activity(puzzle_ids, count=1):
+def simulate_puzzle_activity(puzzle_ids, count=1, max_delay=0.1):
     """"""
     cur = db.cursor()
     result = cur.execute(
@@ -710,7 +711,7 @@ def simulate_puzzle_activity(puzzle_ids, count=1):
         {"count": int(count)},
     ).fetchall()
     if not result:
-        current_app.logger.warn("Add players first")
+        current_app.logger.warning("Add players first")
         return
     players = [x[0] for x in result]
     cur.close()
@@ -720,7 +721,7 @@ def simulate_puzzle_activity(puzzle_ids, count=1):
     jobs.append(multiprocessing.Process(target=puzzle_activity_job_stats.run))
 
     for puzzle_id in _puzzle_ids:
-        puzzle_activity_job = PuzzleActivityJob(puzzle_id, players)
+        puzzle_activity_job = PuzzleActivityJob(puzzle_id, players, max_delay=max_delay)
         jobs.append(multiprocessing.Process(target=puzzle_activity_job.run))
 
     for job in jobs:
@@ -743,6 +744,7 @@ def main():
     max_pieces = int(args.get("--pieces"))
     min_pieces = int(args.get("--min-pieces"))
     puzzles = args.get("--puzzles")
+    delay = float(args.get("--delay"))
 
     dictConfig(
         {
@@ -796,7 +798,7 @@ def main():
             puzzle_ids = []
             if puzzles:
                 puzzle_ids = puzzles.split(",")
-            simulate_puzzle_activity(puzzle_ids, count=count)
+            simulate_puzzle_activity(puzzle_ids, count=count, max_delay=delay)
 
 
 if __name__ == "__main__":
