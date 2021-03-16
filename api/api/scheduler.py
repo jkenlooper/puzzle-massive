@@ -43,6 +43,9 @@ SCHEDULER_INTERVAL = 1
 SCHEDULER_RETRY_INTERVAL = 5 * MINUTE
 scheduler_key = "sc"
 
+# Rate limit the calls to update the database to avoid overwhelming the api.
+API_REQUESTS_LIMIT_RATE = 0.1
+
 
 class Task:
     interval = 5
@@ -53,7 +56,7 @@ class Task:
 
     def __call__(self):
         self.do_task()
-        if self.id == None:
+        if self.id is None:
             # The id may be None if the task is being run manually.  Running
             # a task manually shouldn't change the schedule.
             return
@@ -160,6 +163,7 @@ class AutoRebuildCompletedPuzzle(Task):
                             high, max((low + 400), (completed_puzzle["pieces"] + 400))
                         )
                         pieces = random.randint(low_range, high_range)
+                        sleep(API_REQUESTS_LIMIT_RATE)
                         r = requests.patch(
                             "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
                                 HOSTAPI=current_app.config["HOSTAPI"],
@@ -278,6 +282,7 @@ class UpdateModifiedDateOnPuzzle(Task):
             )
             if result:
                 puzzle_data = result[0]
+                sleep(API_REQUESTS_LIMIT_RATE)
                 r = requests.patch(
                     "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
                         HOSTAPI=current_app.config["HOSTAPI"],
@@ -339,6 +344,7 @@ class UpdatePlayer(Task):
                 )
             )
 
+            sleep(API_REQUESTS_LIMIT_RATE)
             r = requests.post(
                 "http://{HOSTAPI}:{PORTAPI}/internal/tasks/{task_name}/start/".format(
                     HOSTAPI=current_app.config["HOSTAPI"],
@@ -358,6 +364,7 @@ class UpdatePlayer(Task):
                     )
                 )
 
+            sleep(API_REQUESTS_LIMIT_RATE)
             r = requests.post(
                 "http://{HOSTAPI}:{PORTAPI}/internal/tasks/{task_name}/start/".format(
                     HOSTAPI=current_app.config["HOSTAPI"],
@@ -464,6 +471,7 @@ class UpdatePuzzleStats(Task):
                         )
                     )
 
+                    sleep(API_REQUESTS_LIMIT_RATE)
                     r = requests.post(
                         "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/timeline/".format(
                             HOSTAPI=current_app.config["HOSTAPI"],
@@ -562,6 +570,7 @@ class UpdatePuzzleQueue(Task):
                 current_app.logger.debug(
                     "{} has been inactive for more than 7 days".format(puzzle_id)
                 )
+                sleep(API_REQUESTS_LIMIT_RATE)
                 r = requests.patch(
                     "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
                         HOSTAPI=current_app.config["HOSTAPI"],
@@ -616,6 +625,7 @@ class UpdatePuzzleQueue(Task):
                         current_app.logger.debug(
                             "{} is next in queue to be active".format(puzzle_id)
                         )
+                        sleep(API_REQUESTS_LIMIT_RATE)
                         r = requests.patch(
                             "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
                                 HOSTAPI=current_app.config["HOSTAPI"],

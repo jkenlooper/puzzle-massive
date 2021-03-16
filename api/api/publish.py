@@ -242,7 +242,13 @@ class PuzzlePieceTokenView(MethodView):
         mark = request.args.get("mark")
         if not isinstance(mark, str) or len(mark) != 10:
             return make_response(
-                json.jsonify({"msg": "invalid args", "type": "invalid",}), 400
+                json.jsonify(
+                    {
+                        "msg": "invalid args",
+                        "type": "invalid",
+                    }
+                ),
+                400,
             )
         now = int(time.time())
 
@@ -481,10 +487,14 @@ class PuzzlePieceTokenView(MethodView):
             pipe.zrem(piece_token_queue_key, mark)
 
             pipe.set(
-                puzzle_piece_token_key, f"{token}:{mark}", ex=TOKEN_EXPIRE_TIMEOUT,
+                puzzle_piece_token_key,
+                f"{token}:{mark}",
+                ex=TOKEN_EXPIRE_TIMEOUT,
             )
             pipe.set(
-                f"t:{mark}", f"{puzzle}:{piece}:{user}", ex=TOKEN_LOCK_TIMEOUT,
+                f"t:{mark}",
+                f"{puzzle}:{piece}:{user}",
+                ex=TOKEN_LOCK_TIMEOUT,
             )
             pipe.execute()
 
@@ -756,7 +766,8 @@ class PuzzlePiecesMovePublishView(MethodView):
 
         # Check again if piece can be moved and hasn't changed since getting token
         (piece_status, has_y) = redis_connection.hmget(
-            "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), ["s", "y"],
+            "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece),
+            ["s", "y"],
         )
         if has_y == None:
             err_msg = {"msg": "piece not available", "type": "missing"}
@@ -838,7 +849,10 @@ class PuzzlePiecesMovePublishView(MethodView):
         ):
             # Record hot spot (not exact)
             hotspot_area_key = "hotspot:{puzzle}:{user}:{x}:{y}".format(
-                puzzle=puzzle, user=user, x=x - (x % 200), y=y - (y % 200),
+                puzzle=puzzle,
+                user=user,
+                x=x - (x % 200),
+                y=y - (y % 200),
             )
             hotspot_count = redis_connection.incr(hotspot_area_key)
             redis_connection.expire(hotspot_area_key, HOTSPOT_EXPIRE)
@@ -908,7 +922,8 @@ class PuzzlePiecesMovePublishView(MethodView):
                                             f"pc:{puzzle}:{adjacent_piece_id}"
                                         )
                                         pipe.hmget(
-                                            pc_puzzle_adjacent_piece_key, property_list,
+                                            pc_puzzle_adjacent_piece_key,
+                                            property_list,
                                         )
                                     results = pipe.execute()
                                 for (a_id, snapshot_adjacent, updated_adjacent,) in zip(
@@ -1020,7 +1035,10 @@ class PuzzlePiecesMovePublishView(MethodView):
                 "reason": "Puzzle is too active",
                 "timeout": piece_move_timeout,
             }
-            return make_response(json.jsonify(err_msg), 503,)
+            return make_response(
+                json.jsonify(err_msg),
+                503,
+            )
 
         # Check msg for error or if piece can't be moved
         if not isinstance(msg, str):
@@ -1093,8 +1111,8 @@ def serve(config_file, cookie_secret):
         "reload": debug,
         "preload_app": True,
         # Restart workers after this many requests just in case there are memory leaks
-        "max_requests": 1000,
-        "max_requests_jitter": 50,
+        "max_requests": 10000,
+        "max_requests_jitter": 500,
     }
     app = StreamGunicornBase(app, options).run()
 
