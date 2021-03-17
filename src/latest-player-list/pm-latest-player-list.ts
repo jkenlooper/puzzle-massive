@@ -19,6 +19,7 @@ interface TemplateData {
   isReady: boolean;
   playerCount: number;
   players: PlayersByTimeSince;
+  notShownCount: number;
 }
 
 const tag = "pm-latest-player-list";
@@ -31,6 +32,7 @@ customElements.define(
     errorMessage: string = "";
     isReady: boolean = false;
     limit: number = 100;
+    playerCount: number = 0;
     players: Array<PlayerDetail> = [];
     constructor() {
       super();
@@ -75,9 +77,7 @@ customElements.define(
       function playerListWithTimeSince() {
         return html`
           <div class="pm-LatestPlayerList">
-            <h2>
-              ${data.playerCount > 1 ? data.playerCount : ""} Players
-            </h2>
+            <h2>${data.playerCount > 1 ? data.playerCount : ""} Players</h2>
             ${data.players.recent.length > 0
               ? html`
                   <div
@@ -182,6 +182,14 @@ customElements.define(
                   </div>
                 `
               : ""}
+            ${data.notShownCount > 0
+              ? html`
+                  <div>
+                    ...plus ${data.notShownCount} more
+                    player${data.notShownCount > 1 ? "s" : ""} not listed here.
+                  </div>
+                `
+              : ""}
           </div>
         `;
       }
@@ -231,7 +239,7 @@ customElements.define(
         isReady: this.isReady,
         hasError: this.hasError,
         errorMessage: this.errorMessage,
-        playerCount: this.players.length,
+        playerCount: this.playerCount,
         players: this.players.reduce(
           (acc, player) => {
             if (player.isRecent) {
@@ -252,6 +260,7 @@ customElements.define(
             rest: [],
           }
         ),
+        notShownCount: this.playerCount - this.players.length,
       };
     }
 
@@ -263,6 +272,7 @@ customElements.define(
       return puzzleStatsService
         .getPlayerStatsOnPuzzle(this.puzzleId)
         .then((playerStats: PlayerStatsData) => {
+          this.playerCount = playerStats.players.length;
           this.players = playerStats.players.slice(0, this.limit);
         })
         .catch(() => {
