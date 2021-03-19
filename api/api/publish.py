@@ -41,8 +41,7 @@ from rq import Worker, Queue
 import requests
 
 from api.flask_secure_cookie import SecureCookie
-from api.app import db, redis_connection
-from api.database import fetch_query_string, rowify
+from api.app import redis_connection
 from api.jobs.pieceTranslate import attempt_piece_movement
 from api.tools import (
     loadConfig,
@@ -111,13 +110,6 @@ def make_app(config=None, database_writable=False, **kw):
     app.secure_cookie = SecureCookie(app, cookie_secret=kw["cookie_secret"])
 
     app.queries = files_loader("queries")
-
-    # TODO: Still calling db since using user_id_from_ip
-    @app.teardown_appcontext
-    def teardown_db(exception):
-        db = getattr(g, "_database", None)
-        if db is not None:
-            db.close()
 
     # import the views and sockets
     from api.publish import PuzzlePiecesMovePublishView, PuzzlePieceTokenView
@@ -224,11 +216,13 @@ class PuzzlePieceTokenView(MethodView):
 
     def get(self, puzzle_id, piece):
         ip = request.headers.get("X-Real-IP")
-        user = current_app.secure_cookie.get("user") or user_id_from_ip(ip)
+        user = current_app.secure_cookie.get("user") or user_id_from_ip(
+            ip, validate_shared_user=False
+        )
         if user == None:
             err_msg = {
                 "msg": "Please reload the page.",
-                "reason": "The player login that you were using is no longer valid.  This may have happened if another player on your network has selected a bit icon.  Refreshing the page should set a new player login cookie.",
+                "reason": "The player login was not found.",
                 "type": "puzzlereload",
                 "timeout": 300,
             }
@@ -647,7 +641,18 @@ class PuzzlePiecesMovePublishView(MethodView):
             (m_puzzle, m_piece, m_user) = existing_token.split(":")
             user = int(m_user)
         else:
-            user = int(current_app.secure_cookie.get("user") or user_id_from_ip(ip))
+            user = current_app.secure_cookie.get("user") or user_id_from_ip(
+                ip, validate_shared_user=False
+            )
+            if user is None:
+                err_msg = {
+                    "msg": "Please reload the page.",
+                    "reason": "The player login was not found.",
+                    "type": "puzzlereload",
+                    "timeout": 300,
+                }
+                return make_response(json.jsonify(err_msg), 400)
+            user = int(user)
 
         timestamp_now = int(time.time())
 

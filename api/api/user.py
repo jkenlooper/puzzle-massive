@@ -7,6 +7,7 @@ import random
 import time
 import datetime
 import hashlib
+import uuid
 
 from flask import current_app, json, redirect, make_response, request, url_for
 from flask.views import MethodView
@@ -46,22 +47,25 @@ def generate_password():
 
 def generate_user_login():
     "Create a unique login"
-    timestamp = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
-    random_int = random.randint(1, 99999)
-    login = hashlib.sha224(
-        bytes("%s%i" % (timestamp, random_int), "utf-8")
-    ).hexdigest()[:13]
-
-    return login
+    return str(uuid.uuid4())
 
 
-def user_id_from_ip(ip, skip_generate=True):
+def user_id_from_ip(ip, skip_generate=True, validate_shared_user=True):
     current_app.logger.debug(f"user_id_from_ip {ip}")
     # start = time.perf_counter()
-    cur = db.cursor()
 
     shareduser = current_app.secure_cookie.get("shareduser")
-    if shareduser != None:
+    if not validate_shared_user:
+        if shareduser is not None:
+            return int(shareduser)
+        else:
+            # The player will need a shareduser cookie set when skipping the
+            # validate_shared_user check. This is useful for API calls that
+            # should have a cookie set already.
+            return None
+
+    cur = db.cursor()
+    if shareduser is not None:
         # Check if this shareduser is still valid and another user hasn't chosen
         # a bit icon.
         result = cur.execute(
@@ -121,10 +125,12 @@ def user_not_banned(f):
 
     def decorator(*args, **kwargs):
         ip = request.headers.get("X-Real-IP")
-        user = current_app.secure_cookie.get("user") or user_id_from_ip(ip)
+        user = current_app.secure_cookie.get("user") or user_id_from_ip(
+            ip, validate_shared_user=False
+        )
         current_app.logger.debug(f"user_not_banned")
         # start = time.perf_counter()
-        if not user == None:
+        if user is not None:
             user = int(user)
             banneduser_score = redis_connection.zscore("bannedusers", user)
             if banneduser_score:

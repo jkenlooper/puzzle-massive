@@ -21,21 +21,32 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
+## [Unreleased] - ...
+
+Optimize response times when moving pieces.
+
+Migrate script for this update: migrate_from_2_10_1_to_2_10_2.py
+
+### Fixed
+
+- Players without a cookie will be shown a reload page message when attempting
+  to move a piece on a puzzle.
+
 ## [2.10.1] - 2021-03-14
 
-## Added
+### Added
 
 - Unsplash batch upload form on admin page.
 - Site config setting to auto approve submitted puzzles
 
-## Fixed
+### Fixed
 
 - Scripts around provisioning TLS certificates with the Let's Encrypt certbot
   work better when doing blue/green deployments.
 - Auto rebuild query correctly gets the preview_full of the puzzle it is
   rebuilding.
 
-## Changed
+### Changed
 
 - The skill level ranges for puzzles are now configurable via updating the .env
   file.
@@ -53,7 +64,7 @@ If doing an in-place deployment then add `sudo apt -y install python-is-python3`
 
 Migrate script for this update: migrate_from_2_9_2_to_2_10_0.py
 
-## Added
+### Added
 
 - The home page route can be configured to be something different then the most
   recent puzzle.
@@ -65,7 +76,7 @@ Migrate script for this update: migrate_from_2_9_2_to_2_10_0.py
 - (Content) Three letter animal and insect bit icons.
 - (Content) Generated bit icons from emoji characters
 
-## Changed
+### Changed
 
 - Specific content for a site is separated out into chill-data directory and
   'other' directories in templates, queries, and documents.
@@ -74,7 +85,7 @@ Migrate script for this update: migrate_from_2_9_2_to_2_10_0.py
 - Update bit icon expiration extend values
 - Original puzzles that are unlisted can not be rebuilt
 
-## Fixed
+### Fixed
 
 - Styleguide page is added if in development environment
 - Include python-is-python3 to make sure that sudo uses python 3.

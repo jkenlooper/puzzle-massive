@@ -48,10 +48,12 @@ class PingPuzzleView(MethodView):
         response = {"message": "", "name": ""}
 
         user = current_app.secure_cookie.get(u"user") or user_id_from_ip(
-            request.headers.get("X-Real-IP"), skip_generate=True
+            request.headers.get("X-Real-IP"),
+            skip_generate=True,
+            validate_shared_user=False,
         )
 
-        if user == None:
+        if user is None:
             response["message"] = "Player not currently logged in."
             response["name"] = "error"
             return make_response(json.jsonify(response), 400)
@@ -127,16 +129,18 @@ class PingPuzzleView(MethodView):
             args.update(request.form.to_dict(flat=True))
 
         token = args.get("token")
-        if token == None:
+        if token is None:
             response["message"] = "No token"
             response["name"] = "error"
             return make_response(json.jsonify(response), 400)
 
         user = current_app.secure_cookie.get(u"user") or user_id_from_ip(
-            request.headers.get("X-Real-IP"), skip_generate=True
+            request.headers.get("X-Real-IP"),
+            skip_generate=True,
+            validate_shared_user=False,
         )
 
-        if user == None:
+        if user is None:
             response["message"] = "Player not currently logged in."
             response["name"] = "error"
             return make_response(json.jsonify(response), 400)
