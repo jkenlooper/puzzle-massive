@@ -24,7 +24,10 @@ if __name__ == "__main__":
     cur = db.cursor()
 
     ## Update
-    for filename in ("create_user_ip_index.sql",):
+    for filename in [
+        "create_user_ip_index.sql",
+        "create_puzzle_puzzle_id_index.sql",
+    ]:
         for statement in read_query_file(filename).split(";"):
             try:
                 cur.execute(statement)

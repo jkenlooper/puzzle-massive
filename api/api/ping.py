@@ -64,7 +64,7 @@ class PingPuzzleView(MethodView):
 
         # Validate the puzzle_id
         result = cur.execute(
-            fetch_query_string("select-all-from-puzzle-by-puzzle_id.sql"),
+            fetch_query_string("select-id-status-from-puzzle-by-puzzle_id.sql"),
             {"puzzle_id": puzzle_id},
         ).fetchall()
         if not result:
@@ -74,7 +74,7 @@ class PingPuzzleView(MethodView):
             return make_response(json.jsonify(response), 400)
         else:
             (result, col_names) = rowify(result, cur.description)
-            puzzle = result[0].get("puzzle")
+            puzzle = result[0].get("id")
             status = result[0].get("status")
             if status not in (
                 ACTIVE,
@@ -151,7 +151,7 @@ class PingPuzzleView(MethodView):
 
         # Validate the puzzle_id
         result = cur.execute(
-            fetch_query_string("select-all-from-puzzle-by-puzzle_id.sql"),
+            fetch_query_string("select-id-status-from-puzzle-by-puzzle_id.sql"),
             {"puzzle_id": puzzle_id},
         ).fetchall()
         if not result:
@@ -161,7 +161,7 @@ class PingPuzzleView(MethodView):
             return make_response(json.jsonify(response), 400)
         else:
             (result, col_names) = rowify(result, cur.description)
-            puzzle = result[0].get("puzzle")
+            puzzle = result[0].get("id")
             status = result[0].get("status")
             if status not in (
                 ACTIVE,
