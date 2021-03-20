@@ -116,8 +116,8 @@ cat <<HERE
 HERE
 if test $USE_PIECE_PUBLISH_LIMIT -eq 1; then
 cat <<HERELIMITREQZONE
-limit_req_zone \$server_name zone=piece_move_limit:1m rate=100r/s;
-limit_req_zone \$binary_remote_addr zone=piece_token_limit_per_ip:1m rate=20r/s;
+limit_req_zone \$server_name zone=piece_move_limit:1m rate=200r/s;
+limit_req_zone \$binary_remote_addr zone=piece_token_limit_per_ip:1m rate=60r/s;
 HERELIMITREQZONE
 fi
 cat <<HERE
@@ -128,7 +128,7 @@ limit_req_zone \$binary_remote_addr zone=player_email_register_limit_per_ip:1m r
 
 # Most of the time these requests will be cached and not be rate limited.
 # 10 requests a second = 100ms
-limit_req_zone \$server_name zone=chill_site_internal_limit:1m rate=10r/s;
+limit_req_zone \$server_name zone=chill_site_internal_limit:1m rate=400r/s;
 
 proxy_headers_hash_bucket_size 2048;
 
@@ -786,10 +786,10 @@ cat <<HEREORIGINSERVER
 HEREORIGINSERVER
 if test $USE_PIECE_PUBLISH_LIMIT -eq 1; then
 cat <<HEREPIECETOKENLIMIT
-    # Limit rate for an IP to prevent hitting 503 errors. Burst is set at 40
-    # with the 20 requests a second rate. (1000/20) * 40 = 2 seconds. Which will
+    # Limit rate for an IP to prevent hitting 503 errors. Burst is set at 120
+    # with the 60 requests a second rate. (1000/60) * 120 = 2 seconds. Which will
     # give at most a 2 second delay before dropping requests with 429 error.
-    limit_req zone=piece_token_limit_per_ip burst=40;
+    limit_req zone=piece_token_limit_per_ip burst=120;
     limit_req_status 429;
 
 HEREPIECETOKENLIMIT
@@ -813,10 +813,10 @@ cat <<HEREORIGINSERVER
 HEREORIGINSERVER
 if test $USE_PIECE_PUBLISH_LIMIT -eq 1; then
 cat <<HEREPIECEMOVELIMIT
-    # (1000/100) * 400 = 4 seconds max delay on requests before dropping them
-    # with a 503 error. Each subsequent request is delayed 10ms. This rate limit
+    # (1000/200) * 800 = 4 seconds max delay on requests before dropping them
+    # with a 503 error. Each subsequent request is delayed 5ms. This rate limit
     # is server wide, but the token limit is on the IP address.
-    limit_req zone=piece_move_limit burst=400;
+    limit_req zone=piece_move_limit burst=800;
     limit_req_status 503;
 
 HEREPIECEMOVELIMIT
@@ -846,9 +846,10 @@ cat <<HEREORIGINSERVER
   location /chill/site/internal/ {
     # Limit the response rate for the server as these requests can be called
     # multiple times on a page request.
-    # Each request is delayed by 100ms up to 20 seconds (burst=200).
+    # Each request is delayed by 2.5ms up to 4 seconds (burst=1600).
+    # (1000/400) * 1600 = 4 seconds
     # Note that these requests are cached with a long expiration.
-    limit_req zone=chill_site_internal_limit burst=200;
+    limit_req zone=chill_site_internal_limit burst=1600;
     limit_req_status 429;
 
     proxy_pass_header Server;
