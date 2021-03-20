@@ -3,15 +3,19 @@ set -eu -o pipefail
 
 function usage {
   cat <<USAGE
-Usage: ${0} [-h] <dist_file.tar.gz>
+Usage: ${0} [-h] <dist_file.tar.gz> [<migrate_script>]
 
 Options:
   -h            Show help
 
 Quickly deploys a dist file on a server that has already been setup. This
 follows the In-Place Deployment guide and takes a dist file
-(puzzle-massive-2.x.x.tar.gz) as the only argument. A backup is made and placed
-in the /home/dev/ directory in case a rollback needs to happen.
+(puzzle-massive-2.x.x.tar.gz) as the first argument. An optional second argument
+can be added to run any python migrate scripts. A backup is made and placed in
+the /home/dev/ directory in case a rollback needs to happen.
+
+The migrate_script should be a relative path to the script file.  Usually this
+is something like api/api/jobs/migrate_from_2_10_1_to_2_10_2.py
 
 Should be run with sudo.
 USAGE
@@ -36,6 +40,8 @@ if [ ! -e $DIST_FILE ]; then
   echo "The '${DIST_FILE}' should be a dist file."
   exit 1
 fi
+
+MIGRATE_SCRIPT=$2
 
 if [ $(whoami) != root ]; then
   echo "This script should be run as root or use sudo"
@@ -76,9 +82,24 @@ su dev -c "cp puzzle-massive-$(date +%F)/.has-certs /usr/local/src/puzzle-massiv
 
 
 cd /usr/local/src/puzzle-massive;
+if [ -n $MIGRATE_SCRIPT ]; then
+  if [ ! -e $MIGRATE_SCRIPT ]; then
+    echo "The file path to the migrate script is missing: $MIGRATE_SCRIPT";
+    read -n1 -p "Continue with quick deploy? [y/n]" CONFIRM;
+    if test "${CONFIRM}" == 'y'; then
+      MIGRATE_SCRIPT=''
+    else
+      exit 2
+    fi
+  fi
+fi
 su dev -c "python -m venv .";
 
 su dev -c "make ENVIRONMENT=production";
+
+if [ -n $MIGRATE_SCRIPT ]; then
+  su dev -c "./bin/python $MIGRATE_SCRIPT site.cfg";
+fi
 
 # Update any bit icon authors and add new bit icons if applicable
 su dev -c "./bin/python api/api/jobs/insert-or-replace-bit-icons.py";
