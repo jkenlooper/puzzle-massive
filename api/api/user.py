@@ -6,11 +6,10 @@ import string
 import random
 import time
 import datetime
-import hashlib
-import uuid
 
 from flask import current_app, json, redirect, make_response, request, url_for
 from flask.views import MethodView
+import nanoid
 
 from api.app import db, redis_connection
 from api.database import rowify, fetch_query_string
@@ -38,9 +37,7 @@ def generate_password():
     random_int = random.randint(1, 99999)
     # WARNING: Changing the length of the generated password (p_string) will
     # break any saved login links that players may have.
-    p_string = hashlib.sha224(
-        bytes("%s%i" % (timestamp, int(old_div(random_int, 2))), "utf-8")
-    ).hexdigest()[:13]
+    p_string = nanoid.generate(size=13)
     salt = "%s%s" % (random.choice(LETTERS), random.choice(LETTERS))
     password = crypt.crypt(p_string, salt)
 
@@ -49,7 +46,7 @@ def generate_password():
 
 def generate_user_login():
     "Create a unique login"
-    return str(uuid.uuid4())
+    return nanoid.generate(size=13)
 
 
 def user_id_from_ip(ip, skip_generate=True, validate_shared_user=True):
