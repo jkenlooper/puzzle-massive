@@ -246,6 +246,7 @@ class PuzzlePieceTokenView(MethodView):
             )
         now = int(time.time())
 
+        # start = time.perf_counter()
         pzq_key = "pzq:{puzzle_id}".format(puzzle_id=puzzle_id)
         puzzle = redis_connection.hget(pzq_key, "puzzle")
         if not puzzle:
@@ -501,6 +502,8 @@ class PuzzlePieceTokenView(MethodView):
         }
         if snapshot_id:
             response["snap"] = snapshot_id
+        # end = time.perf_counter()
+        # current_app.logger.debug("PuzzlePieceTokenView {}".format(end - start))
         return make_response(json.jsonify(response), 200)
 
 
@@ -636,6 +639,7 @@ class PuzzlePiecesMovePublishView(MethodView):
             }
             return make_response(json.jsonify(err_msg), 400)
 
+        # start = time.perf_counter()
         existing_token = redis_connection.get(f"t:{mark}")
         if validate_token and existing_token:
             (m_puzzle, m_piece, m_user) = existing_token.split(":")
@@ -1067,6 +1071,8 @@ class PuzzlePiecesMovePublishView(MethodView):
             if karma + recent_points <= 0:
                 return _blockplayer()
 
+        # end = time.perf_counter()
+        # current_app.logger.debug("PuzzlePiecesMovePublishView {}".format(end - start))
         return make_response("", 204)
 
 

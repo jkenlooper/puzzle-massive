@@ -72,6 +72,7 @@ class PuzzlePiecesView(MethodView):
         # The 'r' field is the mutable rotation of the piece.
         publicPieceProperties = ("x", "y", "r", "s", "g", "w", "h", "b")
 
+        # start = time.perf_counter()
         with redis_connection.pipeline(transaction=True) as pipe:
             for item in all_pieces:
                 piece = item.get("id")
@@ -80,6 +81,8 @@ class PuzzlePiecesView(MethodView):
                     *publicPieceProperties,
                 )
             allPublicPieceProperties = pipe.execute()
+        # end = time.perf_counter()
+        # current_app.logger.debug("PuzzlePiecesView {}".format(end - start))
 
         # convert the list of lists into list of dicts.  Only want to return the public piece props.
         pieces = [

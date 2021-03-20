@@ -27,6 +27,7 @@ if __name__ == "__main__":
     for filename in [
         "create_user_ip_index.sql",
         "create_puzzle_puzzle_id_index.sql",
+        "create_piece_puzzle_index.sql",
     ]:
         for statement in read_query_file(filename).split(";"):
             try:

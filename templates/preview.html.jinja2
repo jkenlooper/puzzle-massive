@@ -172,17 +172,17 @@
               {%- if recent.permission == PRIVATE and recent.is_original -%}
               {# no rebuild for private puzzles that are original #}
               {% else %}
-              {% if not recent.is_recent -%}
-              <pm-dot-require min="{{ config.MINIMUM_PIECE_COUNT }}" type="none">
-                <a class="Button Button--primary" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/0'.format(recent.puzzle_id)) }}">
-                Rebuild
-                </a>
-              </pm-dot-require>
-              {% endif %}
+                {% if not recent.is_recent -%}
+                  <pm-dot-require min="{{ config.MINIMUM_PIECE_COUNT }}" type="none">
+                    <a class="Button Button--primary" href="/chill{{ url_for('.page_uri', uri='puzzle/{}/scale/0'.format(recent.puzzle_id)) }}">
+                    Rebuild
+                    </a>
+                  </pm-dot-require>
+                {% endif %}
               {% endif %}
             {% endif %}
             {% if recent.status in (ACTIVE, IN_QUEUE, COMPLETED, FROZEN) %}
-            <pm-player-create-puzzle-instance-link view="buttons" create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}"></pm-player-create-puzzle-instance-link>
+              <pm-player-create-puzzle-instance-link view="buttons" create-puzzle-instance-href="/chill{{ url_for('.page_uri', uri='create-puzzle-instance/{}'.format(recent.puzzle_id)) }}"></pm-player-create-puzzle-instance-link>
             {% endif %}
 
             {% if not recent.is_original %}

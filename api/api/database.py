@@ -12,6 +12,7 @@ PUZZLE_CREATE_TABLE_LIST = (
     "create_table_puzzle.sql",
     "create_puzzle_puzzle_id_index.sql",
     "create_table_piece.sql",
+    "create_piece_puzzle_index.sql",
     "create_table_user.sql",
     "create_user_ip_index.sql",
     "create_table_timeline.sql",
