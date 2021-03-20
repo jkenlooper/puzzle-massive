@@ -36,6 +36,8 @@ def generate_password():
     "Create a random string for use as password. Return as cleartext and encrypted."
     timestamp = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
     random_int = random.randint(1, 99999)
+    # WARNING: Changing the length of the generated password (p_string) will
+    # break any saved login links that players may have.
     p_string = hashlib.sha224(
         bytes("%s%i" % (timestamp, int(old_div(random_int, 2))), "utf-8")
     ).hexdigest()[:13]
@@ -357,8 +359,8 @@ class UserLoginView(MethodView):
 
     def get(self, anonymous_login):
         "Set the user cookie if correct anon bit link."
-        login = anonymous_login[:13]
-        password = anonymous_login[13:]
+        login = anonymous_login[:-13]
+        password = anonymous_login[-13:]
         cur = db.cursor()
 
         response = make_response(redirect("/"))
