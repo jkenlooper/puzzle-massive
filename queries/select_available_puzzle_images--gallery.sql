@@ -23,7 +23,7 @@ l.title as license_title,
 
 pfd.puzzle_feature is not null as has_hidden_preview
 
-from Puzzle as p
+from Puzzle as p indexed by puzzle_puzzle_id
 join PuzzleInstance as pi on (pi.instance = p.id)
 join Puzzle as p1 on (pi.original = p1.id)
 join PuzzleFile as pf on (p1.id = pf.puzzle)
