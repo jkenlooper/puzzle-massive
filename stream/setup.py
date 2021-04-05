@@ -16,3 +16,5 @@ setuptools.setup(
     install_requires=["future",],
     entry_points={"console_scripts": ["puzzle-massive-stream = stream.script:main"]},
 )
+
+#lol
