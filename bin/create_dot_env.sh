@@ -28,7 +28,7 @@ shift "$((OPTIND-1))";
 
 # Defaults
 SECURE_COOKIE_SECRET="chocolate chip"
-MUPPET_CHARACTER="rizzo"
+MUPPET_CHARACTER="pepethekingprawn"
 AUTO_APPROVE_PUZZLES="y"
 PUZZLE_RULES="all"
 PUZZLE_FEATURES="all"
@@ -81,9 +81,9 @@ Enter some random text for secure cookie:
 
 " -i "${SECURE_COOKIE_SECRET}" SECURE_COOKIE_SECRET;
 
-if [ -n "${NEW_PUZZLE_CONTRIB}" ]; then
-    MUPPET_CHARACTER=${NEW_PUZZLE_CONTRIB}
-fi
+#if [ -n "${NEW_PUZZLE_CONTRIB}" ]; then
+#    MUPPET_CHARACTER=${NEW_PUZZLE_CONTRIB}
+#fi
 read -e -p "
 What is your favorite muppet character (should be one word):
 
