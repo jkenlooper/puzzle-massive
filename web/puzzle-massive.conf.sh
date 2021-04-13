@@ -436,7 +436,7 @@ cat <<HERECACHESERVERUP
     proxy_pass http://127.0.0.1:${PORTORIGIN};
   }
 
-  location ~* ^/newapi/puzzle-upload/\$ {
+  location ~* ^/newapi/(puzzle-upload|admin/puzzle/promote-suggested)/\$ {
     if (\$hotlinking_policy) {
       return 444;
     }
