@@ -42,14 +42,14 @@ apt-get --yes install python3-pil
 apt-get --yes install libsqlite3-dev
 
 # Dependencies for piecemaker
+apt-get --yes install libspatialindex6
 apt-get --yes install optipng
 curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
 apt-get install -y nodejs
 
 apt-get --yes install potrace libffi-dev libxml2-dev python3-lxml python3-xcffib
-apt-get --yes install libcairo2-dev
-apt-get --yes install python3-cairo
 npm install -g svgo
+npm install -g --unsafe-perm=true svpng
 
 
 apt-get --yes install redis-server

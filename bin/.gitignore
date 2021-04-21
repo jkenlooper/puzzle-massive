@@ -20,7 +20,6 @@
 /rst2*
 /rstpep2*
 /wheel
-/cairosvg
 /createfontdatachunk.py
 /enhancer.py
 /explode.py

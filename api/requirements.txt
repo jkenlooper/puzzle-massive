@@ -1,15 +1,14 @@
 -r ../requirements.txt
-Pillow == 6.2.2
-git+https://github.com/jkenlooper/glue#egg=glue
-pixsaw==0.2.0
+Pillow==8.1.2
+git+https://github.com/jkenlooper/glue.git@master#egg=glue
+#pixsaw==0.2.0
+git+https://github.com/jkenlooper/pixsaw.git@develop#egg=pixsaw
 docopt==0.6.2
-piecemaker==0.3.1
-#git+https://github.com/jkenlooper/piecemaker.git@develop#egg=piecemaker
+#piecemaker==0.3.1
+git+https://github.com/jkenlooper/piecemaker.git@develop#egg=piecemaker
 #pycurl==7.43.0.2
-
 requests==2.21
 responses==0.10.14
-cairosvg==2.4.0
-svgwrite==1.3.1
+svgwrite==1.4.1
 PyYAML
 -e api/
