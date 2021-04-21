@@ -21,6 +21,10 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
+## [Unreleased] - ...
+
+...
+
 ## [2.10.2] - 2021-03-20
 
 Optimize response times when moving pieces.

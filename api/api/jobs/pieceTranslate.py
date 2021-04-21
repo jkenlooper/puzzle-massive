@@ -1,13 +1,7 @@
 from __future__ import division
 from builtins import map
-from builtins import zip
-from builtins import str
-from past.utils import old_div
-import os.path
-import math
 import time
 import sys
-import random
 from datetime import timedelta
 
 from flask import current_app
@@ -17,7 +11,6 @@ from redis.exceptions import WatchError
 
 from api.app import redis_connection
 from api.tools import (
-    init_karma_key,
     purge_route_from_nginx_cache,
 )
 from api.constants import COMPLETED, QUEUE_END_OF_LINE, PRIVATE
@@ -78,6 +71,7 @@ def attempt_piece_movement(ip, user, puzzleData, piece, x, y, r, karma_change, k
 
 def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
     # start = time.perf_counter()
+    now = int(time.time())
 
     def publishMessage(msg, karma_change, karma, points=0, complete=False):
         # print(topic)
@@ -93,7 +87,6 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
             channel="puzzle:{puzzle_id}".format(puzzle_id=puzzleData["puzzle_id"]),
         )
 
-        now = int(time.time())
         points_key = "points:{user}".format(user=user)
         recent_points = int(redis_connection.get(points_key) or 0)
         if karma_change < 0 and karma <= 0 and recent_points > 0:
@@ -227,7 +220,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
         pc_puzzle_piece_key,
         ["s", "y"],
     )
-    if has_y == None:
+    if has_y is None:
         err_msg = {"msg": "piece not available", "type": "missing"}
         return (err_msg, 0)
 

@@ -120,7 +120,7 @@ class PieceMutateProcess:
                     > 0
                 ):
                     msg = self._reset_pieces_in_proximity_stacked_status(pipe)
-                if self.can_join_adjacent_piece == None:
+                if self.can_join_adjacent_piece is None:
                     msg += self._move_pieces(pipe)
                     status = "moved"
                 else:
@@ -241,8 +241,10 @@ class PieceMutateProcess:
                 )
                 > 0
             ):
-                self.pieces_in_proximity_to_target = self._get_pieces_in_proximity_to_target(
-                    pcx_puzzle, pcy_puzzle, pcfixed_puzzle, pcg_puzzle_g
+                self.pieces_in_proximity_to_target = (
+                    self._get_pieces_in_proximity_to_target(
+                        pcx_puzzle, pcy_puzzle, pcfixed_puzzle, pcg_puzzle_g
+                    )
                 )
             # Get Adjacent Piece Properties
             self.adjacent_piece_properties = dict(
@@ -274,7 +276,8 @@ class PieceMutateProcess:
                     puzzle=self.puzzle, grouped_piece=grouped_piece
                 )
                 pipe.hmget(
-                    pc_puzzle_grouped_piece_key, grouped_piece_property_list,
+                    pc_puzzle_grouped_piece_key,
+                    grouped_piece_property_list,
                 )
                 self.watched_keys.add(pc_puzzle_grouped_piece_key)
 
@@ -339,7 +342,7 @@ class PieceMutateProcess:
         ) in self.adjacent_piece_properties.items():
             # Skip if adjacent piece in same group
             if (
-                piece_group != None
+                piece_group is not None
                 and self.adjacent_piece_group_ids.get(adjacent_piece) == piece_group
             ):
                 continue
@@ -350,9 +353,6 @@ class PieceMutateProcess:
             targetX = offset_from_piece_x + self.target_x
             targetY = offset_from_piece_y + self.target_y
 
-            xlow = targetX - tolerance
-            xhigh = targetX + tolerance
-
             # Skip If the adjacent piece is not within range of the targetX and targetY
             if not (
                 (adjacent_piece_props["x"] > (targetX - tolerance))
@@ -360,8 +360,6 @@ class PieceMutateProcess:
             ):
                 continue
 
-            ylow = targetY - tolerance
-            yhigh = targetY + tolerance
             if not (
                 (adjacent_piece_props["y"] > (targetY - tolerance))
                 and (adjacent_piece_props["y"] < (targetY + tolerance))
@@ -406,7 +404,8 @@ class PieceMutateProcess:
 
         # Move the piece
         pipe.hmset(
-            self.pc_puzzle_piece_key, {"x": self.target_x, "y": self.target_y},
+            self.pc_puzzle_piece_key,
+            {"x": self.target_x, "y": self.target_y},
         )
         pipe.zadd(
             "pcx:{puzzle}".format(puzzle=self.puzzle), {self.piece: self.target_x}
@@ -486,7 +485,9 @@ class PieceMutateProcess:
         # Set immovable status if adjacent piece is immovable
         if adjacent_piece_props.get("s") == "1":
             pipe.hset(
-                self.pc_puzzle_piece_key, "s", "1",
+                self.pc_puzzle_piece_key,
+                "s",
+                "1",
             )
             pipe.sadd("pcfixed:{puzzle}".format(puzzle=self.puzzle), self.piece)
             lines.append(formatPieceMovementString(self.piece, s="1"))
@@ -506,7 +507,9 @@ class PieceMutateProcess:
             self.can_join_adjacent_piece,
         )
         pipe.hset(
-            self.pc_puzzle_piece_key, "g", new_piece_group,
+            self.pc_puzzle_piece_key,
+            "g",
+            new_piece_group,
         )
         pipe.hset(
             "pc:{puzzle}:{adjacent_piece}".format(
@@ -581,7 +584,10 @@ class PieceMutateProcess:
         return adjacent_piece_group_ids
 
     def _update_grouped_pieces_positions(
-        self, pipe, new_group=None, status=None,
+        self,
+        pipe,
+        new_group=None,
+        status=None,
     ):
         "Update all other pieces x,y in group to the offset, if new_group then assign them to the new_group"
 

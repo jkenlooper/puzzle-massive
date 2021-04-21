@@ -1,11 +1,11 @@
 from __future__ import absolute_import
 from builtins import zip
-from flask import abort, json, current_app, request, make_response
+from flask import abort, json, make_response
 from flask.views import MethodView
 
 from .app import db, redis_connection
 from .database import fetch_query_string, rowify
-from .user import user_not_banned, user_id_from_ip
+from .user import user_not_banned
 
 encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
@@ -19,8 +19,6 @@ class PuzzlePieceView(MethodView):
 
     def get(self, puzzle_id, piece):
 
-        ip = request.headers.get("X-Real-IP")
-        user = int(current_app.secure_cookie.get(u"user") or user_id_from_ip(ip))
         cur = db.cursor()
         result = cur.execute(
             fetch_query_string("select_puzzle_id_by_puzzle_id.sql"),
@@ -35,7 +33,6 @@ class PuzzlePieceView(MethodView):
         (result, col_names) = rowify(result, cur.description)
         puzzle = result[0].get("puzzle")
         cur.close()
-        db.commit()
 
         # Only allow if there is data in redis
         if not redis_connection.zscore("pcupdates", puzzle):

@@ -1,17 +1,14 @@
 from __future__ import print_function
 from __future__ import absolute_import
 from builtins import zip
-import time
 import uuid
 
 from flask import current_app, make_response, request, abort, json
 
 from flask.views import MethodView
-from werkzeug.exceptions import HTTPException
 
 from .app import db, redis_connection
 from .database import fetch_query_string, rowify
-from .tools import formatPieceMovementString
 from .jobs.convertPiecesToRedis import convert
 
 from .constants import COMPLETED
@@ -25,7 +22,6 @@ class PuzzlePiecesView(MethodView):
 
     def get(self, puzzle_id):
         ""
-        timestamp_now = int(time.time())
         cur = db.cursor()
         result = cur.execute(
             fetch_query_string("select_viewable_puzzle_id.sql"),
@@ -34,7 +30,6 @@ class PuzzlePiecesView(MethodView):
         if not result:
             # 404 if puzzle or piece does not exist
             cur.close()
-            db.commit()
             abort(404)
 
         (result, col_names) = rowify(result, cur.description)

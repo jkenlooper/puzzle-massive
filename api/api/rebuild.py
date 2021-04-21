@@ -2,9 +2,8 @@ from __future__ import absolute_import
 from __future__ import division
 from past.utils import old_div
 import os
-from random import randint
 
-from flask import current_app, redirect, make_response, abort, request
+from flask import current_app, redirect, abort, request
 from flask.views import MethodView
 from PIL import Image
 
@@ -14,7 +13,6 @@ from api.database import rowify, fetch_query_string
 from api.constants import REBUILD, COMPLETED, QUEUE_REBUILD, PRIVATE
 
 from api.user import user_id_from_ip, user_not_banned
-from api.jobs.convertPiecesToRedis import convert
 from api.tools import deletePieceDataFromRedis, purge_route_from_nginx_cache
 
 # From pieceRenderer

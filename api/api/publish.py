@@ -15,7 +15,6 @@ from __future__ import absolute_import
 from __future__ import division
 from builtins import str
 from builtins import map
-from past.utils import old_div
 
 from gevent import monkey
 
@@ -24,20 +23,16 @@ monkey.patch_all()
 import datetime
 import sys
 import time
-import random
 import uuid
-from subprocess import Popen
 import multiprocessing
 from docopt import docopt
 import os
 
 import gunicorn.app.base
-from flask import current_app, make_response, request, json, url_for, redirect, Flask, g
+from flask import current_app, make_response, request, json, Flask
 from flask.views import MethodView
-from werkzeug.exceptions import HTTPException
 from flask_sse import sse
-from redis.exceptions import WatchError
-from rq import Worker, Queue
+from rq import Queue
 import requests
 
 from api.flask_secure_cookie import SecureCookie
@@ -45,7 +40,6 @@ from api.app import redis_connection
 from api.jobs.pieceTranslate import attempt_piece_movement
 from api.tools import (
     loadConfig,
-    formatPieceMovementString,
     formatBitMovementString,
     init_karma_key,
     files_loader,
@@ -57,8 +51,6 @@ from api.constants import (
 )
 
 # from jobs import pieceMove
-from api.jobs import pieceTranslate
-from api.piece_mutate import PieceMutateError
 from api.user import user_id_from_ip, user_not_banned, increase_ban_time
 
 HOUR = 3600  # hour in seconds
@@ -287,7 +279,7 @@ class PuzzlePieceTokenView(MethodView):
             redis_connection.hgetall(pc_puzzle_piece_key)
         )
 
-        if piece_properties.get("y") == None:
+        if piece_properties.get("y") is None:
             # 400 if puzzle does not exist or piece is not found
             # Only puzzles in ACTIVE state can be mutated
             err_msg = {
@@ -329,7 +321,6 @@ class PuzzlePieceTokenView(MethodView):
         # Snapshot of adjacent pieces at time of token request
         snapshot_id = None
         adjacent_pieces_list = _get_adjacent_pieces_list(piece_properties)
-        adjacent_piece_properties = None
         adjacent_property_list = ["x", "y", "r", "g", "s", str(piece)]
         pzq_current_key = "pzq_current:{puzzle}".format(puzzle=puzzle)
         results = []
@@ -363,7 +354,7 @@ class PuzzlePieceTokenView(MethodView):
             # skip any that don't have offsets (adjacent edge piece)
             if not a_props.get(str(piece)):
                 continue
-            if a_props.get("g") == None:
+            if a_props.get("g") is None:
                 a_props["g"] = ""
             snapshot.append(
                 "_".join(
@@ -428,7 +419,7 @@ class PuzzlePieceTokenView(MethodView):
             pipe.expire(piece_token_queue_key, TOKEN_LOCK_TIMEOUT + 5)
             (queue_rank, _) = pipe.execute()
 
-        if queue_rank == None:
+        if queue_rank is None:
             # Append this player to a queue for getting the next token. This
             # will prevent the player with the lock from continually locking the
             # same piece.
@@ -658,8 +649,6 @@ class PuzzlePiecesMovePublishView(MethodView):
                 return make_response(json.jsonify(err_msg), 400)
             user = int(user)
 
-        timestamp_now = int(time.time())
-
         pzq_key = "pzq:{puzzle_id}".format(puzzle_id=puzzle_id)
         pzq_fields = [
             "puzzle",
@@ -670,7 +659,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         ]
         puzzle_data = dict(zip(pzq_fields, redis_connection.hmget(pzq_key, pzq_fields)))
         puzzle = puzzle_data.get("puzzle")
-        if puzzle == None:
+        if puzzle is None:
             req = requests.get(
                 "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
                     HOSTAPI=current_app.config["HOSTAPI"],
@@ -778,7 +767,7 @@ class PuzzlePiecesMovePublishView(MethodView):
             "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece),
             ["s", "y"],
         )
-        if has_y == None:
+        if has_y is None:
             err_msg = {"msg": "piece not available", "type": "missing"}
             return make_response(json.jsonify(err_msg), 404)
 
