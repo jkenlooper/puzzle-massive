@@ -48,12 +48,14 @@ let lastInstanceId = 0;
 interface RenderedShadowPieces {
   [index: number]: PieceData;
 }
+
 customElements.define(
   tag,
   class PmPuzzlePieces extends HTMLElement {
     static get _instanceId(): string {
       return `${tag} ${lastInstanceId++}`;
     }
+
     private instanceId: string;
     private puzzleId: string;
     private maxPausePiecesTimeout: number;
@@ -78,6 +80,7 @@ customElements.define(
     private renderedShadowPieces: RenderedShadowPieces = {};
     private isWaitingOnMoveRequestTimeout: number | undefined;
     private removeShadowedPiecesTimeout: number | undefined;
+
     //private pauseStop: number = 0;
 
     constructor() {
@@ -401,6 +404,26 @@ customElements.define(
             this.pieceFollow,
             false
           );
+          document.addEventListener("keydown", (event) => {
+            if (event.defaultPrevented) {
+              return; // Do nothing if the event was already processed
+            }
+            if (event.key == "Enter") {
+              this.$slabMassive.removeEventListener(
+                "mousemove",
+                this.pieceFollow,
+                false
+              );
+              // Stop listening for any updates to this piece
+              puzzleService.unsubscribe(
+                "piece/move/rejected",
+                `pieceFollow ${this.id} ${this.instanceId}`
+              );
+
+              // Just unselect the piece so the next on tap doesn't move it
+              puzzleService.unSelectPiece(this.id);
+            }
+          });
           // subscribe to piece/update to unfollow if active piece is updated
           streamService.subscribe(
             "piece/update",
@@ -661,6 +684,7 @@ customElements.define(
       //  });
       //}, 100);
     }
+
     removeShadowPieces() {
       const shadowPieces = this.$collection.querySelectorAll(".s");
       for (const sp of shadowPieces.values()) {
@@ -718,12 +742,12 @@ customElements.define(
         // let sat = hsl[1]
         let light = hsl[2];
         /*
-        let opposingHSL = [
-          hue > 180 ? hue - 180 : hue + 180,
-          100 - sat,
-          100 - light
-        ]
-        */
+              let opposingHSL = [
+                hue > 180 ? hue - 180 : hue + 180,
+                100 - sat,
+                100 - light
+              ]
+              */
         let contrast = light > 50 ? 0 : 100;
         this.$container.style.color = `hsla(0,0%,${contrast}%,1)`;
       }
@@ -753,6 +777,7 @@ customElements.define(
     static get observedAttributes() {
       return [];
     }
+
     // Fires when an attribute was added, removed, or updated.
     //attributeChangedCallback(attrName, oldVal, newVal) {}
 
