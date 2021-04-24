@@ -454,6 +454,8 @@ customElements.define(
       if ($_piece !== null && karmaData.karmaChange) {
         if (karmaData.karmaChange > 0) {
           $_piece.classList.add("is-up");
+          var audio = new Audio("https://www.fesliyanstudios.com/play-mp3/387");
+          audio.play();
         } else if (karmaData.karmaChange < 0 && karmaData.karma < 18) {
           // Only show is-down icon if risk of player being blocked.
           $_piece.classList.add("is-down");
