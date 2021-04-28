@@ -29,6 +29,8 @@ echo "ExecStart=${SRCDIR}bin/chill serve --readonly"
 fi
 cat <<HERE
 Restart=on-failure
+# Restart the chill app every 26 hours because of a memory leak somewhere
+RuntimeMaxSec=93600
 
 [Install]
 WantedBy=multi-user.target
