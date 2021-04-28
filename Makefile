@@ -101,6 +101,10 @@ bin/puzzle-massive-stream: stream/requirements.txt requirements.txt stream/setup
 	$(PIP) install --upgrade --upgrade-strategy eager -r $<
 	touch $@;
 
+bin/puzzle-massive-enforcer: enforcer/requirements.txt requirements.txt enforcer/setup.py
+	$(PIP) install wheel
+	$(PIP) install --upgrade --upgrade-strategy eager -r $<
+	touch $@;
 
 objects += api/puzzle-massive-api.service
 api/puzzle-massive-api.service: api/puzzle-massive-api.service.sh
@@ -130,6 +134,9 @@ objects += stream/puzzle-massive-stream.service
 stream/puzzle-massive-stream.service: stream/puzzle-massive-stream.service.sh
 	./$< $(project_dir) > $@
 
+objects += enforcer/puzzle-massive-enforcer.service
+enforcer/puzzle-massive-enforcer.service: enforcer/puzzle-massive-enforcer.service.sh
+	./$< $(project_dir) > $@
 
 objects += api/puzzle-massive-cache-purge.path
 api/puzzle-massive-cache-purge.path: api/puzzle-massive-cache-purge.path.sh
@@ -173,7 +180,7 @@ puzzle-massive-$(TAG).tar.gz: bin/dist.sh
 ######
 
 .PHONY: all
-all: bin/chill bin/puzzle-massive-api bin/puzzle-massive-divulger bin/puzzle-massive-stream media $(objects)
+all: bin/chill bin/puzzle-massive-api bin/puzzle-massive-divulger bin/puzzle-massive-stream bin/puzzle-massive-enforcer media $(objects)
 
 .PHONY: install
 install:
@@ -189,6 +196,7 @@ clean:
 	$(PIP) uninstall --yes -r api/requirements.txt
 	$(PIP) uninstall --yes -r divulger/requirements.txt
 	$(PIP) uninstall --yes -r stream/requirements.txt
+	$(PIP) uninstall --yes -r enforcer/requirements.txt
 	for mk in $(source_media_mk); do make -f $${mk} clean; done;
 
 # Remove files placed outside of src directory and uninstall app.

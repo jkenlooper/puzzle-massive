@@ -19,6 +19,7 @@ if test "${COMMAND}" == 'start'; then
     # Start the puzzle-massive-api first since other services depend on it.
     systemctl start puzzle-massive-api;
     systemctl start puzzle-massive-stream;
+    systemctl start puzzle-massive-enforcer;
     systemctl start puzzle-massive-publish;
     systemctl start puzzle-massive-scheduler;
     systemctl start puzzle-massive-chill;
@@ -43,6 +44,7 @@ elif test "${COMMAND}" == 'stop'; then
     fi
     # Stop the puzzle-massive-api last since other services depend on it.
     systemctl stop puzzle-massive-api;
+    systemctl stop puzzle-massive-enforcer;
     systemctl reload nginx;
 
 else
@@ -50,6 +52,7 @@ else
     puzzle-massive-api \
     puzzle-massive-publish \
     puzzle-massive-stream \
+    puzzle-massive-enforcer \
     puzzle-massive-artist \
     puzzle-massive-scheduler \
     puzzle-massive-backup-db.timer \

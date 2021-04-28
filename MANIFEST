@@ -49,6 +49,11 @@ stream/stream
 stream/puzzle-massive-stream.service.sh
 stream/requirements.txt
 stream/setup.py
+enforcer/README.md
+enforcer/enforcer
+enforcer/puzzle-massive-enforcer.service.sh
+enforcer/requirements.txt
+enforcer/setup.py
 documents
 media
 package.json

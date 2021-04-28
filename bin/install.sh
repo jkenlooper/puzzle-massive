@@ -186,6 +186,10 @@ cp stream/puzzle-massive-stream.service "${SYSTEMDDIR}"
 systemctl start puzzle-massive-stream || echo "can't start service"
 systemctl enable puzzle-massive-stream || echo "can't enable service"
 
+cp enforcer/puzzle-massive-enforcer.service "${SYSTEMDDIR}"
+systemctl start puzzle-massive-enforcer || echo "can't start service"
+systemctl enable puzzle-massive-enforcer || echo "can't enable service"
+
 cp api/puzzle-massive-publish.service "${SYSTEMDDIR}"
 systemctl start puzzle-massive-publish || echo "can't start service"
 systemctl enable puzzle-massive-publish || echo "can't enable service"

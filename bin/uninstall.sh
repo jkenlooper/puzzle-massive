@@ -85,6 +85,10 @@ systemctl stop puzzle-massive-stream
 systemctl disable puzzle-massive-stream
 rm -f "${SYSTEMDDIR}puzzle-massive-stream.service";
 
+systemctl stop puzzle-massive-enforcer
+systemctl disable puzzle-massive-enforcer
+rm -f "${SYSTEMDDIR}puzzle-massive-enforcer.service";
+
 # Skipping divulger since it is not needed at the moment.
 #systemctl stop puzzle-massive-divulger
 #systemctl disable puzzle-massive-divulger

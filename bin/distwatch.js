@@ -41,6 +41,7 @@ wp.watch(
     "root",
     "source-media",
     "stream/stream",
+    "enforcer/enforcer",
     "templates",
     "web",
   ],

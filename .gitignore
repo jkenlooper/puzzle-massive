@@ -26,6 +26,7 @@
 /api/puzzle-massive-backup-db.service
 /divulger/puzzle-massive-divulger.service
 /stream/puzzle-massive-stream.service
+/enforcer/puzzle-massive-enforcer.service
 /db
 /db.dump.sql
 /dist/
