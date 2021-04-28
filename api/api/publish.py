@@ -846,11 +846,12 @@ class PuzzlePiecesMovePublishView(MethodView):
             > 0
         ):
             # Record hot spot (not exact)
+            # TODO: hot spot region should be based on piece size and puzzle size
             hotspot_area_key = "hotspot:{puzzle}:{user}:{x}:{y}".format(
                 puzzle=puzzle,
                 user=user,
-                x=x - (x % 200),
-                y=y - (y % 200),
+                x=x - (x % 40),
+                y=y - (y % 40),
             )
             hotspot_count = redis_connection.incr(hotspot_area_key)
             redis_connection.expire(hotspot_area_key, HOTSPOT_EXPIRE)
@@ -946,6 +947,7 @@ class PuzzlePiecesMovePublishView(MethodView):
                                             int, snapshot_adjacent[:2]
                                         )
                                         # Check if the x,y is within range of the adjacent piece that has moved
+                                        # TODO: use the pieces adjacent piece range bbox when setting piece_join_tolerance
                                         piece_join_tolerance = current_app.config[
                                             "PIECE_JOIN_TOLERANCE"
                                         ]

@@ -171,6 +171,8 @@ class PieceMutateProcess:
             self.origin_r = self.piece_properties.get("r")
             self._update_target_position(self.target_x, self.target_y)
 
+            # TODO: tolerance to pieces within proximity should be based on the
+            # piece adjacent range.
             tolerance = int(100 / 2)
 
             # pcx_puzzle
@@ -241,6 +243,7 @@ class PieceMutateProcess:
                 )
                 > 0
             ):
+                # TODO
                 self.pieces_in_proximity_to_target = (
                     self._get_pieces_in_proximity_to_target(
                         pcx_puzzle, pcy_puzzle, pcfixed_puzzle, pcg_puzzle_g
@@ -537,6 +540,7 @@ class PieceMutateProcess:
         # TODO:  This is only using the x and y coordinates and not the actual
         # piece footprint. If custom piece shapes are used that have different
         # widths and heights, then a different method will need to be used.
+        # TODO: Check this pieces in proximity to target with custom piece size
         pieces_in_proximity_to_target = set.intersection(
             set(pcx_puzzle), set(pcy_puzzle)
         )

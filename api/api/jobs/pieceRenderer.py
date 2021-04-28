@@ -12,7 +12,6 @@ Options:
 
 from __future__ import print_function
 from __future__ import division
-from builtins import map
 from builtins import str
 import os
 import json
@@ -49,8 +48,8 @@ from api.constants import (
 
 #  <policy domain="resource" name="disk" value="1GiB"/>
 
-MIN_PIECE_SIZE = 35
-MAX_PIECE_SIZE = 71
+MIN_PIECE_SIZE = 45
+MAX_PIECE_SIZE = 91
 
 
 def handle_render_fail(job, exception, exception_func, traceback):
