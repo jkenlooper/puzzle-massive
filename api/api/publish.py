@@ -781,6 +781,16 @@ class PuzzlePiecesMovePublishView(MethodView):
             }
             return make_response(json.jsonify(err_msg), 400)
 
+        # TODO: publish the piece movement to enforcer so it can track hot spot
+        # and piece stacking stuff.
+        if (
+            len({"all", "hot_spot"}.intersection(current_app.config["PUZZLE_RULES"]))
+            > 0
+        ):
+            redis_connection.publish(
+                "enforcer_hotspot", f"{user}:{puzzle}:{piece}:{x}:{y}"
+            )
+
         points_key = "points:{user}".format(user=user)
         recent_points = int(redis_connection.get(points_key) or "0")
 
