@@ -16,7 +16,6 @@ Subcommands:
 import os
 
 from docopt import docopt
-from daemonize import Daemonize
 
 from enforcer.app import make_app
 
@@ -33,11 +32,6 @@ def main():
     app = make_app(config_file)
 
     if args["start"]:
-        pid = "EnforcerApp.pid"
-        daemon = Daemonize(app="EnforcerApp", pid=pid, action=app.start)
-        daemon.start()
-
-    if args["fg"]:
         # TODO: handle a sys exit stuff to do a graceful shutdown
         app.start()
 

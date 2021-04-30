@@ -16,8 +16,7 @@ Description=Enforcer for Puzzle Massive
 After=multi-user.target
 
 [Service]
-Type=forking
-PIDFile=${SRCDIR}EnforcerApp.pid
+Type=exec
 User=dev
 Group=dev
 WorkingDirectory=$SRCDIR

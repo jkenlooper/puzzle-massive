@@ -211,7 +211,7 @@ class PuzzlePieceTokenView(MethodView):
         user = current_app.secure_cookie.get("user") or user_id_from_ip(
             ip, validate_shared_user=False
         )
-        if user == None:
+        if user is None:
             err_msg = {
                 "msg": "Please reload the page.",
                 "reason": "The player login was not found.",
@@ -308,6 +308,11 @@ class PuzzlePieceTokenView(MethodView):
                 blockedplayers_expires, blockedplayers_expires - now
             )
             return make_response(json.jsonify(err_msg), 429)
+
+        redis_connection.publish(
+            "enforcer_token_request",
+            f"{user}:{puzzle}:{piece}:{piece_properties['x']}:{piece_properties['y']}",
+        )
 
         def move_bit_icon_to_piece(x, y):
             # Claim the piece by showing the bit icon next to it.
@@ -788,7 +793,7 @@ class PuzzlePiecesMovePublishView(MethodView):
             > 0
         ):
             redis_connection.publish(
-                "enforcer_hotspot", f"{user}:{puzzle}:{piece}:{x}:{y}"
+                f"enforcer_hotspot:{puzzle}", f"{user}:{piece}:{x}:{y}"
             )
 
         points_key = "points:{user}".format(user=user)

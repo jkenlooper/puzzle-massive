@@ -62,9 +62,9 @@ def get_redis_connection(config, decode_responses=True):
 
 
 def formatPieceMovementString(piece_id, x="", y="", r="", g="", s="", **args):
-    if s == None:
+    if s is None:
         s = ""
-    if g == None:
+    if g is None:
         g = ""
     return u":{piece_id}:{x}:{y}:{r}:{g}:{s}".format(**locals())
 

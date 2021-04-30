@@ -1,3 +1,2 @@
 -r ../requirements.txt
-daemonize==2.5.0
 -e enforcer/
