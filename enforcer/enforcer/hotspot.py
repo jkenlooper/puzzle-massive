@@ -14,7 +14,7 @@ class HotSpot:
         logger.debug("process puzzle stuff")
         logger.debug(message)
         data = message.get("data", b"").decode()
-        print(data)
+        logger.debug(data)
         self.process(data)
 
     def process(self, data):

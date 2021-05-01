@@ -1,14 +1,10 @@
 from time import sleep
 import logging
+from multiprocessing import Pool
 
 from api.tools import loadConfig, get_redis_connection
 import enforcer.process
 
-# TODO: import multiprocessing-logging to have sub processes show logs
-
-# TODO: use multiprocessing to create a new process for each active puzzle?
-# import multiprocessing
-from multiprocessing import Pool
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -42,18 +38,27 @@ class EnforcerApp:
         (_, puzzle, _, _, _) = map(int, data.split(":"))
         if puzzle not in self.active_puzzles:
             logger.debug(f"new active puzzle {puzzle}")
-            process = enforcer.process.Process(self.config, puzzle)
             self.active_puzzles.add(puzzle)
+
+            def cb(puzzle):
+                logger.debug(f"callback {puzzle}")
+                self.active_puzzles.remove(puzzle)
+
+            def err_cb(puzzle):
+                logger.debug(f"error callback {puzzle}")
+                self.active_puzzles.remove(puzzle)
+
             if True:
                 self.pool.apply_async(
-                    process.start,
-                    callback=lambda puzzle: self.active_puzzles.remove(puzzle),
-                    error_callback=lambda puzzle: self.active_puzzles.remove(puzzle),
+                    enforcer.process.start,
+                    (self.config, puzzle),
+                    callback=cb,
+                    error_callback=err_cb,
                 )
             else:
                 logger.debug(f"start sync {puzzle}")
-                process.start()
-                self.active_puzzles.remove(puzzle)
+                enforcer.process.start(self.config, puzzle)
+                cb(puzzle)
                 logger.debug(f"end sync {puzzle}")
 
     def start(self):
