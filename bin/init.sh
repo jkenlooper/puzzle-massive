@@ -35,3 +35,6 @@ su --command "chmod 600 ~/.ssh/authorized_keys" dev
 sed --in-place "s/^PasswordAuthentication yes$/PasswordAuthentication no/" /etc/ssh/sshd_config
 sed --in-place "s/^#PasswordAuthentication yes$/PasswordAuthentication no/" /etc/ssh/sshd_config
 systemctl reload sshd
+
+# Set the external-puzzle-massive for internal use. Which makes much sense.
+echo "127.0.0.1 external-puzzle-massive" >> /etc/hosts

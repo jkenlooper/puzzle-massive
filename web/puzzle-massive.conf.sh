@@ -312,13 +312,17 @@ cat <<HEREBEDEVELOPMENT
   # update a /etc/hosts file.
   # Use localhost when developing in a vm with Vagrant (see forwarded_port in
   # VagrantFile).
-  server_name local-puzzle-massive localhost $INTERNALIP;
+  # external-puzzle-massive server_name is used for internal requests that need
+  # to benefit from nginx cache.
+  server_name local-puzzle-massive external-puzzle-massive localhost $INTERNALIP;
 HEREBEDEVELOPMENT
 else
 cat <<HEREBEPRODUCTION
   # Generated docs use puzzle-massive-blue puzzle-massive-green.
   # Use of puzzle-blue and puzzle-green is deprecated.
-  server_name local-puzzle-massive puzzle-massive-blue puzzle-blue puzzle-massive-green puzzle-green ${DOMAIN_NAME};
+  # external-puzzle-massive server_name is used for internal requests that need
+  # to benefit from nginx cache.
+  server_name local-puzzle-massive external-puzzle-massive puzzle-massive-blue puzzle-blue puzzle-massive-green puzzle-green ${DOMAIN_NAME};
 
 HEREBEPRODUCTION
 fi

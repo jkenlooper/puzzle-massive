@@ -58,7 +58,6 @@ MINUTE = 60  # minute in seconds
 
 MOVES_BEFORE_PENALTY = 12
 STACK_PENALTY = 1
-HOTSPOT_EXPIRE = 30
 HOTSPOT_LIMIT = 10
 HOT_PIECE_MOVEMENT_RATE_TIMEOUT = 10
 PIECE_MOVEMENT_RATE_TIMEOUT = 100
@@ -786,12 +785,11 @@ class PuzzlePiecesMovePublishView(MethodView):
             }
             return make_response(json.jsonify(err_msg), 400)
 
-        # TODO: publish the piece movement to enforcer so it can track hot spot
-        # and piece stacking stuff.
         if (
             len({"all", "hot_spot"}.intersection(current_app.config["PUZZLE_RULES"]))
             > 0
         ):
+            # Publish the piece movement so enforcer can record hot spot.
             redis_connection.publish(
                 f"enforcer_hotspot:{puzzle}", f"{user}:{piece}:{x}:{y}"
             )
@@ -860,16 +858,13 @@ class PuzzlePiecesMovePublishView(MethodView):
             len({"all", "hot_spot"}.intersection(current_app.config["PUZZLE_RULES"]))
             > 0
         ):
-            # Record hot spot (not exact)
-            # TODO: hot spot region should be based on piece size and puzzle size
             hotspot_area_key = "hotspot:{puzzle}:{user}:{x}:{y}".format(
                 puzzle=puzzle,
                 user=user,
                 x=x - (x % 40),
                 y=y - (y % 40),
             )
-            hotspot_count = redis_connection.incr(hotspot_area_key)
-            redis_connection.expire(hotspot_area_key, HOTSPOT_EXPIRE)
+            hotspot_count = int(redis_connection.get(hotspot_area_key) or "0")
             if hotspot_count > HOTSPOT_LIMIT:
                 if karma > 0:
                     karma = redis_connection.decr(karma_key)
@@ -962,7 +957,6 @@ class PuzzlePiecesMovePublishView(MethodView):
                                             int, snapshot_adjacent[:2]
                                         )
                                         # Check if the x,y is within range of the adjacent piece that has moved
-                                        # TODO: use the pieces adjacent piece range bbox when setting piece_join_tolerance
                                         piece_join_tolerance = current_app.config[
                                             "PIECE_JOIN_TOLERANCE"
                                         ]

@@ -32,8 +32,8 @@ class EnforcerApp:
     def handle_active_puzzle(self, message):
         "message = '{user}:{puzzle}:{piece}:{x}:{y}'"
         data = message.get("data", b"").decode()
-        logger.debug(f"active puzzle {data}")
         if not data:
+            logger.debug(f"handle_active_puzzle no data?")
             return
         (_, puzzle, _, _, _) = map(int, data.split(":"))
         if puzzle not in self.active_puzzles:
@@ -48,18 +48,12 @@ class EnforcerApp:
                 logger.debug(f"error callback {puzzle}")
                 self.active_puzzles.remove(puzzle)
 
-            if True:
-                self.pool.apply_async(
-                    enforcer.process.start,
-                    (self.config, puzzle),
-                    callback=cb,
-                    error_callback=err_cb,
-                )
-            else:
-                logger.debug(f"start sync {puzzle}")
-                enforcer.process.start(self.config, puzzle)
-                cb(puzzle)
-                logger.debug(f"end sync {puzzle}")
+            self.pool.apply_async(
+                enforcer.process.start,
+                (self.config, puzzle),
+                callback=cb,
+                error_callback=err_cb,
+            )
 
     def start(self):
         logger.info(self)
@@ -68,10 +62,9 @@ class EnforcerApp:
         while True:
             pmessage = self.pubsub.get_message()
             if pmessage:
-                logger.debug(pmessage)
+                logger.debug(f"enforcer app got message {pmessage}")
             # TODO: Set sleep to 0.001 when not developing
-            sleep(3)
-            logger.debug("sleeping")
+            sleep(0.001)
         self.pubsub.unsubscribe("enforcer_token_request")
         self.pubsub.close()
         self.pool.close()

@@ -528,6 +528,17 @@ class InternalPuzzleDetailsView(MethodView):
         return make_response(json.jsonify(response_msg), response_msg["status_code"])
 
 
+class InternalPuzzleDetailsByIdView(MethodView):
+    """"""
+
+    def get(self, pz_id):
+        result = get_puzzle_details_by_id(pz_id)
+        if result["status_code"] >= 400:
+            return make_response(json.jsonify(result), result["status_code"])
+
+        return make_response(json.jsonify(result["result"]), result["status_code"])
+
+
 def get_puzzle_details(puzzle_id):
     ""
     cur = db.cursor()
@@ -535,6 +546,26 @@ def get_puzzle_details(puzzle_id):
     result = cur.execute(
         fetch_query_string("select-internal-puzzle-details-for-puzzle_id.sql"),
         {"puzzle_id": puzzle_id},
+    ).fetchall()
+    if not result:
+        # 404 if puzzle does not exist
+        err_msg = {"msg": "No puzzle found", "status_code": 404}
+        cur.close()
+        return err_msg
+    (result, col_names) = rowify(result, cur.description)
+    puzzle_details = result[0]
+    cur.close()
+    msg = {"result": puzzle_details, "msg": "Success", "status_code": 200}
+    return msg
+
+
+def get_puzzle_details_by_id(pz_id):
+    ""
+    cur = db.cursor()
+    # validate the puzzle_id
+    result = cur.execute(
+        fetch_query_string("select-internal-puzzle-details-for-id.sql"),
+        {"pz_id": pz_id},
     ).fetchall()
     if not result:
         # 404 if puzzle does not exist

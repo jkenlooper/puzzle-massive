@@ -131,6 +131,7 @@ class PuzzlePieceUpdatesView(MethodView):
         if not piece_cache_ttl:
             return make_response("", 204)
 
+        # pcu:{stamp} is also used in enforcer process.py
         pcu_key = f"pcu:{stamp}"
         piece_updates = redis_connection.lrange(pcu_key, 0, -1)
         if len(piece_updates) == 0:

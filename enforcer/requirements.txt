@@ -1,2 +1,4 @@
 -r ../requirements.txt
+requests==2.21
+Rtree==0.9.7
 -e enforcer/

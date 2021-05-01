@@ -127,6 +127,7 @@ def make_app(config=None, database_writable=False, **kw):
         PuzzleInstanceDetailsView,
         PuzzleOriginalDetailsView,
         InternalPuzzleDetailsView,
+        InternalPuzzleDetailsByIdView,
     )
     from api.puzzle_list import (
         PuzzleListView,
@@ -315,6 +316,12 @@ def make_app(config=None, database_writable=False, **kw):
     app.add_url_rule(
         "/internal/puzzle/<puzzle_id>/details/",
         view_func=InternalPuzzleDetailsView.as_view("internal-puzzle-details"),
+    )
+    app.add_url_rule(
+        "/internal/pz/<pz_id>/details/",
+        view_func=InternalPuzzleDetailsByIdView.as_view(
+            "internal-puzzle-details-by-id"
+        ),
     )
     app.add_url_rule(
         "/internal/puzzle/<puzzle_id>/pieces/",
