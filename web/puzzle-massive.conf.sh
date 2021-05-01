@@ -223,7 +223,7 @@ cat <<HEREBEUP
   ~/newapi/puzzle-stats/.*?/ 10s;
   ~/newapi/puzzle-list/.* 5m;
   ~/newapi/puzzle-pieces/.* ${PUZZLE_PIECES_CACHE_TTL}s;
-  ~/puzzle-piece-updates/.* off;
+  ~/newapi/puzzle-piece-updates/.* off;
   # Safeguard for no cache on player-puzzle-list
   /newapi/player-puzzle-list/ off;
 }

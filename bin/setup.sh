@@ -57,4 +57,4 @@ redis-cli config set maxmemory "500mb"
 redis-cli config rewrite
 
 # Remove the default nginx config
-rm /etc/nginx/sites-enabled/default
+rm -f /etc/nginx/sites-enabled/default

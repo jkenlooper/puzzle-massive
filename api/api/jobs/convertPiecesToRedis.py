@@ -7,31 +7,18 @@ Options:
   -h --help         Show this screen.
   --config <file>   Set config file. [default: site.cfg]
 """
-import sys
-import os.path
-import math
 import time
 from docopt import docopt
-
-from flask import current_app
 
 from api.app import redis_connection, db, make_app
 from api.database import rowify
 from api.tools import (
     loadConfig,
-    formatPieceMovementString,
 )
-from api.constants import COMPLETED
 
 
 def convert(puzzle):
     cur = db.cursor()
-
-    query = """select * from Puzzle where (id = :puzzle)"""
-    (result, col_names) = rowify(
-        cur.execute(query, {"puzzle": puzzle}).fetchall(), cur.description
-    )
-    puzzle_data = result[0]
 
     query = """select * from Piece where (puzzle = :puzzle)"""
     (all_pieces, col_names) = rowify(
