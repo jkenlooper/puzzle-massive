@@ -1,4 +1,4 @@
-import datetime
+import time
 from time import sleep
 import logging
 
@@ -15,7 +15,9 @@ logger.setLevel(logging.DEBUG)
 
 # TODO: set the time to live for an active puzzle to be 5 minutes.
 # Set to 30 seconds while developing.
-TTL = datetime.timedelta(seconds=30)
+TTL = 30
+
+HOTSPOT_GRID_SIZE = 40
 
 
 def start(config, puzzle):
@@ -27,26 +29,65 @@ def start(config, puzzle):
     The process will end after a 5 minute time to live (TTL). This frees up
     resources if the puzzle isn't active anymore.
     """
-    pubsub = get_redis_connection(config, decode_responses=False).pubsub(
-        ignore_subscribe_messages=False
-    )
-    redis_connection = get_redis_connection(config, decode_responses=False)
-    now = datetime.datetime.now()
-    end = now + TTL
-    logger.debug(f"start process {now}")
-    # setup puzzle bbox index
-    # create pixelated piece mask if needed
-    rtree_idx = create_index(config, redis_connection, puzzle)
-    hotspot = enforcer.hotspot.HotSpot(redis_connection, rtree_idx)
-    pubsub.subscribe(**{f"enforcer_hotspot:{puzzle}": hotspot.handle_message})
-    while now < end:
-        now = datetime.datetime.now()
-        pubsub.get_message()
-        sleep(0.001)
-    pubsub.unsubscribe(f"enforcer_hotspot:{puzzle}")
-    logger.debug("finish process")
+
+    process = Process(config, puzzle)
+    process.start()
+    process.close()
 
     return puzzle
+
+
+class Process:
+    ""
+
+    def __init__(self, config, puzzle):
+        self.config = config
+        self.puzzle = puzzle
+        self.pubsub = get_redis_connection(self.config, decode_responses=False).pubsub(
+            ignore_subscribe_messages=False
+        )
+        self.redis_connection = get_redis_connection(
+            self.config, decode_responses=False
+        )
+        self.now = time.time()
+        self.end = self.now + TTL
+        logger.debug(f"start process {self.now}")
+        # setup puzzle bbox index
+        # create pixelated piece mask if needed
+        (piece_properties, hotspot_idx, pieces_idx) = create_index(
+            self.config, self.redis_connection, puzzle
+        )
+        self.hotspot = enforcer.hotspot.HotSpot(
+            self.redis_connection, hotspot_idx, piece_properties
+        )
+
+    def update_active_puzzle(self, message):
+        "message = '{user}:{piece}:{x}:{y}'"
+        channel = message.get("channel", b"").decode()
+        puzzle = int(channel.split(":")[1])
+        if self.puzzle == puzzle:
+            self.end = time.time() + TTL
+
+    def start(self):
+        ""
+
+        self.pubsub.subscribe(
+            **{
+                f"enforcer_hotspot:{self.puzzle}": self.hotspot.handle_message,
+                f"enforcer_token_request:{self.puzzle}": self.update_active_puzzle,
+            }
+        )
+        while self.now < self.end:
+            self.now = time.time()
+            self.pubsub.get_message()
+            sleep(0.001)
+
+    def close(self):
+        ""
+        self.pubsub.unsubscribe(f"enforcer_hotspot:{self.puzzle}")
+        self.pubsub.unsubscribe(f"enforcer_token_request:{self.puzzle}")
+        self.pubsub.close()
+        logger.debug("finish process")
 
 
 def piece_positions_from_line(line):
@@ -70,7 +111,10 @@ def piece_positions_from_line(line):
 
 
 def create_index(config, redis_connection, puzzle):
-    rtree_idx = index.Index(interleaved=True)
+    ""
+    # TODO: create a hotspot index which will have a grid of bboxes
+    # TODO: create other rtree indexes for tracking pieces as needed for
+    # proximity and stacking.
 
     HOSTAPI = config["HOSTAPI"]
     PORTAPI = config["PORTAPI"]
@@ -107,19 +151,48 @@ def create_index(config, redis_connection, puzzle):
         line = line.decode()
         piece_updates.update(piece_positions_from_line(line))
     has_updates = bool(len(piece_updates))
+    piece_properties = {}
     for piece in piece_data.get("positions", []):
         pc_id = int(piece["id"])
         if has_updates:
             piece.update(piece_updates.get(pc_id, {}))
-        (x, y, w, h) = map(
-            int,
-            [
-                piece["x"],
-                piece["y"],
-                piece["w"],
-                piece["h"],
-            ],
-        )
+        for k in ("id", "x", "y", "r", "w", "h", "b", "rotate", "g", "s"):
+            v = piece.get(k)
+            if isinstance(v, str):
+                piece[k] = int(v)
+        piece_properties[pc_id] = piece
+
+    def piecebboxes():
+        x = piece["x"]
+        y = piece["y"]
+        w = piece["w"]
+        h = piece["h"]
         piece_bbox = [x, y, x + w, y + h]
-        rtree_idx.insert(pc_id, piece_bbox)
-    return rtree_idx
+        yield (piece["id"], piece_bbox, None)
+
+    pieces_idx = index.Index(piecebboxes(), interleaved=True)
+
+    table_width = puzzle_data["table_width"]
+    table_height = puzzle_data["table_height"]
+
+    def gridbboxes():
+        # TODO: not used at the moment, but might be in the future for something.
+        index = 0
+        # TODO: add the remainder cells
+        # width_remainder = table_width % HOTSPOT_GRID_SIZE
+        # height_remainder = table_height % HOTSPOT_GRID_SIZE
+        for row in range(0, table_height // HOTSPOT_GRID_SIZE):
+            for col in range(0, table_width // HOTSPOT_GRID_SIZE):
+                gridbbox = [
+                    col * HOTSPOT_GRID_SIZE,
+                    row * HOTSPOT_GRID_SIZE,
+                    min((col + 1) * HOTSPOT_GRID_SIZE, table_width),
+                    min((row + 1) * HOTSPOT_GRID_SIZE, table_height),
+                ]
+                yield (index, gridbbox, None)
+                index = index + 1
+
+    logger.debug("create hotspot idx")
+    hotspot_idx = index.Index(interleaved=True)
+
+    return piece_properties, hotspot_idx, pieces_idx

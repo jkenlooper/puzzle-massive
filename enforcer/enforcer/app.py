@@ -30,12 +30,9 @@ class EnforcerApp:
         self.active_puzzles = set()
 
     def handle_active_puzzle(self, message):
-        "message = '{user}:{puzzle}:{piece}:{x}:{y}'"
-        data = message.get("data", b"").decode()
-        if not data:
-            logger.debug(f"handle_active_puzzle no data?")
-            return
-        (_, puzzle, _, _, _) = map(int, data.split(":"))
+        "message = '{user}:{piece}:{x}:{y}'"
+        channel = message.get("channel", b"").decode()
+        puzzle = int(channel.split(":")[1])
         if puzzle not in self.active_puzzles:
             logger.debug(f"new active puzzle {puzzle}")
             self.active_puzzles.add(puzzle)
@@ -57,7 +54,9 @@ class EnforcerApp:
 
     def start(self):
         logger.info(self)
-        self.pubsub.subscribe(**{"enforcer_token_request": self.handle_active_puzzle})
+        self.pubsub.psubscribe(
+            **{"enforcer_token_request:*": self.handle_active_puzzle}
+        )
 
         while True:
             pmessage = self.pubsub.get_message()
@@ -65,7 +64,7 @@ class EnforcerApp:
                 logger.debug(f"enforcer app got message {pmessage}")
             # TODO: Set sleep to 0.001 when not developing
             sleep(0.001)
-        self.pubsub.unsubscribe("enforcer_token_request")
+        self.pubsub.punsubscribe("enforcer_token_request:*")
         self.pubsub.close()
         self.pool.close()
         logger.debug("exiting")

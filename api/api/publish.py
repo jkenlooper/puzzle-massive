@@ -309,8 +309,8 @@ class PuzzlePieceTokenView(MethodView):
             return make_response(json.jsonify(err_msg), 429)
 
         redis_connection.publish(
-            "enforcer_token_request",
-            f"{user}:{puzzle}:{piece}:{piece_properties['x']}:{piece_properties['y']}",
+            f"enforcer_token_request:{puzzle}",
+            f"{user}:{piece}:{piece_properties['x']}:{piece_properties['y']}",
         )
 
         def move_bit_icon_to_piece(x, y):
@@ -858,13 +858,8 @@ class PuzzlePiecesMovePublishView(MethodView):
             len({"all", "hot_spot"}.intersection(current_app.config["PUZZLE_RULES"]))
             > 0
         ):
-            hotspot_area_key = "hotspot:{puzzle}:{user}:{x}:{y}".format(
-                puzzle=puzzle,
-                user=user,
-                x=x - (x % 40),
-                y=y - (y % 40),
-            )
-            hotspot_count = int(redis_connection.get(hotspot_area_key) or "0")
+            hotspot_piece_key = f"hotspot:{puzzle}:{user}:{piece}"
+            hotspot_count = int(redis_connection.get(hotspot_piece_key) or "0")
             if hotspot_count > HOTSPOT_LIMIT:
                 if karma > 0:
                     karma = redis_connection.decr(karma_key)
