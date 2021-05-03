@@ -1,0 +1,13 @@
+.pm-PuzzleTime {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pm-PuzzleTime-label {
+  line-height: 1;
+}
+
+.pm-PuzzleTime-value {
+  line-height: 1;
+  vertical-align: middle;
+}
