@@ -345,6 +345,7 @@ customElements.define(
       ev.preventDefault();
       this.slabMassiveOffsetTop = this.$slabMassive.offsetTop;
       this.slabMassiveOffsetLeft = this.$slabMassive.offsetLeft;
+
       if (typeof this.draggedPieceID === "number") {
         puzzleService.unsubscribe(
           "piece/move/rejected",
@@ -361,6 +362,25 @@ customElements.define(
         );
         this.draggedPieceID = null;
       }
+      document.addEventListener("keydown", (event) => {
+        if (event.key == "Enter") {
+          puzzleService.unSelectPiece(this.id);
+          this.$slabMassive.removeEventListener(
+            "mousemove",
+            this.pieceFollow,
+            false
+          );
+          // Stop listening for any updates to this piece
+          puzzleService.unsubscribe(
+            "piece/move/rejected",
+            `pieceFollow ${this.id} ${this.instanceId}`
+          );
+
+          // Just unselect the piece so the next on tap doesn't move it
+
+          this.onKarmaUpdated.bind(ev);
+        }
+      });
     }
 
     onTap(ev) {
@@ -404,26 +424,6 @@ customElements.define(
             this.pieceFollow,
             false
           );
-          document.addEventListener("keydown", (event) => {
-            if (event.defaultPrevented) {
-              return; // Do nothing if the event was already processed
-            }
-            if (event.key == "Enter") {
-              this.$slabMassive.removeEventListener(
-                "mousemove",
-                this.pieceFollow,
-                false
-              );
-              // Stop listening for any updates to this piece
-              puzzleService.unsubscribe(
-                "piece/move/rejected",
-                `pieceFollow ${this.id} ${this.instanceId}`
-              );
-
-              // Just unselect the piece so the next on tap doesn't move it
-              puzzleService.unSelectPiece(this.id);
-            }
-          });
           // subscribe to piece/update to unfollow if active piece is updated
           streamService.subscribe(
             "piece/update",
@@ -447,6 +447,25 @@ customElements.define(
           );
           this.draggedPieceID = null;
         }
+        document.addEventListener("keydown", (event) => {
+          if (event.key == "Enter") {
+            puzzleService.unSelectPiece(this.id);
+            this.$slabMassive.removeEventListener(
+              "mousemove",
+              this.pieceFollow,
+              false
+            );
+            // Stop listening for any updates to this piece
+            puzzleService.unsubscribe(
+              "piece/move/rejected",
+              `pieceFollow ${this.id} ${this.instanceId}`
+            );
+
+            // Just unselect the piece so the next on tap doesn't move it
+
+            this.onKarmaUpdated.bind(ev);
+          }
+        });
       }
     }
 
