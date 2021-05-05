@@ -92,12 +92,15 @@ class PieceMutateProcess:
             # Put back to buffered mode since the watch was called.
             pipe.multi()
 
+            # TODO: get nearest proximity piece (if any) and check it's stacked
+            # piece status. Then stack pieces or reject pieces.
             if (
                 len({"all", "stack_pieces"}.intersection(self.puzzle_rules)) > 0
                 and 13 >= len(self.pieces_in_proximity_to_target) >= 4
             ):
                 # Too many pieces within proximity of this piece, mark piece as
                 # stacked.
+                # TODO: move to enforcer
                 msg = self._stack_pieces(pipe)
                 status = "stacked"
             elif (
@@ -106,6 +109,7 @@ class PieceMutateProcess:
             ):
                 # Too many pieces within proximity of this piece, reject piece
                 # movement.
+                # TODO: move to enforcer
                 msg = self._reject_pieces(pipe)
                 status = "stacked"
             else:
@@ -391,9 +395,10 @@ class PieceMutateProcess:
         "When too many pieces are within proximity to each other, skip trying to join any of them and mark them as stacked"
         lines = []
         msg = ""
+        # TODO: move to enforcer
         pipe.sadd(
             "pcstacked:{puzzle}".format(puzzle=self.puzzle),
-            *self.pieces_in_proximity_to_target
+            *self.pieces_in_proximity_to_target,
         )
         for piece_in_proximity in self.pieces_in_proximity_to_target:
             pipe.hset(
@@ -596,9 +601,12 @@ class PieceMutateProcess:
         "Update all other pieces x,y in group to the offset, if new_group then assign them to the new_group"
 
         lines = []
+        publish_message = []
         for grouped_piece in self.grouped_piece_properties.keys():
-            new_x = self.grouped_piece_properties[grouped_piece]["x"] + self.offset_x
-            new_y = self.grouped_piece_properties[grouped_piece]["y"] + self.offset_y
+            origin_x = self.grouped_piece_properties[grouped_piece]["x"]
+            origin_y = self.grouped_piece_properties[grouped_piece]["y"]
+            new_x = origin_x + self.offset_x
+            new_y = origin_y + self.offset_y
             new_pc = {"x": new_x, "y": new_y}
             if new_group != None:
                 # Remove from the old group and place in new_group
@@ -632,6 +640,14 @@ class PieceMutateProcess:
                     grouped_piece, x=new_x, y=new_y, g=new_group, s=status
                 )
             )
+            # TODO: update grouped piece status for fully joined pieces.  Should
+            # filter out fully joined pieces from being tracked in proximity rtree.
+            publish_message.append(
+                f"{grouped_piece}:{origin_x}:{origin_y}:{new_x}:{new_y}"
+            )
+        self.redis_connection.publish(
+            f"enforcer_piece_group_translate:{self.puzzle}", "_".join(publish_message)
+        )
         if status == "1":
             pipe.sadd("pcfixed:{puzzle}".format(puzzle=self.puzzle), self.piece)
             pipe.srem("pcstacked:{puzzle}".format(puzzle=self.puzzle), self.piece)
@@ -664,7 +680,7 @@ class PieceMutateProcess:
         lines = []
         pipe.srem(
             "pcstacked:{puzzle}".format(puzzle=self.puzzle),
-            *self.pieces_in_proximity_to_target
+            *self.pieces_in_proximity_to_target,
         )
         for piece_in_proximity in self.pieces_in_proximity_to_target:
             pipe.hdel(

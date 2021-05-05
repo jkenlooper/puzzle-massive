@@ -23,7 +23,8 @@ monkey.patch_all()
 import datetime
 import sys
 import time
-import uuid
+import nanoid
+import base64
 import multiprocessing
 from docopt import docopt
 import os
@@ -198,6 +199,19 @@ def _get_adjacent_pieces_list(piece_properties):
     )
 
 
+def pack_token(token, puzzle, user, piece, piece_properties):
+    x = piece_properties["x"]
+    y = piece_properties["y"]
+    p_token = bytes(f"{puzzle}:{user}:{piece}:{x}:{y}:{token}", encoding="utf8")
+    b64_token = base64.b64encode(p_token).decode(encoding="utf8")
+    return b64_token
+
+
+def unpack_token(token):
+    "(puzzle, user, piece, x, y, token)"
+    return base64.b64decode(token).decode(encoding="utf8").split(":")
+
+
 class PuzzlePieceTokenView(MethodView):
     """
     player gets token after mousedown.  /puzzle/<puzzle_id>/piece/<int:piece>/token/
@@ -308,9 +322,12 @@ class PuzzlePieceTokenView(MethodView):
             )
             return make_response(json.jsonify(err_msg), 429)
 
+        token = pack_token(
+            nanoid.generate(size=8), puzzle, user, piece, piece_properties
+        )
         redis_connection.publish(
             f"enforcer_token_request:{puzzle}",
-            f"{user}:{piece}:{piece_properties['x']}:{piece_properties['y']}",
+            token,
         )
 
         def move_bit_icon_to_piece(x, y):
@@ -374,7 +391,7 @@ class PuzzlePieceTokenView(MethodView):
             )
 
         if len(snapshot):
-            snapshot_id = uuid.uuid4().hex[:8]
+            snapshot_id = nanoid.generate(size=8)
             snapshot_key = f"snap:{snapshot_id}"
             snapshot.insert(0, pzq_current)
             redis_connection.set(snapshot_key, ":".join(snapshot))
@@ -395,7 +412,7 @@ class PuzzlePieceTokenView(MethodView):
 
             move_bit_icon_to_piece(piece_properties.get("x"), piece_properties.get("y"))
             response = {
-                "token": "---",
+                "token": token,
                 "lock": now + TOKEN_LOCK_TIMEOUT,
                 "expires": now + TOKEN_EXPIRE_TIMEOUT,
             }
@@ -471,7 +488,6 @@ class PuzzlePieceTokenView(MethodView):
 
         # This piece is up for grabs since it has been more then 5 seconds since
         # another player has grabbed it.
-        token = uuid.uuid4().hex[:8]
         with redis_connection.pipeline(transaction=False) as pipe:
             # Remove player from the piece token queue
             pipe.zrem(piece_token_queue_key, mark)
@@ -785,14 +801,18 @@ class PuzzlePiecesMovePublishView(MethodView):
             }
             return make_response(json.jsonify(err_msg), 400)
 
-        if (
-            len({"all", "hot_spot"}.intersection(current_app.config["PUZZLE_RULES"]))
-            > 0
-        ):
-            # Publish the piece movement so enforcer can record hot spot.
-            redis_connection.publish(
-                f"enforcer_hotspot:{puzzle}", f"{user}:{piece}:{x}:{y}"
-            )
+        # TODO: change enforcer_hotspot to be a more generic channel?
+        # if (
+        #    len({"all", "hot_spot"}.intersection(current_app.config["PUZZLE_RULES"]))
+        #    > 0
+        # ):
+        # Publish the piece movement so enforcer can record hot spot.
+        # f"enforcer_hotspot:{puzzle}", f"{user}:{piece}:{x}:{y}"
+        (_, _, _, origin_x, origin_y, _) = unpack_token(token)
+        redis_connection.publish(
+            f"enforcer_piece_translate:{puzzle}",
+            f"{user}:{piece}:{origin_x}:{origin_y}:{x}:{y}",
+        )
 
         points_key = "points:{user}".format(user=user)
         recent_points = int(redis_connection.get(points_key) or "0")
@@ -858,6 +878,7 @@ class PuzzlePiecesMovePublishView(MethodView):
             len({"all", "hot_spot"}.intersection(current_app.config["PUZZLE_RULES"]))
             > 0
         ):
+            # Decrease the karma for the player if the piece is in a hotspot.
             hotspot_piece_key = f"hotspot:{puzzle}:{user}:{piece}"
             hotspot_count = int(redis_connection.get(hotspot_piece_key) or "0")
             if hotspot_count > HOTSPOT_LIMIT:

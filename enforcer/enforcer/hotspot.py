@@ -16,19 +16,6 @@ class HotSpot:
         self.piece_properties = piece_properties
         self.hotspot_init_time = time.time()
 
-    def handle_message(self, message):
-        "enforcer_hotspot:{puzzle} {user}:{piece}:{x}:{y}"
-        if message.get("type") != "message":
-            return
-        channel = message.get("channel", b"").decode()
-        data = message.get("data", b"").decode()
-        if not data:
-            logger.debug("hotspot no data?")
-            return
-        (user, piece, x, y) = map(int, data.split(":"))
-        puzzle = int(channel.split(":")[1])
-        self.process(user, puzzle, piece, x, y)
-
     def process(self, user, puzzle, piece, x, y):
         piece_bbox = [
             x,

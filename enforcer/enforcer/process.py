@@ -1,6 +1,7 @@
 import time
 from time import sleep
 import logging
+import base64
 
 import requests
 from rtree import index
@@ -8,6 +9,7 @@ from rtree import index
 from api.constants import ACTIVE, BUGGY_UNLISTED
 from api.tools import get_redis_connection
 import enforcer.hotspot
+import enforcer.proximity
 
 
 logger = logging.getLogger(__name__)
@@ -54,26 +56,68 @@ class Process:
         logger.debug(f"start process {self.now}")
         # setup puzzle bbox index
         # create pixelated piece mask if needed
-        (piece_properties, hotspot_idx, pieces_idx) = create_index(
+        (piece_properties, hotspot_idx, proximity_idx) = create_index(
             self.config, self.redis_connection, puzzle
         )
         self.hotspot = enforcer.hotspot.HotSpot(
             self.redis_connection, hotspot_idx, piece_properties
         )
+        self.proximity = enforcer.proximity.Proximity(
+            self.redis_connection,
+            proximity_idx,
+            piece_properties,
+            piece_join_tolerance=self.config["PIECE_JOIN_TOLERANCE"],
+        )
 
     def update_active_puzzle(self, message):
-        "message = '{user}:{piece}:{x}:{y}'"
+        "message = base64({puzzle}:{user}:{piece}:{x}:{y}:{token})"
         channel = message.get("channel", b"").decode()
         puzzle = int(channel.split(":")[1])
         if self.puzzle == puzzle:
             self.end = time.time() + TTL
+
+    def handle_piece_translate_message(self, message):
+        "enforcer_piece_translate:{puzzle} {user}:{piece}:{origin_x}:{origin_y}:{x}:{y}"
+        if message.get("type") != "message":
+            return
+        channel = message.get("channel", b"").decode()
+        data = message.get("data", b"").decode()
+        if not data:
+            logger.debug("piece_translate no data?")
+            return
+        (user, piece, origin_x, origin_y, x, y) = map(int, data.split(":"))
+        puzzle = int(channel.split(":")[1])
+
+        self.hotspot.process(user, puzzle, piece, x, y)
+        self.proximity.process(user, puzzle, piece, origin_x, origin_y, x, y)
+
+    def handle_piece_group_translate_message(self, message):
+        "enforcer_piece_group_translate:{puzzle} {piece}:{origin_x}:{origin_y}:{x}:{y}_{piece}:{origin_x}:{origin_y}:{x}:{y}_..."
+        if message.get("type") != "message":
+            return
+        channel = message.get("channel", b"").decode()
+        data = message.get("data", b"").decode()
+        if not data:
+            logger.debug("piece group translate no data?")
+            return
+        puzzle = int(channel.split(":")[1])
+
+        def parse_piece(d):
+            (piece, origin_x, origin_y, x, y) = d.split(":")
+            return dict(zip(keys, map(int, d.split(":"))))
+
+        # pieces = map(lambda x: dict(zip(keys, map(int, x.split(":")))), data.split("_"))
+        pieces = map(lambda x: map(int, x.split(":")), data.split("_"))
+        self.proximity.batch_process(puzzle, pieces)
+        (user, piece, origin_x, origin_y, x, y) = map(int, data.split(":"))
 
     def start(self):
         ""
 
         self.pubsub.subscribe(
             **{
-                f"enforcer_hotspot:{self.puzzle}": self.hotspot.handle_message,
+                f"enforcer_piece_group_translate:{self.puzzle}": self.handle_piece_group_translate_message,
+                f"enforcer_piece_translate:{self.puzzle}": self.handle_piece_translate_message,
                 f"enforcer_token_request:{self.puzzle}": self.update_active_puzzle,
             }
         )
@@ -84,7 +128,7 @@ class Process:
 
     def close(self):
         ""
-        self.pubsub.unsubscribe(f"enforcer_hotspot:{self.puzzle}")
+        self.pubsub.unsubscribe(f"enforcer_piece_translate:{self.puzzle}")
         self.pubsub.unsubscribe(f"enforcer_token_request:{self.puzzle}")
         self.pubsub.close()
         logger.debug("finish process")
@@ -135,11 +179,13 @@ def create_index(config, redis_connection, puzzle):
         f"http://external-puzzle-massive/newapi/puzzle-pieces/{puzzle_id}/"
     )
     if req.status_code >= 400:
-        raise Exception("external-puzzle-massive api error")
+        logger.error("external-puzzle-massive api error")
+        raise Exception(puzzle)
     try:
         result = req.json()
     except ValueError as err:
-        raise Exception(f"external-puzzle-massive api error {err}")
+        logger.error(f"external-puzzle-massive api error {err}")
+        raise Exception(puzzle)
     piece_data = result
 
     # timestamp here is really a truncated uuid
@@ -163,14 +209,15 @@ def create_index(config, redis_connection, puzzle):
         piece_properties[pc_id] = piece
 
     def piecebboxes():
-        x = piece["x"]
-        y = piece["y"]
-        w = piece["w"]
-        h = piece["h"]
-        piece_bbox = [x, y, x + w, y + h]
-        yield (piece["id"], piece_bbox, None)
+        for piece in piece_properties.values():
+            x = piece["x"]
+            y = piece["y"]
+            w = piece["w"]
+            h = piece["h"]
+            piece_bbox = [x, y, x + w, y + h]
+            yield (piece["id"], piece_bbox, None)
 
-    pieces_idx = index.Index(piecebboxes(), interleaved=True)
+    proximity_idx = index.Index(piecebboxes(), interleaved=True)
 
     table_width = puzzle_data["table_width"]
     table_height = puzzle_data["table_height"]
@@ -195,4 +242,4 @@ def create_index(config, redis_connection, puzzle):
     logger.debug("create hotspot idx")
     hotspot_idx = index.Index(interleaved=True)
 
-    return piece_properties, hotspot_idx, pieces_idx
+    return piece_properties, hotspot_idx, proximity_idx

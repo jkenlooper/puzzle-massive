@@ -38,11 +38,12 @@ class EnforcerApp:
             self.active_puzzles.add(puzzle)
 
             def cb(puzzle):
-                logger.debug(f"callback {puzzle}")
-                self.active_puzzles.remove(puzzle)
+                logger.debug(f"callback for puzzle: {puzzle}")
+                self.active_puzzles.remove(int(puzzle))
 
-            def err_cb(puzzle):
-                logger.debug(f"error callback {puzzle}")
+            def err_cb(message):
+                logger.error(f"error callback for puzzle: {puzzle}")
+                logger.error(message)
                 self.active_puzzles.remove(puzzle)
 
             self.pool.apply_async(
