@@ -226,6 +226,50 @@ def update_puzzle_pieces(puzzle_id, piece_properties):
     return msg
 
 
+def get_immutable_piece_props(puzzle_id):
+    cur = db.cursor()
+    result = cur.execute(
+        fetch_query_string("select-internal-puzzle-details-for-puzzle_id.sql"),
+        {"puzzle_id": puzzle_id},
+    ).fetchall()
+    if not result:
+        err_msg = {"msg": "No puzzle found", "status_code": 400}
+        cur.close()
+        return err_msg
+
+    (result, col_names) = rowify(result, cur.description)
+    puzzle_data = result[0]
+    puzzle = puzzle_data["id"]
+
+    result = cur.execute(
+        fetch_query_string("select_immutable_piece_props_for_puzzle.sql"),
+        {"puzzle": puzzle},
+    ).fetchall()
+    if not result:
+        err_msg = {"msg": "No pieces found for puzzle", "status_code": 400}
+        cur.close()
+        return err_msg
+    (result, col_names) = rowify(result, cur.description)
+    immutable_piece_properties = {}
+    for piece_data in result:
+        adjacent_offsets = {}
+        for adjacent_piece_string in piece_data["adjacent"].split(" "):
+            (adjacent_piece_id, offset_string) = adjacent_piece_string.split(":")
+            offset = list(map(int, offset_string.split(",")))
+            adjacent_offsets[adjacent_piece_id] = offset
+
+        piece_data["adjacent"] = adjacent_offsets
+        immutable_piece_properties[piece_data["id"]] = piece_data
+
+    msg = {
+        "rowcount": len(immutable_piece_properties),
+        "immutable_piece_properties": immutable_piece_properties,
+        "msg": "Success",
+        "status_code": 200,
+    }
+    return msg
+
+
 def add_puzzle_pieces(puzzle_id, piece_properties):
     """
     piece_properties is a list of piece properties
@@ -298,6 +342,10 @@ class InternalPuzzlePiecesView(MethodView):
     """
     Internal puzzle pieces view for use by other apps. Allows modifying piece data.
     """
+
+    def get(self, puzzle_id):
+        response_msg = get_immutable_piece_props(puzzle_id)
+        return make_response(json.jsonify(response_msg), response_msg["status_code"])
 
     def post(self, puzzle_id):
         ""

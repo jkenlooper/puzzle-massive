@@ -95,21 +95,13 @@ class Process:
         "enforcer_piece_group_translate:{puzzle} {piece}:{origin_x}:{origin_y}:{x}:{y}_{piece}:{origin_x}:{origin_y}:{x}:{y}_..."
         if message.get("type") != "message":
             return
-        channel = message.get("channel", b"").decode()
         data = message.get("data", b"").decode()
         if not data:
             logger.debug("piece group translate no data?")
             return
-        puzzle = int(channel.split(":")[1])
 
-        def parse_piece(d):
-            (piece, origin_x, origin_y, x, y) = d.split(":")
-            return dict(zip(keys, map(int, d.split(":"))))
-
-        # pieces = map(lambda x: dict(zip(keys, map(int, x.split(":")))), data.split("_"))
-        pieces = map(lambda x: map(int, x.split(":")), data.split("_"))
-        self.proximity.batch_process(puzzle, pieces)
-        (user, piece, origin_x, origin_y, x, y) = map(int, data.split(":"))
+        pieces = list(map(lambda x: list(map(int, x.split(":"))), data.split("_")))
+        self.proximity.batch_process(pieces)
 
     def start(self):
         ""
@@ -128,6 +120,7 @@ class Process:
 
     def close(self):
         ""
+        self.pubsub.unsubscribe(f"enforcer_piece_group_translate:{self.puzzle}")
         self.pubsub.unsubscribe(f"enforcer_piece_translate:{self.puzzle}")
         self.pubsub.unsubscribe(f"enforcer_token_request:{self.puzzle}")
         self.pubsub.close()
@@ -175,6 +168,25 @@ def create_index(config, redis_connection, puzzle):
     puzzle_data = result
 
     puzzle_id = puzzle_data["puzzle_id"]
+
+    req = requests.get(
+        f"http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/pieces/"
+    )
+    if req.status_code >= 400:
+        logger.error("puzzle not available")
+        raise Exception(puzzle)
+    try:
+        result = req.json()
+    except ValueError as err:
+        logger.error(f"internal api error {err}")
+        raise Exception(puzzle)
+    adjacent_pieces = {}
+    for piece_id, piece_prop in result["immutable_piece_properties"].items():
+        adjacent = {}
+        for adjacent_piece_id, adjacent_offset in piece_prop["adjacent"].items():
+            adjacent[int(adjacent_piece_id)] = adjacent_offset
+        adjacent_pieces[int(piece_id)] = adjacent
+
     req = requests.get(
         f"http://external-puzzle-massive/newapi/puzzle-pieces/{puzzle_id}/"
     )
@@ -198,6 +210,7 @@ def create_index(config, redis_connection, puzzle):
         piece_updates.update(piece_positions_from_line(line))
     has_updates = bool(len(piece_updates))
     piece_properties = {}
+
     for piece in piece_data.get("positions", []):
         pc_id = int(piece["id"])
         if has_updates:
@@ -206,6 +219,7 @@ def create_index(config, redis_connection, puzzle):
             v = piece.get(k)
             if isinstance(v, str):
                 piece[k] = int(v)
+        piece["adjacent"] = adjacent_pieces[pc_id]
         piece_properties[pc_id] = piece
 
     def piecebboxes():
@@ -239,7 +253,6 @@ def create_index(config, redis_connection, puzzle):
                 yield (index, gridbbox, None)
                 index = index + 1
 
-    logger.debug("create hotspot idx")
     hotspot_idx = index.Index(interleaved=True)
 
     return piece_properties, hotspot_idx, proximity_idx

@@ -6,15 +6,15 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 # record origin of the piece
-# origin of piece is packed in the token
+#   origin of piece is packed in the token
 # count pieces that are overlapping
 # if stacked
-# use internal request to update piece and other pieces
-# that are overlapping statuses to stacked
+#   use internal request to update piece and other pieces
+#   that are overlapping statuses to stacked
 # if stacked and past stack limit
-# reject piece move
-# put request back to origin
-# use internal only request to move piece back to origin
+#   reject piece move
+#   put request back to origin
+#   use internal only request to move piece back to origin
 
 
 class Proximity:
@@ -65,8 +65,10 @@ class Proximity:
 
         proximity_count = self.proximity_idx.count(piece_padded_bbox)
         logger.debug(f"proximity count {proximity_count}")
+        logger.debug(f"adjacent count {len(self.piece_properties[piece]['adjacent'])}")
 
     def batch_process(self, pieces):
+        logger.debug(pieces)
         for pc in pieces:
             (piece, origin_x, origin_y, x, y) = pc
             w = self.piece_properties[piece]["w"]
@@ -84,7 +86,7 @@ class Proximity:
                 x + w,
                 y + h,
             ]
-            # TODO: WIP
+            self.move_piece(piece, origin_piece_bbox, piece_bbox)
 
     def move_piece(self, piece, origin_piece_bbox, piece_bbox):
         """

@@ -12,12 +12,6 @@ logger.setLevel(logging.DEBUG)
 
 class EnforcerApp:
     "Enforcer App"
-    # channels:
-    # enforcer_active_puzzle
-    # enforcer_inactive:{puzzle}
-    # enforcer_hotspot:{puzzle}
-    # enforcer_player_piece_move
-    # enforcer_system_group_piece_move
 
     def __init__(self, config_file, **kw):
         config = loadConfig(config_file)
@@ -63,7 +57,6 @@ class EnforcerApp:
             pmessage = self.pubsub.get_message()
             if pmessage:
                 logger.debug(f"enforcer app got message {pmessage}")
-            # TODO: Set sleep to 0.001 when not developing
             sleep(0.001)
         self.pubsub.punsubscribe("enforcer_token_request:*")
         self.pubsub.close()
