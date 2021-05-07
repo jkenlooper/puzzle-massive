@@ -215,7 +215,9 @@ def create_index(config, redis_connection, puzzle):
         pc_id = int(piece["id"])
         if has_updates:
             piece.update(piece_updates.get(pc_id, {}))
-        for k in ("id", "x", "y", "r", "w", "h", "b", "rotate", "g", "s"):
+        for k in ("id", "x", "y", "r", "w", "h", "b", "rotate"):
+            # Not tracking "g" and "s" for group and status since they are
+            # updated in a different process.
             v = piece.get(k)
             if isinstance(v, str):
                 piece[k] = int(v)
