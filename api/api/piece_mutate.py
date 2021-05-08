@@ -179,6 +179,7 @@ class PieceMutateProcess:
             # piece adjacent range.
             tolerance = int(100 / 2)
 
+            # TODO: remove pcx_puzzle and pcy_puzzle
             # pcx_puzzle
             pipe.zrangebyscore(
                 "pcx:{puzzle}".format(puzzle=self.puzzle),
