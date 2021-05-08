@@ -14,6 +14,8 @@ Subcommands:
     fg      - Starts the app in the foreground.
 """
 import os
+import signal
+import sys
 
 from docopt import docopt
 
@@ -32,9 +34,18 @@ def main():
     app = make_app(config_file)
 
     if args["start"]:
-        # TODO: handle a sys exit stuff to do a graceful shutdown
-        app.start()
+        try:
+            app.start()
+        except KeyboardInterrupt:
+            app.close()
 
 
 if __name__ == "__main__":
     main()
+
+
+def signal_handler(signal, frame):
+    sys.exit(0)
+
+
+signal.signal(signal.SIGINT, signal_handler)

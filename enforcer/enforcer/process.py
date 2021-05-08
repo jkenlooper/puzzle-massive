@@ -2,6 +2,7 @@ import time
 from time import sleep
 import logging
 import base64
+import atexit
 
 import requests
 from rtree import index
@@ -34,6 +35,7 @@ def start(config, puzzle):
 
     process = Process(config, puzzle)
     process.start()
+    logger.debug("process start is done")
     process.close()
 
     return puzzle
@@ -43,6 +45,7 @@ class Process:
     ""
 
     def __init__(self, config, puzzle):
+        self.halt = False
         self.config = config
         self.puzzle = puzzle
         self.pubsub = get_redis_connection(self.config, decode_responses=False).pubsub(
@@ -113,7 +116,8 @@ class Process:
                 f"enforcer_token_request:{self.puzzle}": self.update_active_puzzle,
             }
         )
-        while self.now < self.end:
+        atexit.register(self.halt_process)
+        while not self.halt and self.now < self.end:
             self.now = time.time()
             self.pubsub.get_message()
             sleep(0.001)
@@ -125,6 +129,11 @@ class Process:
         self.pubsub.unsubscribe(f"enforcer_token_request:{self.puzzle}")
         self.pubsub.close()
         logger.debug("finish process")
+
+    def halt_process(self):
+        self.halt = True
+        self.logger.debug("halt process")
+        self.close()
 
 
 def piece_positions_from_line(line):
