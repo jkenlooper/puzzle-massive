@@ -67,26 +67,19 @@ def convert(puzzle):
                 pipe.hset(pc_puzzle_piece_key, "g", piece["parent"])
 
             pieceStatus = piece.get("status", None)
-            if pieceStatus != None:
+            if pieceStatus is not None:
                 # print 'pieceStatus'
                 # print pieceStatus
                 # print("immovable piece: {id}".format(**piece))
                 pieceStatus = int(
                     pieceStatus
                 )  # in case it's from the actual results of the query
-                pipe.hset(pc_puzzle_piece_key, "s", pieceStatus)
                 if pieceStatus == 1:
                     # Add Piece Fixed (immovable)
                     pipe.sadd("pcfixed:{puzzle}".format(puzzle=puzzle), piece["id"])
                 elif pieceStatus == 2:
                     # Add Piece Stacked
                     pipe.sadd("pcstacked:{puzzle}".format(puzzle=puzzle), piece["id"])
-
-            # Add Piece x Set
-            pipe.zadd("pcx:{puzzle}".format(puzzle=puzzle), {piece["id"]: piece["x"]})
-
-            # Add Piece y Set
-            pipe.zadd("pcy:{puzzle}".format(puzzle=puzzle), {piece["id"]: piece["y"]})
 
         # Add to the pcupdates sorted set
         pipe.zadd("pcupdates", {puzzle: int(time.time())})

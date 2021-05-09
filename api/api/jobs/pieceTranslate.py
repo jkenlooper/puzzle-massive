@@ -216,15 +216,15 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
     pc_puzzle_piece_key = "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
 
     # check if piece can be moved
-    (piece_status, has_y) = redis_connection.hmget(
+    has_y = redis_connection.hget(
         pc_puzzle_piece_key,
-        ["s", "y"],
+        "y",
     )
     if has_y is None:
         err_msg = {"msg": "piece not available", "type": "missing"}
         return (err_msg, 0)
 
-    if piece_status == "1":
+    if redis_connection.sismember(f"pcfixed:{puzzle}", piece) == 1:
         # immovable
         err_msg = {
             "msg": "piece can't be moved",
@@ -258,22 +258,24 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
     )
     (msg, status) = piece_mutate_process.start()
 
-    if status == "stacked":
-        # Decrease karma since stacking
-        if (
-            len(
-                {"all", "karma_stacked"}.intersection(
-                    current_app.config["PUZZLE_RULES"]
-                )
-            )
-            > 0
-        ):
-            if karma > 0:
-                karma = redis_connection.decr(karma_key)
-            karma_change -= 1
+    # TODO: The enforcer handles updating stacked status. Should karma be
+    # decreased here still?
+    # if status == "stacked":
+    #     # Decrease karma since stacking
+    #     if (
+    #         len(
+    #             {"all", "karma_stacked"}.intersection(
+    #                 current_app.config["PUZZLE_RULES"]
+    #             )
+    #         )
+    #         > 0
+    #     ):
+    #         if karma > 0:
+    #             karma = redis_connection.decr(karma_key)
+    #         karma_change -= 1
 
-        return publishMessage(msg, karma_change, karma)
-    elif status == "moved":
+    #     return publishMessage(msg, karma_change, karma)
+    if status == "moved":
         # Decrease karma since moving large group of pieces
         if (
             len(

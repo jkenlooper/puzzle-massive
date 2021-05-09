@@ -149,21 +149,29 @@ class Proximity:
 
         reset_stacked_ids = reset_stacked_ids.intersection(pcstacked)
         if len(stacked_piece_ids) > 0:
-            logger.debug(
-                f"TODO: Set these piece ids to stacked status: {stacked_piece_ids}"
-            )
-            # TODO: send internal request to update stacked status for stacked_piece_ids
-            # The update to stacked piece status should only be done for pieces
-            # that are not in the immovable status.
-            # OR modify the pcstacked and s directly?
+            logger.debug(f"Set these piece ids to stacked status: {stacked_piece_ids}")
+            self.update_stack_status(puzzle, stacked_piece_ids, stacked=True)
         if reject_piece_move:
             logger.debug(f"TODO: Exceeded stack limit; reject piece move for {piece}")
             # TODO: send internal request to reject piece move
         if len(reset_stacked_ids) > 0:
-            logger.debug(f"TODO: Reset stacked pieces: {stacked_piece_ids}")
+            logger.debug(f"Reset stacked pieces: {reset_stacked_ids}")
+            self.update_stack_status(puzzle, reset_stacked_ids, stacked=False)
 
         logger.debug(f"proximity count {proximity_count}")
         logger.debug(f"adjacent count {len(self.piece_properties[piece]['adjacent'])}")
+
+    def update_stack_status(self, puzzle, piece_ids, stacked=True):
+        if stacked:
+            self.redis_connection.sadd(
+                "pcstacked:{puzzle}".format(puzzle=puzzle),
+                *piece_ids,
+            )
+        else:
+            self.redis_connection.srem(
+                "pcstacked:{puzzle}".format(puzzle=puzzle),
+                *piece_ids,
+            )
 
     def batch_process(self, pieces):
         "Update the piece bboxes for all pieces that moved in a group"
@@ -185,7 +193,7 @@ class Proximity:
                 y + h,
             ]
             self.move_piece(piece, origin_piece_bbox, piece_bbox)
-            # TODO: update the pcstacked and s status on all pieces moved in the group?
+            # TODO: update the pcstacked and pcfixed status on all pieces moved in the group?
 
     def move_piece(self, piece, origin_piece_bbox, piece_bbox):
         """

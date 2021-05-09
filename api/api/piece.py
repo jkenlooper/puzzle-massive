@@ -41,11 +41,16 @@ class PuzzlePieceView(MethodView):
         # Fetch just the piece properties
         # The 'rotate' field is not public. It is for the true orientation of the piece.
         # The 'r' field is the mutable rotation of the piece.
-        publicPieceProperties = ("x", "y", "r", "s", "g", "w", "h", "b")
+        publicPieceProperties = ("x", "y", "r", "g", "w", "h", "b")
         pieceProperties = redis_connection.hmget(
             "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece),
-            *publicPieceProperties
+            *publicPieceProperties,
         )
         pieceData = dict(list(zip(publicPieceProperties, pieceProperties)))
+        piece_status = None
+        if redis_connection.sismember(f"pcfixed:{puzzle}") == 1:
+            piece_status = "1"
+
+        pieceData["s"] = piece_status
         pieceData["id"] = piece
         return make_response(json.jsonify(pieceData), 200)

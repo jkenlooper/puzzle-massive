@@ -187,6 +187,7 @@ def _int_piece_properties(piece_properties):
 
 def _get_adjacent_pieces_list(piece_properties):
     "Get adjacent pieces list"
+    # The "s" property is deprecated, but still filter it out.
     return list(
         map(
             int,
@@ -291,6 +292,7 @@ class PuzzlePieceTokenView(MethodView):
         piece_properties = _int_piece_properties(
             redis_connection.hgetall(pc_puzzle_piece_key)
         )
+        pcfixed = set(redis_connection.smembers(f"pcfixed:{puzzle}"))
 
         if piece_properties.get("y") is None:
             # 400 if puzzle does not exist or piece is not found
@@ -301,7 +303,7 @@ class PuzzlePieceTokenView(MethodView):
             }
             return make_response(json.jsonify(err_msg), 400)
 
-        if piece_properties.get("s") == "1":
+        if piece in pcfixed:
             # immovable
             err_msg = {
                 "msg": "piece can't be moved",
@@ -342,7 +344,7 @@ class PuzzlePieceTokenView(MethodView):
         # Snapshot of adjacent pieces at time of token request
         snapshot_id = None
         adjacent_pieces_list = _get_adjacent_pieces_list(piece_properties)
-        adjacent_property_list = ["x", "y", "r", "g", "s", str(piece)]
+        adjacent_property_list = ["x", "y", "r", "g", str(piece)]
         pzq_current_key = "pzq_current:{puzzle}".format(puzzle=puzzle)
         results = []
         with redis_connection.pipeline(transaction=False) as pipe:
@@ -365,12 +367,12 @@ class PuzzlePieceTokenView(MethodView):
         snapshot = []
         for a_piece, a_props in adjacent_properties.items():
             # skip any that are immovable
-            if a_props.get("s") == "1":
+            if a_piece in pcfixed:
                 continue
             # skip any that are in the same group
-            if a_props.get("g") != None and a_props.get("g") == piece_properties.get(
+            if a_props.get("g") is not None and a_props.get(
                 "g"
-            ):
+            ) == piece_properties.get("g"):
                 continue
             # skip any that don't have offsets (adjacent edge piece)
             if not a_props.get(str(piece)):
@@ -783,15 +785,14 @@ class PuzzlePiecesMovePublishView(MethodView):
             return make_response(json.jsonify(err_msg), 400)
 
         # Check again if piece can be moved and hasn't changed since getting token
-        (piece_status, has_y) = redis_connection.hmget(
-            "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece),
-            ["s", "y"],
+        has_y = redis_connection.hget(
+            "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), "y"
         )
         if has_y is None:
             err_msg = {"msg": "piece not available", "type": "missing"}
             return make_response(json.jsonify(err_msg), 404)
 
-        if piece_status == "1":
+        if redis_connection.sismember(f"pcfixed:{puzzle}", piece) == 1:
             # immovable
             err_msg = {
                 "msg": "piece can't be moved",

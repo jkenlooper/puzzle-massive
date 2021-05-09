@@ -102,9 +102,11 @@ def deletePieceDataFromRedis(redis_connection, puzzle, all_pieces):
         # Delete Piece Stacked
         pipe.delete("pcstacked:{puzzle}".format(puzzle=puzzle))
 
+        # pcx is deprecated, but should still delete it if it is there.
         # Delete Piece X
         pipe.delete("pcx:{puzzle}".format(puzzle=puzzle))
 
+        # pcy is deprecated, but should still delete it if it is there.
         # Delete Piece Y
         pipe.delete("pcy:{puzzle}".format(puzzle=puzzle))
 

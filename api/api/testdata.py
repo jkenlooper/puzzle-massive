@@ -537,7 +537,7 @@ class PuzzlePieces:
         self.table_width = table_width
         self.table_height = table_height
         self.movable_pieces = [
-            x["id"] for x in self.puzzle_pieces["positions"] if x["s"] != "1"
+            x["id"] for x in self.puzzle_pieces["positions"] if x.get("s") != "1"
         ]
         # TODO: connect to the stream and update movable_pieces
 

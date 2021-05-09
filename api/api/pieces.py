@@ -65,7 +65,7 @@ class PuzzlePiecesView(MethodView):
 
         # The 'rotate' field is not public. It is for the true orientation of the piece.
         # The 'r' field is the mutable rotation of the piece.
-        publicPieceProperties = ("x", "y", "r", "s", "g", "w", "h", "b")
+        publicPieceProperties = ("x", "y", "r", "g", "w", "h", "b")
 
         # start = time.perf_counter()
         with redis_connection.pipeline(transaction=True) as pipe:
@@ -76,6 +76,7 @@ class PuzzlePiecesView(MethodView):
                     *publicPieceProperties,
                 )
             allPublicPieceProperties = pipe.execute()
+        pcfixed = set(redis_connection.smembers(f"pcfixed:{puzzle}"))
         # end = time.perf_counter()
         # current_app.logger.debug("PuzzlePiecesView {}".format(end - start))
 
@@ -88,6 +89,8 @@ class PuzzlePiecesView(MethodView):
         for item in all_pieces:
             piece = item.get("id")
             pieces[piece]["id"] = piece
+            if str(piece) in pcfixed:
+                pieces[piece]["s"] = "1"
 
         stamp = redis_connection.get(f"pzstamp:{puzzle}")
         if not stamp:

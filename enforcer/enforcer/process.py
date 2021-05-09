@@ -56,6 +56,14 @@ class Process:
         )
         self.now = time.time()
         self.end = self.now + TTL
+
+        self.enable_proximity = bool(
+            len(
+                {"all", "stack_pieces", "max_stack_pieces"}.intersection(
+                    self.config["PUZZLE_RULES"]
+                )
+            )
+        )
         logger.debug(f"start process {self.now}")
         # setup puzzle bbox index
         # create pixelated piece mask if needed
@@ -65,12 +73,13 @@ class Process:
         self.hotspot = enforcer.hotspot.HotSpot(
             self.redis_connection, hotspot_idx, piece_properties
         )
-        self.proximity = enforcer.proximity.Proximity(
-            self.redis_connection,
-            proximity_idx,
-            piece_properties,
-            piece_join_tolerance=self.config["PIECE_JOIN_TOLERANCE"],
-        )
+        if self.enable_proximity:
+            self.proximity = enforcer.proximity.Proximity(
+                self.redis_connection,
+                proximity_idx,
+                piece_properties,
+                piece_join_tolerance=self.config["PIECE_JOIN_TOLERANCE"],
+            )
 
     def update_active_puzzle(self, message):
         "message = base64({puzzle}:{user}:{piece}:{x}:{y}:{token})"
@@ -92,10 +101,14 @@ class Process:
         puzzle = int(channel.split(":")[1])
 
         self.hotspot.process(user, puzzle, piece, x, y)
-        self.proximity.process(user, puzzle, piece, origin_x, origin_y, x, y)
+        if self.enable_proximity:
+            self.proximity.process(user, puzzle, piece, origin_x, origin_y, x, y)
 
     def handle_piece_group_translate_message(self, message):
         "enforcer_piece_group_translate:{puzzle} {piece}:{origin_x}:{origin_y}:{x}:{y}_{piece}:{origin_x}:{origin_y}:{x}:{y}_..."
+        if not self.enable_proximity:
+            # At this time only the proximity process usese this information
+            return
         if message.get("type") != "message":
             return
         data = message.get("data", b"").decode()
