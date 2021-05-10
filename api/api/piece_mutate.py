@@ -69,6 +69,7 @@ class PieceMutateProcess:
         self.grouped_piece_properties = None
         self.all_other_pieces_in_piece_group = set()
         self.pcfixed_puzzle = set()
+        self.pcstacked_puzzle = set()
 
         self.can_join_adjacent_piece = None
 
@@ -147,6 +148,8 @@ class PieceMutateProcess:
 
             # pcfixed_puzzle
             pipe.smembers("pcfixed:{puzzle}".format(puzzle=self.puzzle))
+            # pcstacked_puzzle
+            pipe.smembers("pcstacked:{puzzle}".format(puzzle=self.puzzle))
             # pcg_puzzle_g
             pipe.smembers(pcg_puzzle_g_key)
 
@@ -170,16 +173,19 @@ class PieceMutateProcess:
                 raise PieceMutateError("phase 1 conflict")
             (
                 pcfixed_puzzle,
+                pcstacked_puzzle,
                 pcg_puzzle_g,
                 pc_puzzle_adjacent_piece_properties,
                 pcg_puzzle_piece_group_count,
             ) = (
                 phase_1_response[0],
                 phase_1_response[1],
-                phase_1_response[2 : 2 + len(adjacent_pieces_list)],
-                phase_1_response[2 + len(adjacent_pieces_list)],
+                phase_1_response[2],
+                phase_1_response[3 : 3 + len(adjacent_pieces_list)],
+                phase_1_response[3 + len(adjacent_pieces_list)],
             )
             self.pcfixed_puzzle = set(map(int, pcfixed_puzzle))
+            self.pcstacked_puzzle = set(map(int, pcstacked_puzzle))
             pcg_puzzle_g = set(map(int, pcg_puzzle_g))
             self.all_other_pieces_in_piece_group = pcg_puzzle_g.copy()
             self.all_other_pieces_in_piece_group.discard(self.piece)
@@ -281,6 +287,9 @@ class PieceMutateProcess:
             adjacent_piece,
             adjacent_piece_props,
         ) in self.adjacent_piece_properties.items():
+            # Skip if adjacent piece is currently marked as stacked
+            if int(adjacent_piece) in self.pcstacked_puzzle:
+                continue
             # Skip if adjacent piece in same group
             if (
                 piece_group is not None

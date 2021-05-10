@@ -2,6 +2,7 @@ import time
 import logging
 from math import ceil
 
+import requests
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -37,19 +38,20 @@ class Proximity:
     """
 
     def __init__(
-        self,
-        redis_connection,
-        proximity_idx,
-        piece_properties,
-        piece_join_tolerance=100,
+        self, redis_connection, proximity_idx, puzzle_data, piece_properties, config
     ):
+        self.config = config
         self.redis_connection = redis_connection
         self.proximity_idx = proximity_idx
         self.piece_properties = piece_properties
+        self.puzzle_data = puzzle_data
         self.proximity_init_time = time.time()
+        piece_join_tolerance = self.config["PIECE_JOIN_TOLERANCE"]
         self.piece_padding = int(piece_join_tolerance * 0.5)
 
     def process(self, user, puzzle, piece, origin_x, origin_y, x, y):
+        # rotate is not implemented yet; leaving origin_r as 0 for now.
+        origin_r = 0
         logger.debug(
             f"proximity process {user}, {puzzle}, {piece}, {origin_x}, {origin_y}, {x}, {y}"
         )
@@ -154,6 +156,23 @@ class Proximity:
         if reject_piece_move:
             logger.debug(f"TODO: Exceeded stack limit; reject piece move for {piece}")
             # TODO: send internal request to reject piece move
+            r = requests.patch(
+                "http://{HOSTPUBLISH}:{PORTPUBLISH}/internal/puzzle/{puzzle_id}/piece/{piece}/move/".format(
+                    HOSTPUBLISH=self.config["HOSTPUBLISH"],
+                    PORTPUBLISH=self.config["PORTPUBLISH"],
+                    puzzle_id=self.puzzle_data["puzzle_id"],
+                    piece=piece,
+                ),
+                json={
+                    "x": origin_x,
+                    "y": origin_y,
+                    "r": origin_r,
+                },
+            )
+            if r.status_code >= 400:
+                # Could be caused by the puzzle completing after the initial
+                # request.
+                logger.debug("Ignoring error when attempting to reject piece movement")
         if len(reset_stacked_ids) > 0:
             logger.debug(f"Reset stacked pieces: {reset_stacked_ids}")
             self.update_stack_status(puzzle, reset_stacked_ids, stacked=False)

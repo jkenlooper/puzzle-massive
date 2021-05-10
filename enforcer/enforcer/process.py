@@ -67,7 +67,7 @@ class Process:
         logger.debug(f"start process {self.now}")
         # setup puzzle bbox index
         # create pixelated piece mask if needed
-        (piece_properties, hotspot_idx, proximity_idx) = create_index(
+        (puzzle_data, piece_properties, hotspot_idx, proximity_idx) = create_index(
             self.config, self.redis_connection, puzzle
         )
         self.hotspot = enforcer.hotspot.HotSpot(
@@ -77,8 +77,9 @@ class Process:
             self.proximity = enforcer.proximity.Proximity(
                 self.redis_connection,
                 proximity_idx,
+                puzzle_data,
                 piece_properties,
-                piece_join_tolerance=self.config["PIECE_JOIN_TOLERANCE"],
+                self.config,
             )
 
     def update_active_puzzle(self, message):
@@ -279,4 +280,4 @@ def create_index(config, redis_connection, puzzle):
 
     hotspot_idx = index.Index(interleaved=True)
 
-    return piece_properties, hotspot_idx, proximity_idx
+    return puzzle_data, piece_properties, hotspot_idx, proximity_idx

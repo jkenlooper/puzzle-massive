@@ -52,7 +52,12 @@ from api.constants import (
 )
 
 # from jobs import pieceMove
-from api.user import user_id_from_ip, user_not_banned, increase_ban_time
+from api.user import (
+    user_id_from_ip,
+    user_not_banned,
+    increase_ban_time,
+    ANONYMOUS_USER_ID,
+)
 
 HOUR = 3600  # hour in seconds
 MINUTE = 60  # minute in seconds
@@ -103,14 +108,17 @@ def make_app(config=None, database_writable=False, **kw):
 
     app.queries = files_loader("queries")
 
-    # import the views and sockets
-    from api.publish import PuzzlePiecesMovePublishView, PuzzlePieceTokenView
-
     # register the views
 
     app.add_url_rule(
         "/puzzle/<puzzle_id>/piece/<int:piece>/move/",
         view_func=PuzzlePiecesMovePublishView.as_view("puzzle-pieces-move"),
+    )
+    app.add_url_rule(
+        "/internal/puzzle/<puzzle_id>/piece/<int:piece>/move/",
+        view_func=InternalPuzzlePiecesMovePublishView.as_view(
+            "internal-puzzle-pieces-move"
+        ),
     )
     app.add_url_rule(
         "/puzzle/<puzzle_id>/piece/<int:piece>/token/",
@@ -531,7 +539,6 @@ class PuzzlePiecesMovePublishView(MethodView):
     * Set karma
 
     * Check if piece move is within bounds
-    * Check if piece move is not to a large stacked area
 
     * Check if karma + points > 0
 
@@ -1090,6 +1097,95 @@ class PuzzlePiecesMovePublishView(MethodView):
 
         # end = time.perf_counter()
         # current_app.logger.debug("PuzzlePiecesMovePublishView {}".format(end - start))
+        return make_response("", 204)
+
+
+class InternalPuzzlePiecesMovePublishView(MethodView):
+    ACCEPTABLE_ARGS = set(["x", "y", "r"])
+
+    def patch(self, puzzle_id, piece):
+        """
+        args:
+        x
+        y
+        r
+        """
+        ip = "0"  # No ip is used here for karma
+        user = ANONYMOUS_USER_ID
+        piece_move_timeout = current_app.config["PIECE_MOVE_TIMEOUT"]
+
+        # validate the args and headers
+        args = {}
+        xhr_data = request.get_json()
+        if xhr_data:
+            args.update(xhr_data)
+        if request.form:
+            args.update(request.form.to_dict(flat=True))
+
+        x = args.get("x")
+        y = args.get("y")
+        r = args.get("r")
+        current_app.logger.debug("Test internal piece move")
+
+        pzq_key = "pzq:{puzzle_id}".format(puzzle_id=puzzle_id)
+        pzq_fields = [
+            "puzzle",
+            "table_width",
+            "table_height",
+            "permission",
+            "pieces",
+        ]
+        puzzle_data = dict(zip(pzq_fields, redis_connection.hmget(pzq_key, pzq_fields)))
+        puzzle = puzzle_data.get("puzzle")
+        if puzzle is None:
+            err_msg = {
+                "msg": "No puzzle",
+            }
+            return make_response(json.jsonify(err_msg), 400)
+
+        puzzle_data["puzzle"] = int(puzzle_data["puzzle"])
+        puzzle_data["table_width"] = int(puzzle_data["table_width"])
+        puzzle_data["table_height"] = int(puzzle_data["table_height"])
+        puzzle_data["permission"] = int(puzzle_data["permission"])
+        puzzle_data["pieces"] = int(puzzle_data["pieces"])
+        puzzle_data["puzzle_id"] = puzzle_id
+        puzzle = puzzle_data["puzzle"]
+        puzzle = int(puzzle_data["puzzle"])
+
+        if redis_connection.sismember(f"pcfixed:{puzzle}", piece) == 1:
+            # immovable
+            err_msg = {
+                "msg": "piece can't be moved",
+            }
+            return make_response(json.jsonify(err_msg), 400)
+
+        pzq_current_key = "pzq_current:{puzzle}".format(puzzle=puzzle)
+        pzq_next_key = "pzq_next:{puzzle}".format(puzzle=puzzle)
+        # The attempt_piece_movement bumps the pzq_current by 1
+        pzq_next = redis_connection.incr(pzq_next_key, amount=1)
+        # Set the expire in case it fails to reach expire in attempt_piece_movement.
+        redis_connection.expire(pzq_current_key, piece_move_timeout + 2)
+        redis_connection.expire(pzq_next_key, piece_move_timeout + 2)
+
+        karma = 1
+        karma_change = 0
+        attempt_timestamp = time.time()
+        timeout = attempt_timestamp + piece_move_timeout
+        while attempt_timestamp < timeout:
+            pzq_current = int(redis_connection.get(pzq_current_key) or "0")
+            if pzq_current == pzq_next - 1:
+                (_, _) = attempt_piece_movement(
+                    ip,
+                    user,
+                    puzzle_data,
+                    piece,
+                    x,
+                    y,
+                    r,
+                    karma_change,
+                    karma,
+                )
+                break
         return make_response("", 204)
 
 
