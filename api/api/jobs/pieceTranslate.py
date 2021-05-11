@@ -15,6 +15,7 @@ from api.tools import (
 )
 from api.constants import COMPLETED, QUEUE_END_OF_LINE, PRIVATE
 from api.piece_mutate import PieceMutateProcess, PieceMutateError
+from api.user import ANONYMOUS_USER_ID
 
 KARMA_POINTS_EXPIRE = 3600  # hour in seconds
 PIECE_GROUP_MOVE_MAX_BEFORE_PENALTY = 5
@@ -87,19 +88,23 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
             channel="puzzle:{puzzle_id}".format(puzzle_id=puzzleData["puzzle_id"]),
         )
 
-        points_key = "points:{user}".format(user=user)
-        recent_points = int(redis_connection.get(points_key) or 0)
-        if karma_change < 0 and karma <= 0 and recent_points > 0:
-            redis_connection.decr(points_key)
+        if user != ANONYMOUS_USER_ID:
+            points_key = "points:{user}".format(user=user)
+            recent_points = int(redis_connection.get(points_key) or 0)
+            if karma_change < 0 and karma <= 0 and recent_points > 0:
+                redis_connection.decr(points_key)
 
         redis_connection.zadd("pcupdates", {puzzle: now})
 
-        # bump the m_date for this player on the puzzle and timeline
-        redis_connection.zadd("timeline:{puzzle}".format(puzzle=puzzle), {user: now})
-        redis_connection.zadd("timeline", {user: now})
+        if user != ANONYMOUS_USER_ID:
+            # bump the m_date for this player on the puzzle and timeline
+            redis_connection.zadd(
+                "timeline:{puzzle}".format(puzzle=puzzle), {user: now}
+            )
+            redis_connection.zadd("timeline", {user: now})
 
         # Update player points
-        if points != 0 and user != None:
+        if points != 0 and user is not None and user != ANONYMOUS_USER_ID:
             redis_connection.zincrby(
                 "score:{puzzle}".format(puzzle=puzzle), amount=1, value=user
             )
@@ -191,7 +196,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
                 current_app.config.get("PURGEURLLIST"),
             )
 
-        if karma_change:
+        if karma_change and user != ANONYMOUS_USER_ID:
             sse.publish(
                 "{user}:{piece}:{karma}:{karma_change}".format(
                     user=user,

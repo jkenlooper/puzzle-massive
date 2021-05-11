@@ -154,8 +154,7 @@ class Proximity:
             logger.debug(f"Set these piece ids to stacked status: {stacked_piece_ids}")
             self.update_stack_status(puzzle, stacked_piece_ids, stacked=True)
         if reject_piece_move:
-            logger.debug(f"TODO: Exceeded stack limit; reject piece move for {piece}")
-            # TODO: send internal request to reject piece move
+            logger.debug(f"Exceeded stack limit; reject piece move for {piece}")
             r = requests.patch(
                 "http://{HOSTPUBLISH}:{PORTPUBLISH}/internal/puzzle/{puzzle_id}/piece/{piece}/move/".format(
                     HOSTPUBLISH=self.config["HOSTPUBLISH"],

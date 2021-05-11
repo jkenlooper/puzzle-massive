@@ -1111,6 +1111,7 @@ class InternalPuzzlePiecesMovePublishView(MethodView):
         r
         """
         ip = "0"  # No ip is used here for karma
+        # Ignore publish of user data when anonymous user
         user = ANONYMOUS_USER_ID
         piece_move_timeout = current_app.config["PIECE_MOVE_TIMEOUT"]
 
