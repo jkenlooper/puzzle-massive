@@ -7,20 +7,6 @@ import requests
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-# record origin of the piece
-#   origin of piece is packed in the token
-# count pieces that are overlapping
-# if stacked
-#   use internal request to update piece and other pieces
-#   that are overlapping statuses to stacked
-# if stacked and past stack limit
-#   reject piece move
-#   put request back to origin
-#   use internal only request to move piece back to origin
-# if not stacked
-#   update pcstacked status
-#   delete stacked status (s)
-
 # TODO: make these configurable in the site.cfg, they could also be configurable
 # per puzzle.
 STACK_THRESHOLD = 1

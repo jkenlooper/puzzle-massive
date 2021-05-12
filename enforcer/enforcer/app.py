@@ -51,6 +51,7 @@ class EnforcerApp:
             def halt_process():
                 cb(puzzle)
 
+            # TODO: Switch to starting a new Process instead of using a Pool
             self.pool.apply_async(
                 enforcer.process.start,
                 (self.config, puzzle),
