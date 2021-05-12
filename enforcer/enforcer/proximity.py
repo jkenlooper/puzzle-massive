@@ -21,9 +21,12 @@ logger.setLevel(logging.DEBUG)
 #   update pcstacked status
 #   delete stacked status (s)
 
-# TODO: make these configurable in the site.cfg
-STACK_THRESHOLD = 4
-STACK_LIMIT = 10
+# TODO: make these configurable in the site.cfg, they could also be configurable
+# per puzzle.
+STACK_THRESHOLD = 1
+STACK_LIMIT = 2
+# TODO: experminting with no piece padding.
+PIECE_PADDING = 0.0
 
 
 def get_bbox_area(bbox):
@@ -47,7 +50,7 @@ class Proximity:
         self.puzzle_data = puzzle_data
         self.proximity_init_time = time.time()
         piece_join_tolerance = self.config["PIECE_JOIN_TOLERANCE"]
-        self.piece_padding = int(piece_join_tolerance * 0.5)
+        self.piece_padding = int(piece_join_tolerance * PIECE_PADDING)
 
     def process(self, user, puzzle, piece, origin_x, origin_y, x, y):
         # rotate is not implemented yet; leaving origin_r as 0 for now.
@@ -81,6 +84,7 @@ class Proximity:
         adjacent_piece_ids = set(self.piece_properties[piece]["adjacent"].keys())
         proximity_count = self.proximity_idx.count(piece_padded_bbox) - 1
         if proximity_count == 0:
+            self.update_stack_status(puzzle, [piece], stacked=False)
             return
 
         hits = list(self.proximity_idx.intersection(piece_padded_bbox, objects=True))
@@ -172,6 +176,9 @@ class Proximity:
                 # Could be caused by the puzzle completing after the initial
                 # request.
                 logger.debug("Ignoring error when attempting to reject piece movement")
+            else:
+                # Keep the proximity idx in sync with the rejected piece move
+                self.move_piece(piece, piece_bbox, origin_piece_bbox)
         if len(reset_stacked_ids) > 0:
             logger.debug(f"Reset stacked pieces: {reset_stacked_ids}")
             self.update_stack_status(puzzle, reset_stacked_ids, stacked=False)
