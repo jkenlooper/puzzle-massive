@@ -1,9 +1,8 @@
 import time
-from time import sleep
 import logging
-import base64
 import atexit
 
+from greenlet import getcurrent, greenlet, GreenletExit
 import requests
 from rtree import index
 
@@ -14,11 +13,8 @@ import enforcer.proximity
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
-# TODO: set the time to live for an active puzzle to be 5 minutes.
-# Set to 30 seconds while developing.
-TTL = 30
+TTL = 300
 
 HOTSPOT_GRID_SIZE = 40
 
@@ -33,6 +29,7 @@ def start(config, puzzle):
     resources if the puzzle isn't active anymore.
     """
 
+    logger.setLevel(logging.DEBUG if config["DEBUG"] else logging.INFO)
     process = Process(config, puzzle)
     process.start()
     logger.debug("process start is done")
@@ -41,10 +38,11 @@ def start(config, puzzle):
     return puzzle
 
 
-class Process:
+class Process(greenlet):
     ""
 
     def __init__(self, config, puzzle):
+        super().__init__()
         self.halt = False
         self.config = config
         self.puzzle = puzzle
@@ -64,14 +62,17 @@ class Process:
                 )
             )
         )
-        logger.debug(f"start process {self.now}")
+        logger.info(f"Puzzle {puzzle} init now: {self.now}")
         # setup puzzle bbox index
         # create pixelated piece mask if needed
         (puzzle_data, piece_properties, hotspot_idx, proximity_idx) = create_index(
             self.config, self.redis_connection, puzzle
         )
         self.hotspot = enforcer.hotspot.HotSpot(
-            self.redis_connection, hotspot_idx, piece_properties
+            self.redis_connection,
+            hotspot_idx,
+            piece_properties,
+            self.config,
         )
         if self.enable_proximity:
             self.proximity = enforcer.proximity.Proximity(
@@ -84,6 +85,7 @@ class Process:
 
     def update_active_puzzle(self, message):
         "message = base64({puzzle}:{user}:{piece}:{x}:{y}:{token})"
+        logger.debug("update_active_puzzle")
         channel = message.get("channel", b"").decode()
         puzzle = int(channel.split(":")[1])
         if self.puzzle == puzzle:
@@ -91,6 +93,7 @@ class Process:
 
     def handle_piece_translate_message(self, message):
         "enforcer_piece_translate:{puzzle} {user}:{piece}:{origin_x}:{origin_y}:{x}:{y}"
+        logger.debug("handle_piece_translate_message")
         if message.get("type") != "message":
             return
         channel = message.get("channel", b"").decode()
@@ -107,6 +110,7 @@ class Process:
 
     def handle_piece_group_translate_message(self, message):
         "enforcer_piece_group_translate:{puzzle} {piece}:{origin_x}:{origin_y}:{x}:{y}_{piece}:{origin_x}:{origin_y}:{x}:{y}_..."
+        logger.debug("handle_piece_group_translate_message")
         if not self.enable_proximity:
             # At this time only the proximity process usese this information
             return
@@ -120,9 +124,10 @@ class Process:
         pieces = list(map(lambda x: list(map(int, x.split(":"))), data.split("_")))
         self.proximity.batch_process(pieces)
 
-    def start(self):
+    def run(self):
         ""
 
+        logger.debug(f"Puzzle {self.puzzle} run")
         self.pubsub.subscribe(
             **{
                 f"enforcer_piece_group_translate:{self.puzzle}": self.handle_piece_group_translate_message,
@@ -131,10 +136,16 @@ class Process:
             }
         )
         atexit.register(self.halt_process)
-        while not self.halt and self.now < self.end:
-            self.now = time.time()
-            self.pubsub.get_message()
-            sleep(0.001)
+        try:
+            while not self.halt and self.now < self.end:
+                self.now = time.time()
+                self.pubsub.get_message()
+                getcurrent().parent.switch()
+        except GreenletExit:
+            logger.info(f"{self.puzzle}: Got GreenletExit; quitting")
+        finally:
+            self.close()
+        return "DONE"
 
     def close(self):
         ""
@@ -142,11 +153,11 @@ class Process:
         self.pubsub.unsubscribe(f"enforcer_piece_translate:{self.puzzle}")
         self.pubsub.unsubscribe(f"enforcer_token_request:{self.puzzle}")
         self.pubsub.close()
-        logger.debug("finish process")
+        logger.info(f"Finish process on puzzle {self.puzzle}")
 
     def halt_process(self):
         self.halt = True
-        self.logger.debug("halt process")
+        logger.debug("halt process")
         self.close()
 
 
@@ -196,7 +207,7 @@ def create_index(config, redis_connection, puzzle):
         f"http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/pieces/"
     )
     if req.status_code >= 400:
-        logger.error("puzzle not available")
+        logger.error(f"puzzle {puzzle_id} not available")
         raise Exception(puzzle)
     try:
         result = req.json()

@@ -10,7 +10,9 @@ HOTSPOT_EXPIRE = 30
 class HotSpot:
     ""
 
-    def __init__(self, redis_connection, hotspot_idx, piece_properties):
+    def __init__(self, redis_connection, hotspot_idx, piece_properties, config):
+        self.config = config
+        logger.setLevel(logging.DEBUG if config["DEBUG"] else logging.INFO)
         self.redis_connection = redis_connection
         self.hotspot_idx = hotspot_idx
         self.piece_properties = piece_properties

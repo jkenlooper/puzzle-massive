@@ -5,14 +5,11 @@ from math import ceil
 import requests
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 # TODO: make these configurable in the site.cfg, they could also be configurable
 # per puzzle.
-STACK_THRESHOLD = 1
-STACK_LIMIT = 2
-# TODO: experminting with no piece padding.
-PIECE_PADDING = 0.0
+STACK_THRESHOLD = 3
+STACK_LIMIT = 4
 
 
 def get_bbox_area(bbox):
@@ -30,13 +27,12 @@ class Proximity:
         self, redis_connection, proximity_idx, puzzle_data, piece_properties, config
     ):
         self.config = config
+        logger.setLevel(logging.DEBUG if config["DEBUG"] else logging.INFO)
         self.redis_connection = redis_connection
         self.proximity_idx = proximity_idx
         self.piece_properties = piece_properties
         self.puzzle_data = puzzle_data
         self.proximity_init_time = time.time()
-        piece_join_tolerance = self.config["PIECE_JOIN_TOLERANCE"]
-        self.piece_padding = int(piece_join_tolerance * PIECE_PADDING)
 
     def process(self, user, puzzle, piece, origin_x, origin_y, x, y):
         # rotate is not implemented yet; leaving origin_r as 0 for now.
@@ -59,21 +55,15 @@ class Proximity:
             y + h,
         ]
         piece_bbox_coverage = get_bbox_area(piece_bbox)
-        piece_padded_bbox = [
-            max(x - self.piece_padding, 0),
-            max(y - self.piece_padding, 0),
-            x + self.piece_padding + w,
-            y + self.piece_padding + h,
-        ]
         self.move_piece(piece, origin_piece_bbox, piece_bbox)
 
         adjacent_piece_ids = set(self.piece_properties[piece]["adjacent"].keys())
-        proximity_count = self.proximity_idx.count(piece_padded_bbox) - 1
+        proximity_count = self.proximity_idx.count(piece_bbox) - 1
         if proximity_count == 0:
             self.update_stack_status(puzzle, [piece], stacked=False)
             return
 
-        hits = list(self.proximity_idx.intersection(piece_padded_bbox, objects=True))
+        hits = list(self.proximity_idx.intersection(piece_bbox, objects=True))
         proximity_count = len(hits)
         stacked_piece_ids = set()
         reset_stacked_ids = set()
@@ -81,7 +71,6 @@ class Proximity:
         # TODO: Should immovable pieces be counted or not?
         ignore_immovable_pieces = True
         pcstacked = set(map(int, self.redis_connection.smembers(f"pcstacked:{puzzle}")))
-        logger.debug(f"all pcstacked {pcstacked}")
 
         if proximity_count > STACK_THRESHOLD:
             if ignore_immovable_pieces:
@@ -95,12 +84,12 @@ class Proximity:
                     # don't count the pieces that can join this piece
                     continue
                 # count how many pieces are overlapping for the intersection of
-                # this item's bbox and the piece_padded_bbox.
+                # this item's bbox and the piece_bbox.
                 intersecting_bbox = [
-                    max(piece_padded_bbox[0], item.bbox[0]),
-                    max(piece_padded_bbox[1], item.bbox[1]),
-                    min(piece_padded_bbox[2], item.bbox[2]),
-                    min(piece_padded_bbox[3], item.bbox[3]),
+                    max(piece_bbox[0], item.bbox[0]),
+                    max(piece_bbox[1], item.bbox[1]),
+                    min(piece_bbox[2], item.bbox[2]),
+                    min(piece_bbox[3], item.bbox[3]),
                 ]
                 intersecting_bbox_coverage = get_bbox_area(intersecting_bbox)
                 intersecting_hits = list(
@@ -161,7 +150,9 @@ class Proximity:
             if r.status_code >= 400:
                 # Could be caused by the puzzle completing after the initial
                 # request.
-                logger.debug("Ignoring error when attempting to reject piece movement")
+                logger.info(
+                    "Ignoring error when attempting to reject piece movement on possibly completed puzzle"
+                )
             else:
                 # Keep the proximity idx in sync with the rejected piece move
                 self.move_piece(piece, piece_bbox, origin_piece_bbox)

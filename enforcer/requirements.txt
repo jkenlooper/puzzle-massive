@@ -1,4 +1,5 @@
 -r ../requirements.txt
 requests==2.21
+greenlet==1.0.0
 Rtree==0.9.7
 -e enforcer/
