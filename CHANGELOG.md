@@ -23,7 +23,16 @@ Types of changes
 
 ## [Unreleased] - ...
 
-...
+### Fixed
+
+- Restart chill app every 26 hours (temporary fix...)
+
+### Changed
+
+- Update to latest piecemaker
+- Update piece size and hot spot size
+- Implement more accurate hotspot tracking
+- Reject piece moves when adjacent piece is stacked
 
 ## [2.10.2] - 2021-03-20
 
