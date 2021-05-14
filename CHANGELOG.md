@@ -23,6 +23,10 @@ Types of changes
 
 ## [Unreleased] - ...
 
+Did a YouTube live stream of me going over some of the improvements to piece
+rendering and with changes to the stacked pieces logic.
+[https://youtu.be/GLbO6n2JvMs](https://youtu.be/GLbO6n2JvMs)
+
 ### Fixed
 
 - Restart chill app every 26 hours (temporary fix...)
