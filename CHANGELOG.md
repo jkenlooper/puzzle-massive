@@ -33,6 +33,8 @@ rendering and with changes to the stacked pieces logic.
 
 ### Changed
 
+- Active player count is now just within last 5 minutes instead of the last 14
+  days.
 - Update to latest piecemaker
 - Update piece size and hot spot size
 - Implement more accurate hotspot tracking

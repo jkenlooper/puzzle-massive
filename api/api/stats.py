@@ -10,6 +10,7 @@ encoder = json.JSONEncoder(indent=2, sort_keys=True)
 
 DAY = 24 * 60 * 60
 ACTIVE_RANGE = 14 * DAY
+ACTIVE_PLAYER_RANGE = 5 * 60
 
 
 class PlayerRanksView(MethodView):
@@ -166,7 +167,7 @@ class PlayerStatsView(MethodView):
     def get(self):
         ""
         now = int(time.time())
-        since = now - ACTIVE_RANGE
+        since = now - ACTIVE_PLAYER_RANGE
         total_active_player_count = redis_connection.zcount("timeline", since, "+inf")
         return make_response(
             json.jsonify({"totalActivePlayers": total_active_player_count}), 200

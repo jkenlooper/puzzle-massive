@@ -13,7 +13,7 @@ export interface PlayerStatsData extends PlayerStatsResponse {
 class PlayerStatsService {
   private fetchStatsService: FetchService;
   private listeners: Map<string, PlayerStatsCallback> = new Map();
-  //private pollingInterval = 5 * 60 * 1000; // 5 minutes
+  private pollingInterval = 1 * 60 * 1000; // one minute
   data: PlayerStatsData = {
     hasError: false,
     isReady: false,
@@ -27,7 +27,7 @@ class PlayerStatsService {
     // use a websocket or server push.  For now, just hit it once per page
     // load.
     //document.addEventListener("playerStatsChange", onPlayerStatsChange);
-    //window.setInterval(onPlayerStatsChange, this.pollingInterval);
+    window.setInterval(onPlayerStatsChange, this.pollingInterval);
     onPlayerStatsChange();
   }
 
