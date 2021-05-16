@@ -23,10 +23,6 @@ class PlayerStatsService {
   constructor() {
     this.fetchStatsService = new FetchService(`/newapi/player-stats/`);
     const onPlayerStatsChange = this._onPlayerStatsChange.bind(this);
-    // TODO: This could update as needed or poll.  It could also be setup to
-    // use a websocket or server push.  For now, just hit it once per page
-    // load.
-    //document.addEventListener("playerStatsChange", onPlayerStatsChange);
     window.setInterval(onPlayerStatsChange, this.pollingInterval);
     onPlayerStatsChange();
   }
