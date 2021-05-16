@@ -79,4 +79,6 @@
 /queries/other/*
 !/queries/other/README.md
 /templates/other/*
+!/media/other/README.md
+/media/other/*
 !/templates/other/README.md
