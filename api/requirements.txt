@@ -4,8 +4,8 @@ git+https://github.com/jkenlooper/glue.git@master#egg=glue
 pixsaw==0.3.0
 #git+https://github.com/jkenlooper/pixsaw.git@develop#egg=pixsaw
 docopt==0.6.2
-piecemaker==0.4.0
-#git+https://github.com/jkenlooper/piecemaker.git@develop#egg=piecemaker
+#piecemaker==0.4.0
+git+https://github.com/jkenlooper/piecemaker.git@develop#egg=piecemaker
 #pycurl==7.43.0.2
 requests==2.21
 responses==0.10.14
