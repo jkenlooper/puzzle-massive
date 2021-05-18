@@ -57,12 +57,12 @@ apt-get --yes install ca-certificates fonts-liberation libappindicator3-1 libaso
 su --command "cd /home/dev && npm install jkenlooper/svpng#28554fa32d57df13ec330e3a4df152172b6080bb" dev
 ln -f -s /home/dev/node_modules/svpng/bin/svpng.js /usr/local/bin/svpng
 
-echo "checking for missed dependencies of chrome"
-ldd chrome | grep not
-
 apt-get --yes install redis-server
 redis-cli config set maxmemory "500mb"
 redis-cli config rewrite
 
 # Remove the default nginx config
 rm -f /etc/nginx/sites-enabled/default
+
+echo "checking for missed dependencies of chrome"
+ldd /home/dev/node_modules/puppeteer/.local-chromium/linux-*/chrome-linux/chrome | grep not
