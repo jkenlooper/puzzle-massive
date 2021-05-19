@@ -1,3 +1,5 @@
+from flask import current_app
+
 from api.tools import formatPieceMovementString
 
 
@@ -186,6 +188,7 @@ class PieceMutateProcess:
             )
             self.pcfixed_puzzle = set(map(int, pcfixed_puzzle))
             self.pcstacked_puzzle = set(map(int, pcstacked_puzzle))
+            #current_app.logger.debug(f"piece:{self.piece} stacked {self.pcstacked_puzzle}")
             pcg_puzzle_g = set(map(int, pcg_puzzle_g))
             self.all_other_pieces_in_piece_group = pcg_puzzle_g.copy()
             self.all_other_pieces_in_piece_group.discard(self.piece)

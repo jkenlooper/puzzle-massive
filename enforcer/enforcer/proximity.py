@@ -1,6 +1,6 @@
 import time
 import logging
-from math import ceil
+from math import ceil, floor
 
 import requests
 
@@ -129,6 +129,34 @@ class Proximity:
             reset_stacked_ids.update(set(map(lambda x: x.id, hits)))
 
         reset_stacked_ids = reset_stacked_ids.intersection(pcstacked)
+
+        # Filter out any that are still stacked.
+        # TODO: More testing of this bit of madness would be a good idea.
+        for item in hits:
+            other_hits = list(
+                self.proximity_idx.intersection(item.bbox, objects=True)
+            )
+            for other_item in other_hits:
+                other_item_bbox_coverage = get_bbox_area(other_item.bbox)
+                other_intersecting_bbox = [
+                    max(item.bbox[0], other_item.bbox[0]),
+                    max(item.bbox[1], other_item.bbox[1]),
+                    min(item.bbox[2], other_item.bbox[2]),
+                    min(item.bbox[3], other_item.bbox[3]),
+                ]
+                other_intersecting_bbox_coverage = get_bbox_area(other_intersecting_bbox)
+                other_intersecting_hits = list(
+                    self.proximity_idx.intersection(other_intersecting_bbox, objects=True)
+                )
+                other_intersecting_count = len(other_intersecting_hits) - 1
+                if other_intersecting_count > floor(
+                    STACK_THRESHOLD * (other_intersecting_bbox_coverage / other_item_bbox_coverage)
+                ):
+                    try:
+                        reset_stacked_ids.remove(other_item.id)
+                    except KeyError:
+                        pass
+
         if len(stacked_piece_ids) > 0:
             logger.debug(f"Set these piece ids to stacked status: {stacked_piece_ids}")
             self.update_stack_status(puzzle, stacked_piece_ids, stacked=True)

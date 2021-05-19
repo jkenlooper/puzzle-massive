@@ -531,6 +531,12 @@ customElements.define(
           $piece.classList.add("p");
           $piece.setAttribute("id", "p-" + pieceID);
           $piece.classList.add("pc-" + pieceID);
+          /* TODO: show id on piece when debugging
+          const $pieceID = document.createElement("span");
+          $pieceID.classList.add("p-id");
+          $pieceID.innerText = "" + pieceID;
+          $piece.appendChild($pieceID);
+          */
           // dark/light pieces not used at the moment.
           //$piece.classList.add("p--" + (piece.b === 0 ? "dark" : "light"));
           tmp.appendChild($piece);
@@ -672,9 +678,8 @@ customElements.define(
       // Delay removing is-shadowed so the transition can complete first
       window.clearTimeout(this.removeShadowedPiecesTimeout);
       this.removeShadowedPiecesTimeout = window.setTimeout(() => {
-        const shadowedPieces = this.$collection.querySelectorAll(
-          ".is-shadowed.p"
-        );
+        const shadowedPieces =
+          this.$collection.querySelectorAll(".is-shadowed.p");
         for (const sp of shadowedPieces.values()) {
           sp.classList.remove("is-shadowed");
         }

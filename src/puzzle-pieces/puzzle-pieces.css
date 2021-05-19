@@ -16,6 +16,11 @@
   transition-property: transform;
   transition-timing-function: cubic-bezier(0.96, -0.08, 0.71, -0.53);
   transition-duration: 1.2s;
+  /* TODO: show id on piece when debugging
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  */
 }
 .pm-PuzzlePieces.show-movable .p {
   box-shadow: 0 0 0px 10px rgba(0, 0, 0, 0.5),
@@ -207,6 +212,18 @@
   background: var(--pm-PuzzlePieces-shadowColor);
   filter: brightness(85%) blur(5px);
 }
+
+/* TODO: show id on piece when debugging
+.p-id {
+  display: inline-block;
+  background-color: black;
+  color: white;
+  padding: 2px;
+  font-size: 12px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+*/
 
 .pm-PuzzlePieces-collection {
 }
