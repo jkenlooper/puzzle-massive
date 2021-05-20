@@ -366,6 +366,11 @@ class PieceMutateProcess:
             for grouped_piece in self.all_other_pieces_in_piece_group:
                 pipe.sadd("pcfixed:{puzzle}".format(puzzle=self.puzzle), grouped_piece)
                 self.pcfixed_puzzle.add(grouped_piece)
+                pipe.srem("pcstacked:{puzzle}".format(puzzle=self.puzzle), grouped_piece)
+                try:
+                    self.pcstacked_puzzle.remove(grouped_piece)
+                except KeyError:
+                    pass
                 lines.append(formatPieceMovementString(grouped_piece, s="1"))
 
         new_piece_group = adjacent_piece_props.get("g", self.can_join_adjacent_piece)

@@ -68,15 +68,12 @@ class Proximity:
         stacked_piece_ids = set()
         reset_stacked_ids = set()
         reject_piece_move = False
-        # TODO: Should immovable pieces be counted or not?
-        ignore_immovable_pieces = True
         pcstacked = set(map(int, self.redis_connection.smembers(f"pcstacked:{puzzle}")))
+        pcfixed = set(
+            map(int, self.redis_connection.smembers(f"pcfixed:{puzzle}"))
+        )
 
         if proximity_count > STACK_THRESHOLD:
-            if ignore_immovable_pieces:
-                pcfixed = set(
-                    map(int, self.redis_connection.smembers(f"pcfixed:{puzzle}"))
-                )
             for item in hits:
                 if item.id == piece:
                     continue
@@ -112,7 +109,7 @@ class Proximity:
                         # don't count the pieces that can join this piece
                         intersecting_adjacent_piece_ids.add(intersecting_item.id)
                         continue
-                    if ignore_immovable_pieces and intersecting_item.id in pcfixed:
+                    if intersecting_item.id in pcfixed:
                         # don't count pieces that are immovable since updating
                         # the status from immovable to fixed would break things.
                         continue
@@ -137,6 +134,10 @@ class Proximity:
                 self.proximity_idx.intersection(item.bbox, objects=True)
             )
             for other_item in other_hits:
+                if other_item.id in pcfixed:
+                    # Catch any edge cases when piece_mutate might not have
+                    # updated pcstacked in time.
+                    continue
                 other_item_bbox_coverage = get_bbox_area(other_item.bbox)
                 other_intersecting_bbox = [
                     max(item.bbox[0], other_item.bbox[0]),
