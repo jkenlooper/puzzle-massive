@@ -23,6 +23,9 @@ Types of changes
 
 ## [Unreleased] - ...
 
+The enforcer service is still a work in progress and is currently not handling
+the stacking of pieces to avoid breaking puzzles.
+
 Did a YouTube live stream of me going over some of the improvements to piece
 rendering and with changes to the stacked pieces logic.
 [https://youtu.be/GLbO6n2JvMs](https://youtu.be/GLbO6n2JvMs)

@@ -62,6 +62,14 @@ class Process(greenlet):
                 )
             )
         )
+
+        # TODO: The stacking piece logic still has some issues with correctly
+        # updating piece stacked and sometimes piece fixed statuses.
+        self.enable_proximity = False
+
+        if not self.enable_proximity:
+            self.redis_connection.delete(f"pcstacked:{puzzle}")
+
         logger.info(f"Puzzle {puzzle} init now: {self.now}")
         # setup puzzle bbox index
         # create pixelated piece mask if needed
@@ -112,7 +120,7 @@ class Process(greenlet):
         "enforcer_piece_group_translate:{puzzle} {piece}:{origin_x}:{origin_y}:{x}:{y}_{piece}:{origin_x}:{origin_y}:{x}:{y}_..."
         logger.debug("handle_piece_group_translate_message")
         if not self.enable_proximity:
-            # At this time only the proximity process usese this information
+            # At this time only the proximity process uses this information
             return
         if message.get("type") != "message":
             return

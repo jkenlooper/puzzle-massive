@@ -72,12 +72,16 @@ class Proximity:
         pcfixed = set(
             map(int, self.redis_connection.smembers(f"pcfixed:{puzzle}"))
         )
+        logger.debug(f"stacked: {pcstacked}")
+        logger.debug(f"fixed: {pcfixed}")
 
         if proximity_count > STACK_THRESHOLD:
             for item in hits:
                 if item.id == piece:
+                    reset_stacked_ids.add(item.id)
                     continue
                 if item.id in adjacent_piece_ids:
+                    reset_stacked_ids.add(item.id)
                     # don't count the pieces that can join this piece
                     continue
                 # count how many pieces are overlapping for the intersection of
@@ -113,6 +117,7 @@ class Proximity:
                         # don't count pieces that are immovable since updating
                         # the status from immovable to fixed would break things.
                         continue
+                    # TODO: check intersecting_item bbox coverage here?
                     intersecting_stacked_piece_ids.add(intersecting_item.id)
                 if len(intersecting_stacked_piece_ids) <= STACK_THRESHOLD:
                     reset_stacked_ids.update(intersecting_stacked_piece_ids)
@@ -137,6 +142,7 @@ class Proximity:
                 if other_item.id in pcfixed:
                     # Catch any edge cases when piece_mutate might not have
                     # updated pcstacked in time.
+                    reset_stacked_ids.add(other_item.id)
                     continue
                 other_item_bbox_coverage = get_bbox_area(other_item.bbox)
                 other_intersecting_bbox = [

@@ -471,6 +471,10 @@ class PieceMutateProcess:
                 pipe.srem(
                     "pcstacked:{puzzle}".format(puzzle=self.puzzle), grouped_piece
                 )
+                try:
+                    self.pcstacked_puzzle.remove(grouped_piece)
+                except KeyError:
+                    pass
             pipe.hmset(
                 "pc:{puzzle}:{grouped_piece}".format(
                     puzzle=self.puzzle, grouped_piece=grouped_piece
@@ -494,6 +498,10 @@ class PieceMutateProcess:
             pipe.sadd("pcfixed:{puzzle}".format(puzzle=self.puzzle), self.piece)
             self.pcfixed_puzzle.add(self.piece)
             pipe.srem("pcstacked:{puzzle}".format(puzzle=self.puzzle), self.piece)
+            try:
+                self.pcstacked_puzzle.remove(self.piece)
+            except KeyError:
+                pass
         if new_group is not None:
             # For the piece that doesn't need x,y updated remove from the old group and place in new_group
             pipe.sadd(
