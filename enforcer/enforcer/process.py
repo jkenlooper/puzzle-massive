@@ -63,8 +63,7 @@ class Process(greenlet):
             )
         )
 
-        # TODO: The stacking piece logic still has some issues with correctly
-        # updating piece stacked and sometimes piece fixed statuses.
+        # TODO: The stacking piece logic has not been well tested.
         self.enable_proximity = False
 
         if not self.enable_proximity:
@@ -124,13 +123,15 @@ class Process(greenlet):
             return
         if message.get("type") != "message":
             return
+        channel = message.get("channel", b"").decode()
         data = message.get("data", b"").decode()
         if not data:
             logger.debug("piece group translate no data?")
             return
 
+        puzzle = int(channel.split(":")[1])
         pieces = list(map(lambda x: list(map(int, x.split(":"))), data.split("_")))
-        self.proximity.batch_process(pieces)
+        self.proximity.batch_process(puzzle, pieces)
 
     def run(self):
         ""

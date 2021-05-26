@@ -1,8 +1,9 @@
 import time
 import logging
-from math import ceil, floor
 
 import requests
+
+from api.tools import formatPieceMovementString
 
 logger = logging.getLogger(__name__)
 
@@ -10,6 +11,7 @@ logger = logging.getLogger(__name__)
 # per puzzle.
 STACK_THRESHOLD = 3
 STACK_LIMIT = 4
+OVERLAP_THRESHOLD = 0.3
 
 
 def get_bbox_area(bbox):
@@ -36,6 +38,9 @@ class Proximity:
 
     def process(self, user, puzzle, piece, origin_x, origin_y, x, y):
         # rotate is not implemented yet; leaving origin_r as 0 for now.
+        stacked_piece_ids = set()
+        reset_stacked_ids = set()
+        reject_piece_move = False
         origin_r = 0
         logger.debug(
             f"proximity process {user}, {puzzle}, {piece}, {origin_x}, {origin_y}, {x}, {y}"
@@ -54,120 +59,23 @@ class Proximity:
             x + w,
             y + h,
         ]
-        piece_bbox_coverage = get_bbox_area(piece_bbox)
-        self.move_piece(piece, origin_piece_bbox, piece_bbox)
-
-        adjacent_piece_ids = set(self.piece_properties[piece]["adjacent"].keys())
-        proximity_count = self.proximity_idx.count(piece_bbox) - 1
-        if proximity_count == 0:
-            self.update_stack_status(puzzle, [piece], stacked=False)
-            return
-
-        hits = list(self.proximity_idx.intersection(piece_bbox, objects=True))
-        proximity_count = len(hits)
-        stacked_piece_ids = set()
-        reset_stacked_ids = set()
-        reject_piece_move = False
-        pcstacked = set(map(int, self.redis_connection.smembers(f"pcstacked:{puzzle}")))
         pcfixed = set(
             map(int, self.redis_connection.smembers(f"pcfixed:{puzzle}"))
         )
-        logger.debug(f"stacked: {pcstacked}")
-        logger.debug(f"fixed: {pcfixed}")
 
-        if proximity_count > STACK_THRESHOLD:
-            for item in hits:
-                if item.id == piece:
-                    reset_stacked_ids.add(item.id)
-                    continue
-                if item.id in adjacent_piece_ids:
-                    reset_stacked_ids.add(item.id)
-                    # don't count the pieces that can join this piece
-                    continue
-                # count how many pieces are overlapping for the intersection of
-                # this item's bbox and the piece_bbox.
-                intersecting_bbox = [
-                    max(piece_bbox[0], item.bbox[0]),
-                    max(piece_bbox[1], item.bbox[1]),
-                    min(piece_bbox[2], item.bbox[2]),
-                    min(piece_bbox[3], item.bbox[3]),
-                ]
-                intersecting_bbox_coverage = get_bbox_area(intersecting_bbox)
-                intersecting_hits = list(
-                    self.proximity_idx.intersection(intersecting_bbox, objects=True)
-                )
-                intersecting_count = len(intersecting_hits) - 1
-                if intersecting_count < ceil(
-                    STACK_THRESHOLD * (intersecting_bbox_coverage / piece_bbox_coverage)
-                ):
-                    reset_stacked_ids.update(
-                        set(map(lambda x: x.id, intersecting_hits))
-                    )
-                    continue
-                intersecting_stacked_piece_ids = set()
-                intersecting_adjacent_piece_ids = set()
-                for intersecting_item in intersecting_hits:
-                    if intersecting_item.id == item.id:
-                        continue
-                    if intersecting_item.id in adjacent_piece_ids:
-                        # don't count the pieces that can join this piece
-                        intersecting_adjacent_piece_ids.add(intersecting_item.id)
-                        continue
-                    if intersecting_item.id in pcfixed:
-                        # don't count pieces that are immovable since updating
-                        # the status from immovable to fixed would break things.
-                        continue
-                    # TODO: check intersecting_item bbox coverage here?
-                    intersecting_stacked_piece_ids.add(intersecting_item.id)
-                if len(intersecting_stacked_piece_ids) <= STACK_THRESHOLD:
-                    reset_stacked_ids.update(intersecting_stacked_piece_ids)
-                    reset_stacked_ids.update(intersecting_adjacent_piece_ids)
-                    reset_stacked_ids.add(item.id)
-                if len(intersecting_stacked_piece_ids) > STACK_THRESHOLD:
-                    stacked_piece_ids.update(intersecting_stacked_piece_ids)
-                if len(intersecting_stacked_piece_ids) > STACK_LIMIT:
-                    reject_piece_move = True
-        else:
-            reset_stacked_ids.update(set(map(lambda x: x.id, hits)))
+        # Reassess stacked pieces that were intersecting with the piece before
+        # it moved.
+        origin_stack_counts = self.get_stack_counts(origin_piece_bbox, pcfixed=pcfixed)
+        for piece_id, stack_count in origin_stack_counts.items():
+            if piece_id == piece:
+                reset_stacked_ids.add(piece_id)
+            elif (stack_count - 1) <= STACK_THRESHOLD:
+                reset_stacked_ids.add(piece_id)
 
-        reset_stacked_ids = reset_stacked_ids.intersection(pcstacked)
+        self.move_piece(piece, origin_piece_bbox, piece_bbox)
 
-        # Filter out any that are still stacked.
-        # TODO: More testing of this bit of madness would be a good idea.
-        for item in hits:
-            other_hits = list(
-                self.proximity_idx.intersection(item.bbox, objects=True)
-            )
-            for other_item in other_hits:
-                if other_item.id in pcfixed:
-                    # Catch any edge cases when piece_mutate might not have
-                    # updated pcstacked in time.
-                    reset_stacked_ids.add(other_item.id)
-                    continue
-                other_item_bbox_coverage = get_bbox_area(other_item.bbox)
-                other_intersecting_bbox = [
-                    max(item.bbox[0], other_item.bbox[0]),
-                    max(item.bbox[1], other_item.bbox[1]),
-                    min(item.bbox[2], other_item.bbox[2]),
-                    min(item.bbox[3], other_item.bbox[3]),
-                ]
-                other_intersecting_bbox_coverage = get_bbox_area(other_intersecting_bbox)
-                other_intersecting_hits = list(
-                    self.proximity_idx.intersection(other_intersecting_bbox, objects=True)
-                )
-                other_intersecting_count = len(other_intersecting_hits) - 1
-                if other_intersecting_count > floor(
-                    STACK_THRESHOLD * (other_intersecting_bbox_coverage / other_item_bbox_coverage)
-                ):
-                    try:
-                        reset_stacked_ids.remove(other_item.id)
-                    except KeyError:
-                        pass
-
-        if len(stacked_piece_ids) > 0:
-            logger.debug(f"Set these piece ids to stacked status: {stacked_piece_ids}")
-            self.update_stack_status(puzzle, stacked_piece_ids, stacked=True)
-        if reject_piece_move:
+        def reject_piece_move():
+            success = False
             logger.debug(f"Exceeded stack limit; reject piece move for {piece}")
             r = requests.patch(
                 "http://{HOSTPUBLISH}:{PORTPUBLISH}/internal/puzzle/{puzzle_id}/piece/{piece}/move/".format(
@@ -191,14 +99,33 @@ class Proximity:
             else:
                 # Keep the proximity idx in sync with the rejected piece move
                 self.move_piece(piece, piece_bbox, origin_piece_bbox)
-        if len(reset_stacked_ids) > 0:
-            logger.debug(f"Reset stacked pieces: {reset_stacked_ids}")
-            self.update_stack_status(puzzle, reset_stacked_ids, stacked=False)
+                success = True
+            return success
 
-        logger.debug(f"proximity count {proximity_count}")
-        logger.debug(f"adjacent count {len(self.piece_properties[piece]['adjacent'])}")
+        # Reassess stacked pieces that are now intersecting with the piece after
+        # it moved.
+        piece_move_rejected = False
+        target_stack_counts = self.get_stack_counts(piece_bbox, pcfixed=pcfixed)
+        for piece_id, stack_count in target_stack_counts.items():
+            if stack_count > STACK_LIMIT:
+                piece_move_rejected = reject_piece_move()
+                break
+            if piece_id in pcfixed:
+                continue
+            if stack_count > STACK_THRESHOLD:
+                try:
+                    reset_stacked_ids.remove(piece_id)
+                except KeyError:
+                    pass
+                stacked_piece_ids.add(piece_id)
+
+        if not piece_move_rejected:
+            self.update_stack_status(puzzle, reset_stacked_ids, stacked=False)
+            self.update_stack_status(puzzle, stacked_piece_ids, stacked=True)
 
     def update_stack_status(self, puzzle, piece_ids, stacked=True):
+        if len(piece_ids) == 0:
+            return
         if stacked:
             self.redis_connection.sadd(
                 "pcstacked:{puzzle}".format(puzzle=puzzle),
@@ -210,8 +137,29 @@ class Proximity:
                 *piece_ids,
             )
 
-    def batch_process(self, pieces):
+        # TODO: publish the stacked status change so the piece can have the
+        # border around it be removed or added.
+        lines = []
+        msg = ""
+        stacked_status = "2" if stacked else None
+        for piece in piece_ids:
+            lines.append(formatPieceMovementString(piece, s=stacked_status))
+        msg = "\n".join(lines)
+        logger.debug(msg)
+        # TODO: The enforcer app is not a flask app, so can't just use the sse.publish
+        #sse.publish(
+        #    msg,
+        #    type="move",
+        #    channel="puzzle:{puzzle_id}".format(puzzle_id=self.puzzle_data["puzzle_id"]),
+        #)
+
+    def batch_process(self, puzzle, pieces):
         "Update the piece bboxes for all pieces that moved in a group"
+        stacked_piece_ids = set()
+        reset_stacked_ids = set()
+        pcfixed = set(
+            map(int, self.redis_connection.smembers(f"pcfixed:{puzzle}"))
+        )
         for pc in pieces:
             (piece, origin_x, origin_y, x, y) = pc
             w = self.piece_properties[piece]["w"]
@@ -229,8 +177,33 @@ class Proximity:
                 x + w,
                 y + h,
             ]
+
+            # Reassess stacked pieces that were intersecting with the piece before
+            # it moved.
+            origin_stack_counts = self.get_stack_counts(origin_piece_bbox, pcfixed=pcfixed)
+            for piece_id, stack_count in origin_stack_counts.items():
+                if piece_id == piece:
+                    reset_stacked_ids.add(piece_id)
+                elif (stack_count - 1) <= STACK_THRESHOLD:
+                    reset_stacked_ids.add(piece_id)
+
             self.move_piece(piece, origin_piece_bbox, piece_bbox)
-            # TODO: update the pcstacked and pcfixed status on all pieces moved in the group?
+
+            # Reassess stacked pieces that are now intersecting with the piece after
+            # it moved.
+            target_stack_counts = self.get_stack_counts(piece_bbox, pcfixed=pcfixed)
+            for piece_id, stack_count in target_stack_counts.items():
+                if piece_id in pcfixed:
+                    continue
+                if stack_count > STACK_THRESHOLD:
+                    try:
+                        reset_stacked_ids.remove(piece_id)
+                    except KeyError:
+                        pass
+                    stacked_piece_ids.add(piece_id)
+
+        self.update_stack_status(puzzle, reset_stacked_ids, stacked=False)
+        self.update_stack_status(puzzle, stacked_piece_ids, stacked=True)
 
     def move_piece(self, piece, origin_piece_bbox, piece_bbox):
         """
@@ -239,3 +212,31 @@ class Proximity:
         """
         self.proximity_idx.delete(piece, origin_piece_bbox)
         self.proximity_idx.insert(piece, piece_bbox)
+
+    def get_stack_counts(self, bbox, pcfixed={}):
+        "With each intersecting bbox; reassess the stack count of other bboxes that intersect it."
+        result = {}
+        hits = list(self.proximity_idx.intersection(bbox, objects=True))
+        for item in hits:
+            intersecting_hits = self.proximity_idx.intersection(item.bbox, objects=True)
+            stack_count = 0
+            coverage = get_bbox_area(item.bbox)
+            adjacent_piece_ids = set(self.piece_properties[item.id]["adjacent"].keys())
+            for intersecting_item in intersecting_hits:
+                if intersecting_item.id in adjacent_piece_ids:
+                    continue
+                if intersecting_item.id in pcfixed:
+                    continue
+                intersecting_bbox = [
+                    max(item.bbox[0], intersecting_item.bbox[0]),
+                    max(item.bbox[1], intersecting_item.bbox[1]),
+                    min(item.bbox[2], intersecting_item.bbox[2]),
+                    min(item.bbox[3], intersecting_item.bbox[3]),
+                ]
+                intersecting_coverage = get_bbox_area(intersecting_bbox)
+                percent_of_item_is_covered_by_bbox = (intersecting_coverage / coverage)
+
+                if percent_of_item_is_covered_by_bbox >= OVERLAP_THRESHOLD:
+                    stack_count = stack_count + 1
+                result[item.id] = stack_count
+        return result
