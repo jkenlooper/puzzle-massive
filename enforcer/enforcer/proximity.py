@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 # TODO: make these configurable in the site.cfg, they could also be configurable
 # per puzzle.
 STACK_THRESHOLD = 3
-STACK_LIMIT = 4
+STACK_LIMIT = 6
 OVERLAP_THRESHOLD = 0.3
 
 
@@ -69,7 +69,7 @@ class Proximity:
         for piece_id, stack_count in origin_stack_counts.items():
             if piece_id == piece:
                 reset_stacked_ids.add(piece_id)
-            elif (stack_count - 1) <= STACK_THRESHOLD:
+            elif stack_count <= STACK_THRESHOLD:
                 reset_stacked_ids.add(piece_id)
 
         self.move_piece(piece, origin_piece_bbox, piece_bbox)
@@ -120,8 +120,14 @@ class Proximity:
                 stacked_piece_ids.add(piece_id)
 
         if not piece_move_rejected:
+            reset_stacked_ids.difference_update(stacked_piece_ids)
             self.update_stack_status(puzzle, reset_stacked_ids, stacked=False)
             self.update_stack_status(puzzle, stacked_piece_ids, stacked=True)
+            self.publish_piece_status_update(reset_stacked_ids, stacked_piece_ids)
+        #pcstacked = set(
+        #    map(int, self.redis_connection.smembers(f"pcstacked:{puzzle}"))
+        #)
+        #logger.debug(f"stacked: {pcstacked}")
 
     def update_stack_status(self, puzzle, piece_ids, stacked=True):
         if len(piece_ids) == 0:
@@ -137,21 +143,31 @@ class Proximity:
                 *piece_ids,
             )
 
-        # TODO: publish the stacked status change so the piece can have the
-        # border around it be removed or added.
+    def publish_piece_status_update(self, reset_stacked_ids, stacked_piece_ids):
+        """
+        Publish the stacked status change so the piece can have the border
+        around it be removed or added.
+        """
         lines = []
         msg = ""
-        stacked_status = "2" if stacked else None
-        for piece in piece_ids:
-            lines.append(formatPieceMovementString(piece, s=stacked_status))
+        for piece in reset_stacked_ids:
+            lines.append(formatPieceMovementString(piece, s="0"))
+        for piece in stacked_piece_ids:
+            lines.append(formatPieceMovementString(piece, s="2"))
         msg = "\n".join(lines)
         logger.debug(msg)
-        # TODO: The enforcer app is not a flask app, so can't just use the sse.publish
-        #sse.publish(
-        #    msg,
-        #    type="move",
-        #    channel="puzzle:{puzzle_id}".format(puzzle_id=self.puzzle_data["puzzle_id"]),
-        #)
+        r = requests.post(
+            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/publish_move/".format(
+                HOSTAPI=self.config["HOSTAPI"],
+                PORTAPI=self.config["PORTAPI"],
+                puzzle_id=self.puzzle_data["puzzle_id"],
+            ),
+            json={"msg": msg},
+        )
+        if r.status_code != 200:
+            logger.warning(
+                "Internal puzzle api error. Could not publish pieces move to update stack status on pieces"
+            )
 
     def batch_process(self, puzzle, pieces):
         "Update the piece bboxes for all pieces that moved in a group"
@@ -184,7 +200,7 @@ class Proximity:
             for piece_id, stack_count in origin_stack_counts.items():
                 if piece_id == piece:
                     reset_stacked_ids.add(piece_id)
-                elif (stack_count - 1) <= STACK_THRESHOLD:
+                elif stack_count <= STACK_THRESHOLD:
                     reset_stacked_ids.add(piece_id)
 
             self.move_piece(piece, origin_piece_bbox, piece_bbox)
@@ -202,8 +218,10 @@ class Proximity:
                         pass
                     stacked_piece_ids.add(piece_id)
 
+        reset_stacked_ids.difference_update(stacked_piece_ids)
         self.update_stack_status(puzzle, reset_stacked_ids, stacked=False)
         self.update_stack_status(puzzle, stacked_piece_ids, stacked=True)
+        self.publish_piece_status_update(reset_stacked_ids, stacked_piece_ids)
 
     def move_piece(self, piece, origin_piece_bbox, piece_bbox):
         """

@@ -23,8 +23,9 @@
   */
 }
 .pm-PuzzlePieces.show-movable .p {
-  box-shadow: 0 0 0px 10px rgba(0, 0, 0, 0.5),
-    0 0 0 20px rgba(255, 255, 255, 0.8);
+  filter: drop-shadow(5px -5px 0px currentColor)
+    drop-shadow(-5px 5px 0px currentColor) drop-shadow(5px 5px 0px currentColor)
+    drop-shadow(-5px -5px 0px currentColor);
 }
 
 .pm-PuzzlePieces-collection.is-waitingOnMoveRequest .p {
@@ -92,13 +93,25 @@
   opacity: 0.8;
 }
 
-.is-immovable.p {
+.is-stacked.p {
+  filter: drop-shadow(0px -3px 0px currentColor)
+    drop-shadow(-3px 0px 0px currentColor) drop-shadow(0px 3px 0px currentColor)
+    drop-shadow(3px 0px 0px currentColor) grayscale(100%);
   z-index: 9;
+}
+.pm-PuzzlePieces.show-movable .is-stacked.p {
+  filter: drop-shadow(5px -5px 0px currentColor)
+    drop-shadow(-5px 5px 0px currentColor) drop-shadow(5px 5px 0px currentColor)
+    drop-shadow(-5px -5px 0px currentColor) grayscale(100%) invert(100%);
+}
+
+.is-immovable.p {
+  z-index: 8;
   pointer-events: none;
 }
 
 .pm-PuzzlePieces.show-movable .is-immovable.p {
-  box-shadow: none;
+  filter: none;
 }
 
 .is-up.p,
@@ -140,7 +153,7 @@
 
 .pm-PuzzlePieces.show-movable .is-dragging.p {
   z-index: 15;
-  box-shadow: 0px 0px 100px 0px currentColor;
+  filter: none;
 }
 .is-dragging.p::before {
   pointer-events: none;
@@ -202,7 +215,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 8;
+  z-index: 7;
   transition: none;
   background-repeat: no-repeat;
   pointer-events: none;

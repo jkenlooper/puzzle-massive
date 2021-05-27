@@ -4,8 +4,8 @@ from builtins import zip
 import uuid
 
 from flask import current_app, make_response, request, abort, json
-
 from flask.views import MethodView
+from flask_sse import sse
 
 from .app import db, redis_connection
 from .database import fetch_query_string, rowify
@@ -77,6 +77,7 @@ class PuzzlePiecesView(MethodView):
                 )
             allPublicPieceProperties = pipe.execute()
         pcfixed = set(redis_connection.smembers(f"pcfixed:{puzzle}"))
+        pcstacked = set(redis_connection.smembers(f"pcstacked:{puzzle}"))
         # end = time.perf_counter()
         # current_app.logger.debug("PuzzlePiecesView {}".format(end - start))
 
@@ -91,6 +92,10 @@ class PuzzlePiecesView(MethodView):
             pieces[piece]["id"] = piece
             if str(piece) in pcfixed:
                 pieces[piece]["s"] = "1"
+            elif str(piece) in pcstacked:
+                pieces[piece]["s"] = "2"
+            else:
+                pieces[piece]["s"] = ""
 
         stamp = redis_connection.get(f"pzstamp:{puzzle}")
         if not stamp:
@@ -228,6 +233,14 @@ def update_puzzle_pieces(puzzle_id, piece_properties):
     }
     return msg
 
+def publish_puzzle_pieces_move_msg(puzzle_id, msg):
+    ""
+    sse.publish(
+        msg,
+        type="move",
+        channel=f"puzzle:{puzzle_id}",
+    )
+    return {"msg": "Sent", "status_code": 200}
 
 def get_immutable_piece_props(puzzle_id):
     cur = db.cursor()
@@ -385,5 +398,22 @@ class InternalPuzzlePiecesView(MethodView):
         ""
         data = request.get_json(silent=True)
         response_msg = delete_puzzle_pieces(puzzle_id)
+
+        return make_response(json.jsonify(response_msg), response_msg["status_code"])
+
+
+class InternalPuzzlePublishMove(MethodView):
+    ""
+    def post(self, puzzle_id):
+        data = request.get_json(silent=True)
+        if not data:
+            err_msg = {"msg": "No JSON data sent", "status_code": 400}
+            return make_response(json.jsonify(err_msg), err_msg["status_code"])
+        if not {
+            "msg",
+        }.issuperset(data.keys()):
+            err_msg = {"msg": "Extra fields in JSON data were sent", "status_code": 400}
+            return make_response(json.jsonify(err_msg), err_msg["status_code"])
+        response_msg = publish_puzzle_pieces_move_msg(puzzle_id, data["msg"])
 
         return make_response(json.jsonify(response_msg), response_msg["status_code"])

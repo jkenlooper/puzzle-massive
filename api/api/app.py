@@ -89,6 +89,7 @@ def make_app(config=None, database_writable=False, **kw):
         PuzzlePiecesView,
         PuzzlePieceUpdatesView,
         InternalPuzzlePiecesView,
+        InternalPuzzlePublishMove,
     )
     from api.puzzle_file import InternalPuzzleFileView
     from api.timeline import InternalPuzzleTimelineView
@@ -326,6 +327,10 @@ def make_app(config=None, database_writable=False, **kw):
     app.add_url_rule(
         "/internal/puzzle/<puzzle_id>/pieces/",
         view_func=InternalPuzzlePiecesView.as_view("internal-puzzle-pieces"),
+    )
+    app.add_url_rule(
+        "/internal/puzzle/<puzzle_id>/publish_move/",
+        view_func=InternalPuzzlePublishMove.as_view("internal-puzzle-publish-move"),
     )
     app.add_url_rule(
         "/internal/puzzle/<puzzle_id>/files/<file_name>/",
