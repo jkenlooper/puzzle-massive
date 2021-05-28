@@ -155,7 +155,6 @@ class Proximity:
         for piece in stacked_piece_ids:
             lines.append(formatPieceMovementString(piece, s="2"))
         msg = "\n".join(lines)
-        logger.debug(msg)
         r = requests.post(
             "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/publish_move/".format(
                 HOSTAPI=self.config["HOSTAPI"],

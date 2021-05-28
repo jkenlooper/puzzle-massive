@@ -16,6 +16,7 @@
   transition-property: transform;
   transition-timing-function: cubic-bezier(0.96, -0.08, 0.71, -0.53);
   transition-duration: 1.2s;
+  cursor: grab;
   /* TODO: show id on piece when debugging
   display: flex;
   justify-content: center;
@@ -56,6 +57,7 @@
 .is-pending.p,
 .pm-PuzzlePieces.show-movable .is-pending.p {
   z-index: 13;
+  cursor: progress;
 }
 .is-pending.p::before {
   pointer-events: none;
@@ -108,6 +110,7 @@
 .is-immovable.p {
   z-index: 8;
   pointer-events: none;
+  cursor: none;
 }
 
 .pm-PuzzlePieces.show-movable .is-immovable.p {
@@ -149,6 +152,7 @@
 .is-dragging.p {
   transition-duration: 0s;
   z-index: 15;
+  cursor: grabbing;
 }
 
 .pm-PuzzlePieces.show-movable .is-dragging.p {
@@ -250,6 +254,10 @@
   bottom: 0;
   left: 0;
   z-index: 2;
+  cursor: default;
+}
+.pm-Puzzlepage-main--scaled .pm-PuzzlePieces-dropZone {
+  cursor: crosshair;
 }
 
 /* The width, height, left, and top is set by puzzle CSS. */

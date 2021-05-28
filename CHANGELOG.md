@@ -23,16 +23,17 @@ Types of changes
 
 ## [Unreleased] - ...
 
-The enforcer service is still a work in progress and is currently not handling
-the stacking of pieces to avoid breaking puzzles.
-
-Did a YouTube live stream of me going over some of the improvements to piece
-rendering and with changes to the stacked pieces logic.
+Did a YouTube live stream going over some of the improvements to piece rendering
+and with changes to the stacked pieces logic. Update: The stack pieces
+functionality shown is actually old and doesn't really capture the current state
+of things. I basically took a different approach then the one that was outlined
+in the video.
 [https://youtu.be/GLbO6n2JvMs](https://youtu.be/GLbO6n2JvMs)
 
 ### Fixed
 
 - Restart chill app every 26 hours (temporary fix...)
+- Stacked piece logic is _mostly_ fixed; off by one errors are now a feature :)
 
 ### Changed
 
@@ -41,7 +42,13 @@ rendering and with changes to the stacked pieces logic.
 - Update to latest piecemaker
 - Update piece size and hot spot size
 - Implement more accurate hotspot tracking
-- Reject piece moves when adjacent piece is stacked
+- Reject piece moves when too many pieces are stacked
+- Show different cursors when interacting with pieces on a puzzle
+
+### Added
+
+- Stacked pieces show a border and change to grayscale to hint that joining of
+  pieces are temporarily disabled
 
 ## [2.10.2] - 2021-03-20
 

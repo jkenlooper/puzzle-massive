@@ -63,9 +63,6 @@ class Process(greenlet):
             )
         )
 
-        # TODO: The stacking piece logic has not been well tested.
-        self.enable_proximity = False
-
         if not self.enable_proximity:
             self.redis_connection.delete(f"pcstacked:{puzzle}")
 
