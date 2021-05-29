@@ -33,7 +33,7 @@ in the video.
 ### Fixed
 
 - Restart chill app every 26 hours (temporary fix...)
-- Stacked piece logic is _mostly_ fixed; off by one errors are now a feature :)
+- Stacked piece logic is _should_ be fixed and not break things
 
 ### Changed
 

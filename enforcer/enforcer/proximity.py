@@ -40,39 +40,37 @@ class Proximity:
         # rotate is not implemented yet; leaving origin_r as 0 for now.
         stacked_piece_ids = set()
         reset_stacked_ids = set()
-        reject_piece_move = False
         origin_r = 0
         logger.debug(
             f"proximity process {user}, {puzzle}, {piece}, {origin_x}, {origin_y}, {x}, {y}"
         )
         w = self.piece_properties[piece]["w"]
         h = self.piece_properties[piece]["h"]
-        origin_piece_bbox = [
+        origin_piece_bbox = (
             origin_x,
             origin_y,
             origin_x + w,
             origin_y + h,
-        ]
-        piece_bbox = [
+        )
+        piece_bbox = (
             x,
             y,
             x + w,
             y + h,
-        ]
+        )
         pcfixed = set(
             map(int, self.redis_connection.smembers(f"pcfixed:{puzzle}"))
         )
 
-        # Reassess stacked pieces that were intersecting with the piece before
-        # it moved.
+        # Reassess stacked pieces that were intersecting with the piece origin
+        reset_stacked_ids.add(piece)
+        self.move_piece(piece, origin_piece_bbox, piece_bbox)
         origin_stack_counts = self.get_stack_counts(origin_piece_bbox, pcfixed=pcfixed)
         for piece_id, stack_count in origin_stack_counts.items():
             if piece_id == piece:
                 reset_stacked_ids.add(piece_id)
             elif stack_count <= STACK_THRESHOLD:
                 reset_stacked_ids.add(piece_id)
-
-        self.move_piece(piece, origin_piece_bbox, piece_bbox)
 
         def reject_piece_move():
             success = False
@@ -113,10 +111,6 @@ class Proximity:
             if piece_id in pcfixed:
                 continue
             if stack_count > STACK_THRESHOLD:
-                try:
-                    reset_stacked_ids.remove(piece_id)
-                except KeyError:
-                    pass
                 stacked_piece_ids.add(piece_id)
 
         if not piece_move_rejected:
@@ -124,10 +118,6 @@ class Proximity:
             self.update_stack_status(puzzle, reset_stacked_ids, stacked=False)
             self.update_stack_status(puzzle, stacked_piece_ids, stacked=True)
             self.publish_piece_status_update(reset_stacked_ids, stacked_piece_ids)
-        #pcstacked = set(
-        #    map(int, self.redis_connection.smembers(f"pcstacked:{puzzle}"))
-        #)
-        #logger.debug(f"stacked: {pcstacked}")
 
     def update_stack_status(self, puzzle, piece_ids, stacked=True):
         if len(piece_ids) == 0:
@@ -180,21 +170,22 @@ class Proximity:
             w = self.piece_properties[piece]["w"]
             h = self.piece_properties[piece]["h"]
 
-            origin_piece_bbox = [
+            origin_piece_bbox = (
                 origin_x,
                 origin_y,
                 origin_x + w,
                 origin_y + h,
-            ]
-            piece_bbox = [
+            )
+            piece_bbox = (
                 x,
                 y,
                 x + w,
                 y + h,
-            ]
+            )
 
-            # Reassess stacked pieces that were intersecting with the piece before
-            # it moved.
+            # Reassess stacked pieces that were intersecting with the piece origin
+            reset_stacked_ids.add(piece)
+            self.move_piece(piece, origin_piece_bbox, piece_bbox)
             origin_stack_counts = self.get_stack_counts(origin_piece_bbox, pcfixed=pcfixed)
             for piece_id, stack_count in origin_stack_counts.items():
                 if piece_id == piece:
@@ -202,7 +193,6 @@ class Proximity:
                 elif stack_count <= STACK_THRESHOLD:
                     reset_stacked_ids.add(piece_id)
 
-            self.move_piece(piece, origin_piece_bbox, piece_bbox)
 
             # Reassess stacked pieces that are now intersecting with the piece after
             # it moved.
@@ -211,10 +201,6 @@ class Proximity:
                 if piece_id in pcfixed:
                     continue
                 if stack_count > STACK_THRESHOLD:
-                    try:
-                        reset_stacked_ids.remove(piece_id)
-                    except KeyError:
-                        pass
                     stacked_piece_ids.add(piece_id)
 
         reset_stacked_ids.difference_update(stacked_piece_ids)
@@ -244,12 +230,12 @@ class Proximity:
                     continue
                 if intersecting_item.id in pcfixed:
                     continue
-                intersecting_bbox = [
+                intersecting_bbox = (
                     max(item.bbox[0], intersecting_item.bbox[0]),
                     max(item.bbox[1], intersecting_item.bbox[1]),
                     min(item.bbox[2], intersecting_item.bbox[2]),
                     min(item.bbox[3], intersecting_item.bbox[3]),
-                ]
+                )
                 intersecting_coverage = get_bbox_area(intersecting_bbox)
                 percent_of_item_is_covered_by_bbox = (intersecting_coverage / coverage)
 

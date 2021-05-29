@@ -22,6 +22,7 @@ class PieceMutateProcess:
     def __init__(
         self,
         redis_connection,
+        user,
         puzzle,
         piece,
         target_x,
@@ -34,6 +35,7 @@ class PieceMutateProcess:
     ):
         ""
         self.redis_connection = redis_connection
+        self.user = user
         self.puzzle = puzzle
         self.piece = piece
         self.target_x = target_x
@@ -357,6 +359,10 @@ class PieceMutateProcess:
         lines.append(
             formatPieceMovementString(self.piece, x=self.target_x, y=self.target_y)
         )
+        self.redis_connection.publish(
+            f"enforcer_piece_translate:{self.puzzle}",
+            f"{self.user}:{self.piece}:{self.origin_x}:{self.origin_y}:{self.target_x}:{self.target_y}",
+        )
 
         # Set immovable status if adjacent piece is immovable
         if self.can_join_adjacent_piece in self.pcfixed_puzzle:
@@ -486,8 +492,6 @@ class PieceMutateProcess:
                     grouped_piece, x=new_x, y=new_y, g=new_group, s=status
                 )
             )
-            # TODO: update grouped piece status for fully joined pieces.  Should
-            # filter out fully joined pieces from being tracked in proximity rtree.
             publish_message.append(
                 f"{grouped_piece}:{origin_x}:{origin_y}:{new_x}:{new_y}"
             )

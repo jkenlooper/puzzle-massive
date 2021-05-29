@@ -809,13 +809,6 @@ class PuzzlePiecesMovePublishView(MethodView):
             }
             return make_response(json.jsonify(err_msg), 400)
 
-        # TODO: change enforcer_hotspot to be a more generic channel?
-        # if (
-        #    len({"all", "hot_spot"}.intersection(current_app.config["PUZZLE_RULES"]))
-        #    > 0
-        # ):
-        # Publish the piece movement so enforcer can record hot spot.
-        # f"enforcer_hotspot:{puzzle}", f"{user}:{piece}:{x}:{y}"
         (_, _, _, origin_x, origin_y, _) = unpack_token(token)
         redis_connection.publish(
             f"enforcer_piece_translate:{puzzle}",

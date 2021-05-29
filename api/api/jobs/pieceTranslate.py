@@ -251,6 +251,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
 
     piece_mutate_process = PieceMutateProcess(
         redis_connection,
+        user,
         puzzle,
         piece,
         x,
