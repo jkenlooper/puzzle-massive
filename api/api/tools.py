@@ -1,5 +1,4 @@
 from __future__ import division
-from past.utils import old_div
 import os
 import re
 import logging
@@ -128,7 +127,7 @@ def check_bg_color(bg_color):
         return "#808080"
 
 
-strip_chars_regex = re.compile("\s+")
+strip_chars_regex = re.compile(r"\s+")
 
 
 def normalize_name_from_display_name(display_name):

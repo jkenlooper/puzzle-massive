@@ -1,7 +1,7 @@
 from builtins import range
 from random import randint
 
-from flask import current_app, redirect
+from flask import current_app
 from flask_sse import sse
 import requests
 
@@ -90,6 +90,7 @@ def reset_puzzle_pieces(puzzle):
     allPiecesExceptTopLeft.remove(topLeftPiece["id"])
 
     # Randomize piece x, y. Reset the parent
+    # TODO: use same method of random piece placement that piecemaker uses.
     new_piece_properties = []
     for piece in allPiecesExceptTopLeft:
         x = randint(x1, x2)

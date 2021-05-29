@@ -13,9 +13,6 @@ from __future__ import print_function
 # This job should be ran by a janitor worker.  It should find all puzzles in
 # redis that haven't had any activity in the last week or so.
 
-import sys
-import os.path
-import math
 import time
 from docopt import docopt
 

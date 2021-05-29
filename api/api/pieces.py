@@ -140,6 +140,7 @@ class PuzzlePieceUpdatesView(MethodView):
             return make_response("", 204)
 
         # pcu:{stamp} is also used in enforcer process.py
+        # TODO: piece updates should also include the status for pcstacked
         pcu_key = f"pcu:{stamp}"
         piece_updates = redis_connection.lrange(pcu_key, 0, -1)
         if len(piece_updates) == 0:
