@@ -130,6 +130,13 @@ class Process(greenlet):
         pieces = list(map(lambda x: list(map(int, x.split(":"))), data.split("_")))
         self.proximity.batch_process(puzzle, pieces)
 
+    def handle_stop(self, message):
+        ""
+        if message.get("type") != "message":
+            return
+        logger.info(f"Stopping enforcer process for puzzle {self.puzzle}")
+        self.halt = True
+
     def run(self):
         ""
 
@@ -139,6 +146,7 @@ class Process(greenlet):
                 f"enforcer_piece_group_translate:{self.puzzle}": self.handle_piece_group_translate_message,
                 f"enforcer_piece_translate:{self.puzzle}": self.handle_piece_translate_message,
                 f"enforcer_token_request:{self.puzzle}": self.update_active_puzzle,
+                f"enforcer_stop:{self.puzzle}": self.handle_stop,
             }
         )
         atexit.register(self.halt_process)
@@ -158,6 +166,7 @@ class Process(greenlet):
         self.pubsub.unsubscribe(f"enforcer_piece_group_translate:{self.puzzle}")
         self.pubsub.unsubscribe(f"enforcer_piece_translate:{self.puzzle}")
         self.pubsub.unsubscribe(f"enforcer_token_request:{self.puzzle}")
+        self.pubsub.unsubscribe(f"enforcer_stop:{self.puzzle}")
         self.pubsub.close()
         logger.info(f"Finish process on puzzle {self.puzzle}")
 

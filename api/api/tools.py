@@ -89,6 +89,8 @@ def deletePieceDataFromRedis(redis_connection, puzzle, all_pieces):
     # Bump the pzm id when preparing to mutate the puzzle.
     puzzle_mutation_id = redis_connection.incr(pzm_puzzle_key)
 
+    redis_connection.publish(f"enforcer_stop:{puzzle}", "")
+
     with redis_connection.pipeline(transaction=True) as pipe:
         # Delete all piece data
         for piece in all_pieces:
