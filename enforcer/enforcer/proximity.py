@@ -223,10 +223,12 @@ class Proximity:
         # Delete all potential duplicates of this piece
         origin_piece_bbox = self.internal_origin_bboxes[piece]
         self.proximity_idx.delete(piece, origin_piece_bbox)
-        for item in list(self.proximity_idx.intersection(origin_piece_bbox, objects=True)):
-            if item.id == piece:
-                logger.debug(f"Found and deleted {piece} at {item.bbox}")
-                self.proximity_idx.delete(piece, item.bbox)
+        # TODO: probably no need to double tap here now since the origin piece
+        # bbox is tracked internally.
+        # for item in list(self.proximity_idx.intersection(origin_piece_bbox, objects=True)):
+        #     if item.id == piece:
+        #         logger.error(f"Found and deleted {piece} at {item.bbox}")
+        #         self.proximity_idx.delete(piece, item.bbox)
 
         self.proximity_idx.insert(piece, piece_bbox)
         self.internal_origin_bboxes[piece] = piece_bbox
