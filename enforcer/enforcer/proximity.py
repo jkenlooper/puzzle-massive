@@ -9,9 +9,11 @@ logger = logging.getLogger(__name__)
 
 # TODO: make these configurable in the site.cfg, they could also be configurable
 # per puzzle.
-STACK_THRESHOLD = 3
-STACK_LIMIT = 6
-OVERLAP_THRESHOLD = 0.3
+SINGLE_STACK_THRESHOLD = 1
+GROUP_STACK_THRESHOLD = 1
+STACK_COST_THRESHOLD = 2
+STACK_LIMIT = 4
+OVERLAP_THRESHOLD = 0.5
 
 
 def get_bbox_area(bbox):
@@ -26,7 +28,7 @@ class Proximity:
     """
 
     def __init__(
-        self, redis_connection, proximity_idx, puzzle_data, piece_properties, config
+        self, redis_connection, proximity_idx, origin_bboxes, puzzle_data, piece_properties, config
     ):
         self.config = config
         logger.setLevel(logging.DEBUG if config["DEBUG"] else logging.INFO)
@@ -35,6 +37,7 @@ class Proximity:
         self.piece_properties = piece_properties
         self.puzzle_data = puzzle_data
         self.proximity_init_time = time.time()
+        self.internal_origin_bboxes = origin_bboxes
 
     def process(self, user, puzzle, piece, origin_x, origin_y, x, y):
         # rotate is not implemented yet; leaving origin_r as 0 for now.
@@ -64,12 +67,12 @@ class Proximity:
 
         # Reassess stacked pieces that were intersecting with the piece origin
         reset_stacked_ids.add(piece)
-        self.move_piece(piece, origin_piece_bbox, piece_bbox)
+        self.move_piece(piece, piece_bbox)
         origin_stack_counts = self.get_stack_counts(origin_piece_bbox, pcfixed=pcfixed)
         for piece_id, stack_count in origin_stack_counts.items():
             if piece_id == piece:
                 reset_stacked_ids.add(piece_id)
-            elif stack_count <= STACK_THRESHOLD:
+            elif stack_count <= SINGLE_STACK_THRESHOLD:
                 reset_stacked_ids.add(piece_id)
 
         def reject_piece_move():
@@ -96,13 +99,14 @@ class Proximity:
                 )
             else:
                 # Keep the proximity idx in sync with the rejected piece move
-                self.move_piece(piece, piece_bbox, origin_piece_bbox)
+                self.move_piece(piece, origin_piece_bbox)
                 success = True
             return success
 
         # Reassess stacked pieces that are now intersecting with the piece after
         # it moved.
         piece_move_rejected = False
+        past_stack_cost_threshold = False
         target_stack_counts = self.get_stack_counts(piece_bbox, pcfixed=pcfixed)
         for piece_id, stack_count in target_stack_counts.items():
             if stack_count > STACK_LIMIT:
@@ -110,8 +114,16 @@ class Proximity:
                 break
             if piece_id in pcfixed:
                 continue
-            if stack_count > STACK_THRESHOLD:
+            if stack_count > SINGLE_STACK_THRESHOLD:
                 stacked_piece_ids.add(piece_id)
+            if stack_count > STACK_COST_THRESHOLD:
+                past_stack_cost_threshold = True
+
+        if not piece_move_rejected and past_stack_cost_threshold:
+            can_stack = self.pay_stacking_cost(user, 1)
+            if not can_stack:
+                logger.debug("rejecting piece move because can't pay stacking cost")
+                piece_move_rejected = reject_piece_move()
 
         if not piece_move_rejected:
             reset_stacked_ids.difference_update(stacked_piece_ids)
@@ -166,16 +178,10 @@ class Proximity:
             map(int, self.redis_connection.smembers(f"pcfixed:{puzzle}"))
         )
         for pc in pieces:
-            (piece, origin_x, origin_y, x, y) = pc
+            (user, piece, x, y) = pc
             w = self.piece_properties[piece]["w"]
             h = self.piece_properties[piece]["h"]
 
-            origin_piece_bbox = (
-                origin_x,
-                origin_y,
-                origin_x + w,
-                origin_y + h,
-            )
             piece_bbox = (
                 x,
                 y,
@@ -185,12 +191,13 @@ class Proximity:
 
             # Reassess stacked pieces that were intersecting with the piece origin
             reset_stacked_ids.add(piece)
-            self.move_piece(piece, origin_piece_bbox, piece_bbox)
+            origin_piece_bbox = self.internal_origin_bboxes[piece]
+            self.move_piece(piece, piece_bbox)
             origin_stack_counts = self.get_stack_counts(origin_piece_bbox, pcfixed=pcfixed)
             for piece_id, stack_count in origin_stack_counts.items():
                 if piece_id == piece:
                     reset_stacked_ids.add(piece_id)
-                elif stack_count <= STACK_THRESHOLD:
+                elif stack_count <= GROUP_STACK_THRESHOLD:
                     reset_stacked_ids.add(piece_id)
 
 
@@ -200,7 +207,7 @@ class Proximity:
             for piece_id, stack_count in target_stack_counts.items():
                 if piece_id in pcfixed:
                     continue
-                if stack_count > STACK_THRESHOLD:
+                if stack_count > GROUP_STACK_THRESHOLD:
                     stacked_piece_ids.add(piece_id)
 
         reset_stacked_ids.difference_update(stacked_piece_ids)
@@ -208,13 +215,21 @@ class Proximity:
         self.update_stack_status(puzzle, stacked_piece_ids, stacked=True)
         self.publish_piece_status_update(reset_stacked_ids, stacked_piece_ids)
 
-    def move_piece(self, piece, origin_piece_bbox, piece_bbox):
+    def move_piece(self, piece, piece_bbox):
         """
         Update location of piece by first deleting it from the rtree index and
         then inserting it in the new location.
         """
+        # Delete all potential duplicates of this piece
+        origin_piece_bbox = self.internal_origin_bboxes[piece]
         self.proximity_idx.delete(piece, origin_piece_bbox)
+        for item in list(self.proximity_idx.intersection(origin_piece_bbox, objects=True)):
+            if item.id == piece:
+                logger.debug(f"Found and deleted {piece} at {item.bbox}")
+                self.proximity_idx.delete(piece, item.bbox)
+
         self.proximity_idx.insert(piece, piece_bbox)
+        self.internal_origin_bboxes[piece] = piece_bbox
 
     def get_stack_counts(self, bbox, pcfixed={}):
         "With each intersecting bbox; reassess the stack count of other bboxes that intersect it."
@@ -222,7 +237,8 @@ class Proximity:
         hits = list(self.proximity_idx.intersection(bbox, objects=True))
         for item in hits:
             intersecting_hits = self.proximity_idx.intersection(item.bbox, objects=True)
-            stack_count = 0
+            # stack_count = 0
+            overlapping_ids = set()
             coverage = get_bbox_area(item.bbox)
             adjacent_piece_ids = set(self.piece_properties[item.id]["adjacent"].keys())
             for intersecting_item in intersecting_hits:
@@ -240,6 +256,44 @@ class Proximity:
                 percent_of_item_is_covered_by_bbox = (intersecting_coverage / coverage)
 
                 if percent_of_item_is_covered_by_bbox >= OVERLAP_THRESHOLD:
-                    stack_count = stack_count + 1
-                result[item.id] = stack_count
+                    # stack_count = stack_count + 1
+                    overlapping_ids.add(intersecting_item.id)
+                # if stack_count != len(overlapping_ids):
+                #     logger.debug(f"duplicates? {stack_count} != {overlapping_ids}")
+                result[item.id] = len(overlapping_ids)
+        # logger.debug(result)
         return result
+
+    def pay_stacking_cost(self, user, amount):
+        can_stack = False
+        points_key = f"points:{user}"
+        recent_points = int(self.redis_connection.get(points_key) or "0")
+
+        if recent_points > amount:
+            self.redis_connection.decr(points_key, amount=amount)
+            can_stack = True
+        else:
+            can_stack = False
+        return can_stack
+
+        # Not updating karma points and publishing since don't have ip here and
+        # would need to send a request to the api in order to publish on sse.
+        # karma_key = f"karma:{puzzle}:{ip}"
+        # # Extend the karma points expiration since it has changed
+        # self.redis_connection.expire(
+        #     karma_key, self.config["KARMA_POINTS_EXPIRE"]
+        # )
+        # karma = self.redis_connection.decr(karma_key)
+        # karma_change = -1
+
+        # if karma_change and user != ANONYMOUS_USER_ID:
+        #     sse.publish(
+        #         "{user}:{piece}:{karma}:{karma_change}".format(
+        #             user=user,
+        #             piece=piece,
+        #             karma=karma + recent_points,
+        #             karma_change=karma_change,
+        #         ),
+        #         type="karma",
+        #         channel="puzzle:{puzzle_id}".format(puzzle_id=puzzleData["puzzle_id"]),
+        #     )

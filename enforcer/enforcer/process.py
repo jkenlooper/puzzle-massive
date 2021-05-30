@@ -69,7 +69,7 @@ class Process(greenlet):
         logger.info(f"Puzzle {puzzle} init now: {self.now}")
         # setup puzzle bbox index
         # create pixelated piece mask if needed
-        (puzzle_data, piece_properties, hotspot_idx, proximity_idx) = create_index(
+        (puzzle_data, piece_properties, hotspot_idx, proximity_idx, origin_bboxes) = create_index(
             self.config, self.redis_connection, puzzle
         )
         self.hotspot = enforcer.hotspot.HotSpot(
@@ -82,6 +82,7 @@ class Process(greenlet):
             self.proximity = enforcer.proximity.Proximity(
                 self.redis_connection,
                 proximity_idx,
+                origin_bboxes,
                 puzzle_data,
                 piece_properties,
                 self.config,
@@ -113,7 +114,7 @@ class Process(greenlet):
             self.proximity.process(user, puzzle, piece, origin_x, origin_y, x, y)
 
     def handle_piece_group_translate_message(self, message):
-        "enforcer_piece_group_translate:{puzzle} {piece}:{origin_x}:{origin_y}:{x}:{y}_{piece}:{origin_x}:{origin_y}:{x}:{y}_..."
+        "enforcer_piece_group_translate:{puzzle} {user}:{piece}:{x}:{y}_{user}:{piece}:{x}:{y}_..."
         logger.debug("handle_piece_group_translate_message")
         if not self.enable_proximity:
             # At this time only the proximity process uses this information
@@ -273,6 +274,7 @@ def create_index(config, redis_connection, puzzle):
         piece["adjacent"] = adjacent_pieces[pc_id]
         piece_properties[pc_id] = piece
 
+    origin_bboxes = {}
     def piecebboxes():
         for piece in piece_properties.values():
             x = piece["x"]
@@ -280,6 +282,7 @@ def create_index(config, redis_connection, puzzle):
             w = piece["w"]
             h = piece["h"]
             piece_bbox = [x, y, x + w, y + h]
+            origin_bboxes[piece["id"]] = piece_bbox
             yield (piece["id"], piece_bbox, None)
 
     proximity_idx = index.Index(piecebboxes(), interleaved=True)
@@ -306,4 +309,4 @@ def create_index(config, redis_connection, puzzle):
 
     hotspot_idx = index.Index(interleaved=True)
 
-    return puzzle_data, piece_properties, hotspot_idx, proximity_idx
+    return puzzle_data, piece_properties, hotspot_idx, proximity_idx, origin_bboxes

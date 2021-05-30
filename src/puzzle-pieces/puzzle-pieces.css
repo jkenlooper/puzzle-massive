@@ -154,9 +154,15 @@
   z-index: 15;
   cursor: grabbing;
 }
+.is-dragging.is-stacked.p {
+  filter: none;
+}
 
 .pm-PuzzlePieces.show-movable .is-dragging.p {
   z-index: 15;
+  filter: none;
+}
+.pm-PuzzlePieces.show-movable .is-dragging.is-stacked.p {
   filter: none;
 }
 .is-dragging.p::before {

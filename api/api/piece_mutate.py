@@ -74,6 +74,7 @@ class PieceMutateProcess:
         self.all_other_pieces_in_piece_group = set()
         self.pcfixed_puzzle = set()
         self.pcstacked_puzzle = set()
+        self.publish_message = []
 
         self.can_join_adjacent_piece = None
 
@@ -115,6 +116,10 @@ class PieceMutateProcess:
             result = pipe.execute()
             if not result:
                 raise PieceMutateError("end conflict")
+            if len(self.publish_message) != 0:
+                self.redis_connection.publish(
+                    f"enforcer_piece_group_translate:{self.puzzle}", "_".join(self.publish_message)
+                )
         return (msg, status)
 
     def _load_related_pieces(self):
@@ -166,11 +171,11 @@ class PieceMutateProcess:
                 self.watched_keys.add(pc_puzzle_adjacent_piece_key)
 
             # pcg_puzzle_piece_group_count =countOfPiecesInPieceGroup
-            pipe.scard(
-                "pcg:{puzzle}:{g}".format(
-                    puzzle=self.puzzle, g=self.piece_properties.get("g", self.piece)
-                )
-            )
+            # pipe.scard(
+            #     "pcg:{puzzle}:{g}".format(
+            #         puzzle=self.puzzle, g=self.piece_properties.get("g", self.piece)
+            #     )
+            # )
 
             phase_1_response = pipe.execute()
             if not phase_1_response:
@@ -180,13 +185,13 @@ class PieceMutateProcess:
                 pcstacked_puzzle,
                 pcg_puzzle_g,
                 pc_puzzle_adjacent_piece_properties,
-                pcg_puzzle_piece_group_count,
+                #pcg_puzzle_piece_group_count,
             ) = (
                 phase_1_response[0],
                 phase_1_response[1],
                 phase_1_response[2],
                 phase_1_response[3 : 3 + len(adjacent_pieces_list)],
-                phase_1_response[3 + len(adjacent_pieces_list)],
+                # phase_1_response[3 + len(adjacent_pieces_list)],
             )
             self.pcfixed_puzzle = set(map(int, pcfixed_puzzle))
             self.pcstacked_puzzle = set(map(int, pcstacked_puzzle))
@@ -325,6 +330,9 @@ class PieceMutateProcess:
             self.can_join_adjacent_piece = adjacent_piece
             new_target_x = adjacent_piece_props["x"] - offset_from_piece_x
             new_target_y = adjacent_piece_props["y"] - offset_from_piece_y
+            self.publish_message.append(
+                f"{self.user}:{self.piece}:{new_target_x}:{new_target_y}"
+            )
             self._update_target_position(new_target_x, new_target_y)
             break
 
@@ -358,10 +366,6 @@ class PieceMutateProcess:
         pipe.hmset(self.pc_puzzle_piece_key, {"x": self.target_x, "y": self.target_y})
         lines.append(
             formatPieceMovementString(self.piece, x=self.target_x, y=self.target_y)
-        )
-        self.redis_connection.publish(
-            f"enforcer_piece_translate:{self.puzzle}",
-            f"{self.user}:{self.piece}:{self.origin_x}:{self.origin_y}:{self.target_x}:{self.target_y}",
         )
 
         # Set immovable status if adjacent piece is immovable
@@ -451,7 +455,6 @@ class PieceMutateProcess:
         "Update all other pieces x,y in group to the offset, if new_group then assign them to the new_group"
 
         lines = []
-        publish_message = []
         for grouped_piece in self.grouped_piece_properties.keys():
             origin_x = self.grouped_piece_properties[grouped_piece]["x"]
             origin_y = self.grouped_piece_properties[grouped_piece]["y"]
@@ -492,12 +495,9 @@ class PieceMutateProcess:
                     grouped_piece, x=new_x, y=new_y, g=new_group, s=status
                 )
             )
-            publish_message.append(
-                f"{grouped_piece}:{origin_x}:{origin_y}:{new_x}:{new_y}"
+            self.publish_message.append(
+                f"{self.user}:{grouped_piece}:{new_x}:{new_y}"
             )
-        self.redis_connection.publish(
-            f"enforcer_piece_group_translate:{self.puzzle}", "_".join(publish_message)
-        )
         if status == "1":
             pipe.sadd("pcfixed:{puzzle}".format(puzzle=self.puzzle), self.piece)
             self.pcfixed_puzzle.add(self.piece)
