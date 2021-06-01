@@ -22,6 +22,8 @@ Group=dev
 WorkingDirectory=$SRCDIR
 ExecStart=${SRCDIR}bin/puzzle-massive-enforcer start --config site.cfg
 Restart=on-failure
+# Restart every 13 hours in case of memory leaks or other issues
+RuntimeMaxSec=46800
 
 [Install]
 WantedBy=multi-user.target

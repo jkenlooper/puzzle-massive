@@ -8,7 +8,7 @@ from piecemaker.distribution import random_outside
 
 from api.app import db, redis_connection
 from api.database import rowify, fetch_query_string
-from api.constants import MAINTENANCE, RENDERING_FAILED, ACTIVE
+from api.constants import MAINTENANCE, RENDERING_FAILED, ACTIVE, BUGGY_UNLISTED
 from api.jobs.timeline_archive import archive_and_clear
 from api.jobs.convertPiecesToDB import transfer
 
@@ -143,6 +143,21 @@ def reset_puzzle_pieces(puzzle):
         json={"piece_properties": new_piece_properties},
     )
     if r.status_code != 200:
+        # Update puzzle status to BUGGY_UNLISTED
+        r = requests.patch(
+            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                HOSTAPI=current_app.config["HOSTAPI"],
+                PORTAPI=current_app.config["PORTAPI"],
+                puzzle_id=puzzle_data["puzzle_id"],
+            ),
+            json={"status": BUGGY_UNLISTED},
+        )
+        if r.status_code != 200:
+            raise Exception("Puzzle details api error")
+        sse.publish(
+            "status:{}".format(BUGGY_UNLISTED),
+            channel="puzzle:{puzzle_id}".format(puzzle_id=puzzle_data["puzzle_id"]),
+        )
         raise Exception(
             "Puzzle pieces api error. Failed to patch pieces. {}".format(r.json())
         )

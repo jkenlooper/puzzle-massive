@@ -15,6 +15,8 @@ import enforcer.proximity
 logger = logging.getLogger(__name__)
 
 TTL = 300
+# Use a max ttl just to clean things up and reset things.
+MAX_TTL = TTL * 5
 
 HOTSPOT_GRID_SIZE = 40
 
@@ -25,8 +27,8 @@ def start(config, puzzle):
     channel. This will start a subscription on the specific channels for the
     puzzle to monitor piece movements and update the stacked piece status, piece
     proximity, and hotspots.
-    The process will end after a 5 minute time to live (TTL). This frees up
-    resources if the puzzle isn't active anymore.
+    The process will end after 5 minutes of inactivity. This frees up resources
+    if the puzzle isn't active anymore.
     """
 
     logger.setLevel(logging.DEBUG if config["DEBUG"] else logging.INFO)
@@ -54,6 +56,7 @@ class Process(greenlet):
         )
         self.now = time.time()
         self.end = self.now + TTL
+        self.limit = self.now + MAX_TTL
 
         self.enable_proximity = bool(
             len(
@@ -90,11 +93,10 @@ class Process(greenlet):
 
     def update_active_puzzle(self, message):
         "message = base64({puzzle}:{user}:{piece}:{x}:{y}:{token})"
-        logger.debug("update_active_puzzle")
         channel = message.get("channel", b"").decode()
         puzzle = int(channel.split(":")[1])
         if self.puzzle == puzzle:
-            self.end = time.time() + TTL
+            self.end = min(time.time() + TTL, self.limit)
 
     def handle_piece_translate_message(self, message):
         "enforcer_piece_translate:{puzzle} {user}:{piece}:{origin_x}:{origin_y}:{x}:{y}"
