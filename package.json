@@ -1,6 +1,6 @@
 {
   "name": "puzzle-massive",
-  "version": "2.11.0-5",
+  "version": "2.11.0",
   "description": "Puzzle Massive is a Massively Multiplayer Online Jigsaw Puzzle web application. Jigsaw puzzles are made from randomly generated classic interlocking pieces and can be 5000+ pieces.  Players can collaborate on the same jigsaw puzzle in real time.  Other player's piece movements are moderated automatically in order to prevent abusive behavior.",
   "author": "Jake Hickenlooper",
   "contributors": [
