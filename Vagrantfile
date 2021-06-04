@@ -41,6 +41,13 @@ Vagrant.configure(2) do |config|
   # argument is a set of non-required options.
   # config.vm.synced_folder "../data", "/vagrant_data"
 
+  # Disable the default /vagrant shared folder
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.synced_folder ".", "/home/vagrant/puzzle-massive", type: "rsync",
+    rsync__exclude: ["/.git/", "/.vagrant/", "/node_modules/", "/include/", "/lib/", "/lib64/", "/local/", "/share/", "/dist/", "/puzzle-massive-*.tar.gz"],
+    rsync__args: ["--verbose", "--archive", "--delete", "-z", "--copy-links", "--delay-updates"]
+
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
   # Example for VirtualBox:
@@ -72,12 +79,45 @@ Vagrant.configure(2) do |config|
   #   sudo apt-get install -y apache2
   # SHELL
 
-  # For vagrant just set up the dev user instead of running ./bin/init.sh
+  # For vagrant just set up the dev user and the initial
+  # /usr/local/src/puzzle-massive directory.
   # To do db stuff as dev use `sudo su dev`.
   config.vm.provision "shell", inline: <<-SHELL
     adduser dev --disabled-login
-    usermod -aG sudo dev
+    usermod -aG sudo dev vagrant
+    echo "127.0.0.1 external-puzzle-massive" >> /etc/hosts
   SHELL
+
+  config.vm.provision "shell", path: "bin/setup.sh"
+
+  # The devsync.sh uses local-puzzle-massive when syncing files
+  # Install the watchit command that is used in _infra/local/watchit.sh script.
+  config.vm.provision "shell", inline: <<-SHELL
+    echo "127.0.0.1 local-puzzle-massive" >> /etc/hosts
+    pip install watchit
+  SHELL
+
+  config.vm.provision "shell", privileged: false, inline: <<-SHELL
+    cd /home/vagrant/puzzle-massive
+    npm install
+  SHELL
+
+  config.vm.provision "shell", inline: <<-SHELL
+    mkdir -p /usr/local/src/puzzle-massive;
+    chown dev:dev /usr/local/src/puzzle-massive;
+
+    /home/vagrant/puzzle-massive/_infra/local/local-puzzle-massive-watchit.service.sh vagrant > /etc/systemd/system/local-puzzle-massive-watchit.service
+    systemctl start local-puzzle-massive-watchit
+    systemctl enable local-puzzle-massive-watchit
+
+    /home/vagrant/puzzle-massive/_infra/local/local-puzzle-massive-auto-devsync.service.sh vagrant > /etc/systemd/system/local-puzzle-massive-auto-devsync.service
+    systemctl start local-puzzle-massive-auto-devsync
+    systemctl enable local-puzzle-massive-auto-devsync
+  SHELL
+
+
+  # TODO: add systemctl service to run devsync.sh command when files change in
+  # /home/vagrant/puzzle-massive/*
 
   # Run the bin/setup.sh script after logging in
 end
