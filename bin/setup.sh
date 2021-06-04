@@ -1,8 +1,19 @@
 #!/usr/bin/env bash
 set -eu -o pipefail
 
+set -x
+
+# https://linuxhint.com/debian_frontend_noninteractive/
+export DEBIAN_FRONTEND=noninteractive
+
 apt-get --yes update
-apt-get --yes upgrade
+# Use dist-upgrade instead of upgrade to less likely break things.
+apt-get --yes dist-upgrade
+
+# TODO: add these to apt-get commands that show anything about existing
+# configuration files that need to be overwritten
+# -o Dpkg::Options::="--force-confdef" \
+# -o Dpkg::Options::="--force-confold" \
 
 apt-get --yes install \
   software-properties-common \
@@ -65,4 +76,4 @@ redis-cli config rewrite
 rm -f /etc/nginx/sites-enabled/default
 
 echo "checking for missed dependencies of chrome"
-ldd /home/dev/node_modules/puppeteer/.local-chromium/linux-*/chrome-linux/chrome | grep not
+ldd /home/dev/node_modules/puppeteer/.local-chromium/linux-*/chrome-linux/chrome | grep not || echo 'no missed dependencies for chrome'

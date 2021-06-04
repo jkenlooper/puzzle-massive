@@ -21,6 +21,8 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
+## [Unreleased] - ...
+
 ## [2.11.0] - 2021-06-01
 
 Did a YouTube live stream going over some of the improvements to piece rendering
