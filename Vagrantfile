@@ -82,30 +82,54 @@ Vagrant.configure(2) do |config|
   # For vagrant just set up the dev user and the initial
   # /usr/local/src/puzzle-massive directory.
   # To do db stuff as dev use `sudo su dev`.
-  config.vm.provision "shell", inline: <<-SHELL
+  config.vm.provision "shell-add-dev-user", type: "shell", inline: <<-SHELL
     adduser dev --disabled-login
     usermod -aG sudo dev vagrant
     echo "127.0.0.1 external-puzzle-massive" >> /etc/hosts
+
+    sed --in-place "s/^PasswordAuthentication yes$/PasswordAuthentication no/" /etc/ssh/sshd_config
+    sed --in-place "s/^#PasswordAuthentication yes$/PasswordAuthentication no/" /etc/ssh/sshd_config
+    systemctl reload sshd
   SHELL
 
-  config.vm.provision "shell", path: "bin/setup.sh"
+  config.vm.provision "setup", type: "shell", path: "bin/setup.sh"
 
   # The devsync.sh uses local-puzzle-massive when syncing files
   # Install the watchit command that is used in _infra/local/watchit.sh script.
-  config.vm.provision "shell", inline: <<-SHELL
+  config.vm.provision "shell-watchit-support", type: "shell", inline: <<-SHELL
     echo "127.0.0.1 local-puzzle-massive" >> /etc/hosts
     pip install watchit
   SHELL
 
-  config.vm.provision "shell", privileged: false, inline: <<-SHELL
-    cd /home/vagrant/puzzle-massive
-    npm install
+  config.vm.provision "shell-vagrant-local-ssh", privileged: false, type: "shell", inline: <<-SHELL
+    ssh-keyscan -H local-puzzle-massive >> /home/vagrant/.ssh/known_hosts
+    ssh-keygen -t rsa -C "vagrant@local-puzzle-massive" -N "" -q -f /home/vagrant/.ssh/id_rsa
   SHELL
 
-  config.vm.provision "shell", inline: <<-SHELL
+  config.vm.provision "shell-vagrant-npm-install-and-build", privileged: false, type: "shell", inline: <<-SHELL
+    cd /home/vagrant/puzzle-massive
+    npm install
+    npm run debug
+  SHELL
+
+  config.vm.provision "shell-dev-ssh", type: "shell", inline: <<-SHELL
+    mkdir /home/dev/.ssh
+    chown dev:dev /home/dev/.ssh
+    chmod 700 /home/dev/.ssh
+    cat /home/vagrant/.ssh/id_rsa.pub >> /home/dev/.ssh/authorized_keys
+    chmod 600 /home/dev/.ssh/authorized_keys
+    chown dev:dev /home/dev/.ssh/authorized_keys
+
     mkdir -p /usr/local/src/puzzle-massive;
     chown dev:dev /usr/local/src/puzzle-massive;
+  SHELL
 
+  config.vm.provision "shell-vagrant-devsync", privileged: false, type: "shell", inline: <<-SHELL
+    cd /home/vagrant/puzzle-massive
+    ./bin/devsync.sh
+  SHELL
+
+  config.vm.provision "shell-services-watchit-devsync", type: "shell", inline: <<-SHELL
     /home/vagrant/puzzle-massive/_infra/local/local-puzzle-massive-watchit.service.sh vagrant > /etc/systemd/system/local-puzzle-massive-watchit.service
     systemctl start local-puzzle-massive-watchit
     systemctl enable local-puzzle-massive-watchit
@@ -115,6 +139,36 @@ Vagrant.configure(2) do |config|
     systemctl enable local-puzzle-massive-auto-devsync
   SHELL
 
+  config.vm.provision "shell-init-dev-local", type: "shell", run: "never", inline: <<-SHELL
+    cd /usr/local/src/puzzle-massive;
+    sudo su --command '
+      python -m venv .;
+      make;
+    ' dev
+    make install;
+    ./bin/appctl.sh stop -f;
+    sudo su --command '
+      ./bin/python api/api/create_database.py site.cfg;
+      ./bin/python api/api/jobs/insert-or-replace-bit-icons.py;
+      ./bin/python api/api/update_enabled_puzzle_features.py;
+    ' dev
+    nginx -t;
+    systemctl reload nginx;
+    ./bin/appctl.sh start;
+    ./bin/appctl.sh status;
+  SHELL
+
+  config.vm.provision "shell-testdata-puzzles", type: "shell", run: "never", inline: <<-SHELL
+    cd /usr/local/src/puzzle-massive;
+    sudo su --command '
+      ./bin/puzzle-massive-testdata players --count=100;
+      ./bin/puzzle-massive-testdata puzzles --count=30 --min-pieces=9 --pieces=200 --size=180x180\!;
+      ./bin/puzzle-massive-testdata puzzles --count=10 --min-pieces=20 --pieces=900 --size=800x1500\!;
+      ./bin/puzzle-massive-testdata puzzles --count=10 --min-pieces=20 --pieces=900 --size=1800x1300\!;
+      ./bin/puzzle-massive-testdata instances --count=10 --min-pieces=20 --pieces=500;
+      ./bin/puzzle-massive-testdata puzzles --count=1 --pieces=2000 --size=3800x3500\!;
+    ' dev
+  SHELL
 
   # TODO: add systemctl service to run devsync.sh command when files change in
   # /home/vagrant/puzzle-massive/*

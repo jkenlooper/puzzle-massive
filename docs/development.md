@@ -60,6 +60,46 @@ This IP can be found by logging into the virtual machine and using this command:
 echo "127.0.0.1 local-puzzle-massive" >> /etc/hosts
 ```
 
+---
+
+## Quick setup with vagrant and virtualbox
+
+**This is a work in progress and may change a lot.** Running the below vagrant
+commands _should_ get a local version of Puzzle Massive working on your own
+machine.
+
+```bash
+# Creates the .env file
+./bin/create_dot_env.sh;
+
+# Creates the .htpasswd file
+# Enter whatever simple password that will be used for development.
+# Do not use your a password that is used elsewhere or is meant to be secure.
+./bin/create_dot_htpasswd.sh;
+
+vagrant up
+
+vagrant rsync
+
+vagrant provision --provision-with shell-init-dev-local
+
+vagrant provision --provision-with shell-testdata-puzzles
+
+vagrant rsync-auto
+
+# Now edit src/ files as needed and they will automatically be uploaded and
+# compiled.
+
+# After a few minutes some puzzles will be rendered and will show up on the site
+# at http://localhost:8080
+# TODO: fix preview image for these auto-generated puzzles.
+```
+
+---
+
+The below instructions are still relevant if needing to troubleshoot or are
+manually setting up without using the above vagrant commands.
+
 ## Initial setup
 
 After cloning or forking the git repo

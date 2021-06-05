@@ -18,6 +18,7 @@ cat <<HERE
 
 [Unit]
 Description=Auto devsync local environment
+After=multi-user.target
 
 [Service]
 Type=exec
@@ -26,5 +27,8 @@ Group=vagrant
 WorkingDirectory=$PROJECT_DIRECTORY
 Restart=on-failure
 ExecStart=$PROJECT_DIRECTORY/bin/distwatch.js
+
+[Install]
+WantedBy=multi-user.target
 
 HERE

@@ -13,7 +13,7 @@ import Watchpack from "watchpack";
 const wp = new Watchpack({
   aggregateTimeout: 300,
 
-  poll: undefined,
+  poll: 1000,
   // poll: true - use polling with the default interval
   // poll: 10000 - use polling with an interval of 10s
   // poll defaults to undefined, which prefer native watching methods

@@ -19,6 +19,7 @@ cat <<HERE
 
 [Unit]
 Description=Watch project directory
+After=multi-user.target
 
 [Service]
 Type=exec
@@ -27,5 +28,8 @@ Group=$user
 WorkingDirectory=$PROJECT_DIRECTORY
 Restart=on-success
 ExecStart=$LOCAL_WATCHIT_SCRIPT $PROJECT_DIRECTORY
+
+[Install]
+WantedBy=multi-user.target
 
 HERE
