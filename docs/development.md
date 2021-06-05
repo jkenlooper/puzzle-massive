@@ -85,14 +85,15 @@ vagrant provision --provision-with shell-init-dev-local
 
 vagrant provision --provision-with shell-testdata-puzzles
 
+# After a few minutes some puzzles will be rendered and will show up on the site
+# at http://localhost:8080
+# May need to approve them if the AUTO_APPROVE_PUZZLES is not set in the .env
+# configuration file.
+
 vagrant rsync-auto
 
 # Now edit src/ files as needed and they will automatically be uploaded and
 # compiled.
-
-# After a few minutes some puzzles will be rendered and will show up on the site
-# at http://localhost:8080
-# TODO: fix preview image for these auto-generated puzzles.
 ```
 
 ---

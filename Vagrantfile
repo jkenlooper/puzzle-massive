@@ -48,6 +48,8 @@ Vagrant.configure(2) do |config|
     rsync__exclude: ["/.git/", "/.vagrant/", "/node_modules/", "/include/", "/lib/", "/lib64/", "/local/", "/share/", "/dist/", "/puzzle-massive-*.tar.gz"],
     rsync__args: ["--verbose", "--archive", "--delete", "-z", "--copy-links", "--delay-updates"]
 
+  config.vm.synced_folder "./_infra/local/output", "/home/vagrant/output"
+
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
   # Example for VirtualBox:
@@ -162,11 +164,19 @@ Vagrant.configure(2) do |config|
     cd /usr/local/src/puzzle-massive;
     sudo su --command '
       ./bin/puzzle-massive-testdata players --count=100;
-      ./bin/puzzle-massive-testdata puzzles --count=30 --min-pieces=9 --pieces=200 --size=180x180\!;
-      ./bin/puzzle-massive-testdata puzzles --count=10 --min-pieces=20 --pieces=900 --size=800x1500\!;
-      ./bin/puzzle-massive-testdata puzzles --count=10 --min-pieces=20 --pieces=900 --size=1800x1300\!;
-      ./bin/puzzle-massive-testdata instances --count=10 --min-pieces=20 --pieces=500;
-      ./bin/puzzle-massive-testdata puzzles --count=1 --pieces=2000 --size=3800x3500\!;
+      ./bin/puzzle-massive-testdata puzzles --count=10 --min-pieces=20 --pieces=400 --size=1800x800\!;
+      ./bin/puzzle-massive-testdata puzzles --count=10 --min-pieces=20 --pieces=400 --size=1800x1800\!;
+      ./bin/puzzle-massive-testdata puzzles --count=10 --min-pieces=20 --pieces=400 --size=800x1800\!;
+      ./bin/puzzle-massive-testdata puzzles --count=10 --min-pieces=40 --pieces=90 --size=4800x800\!;
+      ./bin/puzzle-massive-testdata puzzles --count=10 --min-pieces=40 --pieces=90 --size=800x4800\!;
+      ./bin/puzzle-massive-testdata puzzles --count=3 --min-pieces=400 --pieces=1900 --size=5040x3360\!;
+      ./bin/puzzle-massive-testdata puzzles --count=3 --min-pieces=400 --pieces=1900 --size=4000x5000\!;
+      ./bin/puzzle-massive-testdata puzzles --count=3 --min-pieces=400 --pieces=1900 --size=5212x6741\!;
+      ./bin/puzzle-massive-testdata puzzles --count=3 --min-pieces=400 --pieces=1900 --size=6720x4480\!;
+      ./bin/puzzle-massive-testdata puzzles --count=3 --min-pieces=1900 --pieces=3900 --size=5040x3360\!;
+      ./bin/puzzle-massive-testdata puzzles --count=3 --min-pieces=1900 --pieces=3900 --size=4000x5000\!;
+      ./bin/puzzle-massive-testdata puzzles --count=3 --min-pieces=1900 --pieces=3900 --size=5212x6741\!;
+      ./bin/puzzle-massive-testdata puzzles --count=3 --min-pieces=1900 --pieces=3900 --size=6720x4480\!;
     ' dev
   SHELL
 

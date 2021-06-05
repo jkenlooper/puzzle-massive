@@ -96,9 +96,6 @@ def submit_puzzle(
                 ["identify", "-format", "%m", temp_upload_file.name], encoding="utf-8"
             )
             identify_format = identify_format.lower()
-            current_app.logger.debug(
-                f"identify_format {identify_format} in {ALLOWED_EXTENSIONS}"
-            )
             if identify_format not in ALLOWED_EXTENSIONS:
                 os.rmdir(puzzle_dir)
                 cur.close()
