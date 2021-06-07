@@ -23,6 +23,14 @@ Types of changes
 
 ## [Unreleased] - ...
 
+Improving support for Vagrant and Virtualbox local environments. Also trying to
+make it easier to get a working version on a local development machine without
+needing to manually build stuff.
+
+### Fixed
+
+- Preview full image from generated puzzle images
+
 ## [2.11.0] - 2021-06-01
 
 Did a YouTube live stream going over some of the improvements to piece rendering

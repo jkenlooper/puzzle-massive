@@ -160,6 +160,18 @@ Vagrant.configure(2) do |config|
     ./bin/appctl.sh status;
   SHELL
 
+  config.vm.provision "shell-testdata-puzzles-quick", type: "shell", run: "never", inline: <<-SHELL
+    cd /usr/local/src/puzzle-massive;
+    sudo su --command '
+      ./bin/puzzle-massive-testdata players --count=100;
+      ./bin/puzzle-massive-testdata puzzles --count=10 --pieces=20 --size=800x800\!;
+      ./bin/puzzle-massive-testdata puzzles --count=1 --pieces=100 --size=1800x800\!;
+      ./bin/puzzle-massive-testdata puzzles --count=1 --pieces=100 --size=1800x1800\!;
+      ./bin/puzzle-massive-testdata puzzles --count=1 --pieces=100 --size=800x1800\!;
+      ./bin/puzzle-massive-testdata puzzles --count=1 --pieces=900 --size=6720x4480\!;
+    ' dev
+  SHELL
+
   config.vm.provision "shell-testdata-puzzles", type: "shell", run: "never", inline: <<-SHELL
     cd /usr/local/src/puzzle-massive;
     sudo su --command '

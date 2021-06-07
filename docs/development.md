@@ -1,7 +1,9 @@
 # Local Development Guide
 
-Get a local development version of Puzzle Massive to run on your machine by
-following these (super awesome) instructions. This is necessary in order to
+Get a **local development** version of Puzzle Massive to run on your machine by
+following this guide.
+
+This is necessary in order to
 create a dist file (`make dist`) for deploying to a production server.
 
 Written for a Linux machine that is Debian based. Only tested on
@@ -68,33 +70,155 @@ echo "127.0.0.1 local-puzzle-massive" >> /etc/hosts
 commands _should_ get a local version of Puzzle Massive working on your own
 machine.
 
+### Create `.env` Configuration File
+
+The configuration is handled by a `.env` file that is located in the project's
+directory. It is recommended to run the
+[create_dot_env.sh](bin/create_dot_env.sh) script in order to create this file.
+It will prompt for inputs and show the defaults for each item that can be
+configured.
+
 ```bash
 # Creates the .env file
 ./bin/create_dot_env.sh;
+```
 
+### Create `.htpasswd` File
+
+The `.htpasswd` file is used for Puzzle Massive basic authentication when
+viewing the admin pages. For local development it doesn't need to be that
+secure, unless you don't trust others on your local network. As with any
+password stuff; don't use a password you have used for something else. The
+password is stored in the `.htpasswd` file in a non-secure manner.
+
+```bash
 # Creates the .htpasswd file
 # Enter whatever simple password that will be used for development.
 # Do not use your a password that is used elsewhere or is meant to be secure.
 ./bin/create_dot_htpasswd.sh;
-
-vagrant up
-
-vagrant rsync
-
-vagrant provision --provision-with shell-init-dev-local
-
-vagrant provision --provision-with shell-testdata-puzzles
-
-# After a few minutes some puzzles will be rendered and will show up on the site
-# at http://localhost:8080
-# May need to approve them if the AUTO_APPROVE_PUZZLES is not set in the .env
-# configuration file.
-
-vagrant rsync-auto
-
-# Now edit src/ files as needed and they will automatically be uploaded and
-# compiled.
 ```
+
+### Initialize the Vagrant Development Machine
+
+[VirtualBox](https://www.virtualbox.org/) and
+[Vagrant](https://www.vagrantup.com/) are used to create a virtual machine on
+your local machine. This allows you to run your own version of Puzzle Massive
+locally. It is also configured to automatically compile any files changed in
+the src/ directory which will then show those changes locally after refreshing
+the web browser. The [Vagrantfile](Vagrantfile) included with the project is for
+local development only. It has a few scripts within it that help setup a local
+version of Puzzle Massive. This can all be set up by running the below
+`vagrant` commands.
+
+```bash
+# Bring the virtual machine up and provision it
+vagrant up
+```
+
+The virtual machine will create a synced folder which is used to copy the files
+from this project's directory to a directory on the virtual machine. The
+virtual machine will have a 'vagrant' user so the directory that is created for
+Puzzle Massive will be at `/home/vagrant/puzzle-massive/`. This folder is only
+one-way synced so any changes made in `/home/vagrant/puzzle-massive/` are not
+sent back to your project's directory. To copy files to the virtual machine run
+the `vagrant rsync` command. A file watcher on the virtual machine will be
+triggered when these files change and will start a process to compile the `src/`
+files as needed.
+
+```bash
+# Copy the files in the project's directory to the virtual machine.
+vagrant rsync
+```
+
+Now that the project files have been copied over, the rest of the initial setup
+can be done. This step to run the provisioning script 'shell-init-dev-local'
+should only need to be done once. It creates the initial database and then
+starts the services used for Puzzle Massive. These services should then
+automatically start up if the virtual machine is rebooted.
+
+```bash
+vagrant provision --provision-with shell-init-dev-local
+```
+
+### Add Random Puzzles
+
+At this point the site at http://localhost:8080 should be working on your local
+machine. It won't have any puzzles or any players initially. To add some
+random puzzles to work with and test things run these optional vagrant
+provisioning scripts.
+
+These will create some random images and then upload them much like how the
+puzzle upload form works. If the site wasn't configured to automatically
+approve any submitted puzzles (see AUTO_APPROVE_PUZZLES in the `.env` file),
+then you'll need to manually approve these. Go to the admin page to view any
+puzzles that have been submitted for approval
+http://localhost:8080/chill/site/admin/puzzle/submitted/
+
+```bash
+# Optional if needing a few initial puzzles to work with.
+vagrant provision --provision-with shell-testdata-puzzles-quick
+
+# Optional if needing lots of puzzles to work with. This may take a few minutes.
+vagrant provision --provision-with shell-testdata-puzzles
+```
+
+### Edit the Source Code
+
+This project has both server-side code written in mostly Python as well as
+client-side code that a web browser uses. All the client-side Javascript, HTML,
+and CSS is located in the `src/` directory. After making changes to these files
+it will be necessary to copy them over to the virtual machine. This can either
+be done with the `vagrant rsync` command to do it once, or you can open another
+terminal window and have it always update whenever a change to a file is made
+with the `vagrant rsync-auto` command.
+
+```bash
+# Copy the files to the virtual machine.
+vagrant rsync
+```
+
+```bash
+# Or continually watch files for any changes and copy them to the virtual
+# machine.
+vagrant rsync-auto
+```
+
+### Troubleshoot Errors on the Vagrant Virtual Machine
+
+Errors with changing the source code and updating the development machine are
+bound to happen. At this time, the logging of errors and such are only
+accessible if you ssh into that development machine. Vagrant has a command
+for this which is `vagrant ssh`. After logging in you'll see the
+`puzzle-massive/` directory at `/home/vagrant/`. This is where all the files
+from your project directory are uploaded to. However, this is **not** the
+actual files that are used for the running development machine. The actual files
+that are being used for the site are in the `/usr/local/src/puzzle-massive/`
+directory and are owned by the 'dev' user. Any file changes in `/home/vagrant/puzzle-massive/` will be
+automatically copied over to `/usr/local/src/puzzle-massive/` via the
+`local-puzzle-massive-auto-devsync` service (assuming that it hasn't failed for
+some reason).
+
+#### Errors with Compiling `src/` Files
+
+Any changes to the `src/` files in `/home/vagrant/puzzle-massive/` will trigger
+the command `npm run debug` to run. To disable this you can stop the
+`local-puzzle-massive-watchit` service. Now you can manually run `npm run debug` and see any errors it might be throwing.
+
+```bash
+# Stop the service that automatically runs npm run debug
+sudo systemctl stop local-puzzle-massive-watchit
+
+# Now manually run the npm command to see any errors
+npm run debug
+```
+
+#### Errors with Python Code
+
+...WIP
+
+#### Errors with Template Code Used in HTML Pages
+
+...WIP
 
 ---
 
