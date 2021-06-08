@@ -141,24 +141,32 @@ Vagrant.configure(2) do |config|
     systemctl enable local-puzzle-massive-auto-devsync
   SHELL
 
-  config.vm.provision "shell-init-dev-local", type: "shell", run: "never", inline: <<-SHELL
-    cd /usr/local/src/puzzle-massive;
-    sudo su --command '
-      python -m venv .;
-      make;
-    ' dev
-    make install;
-    ./bin/appctl.sh stop -f;
-    sudo su --command '
-      ./bin/python api/api/create_database.py site.cfg;
-      ./bin/python api/api/jobs/insert-or-replace-bit-icons.py;
-      ./bin/python api/api/update_enabled_puzzle_features.py;
-    ' dev
-    nginx -t;
-    systemctl reload nginx;
-    ./bin/appctl.sh start;
-    ./bin/appctl.sh status;
-  SHELL
+  config.vm.provision "shell-init-dev-local",
+    type: "shell",
+    run: "never",
+    env: {
+      "VAGRANT_FORWARDED_PORT_80": ENV["VAGRANT_FORWARDED_PORT_80"]
+    },
+    inline: <<-SHELL
+      cd /usr/local/src/puzzle-massive;
+      echo "VAGRANT_FORWARDED_PORT_80=$VAGRANT_FORWARDED_PORT_80" > .vagrant-overrides
+      chown dev:dev .vagrant-overrides
+      sudo su --command '
+        python -m venv .;
+        make;
+      ' dev
+      make install;
+      ./bin/appctl.sh stop -f;
+      sudo su --command '
+        ./bin/python api/api/create_database.py site.cfg;
+        ./bin/python api/api/jobs/insert-or-replace-bit-icons.py;
+        ./bin/python api/api/update_enabled_puzzle_features.py;
+      ' dev
+      nginx -t;
+      systemctl reload nginx;
+      ./bin/appctl.sh start;
+      ./bin/appctl.sh status;
+    SHELL
 
   config.vm.provision "shell-testdata-puzzles-quick", type: "shell", run: "never", inline: <<-SHELL
     cd /usr/local/src/puzzle-massive;

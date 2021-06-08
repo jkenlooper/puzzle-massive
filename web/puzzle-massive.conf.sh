@@ -14,12 +14,19 @@ STATE=$8
 # Defaults in case not defined in .env
 PUZZLE_RULES='all'
 HOME_PAGE_ROUTE='/chill/site/front/'
+VAGRANT_FORWARDED_PORT_80=80
 
 # shellcheck source=/dev/null
 source "$PORTREGISTRY"
 
 # shellcheck source=/dev/null
 source .env
+
+if test -e .vagrant-overrides; then
+  # override the VAGRANT_FORWARDED_PORT_80 variable
+  # shellcheck source=/dev/null
+  source .vagrant-overrides
+fi
 
 DATE=$(date)
 
@@ -437,6 +444,13 @@ cat <<HERECACHESERVERUP
     proxy_cache pm_cache_zone;
     add_header X-Proxy-Cache \$upstream_cache_status;
     include proxy_params;
+HERECACHESERVERUP
+    if test -e .vagrant-overrides; then
+cat <<HERECACHESERVERUP
+    proxy_redirect http://\$host/ http://\$host:$VAGRANT_FORWARDED_PORT_80/;
+HERECACHESERVERUP
+    fi
+cat <<HERECACHESERVERUP
     proxy_pass http://127.0.0.1:${PORTORIGIN};
   }
 
@@ -453,6 +467,13 @@ cat <<HERECACHESERVERUP
     proxy_cache pm_cache_zone;
     add_header X-Proxy-Cache \$upstream_cache_status;
     include proxy_params;
+HERECACHESERVERUP
+    if test -e .vagrant-overrides; then
+cat <<HERECACHESERVERUP
+    proxy_redirect http://\$host/ http://\$host:$VAGRANT_FORWARDED_PORT_80/;
+HERECACHESERVERUP
+    fi
+cat <<HERECACHESERVERUP
     proxy_pass http://127.0.0.1:${PORTORIGIN};
   }
 
@@ -473,6 +494,13 @@ cat <<HERECACHESERVERUP
     proxy_cache pm_cache_zone;
     add_header X-Proxy-Cache \$upstream_cache_status;
     include proxy_params;
+HERECACHESERVERUP
+    if test -e .vagrant-overrides; then
+cat <<HERECACHESERVERUP
+    proxy_redirect http://\$host/ http://\$host:$VAGRANT_FORWARDED_PORT_80/;
+HERECACHESERVERUP
+    fi
+cat <<HERECACHESERVERUP
     proxy_pass http://127.0.0.1:${PORTORIGIN};
   }
 
@@ -492,6 +520,13 @@ cat <<HERECACHESERVERUP
     proxy_cache pm_cache_zone;
     add_header X-Proxy-Cache \$upstream_cache_status;
     include proxy_params;
+HERECACHESERVERUP
+    if test -e .vagrant-overrides; then
+cat <<HERECACHESERVERUP
+    proxy_redirect http://\$host/ http://\$host:$VAGRANT_FORWARDED_PORT_80/;
+HERECACHESERVERUP
+    fi
+cat <<HERECACHESERVERUP
     proxy_pass http://127.0.0.1:${PORTORIGIN};
   }
 

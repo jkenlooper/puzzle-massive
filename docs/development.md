@@ -137,7 +137,9 @@ starts the services used for Puzzle Massive. These services should then
 automatically start up if the virtual machine is rebooted.
 
 ```bash
-vagrant provision --provision-with shell-init-dev-local
+# Vagrant virtual machine uses this port on the host to forward to the guest.
+# Pass along the forwarded port so redirects will work right.
+VAGRANT_FORWARDED_PORT_80=$(vagrant port --guest 80) vagrant provision --provision-with shell-init-dev-local
 ```
 
 ### Add Random Puzzles
