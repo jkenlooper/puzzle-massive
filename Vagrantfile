@@ -86,7 +86,7 @@ Vagrant.configure(2) do |config|
   # To do db stuff as dev use `sudo su dev`.
   config.vm.provision "shell-add-dev-user", type: "shell", inline: <<-SHELL
     adduser dev --disabled-login
-    usermod -aG sudo dev vagrant
+    usermod -aG sudo dev
     echo "127.0.0.1 external-puzzle-massive" >> /etc/hosts
 
     sed --in-place "s/^PasswordAuthentication yes$/PasswordAuthentication no/" /etc/ssh/sshd_config

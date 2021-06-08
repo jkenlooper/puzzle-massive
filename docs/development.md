@@ -198,6 +198,23 @@ automatically copied over to `/usr/local/src/puzzle-massive/` via the
 `local-puzzle-massive-auto-devsync` service (assuming that it hasn't failed for
 some reason).
 
+```bash
+# Log into the virtual machine
+vagrant ssh
+```
+
+Note that after logging into the development machine as the vagrant user that
+there is a 'dev' user. The 'dev' user owns the `/user/local/src/puzzle-massive/`
+directory and in order to start and stop the services, or manipulate the
+database, you'll need to login as that user. When the 'dev' user was created in
+the vagrant provisioning script it did not set a password for the 'dev' user.
+You'll need to set one for this user.
+
+```bash
+# Set initial password for dev user
+sudo passwd dev
+```
+
 #### Errors with Compiling `src/` Files
 
 Any changes to the `src/` files in `/home/vagrant/puzzle-massive/` will trigger
@@ -209,6 +226,7 @@ the command `npm run debug` to run. To disable this you can stop the
 sudo systemctl stop local-puzzle-massive-watchit
 
 # Now manually run the npm command to see any errors
+cd /home/vagrant/puzzle-massive/
 npm run debug
 ```
 

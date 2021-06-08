@@ -10,7 +10,7 @@ Options:
 
 Creates the .htpasswd file used for Puzzle Massive basic authentication when
 viewing the admin pages.  Existing files will be renamed with a .bak suffix.
-This is a simple wrapper around the htpasswd command. Directly use the htpasswd
+This is a wrapper around the htpasswd command. Directly use the htpasswd
 command if needing to do anything different. It defaults to use the current
 logged in user name (whoami).
 USAGE
