@@ -38,6 +38,8 @@
 /src/*/*.tmp.css.map
 /src/*/*.tmp.js
 /src/*/*.tmp.js.map
+/_infra/local/output/*
+!/_infra/local/output/README.md
 
 /web/dhparam.pem
 /web/local-puzzle-massive.crt
