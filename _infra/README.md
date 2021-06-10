@@ -11,7 +11,7 @@ the local development machine. It is useful to quickly setup a local instance
 of Puzzle Massive ready for a developer to make changes to and closely resembles
 a production environment.
 
-Shell scripts written in Bash and Python are used to do all the _cool ninja stuff_.
+Shell scripts written in Bash, Python, and Node.js are used to do all the _cool ninja stuff_.
 
 ## Environments
 
@@ -19,7 +19,7 @@ The environments are largely based off of the different git branches. Follow the
 [GitFlow Workflow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow)
 for the git branching model that are used for these environments.
 
-## Local Environment
+### Local Environment
 
 **Git branch: `feature/*`, `bugfix/*`**
 
@@ -30,9 +30,8 @@ directly install Puzzle Massive on your machine without using a virtual machine
 if you use Ubuntu 20.04 which is the current OS that the project is built
 around.
 
-Setting up a local environment mostly involves following the [development
-guide](/docs/development.md) and troubleshooting any issues as you come across
-them. Help is available on the Discord Chat Development channel.
+Setting up a local environment may involve some troubleshooting. Please ask for
+help on the Discord Chat development channel.
 
 When developing a feature or fixing a bug use the branch naming convention of
 prefixing it with 'feature/' or 'bugfix/'. For example, if working on a feature
@@ -48,7 +47,10 @@ that issue so others might pick up where you left off.
 Create a pull request when the feature or bugfix is ready. The pull request
 should target the `develop` git branch.
 
-## Development Environment
+[Vagrant Share](https://www.vagrantup.com/docs/share) can be used to expose the
+local instance remotely if using Vagrant on the local machine.
+
+### Development Environment
 
 **Git branch: `develop`**
 
@@ -57,20 +59,15 @@ be based from.
 
 Debug mode can be enabled for this environment.
 
-A process to automatically deploy to this environment when changes occur can be
-done by setting up a continuous integration and deployment action.
-
 Each developer can create their own development instance which can be deployed
 locally or remotely with a supported
-[IaaS provider](https://registry.terraform.io/browse/providers?category=infrastructure&tier=official%2Cpartner). At this time, DigitalOcean is the preferred IaaS provider.
-
-[Vagrant Share](https://www.vagrantup.com/docs/share) can be used to expose the
-local instance remotely if using Vagrant on the local machine.
+[IaaS provider](https://registry.terraform.io/browse/providers?category=infrastructure&tier=official%2Cpartner).
+At this time, DigitalOcean is the preferred IaaS provider.
 
 _Development instances should be secured by blocking un-authenticated users since
 debug mode is usually enabled for these._
 
-## Test Environment
+### Test Environment
 
 **Git tag: `test/*`**
 
@@ -95,7 +92,7 @@ _Git tags with test/ as their prefix may be removed later to clean things up._
 
 - Load testing and simulate puzzle activity with the puzzle-massive-testdata script.
 
-## Acceptance Environment
+### Acceptance Environment
 
 **Git branch: `release`, `hotfix/*`**
 
@@ -110,7 +107,7 @@ process to go through the test environment is skipped and only an acceptance
 environment is created from the hotfix branch. This new acceptance environment
 does not replace an acceptance environment that may already be active.
 
-## Production Environment
+### Production Environment
 
 **Git branch: `production`**
 
@@ -118,3 +115,43 @@ Either a new instance is created when following blue/green deployments or it is
 updated in-place.
 
 A git tag of the version is created after successfully deploying to production.
+
+---
+
+## Terraform Usage and Guide
+
+**Work in Progress**
+
+[Terraform](https://www.terraform.io/) will be used to automate handling the
+different environments as needed.
+
+Designed for small scale and no shared state between individuals deploying
+updates.
+
+This largely automates the process defined in the
+[manual deployment guide](/docs/deployment.md).
+
+Environments are mapped to Terraform Workspaces. Each workspace has it's own
+`config.tfvars` var file.
+
+DigitalOcean is used as the IaaS Provider. An account with DigitalOcean is
+required in order to get an access token.
+
+## Setup
+
+Create a `_infra/puzzle-massive.auto.tfvars` file by copying the example one at
+`_infra/example.tfvars` and filling in the variables.
+
+Install terraform and initialize if haven't done so.
+
+```bash
+terraform init
+```
+
+A helper script for each environment can be used when running the terraform
+commands in a workspace. See the README.md for each environment.
+
+- [Development](/_infra/development/README.md)
+- [Test](/_infra/test/README.md)
+- [Acceptance](/_infra/acceptance/README.md)
+- [Production](/_infra/production/README.md)

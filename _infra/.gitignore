@@ -1,0 +1,7 @@
+# State is not checked in or shared.
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate*
+
+# These can have sensitive variables in them like the do_token.
+/*.auto.tfvars
