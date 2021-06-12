@@ -5,3 +5,7 @@ terraform.tfstate*
 
 # These can have sensitive variables in them like the do_token.
 /*.auto.tfvars
+.env
+.env.bak*
+.htpasswd
+.htpasswd.bak*

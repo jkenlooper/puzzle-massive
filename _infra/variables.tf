@@ -6,7 +6,6 @@ variable "do_token" {
 variable "developer_ips" {
   description = "List of ips that will be allowed through the firewall on the SSH port."
   type=list(string)
-  default = ["0.0.0.0/0"]
 }
 
 variable "developer_ssh_key_fingerprints" {
@@ -22,9 +21,22 @@ variable "environment" {
     error_message = "Must be an environment that has been defined for the Puzzle Massive project."
   }
 }
+variable "project_environment" {
+  description = "Used to set the environment in the DigitalOcean project."
+  default = "Development"
+  validation {
+    condition = can(regex("Development|Staging|Production", var.project_environment))
+    error_message = "Must be an environment that is acceptable for DigitalOcean projects."
+  }
+}
 
 variable "droplet_size" {
   default = "s-2vcpu-4gb"
+}
+
+variable "init_user_data_script" {
+  type=string
+  default = ""
 }
 
 variable "region" {
@@ -39,3 +51,17 @@ variable "project_description" {
   default = "Massively Multiplayer Jigsaw Puzzle"
   description = "Sets the DigitalOcean project description. Should be set to the current version that is being used."
 }
+
+variable "project_version" {
+  default = ""
+  description = "Appended to the end of the DigitialOcean project name.  Allows multiple versions of that environment to be deployed. Can also be left blank for Production in-place deployments."
+}
+
+variable "checkout_commit" {
+  default = "develop"
+}
+variable "repository_clone_url" {
+  description = "Depending on the environment, a git checkout of this repo will occur when deploying."
+  default = "https://github.com/jkenlooper/puzzle-massive.git"
+}
+

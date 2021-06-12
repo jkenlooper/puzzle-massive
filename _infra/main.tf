@@ -8,9 +8,10 @@ terraform {
 }
 
 resource "digitalocean_project" "puzzle_massive" {
-  name        = "Puzzle Massive - ${var.environment}"
+  name        = "Puzzle Massive - ${var.environment} ${var.project_version}"
   description = var.project_description
   purpose     = "Web Application"
+  environment = var.project_environment
   resources   = [digitalocean_droplet.puzzle_massive.urn]
 }
 
@@ -18,7 +19,6 @@ resource "digitalocean_vpc" "puzzle_massive" {
   name     = "puzzle-massive-${var.environment}"
   description = "Puzzle Massive network for the ${var.environment} environment"
   region   = var.region
-  ip_range = var.vpc_ip_range
 }
 
 resource "digitalocean_droplet" "puzzle_massive" {
@@ -30,9 +30,21 @@ resource "digitalocean_droplet" "puzzle_massive" {
   ssh_keys = var.developer_ssh_key_fingerprints
   tags     = [digitalocean_tag.fw_puzzle_massive.id]
 
-  # TODO: create the initial scripts that will be used to setup this droplet.
-  #user_data = file("")
+  user_data = join("\n", concat([
+    "#!/usr/bin/env bash",
+    "CHECKOUT_COMMIT=${var.checkout_commit}",
+    "REPOSITORY_CLONE_URL=${var.repository_clone_url}",
 
+    "cat <<-'ENV_CONTENT' > .env",
+    file("${lower(var.environment)}/.env"),
+    "ENV_CONTENT",
+
+    "cat <<-'HTPASSWD_CONTENT' > .htpasswd",
+    file("${lower(var.environment)}/.htpasswd"),
+    "HTPASSWD_CONTENT",
+
+    file("${lower(var.environment)}/droplet-setup.sh")
+  ]))
 }
 
 resource "digitalocean_tag" "fw_puzzle_massive" {
@@ -40,7 +52,7 @@ resource "digitalocean_tag" "fw_puzzle_massive" {
 }
 
 resource "digitalocean_firewall" "puzzle_massive" {
-  name = "puzzle_massive"
+  name = "puzzle-massive"
   tags = [digitalocean_tag.fw_puzzle_massive.id]
 
   inbound_rule {
