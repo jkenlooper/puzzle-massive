@@ -19,6 +19,7 @@ resource "digitalocean_vpc" "puzzle_massive" {
   name     = "puzzle-massive-${var.environment}"
   description = "Puzzle Massive network for the ${var.environment} environment"
   region   = var.region
+  ip_range = var.vpc_ip_range
 }
 
 resource "digitalocean_droplet" "puzzle_massive" {
@@ -34,6 +35,10 @@ resource "digitalocean_droplet" "puzzle_massive" {
     "#!/usr/bin/env bash",
     "CHECKOUT_COMMIT=${var.checkout_commit}",
     "REPOSITORY_CLONE_URL=${var.repository_clone_url}",
+
+    "cat <<-'BIN_CHECKSUMS' > checksums",
+    file("${lower(var.environment)}/.bin_checksums"),
+    "BIN_CHECKSUMS",
 
     "cat <<-'ENV_CONTENT' > .env",
     file("${lower(var.environment)}/.env"),

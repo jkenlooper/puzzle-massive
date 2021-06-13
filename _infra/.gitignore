@@ -3,6 +3,9 @@
 .terraform.lock.hcl
 terraform.tfstate*
 
+# Generated from running terra.sh scripts
+/*/.bin_checksums
+
 # These can have sensitive variables in them like the do_token.
 /*.auto.tfvars
 .env

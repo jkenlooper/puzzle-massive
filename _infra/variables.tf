@@ -44,7 +44,7 @@ variable "region" {
 }
 
 variable "vpc_ip_range" {
-  default = "10.0.0.0/24"
+  default = "192.168.126.0/24"
 }
 
 variable "project_description" {

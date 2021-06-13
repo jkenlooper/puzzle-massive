@@ -16,6 +16,7 @@ test $(basename $PWD) = "_infra" || (echo "Must run this script from the _infra 
 # The workspace name is the folder that contains the terra.sh script.
 script_dir=$(dirname $(realpath $0))
 workspace=$(basename $script_dir)
+project_dir=$(dirname $PWD)
 
 project_description="Temporary instance for development"
 
@@ -23,6 +24,10 @@ echo "Terraform workspace is: $workspace"
 echo "Project description will be: '$project_description'"
 
 set -x
+
+(cd $project_dir
+md5sum bin/{add-dev-user.sh,update-sshd-config.sh,set-external-puzzle-massive-in-hosts.sh,infra-development-build.sh} > $script_dir/.bin_checksums
+)
 
 terraform workspace select $workspace || \
   terraform workspace new $workspace
