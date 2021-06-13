@@ -30,8 +30,8 @@ mkdir -p /usr/local/src/puzzle-massive;
 chown dev:dev /usr/local/src/puzzle-massive;
 
 # Sends files to the /usr/local/src/puzzle-massive directory
-./bin/devsync.sh
-
+./bin/devsync.sh . /usr/local/src/puzzle-massive/
+chown -R dev:dev /usr/local/src/puzzle-massive;
 
 cd /usr/local/src/puzzle-massive;
 su --command '

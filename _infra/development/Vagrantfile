@@ -1,0 +1,23 @@
+# For debugging the user_data.sh for an environment
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "bento/ubuntu-20.04"
+
+  config.vm.network "forwarded_port", guest: 80, host: 9090
+  config.vm.network "forwarded_port", guest: 443, host: 9091
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "4096"
+    vb.cpus = 2
+  end
+
+  # The add-dev-user.sh will need to copy the /root/.ssh/authorized_keys file to
+  # the /home/dev/.ssh/ directory.  On a vagrant virtual machine, however, this
+  # file doesn't exist in the /root/ directory.
+  config.vm.provision "shell-prep-root", type: "shell", inline: <<-SHELL
+    cp -r /home/vagrant/.ssh /root/
+  SHELL
+
+  config.vm.provision "user_data", type: "shell", path: "user_data.sh"
+
+end

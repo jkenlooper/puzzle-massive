@@ -2,12 +2,6 @@
 
 set -euo pipefail
 
-# TODO: use adduser instead of useradd
-# Create dev user and immediately expire password to force a change on login
-#useradd --create-home --shell "/bin/bash" --user-group --groups sudo dev
-#passwd --delete dev
-#chage --lastday 0 dev
-
 # gecos option will prevent the other informational prompts
 adduser dev --disabled-login --disabled-password --gecos ""
 usermod -aG sudo dev

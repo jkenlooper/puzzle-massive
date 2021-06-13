@@ -7,6 +7,9 @@ terraform.tfstate*
 /*/.bin_checksums
 /*/user_data.sh
 
+# Generated from using vagrant to debug user_data.sh scripts
+/*/.vagrant
+
 # These can have sensitive variables in them like the do_token.
 /*.auto.tfvars
 .env
