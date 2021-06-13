@@ -12,8 +12,8 @@ Vagrant.configure(2) do |config|
   end
 
   # The add-dev-user.sh will need to copy the /root/.ssh/authorized_keys file to
-  # the /home/dev/.ssh/ directory.  On a vagrant virtual machine, however, this
-  # file doesn't exist in the /root/ directory.
+  # the /home/dev/.ssh/ directory.  On a vagrant virtual machine; this file
+  # doesn't exist in the /root/ directory.
   config.vm.provision "shell-prep-root", type: "shell", inline: <<-SHELL
     cp -r /home/vagrant/.ssh /root/
   SHELL

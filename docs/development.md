@@ -242,10 +242,12 @@ npm run debug
 
 ---
 
-The below instructions are still relevant if needing to troubleshoot or are
-manually setting up without using the above vagrant commands.
+**The below instructions are still relevant if needing to troubleshoot or are
+manually setting up without using the above vagrant commands. The "Initial
+Setup", and "Setup For Building" sections can be skipped if using vagrant since
+most of that was automatically done.**
 
-## Initial setup
+## Initial Setup
 
 After cloning or forking the git repo
 [puzzle-massive](https://github.com/jkenlooper/puzzle-massive); open a terminal

@@ -9,11 +9,6 @@ HTPASSWD_FILE=$4
 
 cd /home/dev/
 
-echo "127.0.0.1 local-puzzle-massive" >> /etc/hosts
-# The devsync.sh will use ssh to copy files to local-puzzle-massive.  Need to
-# add that to the known hosts first.
-su --command 'ssh-keyscan -H local-puzzle-massive >> /home/dev/.ssh/known_hosts' dev
-
 # Get the source code
 git clone $REPOSITORY_CLONE_URL puzzle-massive
 cd puzzle-massive
@@ -23,8 +18,10 @@ cp $ENV_FILE .env
 cp $HTPASSWD_FILE .htpasswd
 
 # Standard build stuff
-npm install
-npm run debug
+su --command '
+npm install;
+npm run debug;
+' dev
 
 mkdir -p /usr/local/src/puzzle-massive;
 chown dev:dev /usr/local/src/puzzle-massive;

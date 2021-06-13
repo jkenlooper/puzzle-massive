@@ -81,20 +81,20 @@ Vagrant.configure(2) do |config|
   #   sudo apt-get install -y apache2
   # SHELL
 
+  # The add-dev-user.sh will need to copy the /root/.ssh/authorized_keys file to
+  # the /home/dev/.ssh/ directory.  On a vagrant virtual machine; this file
+  # doesn't exist in the /root/ directory.
+  config.vm.provision "shell-prep-root", type: "shell", inline: <<-SHELL
+    cp -r /home/vagrant/.ssh /root/
+  SHELL
+
   # For vagrant just set up the dev user and the initial
   # /usr/local/src/puzzle-massive directory.
   # To do db stuff as dev use `sudo su dev`.
-  config.vm.provision "shell-add-dev-user", type: "shell", inline: <<-SHELL
-    adduser dev --disabled-login
-    usermod -aG sudo dev
-    echo "127.0.0.1 external-puzzle-massive" >> /etc/hosts
-
-    sed --in-place "s/^PasswordAuthentication yes$/PasswordAuthentication no/" /etc/ssh/sshd_config
-    sed --in-place "s/^#PasswordAuthentication yes$/PasswordAuthentication no/" /etc/ssh/sshd_config
-    systemctl reload sshd
-  SHELL
-
-  config.vm.provision "setup", type: "shell", path: "bin/setup.sh"
+  config.vm.provision "bin-add-dev-user", type: "shell", path: "bin/add-dev-user.sh"
+  config.vm.provision "bin-update-sshd-config", type: "shell", path: "bin/update-sshd-config.sh"
+  config.vm.provision "bin-set-external-puzzle-massive-in-hosts", type: "shell", path: "bin/set-external-puzzle-massive-in-hosts.sh"
+  config.vm.provision "bin-setup", type: "shell", path: "bin/setup.sh"
 
   # The devsync.sh uses local-puzzle-massive when syncing files
   # Install the watchit command that is used in _infra/local/watchit.sh script.
@@ -107,6 +107,9 @@ Vagrant.configure(2) do |config|
     ssh-keyscan -H local-puzzle-massive >> /home/vagrant/.ssh/known_hosts
     ssh-keygen -t rsa -C "vagrant@local-puzzle-massive" -N "" -q -f /home/vagrant/.ssh/id_rsa
   SHELL
+  config.vm.provision "shell-vagrant-local-ssh-part-two", type: "shell", inline: <<-SHELL
+    cat /home/vagrant/.ssh/id_rsa.pub >> /home/dev/.ssh/authorized_keys
+  SHELL
 
   config.vm.provision "shell-vagrant-npm-install-and-build", privileged: false, type: "shell", inline: <<-SHELL
     cd /home/vagrant/puzzle-massive
@@ -114,14 +117,7 @@ Vagrant.configure(2) do |config|
     npm run debug
   SHELL
 
-  config.vm.provision "shell-dev-ssh", type: "shell", inline: <<-SHELL
-    mkdir /home/dev/.ssh
-    chown dev:dev /home/dev/.ssh
-    chmod 700 /home/dev/.ssh
-    cat /home/vagrant/.ssh/id_rsa.pub >> /home/dev/.ssh/authorized_keys
-    chmod 600 /home/dev/.ssh/authorized_keys
-    chown dev:dev /home/dev/.ssh/authorized_keys
-
+  config.vm.provision "shell-usr-local-src-puzzle-massive", type: "shell", inline: <<-SHELL
     mkdir -p /usr/local/src/puzzle-massive;
     chown dev:dev /usr/local/src/puzzle-massive;
   SHELL
@@ -199,9 +195,4 @@ Vagrant.configure(2) do |config|
       ./bin/puzzle-massive-testdata puzzles --count=3 --min-pieces=1900 --pieces=3900 --size=6720x4480\!;
     ' dev
   SHELL
-
-  # TODO: add systemctl service to run devsync.sh command when files change in
-  # /home/vagrant/puzzle-massive/*
-
-  # Run the bin/setup.sh script after logging in
 end
