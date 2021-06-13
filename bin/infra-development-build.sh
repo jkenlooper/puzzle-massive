@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 CHECKOUT_COMMIT=$1
 REPOSITORY_CLONE_URL=$2
 ENV_FILE=$3
@@ -23,6 +25,9 @@ cp $HTPASSWD_FILE .htpasswd
 # Standard build stuff
 npm install
 npm run debug
+
+mkdir -p /usr/local/src/puzzle-massive;
+chown dev:dev /usr/local/src/puzzle-massive;
 
 # Sends files to the /usr/local/src/puzzle-massive directory
 ./bin/devsync.sh

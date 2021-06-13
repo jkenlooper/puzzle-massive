@@ -5,6 +5,7 @@ terraform.tfstate*
 
 # Generated from running terra.sh scripts
 /*/.bin_checksums
+/*/user_data.sh
 
 # These can have sensitive variables in them like the do_token.
 /*.auto.tfvars

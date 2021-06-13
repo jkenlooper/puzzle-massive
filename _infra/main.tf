@@ -31,7 +31,17 @@ resource "digitalocean_droplet" "puzzle_massive" {
   ssh_keys = var.developer_ssh_key_fingerprints
   tags     = [digitalocean_tag.fw_puzzle_massive.id]
 
-  user_data = join("\n", concat([
+  # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#retrieve-user-data
+  user_data = local_file.droplet_puzzle_massive_user_data.content
+}
+
+# Write out the user_data script to the environment folder to help with
+# debugging.
+resource "local_file" "droplet_puzzle_massive_user_data" {
+  filename = "${lower(var.environment)}/user_data.sh"
+  # Hint that this script shouldn't be edited by the owner.
+  file_permission = "0500"
+  sensitive_content = join("\n", concat([
     "#!/usr/bin/env bash",
     "CHECKOUT_COMMIT=${var.checkout_commit}",
     "REPOSITORY_CLONE_URL=${var.repository_clone_url}",

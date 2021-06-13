@@ -1,5 +1,5 @@
 variable "do_token" {
-  description = "DigitalOcean token"
+  description = "DigitalOcean access token.  Keep this secure and use best practices when using these.  It is recommended to export an environment variable for this like TF_VAR_do_token if you aren't entering it manually each time."
   sensitive = true
 }
 

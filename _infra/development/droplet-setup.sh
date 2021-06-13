@@ -12,13 +12,14 @@ set -euo pipefail
 TMPDIR=$(mktemp -d)
 cp .env $TMPDIR/
 cp .htpasswd $TMPDIR/
+cp checksums $TMPDIR/
 (cd $TMPDIR
 
   # Grab necessary scripts from the GitHub Repo
   mkdir bin
   cd bin
   curl --location --silent --remote-name-all \
-    "https://raw.githubusercontent.com/jkenlooper/puzzle-massive/${CHECKOUT_COMMIT}/bin/{add-dev-user.sh,update-sshd-config.sh,set-external-puzzle-massive-in-hosts.sh,infra-development-build.sh}"
+    "https://raw.githubusercontent.com/jkenlooper/puzzle-massive/${CHECKOUT_COMMIT}/bin/{add-dev-user.sh,update-sshd-config.sh,set-external-puzzle-massive-in-hosts.sh,setup.sh,infra-development-build.sh}"
   cd ..
   md5sum --check checksums
 
@@ -28,6 +29,7 @@ cp .htpasswd $TMPDIR/
   ./bin/add-dev-user.sh
   ./bin/update-sshd-config.sh
   ./bin/set-external-puzzle-massive-in-hosts.sh
+  ./bin/setup.sh
 
   ./bin/infra-development-build.sh $CHECKOUT_COMMIT $REPOSITORY_CLONE_URL $(realpath .env) $(realpath .htpasswd)
 
