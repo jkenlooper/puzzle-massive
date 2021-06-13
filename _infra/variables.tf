@@ -61,7 +61,7 @@ variable "project_description" {
 
 variable "project_version" {
   default = ""
-  description = "Appended to the end of the DigitialOcean project name.  Allows multiple versions of that environment to be deployed. Can also be left blank for Production in-place deployments."
+  description = "Appended to the end of the DigitialOcean project name."
 }
 
 variable "checkout_commit" {
