@@ -32,7 +32,11 @@ resource "digitalocean_droplet" "puzzle_massive" {
   tags     = [digitalocean_tag.fw_puzzle_massive.id]
 
   # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#retrieve-user-data
-  user_data = local_file.droplet_puzzle_massive_user_data.content
+  # Can also debug this locally by using the Vagrantfile in the environment
+  # directory.
+  # Or ssh to the droplet and tail the cloud-init logs:
+  # tail -f /var/log/cloud-init-output.log
+  user_data = local_file.droplet_puzzle_massive_user_data.sensitive_content
 }
 
 # Write out the user_data script to the environment folder to help with
@@ -79,13 +83,13 @@ resource "digitalocean_firewall" "puzzle_massive" {
   inbound_rule {
     protocol         = "tcp"
     port_range       = "80"
-    source_addresses = ["0.0.0.0/0", "::/0"]
+    source_addresses = var.web_ips
   }
 
   inbound_rule {
     protocol         = "tcp"
     port_range       = "443"
-    source_addresses = ["0.0.0.0/0", "::/0"]
+    source_addresses = var.web_ips
   }
 
   inbound_rule {

@@ -8,6 +8,13 @@ variable "developer_ips" {
   type=list(string)
 }
 
+variable "web_ips" {
+  description = "List of ips that will be allowed through the firewall on port 80 and 443."
+  type=list(string)
+  default=["0.0.0.0/0", "::/0"]
+}
+
+
 variable "developer_ssh_key_fingerprints" {
   description = "The fingerprints of any public SSH keys that were added to the DigitalOcean account that should have access to the droplets."
   type=list(string)
