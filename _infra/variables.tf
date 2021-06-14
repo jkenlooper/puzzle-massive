@@ -2,6 +2,30 @@ variable "do_token" {
   description = "DigitalOcean access token.  Keep this secure and use best practices when using these.  It is recommended to export an environment variable for this like TF_VAR_do_token if you aren't entering it manually each time."
   sensitive = true
 }
+variable "do_spaces_access_key_id" {
+  description = "DigitalOcean Spaces access key ID."
+  sensitive = true
+}
+variable "do_spaces_secret_access_key" {
+  description = "DigitalOcean Spaces secret access key"
+  sensitive = true
+}
+variable "artifacts_bucket_region" {
+  description = "Artifacts bucket region"
+  default = "nyc3"
+}
+variable "artifacts_bucket_name" {
+  description = "Artifacts bucket name that will hold versioned distributable gzipped files used for deployments. This bucket should already exist since it is not part of this infrastructure."
+}
+
+variable "artifact_dist_tar_gz" {
+  description = "The file name of the the created artifact that will be used for deploying to the acceptance or production environments. This artifact is created on the developer's machine via the `make dist` command."
+  type=string
+  validation {
+    condition = can(regex("puzzle-massive-.+\\.tar\\.gz", var.artifact_dist_tar_gz))
+    error_message = "Must be a file that was generated from the `make dist` command. The Development and Test environments don't use this file when deploying."
+  }
+}
 
 variable "developer_ips" {
   description = "List of ips that will be allowed through the firewall on the SSH port."

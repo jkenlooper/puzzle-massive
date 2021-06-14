@@ -20,4 +20,6 @@ located.
 ./development/terra.sh destroy
 ```
 
-...WIP
+This development environment has a firewall that blocks all IP addresses from
+hitting the web server by default except localhost. It is expected to use `ssh`
+to set up a proxy with the server in order to access it with a web browser.

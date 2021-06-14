@@ -65,7 +65,8 @@ locally or remotely with a supported
 At this time, DigitalOcean is the preferred IaaS provider.
 
 _Development instances should be secured by blocking un-authenticated users since
-debug mode is usually enabled for these._
+debug mode is usually enabled for these._ See the instructions [development
+environment read me](/_infra/development/README.md) for more.
 
 ### Test Environment
 

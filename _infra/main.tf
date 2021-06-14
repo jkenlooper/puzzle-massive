@@ -114,3 +114,11 @@ resource "digitalocean_firewall" "puzzle_massive" {
     destination_addresses = ["0.0.0.0/0", "::/0"]
   }
 }
+
+resource "digitalocean_spaces_bucket_object" "puzzle_massive_dist_tar" {
+  region       = var.artifacts_bucket_region
+  bucket       = var.artifacts_bucket_name
+  key          = "puzzle-massive/${lower(var.environment)}/${var.artifact_dist_tar_gz}"
+  acl = "private"
+  source = "${lower(var.environment)}/${var.artifact_dist_tar_gz}"
+}

@@ -8,3 +8,5 @@ vpc_ip_range = "192.168.128.0/24"
 
 # See notes on this in the _infra/development/config.tfvars
 web_ips = ["127.0.0.1"]
+
+artifact_dist_tar_gz="puzzle-massive-NO-DIST-FOR-TEST.tar.gz"
