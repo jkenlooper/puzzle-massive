@@ -6,6 +6,8 @@ terraform.tfstate*
 # Generated from running terra.sh scripts
 /*/.bin_checksums
 /*/user_data.sh
+/*/aws_credentials
+/*/aws_config
 
 # Generated from using vagrant to debug user_data.sh scripts
 /*/.vagrant

@@ -26,7 +26,7 @@ echo "Project description will be: '$project_description'"
 set -x
 
 (cd $project_dir
-md5sum bin/{add-dev-user.sh,update-sshd-config.sh,set-external-puzzle-massive-in-hosts.sh,setup.sh,infra-development-build.sh} > $script_dir/.bin_checksums
+md5sum bin/{add-dev-user.sh,update-sshd-config.sh,set-external-puzzle-massive-in-hosts.sh,setup.sh,iptables-setup-firewall.sh,infra-development-build.sh} > $script_dir/.bin_checksums
 )
 
 terraform workspace select $workspace || \
@@ -34,5 +34,8 @@ terraform workspace select $workspace || \
 
 test "$workspace" = "$(terraform workspace show)" || (echo "Sanity check to make sure workspace selected matches environment has failed." && exit 1)
 
+# Does not need to access DigitalOcean Spaces for the development environment it.
 terraform $terraform_command -var-file="$script_dir/config.tfvars" \
+  -var "do_spaces_access_key_id=" \
+  -var "do_spaces_secret_access_key=" \
   -var "project_description=$project_description"

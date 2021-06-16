@@ -9,6 +9,8 @@ HTPASSWD_FILE=$4
 
 cd /home/dev/
 
+# TODO: AWS S3 CLI setup
+
 # Get the source code
 git clone $REPOSITORY_CLONE_URL puzzle-massive
 cd puzzle-massive

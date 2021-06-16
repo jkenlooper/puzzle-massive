@@ -62,6 +62,14 @@ resource "local_file" "droplet_puzzle_massive_user_data" {
     file("${lower(var.environment)}/.htpasswd"),
     "HTPASSWD_CONTENT",
 
+    "cat <<-'AWS_CREDENTIALS' > aws_credentials",
+    file("${lower(var.environment)}/aws_credentials"),
+    "AWS_CREDENTIALS",
+
+    "cat <<-'AWS_CONFIG' > aws_config",
+    file("${lower(var.environment)}/aws_config"),
+    "AWS_CONFIG",
+
     file("${lower(var.environment)}/droplet-setup.sh")
   ]))
 }
@@ -121,4 +129,32 @@ resource "digitalocean_spaces_bucket_object" "puzzle_massive_dist_tar" {
   key          = "puzzle-massive/${lower(var.environment)}/${var.artifact_dist_tar_gz}"
   acl = "private"
   source = "${lower(var.environment)}/${var.artifact_dist_tar_gz}"
+}
+
+# Not used at the moment
+#resource "random_password" "tbd_gpg_passphrase" {
+#  length           = 26
+#  upper          = true
+#  number = true
+#  lower = true
+#  special = false
+#}
+
+resource "local_file" "aws_credentials" {
+  filename = "${lower(var.environment)}/aws_credentials"
+  # Hint that this has been generated from a template and shouldn't be edited by the owner.
+  file_permission = "0400"
+  sensitive_content = templatefile("aws_credentials.tmpl", {
+    do_spaces_access_key_id = var.do_spaces_access_key_id
+    do_spaces_secret_access_key = var.do_spaces_secret_access_key
+  })
+}
+
+resource "local_file" "aws_config" {
+  filename = "${lower(var.environment)}/aws_config"
+  # Hint that this has been generated from a template and shouldn't be edited by the owner.
+  file_permission = "0400"
+  content = templatefile("aws_config.tmpl", {
+    artifacts_bucket_region = var.artifacts_bucket_region
+  })
 }

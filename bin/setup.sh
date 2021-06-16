@@ -7,13 +7,17 @@ set -x
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get --yes update
-# Use dist-upgrade instead of upgrade to less likely break things.
-apt-get --yes dist-upgrade
+apt-get --yes upgrade
 
 # TODO: add these to apt-get commands that show anything about existing
 # configuration files that need to be overwritten
 # -o Dpkg::Options::="--force-confdef" \
 # -o Dpkg::Options::="--force-confold" \
+
+apt-get --yes install ssh rsync
+
+# Support for bin/iptables-setup-firewall.sh
+apt-get --yes install netfilter-persistent iptables-persistent
 
 apt-get --yes install \
   software-properties-common \
@@ -23,6 +27,7 @@ apt-get --yes install \
   cron \
   make \
   gcc \
+  unzip \
   curl
 
 # Adds the `convert` command which is used to convert source-media/ images to

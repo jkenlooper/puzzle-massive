@@ -30,7 +30,7 @@ echo "Using versioned artifact dist file: '$project_dir/$artifact_dist_tar_gz'"
 set -x
 
 (cd $project_dir
-md5sum bin/{add-dev-user.sh,update-sshd-config.sh,set-external-puzzle-massive-in-hosts.sh,setup.sh,infra-development-build.sh} > $script_dir/.bin_checksums
+md5sum bin/{add-dev-user.sh,update-sshd-config.sh,set-external-puzzle-massive-in-hosts.sh,setup.sh,iptables-setup-firewall.sh,aws-cli-install.sh,infra-development-build.sh} > $script_dir/.bin_checksums
 )
 
 cp $project_dir/$artifact_dist_tar_gz $scripts_dir/
