@@ -34,8 +34,5 @@ terraform workspace select $workspace || \
 
 test "$workspace" = "$(terraform workspace show)" || (echo "Sanity check to make sure workspace selected matches environment has failed." && exit 1)
 
-# Does not need to access DigitalOcean Spaces for the development environment it.
 terraform $terraform_command -var-file="$script_dir/config.tfvars" \
-  -var "do_spaces_access_key_id=" \
-  -var "do_spaces_secret_access_key=" \
   -var "project_description=$project_description"
