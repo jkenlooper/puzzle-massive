@@ -1,3 +1,5 @@
+# TODO: split this out into multiple .tf files
+
 terraform {
   required_providers {
     digitalocean = {
@@ -16,20 +18,20 @@ resource "digitalocean_project" "puzzle_massive" {
 }
 
 resource "digitalocean_vpc" "puzzle_massive" {
-  name     = "puzzle-massive-${var.environment}"
+  name        = "puzzle-massive-${var.environment}"
   description = "Puzzle Massive network for the ${var.environment} environment"
-  region   = var.region
-  ip_range = var.vpc_ip_range
+  region      = var.region
+  ip_range    = var.vpc_ip_range
 }
 
 resource "digitalocean_droplet" "puzzle_massive" {
-  name     = lower("puzzle-massive-${var.environment}")
-  size     = var.droplet_size
-  image    = "ubuntu-20-04-x64"
-  region   = var.region
-  vpc_uuid = digitalocean_vpc.puzzle_massive.id
-  ssh_keys = var.developer_ssh_key_fingerprints
-  tags     = [digitalocean_tag.fw_puzzle_massive.id]
+  name       = lower("puzzle-massive-${var.environment}")
+  size       = var.droplet_size
+  image      = "ubuntu-20-04-x64"
+  region     = var.region
+  vpc_uuid   = digitalocean_vpc.puzzle_massive.id
+  ssh_keys   = var.developer_ssh_key_fingerprints
+  tags       = [digitalocean_tag.fw_puzzle_massive.id]
   depends_on = [digitalocean_spaces_bucket_object.puzzle_massive_dist_tar]
 
   # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#retrieve-user-data
@@ -111,13 +113,13 @@ resource "digitalocean_firewall" "puzzle_massive" {
 
   outbound_rule {
     protocol              = "tcp"
-    port_range       = "1-65535"
+    port_range            = "1-65535"
     destination_addresses = ["0.0.0.0/0", "::/0"]
   }
 
   outbound_rule {
     protocol              = "udp"
-    port_range       = "1-65535"
+    port_range            = "1-65535"
     destination_addresses = ["0.0.0.0/0", "::/0"]
   }
 
@@ -128,10 +130,10 @@ resource "digitalocean_firewall" "puzzle_massive" {
 }
 
 resource "digitalocean_spaces_bucket_object" "puzzle_massive_dist_tar" {
-  region       = var.artifacts_bucket_region
-  bucket       = var.artifacts_bucket_name
-  key          = "puzzle-massive/${lower(var.environment)}/${var.artifact_dist_tar_gz}"
-  acl = "private"
+  region = var.artifacts_bucket_region
+  bucket = var.artifacts_bucket_name
+  key    = "puzzle-massive/${lower(var.environment)}/${var.artifact_dist_tar_gz}"
+  acl    = "private"
   source = "${lower(var.environment)}/${var.artifact_dist_tar_gz}"
 }
 
@@ -149,7 +151,7 @@ resource "local_file" "aws_credentials" {
   # Hint that this has been generated from a template and shouldn't be edited by the owner.
   file_permission = "0400"
   sensitive_content = templatefile("aws_credentials.tmpl", {
-    do_spaces_access_key_id = var.do_spaces_access_key_id
+    do_spaces_access_key_id     = var.do_spaces_access_key_id
     do_spaces_secret_access_key = var.do_spaces_secret_access_key
   })
 }
