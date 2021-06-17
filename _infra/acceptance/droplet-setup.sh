@@ -3,6 +3,9 @@
 # Set when uploaded to droplet
 # CHECKOUT_COMMIT
 # REPOSITORY_CLONE_URL
+# ARTIFACT_BUCKET
+# ARTIFACT_BUCKET_REGION
+# DIST_TAR
 # .env file created from heredoc ENV_CONTENT
 # .htpasswd file created from heredoc HTPASSWD_CONTENT
 # checksums file created from heredoc BIN_CHECKSUMS
@@ -41,5 +44,5 @@ mv checksums $TMPDIR/
   mv $pwd_dir/aws_credentials /home/dev/.aws/credentials
   chmod 0600 /home/dev/.aws/credentials
 
-  ./bin/infra-acceptance-build.sh $CHECKOUT_COMMIT $REPOSITORY_CLONE_URL $(realpath .env) $(realpath .htpasswd)
+  ./bin/infra-acceptance-build.sh $ARTIFACT_BUCKET $DIST_TAR $(realpath .env) $(realpath .htpasswd) $ARTIFACT_BUCKET_REGION
 )

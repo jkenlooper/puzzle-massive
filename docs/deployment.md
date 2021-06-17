@@ -186,6 +186,9 @@ by the public.
     # Update any bit icon authors and add new bit icons if applicable
     python api/api/jobs/insert-or-replace-bit-icons.py
 
+    # Update the enabled puzzle features
+    python api/api/update_enabled_puzzle_features.py
+
     sudo ./bin/appctl.sh start;
     ```
 

@@ -10,8 +10,6 @@ set -eu -o pipefail
 apt-get --yes update
 apt-get --yes upgrade
 
-apt-get --yes install ssh rsync
-
 # Support for bin/iptables-setup-firewall.sh
 apt-get --yes install netfilter-persistent iptables-persistent
 

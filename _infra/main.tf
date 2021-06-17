@@ -30,6 +30,7 @@ resource "digitalocean_droplet" "puzzle_massive" {
   vpc_uuid = digitalocean_vpc.puzzle_massive.id
   ssh_keys = var.developer_ssh_key_fingerprints
   tags     = [digitalocean_tag.fw_puzzle_massive.id]
+  depends_on = [digitalocean_spaces_bucket_object.puzzle_massive_dist_tar]
 
   # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#retrieve-user-data
   # Can also debug this locally by using the Vagrantfile in the environment
@@ -49,6 +50,9 @@ resource "local_file" "droplet_puzzle_massive_user_data" {
     "#!/usr/bin/env bash",
     "CHECKOUT_COMMIT=${var.checkout_commit}",
     "REPOSITORY_CLONE_URL=${var.repository_clone_url}",
+    "DIST_TAR=puzzle-massive/${lower(var.environment)}/${var.artifact_dist_tar_gz}",
+    "ARTIFACT_BUCKET=${var.artifacts_bucket_name}",
+    "ARTIFACT_BUCKET_REGION=${var.artifacts_bucket_region}",
 
     "cat <<-'BIN_CHECKSUMS' > checksums",
     file("${lower(var.environment)}/.bin_checksums"),
