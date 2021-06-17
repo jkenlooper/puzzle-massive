@@ -16,6 +16,7 @@ git checkout $CHECKOUT_COMMIT
 
 cp $ENV_FILE .env
 cp $HTPASSWD_FILE .htpasswd
+chown -R dev:dev ../puzzle-massive
 
 # Standard build stuff
 su --command '
