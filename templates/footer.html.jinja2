@@ -56,6 +56,9 @@
     </div>
     {% if page and page.description == " Massively Multiplayer Online Jigsaw Puzzles" %}{{ config.M3|safe }}{% endif %}{# reality check #}
     <div class="pm-Footer-gridC">
+      {#- The chill route shortcode is only inserted if the route exists. This allows this content to be more customized per distribution. -#}
+      {{ '[chill route /internal/referral/]'|shortcodes }}
+      {#- A 404 error HTML comment is inserted here if this route is not defined. -#}
       <p class="u-textRight">
         {#- Show a link to this site's source code in order to comply with the GNU Affero General Public License. -#}
         {% if config.SITE_TITLE != 'Puzzle Massive' or config.SOURCE_CODE_LINK != 'https://github.com/jkenlooper/puzzle-massive/' %}
