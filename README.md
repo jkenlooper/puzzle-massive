@@ -26,6 +26,8 @@ License.
 
 [![Chat on Discord](https://img.shields.io/badge/chat-on%20Discord-green.svg)](https://discord.gg/uVhE2Kd)
 
+[![DigitalOcean Referral Badge](https://web-platforms.sfo2.digitaloceanspaces.com/WWW/Badge%203.svg)](https://www.digitalocean.com/?refcode=686c08019031&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge)
+
 More documentation is available within the docs directory.
 
 - [Local development guide](docs/development.md) for getting a local version

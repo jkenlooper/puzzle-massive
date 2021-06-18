@@ -6,7 +6,7 @@ Development, Test, Acceptance, and Production environments
 ([DTAP](https://en.wikipedia.org/wiki/Development,_testing,_acceptance_and_production))
 are deployed with a supported
 [IaaS provider](https://registry.terraform.io/browse/providers?category=infrastructure&tier=official%2Cpartner).
-At this time, [DigitalOcean](https://www.digitalocean.com/) is the preferred
+At this time, [DigitalOcean](https://m.do.co/c/686c08019031) is the preferred
 IaaS provider.
 
 [Vagrant](https://www.vagrantup.com/) is used to develop the code on
@@ -147,7 +147,7 @@ that are generated.
 Environments are mapped to Terraform Workspaces and also have their own
 directory here. Each environment has it's own `config.tfvars` var file.
 
-[DigitalOcean](https://www.digitalocean.com/) is used as the IaaS Provider. An
+[DigitalOcean](https://m.do.co/c/686c08019031) is used as the IaaS Provider. An
 account with DigitalOcean is required in order to get an access token. Access
 token should be kept private and never checked into source control (git) for
 obvious reasons. It is not my fault if you leaked one of your access tokens.

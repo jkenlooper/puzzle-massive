@@ -34,6 +34,7 @@ needing to manually build stuff.
 ### Added
 
 - Terraform deployment for a development environment. Work in progress of [issue #92](https://github.com/jkenlooper/puzzle-massive/issues/92)
+- Support for referral content in footer.
 
 ## [2.11.0] - 2021-06-01
 
