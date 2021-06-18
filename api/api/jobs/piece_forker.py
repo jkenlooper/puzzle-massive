@@ -46,7 +46,6 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
     """
     """
     cur = db.cursor()
-    original_puzzle_id = source_puzzle_data["puzzle_id"]
     source_instance_puzzle_id = source_puzzle_data["instance_puzzle_id"]
     puzzle_id = puzzle_data["puzzle_id"]
 
@@ -83,25 +82,9 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
             )
         )
 
-    result = cur.execute(
-        read_query_file("get_original_puzzle_id_from_puzzle_instance.sql"),
-        {"puzzle": puzzle_data["id"]},
-    ).fetchone()
-    if not result:
-        raise DataError(
-            "Error with puzzle instance {puzzle_id}.".format(puzzle_id=puzzle_id)
-        )
-
-    original_puzzle_id = result[0]
-    original_puzzle_dir = os.path.join(
-        current_app.config["PUZZLE_RESOURCES"], original_puzzle_id
-    )
     puzzle_dir = os.path.join(current_app.config["PUZZLE_RESOURCES"], puzzle_id)
 
     # Copy the puzzle resources to the new puzzle_dir
-    original_puzzle_dir = os.path.join(
-        current_app.config["PUZZLE_RESOURCES"], original_puzzle_id
-    )
     source_instance_puzzle_dir = os.path.join(
         current_app.config["PUZZLE_RESOURCES"], source_instance_puzzle_id
     )
