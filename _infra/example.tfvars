@@ -1,6 +1,8 @@
 # See _infra/variables.tf for description of these.
 
 do_token = ""
+do_spaces_access_key_id = ""
+do_spaces_secret_access_key = ""
 
 developer_ssh_key_fingerprints = [""]
 

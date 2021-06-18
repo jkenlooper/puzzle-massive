@@ -1,23 +1,31 @@
 # Puzzle Massive Infrastructure as Code
 
-_This is a bit of a wish-list of best practices and a work in progress of
-existing stuff._
+[Terraform](https://www.terraform.io/) is used to automate creating the
+different environments that are deployed outside of the local machine. The
+Development, Test, Acceptance, and Production environments
+([DTAP](https://en.wikipedia.org/wiki/Development,_testing,_acceptance_and_production))
+are deployed with a supported
+[IaaS provider](https://registry.terraform.io/browse/providers?category=infrastructure&tier=official%2Cpartner).
+At this time, [DigitalOcean](https://www.digitalocean.com/) is the preferred
+IaaS provider.
 
-[Terraform](https://www.terraform.io/) will be used to automate handling the
-different environments as needed.
+[Vagrant](https://www.vagrantup.com/) is used to develop the code on
+the **local** machine. It is useful to create a local instance
+of Puzzle Massive that can be modified and tweaked. Or use it as your own
+personal Puzzle Massive site that only is accessible from your local machine.
 
-[Vagrant](https://www.vagrantup.com/) is typically used to develop the code on
-the local development machine. It is useful to quickly setup a local instance
-of Puzzle Massive ready for a developer to make changes to and closely resembles
-a production environment.
-
-Shell scripts written in Bash, Python, and Node.js are used to do all the _cool ninja stuff_.
+Many of the steps to install and get everything working for this is done with
+some scripts that handle automating these things. Shell scripts written in Bash,
+Python, and Node.js are used to do all the _cool ninja stuff_ and most are in
+the `bin/` directory.
 
 ## Environments
 
 The environments are largely based off of the different git branches. Follow the
 [GitFlow Workflow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow)
-for the git branching model that are used for these environments.
+for the git branching model that are used for these environments. This is
+recommended if you plan to make a change and submit a Pull Request in GitHub for
+the project.
 
 ### Local Environment
 
@@ -48,7 +56,8 @@ Create a pull request when the feature or bugfix is ready. The pull request
 should target the `develop` git branch.
 
 [Vagrant Share](https://www.vagrantup.com/docs/share) can be used to expose the
-local instance remotely if using Vagrant on the local machine.
+local instance remotely if using Vagrant on the local machine. I have no
+experience with this and it is untested.
 
 ### Development Environment
 
@@ -57,31 +66,31 @@ local instance remotely if using Vagrant on the local machine.
 The `develop` git branch is the branch that any new features or bug fixes should
 be based from.
 
-Debug mode can be enabled for this environment.
-
-Each developer can create their own development instance which can be deployed
-locally or remotely with a supported
-[IaaS provider](https://registry.terraform.io/browse/providers?category=infrastructure&tier=official%2Cpartner).
-At this time, DigitalOcean is the preferred IaaS provider.
-
-_Development instances should be secured by blocking un-authenticated users since
-debug mode is usually enabled for these._ See the instructions [development
-environment read me](/_infra/development/README.md) for more.
+_Development instances are secured with a firewall that **blocks all inbound
+requests to ports 80 and 443**._ Ports 80 and 443 are the web server ports for
+HTTP and HTTPS. These are blocked because debug mode is usually enabled on the
+development instance and is a security risk if open to the public.
+See the instructions [development environment read me](/_infra/development/README.md)
+for more.
 
 ### Test Environment
 
 **Git tag: `test/*`**
 
-Short-lived environment can be created from a tagged commit. The created
-instance is only accessible to authorized users. The commit that is tagged
+_Work in Progress_
+
+Short-lived environment that is based from a tagged commit. The created
+instance also uses a firewall that blocks inbound requests to the web server for
+ports 80 and 443. The commit that is tagged
 should be from the development branch, but could really be any branch. The
 naming convention for test tags should be descriptive. If this test is for an
 upcoming release then name it with the next version
-(test/release-2.2.2-alpha.1), otherwise use the name of the feature or bugfix.
+(test/release-2.2.2-alpha.1). Otherwise, use the name of the feature or bugfix.
 
 _Git tags with test/ as their prefix may be removed later to clean things up._
 
-- Debug mode is off.
+- Debug mode is off by default since load testing may be used and the site should be
+  configured much like the production site.
 
 - [Cypress](https://www.cypress.io/) for doing integration tests will be used.
 
@@ -97,20 +106,23 @@ _Git tags with test/ as their prefix may be removed later to clean things up._
 
 **Git branch: `release`, `hotfix/*`**
 
-Create a temporary instance for staging the release. This uses a recent copy of
-the production data, but is not used for blue/green deployments. The instance
+_Work in Progress_
+
+Create a temporary instance for staging the release. This uses a recent backup copy of
+the production data, but is **not** used for blue/green deployments. The instance
 is destroyed after it passes acceptance.
 
 A `hotfix/*` branch should be created off of the `production` branch when
 needing to quickly patch something that is on production. This should only be
 done if the issue is causing an impact to users on the live site. The normal
 process to go through the test environment is skipped and only an acceptance
-environment is created from the hotfix branch. This new acceptance environment
-does not replace an acceptance environment that may already be active.
+environment is created from the hotfix branch.
 
 ### Production Environment
 
 **Git branch: `production`**
+
+_Work in Progress_
 
 Either a new instance is created when following blue/green deployments or it is
 updated in-place.
@@ -121,22 +133,26 @@ A git tag of the version is created after successfully deploying to production.
 
 ## Terraform Usage and Guide
 
-**Work in Progress**
+[Terraform](https://www.terraform.io/) is used to automate deploying the
+different environments as needed. You do not need to install the `terraform`
+cli, or get a DigitalOcean account, if you only plan to work on the Puzzle
+Massive site locally on your own machine.
 
-[Terraform](https://www.terraform.io/) will be used to automate handling the
-different environments as needed.
+The setup here is designed for small scale and **no shared state** between
+individuals deploying updates. This is only meant to be used by a single
+developer that will be doing all deployments from their local machine. It will
+be up to that developer to maintain proper backups of the terraform state files
+that are generated.
 
-Designed for small scale and no shared state between individuals deploying
-updates.
+Environments are mapped to Terraform Workspaces and also have their own
+directory here. Each environment has it's own `config.tfvars` var file.
 
-This largely automates the process defined in the
-[manual deployment guide](/docs/deployment.md).
-
-Environments are mapped to Terraform Workspaces. Each workspace has it's own
-`config.tfvars` var file.
-
-DigitalOcean is used as the IaaS Provider. An account with DigitalOcean is
-required in order to get an access token.
+[DigitalOcean](https://www.digitalocean.com/) is used as the IaaS Provider. An
+account with DigitalOcean is required in order to get an access token. Access
+token should be kept private and never checked into source control (git) for
+obvious reasons. It is not my fault if you leaked one of your access tokens.
+Please promptly delete it from your DigitalOcean account if you suspect it has
+been compromised.
 
 ## Setup
 

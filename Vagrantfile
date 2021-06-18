@@ -88,7 +88,7 @@ Vagrant.configure(2) do |config|
     cp -r /home/vagrant/.ssh /root/
   SHELL
 
-  # For vagrant just set up the dev user and the initial
+  # For vagrant, set up the dev user and the initial
   # /usr/local/src/puzzle-massive directory.
   # To do db stuff as dev use `sudo su dev`.
   config.vm.provision "bin-add-dev-user", type: "shell", path: "bin/add-dev-user.sh"

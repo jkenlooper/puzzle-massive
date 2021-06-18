@@ -31,6 +31,10 @@ needing to manually build stuff.
 
 - Preview full image from generated puzzle images
 
+### Added
+
+- Terraform deployment for a development environment. Work in progress of [issue #92](https://github.com/jkenlooper/puzzle-massive/issues/92)
+
 ## [2.11.0] - 2021-06-01
 
 Did a YouTube live stream going over some of the improvements to piece rendering

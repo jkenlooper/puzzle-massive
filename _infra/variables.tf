@@ -3,11 +3,11 @@ variable "do_token" {
   sensitive   = true
 }
 variable "do_spaces_access_key_id" {
-  description = "DigitalOcean Spaces access key ID."
+  description = "DigitalOcean Spaces access key ID. Keep this secure and use best practices when using these.  It is recommended to export an environment variable for this like TF_VAR_do_spaces_access_key_id if you aren't entering it manually each time."
   sensitive   = true
 }
 variable "do_spaces_secret_access_key" {
-  description = "DigitalOcean Spaces secret access key"
+  description = "DigitalOcean Spaces secret access key. Keep this secure and use best practices when using these.  It is recommended to export an environment variable for this like TF_VAR_do_spaces_secret_access_key if you aren't entering it manually each time."
   sensitive   = true
 }
 variable "artifacts_bucket_region" {
@@ -122,7 +122,7 @@ variable "dot_env__UNSPLASH_SECRET" {
 #}
 
 variable "dot_env__SECURE_COOKIE_SECRET" {
-  default     = "chocolate chip sandwich with uuid cream"
+  default     = "chocolate chip"
   description = "Some random text for secure cookie. Should be something that is secure and random. This should never change once it has been used for a domain since it would invalidate any cookie that was used to login a player for that site."
   type        = string
   sensitive   = true
