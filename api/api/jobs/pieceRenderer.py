@@ -19,6 +19,7 @@ import subprocess
 import time
 from docopt import docopt
 from shutil import rmtree, move
+import tempfile
 
 from flask import current_app
 import requests
@@ -26,6 +27,7 @@ import requests
 from api.app import db, make_app
 from api.database import read_query_file, rowify
 from api.tools import loadConfig
+from api.puzzle_resource import PuzzleResource
 from api.constants import (
     IN_RENDER_QUEUE,
     REBUILD,
@@ -190,33 +192,30 @@ def render(puzzles):
 
         result = cur.execute(
             read_query_file("get_original_puzzle_id_from_puzzle_instance.sql"),
-            {"puzzle": puzzle["id"]},
+            {"puzzle": puzzle["id"], "puzzle_file_name": "original"},
         ).fetchone()
         if not result:
             print("Error with puzzle instance {puzzle_id} ; skipping.".format(**puzzle))
             continue
         original_puzzle_id = result[0]
-        original_preview_full = result[1]
-        puzzle_id = puzzle["puzzle_id"]
-        original_puzzle_dir = os.path.join(
-            current_app.config["PUZZLE_RESOURCES"], original_puzzle_id
-        )
-        puzzle_dir = os.path.join(current_app.config["PUZZLE_RESOURCES"], puzzle_id)
+        original_original_image = result[1]
+        original_image_basename = os.path.basename(original_original_image)
 
-        # If it is being rebuilt then delete all the other resources.
-        cleanup(puzzle_id, ["original.jpg", os.path.basename(original_preview_full)])
+        pr_original = PuzzleResource(original_puzzle_id, current_app.config)
+        imagefile = pr_original.yank_file(original_image_basename)
+
+        puzzle_id = puzzle["puzzle_id"]
+        tmp_dir = tempfile.mkdtemp()
+        tmp_puzzle_dir = os.path.join(tmp_dir, puzzle_id)
+        os.mkdir(tmp_puzzle_dir)
 
         preview_full_basename = os.path.basename(puzzle["preview_full"])
-
-        # TODO: get path of original.jpg via the PuzzleFile query
-        # TODO: use requests.get to get original.jpg
-        imagefile = os.path.join(original_puzzle_dir, "original.jpg")
 
         subprocess.run(
             [
                 "./bin/piecemaker",
                 "--dir",
-                puzzle_dir,
+                tmp_puzzle_dir,
                 "--scaled-sizes=100",
                 "--minimum-piece-size",
                 str(MIN_PIECE_SIZE),
@@ -229,31 +228,31 @@ def render(puzzles):
             ],
             check=True,
         )
-        with open(os.path.join(puzzle_dir, "index.json"), "r") as piecemaker_index_json:
+        with open(os.path.join(tmp_puzzle_dir, "index.json"), "r") as piecemaker_index_json:
             piecemaker_index = json.load(piecemaker_index_json)
         full_size = piecemaker_index["full_size"]
 
         # Rename files to match the older names for now.
         move(
-            os.path.join(puzzle_dir, f"size-{full_size}"),
-            os.path.join(puzzle_dir, "scale-100"),
+            os.path.join(tmp_puzzle_dir, f"size-{full_size}"),
+            os.path.join(tmp_puzzle_dir, "scale-100"),
         )
         with open(
-            os.path.join(puzzle_dir, "scale-100", "sprite_raster.css"), "r"
+            os.path.join(tmp_puzzle_dir, "scale-100", "sprite_raster.css"), "r"
         ) as css:
             sprite_raster = css.read()
-        with open(os.path.join(puzzle_dir, "scale-100", "sprite_p.css"), "r") as css:
+        with open(os.path.join(tmp_puzzle_dir, "scale-100", "sprite_p.css"), "r") as css:
             sprite_p = css.read()
-        with open(os.path.join(puzzle_dir, "scale-100", "raster.css"), "w") as css:
+        with open(os.path.join(tmp_puzzle_dir, "scale-100", "raster.css"), "w") as css:
             css.write(sprite_p.replace("sprite_without_padding.png", "raster.png"))
             css.write(sprite_raster)
         move(
-            os.path.join(puzzle_dir, "scale-100", "sprite_without_padding.png"),
-            os.path.join(puzzle_dir, "scale-100", "raster.png"),
+            os.path.join(tmp_puzzle_dir, "scale-100", "sprite_without_padding.png"),
+            os.path.join(tmp_puzzle_dir, "scale-100", "raster.png"),
         )
 
         with open(
-            os.path.join(puzzle_dir, "scale-100", "pieces.json"), "r"
+            os.path.join(tmp_puzzle_dir, "scale-100", "pieces.json"), "r"
         ) as pieces_json:
             piece_bboxes = json.load(pieces_json)
 
@@ -262,7 +261,7 @@ def render(puzzles):
             "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
                 HOSTAPI=current_app.config["HOSTAPI"],
                 PORTAPI=current_app.config["PORTAPI"],
-                puzzle_id=puzzle["puzzle_id"],
+                puzzle_id=puzzle_id,
             ),
             json={
                 "pieces": piecemaker_index["piece_count"],
@@ -284,7 +283,7 @@ def render(puzzles):
                 "}}",
             ]
         )
-        cssfile = os.path.join(puzzle_dir, "scale-100", "raster.css")
+        cssfile = os.path.join(tmp_puzzle_dir, "scale-100", "raster.css")
         with open(cssfile, "a") as f:
             f.write(
                 puzzle_outline_css.format(
@@ -346,8 +345,22 @@ def render(puzzles):
         piece_properties[top_left_piece]["row"] = 0
         piece_properties[top_left_piece]["col"] = 0
 
-        with open(os.path.join(puzzle_dir, "adjacent.json"), "r") as f:
+        with open(os.path.join(tmp_puzzle_dir, "adjacent.json"), "r") as f:
             adjacent_pieces = json.load(f)
+
+        # Save the new files and replace any older ones.
+        keep_list = [
+            original_image_basename,
+            preview_full_basename,
+            # "resized-original.jpg", # TODO: why keep this in cleanup?
+            "scale-100",
+            "raster.css",
+            "raster.png",
+        ]
+        cleanup_dir(tmp_puzzle_dir, keep_list)
+        pr = PuzzleResource(puzzle_id, current_app.config)
+        pr.put(tmp_puzzle_dir)
+
         # Create adjacent offsets for the scale
         for pc in piece_properties:
             origin_x = piece_bboxes[str(pc["id"])][0]
@@ -373,13 +386,13 @@ def render(puzzles):
             "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/pieces/".format(
                 HOSTAPI=current_app.config["HOSTAPI"],
                 PORTAPI=current_app.config["PORTAPI"],
-                puzzle_id=puzzle["puzzle_id"],
+                puzzle_id=puzzle_id,
             )
         )
         if r.status_code != 200:
             raise Exception(
                 "Puzzle pieces api error when deleting pieces for puzzle {}".format(
-                    puzzle["puzzle_id"]
+                    puzzle_id
                 )
             )
 
@@ -391,14 +404,14 @@ def render(puzzles):
                 "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/files/{file_name}/".format(
                     HOSTAPI=current_app.config["HOSTAPI"],
                     PORTAPI=current_app.config["PORTAPI"],
-                    puzzle_id=puzzle["puzzle_id"],
+                    puzzle_id=puzzle_id,
                     file_name=name,
                 ),
             )
             if r.status_code != 200:
                 raise Exception(
                     "Puzzle file api error when deleting file '{}' for puzzle {}".format(
-                        name, puzzle["puzzle_id"]
+                        name, puzzle_id
                     )
                 )
 
@@ -408,7 +421,7 @@ def render(puzzles):
             "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/pieces/".format(
                 HOSTAPI=current_app.config["HOSTAPI"],
                 PORTAPI=current_app.config["PORTAPI"],
-                puzzle_id=puzzle["puzzle_id"],
+                puzzle_id=puzzle_id,
             ),
             json={"piece_properties": piece_properties},
         )
@@ -430,7 +443,7 @@ def render(puzzles):
             "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
                 HOSTAPI=current_app.config["HOSTAPI"],
                 PORTAPI=current_app.config["PORTAPI"],
-                puzzle_id=puzzle["puzzle_id"],
+                puzzle_id=puzzle_id,
             ),
             json={
                 "status": puzzleStatus,
@@ -442,17 +455,17 @@ def render(puzzles):
                 "Puzzle details api error when updating status and m_date on newly rendered puzzle"
             )
 
+        # TODO: Prepend the CDN_BASE_URL when updating public URL for puzzle files.
         for (name, url) in [
             (
                 "pieces",
-                "/resources/{puzzle_id}/scale-100/raster.png".format(
-                    puzzle_id=puzzle["puzzle_id"]
-                ),
+                f"/resources/{puzzle_id}/scale-100/raster.png",
             ),
             (
                 "pzz",
+                # TODO: Is the ts query param still needed for cache-busting on raster.css?
                 "/resources/{puzzle_id}/scale-100/raster.css?ts={timestamp}".format(
-                    puzzle_id=puzzle["puzzle_id"], timestamp=int(time.time())
+                    puzzle_id=puzzle_id, timestamp=int(time.time())
                 ),
             ),
         ]:
@@ -460,7 +473,7 @@ def render(puzzles):
                 "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/files/{file_name}/".format(
                     HOSTAPI=current_app.config["HOSTAPI"],
                     PORTAPI=current_app.config["PORTAPI"],
-                    puzzle_id=puzzle["puzzle_id"],
+                    puzzle_id=puzzle_id,
                     file_name=name,
                 ),
                 json={
@@ -476,20 +489,9 @@ def render(puzzles):
 
         cur.close()
 
-        keep_list = [
-            "original.jpg",
-            preview_full_basename,
-            "resized-original.jpg",
-            "scale-100",
-            "raster.css",
-            "raster.png",
-        ]
-        cleanup(puzzle["puzzle_id"], keep_list)
 
-
-def cleanup(puzzle_id, keep_list):
-    puzzle_dir = os.path.join(current_app.config["PUZZLE_RESOURCES"], puzzle_id)
-    for (dirpath, dirnames, filenames) in os.walk(puzzle_dir, False):
+def cleanup_dir(path, keep_list):
+    for (dirpath, dirnames, filenames) in os.walk(path, False):
         for filename in filenames:
             if filename not in keep_list:
                 os.unlink(os.path.join(dirpath, filename))

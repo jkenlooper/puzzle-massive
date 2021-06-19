@@ -1,23 +1,26 @@
 import os
 import re
 from datetime import timedelta
+from shutil import rmtree
+import tempfile
 
 import requests
 from flask import current_app
 from werkzeug.utils import escape
 
 from api.app import redis_connection
+from api.puzzle_resource import PuzzleResource
 
 # When not in demo mode it is 1000. Get actual value from the header X-Ratelimit-Limit.
 UNSPLASH_RATELIMIT_LIMIT_DEMO = 50
 
 
-def add_photo_to_puzzle(puzzle_id, photo, description):
+def add_photo_to_puzzle(puzzle_id, photo, description, original_filename):
     ""
 
     with current_app.app_context():
         application_id = (current_app.config.get("UNSPLASH_APPLICATION_ID"),)
-        puzzle_resources = current_app.config.get("PUZZLE_RESOURCES")
+        #puzzle_resources = current_app.config.get("PUZZLE_RESOURCES")
         application_name = current_app.config.get("UNSPLASH_APPLICATION_NAME")
 
         # Prevent going past the Unsplash rate limit by storing the current
@@ -62,13 +65,15 @@ def add_photo_to_puzzle(puzzle_id, photo, description):
             "unsplash:rlr", timedelta(hours=1), unsplash_rate_limit_remaining
         )
 
-        # Don't use unsplash description if puzzle already has one
-        description = (
-            description if description else escape(data.get("description", None))
-        )
+        # Don't use unsplash description at all
+        # description = (
+        #     description if description else escape(data.get("description", None))
+        # )
 
-        puzzle_dir = os.path.join(puzzle_resources, puzzle_id)
-        filename = os.path.join(puzzle_dir, "original.jpg")
+        pr = PuzzleResource(puzzle_id, current_app.config)
+
+        tmp_dir = tempfile.mkdtemp()
+        filename = os.path.join(tmp_dir, original_filename)
         links = data.get("links")
         if not links:
             raise Exception("Unsplash returned no links")
@@ -78,6 +83,8 @@ def add_photo_to_puzzle(puzzle_id, photo, description):
         r = requests.get(download)
         with open(filename, "w+b") as f:
             f.write(r.content)
+        pr.put_file(filename)
+        rmtree(tmp_dir)
 
         r = requests.patch(
             "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(

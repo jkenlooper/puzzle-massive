@@ -7,6 +7,7 @@ import re
 
 from flask import current_app
 from .app import db
+from api.puzzle_resource import PuzzleResource
 
 PUZZLE_CREATE_TABLE_LIST = (
     "create_table_puzzle.sql",
@@ -170,12 +171,5 @@ def generate_new_puzzle_id(name):
 
 
 def delete_puzzle_resources(puzzle_id):
-    puzzle_dir = os.path.join(current_app.config["PUZZLE_RESOURCES"], puzzle_id)
-    if not os.path.exists(puzzle_dir):
-        return
-    for (dirpath, dirnames, filenames) in os.walk(puzzle_dir, False):
-        for filename in filenames:
-            os.unlink(os.path.join(dirpath, filename))
-        for dirname in dirnames:
-            os.rmdir(os.path.join(dirpath, dirname))
-    os.rmdir(puzzle_dir)
+    pr = PuzzleResource(puzzle_id, current_app.config)
+    pr.purge()

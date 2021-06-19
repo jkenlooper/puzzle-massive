@@ -1033,7 +1033,7 @@ cat <<HEREORIGINSERVER
     root ${SRVDIR};
     try_files \$uri =404;
   }
-  location ~* ^/resources/.*/(original.jpg)\$ {
+  location ~* ^/resources/.*/(original.jpg|original.*.jpg)\$ {
     allow $INTERNALIP;
     allow 127.0.0.1;
     deny all;

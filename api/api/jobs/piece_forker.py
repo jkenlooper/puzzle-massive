@@ -13,6 +13,7 @@ from api.app import db, redis_connection
 from api.database import fetch_query_string, read_query_file, rowify
 from api.tools import loadConfig, get_db
 from api.jobs.convertPiecesToDB import transfer
+from api.puzzle_resource import PuzzleResource
 from api.constants import (
     MAINTENANCE,
     IN_RENDER_QUEUE,
@@ -82,14 +83,10 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
             )
         )
 
-    puzzle_dir = os.path.join(current_app.config["PUZZLE_RESOURCES"], puzzle_id)
-
-    # Copy the puzzle resources to the new puzzle_dir
-    source_instance_puzzle_dir = os.path.join(
-        current_app.config["PUZZLE_RESOURCES"], source_instance_puzzle_id
-    )
-    puzzle_dir = os.path.join(current_app.config["PUZZLE_RESOURCES"], puzzle_id)
-    copytree(source_instance_puzzle_dir, puzzle_dir)
+    # Copy the puzzle resources to the new target puzzle resource location
+    pr_target = PuzzleResource(puzzle_id, current_app.config)
+    pr_source = PuzzleResource(source_instance_puzzle_id, current_app.config)
+    pr_target.put(pr_source.yank())
 
     # Get all piece props of source puzzle
     transfer(source_puzzle_data["instance_id"])
