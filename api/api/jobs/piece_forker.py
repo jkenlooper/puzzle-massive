@@ -1,36 +1,21 @@
 import os
-import sys
-import subprocess
-import time
-from shutil import copytree
+import re
 
-import sqlite3
-from PIL import Image
 from flask import current_app
 import requests
 
-from api.app import db, redis_connection
-from api.database import fetch_query_string, read_query_file, rowify
-from api.tools import loadConfig, get_db
+from api.app import db
+from api.database import fetch_query_string, rowify
 from api.jobs.convertPiecesToDB import transfer
 from api.puzzle_resource import PuzzleResource
 from api.constants import (
     MAINTENANCE,
-    IN_RENDER_QUEUE,
-    REBUILD,
-    RENDERING,
-    RENDERING_FAILED,
     IN_QUEUE,
     ACTIVE,
     COMPLETED,
     FROZEN,
-    PUBLIC,
     PRIVATE,
 )
-
-insert_puzzle_file = """
-insert into PuzzleFile (puzzle, name, url) values (:puzzle, :name, :url);
-"""
 
 
 class Error(Exception):
@@ -84,9 +69,23 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
         )
 
     # Copy the puzzle resources to the new target puzzle resource location
-    pr_target = PuzzleResource(puzzle_id, current_app.config)
-    pr_source = PuzzleResource(source_instance_puzzle_id, current_app.config)
-    pr_target.put(pr_source.yank())
+    raster_css_filename = ""
+    raster_png_filename = ""
+    pr_target = PuzzleResource(puzzle_id, current_app.config, is_local_resource=current_app.config["LOCAL_PUZZLE_RESOURCES"])
+    pr_source = PuzzleResource(source_instance_puzzle_id, current_app.config, is_local_resource=not source_puzzle_data["url"].startswith("http"))
+    listing = pr_source.list()
+    for path in listing:
+        filename = os.path.basename(path)
+        if re.match(r"(original|preview_full|resized-original)\.([^.]+\.)?jpg", filename) is not None:
+            # When forking a puzzle, the original and preview_full images will
+            # remain with the original puzzle that this instance is being made
+            # from.
+            continue
+        if re.match(r"raster\.([^.]+\.)?css", filename) is not None:
+            raster_css_filename = filename
+        if re.match(r"raster\.([^.]+\.)?png", filename) is not None:
+            raster_png_filename = filename
+        pr_target.copy_file(pr_source, path)
 
     # Get all piece props of source puzzle
     transfer(source_puzzle_data["instance_id"])
@@ -148,39 +147,8 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
             is_complete = False
             break
 
-    # TODO: Copy attribution data on puzzle file if it exists.
-
-    r = requests.post(
-        "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/files/{file_name}/".format(
-            HOSTAPI=current_app.config["HOSTAPI"],
-            PORTAPI=current_app.config["PORTAPI"],
-            puzzle_id=puzzle_id,
-            file_name="original",
-        ),
-        json={
-            "url": "/resources/{puzzle_id}/original.jpg".format(puzzle_id=puzzle_id),
-        },
-    )
-    if r.status_code != 200:
-        raise Exception("Puzzle details api error")
-
-    r = requests.post(
-        "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/files/{file_name}/".format(
-            HOSTAPI=current_app.config["HOSTAPI"],
-            PORTAPI=current_app.config["PORTAPI"],
-            puzzle_id=puzzle_id,
-            file_name="preview_full",
-        ),
-        json={
-            "url": "/resources/{puzzle_id}/preview_full.jpg".format(puzzle_id=puzzle_id)
-            if source_preview_full_url.startswith("/")
-            else source_preview_full_url,
-            "attribution": source_preview_full_attribution,
-        },
-    )
-    if r.status_code != 200:
-        raise Exception("Puzzle details api error {}".format(r.json()))
-
+    CDN_BASE_URL = current_app.config["CDN_BASE_URL"]
+    prefix_resources_url = "" if current_app.config["LOCAL_PUZZLE_RESOURCES"] else CDN_BASE_URL
     r = requests.post(
         "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/files/{file_name}/".format(
             HOSTAPI=current_app.config["HOSTAPI"],
@@ -189,9 +157,7 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
             file_name="pieces",
         ),
         json={
-            "url": "/resources/{puzzle_id}/scale-100/raster.png".format(
-                puzzle_id=puzzle_id
-            ),
+            "url": f"{prefix_resources_url}/resources/{puzzle_id}/scale-100/{raster_png_filename}"
         },
     )
     if r.status_code != 200:
@@ -205,9 +171,7 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
             file_name="pzz",
         ),
         json={
-            "url": "/resources/{puzzle_id}/scale-100/raster.css?ts={timestamp}".format(
-                puzzle_id=puzzle_id, timestamp=int(time.time())
-            )
+            "url": f"{prefix_resources_url}/resources/{puzzle_id}/scale-100/{raster_css_filename}"
         },
     )
     if r.status_code != 200:

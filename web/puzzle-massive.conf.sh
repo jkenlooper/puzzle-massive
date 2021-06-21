@@ -1021,7 +1021,7 @@ HEREBEDEVELOPMENT
 fi
 cat <<HEREORIGINSERVER
 
-  location ~* ^/resources/.*/(scale-100/raster.png|scale-100/raster.css|pzz.css|pieces.png)\$ {
+  location ~* ^/resources/.*/(scale-100/raster.png|scale-100/raster.*.png|scale-100/raster.css|scale-100/raster.*.css|pzz.css|pieces.png)\$ {
     expires \$cache_expire;
     add_header Cache-Control "public";
     root ${SRVDIR};

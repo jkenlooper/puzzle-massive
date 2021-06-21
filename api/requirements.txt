@@ -1,4 +1,5 @@
 -r ../requirements.txt
+boto3==1.17.97
 Pillow==8.1.2
 git+https://github.com/jkenlooper/glue.git@master#egg=glue
 pixsaw==0.3.0

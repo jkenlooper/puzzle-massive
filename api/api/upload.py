@@ -5,6 +5,7 @@ import re
 import uuid
 import subprocess
 import tempfile
+from shutil import rmtree
 
 from PIL import Image
 from flask import current_app, redirect, request, abort
@@ -82,8 +83,9 @@ def submit_puzzle(
 
         puzzle_id = generate_new_puzzle_id(filename)
 
-    pr = PuzzleResource(puzzle_id, current_app.config)
-    puzzle_dir = pr.yank()
+    tmp_dir = tempfile.mkdtemp()
+    tmp_puzzle_dir = os.path.join(tmp_dir, puzzle_id)
+    os.mkdir(tmp_puzzle_dir)
 
     if not is_unsplash_link:
         # Convert the uploaded file to jpg
@@ -110,7 +112,7 @@ def submit_puzzle(
                         "85%",
                         "-format",
                         "jpg",
-                        os.path.join(puzzle_dir, f"original.{original_slip}.jpg"),
+                        os.path.join(tmp_puzzle_dir, f"original.{original_slip}.jpg"),
                     ]
                 )
             except subprocess.CalledProcessError:
@@ -147,12 +149,13 @@ def submit_puzzle(
     )[0][0]
     puzzle = puzzle["puzzle"]
 
+    CDN_BASE_URL = current_app.config["CDN_BASE_URL"]
     cur.execute(
         fetch_query_string("add-puzzle-file.sql"),
         {
             "puzzle": puzzle,
             "name": "original",
-            "url": f"/resources/{puzzle_id}/original.{original_slip}.jpg"
+            "url": f"{CDN_BASE_URL}/resources/{puzzle_id}/original.{original_slip}.jpg"
         },
     )
 
@@ -164,12 +167,12 @@ def submit_puzzle(
             {
                 "puzzle": puzzle,
                 "name": "preview_full",
-                "url": f"/resources/{puzzle_id}/{preview_full_slip}",
+                "url": f"{CDN_BASE_URL}/resources/{puzzle_id}/{preview_full_slip}",
             },
         )
-        im = Image.open(os.path.join(puzzle_dir, f"original.{original_slip}.jpg")).copy()
+        im = Image.open(os.path.join(tmp_puzzle_dir, f"original.{original_slip}.jpg")).copy()
         im.thumbnail(size=(384, 384))
-        im.save(os.path.join(puzzle_dir, preview_full_slip))
+        im.save(os.path.join(tmp_puzzle_dir, preview_full_slip))
         im.close()
 
     classic_variant = cur.execute(
@@ -214,6 +217,10 @@ def submit_puzzle(
 
     db.commit()
     cur.close()
+
+    pr = PuzzleResource(puzzle_id, current_app.config, is_local_resource=not bool(CDN_BASE_URL))
+    pr.put(tmp_puzzle_dir)
+    rmtree(tmp_dir)
 
     if is_unsplash_link:
         original_filename = f"original.{original_slip}.jpg"

@@ -20,6 +20,7 @@ import time
 from docopt import docopt
 from shutil import rmtree, move
 import tempfile
+import uuid
 
 from flask import current_app
 import requests
@@ -201,7 +202,7 @@ def render(puzzles):
         original_original_image = result[1]
         original_image_basename = os.path.basename(original_original_image)
 
-        pr_original = PuzzleResource(original_puzzle_id, current_app.config)
+        pr_original = PuzzleResource(original_puzzle_id, current_app.config, is_local_resource=not original_original_image.startswith("http"))
         imagefile = pr_original.yank_file(original_image_basename)
 
         puzzle_id = puzzle["puzzle_id"]
@@ -233,6 +234,8 @@ def render(puzzles):
         full_size = piecemaker_index["full_size"]
 
         # Rename files to match the older names for now.
+
+        slip = uuid.uuid4().hex[:10]
         move(
             os.path.join(tmp_puzzle_dir, f"size-{full_size}"),
             os.path.join(tmp_puzzle_dir, "scale-100"),
@@ -243,12 +246,12 @@ def render(puzzles):
             sprite_raster = css.read()
         with open(os.path.join(tmp_puzzle_dir, "scale-100", "sprite_p.css"), "r") as css:
             sprite_p = css.read()
-        with open(os.path.join(tmp_puzzle_dir, "scale-100", "raster.css"), "w") as css:
-            css.write(sprite_p.replace("sprite_without_padding.png", "raster.png"))
+        with open(os.path.join(tmp_puzzle_dir, "scale-100", f"raster.{slip}.css"), "w") as css:
+            css.write(sprite_p.replace("sprite_without_padding.png", f"raster.{slip}.png"))
             css.write(sprite_raster)
         move(
             os.path.join(tmp_puzzle_dir, "scale-100", "sprite_without_padding.png"),
-            os.path.join(tmp_puzzle_dir, "scale-100", "raster.png"),
+            os.path.join(tmp_puzzle_dir, "scale-100", f"raster.{slip}.png"),
         )
 
         with open(
@@ -283,7 +286,7 @@ def render(puzzles):
                 "}}",
             ]
         )
-        cssfile = os.path.join(tmp_puzzle_dir, "scale-100", "raster.css")
+        cssfile = os.path.join(tmp_puzzle_dir, "scale-100", f"raster.{slip}.css")
         with open(cssfile, "a") as f:
             f.write(
                 puzzle_outline_css.format(
@@ -352,13 +355,12 @@ def render(puzzles):
         keep_list = [
             original_image_basename,
             preview_full_basename,
-            # "resized-original.jpg", # TODO: why keep this in cleanup?
             "scale-100",
-            "raster.css",
-            "raster.png",
+            f"raster.{slip}.css",
+            f"raster.{slip}.png",
         ]
         cleanup_dir(tmp_puzzle_dir, keep_list)
-        pr = PuzzleResource(puzzle_id, current_app.config)
+        pr = PuzzleResource(puzzle_id, current_app.config, is_local_resource=current_app.config["LOCAL_PUZZLE_RESOURCES"])
         pr.put(tmp_puzzle_dir)
 
         # Create adjacent offsets for the scale
@@ -455,18 +457,15 @@ def render(puzzles):
                 "Puzzle details api error when updating status and m_date on newly rendered puzzle"
             )
 
-        # TODO: Prepend the CDN_BASE_URL when updating public URL for puzzle files.
+        CDN_BASE_URL = current_app.config["CDN_BASE_URL"]
         for (name, url) in [
             (
                 "pieces",
-                f"/resources/{puzzle_id}/scale-100/raster.png",
+                f"{CDN_BASE_URL}/resources/{puzzle_id}/scale-100/raster.{slip}.png",
             ),
             (
                 "pzz",
-                # TODO: Is the ts query param still needed for cache-busting on raster.css?
-                "/resources/{puzzle_id}/scale-100/raster.css?ts={timestamp}".format(
-                    puzzle_id=puzzle_id, timestamp=int(time.time())
-                ),
+                f"{CDN_BASE_URL}/resources/{puzzle_id}/scale-100/raster.{slip}.css"
             ),
         ]:
             r = requests.post(

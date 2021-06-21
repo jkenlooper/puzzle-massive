@@ -182,6 +182,8 @@ resource "local_file" "dot_env" {
     dot_env__EMAIL_SENDER                             = var.dot_env__EMAIL_SENDER
     dot_env__EMAIL_MODERATOR                          = var.dot_env__EMAIL_MODERATOR
     dot_env__AUTO_APPROVE_PUZZLES                     = var.dot_env__AUTO_APPROVE_PUZZLES
+    dot_env__LOCAL_PUZZLE_RESOURCES                     = var.dot_env__LOCAL_PUZZLE_RESOURCES
+    dot_env__CDN_BASE_URL                     = var.dot_env__CDN_BASE_URL
     dot_env__PUZZLE_RULES                             = var.dot_env__PUZZLE_RULES
     dot_env__PUZZLE_FEATURES                          = var.dot_env__PUZZLE_FEATURES
     dot_env__BLOCKEDPLAYER_EXPIRE_TIMEOUTS            = var.dot_env__BLOCKEDPLAYER_EXPIRE_TIMEOUTS

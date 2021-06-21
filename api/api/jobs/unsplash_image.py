@@ -56,7 +56,6 @@ def add_photo_to_puzzle(puzzle_id, photo, description, original_filename):
         )
         data = r.json()
 
-        current_app.logger.debug(r.headers)
         unsplash_rate_limit_remaining = int(
             r.headers.get("X-Ratelimit-Remaining", UNSPLASH_RATELIMIT_LIMIT_DEMO)
         )
@@ -70,7 +69,7 @@ def add_photo_to_puzzle(puzzle_id, photo, description, original_filename):
         #     description if description else escape(data.get("description", None))
         # )
 
-        pr = PuzzleResource(puzzle_id, current_app.config)
+        pr = PuzzleResource(puzzle_id, current_app.config, is_local_resource=current_app.config["LOCAL_PUZZLE_RESOURCES"])
 
         tmp_dir = tempfile.mkdtemp()
         filename = os.path.join(tmp_dir, original_filename)
@@ -83,7 +82,7 @@ def add_photo_to_puzzle(puzzle_id, photo, description, original_filename):
         r = requests.get(download)
         with open(filename, "w+b") as f:
             f.write(r.content)
-        pr.put_file(filename)
+        pr.put_file(filename, private=True)
         rmtree(tmp_dir)
 
         r = requests.patch(

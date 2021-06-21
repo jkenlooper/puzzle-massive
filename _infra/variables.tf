@@ -184,6 +184,56 @@ variable "dot_env__AUTO_APPROVE_PUZZLES" {
   }
 }
 
+variable "dot_env__LOCAL_PUZZLE_RESOURCES" {
+  default     = "y"
+  description = "Use local puzzle resource files [y/n]"
+  type        = string
+  validation {
+    condition     = can(regex("y|n", var.dot_env__LOCAL_PUZZLE_RESOURCES))
+    error_message = "Must be either 'y' for yes or 'n' for no."
+  }
+}
+
+variable "dot_env__CDN_BASE_URL" {
+  default     = ""
+  description = "CDN base URL to use for remote puzzle resources. Leave blank if not using remote puzzle resources."
+  type        = string
+  validation {
+    condition     = can(regex("|https?://.+", var.dot_env__CDN_BASE_URL))
+    error_message = "Should be blank or a valid URL."
+  }
+}
+
+variable "dot_env__PUZZLE_RESOURCES_BUCKET_REGION" {
+  default     = "nyc3"
+  description = "Puzzle resources bucket region. Leave blank if not using remote puzzle resources."
+  type        = string
+}
+variable "dot_env__PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL" {
+  default     = "https://nyc3.digitaloceanspaces.com"
+  description = "Puzzle resources bucket endpoint URL. Leave blank if not using remote puzzle resources."
+  type        = string
+  validation {
+    condition     = can(regex("|https?://.+", var.dot_env__CDN_BASE_URL))
+    error_message = "Should be blank or a valid URL."
+  }
+}
+
+variable "dot_env__PUZZLE_RESOURCES_BUCKET" {
+  description = "Bucket name for storing puzzle resources"
+  type = string
+  validation {
+    condition = can(63 <= length(var.dot_env__PUZZLE_RESOURCES_BUCKET))
+    error_message = "Bucket names can't be over 63 characters"
+  }
+}
+
+variable "dot_env__PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL" {
+  default = "public, max-age:31536000, immutable"
+  description = "CacheControl header that will be used for all objects in the puzzle resources bucket."
+  type = string
+}
+
 variable "dot_env__PUZZLE_RULES" {
   default     = "all"
   description = <<-HERE
