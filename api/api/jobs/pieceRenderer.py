@@ -458,14 +458,15 @@ def render(puzzles):
             )
 
         CDN_BASE_URL = current_app.config["CDN_BASE_URL"]
+        prefix_resources_url = "" if current_app.config["LOCAL_PUZZLE_RESOURCES"] else CDN_BASE_URL
         for (name, url) in [
             (
                 "pieces",
-                f"{CDN_BASE_URL}/resources/{puzzle_id}/scale-100/raster.{slip}.png",
+                f"{prefix_resources_url}/resources/{puzzle_id}/scale-100/raster.{slip}.png",
             ),
             (
                 "pzz",
-                f"{CDN_BASE_URL}/resources/{puzzle_id}/scale-100/raster.{slip}.css"
+                f"{prefix_resources_url}/resources/{puzzle_id}/scale-100/raster.{slip}.css"
             ),
         ]:
             r = requests.post(

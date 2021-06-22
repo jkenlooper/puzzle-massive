@@ -170,6 +170,6 @@ def generate_new_puzzle_id(name):
     return puzzle_id
 
 
-def delete_puzzle_resources(puzzle_id):
-    pr = PuzzleResource(puzzle_id, current_app.config)
-    pr.purge()
+def delete_puzzle_resources(puzzle_id, is_local_resource=True, exclude_regex=None):
+    pr = PuzzleResource(puzzle_id, current_app.config, is_local_resource=is_local_resource)
+    pr.purge(exclude_regex=exclude_regex)

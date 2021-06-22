@@ -157,7 +157,7 @@ class PuzzleInstanceDetailsView(MethodView):
                     {"user": user, "points": delete_penalty},
                 )
 
-            delete_puzzle_resources(puzzle_id)
+            delete_puzzle_resources(puzzle_id, is_local_resource=not puzzleData["url"].startswith("http"))
             cur.execute(
                 fetch_query_string("delete_puzzle_file_for_puzzle.sql"),
                 {"puzzle": puzzleData["id"]},

@@ -1,11 +1,21 @@
 import os.path
 import os
+import stat
 from shutil import copytree, copy2, rmtree
 import tempfile
+import re
+import mimetypes
 
 from flask import current_app
-
+import botocore
 import boto3
+
+
+def is_puzzle_resource_file_private(file_path):
+    """
+    The original.jpg and original.uuid-slip.jpg files should not be public.
+    """
+    return re.match(r"original.([^.]+\.)?jpg", os.path.basename(file_path)) is not None
 
 
 class PuzzleResource():
@@ -23,6 +33,7 @@ class PuzzleResource():
             os.makedirs(self.target_dir, exist_ok=True)
         else:
             current_app.logger.warning("Remote PuzzleResource is not fully implemented.")
+            current_app.logger.debug(self.config["PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL"])
             self.s3 = boto3.client('s3', endpoint_url=self.config["PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL"])
             self._temp_dir = tempfile.mkdtemp()
             self.target_dir = os.path.join(self._temp_dir, self.puzzle_id)
@@ -43,31 +54,55 @@ class PuzzleResource():
             return
 
         current_app.logger.warning("Remote PuzzleResource for 'put' is not fully implemented.")
-        # TODO: upload to remote location (S3 bucket)
+        file_paths = []
+        for root, dirs, files in os.walk(src_dir):
+            for file in files:
+                file_paths.append(os.path.join(root, file))
+        for file_path in file_paths:
+            self.put_file(file_path, dirs=os.path.dirname(file_path[len(src_dir):]))
 
-    def put_file(self, file_path, dirs="", private=True):
+    def put_file(self, file_path, dirs=""):
         if self.is_local_resource:
             local_dir = os.path.join(self.target_dir, dirs)
             os.makedirs(local_dir, exist_ok=True)
             copy2(file_path, local_dir)
             return
 
-        current_app.logger.warning("Remote PuzzleResource for 'put_file' is not fully implemented.")
-        # TODO: upload to remote location (S3 bucket)
+        #current_app.logger.warning("Remote PuzzleResource for 'put_file' is not fully implemented.")
         PUZZLE_RESOURCES_BUCKET = self.config["PUZZLE_RESOURCES_BUCKET"]
+        private = is_puzzle_resource_file_private(file_path)
+        if dirs.startswith("/"):
+            dirs = dirs[1:]
         path = os.path.join(dirs, os.path.basename(file_path))
-        self.s3.put_object(
-            ACL="private" if private else "public-read",
-            Body=file,
-            Bucket=PUZZLE_RESOURCES_BUCKET,
-            Key=f"{self.puzzle_id}/{path}",
-            CacheControl=self.config["PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL"],
-            Metadata = {
-                # The owner is used to prevent other environments from deleting
-                # or modifying this object if it is shared.
-                "owner": self.config["DOMAIN_NAME"]
-            },
-        )
+
+        try:
+            self.s3.head_object(
+                Bucket=PUZZLE_RESOURCES_BUCKET,
+                Key=f"resources/{self.puzzle_id}/{path}",
+            )
+        except botocore.exceptions.ClientError as err:
+            # This key shouldn't already exist.
+            if err.response["Error"]["Code"] == "404":
+                pass
+            else:
+                current_app.logger.error(err.response)
+                current_app.logger.error(f"The object at resources/{self.puzzle_id}/{path} already exists.")
+                raise Exception(f"Immutable object conflict: resources/{self.puzzle_id}/{path} has already been added to the {PUZZLE_RESOURCES_BUCKET} s3 bucket")
+
+        with open(file_path, "rb") as file:
+            self.s3.put_object(
+                ACL="private" if private else "public-read",
+                Body=file,
+                Bucket=PUZZLE_RESOURCES_BUCKET,
+                Key=f"resources/{self.puzzle_id}/{path}",
+                ContentType=mimetypes.guess_type(path)[0],
+                CacheControl=self.config["PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL"],
+                Metadata={
+                    # The owner is used to prevent other environments from deleting
+                    # this object if it is shared.
+                    "owner": self.config["DOMAIN_NAME"]
+                },
+            )
 
     def copy_file(self, pr_src, path):
         if path.startswith("/"):
@@ -80,13 +115,16 @@ class PuzzleResource():
             return
 
         PUZZLE_RESOURCES_BUCKET = self.config["PUZZLE_RESOURCES_BUCKET"]
+        private = is_puzzle_resource_file_private(path)
         self.s3.copy_object(
+            ACL="private" if private else "public-read",
             CopySource = {
                 "Bucket": PUZZLE_RESOURCES_BUCKET,
-                "Key": f"{pr_src.puzzle_id}/{path}"
+                "Key": f"resources/{pr_src.puzzle_id}/{path}"
             },
             Bucket=PUZZLE_RESOURCES_BUCKET,
-            Key=f"{self.puzzle_id}/{path}",
+            Key=f"resources/{self.puzzle_id}/{path}",
+            ContentType=mimetypes.guess_type(path)[0],
             CacheControl=self.config["PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL"],
             Metadata = {
                 # The owner is used to prevent other environments from deleting
@@ -104,27 +142,95 @@ class PuzzleResource():
                     paths.append(os.path.join(root[len(self.target_dir):], file))
             return paths
 
+        PUZZLE_RESOURCES_BUCKET = self.config["PUZZLE_RESOURCES_BUCKET"]
         current_app.logger.warning("Remote PuzzleResource for 'list' is not fully implemented.")
-        # TODO: return listing of remote files
-        return []
+        response = self.s3.list_objects_v2(
+            Bucket=PUZZLE_RESOURCES_BUCKET,
+            Prefix=f"resources/{self.puzzle_id}/",
+        )
+        if response["IsTruncated"]:
+            raise Exception(f"Remote PuzzleResource is not configured to handle truncated responses when listing files at resources/{self.puzzle_id}/")
+
+        paths = list(map(lambda x: x["Key"][len(f"resources/{self.puzzle_id}/"):], response["Contents"]))
+        return paths
 
     def yank_file(self, file_path):
         if self.is_local_resource:
             return os.path.join(self.target_dir, file_path)
 
         current_app.logger.warning("Remote PuzzleResource for 'yank_file' is not fully implemented.")
-        # TODO: download file from remote location and place in target_dir
+
+        PUZZLE_RESOURCES_BUCKET = self.config["PUZZLE_RESOURCES_BUCKET"]
+        # Need to verify that the file exists before downloading it.
+        try:
+            self.s3.head_object(
+                Bucket=PUZZLE_RESOURCES_BUCKET,
+                Key=f"resources/{self.puzzle_id}/{file_path}",
+            )
+        except botocore.exceptions.ClientError as err:
+            if err.response["Error"]["Code"] == "404":
+                raise Exception(f"No file found at: {PUZZLE_RESOURCES_BUCKET} resources/{self.puzzle_id}/{file_path}")
+            else:
+                raise err
+        else:
+            with open(os.path.join(self.target_dir, file_path), "wb") as file:
+                self.s3.download_fileobj(
+                    Bucket=PUZZLE_RESOURCES_BUCKET,
+                    Key=f"resources/{self.puzzle_id}/{file_path}",
+                    Fileobj=file
+                )
         return os.path.join(self.target_dir, file_path)
 
-    def purge(self):
+    def purge(self, exclude_regex=None):
         if self.is_local_resource:
             if not os.path.exists(self.target_dir):
                 return
-            rmtree(self.target_dir)
+
+            if exclude_regex is not None:
+                for root, dirs, files in os.walk(self.target_dir):
+                    for file in files:
+                        if re.search(exclude_regex, file) is None:
+                            os.remove(os.path.join(root, file))
+            else:
+                rmtree(self.target_dir, ignore_errors=True)
             return
 
+        PUZZLE_RESOURCES_BUCKET = self.config["PUZZLE_RESOURCES_BUCKET"]
         current_app.logger.warning("Remote PuzzleResource for 'purge' is not fully implemented.")
-        # TODO: delete all remote puzzle resource files
+
+        paths = self.list()
+        paths_to_delete = []
+
+        for path in paths:
+            try:
+                response = self.s3.head_object(
+                    Bucket=PUZZLE_RESOURCES_BUCKET,
+                    Key=f"resources/{self.puzzle_id}/{path}",
+                )
+            except botocore.exceptions.ClientError as err:
+                if err.response["Error"]["Code"] == "404":
+                    continue
+                else:
+                    raise err
+
+            # Skip deleting objects that are not owned by this domain.
+            if response["Metadata"]["owner"] != self.config["DOMAIN_NAME"]:
+                continue
+
+            if exclude_regex is not None:
+                if re.search(exclude_regex, os.path.basename(path)) is not None:
+                    continue
+
+            paths_to_delete.append(path)
+
+        if len(paths_to_delete) > 0:
+            self.s3.delete_objects(
+                Bucket=PUZZLE_RESOURCES_BUCKET,
+                Delete={
+                    "Objects": list(map(lambda x: {"Key": f"resources/{self.puzzle_id}/{x}"}, paths_to_delete)),
+                    "Quiet": True
+                }
+            )
 
     def delete(self):
         ""

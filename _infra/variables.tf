@@ -199,8 +199,8 @@ variable "dot_env__CDN_BASE_URL" {
   description = "CDN base URL to use for remote puzzle resources. Leave blank if not using remote puzzle resources."
   type        = string
   validation {
-    condition     = can(regex("|https?://.+", var.dot_env__CDN_BASE_URL))
-    error_message = "Should be blank or a valid URL."
+    condition     = can(regex("|https?://.+[^/]", var.dot_env__CDN_BASE_URL))
+    error_message = "Should be blank or a valid URL that doesn't end with a '/'."
   }
 }
 

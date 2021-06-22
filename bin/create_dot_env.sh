@@ -106,7 +106,7 @@ Use local puzzle resource files [y/n]:
 
 if [ "$LOCAL_PUZZLE_RESOURCES" != "y" ]; then
 read -e -p "
-CDN base URL to use for remote puzzle resources:
+CDN base URL to use for remote puzzle resources (Should not end in a slash):
 " -i "${CDN_BASE_URL}" CDN_BASE_URL;
 
 read -e -p "
