@@ -36,6 +36,12 @@ needing to manually build stuff.
 - Terraform deployment for a development environment. Work in progress of [issue #92](https://github.com/jkenlooper/puzzle-massive/issues/92)
 - Support for referral content in footer.
 
+### Changed
+
+- Use latest stable version of NGINX. The install script will replace
+  /etc/nginx/nginx.conf since it assumes it is in full control of the ngnix
+  setup.
+
 ## [2.11.0] - 2021-06-01
 
 Did a YouTube live stream going over some of the improvements to piece rendering

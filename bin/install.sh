@@ -88,6 +88,10 @@ mkdir -p "${NGINXDIR}sites-available"
 rsync --inplace \
   --checksum \
   --itemize-changes \
+  web/nginx.conf "${NGINXDIR}/";
+rsync --inplace \
+  --checksum \
+  --itemize-changes \
   web/default.conf web/puzzle-massive.conf web/puzzle-massive--down.conf "${NGINXDIR}sites-available/";
 echo rsynced web/default.conf web/puzzle-massive.conf web/puzzle-massive--down.conf to "${NGINXDIR}sites-available/";
 
@@ -161,11 +165,11 @@ chown -R dev:dev "${ARCHIVEDIR}"
 chmod -R 770 "${ARCHIVEDIR}"
 
 mkdir -p "${CACHEDIR}"
-chown -R www-data:www-data "${CACHEDIR}"
+chown -R nginx:nginx "${CACHEDIR}"
 chmod -R 770 "${CACHEDIR}"
 
 mkdir -p $(dirname ${PURGEURLLIST})
-chown dev:www-data -R $(dirname ${PURGEURLLIST})
+chown dev:nginx -R $(dirname ${PURGEURLLIST})
 chmod 0770 $(dirname ${PURGEURLLIST})
 touch ${PURGEURLLIST}
 
@@ -232,6 +236,7 @@ systemctl enable puzzle-massive-backup-db.service || echo "can't enable service"
 echo "Reloading service units and nginx"
 set -x
 systemctl daemon-reload
+systemctl start nginx;
 systemctl reload nginx;
 set +x
 echo "Checking is-active status for services"

@@ -55,15 +55,16 @@ iptables -A FORWARD -p icmp --icmp-type echo-request -m limit --limit 1/s -j ACC
 # https://security.stackexchange.com/questions/219375/how-to-harden-against-credential-stealing-in-ec2-via-the-http-169-254-169-254
 # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/
 # The user_data contains sensitive information and requests to access it via
-# creating a http request from dev or www-data users should be blocked. More
+# creating a http request from dev or nginx users should be blocked. More
 # information on SSRF (Server-Side Request Forgery) attacks can be searched for.
 
 # Limiting this across all users including root could break the ability to
 # expand the disk size of the droplet as well as recover from snapshot/backup.
 # Resizing the RAM and CPU on the droplet should still work. That is why it is
-# only being applied to dev and www-data users.
-iptables --table filter --insert OUTPUT 1 --destination 169.254.169.254 --match owner --uid-owner dev --jump REJECT --reject-with icmp-admin-prohibited
-iptables --table filter --insert OUTPUT 1 --destination 169.254.169.254 --match owner --uid-owner www-data --jump REJECT --reject-with icmp-admin-prohibited
+# only being applied to some users.
+for owner in dev www-data nginx ; do
+  iptables --table filter --insert OUTPUT 1 --destination 169.254.169.254 --match owner --uid-owner $owner --jump REJECT --reject-with icmp-admin-prohibited
+done;
 
 
 ## Save all iptables so they persist after reboot.
