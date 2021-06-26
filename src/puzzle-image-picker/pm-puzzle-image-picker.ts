@@ -34,8 +34,8 @@ interface TemplateData {
 // puzzle-list endpoint is rate-limited per ip at one request every 2 seconds
 // with a burst/bucket of 20. The burst here is set to half of that limit and is
 // used to limit requests on the client side without triggering the rate limit.
-const minDelay = 2000; // puzzle-massive.conf: puzzle_list_limit_per_ip
-const burst = 10; // puzzle-massive.conf: puzzle_list_limit_per_ip
+const minDelay = 2000; // web/legacy-cache--up.nginx.conf: puzzle_list_limit_per_ip
+const burst = 10; // web/legacy-cache--up.nginx.conf: puzzle_list_limit_per_ip
 
 const tag = "pm-puzzle-image-picker";
 let lastInstanceId = 0;
@@ -80,9 +80,8 @@ customElements.define(
       } else {
         this.frontFragmentHref = frontFragmentHref.value;
       }
-      const piecesCountListAttr = this.attributes.getNamedItem(
-        "pieces-count-list"
-      );
+      const piecesCountListAttr =
+        this.attributes.getNamedItem("pieces-count-list");
       if (!piecesCountListAttr || !piecesCountListAttr.value) {
         this.hasError = true;
         this.errorMessage = "Missing pieces-count-list attribute";

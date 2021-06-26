@@ -62,6 +62,6 @@ openssl x509 -req -CAcreateserial -days 356 -sha256 \
 #openssl dhparam -out web/dhparam.pem 2048
 
 # Signal that the certs should now exist.
-# The web/puzzle-massive.conf.sh checks if this file exists in
+# The web/snippets/ssl_certificate-ssl_certificate_key.nginx.conf.sh checks if this file exists in
 # order to uncomment the lines in the nginx conf for ssl_certificate fields.
 touch .has-certs web/puzzle-massive.conf.sh

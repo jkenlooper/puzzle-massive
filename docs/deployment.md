@@ -202,8 +202,9 @@ by the public.
     ```
 
 7.  Test and reload the nginx config. If this is a new server you may need to
-    remove the `/etc/nginx/sites-enabled/default` file. This site will include it's
-    own [web/default.conf]().
+    remove the `/etc/nginx/sites-enabled/default` or
+    `/etc/nginx/conf.d/default.conf` file. This site will include it's own
+    [web/default.nginx.conf]().
 
     ```bash
     sudo nginx -t;

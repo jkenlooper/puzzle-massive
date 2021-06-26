@@ -56,14 +56,11 @@ endif
 # Use $* to get the stem
 FORCE:
 
-objects := site.cfg web/puzzle-massive.conf web/puzzle-massive--down.conf stats/awstats.puzzle.massive.xyz.conf stats/awstats-puzzle-massive-crontab
+nginx_web_snippets := $(patsubst web/snippets/%.nginx.conf.sh, web/snippets/%.nginx.conf, $(wildcard web/snippets/*.nginx.conf.sh))
+objects := site.cfg $(nginx_web_snippets) stats/awstats.puzzle.massive.xyz.conf stats/awstats-puzzle-massive-crontab
 
 
 #####
-
-# Uncomment if this is needed in the ssl setup
-#web/dhparam.pem:
-	#openssl dhparam -out $@ 2048
 
 bin/chill: chill/requirements.txt requirements.txt
 	$(PIP) install wheel
@@ -155,17 +152,8 @@ api/puzzle-massive-backup-db.timer: api/puzzle-massive-backup-db.timer.sh
 site.cfg: site.cfg.sh $(PORTREGISTRY) $(ENV_FILE)
 	./$< $(ENVIRONMENT) $(DATABASEDIR) $(PORTREGISTRY) $(SRVDIR) $(ARCHIVEDIR) $(CACHEDIR) $(PURGEURLLIST) > $@
 
-web/puzzle-massive.conf: web/puzzle-massive.conf.sh $(PORTREGISTRY) web/ssl_params.conf
-	./$< $(ENVIRONMENT) $(SRVDIR) $(NGINXLOGDIR) $(NGINXDIR) $(PORTREGISTRY) $(INTERNALIP) $(CACHEDIR) up > $@
-web/puzzle-massive--down.conf: web/puzzle-massive.conf.sh $(PORTREGISTRY) web/ssl_params.conf
-	./$< $(ENVIRONMENT) $(SRVDIR) $(NGINXLOGDIR) $(NGINXDIR) $(PORTREGISTRY) $(INTERNALIP) $(CACHEDIR) down > $@
-
-# Uncomment if using dhparam.pem
-#ifeq ($(ENVIRONMENT),production)
-## Only create the dhparam.pem if needed.
-#objects += web/dhparam.pem
-#web/puzzle-massive.conf: web/dhparam.pem
-#endif
+web/snippets/%.nginx.conf: web/snippets/%.nginx.conf.sh $(PORTREGISTRY) $(ENV_FILE) site.cfg
+	./$< $(ENVIRONMENT) > $@
 
 stats/awstats.puzzle.massive.xyz.conf: stats/awstats.puzzle.massive.xyz.conf.sh
 	./$< $(NGINXLOGDIR) > $@

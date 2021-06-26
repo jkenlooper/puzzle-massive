@@ -15,7 +15,9 @@ source "$PORTREGISTRY"
 
 source .env
 
-HOST='127.0.0.1'
+HOSTCHILL='127.0.0.1'
+HOSTCACHE='127.0.0.1'
+HOSTORIGIN='127.0.0.1'
 # The HOSTAPI should not be externally available.
 # Keep HOSTAPI as localhost (127.0.0.1)
 HOSTAPI='127.0.0.1'
@@ -47,11 +49,14 @@ cat <<HERE
 # Chill.
 
 # Set the HOST to 0.0.0.0 for being an externally visible server.
-HOST = '127.0.0.1'
+HOST = '$HOSTCHILL'
 HOSTNAME = $HOSTNAME
 SITE_PROTOCOL = 'http'
 PORT = $PORTCHILL
 
+HOSTCHILL = '$HOSTCHILL'
+HOSTCACHE = '$HOSTCACHE'
+HOSTORIGIN = '$HOSTORIGIN'
 # The HOSTAPI should not be externally available.
 # Keep HOSTAPI as localhost (127.0.0.1)
 HOSTAPI = '$HOSTAPI'

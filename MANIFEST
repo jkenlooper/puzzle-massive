@@ -68,7 +68,10 @@ stats/README.md
 stats/awstats-puzzle-massive-crontab.sh
 stats/awstats.puzzle.massive.xyz.conf.sh
 templates
-web/default.conf
-web/error_page.conf
-web/ssl_params.conf
-web/puzzle-massive.conf.sh
+web/snippets
+web/default.nginx.conf
+web/legacy-cache--down.nginx.conf
+web/legacy-cache--up.nginx.conf
+web/legacy-origin.nginx.conf
+web/nginx.conf
+web/old-cruft.nginx.conf

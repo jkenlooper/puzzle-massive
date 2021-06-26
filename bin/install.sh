@@ -82,7 +82,7 @@ fi
 
 mkdir -p "${NGINXLOGDIR}";
 
-# Run rsync checksum on nginx default.conf since other sites might also update
+# Run rsync checksum on nginx default.nginx.conf since other sites might also update
 # this file.
 mkdir -p "${NGINXDIR}sites-available"
 rsync --inplace \
@@ -92,14 +92,23 @@ rsync --inplace \
 rsync --inplace \
   --checksum \
   --itemize-changes \
-  web/default.conf web/puzzle-massive.conf web/puzzle-massive--down.conf "${NGINXDIR}sites-available/";
-echo rsynced web/default.conf web/puzzle-massive.conf web/puzzle-massive--down.conf to "${NGINXDIR}sites-available/";
+  web/default.nginx.conf web/old-cruft.nginx.conf web/legacy-cache--down.nginx.conf web/legacy-cache--up.nginx.conf web/legacy-origin.nginx.conf "${NGINXDIR}sites-available/";
+
+echo rsynced web/default.nginx.conf web/old-cruft.nginx.conf web/legacy-cache--down.nginx.conf web/legacy-cache--up.nginx.conf web/legacy-origin.nginx.conf to "${NGINXDIR}sites-available/";
+
+mkdir -p "${NGINXDIR}snippets"
+rsync --inplace \
+  --checksum \
+  --itemize-changes \
+  web/snippets/*.nginx.conf "${NGINXDIR}snippets/";
 
 mkdir -p "${NGINXDIR}sites-enabled";
-ln -sf "${NGINXDIR}sites-available/default.conf" "${NGINXDIR}sites-enabled/default.conf";
+ln -sf "${NGINXDIR}sites-available/default.nginx.conf" "${NGINXDIR}sites-enabled/default.nginx.conf";
+ln -sf "${NGINXDIR}sites-available/old-cruft.nginx.conf" "${NGINXDIR}sites-enabled/old-cruft.nginx.conf";
+ln -sf "${NGINXDIR}sites-available/legacy-origin.nginx.conf"  "${NGINXDIR}sites-enabled/legacy-origin.nginx.conf";
 
-rm -f "${NGINXDIR}sites-enabled/puzzle-massive--down.conf"
-ln -sf "${NGINXDIR}sites-available/puzzle-massive.conf"  "${NGINXDIR}sites-enabled/puzzle-massive.conf";
+rm -f "${NGINXDIR}sites-enabled/legacy-cache--down.nginx.conf"
+ln -sf "${NGINXDIR}sites-available/legacy-cache--up.nginx.conf"  "${NGINXDIR}sites-enabled/legacy-cache--up.nginx.conf";
 
 rsync --inplace \
   --checksum \
