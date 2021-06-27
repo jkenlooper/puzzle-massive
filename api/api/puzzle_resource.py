@@ -1,6 +1,5 @@
 import os.path
 import os
-import stat
 from shutil import copytree, copy2, rmtree
 import tempfile
 import re

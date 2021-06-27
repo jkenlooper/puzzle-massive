@@ -150,12 +150,13 @@ def submit_puzzle(
     puzzle = puzzle["puzzle"]
 
     CDN_BASE_URL = current_app.config["CDN_BASE_URL"]
+    prefix_resources_url = "" if current_app.config["LOCAL_PUZZLE_RESOURCES"] else CDN_BASE_URL
     cur.execute(
         fetch_query_string("add-puzzle-file.sql"),
         {
             "puzzle": puzzle,
             "name": "original",
-            "url": f"{CDN_BASE_URL}/resources/{puzzle_id}/original.{original_slip}.jpg"
+            "url": f"{prefix_resources_url}/resources/{puzzle_id}/original.{original_slip}.jpg"
         },
     )
 
@@ -167,7 +168,7 @@ def submit_puzzle(
             {
                 "puzzle": puzzle,
                 "name": "preview_full",
-                "url": f"{CDN_BASE_URL}/resources/{puzzle_id}/{preview_full_slip}",
+                "url": f"{prefix_resources_url}/resources/{puzzle_id}/{preview_full_slip}",
             },
         )
         im = Image.open(os.path.join(tmp_puzzle_dir, f"original.{original_slip}.jpg")).copy()
@@ -218,7 +219,7 @@ def submit_puzzle(
     db.commit()
     cur.close()
 
-    pr = PuzzleResource(puzzle_id, current_app.config, is_local_resource=not bool(CDN_BASE_URL))
+    pr = PuzzleResource(puzzle_id, current_app.config, is_local_resource=not bool(prefix_resources_url))
     pr.put(tmp_puzzle_dir)
     rmtree(tmp_dir)
 
