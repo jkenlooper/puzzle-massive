@@ -38,5 +38,6 @@ terraform workspace select $workspace || \
 test "$workspace" = "$(terraform workspace show)" || (echo "Sanity check to make sure workspace selected matches environment has failed." && exit 1)
 
 terraform $terraform_command -var-file="$script_dir/config.tfvars" \
-  -var "project_version=$test_tag" \
-  -var "project_description=$project_description"
+    -var-file="$script_dir/private.tfvars" \
+    -var "project_version=$test_tag" \
+    -var "project_description=$project_description"

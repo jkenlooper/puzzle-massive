@@ -26,6 +26,10 @@ variable "artifact_dist_tar_gz" {
     error_message = "Must be a file that was generated from the `make dist` command. The Development and Test environments don't use this file when deploying."
   }
 }
+variable "cdn_bucket_region" {
+  description = "CDN bucket region. This will be used for puzzle resources."
+  default     = "nyc3"
+}
 
 variable "developer_ips" {
   description = "List of ips that will be allowed through the firewall on the SSH port."
@@ -61,7 +65,7 @@ variable "project_environment" {
   }
 }
 
-variable "droplet_size" {
+variable "legacy_droplet_size" {
   default = "s-2vcpu-4gb"
 }
 
@@ -204,34 +208,10 @@ variable "dot_env__CDN_BASE_URL" {
   }
 }
 
-variable "dot_env__PUZZLE_RESOURCES_BUCKET_REGION" {
-  default     = "nyc3"
-  description = "Puzzle resources bucket region. Leave blank if not using remote puzzle resources."
-  type        = string
-}
-variable "dot_env__PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL" {
-  default     = "https://nyc3.digitaloceanspaces.com"
-  description = "Puzzle resources bucket endpoint URL. Leave blank if not using remote puzzle resources."
-  type        = string
-  validation {
-    condition     = can(regex("|https?://.+", var.dot_env__CDN_BASE_URL))
-    error_message = "Should be blank or a valid URL."
-  }
-}
-
-variable "dot_env__PUZZLE_RESOURCES_BUCKET" {
-  description = "Bucket name for storing puzzle resources"
-  type = string
-  validation {
-    condition = can(63 <= length(var.dot_env__PUZZLE_RESOURCES_BUCKET))
-    error_message = "Bucket names can't be over 63 characters"
-  }
-}
-
 variable "dot_env__PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL" {
-  default = "public, max-age:31536000, immutable"
+  default     = "public, max-age:31536000, immutable"
   description = "CacheControl header that will be used for all objects in the puzzle resources bucket."
-  type = string
+  type        = string
 }
 
 variable "dot_env__PUZZLE_RULES" {
@@ -364,7 +344,7 @@ variable "dot_env__POINTS_CAP" {
 }
 
 variable "dot_env__BIT_ICON_EXPIRATION" {
-  default     = [
+  default = [
     "0:    20 minutes",
     "1:    1 day",
     "50:   3 days",
