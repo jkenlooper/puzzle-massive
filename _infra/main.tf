@@ -32,7 +32,7 @@ resource "digitalocean_tag" "fw_web" {
 }
 
 resource "digitalocean_firewall" "developer_ssh" {
-  name = "puzzle-massive-developer_ssh"
+  name = "puzzle-massive-developer-ssh"
   tags = [digitalocean_tag.fw_developer_ssh.id]
 
   inbound_rule {
