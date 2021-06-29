@@ -15,18 +15,18 @@ source "$PORTREGISTRY"
 
 source .env
 
-HOSTCHILL='127.0.0.1'
-HOSTCACHE='127.0.0.1'
-HOSTORIGIN='127.0.0.1'
+HOSTCHILL=${HOSTCHILL:-'127.0.0.1'}
+HOSTCACHE=${HOSTCACHE:-'127.0.0.1'}
+HOSTORIGIN=${HOSTORIGIN:-'127.0.0.1'}
 # The HOSTAPI should not be externally available.
 # Keep HOSTAPI as localhost (127.0.0.1)
-HOSTAPI='127.0.0.1'
+HOSTAPI=${HOSTAPI:-'127.0.0.1'}
 # The HOSTPUBLISH should not be externally available.
 # Keep HOSTPUBLISH as localhost (127.0.0.1)
-HOSTPUBLISH='127.0.0.1'
-HOSTDIVULGER='127.0.0.1'
-HOSTSTREAM='127.0.0.1'
-HOSTREDIS='127.0.0.1'
+HOSTPUBLISH=${HOSTPUBLISH:-'127.0.0.1'}
+HOSTDIVULGER=${HOSTDIVULGER:-'127.0.0.1'}
+HOSTSTREAM=${HOSTSTREAM:-'127.0.0.1'}
+HOSTREDIS=${HOSTREDIS:-'127.0.0.1'}
 # The redis db is by default 0 and the redis db used for unit tests is 1
 REDIS_DB=0
 

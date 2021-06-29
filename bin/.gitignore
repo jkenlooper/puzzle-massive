@@ -1,5 +1,6 @@
 /black
 /blackd
+/black-primer
 /pyrsa*
 /activate*
 /chill
@@ -45,3 +46,7 @@
 /pasteurize
 /chardetect
 /pybabel
+/Activate.ps1
+/jp.py
+/watchit
+/watchmedo

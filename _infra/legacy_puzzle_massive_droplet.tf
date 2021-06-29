@@ -105,10 +105,18 @@ resource "local_file" "dot_env" {
     dot_env__BIT_ICON_EXPIRATION                          = var.dot_env__BIT_ICON_EXPIRATION
     dot_env__PUBLISH_WORKER_COUNT                         = var.dot_env__PUBLISH_WORKER_COUNT
     dot_env__STREAM_WORKER_COUNT                          = var.dot_env__STREAM_WORKER_COUNT
-    dot_env__DOMAIN_NAME                                  = var.dot_env__DOMAIN_NAME
+    dot_env__DOMAIN_NAME                                  = var.domain_name
     dot_env__SITE_TITLE                                   = var.dot_env__SITE_TITLE
     dot_env__HOME_PAGE_ROUTE                              = var.dot_env__HOME_PAGE_ROUTE
     dot_env__SOURCE_CODE_LINK                             = var.dot_env__SOURCE_CODE_LINK
     dot_env__M3                                           = var.dot_env__M3
+    dot_env__HOSTCHILL                                    = "127.0.0.1"
+    dot_env__HOSTCACHE                                    = "127.0.0.1"
+    dot_env__HOSTORIGIN                                   = "127.0.0.1"
+    dot_env__HOSTAPI                                      = "127.0.0.1"
+    dot_env__HOSTPUBLISH                                  = "127.0.0.1"
+    dot_env__HOSTDIVULGER                                 = "127.0.0.1"
+    dot_env__HOSTSTREAM                                   = "127.0.0.1"
+    dot_env__HOSTREDIS                                    = "127.0.0.1"
   })
 }

@@ -61,9 +61,12 @@
 
 /include/
 /lib/
+/lib64/
+/lib64
 /local/
 /share/
 /pysqlite2-doc/
+/pyvenv.cfg
 
 *.pyc
 *.egg-info/

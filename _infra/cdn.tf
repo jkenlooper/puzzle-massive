@@ -12,11 +12,11 @@ resource "local_file" "nginx_snippets_server_name_cdn_conf" {
   file_permission = "0400"
   content = templatefile("cdn-nginx-snippets-server_name-cdn.nginx.conf.tmpl", {
     DATE            = timestamp()
-    CDN_DOMAIN_NAME = "cdn.${var.dot_env__DOMAIN_NAME}"
+    CDN_DOMAIN_NAME = "cdn.${var.domain_name}"
   })
 }
 
-resource "local_file" "nginx_snippets_server_name_cdn_conf" {
+resource "local_file" "nginx_snippets_proxy_pass_cdn_conf" {
   filename = "${lower(var.environment)}/snippets/proxy_pass-cdn.nginx.conf"
   # Hint that this has been generated from a template and shouldn't be edited by the owner.
   file_permission = "0400"

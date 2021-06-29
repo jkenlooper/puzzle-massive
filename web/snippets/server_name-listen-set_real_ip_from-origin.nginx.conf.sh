@@ -6,7 +6,7 @@ set -eu -o pipefail
 HOSTORIGIN=$(./bin/puzzle-massive-site-cfg-echo site.cfg HOSTORIGIN)
 HOSTCACHE=$(./bin/puzzle-massive-site-cfg-echo site.cfg HOSTCACHE)
 
-# HOSTORIGIN and HOSTCACHE can be overridden by .env (not currently doing this)
+# HOSTORIGIN and HOSTCACHE can be overridden by .env
 # shellcheck source=/dev/null
 source .env
 

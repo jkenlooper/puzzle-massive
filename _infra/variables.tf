@@ -119,12 +119,6 @@ variable "dot_env__UNSPLASH_SECRET" {
   sensitive   = true
 }
 
-#variable "dot_env__NEW_PUZZLE_CONTRIB" {
-#  default = 'rizzo'
-#  description = "This is used as part of the URL when directly submitting photos for puzzles."
-#  type = string
-#}
-
 variable "dot_env__SECURE_COOKIE_SECRET" {
   default     = "chocolate chip"
   description = "Some random text for secure cookie. Should be something that is secure and random. This should never change once it has been used for a domain since it would invalidate any cookie that was used to login a player for that site."
@@ -376,7 +370,7 @@ variable "dot_env__STREAM_WORKER_COUNT" {
   }
 }
 
-variable "dot_env__DOMAIN_NAME" {
+variable "domain_name" {
   default     = "puzzle.massive.xyz"
   description = "The domain name (FQDN) that will be used for this deployment."
   type        = string
