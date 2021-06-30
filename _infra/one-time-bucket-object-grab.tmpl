@@ -1,0 +1,13 @@
+EPHEMERAL_DIR=$(mktemp -d)
+
+mkdir -p /root/.aws
+cp aws_config /root/.aws/config
+chmod 0600 /root/.aws/config
+cp aws_credentials /root/.aws/credentials
+chmod 0600 /root/.aws/credentials
+
+%{ for key in keys ~}
+aws s3 cp --endpoint=https://${bucket_region}.digitaloceanspaces.com s3://${bucket_name}/${key} $EPHEMERAL_DIR/
+%{ endfor ~}
+
+rm -rf /root/.aws

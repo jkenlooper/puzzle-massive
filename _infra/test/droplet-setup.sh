@@ -1,31 +1,24 @@
-#!/usr/bin/env bash
+# Script is inlined as part of cloud-init user_data
+# #!/usr/bin/env bash
+# set -eu -o pipefail
+# set -x
 
 # Set when uploaded to droplet
-# CHECKOUT_COMMIT
-# REPOSITORY_CLONE_URL
+# ARTIFACT
 # .env file created from heredoc ENV_CONTENT
 # .htpasswd file created from heredoc HTPASSWD_CONTENT
-# checksums file created from heredoc BIN_CHECKSUMS
 # aws_config file created from heredoc AWS_CONFIG
 # aws_credentials file created from heredoc AWS_CREDENTIALS
-
-set -euo pipefail
+# EPHEMERAL_DIR created from _infra/one-time-bucket-object-grab.tmpl
 
 pwd_dir=$PWD
 TMPDIR=$(mktemp -d)
-mv .env $TMPDIR/
-mv .htpasswd $TMPDIR/
-mv checksums $TMPDIR/
+cp .env $TMPDIR/
+cp .htpasswd $TMPDIR/
 (cd $TMPDIR
 
-  # Grab necessary scripts from the GitHub Repo
   mkdir bin
-  cd bin
-  curl --location --silent --remote-name-all \
-    "https://raw.githubusercontent.com/jkenlooper/puzzle-massive/${CHECKOUT_COMMIT}/bin/{add-dev-user.sh,update-sshd-config.sh,set-external-puzzle-massive-in-hosts.sh,setup.sh,iptables-setup-firewall.sh,aws-cli-install.sh,infra-development-build.sh}"
-  cd ..
-  md5sum --check checksums
-
+  mv $EPHEMERAL_DIR/*.sh bin/
   chmod +x bin/*.sh
 
   # Execute scripts as needed for this environment
@@ -34,9 +27,16 @@ mv checksums $TMPDIR/
   ./bin/set-external-puzzle-massive-in-hosts.sh
   ./bin/setup.sh
   ./bin/iptables-setup-firewall.sh
-  ./bin/aws-cli-install.sh
+
+  mkdir -p /home/dev/.aws
+  mv $pwd_dir/aws_config /home/dev/.aws/config
+  chmod 0600 /home/dev/.aws/config
+  mv $pwd_dir/aws_credentials /home/dev/.aws/credentials
+  chmod 0600 /home/dev/.aws/credentials
+
+  mv $EPHEMERAL_DIR/$ARTIFACT /home/dev/
 
   # At this time both the development environment and test environment use the
   # same infra-development-build.sh script.
-  ./bin/infra-development-build.sh $CHECKOUT_COMMIT $REPOSITORY_CLONE_URL $(realpath .env) $(realpath .htpasswd)
+  ./bin/infra-development-build.sh $ARTIFACT $(realpath .env) $(realpath .htpasswd)
 )

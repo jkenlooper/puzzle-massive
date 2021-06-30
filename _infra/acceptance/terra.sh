@@ -29,11 +29,7 @@ echo "Using versioned artifact dist file: '$project_dir/$artifact_dist_tar_gz'"
 
 set -x
 
-(cd $project_dir
-md5sum bin/{add-dev-user.sh,update-sshd-config.sh,set-external-puzzle-massive-in-hosts.sh,setup.sh,iptables-setup-firewall.sh,aws-cli-install.sh,infra-development-build.sh} > $script_dir/.bin_checksums
-)
-
-cp $project_dir/$artifact_dist_tar_gz $scripts_dir/
+cp $project_dir/$artifact_dist_tar_gz $script_dir/
 
 terraform workspace select $workspace || \
   terraform workspace new $workspace
@@ -42,5 +38,5 @@ test "$workspace" = "$(terraform workspace show)" || (echo "Sanity check to make
 
 terraform $terraform_command -var-file="$script_dir/config.tfvars" \
     -var-file="$script_dir/private.tfvars" \
-    -var "artifact_dist_tar_gz=$artifact_dist_tar_gz" \
+    -var "artifact=$artifact_dist_tar_gz" \
     -var "project_description=$project_description"

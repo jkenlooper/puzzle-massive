@@ -18,6 +18,8 @@ script_dir=$(dirname $(realpath $0))
 workspace=$(basename $script_dir)
 project_dir=$(dirname $PWD)
 
+artifact_bundle=puzzle-massive-$(jq -r '.version' ../package.json).bundle
+
 # The test environment is based off of a git tag with test/
 test_tag="$(git tag --list 'test/*' --contains)"
 test -z $test_tag && echo "Must have a git tag that starts with 'test/' at the HEAD." && exit 1
@@ -25,12 +27,16 @@ project_description="Temporary instance for testing based from git tag: $test_ta
 
 echo "Terraform workspace is: $workspace"
 echo "Project description will be: '$project_description'"
+echo "Versioned artifact bundle file: '$project_dir/$artifact_bundle'"
+
+(cd $project_dir
+git diff --quiet || (echo "Project directory is dirty. Please commit any changes first." && exit 1)
+git bundle create $artifact_bundle HEAD
+)
 
 set -x
 
-(cd $project_dir
-md5sum bin/{add-dev-user.sh,update-sshd-config.sh,set-external-puzzle-massive-in-hosts.sh,setup.sh,iptables-setup-firewall.sh,infra-development-build.sh} > $script_dir/.bin_checksums
-)
+cp $project_dir/$artifact_bundle $script_dir/
 
 terraform workspace select $workspace || \
   terraform workspace new $workspace
@@ -39,5 +45,6 @@ test "$workspace" = "$(terraform workspace show)" || (echo "Sanity check to make
 
 terraform $terraform_command -var-file="$script_dir/config.tfvars" \
     -var-file="$script_dir/private.tfvars" \
+    -var "artifact=$artifact_bundle" \
     -var "project_version=$test_tag" \
     -var "project_description=$project_description"

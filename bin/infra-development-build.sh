@@ -2,17 +2,15 @@
 
 set -euo pipefail
 
-CHECKOUT_COMMIT=$1
-REPOSITORY_CLONE_URL=$2
-ENV_FILE=$3
-HTPASSWD_FILE=$4
+ARTIFACT=$1
+ENV_FILE=$2
+HTPASSWD_FILE=$3
 
 cd /home/dev/
 
 # Get the source code
-git clone $REPOSITORY_CLONE_URL puzzle-massive
+git clone $ARTIFACT puzzle-massive
 cd puzzle-massive
-git checkout $CHECKOUT_COMMIT
 
 cp $ENV_FILE .env
 cp $HTPASSWD_FILE .htpasswd

@@ -20,9 +20,7 @@ cat <<-HERE
     # File generated from $0
     # on ${DATE}
 
-  #server_name localhost;
-  #server_name \$hostname;
-  server_name ${HOSTORIGIN};
+  server_name localhost \$hostname ${HOSTORIGIN};
   listen      ${PORTORIGIN};
   set_real_ip_from ${HOSTCACHE};
 HERE

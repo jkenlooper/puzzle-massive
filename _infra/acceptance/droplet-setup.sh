@@ -1,33 +1,24 @@
-#!/usr/bin/env bash
+# Script is inlined as part of cloud-init user_data
+# #!/usr/bin/env bash
+# set -eu -o pipefail
+# set -x
 
 # Set when uploaded to droplet
-# CHECKOUT_COMMIT
-# REPOSITORY_CLONE_URL
-# ARTIFACT_BUCKET
-# ARTIFACT_BUCKET_REGION
-# DIST_TAR
+# ARTIFACT
 # .env file created from heredoc ENV_CONTENT
 # .htpasswd file created from heredoc HTPASSWD_CONTENT
-# checksums file created from heredoc BIN_CHECKSUMS
 # aws_config file created from heredoc AWS_CONFIG
 # aws_credentials file created from heredoc AWS_CREDENTIALS
+# EPHEMERAL_DIR created from _infra/one-time-bucket-object-grab.tmpl
 
-set -euo pipefail
-
+pwd_dir=$PWD
 TMPDIR=$(mktemp -d)
 mv .env $TMPDIR/
 mv .htpasswd $TMPDIR/
-mv checksums $TMPDIR/
 (cd $TMPDIR
 
-  # Grab necessary scripts from the GitHub Repo
   mkdir bin
-  cd bin
-  curl --location --silent --remote-name-all \
-    "https://raw.githubusercontent.com/jkenlooper/puzzle-massive/${CHECKOUT_COMMIT}/bin/{add-dev-user.sh,update-sshd-config.sh,set-external-puzzle-massive-in-hosts.sh,setup.sh,iptables-setup-firewall.sh,infra-development-build.sh}"
-  cd ..
-  md5sum --check checksums
-
+  mv $EPHEMERAL_DIR/*.sh bin/
   chmod +x bin/*.sh
 
   # Execute scripts as needed for this environment
@@ -36,13 +27,15 @@ mv checksums $TMPDIR/
   ./bin/set-external-puzzle-massive-in-hosts.sh
   ./bin/setup.sh
   ./bin/iptables-setup-firewall.sh
-  ./bin/aws-cli-install.sh
 
-  mkdir /home/dev/.aws
+  mkdir -p /home/dev/.aws
   mv $pwd_dir/aws_config /home/dev/.aws/config
   chmod 0600 /home/dev/.aws/config
   mv $pwd_dir/aws_credentials /home/dev/.aws/credentials
   chmod 0600 /home/dev/.aws/credentials
 
-  ./bin/infra-acceptance-build.sh $ARTIFACT_BUCKET $DIST_TAR $(realpath .env) $(realpath .htpasswd) $ARTIFACT_BUCKET_REGION
+  mv $EPHEMERAL_DIR/$ARTIFACT /home/dev/
+
+  # TODO: pass in the information needed for production database backup
+  ./bin/infra-acceptance-build.sh $ARTIFACT $(realpath .env) $(realpath .htpasswd)
 )

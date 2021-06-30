@@ -1,9 +1,9 @@
-resource "random_uuid" "cdn_bucket_uuid" {
+resource "random_uuid" "cdn" {
 }
 
 resource "digitalocean_spaces_bucket" "cdn" {
-  name   = substr("puzzle-massive-cdn-${lower(var.environment)}-${random_uuid.cdn_bucket_uuid.result}", 0, 63)
-  region = var.cdn_bucket_region
+  name   = substr("puzzle-massive-cdn-${lower(var.environment)}-${random_uuid.cdn.result}", 0, 63)
+  region = var.bucket_region
 }
 
 resource "local_file" "nginx_snippets_server_name_cdn_conf" {

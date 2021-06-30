@@ -14,11 +14,11 @@ resource "digitalocean_project" "puzzle_massive" {
   description = var.project_description
   purpose     = "Web Application"
   environment = var.project_environment
-  resources   = [digitalocean_droplet.puzzle_massive.urn]
+  resources   = [digitalocean_droplet.puzzle_massive.urn, digitalocean_spaces_bucket.cdn.urn, digitalocean_spaces_bucket.ephemeral_artifacts.urn]
 }
 
 resource "digitalocean_vpc" "puzzle_massive" {
-  name        = "puzzle-massive-${var.environment}"
+  name        = "puzzle-massive-${lower(var.environment)}"
   description = "Puzzle Massive network for the ${var.environment} environment"
   region      = var.region
   ip_range    = var.vpc_ip_range
@@ -32,7 +32,7 @@ resource "digitalocean_tag" "fw_web" {
 }
 
 resource "digitalocean_firewall" "developer_ssh" {
-  name = "puzzle-massive-developer-ssh"
+  name = "puzzle-massive-${lower(var.environment)}-developer-ssh"
   tags = [digitalocean_tag.fw_developer_ssh.id]
 
   inbound_rule {
@@ -48,19 +48,19 @@ resource "digitalocean_firewall" "developer_ssh" {
 }
 
 resource "digitalocean_firewall" "web" {
-  name = "puzzle-massive-web"
+  name = "puzzle-massive-${lower(var.environment)}-web"
   tags = [digitalocean_tag.fw_web.id]
 
   inbound_rule {
     protocol         = "tcp"
     port_range       = "80"
-    source_addresses = var.web_ips
+    source_addresses = concat(var.web_ips, var.developer_ips)
   }
 
   inbound_rule {
     protocol         = "tcp"
     port_range       = "443"
-    source_addresses = var.web_ips
+    source_addresses = concat(var.web_ips, var.developer_ips)
   }
 
   inbound_rule {
@@ -86,12 +86,75 @@ resource "digitalocean_firewall" "web" {
   }
 }
 
-resource "digitalocean_spaces_bucket_object" "puzzle_massive_dist_tar" {
-  region = var.artifacts_bucket_region
-  bucket = var.artifacts_bucket_name
-  key    = "puzzle-massive/${lower(var.environment)}/${var.artifact_dist_tar_gz}"
+resource "random_uuid" "ephemeral_artifacts" {
+}
+resource "digitalocean_spaces_bucket" "ephemeral_artifacts" {
+  name   = substr("ephemeral-artifacts-${random_uuid.ephemeral_artifacts.result}", 0, 63)
+  region = var.bucket_region
   acl    = "private"
-  source = "${lower(var.environment)}/${var.artifact_dist_tar_gz}"
+  lifecycle_rule {
+    enabled = true
+    expiration {
+      days = 26
+    }
+  }
+}
+
+resource "digitalocean_spaces_bucket_object" "add_dev_user_sh" {
+  region = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key    = "bin/add-dev-user.sh"
+  acl    = "private"
+  source = "../bin/add-dev-user.sh"
+}
+resource "digitalocean_spaces_bucket_object" "update_sshd_config_sh" {
+  region = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key    = "bin/update-sshd-config.sh"
+  acl    = "private"
+  source = "../bin/update-sshd-config.sh"
+}
+resource "digitalocean_spaces_bucket_object" "set_external_puzzle_massive_in_hosts_sh" {
+  region = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key    = "bin/set-external-puzzle-massive-in-hosts.sh"
+  acl    = "private"
+  source = "../bin/set-external-puzzle-massive-in-hosts.sh"
+}
+resource "digitalocean_spaces_bucket_object" "setup_sh" {
+  region = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key    = "bin/setup.sh"
+  acl    = "private"
+  source = "../bin/setup.sh"
+}
+resource "digitalocean_spaces_bucket_object" "iptables_setup_firewall_sh" {
+  region = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key    = "bin/iptables-setup-firewall.sh"
+  acl    = "private"
+  source = "../bin/iptables-setup-firewall.sh"
+}
+resource "digitalocean_spaces_bucket_object" "infra_development_build_sh" {
+  region = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key    = "bin/infra-development-build.sh"
+  acl    = "private"
+  source = "../bin/infra-development-build.sh"
+}
+resource "digitalocean_spaces_bucket_object" "infra_acceptance_build_sh" {
+  region = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key    = "bin/infra-acceptance-build.sh"
+  acl    = "private"
+  source = "../bin/infra-acceptance-build.sh"
+}
+resource "digitalocean_spaces_bucket_object" "artifact" {
+  region = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key    = var.artifact
+  acl    = "private"
+  source = "${lower(var.environment)}/${var.artifact}"
 }
 
 resource "local_file" "aws_credentials" {
@@ -109,6 +172,6 @@ resource "local_file" "aws_config" {
   # Hint that this has been generated from a template and shouldn't be edited by the owner.
   file_permission = "0400"
   content = templatefile("aws_config.tmpl", {
-    artifacts_bucket_region = var.artifacts_bucket_region
+    bucket_region = var.bucket_region
   })
 }

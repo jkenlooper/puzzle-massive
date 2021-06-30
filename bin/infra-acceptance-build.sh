@@ -2,19 +2,16 @@
 
 set -euo pipefail
 
-ARTIFACT_BUCKET=$1
-DIST_TAR=$2
-ENV_FILE=$3
-HTPASSWD_FILE=$4
-ARTIFACT_BUCKET_REGION=$5
+ARTIFACT=$1
+ENV_FILE=$2
+HTPASSWD_FILE=$3
 
 cd /home/dev/
 
 # AWS S3 CLI has been configured via the user_data from droplet-setup.sh
 
 # Get the dist
-aws s3 cp --endpoint=https://$ARTIFACT_BUCKET_REGION.digitaloceanspaces.com s3://$ARTIFACT_BUCKET/$DIST_TAR ./
-tar --directory=/usr/local/src/ --extract --gunzip -f $DIST_TAR
+tar --directory=/usr/local/src/ --extract --gunzip -f $ARTIFACT
 cd /usr/local/src/puzzle-massive;
 
 mv $ENV_FILE .env
@@ -63,5 +60,6 @@ su --command '
 ' dev
 
 # TODO: get a copy of the last backup of production data from S3
+#aws s3 cp --endpoint=https://$backup_BUCKET_REGION.digitaloceanspaces.com s3://$backup_BUCKET/production_data ./
 
 

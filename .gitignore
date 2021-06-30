@@ -10,6 +10,7 @@
 /.design-tokens-css
 /site.cfg
 /frozen.tar.gz
+/puzzle-massive-*.bundle
 /puzzle-massive-*.tar.gz
 /web/snippets/add_header-cache-control-newapi-puzzle-pieces.nginx.conf
 /web/snippets/limit_req-piece_move_limit.nginx.conf

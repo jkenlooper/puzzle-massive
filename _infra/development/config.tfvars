@@ -16,6 +16,3 @@ vpc_ip_range = "192.168.127.0/24"
 # Recommended to use FireFox web browser to set socks proxy instead of setting
 # your whole system.
 web_ips = ["127.0.0.1"]
-
-
-artifact_dist_tar_gz="puzzle-massive-NO-DIST-FOR-DEVELOPMENT.tar.gz"

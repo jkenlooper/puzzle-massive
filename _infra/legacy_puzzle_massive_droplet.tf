@@ -1,12 +1,21 @@
 resource "digitalocean_droplet" "puzzle_massive" {
-  name       = lower("puzzle-massive-${var.environment}")
-  size       = var.legacy_droplet_size
-  image      = "ubuntu-20-04-x64"
-  region     = var.region
-  vpc_uuid   = digitalocean_vpc.puzzle_massive.id
-  ssh_keys   = var.developer_ssh_key_fingerprints
-  tags       = [digitalocean_tag.fw_web.id, digitalocean_tag.fw_developer_ssh.id]
-  depends_on = [digitalocean_spaces_bucket_object.puzzle_massive_dist_tar]
+  name     = lower("puzzle-massive-${var.environment}")
+  size     = var.legacy_droplet_size
+  image    = "ubuntu-20-04-x64"
+  region   = var.region
+  vpc_uuid = digitalocean_vpc.puzzle_massive.id
+  ssh_keys = var.developer_ssh_key_fingerprints
+  tags     = [digitalocean_tag.fw_web.id, digitalocean_tag.fw_developer_ssh.id]
+  depends_on = [
+    digitalocean_spaces_bucket_object.add_dev_user_sh,
+    digitalocean_spaces_bucket_object.update_sshd_config_sh,
+    digitalocean_spaces_bucket_object.set_external_puzzle_massive_in_hosts_sh,
+    digitalocean_spaces_bucket_object.setup_sh,
+    digitalocean_spaces_bucket_object.iptables_setup_firewall_sh,
+    digitalocean_spaces_bucket_object.infra_development_build_sh,
+    digitalocean_spaces_bucket_object.infra_acceptance_build_sh,
+    digitalocean_spaces_bucket_object.artifact,
+  ]
 
   # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#retrieve-user-data
   # Can also debug this locally by using the Vagrantfile in the environment
@@ -24,15 +33,9 @@ resource "local_file" "droplet_puzzle_massive_user_data" {
   file_permission = "0500"
   sensitive_content = join("\n", concat([
     "#!/usr/bin/env bash",
-    "CHECKOUT_COMMIT=${var.checkout_commit}",
-    "REPOSITORY_CLONE_URL=${var.repository_clone_url}",
-    "DIST_TAR=puzzle-massive/${lower(var.environment)}/${var.artifact_dist_tar_gz}",
-    "ARTIFACT_BUCKET=${var.artifacts_bucket_name}",
-    "ARTIFACT_BUCKET_REGION=${var.artifacts_bucket_region}",
-
-    "cat <<-'BIN_CHECKSUMS' > checksums",
-    file("${lower(var.environment)}/.bin_checksums"),
-    "BIN_CHECKSUMS",
+    "set -eu -o pipefail",
+    "set -x",
+    "ARTIFACT=${var.artifact}",
 
     "cat <<-'ENV_CONTENT' > .env",
     local_file.dot_env.sensitive_content,
@@ -49,6 +52,27 @@ resource "local_file" "droplet_puzzle_massive_user_data" {
     "cat <<-'AWS_CONFIG' > aws_config",
     local_file.aws_config.content,
     "AWS_CONFIG",
+
+    # Minimize size of shell script by stripping out comments (# ...) if this is
+    # passing the file size limit.
+    #replace(file("../bin/aws-cli-install.sh"), "/^[[:space:]]*#.*$/", ""),
+    file("../bin/aws-cli-install.sh"),
+
+    templatefile("one-time-bucket-object-grab.tmpl", {
+      bucket_region = digitalocean_spaces_bucket.ephemeral_artifacts.region
+      bucket_name   = digitalocean_spaces_bucket.ephemeral_artifacts.name
+      keys = [
+        "bin/add-dev-user.sh",
+        "bin/update-sshd-config.sh",
+        "bin/set-external-puzzle-massive-in-hosts.sh",
+        "bin/setup.sh",
+        "bin/iptables-setup-firewall.sh",
+        "bin/infra-development-build.sh",
+        "bin/infra-acceptance-build.sh",
+        var.artifact
+      ]
+    }),
+
 
     file("${lower(var.environment)}/droplet-setup.sh")
   ]))
