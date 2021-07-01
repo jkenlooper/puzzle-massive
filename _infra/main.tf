@@ -14,7 +14,12 @@ resource "digitalocean_project" "puzzle_massive" {
   description = var.project_description
   purpose     = "Web Application"
   environment = var.project_environment
-  resources   = [digitalocean_droplet.puzzle_massive.urn, digitalocean_spaces_bucket.cdn.urn, digitalocean_spaces_bucket.ephemeral_artifacts.urn]
+  resources   = [
+    digitalocean_droplet.puzzle_massive.urn,
+    digitalocean_spaces_bucket.cdn.urn,
+    digitalocean_spaces_bucket.ephemeral_artifacts.urn,
+    digitalocean_droplet.cdn.urn
+  ]
 }
 
 resource "digitalocean_vpc" "puzzle_massive" {
@@ -92,12 +97,14 @@ resource "digitalocean_spaces_bucket" "ephemeral_artifacts" {
   name   = substr("ephemeral-artifacts-${random_uuid.ephemeral_artifacts.result}", 0, 63)
   region = var.bucket_region
   acl    = "private"
-  lifecycle_rule {
-    enabled = true
-    expiration {
-      days = 26
-    }
-  }
+  # These are referenced in user_data, so if they are removed it might make the
+  # droplet require to be recreated?
+  #lifecycle_rule {
+  #  enabled = true
+  #  expiration {
+  #    days = 26
+  #  }
+  #}
 }
 
 resource "digitalocean_spaces_bucket_object" "add_dev_user_sh" {
@@ -120,6 +127,13 @@ resource "digitalocean_spaces_bucket_object" "set_external_puzzle_massive_in_hos
   key    = "bin/set-external-puzzle-massive-in-hosts.sh"
   acl    = "private"
   source = "../bin/set-external-puzzle-massive-in-hosts.sh"
+}
+resource "digitalocean_spaces_bucket_object" "install_latest_stable_nginx_sh" {
+  region = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key    = "bin/install-latest-stable-nginx.sh"
+  acl    = "private"
+  source = "../bin/install-latest-stable-nginx.sh"
 }
 resource "digitalocean_spaces_bucket_object" "setup_sh" {
   region = digitalocean_spaces_bucket.ephemeral_artifacts.region
@@ -157,21 +171,3 @@ resource "digitalocean_spaces_bucket_object" "artifact" {
   source = "${lower(var.environment)}/${var.artifact}"
 }
 
-resource "local_file" "aws_credentials" {
-  filename = "${lower(var.environment)}/aws_credentials"
-  # Hint that this has been generated from a template and shouldn't be edited by the owner.
-  file_permission = "0400"
-  sensitive_content = templatefile("aws_credentials.tmpl", {
-    do_spaces_access_key_id     = var.do_spaces_access_key_id
-    do_spaces_secret_access_key = var.do_spaces_secret_access_key
-  })
-}
-
-resource "local_file" "aws_config" {
-  filename = "${lower(var.environment)}/aws_config"
-  # Hint that this has been generated from a template and shouldn't be edited by the owner.
-  file_permission = "0400"
-  content = templatefile("aws_config.tmpl", {
-    bucket_region = var.bucket_region
-  })
-}

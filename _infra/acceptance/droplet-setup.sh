@@ -25,6 +25,7 @@ mv .htpasswd $TMPDIR/
   ./bin/add-dev-user.sh
   ./bin/update-sshd-config.sh
   ./bin/set-external-puzzle-massive-in-hosts.sh
+  ./bin/install-latest-stable-nginx.sh
   ./bin/setup.sh
   ./bin/iptables-setup-firewall.sh
 

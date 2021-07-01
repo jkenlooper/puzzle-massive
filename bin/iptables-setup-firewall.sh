@@ -7,6 +7,8 @@ set -eu -o pipefail
 
 set -x
 
+apt-get --yes install netfilter-persistent iptables-persistent
+
 ## Allow loopback traffic (localhost to localhost)
 iptables -A INPUT -i lo -j ACCEPT
 iptables -A OUTPUT -o lo -j ACCEPT

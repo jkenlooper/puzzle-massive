@@ -61,6 +61,9 @@ variable "project_environment" {
 variable "legacy_droplet_size" {
   default = "s-2vcpu-4gb"
 }
+variable "cdn_droplet_size" {
+  default = "s-1vcpu-1gb"
+}
 
 variable "init_user_data_script" {
   type    = string
@@ -115,6 +118,13 @@ variable "dot_env__UNSPLASH_SECRET" {
 variable "dot_env__SECURE_COOKIE_SECRET" {
   default     = "chocolate chip"
   description = "Some random text for secure cookie. Should be something that is secure and random. This should never change once it has been used for a domain since it would invalidate any cookie that was used to login a player for that site."
+  type        = string
+  sensitive   = true
+}
+
+variable "dot_env__NEW_PUZZLE_CONTRIB" {
+  default     = "rizzo"
+  description = "Set these to something unique for the app. The NEW_PUZZLE_CONTRIB sets the URL used for directly submitting photos for puzzles. Eventually the puzzle contributor stuff will be done, but for now set it to your favorite [Muppet character](https://en.wikipedia.org/wiki/List_of_Muppets)."
   type        = string
   sensitive   = true
 }

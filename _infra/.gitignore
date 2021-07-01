@@ -4,36 +4,10 @@
 terraform.tfstate*
 
 # Generated from running terra.sh scripts
-/development/snippets/server_name-cdn.nginx.conf
-/development/snippets/proxy_pass-cdn.nginx.conf
 /development/puzzle-massive-*.bundle
-/development/user_data.sh
-/development/aws_credentials
-/development/aws_config
-
-/test/snippets/server_name-cdn.nginx.conf
-/test/snippets/proxy_pass-cdn.nginx.conf
 /test/puzzle-massive-*.bundle
-/test/user_data.sh
-/test/aws_credentials
-/test/aws_config
-
-/acceptance/snippets/server_name-cdn.nginx.conf
-/acceptance/snippets/proxy_pass-cdn.nginx.conf
 /acceptance/puzzle-massive-*.tar.gz
-/acceptance/user_data.sh
-/acceptance/aws_credentials
-/acceptance/aws_config
-
-/production/snippets/server_name-cdn.nginx.conf
-/production/snippets/proxy_pass-cdn.nginx.conf
 /production/puzzle-massive-*.tar.gz
-/production/user_data.sh
-/production/aws_credentials
-/production/aws_config
-
-# Generated from using vagrant to debug user_data.sh scripts
-/*/.vagrant
 
 # These can have sensitive variables in them like the do_token.
 /*.auto.tfvars
