@@ -334,21 +334,18 @@ cd /usr/local/src/puzzle-massive/;
 ./bin/provision-local-ssl-certs.sh
 ```
 
-### Create the `.env` and `.htpasswd` files
+### Create the `.env` file
 
-Use these scripts to create the `.env` file and the `.htpasswd` file. These should
-**not** be added to the distribution or to source control (git). Edit them as
-needed for your use case. They should both stay within the project's directory.
+Use this script to create the `.env` file. The `.env` file should
+**not** be added to the distribution or to source control (git). Edit it as
+needed for your use case. It should stay within the project's directory.
 
-Run these on the _local machine_ from within the project's directory (use `exit`
+Run this on the _local machine_ from within the project's directory (use `exit`
 command if still logged into development machine).
 
 ```bash
 # Creates the .env file
 ./bin/create_dot_env.sh;
-
-# Creates the .htpasswd file
-./bin/create_dot_htpasswd.sh;
 ```
 
 ## Setup For Building
@@ -669,7 +666,7 @@ git clean -dX -n
 
 # ...or just clean up and preserve some files.
 # Swap -n for -f for deleting files
-git clean -dx -e /.htpasswd -e /.env -e /.has-certs -e /web -n
+git clean -dx -e /.env -e /.has-certs -e /web -n
 
 # Removes all data including the sqlite3 database
 sudo rm -rf /var/lib/puzzle-massive/
@@ -704,7 +701,7 @@ cd ../../;
 # Create backup tar of project directory before removing all untracked files.
 tar --auto-compress --create --file puzzle-massive-${now}.bak.tar.gz puzzle-massive;
 cd puzzle-massive;
-git clean -fdx --exclude=.env --exclude=.htpasswd;
+git clean -fdx --exclude=.env;
 cd ../;
 
 # Use rsync to copy over the generated project
@@ -716,7 +713,6 @@ rsync -a \
   --delete \
   --exclude=.git/ \
   --exclude=.env \
-  --exclude=.htpasswd \
   puzzle-massive--${now}/puzzle-massive/ \
   puzzle-massive
 

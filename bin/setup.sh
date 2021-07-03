@@ -22,7 +22,6 @@ apt-get --yes install \
   lsb-release \
   software-properties-common \
   rsync \
-  apache2-utils \
   cron \
   make \
   gcc \

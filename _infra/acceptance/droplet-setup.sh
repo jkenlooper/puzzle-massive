@@ -6,7 +6,7 @@
 # Set when uploaded to droplet
 # ARTIFACT
 # .env file created from heredoc ENV_CONTENT
-# .htpasswd file created from heredoc HTPASSWD_CONTENT
+# .htpasswd file generated from admin_password variable
 # aws_config file created from heredoc AWS_CONFIG
 # aws_credentials file created from heredoc AWS_CREDENTIALS
 # EPHEMERAL_DIR created from _infra/one-time-bucket-object-grab.tmpl

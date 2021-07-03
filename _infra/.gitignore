@@ -17,5 +17,3 @@ terraform.tfstate*
 /production/private.tfvars
 .env
 .env.bak*
-.htpasswd
-.htpasswd.bak*
