@@ -18,18 +18,22 @@ script_dir=$(dirname $(realpath $0))
 workspace=$(basename $script_dir)
 project_dir=$(dirname $PWD)
 
-artifact_bundle=puzzle-massive-$(jq -r '.version' ../package.json).bundle
+tmp_artifact_bundle=$(mktemp -d)/puzzle-massive.bundle
 
 project_description="Temporary instance for development"
 
 echo "Terraform workspace is: $workspace"
 echo "Project description will be: '$project_description'"
-echo "Versioned artifact bundle file: '$project_dir/$artifact_bundle'"
 
-(cd $project_dir
+cd $project_dir
 git diff --quiet || (echo "Project directory is dirty. Please commit any changes first." && exit 1)
-git bundle create $artifact_bundle HEAD
-)
+git bundle create $tmp_artifact_bundle HEAD
+artifact_checksum=$(md5sum $tmp_artifact_bundle | cut -f1 -d ' ')
+artifact_bundle=puzzle-massive-$(jq -r '.version' package.json)-$artifact_checksum.bundle
+mv $tmp_artifact_bundle $artifact_bundle
+cd -
+
+echo "Versioned artifact bundle file: '$project_dir/$artifact_bundle'"
 
 set -x
 

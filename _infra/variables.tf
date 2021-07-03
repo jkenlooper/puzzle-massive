@@ -93,14 +93,6 @@ variable "project_version" {
   description = "Appended to the end of the DigitialOcean project name."
 }
 
-variable "checkout_commit" {
-  default = "develop"
-}
-variable "repository_clone_url" {
-  description = "Depending on the environment, a git checkout of this repo will occur when deploying."
-  default     = "https://github.com/jkenlooper/puzzle-massive.git"
-}
-
 variable "dot_env__UNSPLASH_APPLICATION_ID" {
   default     = ""
   description = "Unsplash Application ID. Leave this blank if not using images from Unsplash."

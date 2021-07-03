@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -eu -o pipefail
 
+# https://linuxhint.com/debian_frontend_noninteractive/
+export DEBIAN_FRONTEND=noninteractive
+
 # More documentation on iptables
 # https://www.netfilter.org/documentation/
 # https://www.digitalocean.com/community/tutorials/iptables-essentials-common-firewall-rules-and-commands

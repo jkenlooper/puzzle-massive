@@ -42,7 +42,7 @@ mv /tmp/nginx_signing.key /etc/apt/trusted.gpg.d/nginx_signing.asc
 apt-get --yes update
 apt-get --yes install nginx
 mkdir -p /etc/nginx/sites-{available,enabled}
-rm /etc/nginx/conf.d/default.conf
+rm -f /etc/nginx/conf.d/default.conf
 # Verify that the latest stable version of nginx has been installed.
 nginx -v 2>&1 | grep --silent '1.20.[0-9]\+' || (echo "Expected stable version nginx 1.20.x" && exit 1)
 

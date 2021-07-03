@@ -112,56 +112,56 @@ resource "digitalocean_spaces_bucket_object" "add_dev_user_sh" {
   bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
   key    = "bin/add-dev-user.sh"
   acl    = "private"
-  source = "../bin/add-dev-user.sh"
+  content = file("../bin/add-dev-user.sh")
 }
 resource "digitalocean_spaces_bucket_object" "update_sshd_config_sh" {
   region = digitalocean_spaces_bucket.ephemeral_artifacts.region
   bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
   key    = "bin/update-sshd-config.sh"
   acl    = "private"
-  source = "../bin/update-sshd-config.sh"
+  content = file("../bin/update-sshd-config.sh")
 }
 resource "digitalocean_spaces_bucket_object" "set_external_puzzle_massive_in_hosts_sh" {
   region = digitalocean_spaces_bucket.ephemeral_artifacts.region
   bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
   key    = "bin/set-external-puzzle-massive-in-hosts.sh"
   acl    = "private"
-  source = "../bin/set-external-puzzle-massive-in-hosts.sh"
+  content = file("../bin/set-external-puzzle-massive-in-hosts.sh")
 }
 resource "digitalocean_spaces_bucket_object" "install_latest_stable_nginx_sh" {
   region = digitalocean_spaces_bucket.ephemeral_artifacts.region
   bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
   key    = "bin/install-latest-stable-nginx.sh"
   acl    = "private"
-  source = "../bin/install-latest-stable-nginx.sh"
+  content = file("../bin/install-latest-stable-nginx.sh")
 }
 resource "digitalocean_spaces_bucket_object" "setup_sh" {
   region = digitalocean_spaces_bucket.ephemeral_artifacts.region
   bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
   key    = "bin/setup.sh"
   acl    = "private"
-  source = "../bin/setup.sh"
+  content = file("../bin/setup.sh")
 }
 resource "digitalocean_spaces_bucket_object" "iptables_setup_firewall_sh" {
   region = digitalocean_spaces_bucket.ephemeral_artifacts.region
   bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
   key    = "bin/iptables-setup-firewall.sh"
   acl    = "private"
-  source = "../bin/iptables-setup-firewall.sh"
+  content = file("../bin/iptables-setup-firewall.sh")
 }
 resource "digitalocean_spaces_bucket_object" "infra_development_build_sh" {
   region = digitalocean_spaces_bucket.ephemeral_artifacts.region
   bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
   key    = "bin/infra-development-build.sh"
   acl    = "private"
-  source = "../bin/infra-development-build.sh"
+  content = file("../bin/infra-development-build.sh")
 }
 resource "digitalocean_spaces_bucket_object" "infra_acceptance_build_sh" {
   region = digitalocean_spaces_bucket.ephemeral_artifacts.region
   bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
   key    = "bin/infra-acceptance-build.sh"
   acl    = "private"
-  source = "../bin/infra-acceptance-build.sh"
+  content = file("../bin/infra-acceptance-build.sh")
 }
 resource "digitalocean_spaces_bucket_object" "artifact" {
   region = digitalocean_spaces_bucket.ephemeral_artifacts.region
