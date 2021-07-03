@@ -11,6 +11,11 @@ variable "do_spaces_secret_access_key" {
   sensitive   = true
 }
 
+variable "admin_password" {
+  description = "Password for admin user to use when accessing /chill/site/admin/"
+  sensitive   = true
+}
+
 variable "artifact" {
   description = "The file name of the the created artifact that will be used for deploying to the acceptance or production environments. This artifact is created on the developer's machine via the `make dist` command. Development and Test environments will create a git bundle instead."
   type        = string

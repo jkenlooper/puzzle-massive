@@ -83,21 +83,6 @@ configured.
 ./bin/create_dot_env.sh;
 ```
 
-### Create `.htpasswd` File
-
-The `.htpasswd` file is used for Puzzle Massive basic authentication when
-viewing the admin pages. For local development it doesn't need to be that
-secure, unless you don't trust others on your local network. As with any
-password stuff; don't use a password you have used for something else. The
-password is stored in the `.htpasswd` file in a non-secure manner.
-
-```bash
-# Creates the .htpasswd file
-# Enter whatever simple password that will be used for development.
-# Do not use your a password that is used elsewhere or is meant to be secure.
-./bin/create_dot_htpasswd.sh;
-```
-
 ### Initialize the Vagrant Development Machine
 
 [VirtualBox](https://www.virtualbox.org/) and

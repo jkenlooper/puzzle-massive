@@ -80,9 +80,7 @@ resource "digitalocean_droplet" "puzzle_massive" {
       HOSTREDIS="127.0.0.1"
     ENV_CONTENT
 
-    cat <<-'HTPASSWD_CONTENT' > .htpasswd
-    ${file("${lower(var.environment)}/.htpasswd")}
-    HTPASSWD_CONTENT
+    echo "admin:"$(perl -le 'print crypt("${var.admin_password}", "${random_password.htpasswd_salt.result}")') > .htpasswd
 
     cat <<-'AWS_CREDENTIALS' > aws_credentials
     [default]
@@ -117,11 +115,9 @@ resource "digitalocean_droplet" "puzzle_massive" {
   USER_DATA
 }
 
-resource "random_pet" "dot_env__NEW_PUZZLE_CONTRIB" {
-  # Changes every month when deploying.
-  length = 2
-  keepers = {
-    month = formatdate("YYYY/MM", timestamp())
-  }
+resource "random_password" "htpasswd_salt" {
+  length = 26
+  special = false
+  lower = true
+  upper = true
 }
-

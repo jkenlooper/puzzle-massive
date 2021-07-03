@@ -8,7 +8,7 @@ Usage: ${0} [-h]
 Options:
   -h            Show help
 
-Creates the .env and .htpasswd files used for Puzzle Massive development.
+Creates the .env file used for Puzzle Massive development.
 Existing files will be renamed with a .bak suffix.
 USAGE
   exit 0;
@@ -53,6 +53,7 @@ SMTP_USER='user@localhost'
 SMTP_PASSWORD='somepassword'
 EMAIL_SENDER='sender@localhost'
 EMAIL_MODERATOR='moderator@localhost'
+ADMIN_PASSWORD="whatidontknowthat"
 PUBLISH_WORKER_COUNT=2
 STREAM_WORKER_COUNT=2
 BLOCKEDPLAYER_EXPIRE_TIMEOUTS='30 300 3600'
@@ -82,6 +83,9 @@ if [ -f .env ]; then
   source .env
   mv --backup=numbered .env .env.bak
 fi
+
+read -e -p "Password for admin user to use when accessing /chill/site/admin/:
+" -i "${ADMIN_PASSWORD}" ADMIN_PASSWORD;
 
 read -e -p "
 Enter some random text for secure cookie:
@@ -284,6 +288,8 @@ read -e -p "email sender:
 read -e -p "email moderator:
 " -i "${EMAIL_MODERATOR}" EMAIL_MODERATOR;
 
+
+
 PUBLISH_WORKER_COUNT_HELP_TEXT="
 # The publish worker count is the number of workers that will handle piece
 # movement requests. Set to None to be based on cpu count.
@@ -315,6 +321,8 @@ UNSPLASH_SECRET='${UNSPLASH_SECRET}'
 # [Muppet character](https://en.wikipedia.org/wiki/List_of_Muppets).
 NEW_PUZZLE_CONTRIB='${MUPPET_CHARACTER}'
 SECURE_COOKIE_SECRET='${SECURE_COOKIE_SECRET}'
+
+ADMIN_PASSWORD='${ADMIN_PASSWORD}'
 
 SUGGEST_IMAGE_LINK='${SUGGEST_IMAGE_LINK}'
 

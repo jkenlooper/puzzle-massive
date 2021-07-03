@@ -96,6 +96,13 @@ Vagrant.configure(2) do |config|
   config.vm.provision "bin-set-external-puzzle-massive-in-hosts", type: "shell", path: "bin/set-external-puzzle-massive-in-hosts.sh"
   config.vm.provision "bin-setup", type: "shell", path: "bin/setup.sh"
 
+  # For vagrant only set the admin password with a salty cookie. This overwrites
+  # any .htpasswd file that may have been uploaded.
+  config.vm.provision "shell-vagrant-local-htpasswd", privileged: false, type: "shell", inline: <<-SHELL
+    source /home/vagrant/puzzle-massive/.env
+    echo "admin:"$(perl -le "print crypt('${ADMIN_PASSWORD}', '${SECURE_COOKIE_SECRET}')") > /home/vagrant/puzzle-massive/.htpasswd
+  SHELL
+
   # The devsync.sh uses local-puzzle-massive when syncing files
   # Install the watchit command that is used in _infra/local/watchit.sh script.
   config.vm.provision "shell-watchit-support", type: "shell", inline: <<-SHELL
