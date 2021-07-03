@@ -19,3 +19,4 @@ cat <<-HERE
     allow 127.0.0.1;
     deny all;
 HERE
+fi
