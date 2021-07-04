@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
-set -eu -o pipefail
+set -e -o pipefail
 
 ENVIRONMENT=$1
 SRCDIR=$2
+ENV_FILE=$3
+
+EPHEMERAL_ARCHIVE_BUCKET=
+source $ENV_FILE
 
 DATE=$(date)
 
@@ -24,6 +28,8 @@ WorkingDirectory=$SRCDIR
 HERE
 if test "${ENVIRONMENT}" == 'development'; then
 echo "ExecStart=${SRCDIR}bin/backup.sh -d /home/dev db-development.dump.gz"
+elif test -n "${EPHEMERAL_ARCHIVE_BUCKET}"; then
+echo "ExecStart=${SRCDIR}bin/backup.sh -d /home/dev -t"
 else
 echo "ExecStart=${SRCDIR}bin/backup.sh -d /home/dev -w"
 fi

@@ -54,6 +54,8 @@ resource "digitalocean_droplet" "puzzle_massive" {
       PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL='https://${digitalocean_spaces_bucket.cdn.region}.digitaloceanspaces.com'
       PUZZLE_RESOURCES_BUCKET='${digitalocean_spaces_bucket.cdn.name}'
       PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL='${var.dot_env__PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL}'
+      EPHEMERAL_ARCHIVE_ENDPOINT_URL='https://${digitalocean_spaces_bucket.ephemeral_archive.region}.digitaloceanspaces.com'
+      EPHEMERAL_ARCHIVE_BUCKET='${digitalocean_spaces_bucket.ephemeral_archive.name}'
       PUZZLE_RULES="${var.dot_env__PUZZLE_RULES}"
       PUZZLE_FEATURES="${var.dot_env__PUZZLE_FEATURES}"
       BLOCKEDPLAYER_EXPIRE_TIMEOUTS="${var.dot_env__BLOCKEDPLAYER_EXPIRE_TIMEOUTS}"
@@ -128,3 +130,62 @@ resource "random_password" "htpasswd_salt" {
   lower   = true
   upper   = true
 }
+
+
+resource "random_uuid" "ephemeral_archive" {
+}
+resource "digitalocean_spaces_bucket" "ephemeral_archive" {
+  name   = substr("ephemeral-archive-${random_uuid.ephemeral_archive.result}", 0, 63)
+  region = var.bucket_region
+  acl    = "private"
+  lifecycle_rule {
+    enabled = true
+    expiration {
+      days = 26
+    }
+  }
+}
+
+resource "digitalocean_spaces_bucket_object" "add_dev_user_sh" {
+  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key     = "bin/add-dev-user.sh"
+  acl     = "private"
+  content = file("../bin/add-dev-user.sh")
+}
+resource "digitalocean_spaces_bucket_object" "set_external_puzzle_massive_in_hosts_sh" {
+  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key     = "bin/set-external-puzzle-massive-in-hosts.sh"
+  acl     = "private"
+  content = file("../bin/set-external-puzzle-massive-in-hosts.sh")
+}
+resource "digitalocean_spaces_bucket_object" "setup_sh" {
+  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key     = "bin/setup.sh"
+  acl     = "private"
+  content = file("../bin/setup.sh")
+}
+resource "digitalocean_spaces_bucket_object" "infra_development_build_sh" {
+  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key     = "bin/infra-development-build.sh"
+  acl     = "private"
+  content = file("../bin/infra-development-build.sh")
+}
+resource "digitalocean_spaces_bucket_object" "infra_acceptance_build_sh" {
+  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key     = "bin/infra-acceptance-build.sh"
+  acl     = "private"
+  content = file("../bin/infra-acceptance-build.sh")
+}
+resource "digitalocean_spaces_bucket_object" "artifact" {
+  region = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key    = var.artifact
+  acl    = "private"
+  source = "${lower(var.environment)}/${var.artifact}"
+}
+

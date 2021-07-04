@@ -144,7 +144,7 @@ api/puzzle-massive-cache-purge.service: api/puzzle-massive-cache-purge.service.s
 
 objects += api/puzzle-massive-backup-db.service
 api/puzzle-massive-backup-db.service: api/puzzle-massive-backup-db.service.sh
-	./$< $(ENVIRONMENT) $(project_dir) > $@
+	./$< $(ENVIRONMENT) $(project_dir) $(ENV_FILE) > $@
 objects += api/puzzle-massive-backup-db.timer
 api/puzzle-massive-backup-db.timer: api/puzzle-massive-backup-db.timer.sh
 	./$< $(ENVIRONMENT) > $@

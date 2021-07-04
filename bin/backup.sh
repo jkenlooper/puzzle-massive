@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eu -o pipefail
+set -e -o pipefail
 
 function usage {
   cat <<USAGE
@@ -18,10 +18,15 @@ USAGE
   exit 0;
 }
 
+EPHEMERAL_ARCHIVE_ENDPOINT_URL=
+EPHEMERAL_ARCHIVE_BUCKET=
+source .env
+
 WEEKDAY_BACKUP=;
+TIMESTAMP_BACKUP=;
 CLEANUP=;
 BACKUP_DIRECTORY=$(pwd)
-while getopts ":hd:wc" opt; do
+while getopts ":hd:wtc" opt; do
   case ${opt} in
     h )
       usage;
@@ -31,6 +36,9 @@ while getopts ":hd:wc" opt; do
       ;;
     w )
       WEEKDAY_BACKUP=1;
+      ;;
+    t )
+      TIMESTAMP_BACKUP=1;
       ;;
     c )
       CLEANUP="--cleanup";
@@ -66,6 +74,8 @@ DBDUMPFILE="$1";
 else
   if [ -n "${WEEKDAY_BACKUP-}" ]; then
     DBDUMPFILE="db-$(date --utc '+%a').dump.gz";
+  elif [ -n "${TIMESTAMP_BACKUP-}" ]; then
+    DBDUMPFILE="db-$(date --utc '+%F-%H%M%S').dump.gz";
   else
     DBDUMPFILE="db-$(date --iso-8601 --utc).dump.gz";
     if [ -e "${BACKUP_DIRECTORY}/${DBDUMPFILE}" ]; then
@@ -82,3 +92,10 @@ echo '.dump' | sqlite3 "$SQLITE_DATABASE_URI" | gzip -c > "${BACKUP_DIRECTORY}/$
 echo "";
 echo "To reconstruct backup";
 echo "zcat ${BACKUP_DIRECTORY}/${DBDUMPFILE} | sqlite3 $SQLITE_DATABASE_URI";
+
+if [ -n "${EPHEMERAL_ARCHIVE_ENDPOINT_URL}" -a -n "${EPHEMERAL_ARCHIVE_BUCKET}" ]; then
+    echo "";
+    echo "Uploading ${DBDUMPFILE} to S3 bucket ${EPHEMERAL_ARCHIVE_BUCKET}";
+    echo "zcat ${BACKUP_DIRECTORY}/${DBDUMPFILE} | sqlite3 $SQLITE_DATABASE_URI";
+    aws s3 cp --endpoint=${EPHEMERAL_ARCHIVE_ENDPOINT_URL} "${BACKUP_DIRECTORY}/${DBDUMPFILE}" s3://${EPHEMERAL_ARCHIVE_BUCKET}/${DBDUMPFILE}
+fi

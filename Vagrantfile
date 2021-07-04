@@ -45,7 +45,7 @@ Vagrant.configure(2) do |config|
   config.vm.synced_folder ".", "/vagrant", disabled: true
 
   config.vm.synced_folder ".", "/home/vagrant/puzzle-massive", type: "rsync",
-    rsync__exclude: ["/.git/", "/.vagrant/", "/node_modules/", "/include/", "/lib/", "/lib64/", "/local/", "/share/", "/dist/", "/puzzle-massive-*.tar.gz"],
+    rsync__exclude: ["/.git/", "/.vagrant/", "/.terraform/", "/terraform.tfstate.d/", ".terraform.lock.hcl", "/node_modules/", "/include/", "/lib/", "/lib64/", "/local/", "/share/", "/dist/", "/puzzle-massive-*.tar.gz", "/puzzle-massive-*.bundle"],
     rsync__args: ["--verbose", "--archive", "--delete", "-z", "--copy-links", "--delay-updates"]
 
   config.vm.synced_folder "./_infra/local/output", "/home/vagrant/output"
