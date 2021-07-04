@@ -184,21 +184,11 @@ variable "dot_env__AUTO_APPROVE_PUZZLES" {
 
 variable "dot_env__LOCAL_PUZZLE_RESOURCES" {
   default     = "y"
-  description = "Use local puzzle resource files [y/n]"
+  description = "Use local puzzle resource files [y/n]. The cdn resource will still be created regardless of this value."
   type        = string
   validation {
     condition     = can(regex("y|n", var.dot_env__LOCAL_PUZZLE_RESOURCES))
     error_message = "Must be either 'y' for yes or 'n' for no."
-  }
-}
-
-variable "dot_env__CDN_BASE_URL" {
-  default     = ""
-  description = "CDN base URL to use for remote puzzle resources. Leave blank if not using remote puzzle resources."
-  type        = string
-  validation {
-    condition     = can(regex("|https?://.+[^/]", var.dot_env__CDN_BASE_URL))
-    error_message = "Should be blank or a valid URL that doesn't end with a '/'."
   }
 }
 
@@ -370,10 +360,19 @@ variable "dot_env__STREAM_WORKER_COUNT" {
   }
 }
 
-variable "domain_name" {
-  default     = "puzzle.massive.xyz"
-  description = "The domain name (FQDN) that will be used for this deployment."
+variable "domain" {
+  default     = "massive.xyz"
+  description = "The domain that will be used in a digitalocean account when creating new DNS records."
   type        = string
+}
+variable "sub_domain" {
+  default     = "puzzle."
+  description = "The sub domain name that will be combined with the 'domain' variable to make the FQDN. Should be blank or end with a period."
+  type        = string
+  validation {
+    condition     = can(regex("|[a-zA-Z0-9_][a-zA-Z0-9._-]+[a-zA-Z0-9_]\\.", var.sub_domain))
+    error_message = "The sub domain must be blank or be a valid sub domain label. The last character should be a '.' since it will be prepended to the domain variable."
+  }
 }
 
 variable "dot_env__SITE_TITLE" {

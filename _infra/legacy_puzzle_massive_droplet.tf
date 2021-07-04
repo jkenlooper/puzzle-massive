@@ -1,3 +1,10 @@
+resource "digitalocean_record" "puzzle_massive" {
+  domain = var.domain
+  type   = "A"
+  name   = trimsuffix(var.sub_domain, ".")
+  value  = digitalocean_droplet.puzzle_massive.ipv4_address
+}
+
 resource "digitalocean_droplet" "puzzle_massive" {
   name     = lower("puzzle-massive-${var.environment}")
   size     = var.legacy_droplet_size
@@ -42,7 +49,7 @@ resource "digitalocean_droplet" "puzzle_massive" {
       EMAIL_MODERATOR='${var.dot_env__EMAIL_MODERATOR}'
       AUTO_APPROVE_PUZZLES='${var.dot_env__AUTO_APPROVE_PUZZLES}'
       LOCAL_PUZZLE_RESOURCES='${var.dot_env__LOCAL_PUZZLE_RESOURCES}'
-      CDN_BASE_URL='${var.dot_env__CDN_BASE_URL}'
+      CDN_BASE_URL='https://${digitalocean_record.cdn.fqdn}'
       PUZZLE_RESOURCES_BUCKET_REGION='${digitalocean_spaces_bucket.cdn.region}'
       PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL='https://${digitalocean_spaces_bucket.cdn.region}.digitaloceanspaces.com'
       PUZZLE_RESOURCES_BUCKET='${digitalocean_spaces_bucket.cdn.name}'
@@ -65,7 +72,7 @@ resource "digitalocean_droplet" "puzzle_massive" {
       BIT_ICON_EXPIRATION="${join(",\n", var.dot_env__BIT_ICON_EXPIRATION)}"
       PUBLISH_WORKER_COUNT=${var.dot_env__PUBLISH_WORKER_COUNT}
       STREAM_WORKER_COUNT=${var.dot_env__STREAM_WORKER_COUNT}
-      DOMAIN_NAME="${var.domain_name}"
+      DOMAIN_NAME="${var.sub_domain}${var.domain}"
       SITE_TITLE="${var.dot_env__SITE_TITLE}"
       HOME_PAGE_ROUTE="${var.dot_env__HOME_PAGE_ROUTE}"
       SOURCE_CODE_LINK="${var.dot_env__SOURCE_CODE_LINK}"
@@ -96,28 +103,28 @@ resource "digitalocean_droplet" "puzzle_massive" {
     ${file("../bin/aws-cli-install.sh")}
 
     ${templatefile("one-time-bucket-object-grab.tmpl", {
-      bucket_region = digitalocean_spaces_bucket.ephemeral_artifacts.region
-      bucket_name   = digitalocean_spaces_bucket.ephemeral_artifacts.name
-      keys = [
-        "bin/add-dev-user.sh",
-        "bin/update-sshd-config.sh",
-        "bin/set-external-puzzle-massive-in-hosts.sh",
-        "bin/install-latest-stable-nginx.sh",
-        "bin/setup.sh",
-        "bin/iptables-setup-firewall.sh",
-        "bin/infra-development-build.sh",
-        "bin/infra-acceptance-build.sh",
-        var.artifact
-      ]
-    })}
+  bucket_region = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket_name   = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  keys = [
+    "bin/add-dev-user.sh",
+    "bin/update-sshd-config.sh",
+    "bin/set-external-puzzle-massive-in-hosts.sh",
+    "bin/install-latest-stable-nginx.sh",
+    "bin/setup.sh",
+    "bin/iptables-setup-firewall.sh",
+    "bin/infra-development-build.sh",
+    "bin/infra-acceptance-build.sh",
+    var.artifact
+  ]
+})}
 
     ${file("${lower(var.environment)}/droplet-setup.sh")}
   USER_DATA
 }
 
 resource "random_password" "htpasswd_salt" {
-  length = 26
+  length  = 26
   special = false
-  lower = true
-  upper = true
+  lower   = true
+  upper   = true
 }
