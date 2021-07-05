@@ -26,10 +26,11 @@ echo "Terraform workspace is: $workspace"
 echo "Project description will be: '$project_description'"
 
 cd $project_dir
+project_version=$(jq -r '.version' package.json)
 git diff --quiet || (echo "Project directory is dirty. Please commit any changes first." && exit 1)
 git bundle create $tmp_artifact_bundle HEAD
-artifact_checksum=$(md5sum $tmp_artifact_bundle | cut -f1 -d ' ')
-artifact_bundle=puzzle-massive-$(jq -r '.version' package.json)-$artifact_checksum.bundle
+artifact_bundle=puzzle-massive-$project_version.bundle
+rm -f puzzle-massive-*.bundle
 mv $tmp_artifact_bundle $artifact_bundle
 cd -
 
@@ -37,6 +38,7 @@ echo "Versioned artifact bundle file: '$project_dir/$artifact_bundle'"
 
 set -x
 
+rm -f $script_dir/puzzle-massive-*.bundle
 cp $project_dir/$artifact_bundle $script_dir/
 
 terraform workspace select $workspace || \
@@ -47,4 +49,5 @@ test "$workspace" = "$(terraform workspace show)" || (echo "Sanity check to make
 terraform $terraform_command -var-file="$script_dir/config.tfvars" \
     -var-file="$script_dir/private.tfvars" \
     -var "artifact=$artifact_bundle" \
+    -var "project_version=$project_version" \
     -var "project_description=$project_description"

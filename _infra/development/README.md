@@ -15,10 +15,9 @@ located.
 ./development/terra.sh apply
 ```
 
-```bash
-# Destroy the project when it is no longer needed
-./development/terra.sh destroy
-```
+The `_infra/development/legacy_puzzle_massive_droplet-user_data.sh` script
+should be uploaded and executed if this is an initial deployment of the
+environment. It is used to fully provision the droplet.
 
 ## Accessing the Droplet
 
@@ -32,19 +31,18 @@ digitalocean droplet in /etc/hosts file.
 
 ```bash
 # ssh to the droplet and bind the 7171 port
-ssh -D 7171 dev@local-puzzle-massive
+ssh -D 7171 dev@THE_IP_OF_THE_DROPLET
 ```
 
 Then setup your SOCKS v5 host to be localhost and 7171 port
 Recommended to use FireFox web browser to set SOCKS proxy instead of changing
 your whole system.
 
-## Check on the Droplet Setup
+## Clean Up
 
-It will take a few minutes for the cloudinit to finish running the
-droplet-setup.sh script. The output log for it can be tailed:
+Destroy the development environment when it is no longer needed.
 
 ```bash
-# On the droplet server
-tail -f /var/log/cloud-init-output.log
+# Destroy the project when it is no longer needed
+./development/terra.sh destroy
 ```

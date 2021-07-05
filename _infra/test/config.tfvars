@@ -1,8 +1,8 @@
 environment = "Test"
 project_environment = "Staging"
-project_description = ""
 
 legacy_droplet_size = "s-1vcpu-1gb"
+cdn_droplet_size = "s-1vcpu-1gb"
 
 vpc_ip_range = "192.168.128.0/24"
 

@@ -17,6 +17,7 @@ test $(basename $PWD) = "_infra" || (echo "Must run this script from the _infra 
 script_dir=$(dirname $(realpath $0))
 workspace=$(basename $script_dir)
 project_dir=$(dirname $PWD)
+project_version=$(jq -r '.version' $project_dir/package.json)
 
 artifact_dist_tar_gz=puzzle-massive-$(jq -r '.version' ../package.json).tar.gz
 test -e $project_dir/$artifact_dist_tar_gz || (echo "Must create a versioned artifact file at path $project_dir/$artifact_dist_tar_gz before running this command." && exit 1)
@@ -29,6 +30,7 @@ echo "Using versioned artifact dist file: '$project_dir/$artifact_dist_tar_gz'"
 
 set -x
 
+rm -f $script_dir/puzzle-massive-*.tar.gz
 cp $project_dir/$artifact_dist_tar_gz $script_dir/
 
 terraform workspace select $workspace || \
@@ -39,4 +41,5 @@ test "$workspace" = "$(terraform workspace show)" || (echo "Sanity check to make
 terraform $terraform_command -var-file="$script_dir/config.tfvars" \
     -var-file="$script_dir/private.tfvars" \
     -var "artifact=$artifact_dist_tar_gz" \
+    -var "project_version=$project_version" \
     -var "project_description=$project_description"

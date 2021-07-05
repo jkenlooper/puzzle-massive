@@ -3,6 +3,87 @@ resource "digitalocean_record" "puzzle_massive" {
   type   = "A"
   name   = trimsuffix(var.sub_domain, ".")
   value  = digitalocean_droplet.puzzle_massive.ipv4_address
+  ttl    = 900
+}
+
+resource "random_password" "htpasswd_salt" {
+  length  = 26
+  special = false
+  lower   = true
+  upper   = true
+}
+
+
+resource "random_uuid" "ephemeral_archive" {
+}
+resource "digitalocean_spaces_bucket" "ephemeral_archive" {
+  name   = substr("ephemeral-archive-${random_uuid.ephemeral_archive.result}", 0, 63)
+  region = var.bucket_region
+  acl    = "private"
+  lifecycle_rule {
+    enabled = true
+    expiration {
+      days = 26
+    }
+  }
+}
+
+resource "digitalocean_spaces_bucket_object" "add_dev_user_sh" {
+  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key     = "bin/add-dev-user.sh"
+  acl     = "private"
+  content = file("../bin/add-dev-user.sh")
+}
+resource "digitalocean_spaces_bucket_object" "set_external_puzzle_massive_in_hosts_sh" {
+  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key     = "bin/set-external-puzzle-massive-in-hosts.sh"
+  acl     = "private"
+  content = file("../bin/set-external-puzzle-massive-in-hosts.sh")
+}
+resource "digitalocean_spaces_bucket_object" "setup_sh" {
+  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key     = "bin/setup.sh"
+  acl     = "private"
+  content = file("../bin/setup.sh")
+}
+resource "digitalocean_spaces_bucket_object" "infra_build__development_sh" {
+  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key     = "bin/infra-build--development.sh"
+  acl     = "private"
+  content = file("../bin/infra-build--development.sh")
+}
+resource "digitalocean_spaces_bucket_object" "infra_build__test_sh" {
+  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key     = "bin/infra-build--test.sh"
+  acl     = "private"
+  content = file("../bin/infra-build--test.sh")
+}
+resource "digitalocean_spaces_bucket_object" "infra_build__acceptance_sh" {
+  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key     = "bin/infra-build--acceptance.sh"
+  acl     = "private"
+  content = file("../bin/infra-build--acceptance.sh")
+}
+resource "digitalocean_spaces_bucket_object" "infra_build__production_sh" {
+  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key     = "bin/infra-build--production.sh"
+  acl     = "private"
+  content = file("../bin/infra-build--production.sh")
+}
+
+resource "digitalocean_spaces_bucket_object" "artifact" {
+  region = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key    = var.artifact
+  acl    = "private"
+  source = "${lower(var.environment)}/${var.artifact}"
 }
 
 resource "digitalocean_droplet" "puzzle_massive" {
@@ -20,15 +101,24 @@ resource "digitalocean_droplet" "puzzle_massive" {
     digitalocean_spaces_bucket_object.install_latest_stable_nginx_sh,
     digitalocean_spaces_bucket_object.setup_sh,
     digitalocean_spaces_bucket_object.iptables_setup_firewall_sh,
-    digitalocean_spaces_bucket_object.infra_development_build_sh,
-    digitalocean_spaces_bucket_object.infra_acceptance_build_sh,
+    digitalocean_spaces_bucket_object.infra_build__development_sh,
+    digitalocean_spaces_bucket_object.infra_build__test_sh,
+    digitalocean_spaces_bucket_object.infra_build__acceptance_sh,
+    digitalocean_spaces_bucket_object.infra_build__production_sh,
     digitalocean_spaces_bucket_object.artifact,
+    local_file.user_data_sh,
   ]
 
   # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#retrieve-user-data
   # Debug via ssh to the droplet and tail the cloud-init logs:
   # tail -f /var/log/cloud-init-output.log
-  user_data = <<-USER_DATA
+  user_data = var.environment == "Test" || var.environment == "Acceptance" ? local_file.user_data_sh.sensitive_content : "echo 'provision manually'"
+}
+
+resource "local_file" "user_data_sh" {
+  filename        = "${lower(var.environment)}/legacy_puzzle_massive_droplet-user_data.sh"
+  file_permission = "0400"
+  sensitive_content = <<-USER_DATA
     #!/usr/bin/env bash
     set -eu -o pipefail
     set -x
@@ -114,78 +204,43 @@ resource "digitalocean_droplet" "puzzle_massive" {
     "bin/install-latest-stable-nginx.sh",
     "bin/setup.sh",
     "bin/iptables-setup-firewall.sh",
-    "bin/infra-development-build.sh",
-    "bin/infra-acceptance-build.sh",
+    "bin/infra-build--development.sh",
+    "bin/infra-build--test.sh",
+    "bin/infra-build--acceptance.sh",
+    "bin/infra-build--production.sh",
     var.artifact
   ]
 })}
 
-    ${file("${lower(var.environment)}/droplet-setup.sh")}
+    pwd_dir=$PWD
+    TMPDIR=$(mktemp -d)
+    mv .env $TMPDIR/
+    mv .htpasswd $TMPDIR/
+    cd $TMPDIR
+      mkdir bin
+      # EPHEMERAL_DIR created from _infra/one-time-bucket-object-grab.tmpl
+      mv $EPHEMERAL_DIR/?*.sh bin/
+      chmod +x bin/?*.sh
+
+      # Execute scripts as needed for this environment
+      ./bin/add-dev-user.sh
+      ./bin/update-sshd-config.sh
+      ./bin/set-external-puzzle-massive-in-hosts.sh
+      ./bin/install-latest-stable-nginx.sh
+      ./bin/setup.sh
+      ./bin/iptables-setup-firewall.sh
+
+      mkdir -p /home/dev/.aws
+      mv $pwd_dir/aws_config /home/dev/.aws/config
+      chmod 0600 /home/dev/.aws/config
+      chown dev:dev /home/dev/.aws/config
+      mv $pwd_dir/aws_credentials /home/dev/.aws/credentials
+      chmod 0600 /home/dev/.aws/credentials
+      chown dev:dev /home/dev/.aws/credentials
+
+      mv $EPHEMERAL_DIR/$ARTIFACT /home/dev/
+
+      ./bin/infra-build--${lower(var.environment)}.sh $ARTIFACT $(realpath .env) $(realpath .htpasswd)
+    cd -
   USER_DATA
 }
-
-resource "random_password" "htpasswd_salt" {
-  length  = 26
-  special = false
-  lower   = true
-  upper   = true
-}
-
-
-resource "random_uuid" "ephemeral_archive" {
-}
-resource "digitalocean_spaces_bucket" "ephemeral_archive" {
-  name   = substr("ephemeral-archive-${random_uuid.ephemeral_archive.result}", 0, 63)
-  region = var.bucket_region
-  acl    = "private"
-  lifecycle_rule {
-    enabled = true
-    expiration {
-      days = 26
-    }
-  }
-}
-
-resource "digitalocean_spaces_bucket_object" "add_dev_user_sh" {
-  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
-  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
-  key     = "bin/add-dev-user.sh"
-  acl     = "private"
-  content = file("../bin/add-dev-user.sh")
-}
-resource "digitalocean_spaces_bucket_object" "set_external_puzzle_massive_in_hosts_sh" {
-  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
-  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
-  key     = "bin/set-external-puzzle-massive-in-hosts.sh"
-  acl     = "private"
-  content = file("../bin/set-external-puzzle-massive-in-hosts.sh")
-}
-resource "digitalocean_spaces_bucket_object" "setup_sh" {
-  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
-  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
-  key     = "bin/setup.sh"
-  acl     = "private"
-  content = file("../bin/setup.sh")
-}
-resource "digitalocean_spaces_bucket_object" "infra_development_build_sh" {
-  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
-  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
-  key     = "bin/infra-development-build.sh"
-  acl     = "private"
-  content = file("../bin/infra-development-build.sh")
-}
-resource "digitalocean_spaces_bucket_object" "infra_acceptance_build_sh" {
-  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
-  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
-  key     = "bin/infra-acceptance-build.sh"
-  acl     = "private"
-  content = file("../bin/infra-acceptance-build.sh")
-}
-resource "digitalocean_spaces_bucket_object" "artifact" {
-  region = digitalocean_spaces_bucket.ephemeral_artifacts.region
-  bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
-  key    = var.artifact
-  acl    = "private"
-  source = "${lower(var.environment)}/${var.artifact}"
-}
-

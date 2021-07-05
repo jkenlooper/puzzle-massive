@@ -12,7 +12,7 @@ IaaS provider.
 [Vagrant](https://www.vagrantup.com/) is used to develop the code on
 the **local** machine. It is useful to create a local instance
 of Puzzle Massive that can be modified and tweaked. Or use it as your own
-personal Puzzle Massive site that only is accessible from your local machine.
+personal Puzzle Massive site that only is accessible from your machine.
 
 Many of the steps to install and get everything working for this is done with
 some scripts that handle automating these things. Shell scripts written in Bash,
@@ -35,13 +35,12 @@ It is recommended to use the Vagrant setup instructions in the [development
 guide](/docs/development.md). Other ways of creating virtual machines with
 virtualization software can be used as long as they use Ubuntu 20.04. Can also
 directly install Puzzle Massive on your machine without using a virtual machine
-if you use Ubuntu 20.04 which is the current OS that the project is built
-around.
+if you use Ubuntu 20.04.
 
 Setting up a local environment may involve some troubleshooting. Please ask for
 help on the Discord Chat development channel.
 
-When developing a feature or fixing a bug use the branch naming convention of
+When developing a feature or fixing a bug; use the branch naming convention of
 prefixing it with 'feature/' or 'bugfix/'. For example, if working on a feature
 to add rotating pieces; then use the branch name of 'feature/rotating-pieces'.
 For fixing a bug with pieces that mysteriously disappear then use
@@ -66,12 +65,14 @@ experience with this and it is untested.
 The `develop` git branch is the branch that any new features or bug fixes should
 be based from.
 
+Deployed initially with Terraform and then updated and provisioned as needed.
+The `_infra/development/legacy_puzzle_massive_droplet-user_data.sh` script that
+is created should be used to fully provision the droplet.
+
 _Development instances are secured with a firewall that **blocks all inbound
 requests to ports 80 and 443**._ Ports 80 and 443 are the web server ports for
 HTTP and HTTPS. These are blocked because debug mode is usually enabled on the
 development instance and is a security risk if open to the public.
-See the instructions [development environment read me](/_infra/development/README.md)
-for more.
 
 ### Test Environment
 

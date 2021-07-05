@@ -33,6 +33,7 @@ git diff --quiet || (echo "Project directory is dirty. Please commit any changes
 git bundle create $tmp_artifact_bundle HEAD
 artifact_checksum=$(md5sum $tmp_artifact_bundle | cut -f1 -d ' ')
 artifact_bundle=puzzle-massive-$(jq -r '.version' package.json)-$artifact_checksum.bundle
+rm -f puzzle-massive-*.bundle
 mv $tmp_artifact_bundle $artifact_bundle
 cd -
 
@@ -40,6 +41,7 @@ echo "Versioned artifact bundle file: '$project_dir/$artifact_bundle'"
 
 set -x
 
+rm -f $script_dir/puzzle-massive-*.bundle
 cp $project_dir/$artifact_bundle $script_dir/
 
 terraform workspace select $workspace || \
