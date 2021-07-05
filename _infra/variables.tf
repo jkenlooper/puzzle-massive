@@ -10,6 +10,14 @@ variable "do_spaces_secret_access_key" {
   description = "DigitalOcean Spaces secret access key. Keep this secure and use best practices when using these.  It is recommended to export an environment variable for this like TF_VAR_do_spaces_secret_access_key if you aren't entering it manually each time."
   sensitive   = true
 }
+variable "do_app_spaces_access_key_id" {
+  description = "DigitalOcean Spaces access key ID for the application to use."
+  sensitive   = true
+}
+variable "do_app_spaces_secret_access_key" {
+  description = "DigitalOcean Spaces secret access key for the application to use."
+  sensitive   = true
+}
 
 variable "admin_password" {
   description = "Password for admin user to use when accessing /chill/site/admin/"

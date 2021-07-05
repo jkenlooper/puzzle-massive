@@ -115,9 +115,25 @@ resource "digitalocean_droplet" "puzzle_massive" {
   user_data = var.environment == "Test" || var.environment == "Acceptance" ? local_file.user_data_sh.sensitive_content : "echo 'provision manually'"
 }
 
+locals {
+  ephemeral_artifact_keys = [
+    "bin/add-dev-user.sh",
+    "bin/update-sshd-config.sh",
+    "bin/set-external-puzzle-massive-in-hosts.sh",
+    "bin/install-latest-stable-nginx.sh",
+    "bin/setup.sh",
+    "bin/iptables-setup-firewall.sh",
+    "bin/infra-build--development.sh",
+    "bin/infra-build--test.sh",
+    "bin/infra-build--acceptance.sh",
+    "bin/infra-build--production.sh",
+    var.artifact
+  ]
+}
+
 resource "local_file" "user_data_sh" {
-  filename        = "${lower(var.environment)}/legacy_puzzle_massive_droplet-user_data.sh"
-  file_permission = "0400"
+  filename          = "${lower(var.environment)}/legacy_puzzle_massive_droplet-user_data.sh"
+  file_permission   = "0400"
   sensitive_content = <<-USER_DATA
     #!/usr/bin/env bash
     set -eu -o pipefail
@@ -181,66 +197,63 @@ resource "local_file" "user_data_sh" {
 
     echo "admin:"$(perl -le 'print crypt("${var.admin_password}", "${random_password.htpasswd_salt.result}")') > .htpasswd
 
-    cat <<-'AWS_CREDENTIALS' > aws_credentials
-    [default]
-    aws_access_key_id = ${var.do_spaces_access_key_id}
-    aws_secret_access_key = ${var.do_spaces_secret_access_key}
-    AWS_CREDENTIALS
-
-    cat <<-'AWS_CONFIG' > aws_config
-    [default]
-    region =  ${var.bucket_region}
-    AWS_CONFIG
-
     ${file("../bin/aws-cli-install.sh")}
 
-    ${templatefile("one-time-bucket-object-grab.tmpl", {
-  bucket_region = digitalocean_spaces_bucket.ephemeral_artifacts.region
-  bucket_name   = digitalocean_spaces_bucket.ephemeral_artifacts.name
-  keys = [
-    "bin/add-dev-user.sh",
-    "bin/update-sshd-config.sh",
-    "bin/set-external-puzzle-massive-in-hosts.sh",
-    "bin/install-latest-stable-nginx.sh",
-    "bin/setup.sh",
-    "bin/iptables-setup-firewall.sh",
-    "bin/infra-build--development.sh",
-    "bin/infra-build--test.sh",
-    "bin/infra-build--acceptance.sh",
-    "bin/infra-build--production.sh",
-    var.artifact
-  ]
-})}
+    EPHEMERAL_DIR=$(mktemp -d)
+
+    ## One time bucket object grab
+    mkdir -p /root/.aws
+    cat <<-'AWS_CONFIG' > /root/.aws/config
+      [default]
+      region =  ${var.bucket_region}
+    AWS_CONFIG
+    chmod 0600 /root/.aws/config
+    cat <<-'AWS_CREDENTIALS' > /root/.aws/credentials
+      [default]
+      aws_access_key_id = ${var.do_spaces_access_key_id}
+      aws_secret_access_key = ${var.do_spaces_secret_access_key}
+    AWS_CREDENTIALS
+    chmod 0600 /root/.aws/credentials
+    %{for key in local.ephemeral_artifact_keys~}
+      aws s3 cp --endpoint=https://${digitalocean_spaces_bucket.ephemeral_artifacts.region}.digitaloceanspaces.com s3://${digitalocean_spaces_bucket.ephemeral_artifacts.name}/${key} $EPHEMERAL_DIR/
+    %{endfor~}
+    rm -rf /root/.aws
 
     pwd_dir=$PWD
     TMPDIR=$(mktemp -d)
     mv .env $TMPDIR/
     mv .htpasswd $TMPDIR/
     cd $TMPDIR
-      mkdir bin
-      # EPHEMERAL_DIR created from _infra/one-time-bucket-object-grab.tmpl
-      mv $EPHEMERAL_DIR/?*.sh bin/
-      chmod +x bin/?*.sh
+    mkdir bin
+    mv $EPHEMERAL_DIR/?*.sh bin/
+    chmod +x bin/?*.sh
 
-      # Execute scripts as needed for this environment
-      ./bin/add-dev-user.sh
-      ./bin/update-sshd-config.sh
-      ./bin/set-external-puzzle-massive-in-hosts.sh
-      ./bin/install-latest-stable-nginx.sh
-      ./bin/setup.sh
-      ./bin/iptables-setup-firewall.sh
+    ./bin/add-dev-user.sh
+    ./bin/update-sshd-config.sh
+    ./bin/set-external-puzzle-massive-in-hosts.sh
+    ./bin/install-latest-stable-nginx.sh
+    ./bin/setup.sh
+    ./bin/iptables-setup-firewall.sh
 
-      mkdir -p /home/dev/.aws
-      mv $pwd_dir/aws_config /home/dev/.aws/config
-      chmod 0600 /home/dev/.aws/config
-      chown dev:dev /home/dev/.aws/config
-      mv $pwd_dir/aws_credentials /home/dev/.aws/credentials
-      chmod 0600 /home/dev/.aws/credentials
-      chown dev:dev /home/dev/.aws/credentials
+    mkdir -p /home/dev/.aws
+    cat <<-'AWS_CREDENTIALS_APP' > /home/dev/.aws/credentials
+      [default]
+      aws_access_key_id = ${var.do_app_spaces_access_key_id}
+      aws_secret_access_key = ${var.do_app_spaces_secret_access_key}
+    AWS_CREDENTIALS_APP
+    chmod 0600 /home/dev/.aws/credentials
+    chown dev:dev /home/dev/.aws/credentials
+    cat <<-'AWS_CONFIG_APP' > /home/dev/.aws/config
+      [default]
+      region =  ${var.bucket_region}
+    AWS_CONFIG_APP
+    chmod 0600 /home/dev/.aws/config
+    chown dev:dev /home/dev/.aws/config
 
-      mv $EPHEMERAL_DIR/$ARTIFACT /home/dev/
+    mv $EPHEMERAL_DIR/$ARTIFACT /home/dev/
 
-      ./bin/infra-build--${lower(var.environment)}.sh $ARTIFACT $(realpath .env) $(realpath .htpasswd)
+    ./bin/infra-build--${lower(var.environment)}.sh $ARTIFACT $(realpath .env) $(realpath .htpasswd)
     cd -
+    rm -rf $EPHEMERAL_DIR $TMPDIR
   USER_DATA
 }

@@ -22,6 +22,19 @@ located.
 ./test/terra.sh apply
 ```
 
+## Check on the Droplet Setup
+
+It will take a few minutes for the cloudinit to finish running the
+`_infra/test/legacy_puzzle_massive_droplet-user_data.sh` script. The output log
+for it can be tailed:
+
+```bash
+# On the droplet server
+tail -f /var/log/cloud-init-output.log
+```
+
+## Clean Up
+
 After all the testing is done the project can be destroyed.
 
 ```bash

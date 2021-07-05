@@ -1,3 +1,14 @@
+locals {
+  ephemeral_artifact_keys_cdn = [
+    "bin/update-sshd-config.sh",
+    "bin/install-latest-stable-nginx.sh",
+    "bin/iptables-setup-firewall.sh",
+    "snippets/server_name-cdn.nginx.conf",
+    "snippets/proxy_pass-cdn.nginx.conf",
+    "cdn.nginx.conf",
+  ]
+}
+
 resource "digitalocean_droplet" "cdn" {
   name     = lower("cdn-${var.environment}")
   size     = var.cdn_droplet_size
@@ -34,37 +45,42 @@ resource "digitalocean_droplet" "cdn" {
 
     ${file("../bin/aws-cli-install.sh")}
 
-    ${templatefile("one-time-bucket-object-grab.tmpl", {
-  # EPHEMERAL_DIR created from _infra/one-time-bucket-object-grab.tmpl
-  bucket_region = digitalocean_spaces_bucket.ephemeral_artifacts.region
-  bucket_name   = digitalocean_spaces_bucket.ephemeral_artifacts.name
-  keys = [
-    "bin/update-sshd-config.sh",
-    "bin/install-latest-stable-nginx.sh",
-    "bin/iptables-setup-firewall.sh",
-    "snippets/server_name-cdn.nginx.conf",
-    "snippets/proxy_pass-cdn.nginx.conf",
-    "cdn.nginx.conf",
-  ]
-})}
+    EPHEMERAL_DIR=$(mktemp -d)
+
+    ## One time bucket object grab
+    mkdir -p /root/.aws
+    cat <<-'AWS_CONFIG' > /root/.aws/config
+      [default]
+      region =  ${var.bucket_region}
+    AWS_CONFIG
+    chmod 0600 /root/.aws/config
+    cat <<-'AWS_CREDENTIALS' > /root/.aws/credentials
+      [default]
+      aws_access_key_id = ${var.do_spaces_access_key_id}
+      aws_secret_access_key = ${var.do_spaces_secret_access_key}
+    AWS_CREDENTIALS
+    chmod 0600 /root/.aws/credentials
+    %{for key in local.ephemeral_artifact_keys_cdn~}
+      aws s3 cp --endpoint=https://${digitalocean_spaces_bucket.ephemeral_artifacts.region}.digitaloceanspaces.com s3://${digitalocean_spaces_bucket.ephemeral_artifacts.name}/${key} $EPHEMERAL_DIR/
+    %{endfor~}
+    rm -rf /root/.aws
 
     TMPDIR=$(mktemp -d)
-    (cd $TMPDIR
+    cd $TMPDIR
+    mkdir bin
+    mv $EPHEMERAL_DIR/?*.sh bin/
+    chmod +x bin/?*.sh
 
-      mkdir bin
-      mv $EPHEMERAL_DIR/*.sh bin/
-      chmod +x bin/*.sh
+    ./bin/update-sshd-config.sh
+    ./bin/install-latest-stable-nginx.sh
+    ./bin/iptables-setup-firewall.sh
 
-      # Execute scripts as needed for this environment
-      ./bin/update-sshd-config.sh
-      ./bin/install-latest-stable-nginx.sh
-      ./bin/iptables-setup-firewall.sh
-
-      mkdir -p /etc/nginx/snippets
-      mv $EPHEMERAL_DIR/server_name-cdn.nginx.conf /etc/nginx/snippets/
-      mv $EPHEMERAL_DIR/proxy_pass-cdn.nginx.conf /etc/nginx/snippets/
-      mv $EPHEMERAL_DIR/cdn.nginx.conf /etc/nginx/nginx.conf
-    )
+    mkdir -p /etc/nginx/snippets
+    mv $EPHEMERAL_DIR/server_name-cdn.nginx.conf /etc/nginx/snippets/
+    mv $EPHEMERAL_DIR/proxy_pass-cdn.nginx.conf /etc/nginx/snippets/
+    mv $EPHEMERAL_DIR/cdn.nginx.conf /etc/nginx/nginx.conf
+    cd -
+    rm -rf $EPHEMERAL_DIR $TMPDIR
 
     nginx -t;
     systemctl reload nginx;
