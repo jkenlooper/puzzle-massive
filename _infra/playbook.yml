@@ -1,0 +1,16 @@
+---
+- name: Initialize legacy_puzzle_massive server
+  hosts: legacy_puzzle_massive
+  tasks:
+    - name: Create the dev user and set the .ssh/authorized_keys from root
+      become: yes
+      script:
+        cmd: ../bin/add-dev-user.sh
+      args:
+        creates: /home/dev/.ssh/authorized_keys
+
+# TODO: setup the cdn server with ansible
+#- name: Initialize cdn server
+#  hosts: cdn
+#  tasks:
+#    - name: Create the nginx conf
