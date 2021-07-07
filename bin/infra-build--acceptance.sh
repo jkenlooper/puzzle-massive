@@ -4,7 +4,6 @@ set -euo pipefail
 
 ARTIFACT=$1
 ENV_FILE=$2
-HTPASSWD_FILE=$3
 
 cd /home/dev/
 
@@ -15,7 +14,6 @@ tar --directory=/usr/local/src/ --extract --gunzip -f $ARTIFACT
 cd /usr/local/src/puzzle-massive;
 
 mv $ENV_FILE .env
-mv $HTPASSWD_FILE .htpasswd
 
 chown dev:dev /usr/local/src/puzzle-massive;
 

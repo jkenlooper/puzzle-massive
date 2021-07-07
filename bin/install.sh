@@ -110,10 +110,12 @@ ln -sf "${NGINXDIR}sites-available/legacy-origin.nginx.conf"  "${NGINXDIR}sites-
 rm -f "${NGINXDIR}sites-enabled/legacy-cache--down.nginx.conf"
 ln -sf "${NGINXDIR}sites-available/legacy-cache--up.nginx.conf"  "${NGINXDIR}sites-enabled/legacy-cache--up.nginx.conf";
 
-rsync --inplace \
-  --checksum \
-  --itemize-changes \
-  .htpasswd "${SRVDIR}";
+# Make sure that the .htpasswd file exists since the nginx conf will be looking
+# for it.
+mkdir -p "${SRVDIR}"
+touch "${SRVDIR}.htpasswd"
+chown nginx:nginx "${SRVDIR}.htpasswd"
+chmod 0400 "${SRVDIR}.htpasswd"
 
 if (test -f web/dhparam.pem); then
 mkdir -p "${NGINXDIR}ssl/"

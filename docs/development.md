@@ -100,6 +100,15 @@ version of Puzzle Massive. This can all be set up by running the below
 vagrant up
 ```
 
+Add an admin user and passphrase which will be used to access the
+/chill/site/admin/puzzle/ pages on the site.
+
+```bash
+BASIC_AUTH_USER=$(read -p 'username: ' && echo $REPLY) \
+BASIC_AUTH_PASSPHRASE=$(read -sp 'passphrase: ' && echo $REPLY) \
+vagrant provision --provision-with add-user-to-basic-auth
+```
+
 The virtual machine will create a synced folder which is used to copy the files
 from this project's directory to a directory on the virtual machine. The
 virtual machine will have a 'vagrant' user so the directory that is created for

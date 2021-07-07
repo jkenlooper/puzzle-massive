@@ -4,7 +4,6 @@ set -euo pipefail
 
 ARTIFACT=$1
 ENV_FILE=$2
-HTPASSWD_FILE=$3
 
 cd /home/dev/
 
@@ -13,7 +12,6 @@ git clone $ARTIFACT puzzle-massive
 cd puzzle-massive
 
 cp $ENV_FILE .env
-cp $HTPASSWD_FILE .htpasswd
 chown -R dev:dev ../puzzle-massive
 
 # Standard build stuff

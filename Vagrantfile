@@ -32,7 +32,7 @@ Vagrant.configure(2) do |config|
     SHELL
 
     legacy_puzzle_massive.vm.provision "playbook", type: :ansible_local, run: "always" do |ansible|
-      ansible.playbook = "_infra/playbook.yml"
+      ansible.playbook = "_infra/ansible-playbooks/main.yml"
       ansible.verbose = true
     end
 
@@ -43,13 +43,6 @@ Vagrant.configure(2) do |config|
     legacy_puzzle_massive.vm.provision "bin-update-sshd-config", type: "shell", path: "bin/update-sshd-config.sh"
     legacy_puzzle_massive.vm.provision "bin-set-external-puzzle-massive-in-hosts", type: "shell", path: "bin/set-external-puzzle-massive-in-hosts.sh"
     legacy_puzzle_massive.vm.provision "bin-setup", type: "shell", path: "bin/setup.sh"
-
-    # For vagrant only set the admin password with a salty cookie. This overwrites
-    # any .htpasswd file that may have been uploaded.
-    legacy_puzzle_massive.vm.provision "shell-vagrant-local-htpasswd", privileged: false, type: "shell", inline: <<-SHELL
-      source /home/vagrant/puzzle-massive/.env
-      echo "admin:"$(perl -le "print crypt('${ADMIN_PASSWORD}', '${SECURE_COOKIE_SECRET}')") > /home/vagrant/puzzle-massive/.htpasswd
-    SHELL
 
     # The devsync.sh uses local-puzzle-massive when syncing files
     # Install the watchit command that is used in _infra/local/watchit.sh script.
@@ -91,6 +84,16 @@ Vagrant.configure(2) do |config|
       systemctl start local-puzzle-massive-auto-devsync
       systemctl enable local-puzzle-massive-auto-devsync
     SHELL
+
+    # BASIC_AUTH_USER=$(read -p 'username: ' && echo $REPLY) BASIC_AUTH_PASSPHRASE=$(read -sp 'passphrase: ' && echo $REPLY) vagrant provision --provision-with add-user-to-basic-auth
+    legacy_puzzle_massive.vm.provision "add-user-to-basic-auth", type: :ansible_local, run: "never" do |ansible|
+      ansible.playbook = "_infra/ansible-playbooks/add-user-to-basic-auth.yml"
+      ansible.verbose = false
+      ansible.extra_vars = {
+        user: ENV["BASIC_AUTH_USER"] || '',
+        passphrase: ENV["BASIC_AUTH_PASSPHRASE"] || ''
+      }
+    end
 
     legacy_puzzle_massive.vm.provision "shell-init-dev-local",
       type: "shell",

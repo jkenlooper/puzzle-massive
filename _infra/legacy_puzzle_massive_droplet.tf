@@ -6,14 +6,6 @@ resource "digitalocean_record" "puzzle_massive" {
   ttl    = 900
 }
 
-resource "random_password" "htpasswd_salt" {
-  length  = 26
-  special = false
-  lower   = true
-  upper   = true
-}
-
-
 resource "random_uuid" "ephemeral_archive" {
 }
 resource "digitalocean_spaces_bucket" "ephemeral_archive" {
@@ -195,8 +187,6 @@ resource "local_file" "user_data_sh" {
       HOSTREDIS="127.0.0.1"
     ENV_CONTENT
 
-    echo "admin:"$(perl -le 'print crypt("${var.admin_password}", "${random_password.htpasswd_salt.result}")') > .htpasswd
-
     ${file("../bin/aws-cli-install.sh")}
 
     EPHEMERAL_DIR=$(mktemp -d)
@@ -222,7 +212,6 @@ resource "local_file" "user_data_sh" {
     pwd_dir=$PWD
     TMPDIR=$(mktemp -d)
     mv .env $TMPDIR/
-    mv .htpasswd $TMPDIR/
     cd $TMPDIR
     mkdir bin
     mv $EPHEMERAL_DIR/?*.sh bin/
@@ -252,7 +241,7 @@ resource "local_file" "user_data_sh" {
 
     mv $EPHEMERAL_DIR/$ARTIFACT /home/dev/
 
-    ./bin/infra-build--${lower(var.environment)}.sh $ARTIFACT $(realpath .env) $(realpath .htpasswd)
+    ./bin/infra-build--${lower(var.environment)}.sh $ARTIFACT $(realpath .env)
     cd -
     rm -rf $EPHEMERAL_DIR $TMPDIR
   USER_DATA

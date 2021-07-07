@@ -25,7 +25,9 @@ Types of changes
 
 Improving support for Vagrant and Virtualbox local environments. Also trying to
 make it easier to get a working version on a local development machine without
-needing to manually build stuff.
+needing to manually build stuff. The preferred local development setup is now
+using Vagrant and VirtualBox. Terraform and Ansible will be used to deploy and
+manage remote servers.
 
 ### Fixed
 
@@ -41,6 +43,7 @@ needing to manually build stuff.
 - Use latest stable version of NGINX. The install script will replace
   /etc/nginx/nginx.conf since it assumes it is in full control of the ngnix
   setup.
+- The .htpasswd file is no longer created locally and uploaded to the server.
 
 ## [2.11.0] - 2021-06-01
 

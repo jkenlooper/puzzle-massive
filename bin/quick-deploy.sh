@@ -75,7 +75,6 @@ mv --backup=existing /usr/local/src/puzzle-massive puzzle-massive-$(date +%F);
 tar --directory=/usr/local/src/ --extract --gunzip -f $DIST_FILE
 chown -R dev:dev /usr/local/src/puzzle-massive
 su dev -c "cp puzzle-massive-$(date +%F)/.env /usr/local/src/puzzle-massive/";
-su dev -c "cp puzzle-massive-$(date +%F)/.htpasswd /usr/local/src/puzzle-massive/";
 
 # Add .has-certs file if site has already been setup with bin/provision-certbot.sh
 su dev -c "cp puzzle-massive-$(date +%F)/.has-certs /usr/local/src/puzzle-massive/" || echo "No certs?";

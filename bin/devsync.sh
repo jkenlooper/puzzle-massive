@@ -64,6 +64,5 @@ rsync --archive \
   --delay-updates \
   --itemize-changes \
   --include=".env" \
-  --include=".htpasswd" \
   --exclude="*" \
   ${params}

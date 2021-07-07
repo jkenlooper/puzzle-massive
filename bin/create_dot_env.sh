@@ -55,7 +55,6 @@ SMTP_USER='user@localhost'
 SMTP_PASSWORD='somepassword'
 EMAIL_SENDER='sender@localhost'
 EMAIL_MODERATOR='moderator@localhost'
-ADMIN_PASSWORD="whatidontknowthat"
 PUBLISH_WORKER_COUNT=2
 STREAM_WORKER_COUNT=2
 BLOCKEDPLAYER_EXPIRE_TIMEOUTS='30 300 3600'
@@ -85,9 +84,6 @@ if [ -f .env ]; then
   source .env
   mv --backup=numbered .env .env.bak
 fi
-
-read -e -p "Password for admin user to use when accessing /chill/site/admin/:
-" -i "${ADMIN_PASSWORD}" ADMIN_PASSWORD;
 
 read -e -p "
 Enter some random text for secure cookie:
@@ -331,8 +327,6 @@ UNSPLASH_SECRET='${UNSPLASH_SECRET}'
 # [Muppet character](https://en.wikipedia.org/wiki/List_of_Muppets).
 NEW_PUZZLE_CONTRIB='${MUPPET_CHARACTER}'
 SECURE_COOKIE_SECRET='${SECURE_COOKIE_SECRET}'
-
-ADMIN_PASSWORD='${ADMIN_PASSWORD}'
 
 SUGGEST_IMAGE_LINK='${SUGGEST_IMAGE_LINK}'
 
