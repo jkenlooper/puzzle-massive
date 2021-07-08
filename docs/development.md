@@ -203,12 +203,13 @@ Note that after logging into the development machine as the vagrant user that
 there is a 'dev' user. The 'dev' user owns the `/user/local/src/puzzle-massive/`
 directory and in order to start and stop the services, or manipulate the
 database, you'll need to login as that user. When the 'dev' user was created in
-the vagrant provisioning script it did not set a password for the 'dev' user.
-You'll need to set one for this user.
+the vagrant provisioning script it set a simple password for the 'dev' user.
+You'll be prompted to update the dev user password when logging in. For the
+vagrant virtual machine the dev user password is 'vagrant'.
 
 ```bash
-# Set initial password for dev user
-sudo passwd dev
+# Switch to the dev user
+sudo su dev
 ```
 
 #### Errors with Compiling `src/` Files

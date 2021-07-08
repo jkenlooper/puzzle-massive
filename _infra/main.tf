@@ -141,9 +141,9 @@ resource "digitalocean_spaces_bucket_object" "iptables_setup_firewall_sh" {
 }
 
 resource "local_file" "host_inventory" {
-  filename = "${lower(var.environment)}/host_inventory.ansible.cfg"
+  filename        = "${lower(var.environment)}/host_inventory.ansible.cfg"
   file_permission = "0400"
-  content = <<-HOST_INVENTORY
+  content         = <<-HOST_INVENTORY
     [legacy_puzzle_massive]
     ${digitalocean_droplet.puzzle_massive.ipv4_address}
 

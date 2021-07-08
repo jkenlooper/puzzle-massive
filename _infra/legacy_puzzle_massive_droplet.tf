@@ -104,7 +104,20 @@ resource "digitalocean_droplet" "puzzle_massive" {
   # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#retrieve-user-data
   # Debug via ssh to the droplet and tail the cloud-init logs:
   # tail -f /var/log/cloud-init-output.log
-  user_data = var.environment == "Test" || var.environment == "Acceptance" ? local_file.user_data_sh.sensitive_content : "echo 'provision manually'"
+  # TODO: Should Development and Production be initially provisioned by Ansible?
+  #user_data = var.environment == "Test" || var.environment == "Acceptance" ? local_file.user_data_sh.sensitive_content : "echo 'provision manually'"
+  user_data = local_file.user_data_sh.sensitive_content
+}
+
+resource "random_string" "initial_dev_user_password" {
+  length      = 16
+  special     = false
+  lower       = true
+  upper       = true
+  number      = true
+  min_lower   = 3
+  min_upper   = 3
+  min_numeric = 3
 }
 
 locals {
@@ -217,7 +230,7 @@ resource "local_file" "user_data_sh" {
     mv $EPHEMERAL_DIR/?*.sh bin/
     chmod +x bin/?*.sh
 
-    ./bin/add-dev-user.sh
+    ./bin/add-dev-user.sh ${random_string.initial_dev_user_password.result}
     ./bin/update-sshd-config.sh
     ./bin/set-external-puzzle-massive-in-hosts.sh
     ./bin/install-latest-stable-nginx.sh
@@ -244,5 +257,6 @@ resource "local_file" "user_data_sh" {
     ./bin/infra-build--${lower(var.environment)}.sh $ARTIFACT $(realpath .env)
     cd -
     rm -rf $EPHEMERAL_DIR $TMPDIR
+    passwd --expire dev
   USER_DATA
 }

@@ -34,6 +34,9 @@ Vagrant.configure(2) do |config|
     legacy_puzzle_massive.vm.provision "playbook", type: :ansible_local, run: "always" do |ansible|
       ansible.playbook = "_infra/ansible-playbooks/main.yml"
       ansible.verbose = true
+      ansible.extra_vars = {
+        initial_dev_user_password: 'vagrant'
+      }
     end
 
     # For vagrant, set up the dev user and the initial
@@ -152,6 +155,10 @@ Vagrant.configure(2) do |config|
         ./bin/puzzle-massive-testdata puzzles --count=3 --min-pieces=1900 --pieces=3900 --size=5212x6741\!;
         ./bin/puzzle-massive-testdata puzzles --count=3 --min-pieces=1900 --pieces=3900 --size=6720x4480\!;
       ' dev
+    SHELL
+
+    legacy_puzzle_massive.vm.provision "shell-vagrant-expire-dev-password", privileged: true, type: "shell", inline: <<-SHELL
+      passwd --expire dev
     SHELL
 
   end

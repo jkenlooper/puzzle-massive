@@ -6,12 +6,16 @@ terraform.tfstate*
 # Generated from running terra.sh scripts
 /development/puzzle-massive-*.bundle
 /development/legacy_puzzle_massive_droplet-user_data.sh
+/development/host_inventory.ansible.cfg
 /test/puzzle-massive-*.bundle
 /test/legacy_puzzle_massive_droplet-user_data.sh
+/test/host_inventory.ansible.cfg
 /acceptance/puzzle-massive-*.tar.gz
 /acceptance/legacy_puzzle_massive_droplet-user_data.sh
+/acceptance/host_inventory.ansible.cfg
 /production/puzzle-massive-*.tar.gz
 /production/legacy_puzzle_massive_droplet-user_data.sh
+/production/host_inventory.ansible.cfg
 
 # These can have sensitive variables in them like the do_token.
 /*.auto.tfvars
