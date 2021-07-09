@@ -24,6 +24,74 @@ Vagrant.configure(2) do |config|
       vb.cpus = 2
     end
 
+    legacy_puzzle_massive.vm.post_up_message = <<-POST_UP_MESSAGE
+      Please run the below command to initialize the instance if haven't done so yet.
+
+      VAGRANT_FORWARDED_PORT_80=$(vagrant port --guest 80) vagrant provision --provision-with shell-init-dev-local
+
+      See further documentation in docs/development.md
+    POST_UP_MESSAGE
+
+    # In case the bin/create_dot_env.sh wasn't run on the local machine.
+    legacy_puzzle_massive.vm.provision "shell-auto-create-dot-env", type: "shell", run: "always", inline: <<-SHELL
+      if test ! -e /home/vagrant/puzzle-massive/.env; then
+        cat <<-'DEFAULT_ENV' > /home/vagrant/puzzle-massive/.env;
+          UNSPLASH_APPLICATION_ID=''
+          UNSPLASH_APPLICATION_NAME=''
+          UNSPLASH_SECRET=''
+          NEW_PUZZLE_CONTRIB='rizzo'
+          SECURE_COOKIE_SECRET='chocolate chip'
+          SUGGEST_IMAGE_LINK=''
+          SMTP_HOST='localhost'
+          SMTP_PORT='587'
+          SMTP_USER='user@localhost'
+          SMTP_PASSWORD='somepassword'
+          EMAIL_SENDER='sender@localhost'
+          EMAIL_MODERATOR='moderator@localhost'
+          AUTO_APPROVE_PUZZLES='y'
+          LOCAL_PUZZLE_RESOURCES='y'
+          CDN_BASE_URL=''
+          PUZZLE_RESOURCES_BUCKET_REGION=''
+          PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL=''
+          PUZZLE_RESOURCES_BUCKET=''
+          PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL=''
+          EPHEMERAL_ARCHIVE_ENDPOINT_URL=''
+          EPHEMERAL_ARCHIVE_BUCKET=''
+          PUZZLE_RULES="all"
+          PUZZLE_FEATURES="all"
+          BLOCKEDPLAYER_EXPIRE_TIMEOUTS="30 300 3600"
+          MINIMUM_PIECE_COUNT=20
+          MAXIMUM_PIECE_COUNT=50000
+          PUZZLE_PIECE_GROUPS="100 200 400 800 1600 2200 4000 60000"
+          ACTIVE_PUZZLES_IN_PIECE_GROUPS="40  20  10  10  5    5    5    5"
+          MINIMUM_IN_QUEUE_PUZZLES_IN_PIECE_GROUPS="6   6   2   2   1    1    0    0"
+          MAX_POINT_COST_FOR_REBUILDING=1000
+          MAX_POINT_COST_FOR_DELETING=1000
+          BID_COST_PER_PUZZLE=100
+          POINT_COST_FOR_CHANGING_BIT=100
+          POINT_COST_FOR_CHANGING_NAME=100
+          NEW_USER_STARTING_POINTS=1300
+          POINTS_CAP=15000
+          BIT_ICON_EXPIRATION="
+          0:    20 minutes,
+          1:    1 day,
+          50:   3 days,
+          400:  7 days,
+          800:  14 days,
+          1600: 1 months
+          "
+          PUBLISH_WORKER_COUNT=2
+          STREAM_WORKER_COUNT=2
+          DOMAIN_NAME="puzzle.massive.xyz"
+          SITE_TITLE="Puzzle Massive"
+          HOME_PAGE_ROUTE="/chill/site/front/"
+          SOURCE_CODE_LINK="https://github.com/jkenlooper/puzzle-massive/"
+          M3=""
+DEFAULT_ENV
+      fi
+    SHELL
+
+
     # The add-dev-user.sh will need to copy the /root/.ssh/authorized_keys file to
     # the /home/dev/.ssh/ directory.  On a vagrant virtual machine; this file
     # doesn't exist in the /root/ directory.
@@ -31,18 +99,10 @@ Vagrant.configure(2) do |config|
       cp -r /home/vagrant/.ssh /root/
     SHELL
 
-    legacy_puzzle_massive.vm.provision "playbook", type: :ansible_local, run: "always" do |ansible|
-      ansible.playbook = "_infra/ansible-playbooks/main.yml"
-      ansible.verbose = true
-      ansible.extra_vars = {
-        initial_dev_user_password: 'vagrant'
-      }
-    end
-
     # For vagrant, set up the dev user and the initial
     # /usr/local/src/puzzle-massive directory.
     # To do db stuff as dev use `sudo su dev`.
-    #legacy_puzzle_massive.vm.provision "bin-add-dev-user", type: "shell", path: "bin/add-dev-user.sh"
+    legacy_puzzle_massive.vm.provision "bin-add-dev-user", type: "shell", path: "bin/add-dev-user.sh", args: 'vagrant'
     legacy_puzzle_massive.vm.provision "bin-update-sshd-config", type: "shell", path: "bin/update-sshd-config.sh"
     legacy_puzzle_massive.vm.provision "bin-set-external-puzzle-massive-in-hosts", type: "shell", path: "bin/set-external-puzzle-massive-in-hosts.sh"
     legacy_puzzle_massive.vm.provision "bin-setup", type: "shell", path: "bin/setup.sh"
@@ -98,6 +158,18 @@ Vagrant.configure(2) do |config|
       }
     end
 
+
+    # #example
+    # legacy_puzzle_massive.vm.provision "playbook", type: :ansible_local, run: "always" do |ansible|
+    #   ansible.playbook = "_infra/ansible-playbooks/main.yml"
+    #   ansible.verbose = true
+    #   ansible.extra_vars = {
+    #     initial_dev_user_password: 'vagrant'
+    #   }
+    # end
+
+
+    # This provisioning script is idempotent.
     legacy_puzzle_massive.vm.provision "shell-init-dev-local",
       type: "shell",
       run: "never",
@@ -108,14 +180,17 @@ Vagrant.configure(2) do |config|
         cd /usr/local/src/puzzle-massive;
         echo "VAGRANT_FORWARDED_PORT_80=$VAGRANT_FORWARDED_PORT_80" > .vagrant-overrides
         chown dev:dev .vagrant-overrides
-        sudo su --command '
+        echo "Stopping the app and creating a backup db file"
+        ./bin/appctl.sh stop;
+        su --command '
           python -m venv .;
           make;
         ' dev
         make install;
         ./bin/appctl.sh stop -f;
-        sudo su --command '
-          ./bin/python api/api/create_database.py site.cfg;
+        su --command '
+          ./bin/python api/api/create_database.py site.cfg \
+            || echo "The api/api/create_database.py failed execution. Assuming that sqlite database tables already exists."
           ./bin/python api/api/jobs/insert-or-replace-bit-icons.py;
           ./bin/python api/api/update_enabled_puzzle_features.py;
         ' dev
@@ -127,7 +202,7 @@ Vagrant.configure(2) do |config|
 
     legacy_puzzle_massive.vm.provision "shell-testdata-puzzles-quick", type: "shell", run: "never", inline: <<-SHELL
       cd /usr/local/src/puzzle-massive;
-      sudo su --command '
+      su --command '
         ./bin/puzzle-massive-testdata players --count=100;
         ./bin/puzzle-massive-testdata puzzles --count=10 --pieces=20 --size=800x800\!;
         ./bin/puzzle-massive-testdata puzzles --count=1 --pieces=100 --size=1800x800\!;
@@ -139,7 +214,7 @@ Vagrant.configure(2) do |config|
 
     legacy_puzzle_massive.vm.provision "shell-testdata-puzzles", type: "shell", run: "never", inline: <<-SHELL
       cd /usr/local/src/puzzle-massive;
-      sudo su --command '
+      su --command '
         ./bin/puzzle-massive-testdata players --count=100;
         ./bin/puzzle-massive-testdata puzzles --count=10 --min-pieces=20 --pieces=400 --size=1800x800\!;
         ./bin/puzzle-massive-testdata puzzles --count=10 --min-pieces=20 --pieces=400 --size=1800x1800\!;
@@ -155,10 +230,6 @@ Vagrant.configure(2) do |config|
         ./bin/puzzle-massive-testdata puzzles --count=3 --min-pieces=1900 --pieces=3900 --size=5212x6741\!;
         ./bin/puzzle-massive-testdata puzzles --count=3 --min-pieces=1900 --pieces=3900 --size=6720x4480\!;
       ' dev
-    SHELL
-
-    legacy_puzzle_massive.vm.provision "shell-vagrant-expire-dev-password", privileged: true, type: "shell", inline: <<-SHELL
-      passwd --expire dev
     SHELL
 
   end

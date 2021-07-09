@@ -40,7 +40,7 @@ elif test "${COMMAND}" == 'stop'; then
     echo "Waiting for the puzzle-massive-stream connections...";
     systemctl stop puzzle-massive-stream;
     if [ "$SKIP_BACKUP" != "-f" ]; then
-      su dev -c "bin/backup.sh -d /home/dev -c"
+      su dev -c "bin/backup.sh -d /home/dev -c" || echo "Creating backup failed. Continuing to stop the other services."
     fi
     # Stop the puzzle-massive-api last since other services depend on it.
     systemctl stop puzzle-massive-api;

@@ -1,74 +1,40 @@
 # Local Development Guide
 
 Get a **local development** version of Puzzle Massive to run on your machine by
-following this guide.
+following this guide. You'll need to install the below software in order to
+create a virtual machine.
 
-This is necessary in order to
-create a dist file (`make dist`) for deploying to a production server.
+- [VirtualBox](https://www.virtualbox.org/)
+- [Vagrant](https://www.vagrantup.com/)
 
-Written for a Linux machine that is Debian based. Only tested on
-[Ubuntu 20.04 LTS (Focal Fossa)](http://releases.ubuntu.com/20.04/).
-It is recommended to use a virtual machine of some sort to keep dependencies for
-the Puzzle Massive services isolated and manageable. Some virtualization
-software suggestions are listed below.
-
-- [VirtualBox](https://www.virtualbox.org/) - can be used with Vagrant.
-- [Vagrant](https://www.vagrantup.com/) - a Vagrantfile has already been made.
-- [KVM](https://wiki.debian.org/KVM) - Kernel Virtual Machine is available for
-  Linux machines.
+Some definitions that this guide uses:
 
 <dl>
   <dt>local machine</dt>
   <dd>
   This is your own computer (localhost) that you edit source files on using your
-  text editor or IDE of choice.
+  text editor or IDE of choice. This will be the machine that VirtualBox and
+  Vagrant have been installed on.
   </dd>
-  <dt>development machine</dt>
+  <dt>development machine or virtual machine</dt>
   <dd>
   The Ubuntu machine that will be setup to run the Puzzle Massive services.
   Source files will be uploaded to it from the local machine each time they
-  change. This is commonly a virtual machine, but can be localhost. You should
-  have ssh access to it and have permissions to add a dev user.
+  change. This machine is automatically created when running the `vagrant up`
+  command and will have the Puzzle Massive instance running on
+  http://localhost:8080 or another port if that one has already been taken.
   </dd>
 </dl>
 
-This guide assumes some familiarity with using the terminal and administrating
-a Linux based machine like Ubuntu. If something isn't working right, or you get
-stuck, please reach out on the
+This guide assumes some familiarity with using the terminal. If something isn't
+working right, or you get stuck, please reach out on the
 [Discord chat channels](https://discord.gg/uVhE2Kd)
 for the project.
 
-## Set local-puzzle-massive hostname
-
-Update your `/etc/hosts` to have local-puzzle-massive map to your development
-machine. This IP can either be localhost (127.0.0.1) or the IP of a virtual
-machine. It is recommended that access to this development machine should be
-limited so be careful if you use a development machine that is hosted in the
-cloud. The local development version of the website will be at
-http://local-puzzle-massive/ . If using vagrant for the virtual machine then
-you'll need to use the 8080 port http://local-puzzle-massive:8080/ . There are
-also some issues when using a port like 8080 on the local-puzzle-massive host
-and the website does a redirect.
-
-Append "127.0.0.1 local-puzzle-massive" to your `/etc/hosts` file on the local
-machine (not the development machine). You'll then be able to access your local
-version of the site at the http://local-puzzle-massive/ URL. If installed on
-a virtual machine; then change the 127.0.0.1 to that IP of the virtual machine.
-This IP can be found by logging into the virtual machine and using this command:
-`ip -4 -br addr show`
-
-```bash
-# Update 127.0.0.1 to be the IP of the development machine
-echo "127.0.0.1 local-puzzle-massive" >> /etc/hosts
-```
-
----
-
 ## Quick setup with vagrant and virtualbox
 
-**This is a work in progress and may change a lot.** Running the below vagrant
-commands _should_ get a local version of Puzzle Massive working on your own
-machine.
+Running the below vagrant commands _should_ get a local version of Puzzle
+Massive working on your own machine.
 
 ### Create `.env` Configuration File
 
@@ -76,10 +42,11 @@ The configuration is handled by a `.env` file that is located in the project's
 directory. It is recommended to run the
 [create_dot_env.sh](bin/create_dot_env.sh) script in order to create this file.
 It will prompt for inputs and show the defaults for each item that can be
-configured.
+configured. This script can be run multiple times and will default to the
+choices that you have made before.
 
 ```bash
-# Creates the .env file
+# Create or update the .env file
 ./bin/create_dot_env.sh;
 ```
 
@@ -242,6 +209,47 @@ manually setting up without using the above vagrant commands. The "Initial
 Setup", and "Setup For Building" sections can be skipped if using vagrant since
 most of that was automatically done.**
 
+Written for a Linux machine that is Debian based. Only tested on
+[Ubuntu 20.04 LTS (Focal Fossa)](http://releases.ubuntu.com/20.04/).
+It is recommended to use a virtual machine of some sort to keep dependencies for
+the Puzzle Massive services isolated and manageable. Some virtualization
+software suggestions are listed below.
+
+- [VirtualBox](https://www.virtualbox.org/) - can be used with Vagrant.
+- [Vagrant](https://www.vagrantup.com/) - a Vagrantfile has already been made.
+- [KVM](https://wiki.debian.org/KVM) - Kernel Virtual Machine is available for
+  Linux machines.
+
+This guide assumes some familiarity with using the terminal and administrating
+a Linux based machine like Ubuntu. If something isn't working right, or you get
+stuck, please reach out on the
+[Discord chat channels](https://discord.gg/uVhE2Kd)
+for the project.
+
+## Set local-puzzle-massive hostname
+
+Update your `/etc/hosts` to have local-puzzle-massive map to your development
+machine. This IP can either be localhost (127.0.0.1) or the IP of a virtual
+machine. It is recommended that access to this development machine should be
+limited so be careful if you use a development machine that is hosted in the
+cloud. The local development version of the website will be at
+http://local-puzzle-massive/ . If using vagrant for the virtual machine then
+you'll need to use the 8080 port http://local-puzzle-massive:8080/ . There are
+also some issues when using a port like 8080 on the local-puzzle-massive host
+and the website does a redirect.
+
+Append "127.0.0.1 local-puzzle-massive" to your `/etc/hosts` file on the local
+machine (not the development machine). You'll then be able to access your local
+version of the site at the http://local-puzzle-massive/ URL. If installed on
+a virtual machine; then change the 127.0.0.1 to that IP of the virtual machine.
+This IP can be found by logging into the virtual machine and using this command:
+`ip -4 -br addr show`
+
+```bash
+# Update 127.0.0.1 to be the IP of the development machine
+echo "127.0.0.1 local-puzzle-massive" >> /etc/hosts
+```
+
 ## Initial Setup
 
 After cloning or forking the git repo
@@ -354,7 +362,7 @@ Run this on the _local machine_ from within the project's directory (use `exit`
 command if still logged into development machine).
 
 ```bash
-# Creates the .env file
+# Create or update the .env file
 ./bin/create_dot_env.sh;
 ```
 
