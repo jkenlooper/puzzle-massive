@@ -15,9 +15,10 @@ Vagrant.configure(2) do |config|
   config.vm.box = "bento/ubuntu-20.04"
 
   config.vm.define "legacy_puzzle_massive", primary: true do |legacy_puzzle_massive|
+    legacy_puzzle_massive.vm.network :private_network, ip: "192.168.117.24", auto_config: true, hostname: true
 
-    legacy_puzzle_massive.vm.network "forwarded_port", guest: 80, host: 8080
-    legacy_puzzle_massive.vm.network "forwarded_port", guest: 443, host: 8081
+    legacy_puzzle_massive.vm.network "forwarded_port", guest: 80, host: 8080, auto_correct: true
+    legacy_puzzle_massive.vm.network "forwarded_port", guest: 443, host: 8081, auto_correct: true
 
     legacy_puzzle_massive.vm.provider "virtualbox" do |vb|
       vb.memory = "4096"
@@ -49,12 +50,12 @@ Vagrant.configure(2) do |config|
           EMAIL_SENDER='sender@localhost'
           EMAIL_MODERATOR='moderator@localhost'
           AUTO_APPROVE_PUZZLES='y'
-          LOCAL_PUZZLE_RESOURCES='y'
-          CDN_BASE_URL=''
-          PUZZLE_RESOURCES_BUCKET_REGION=''
-          PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL=''
-          PUZZLE_RESOURCES_BUCKET=''
-          PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL=''
+          LOCAL_PUZZLE_RESOURCES='n'
+          CDN_BASE_URL='http://localhost:63812'
+          PUZZLE_RESOURCES_BUCKET_REGION='local'
+          PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL='http://s3fake.puzzle.massive.test:4568'
+          PUZZLE_RESOURCES_BUCKET='chum'
+          PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL='public, max-age:31536000, immutable'
           EPHEMERAL_ARCHIVE_ENDPOINT_URL=''
           EPHEMERAL_ARCHIVE_BUCKET=''
           PUZZLE_RULES="all"
@@ -91,6 +92,9 @@ DEFAULT_ENV
       fi
     SHELL
 
+    legacy_puzzle_massive.vm.provision "shell-etc-hosts", type: "shell", inline: <<-SHELL
+      echo "192.168.117.26 s3fake.puzzle.massive.test" >> /etc/hosts
+    SHELL
 
     # The add-dev-user.sh will need to copy the /root/.ssh/authorized_keys file to
     # the /home/dev/.ssh/ directory.  On a vagrant virtual machine; this file
@@ -105,7 +109,10 @@ DEFAULT_ENV
     legacy_puzzle_massive.vm.provision "bin-add-dev-user", type: "shell", path: "bin/add-dev-user.sh", args: 'vagrant'
     legacy_puzzle_massive.vm.provision "bin-update-sshd-config", type: "shell", path: "bin/update-sshd-config.sh"
     legacy_puzzle_massive.vm.provision "bin-set-external-puzzle-massive-in-hosts", type: "shell", path: "bin/set-external-puzzle-massive-in-hosts.sh"
+    legacy_puzzle_massive.vm.provision "bin-install-latest-stable-nginx", type: "shell", path: "bin/install-latest-stable-nginx.sh"
     legacy_puzzle_massive.vm.provision "bin-setup", type: "shell", path: "bin/setup.sh"
+    # Skip setting iptables for vagrant VMs
+    #legacy_puzzle_massive.vm.provision "bin-iptables-setup-firewall", type: "shell", path: "bin/iptables-setup-firewall.sh"
 
     # The devsync.sh uses local-puzzle-massive when syncing files
     # Install the watchit command that is used in _infra/local/watchit.sh script.
@@ -168,6 +175,21 @@ DEFAULT_ENV
     #   }
     # end
 
+    legacy_puzzle_massive.vm.provision "shell-set-s3fake-aws-bucket-credentials", type: "shell", inline: <<-SHELL
+    mkdir -p /home/dev/.aws
+    cat <<-'AWS_CREDENTIALS_APP' > /home/dev/.aws/credentials
+[default]
+aws_access_key_id = S3RVER
+aws_secret_access_key = S3RVER
+AWS_CREDENTIALS_APP
+    chmod 0600 /home/dev/.aws/credentials
+    cat <<-'AWS_CONFIG_APP' > /home/dev/.aws/config
+[default]
+region = local
+AWS_CONFIG_APP
+    chmod 0600 /home/dev/.aws/config
+    chown -R dev:dev /home/dev/.aws
+    SHELL
 
     # This provisioning script is idempotent.
     legacy_puzzle_massive.vm.provision "shell-init-dev-local",
@@ -235,14 +257,112 @@ DEFAULT_ENV
   end
 
   config.vm.define "cdn" do |cdn|
+    cdn.vm.network :private_network, ip: "192.168.117.25", auto_config: true, hostname: true
 
-    cdn.vm.network "forwarded_port", guest: 80, host: 8082
-    cdn.vm.network "forwarded_port", guest: 443, host: 8083
+    cdn.vm.network "forwarded_port", guest: 80, host: 63812, auto_correct: false
 
     cdn.vm.provider "virtualbox" do |vb|
       vb.memory = "1024"
       vb.cpus = 1
     end
+
+    cdn.vm.provision "shell-etc-hosts", type: "shell", inline: <<-SHELL
+    echo "192.168.117.26 s3fake.puzzle.massive.test" >> /etc/hosts
+    SHELL
+
+    cdn.vm.provision "bin-update-sshd-config", type: "shell", path: "bin/update-sshd-config.sh"
+    cdn.vm.provision "bin-install-latest-stable-nginx", type: "shell", path: "bin/install-latest-stable-nginx.sh"
+    # Skip setting iptables for vagrant VMs
+    #cdn.vm.provision "bin-iptables-setup-firewall", type: "shell", path: "bin/iptables-setup-firewall.sh"
+
+    cdn.vm.provision "shell-install-nginx-conf", type: "shell", inline: <<-SHELL
+    mkdir -p /etc/nginx/snippets
+    echo "server_name localhost;" > /etc/nginx/snippets/server_name-cdn.nginx.conf
+    echo "proxy_pass http://s3fake.puzzle.massive.test:4568/chum/;" > /etc/nginx/snippets/proxy_pass-cdn.nginx.conf
+    cp /home/vagrant/puzzle-massive/web/cdn.nginx.conf /etc/nginx/nginx.conf
+
+    mkdir -p /var/lib/cdn/cache/
+    chown -R nginx:nginx /var/lib/cdn/cache/
+    mkdir -p /var/log/nginx/puzzle-massive-cdn/
+    chown -R nginx:nginx /var/log/nginx/puzzle-massive-cdn/
+
+    nginx -t
+    systemctl start nginx
+    systemctl reload nginx
+    SHELL
+
+  end
+
+  config.vm.define "s3fake" do |s3fake|
+    s3fake.vm.hostname = "s3fake.puzzle.massive.test"
+    s3fake.vm.network :private_network, ip: "192.168.117.26", auto_config: true, hostname: true
+    s3fake.vm.network "forwarded_port", guest: 4568, host: 4568, auto_correct: true
+
+    s3fake.vm.provider "virtualbox" do |vb|
+      vb.memory = "1024"
+      vb.cpus = 1
+    end
+
+    s3fake.vm.provision "shell-install-s3rver", type: "shell", inline: <<-SHELL
+    apt-get update
+    apt-get install -y nodejs npm
+
+    adduser s3rver --disabled-login --disabled-password --gecos "" || echo 'user exists already?'
+
+    su --command '
+      cd /home/s3rver
+      cat <<-PACKAGEJSON > package.json
+{
+  "name": "_",
+  "version": "1.0.0",
+  "description": "Fake S3 server",
+  "scripts": {
+    "start": "s3rver --directory /home/s3rver/files --address s3fake.puzzle.massive.test --no-vhost-buckets --configure-bucket chum"
+  },
+  "dependencies": {
+    "s3rver": "3.7.0"
+  }
+}
+PACKAGEJSON
+
+      mkdir -p /home/s3rver/files
+      npm install --no-save 2> /dev/null
+    ' s3rver
+
+    cat <<-'SERVICE_INSTALL' > /etc/systemd/system/s3rver.service
+[Unit]
+Description=Fake S3 Server
+After=multi-user.target
+
+[Service]
+Type=exec
+User=s3rver
+Group=s3rver
+WorkingDirectory=/home/s3rver
+ExecStart=npm start
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+SERVICE_INSTALL
+    systemctl daemon-reload
+    systemctl start s3rver
+    systemctl enable s3rver
+
+    SHELL
+
+    s3fake.vm.post_up_message = <<-POST_UP_MESSAGE
+      Fake S3 Server is running in the private network with a 'chum' bucket.
+      Use these AWS credentials to connect to it:
+        Access Key Id: "S3RVER"
+        Secret Access Key: "S3RVER"
+
+      # Example of uploading test-file and fetching it both with `aws s3 cp` and `curl`.
+      echo 'testing' > test-file
+      aws s3 cp --endpoint-url=http://192.168.117.26:4568 test-file s3://chum/
+      aws s3 cp --endpoint-url=http://192.168.117.26:4568 s3://chum/test-file get-test-file
+      curl http://192.168.117.26:4568/chum/test-file
+    POST_UP_MESSAGE
 
   end
 

@@ -31,13 +31,13 @@ SECURE_COOKIE_SECRET="chocolate chip"
 MUPPET_CHARACTER="rizzo"
 NEW_PUZZLE_CONTRIB=${NEW_PUZZLE_CONTRIB:-$MUPPET_CHARACTER}
 AUTO_APPROVE_PUZZLES="y"
-LOCAL_PUZZLE_RESOURCES="y"
-CDN_BASE_URL=""
-PUZZLE_RESOURCES_BUCKET_REGION="us-west-2"
-PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL="https://s3.us-west-2.amazonaws.com"
-PUZZLE_RESOURCES_BUCKET=""
+LOCAL_PUZZLE_RESOURCES="n"
+CDN_BASE_URL="http://localhost:63812"
+PUZZLE_RESOURCES_BUCKET_REGION="local"
+PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL="http://s3fake.puzzle.massive.test:4568"
+PUZZLE_RESOURCES_BUCKET="chum"
 PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL="public, max-age:31536000, immutable"
-EPHEMERAL_ARCHIVE_ENDPOINT_URL="https://s3.us-west-2.amazonaws.com"
+EPHEMERAL_ARCHIVE_ENDPOINT_URL=""
 EPHEMERAL_ARCHIVE_BUCKET=""
 PUZZLE_RULES="all"
 PUZZLE_FEATURES="all"
@@ -130,11 +130,14 @@ CacheControl header that will be used for all objects in the puzzle resources bu
 fi
 
 read -e -p "
-Ephemeral archive bucket endpoint URL to use for uploading backup db files (skip if not needing to upload to S3):
+Ephemeral archive bucket endpoint URL to use for uploading backup db files.
+Example for AWS would be https://s3.us-west-2.amazonaws.com
+Skip if not needing to upload to S3:
 " -i "${EPHEMERAL_ARCHIVE_ENDPOINT_URL}" EPHEMERAL_ARCHIVE_ENDPOINT_URL;
 
 read -e -p "
-Bucket name for ephemeral archive bucket (leave blank if not needing to upload to S3):
+Bucket name for ephemeral archive bucket.
+Leave blank if not needing to upload to S3:
 " -i "${EPHEMERAL_ARCHIVE_BUCKET}" EPHEMERAL_ARCHIVE_BUCKET
 
 PUZZLE_RULES_HELP_TEXT="

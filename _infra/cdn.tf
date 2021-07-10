@@ -82,8 +82,14 @@ resource "digitalocean_droplet" "cdn" {
     cd -
     rm -rf $EPHEMERAL_DIR $TMPDIR
 
-    nginx -t;
-    systemctl reload nginx;
+    mkdir -p /var/lib/cdn/cache/
+    chown -R nginx:nginx /var/lib/cdn/cache/
+    mkdir -p /var/log/nginx/puzzle-massive-cdn/
+    chown -R nginx:nginx /var/log/nginx/puzzle-massive-cdn/
+
+    nginx -t
+    systemctl start nginx
+    systemctl reload nginx
 
     USER_DATA
 }

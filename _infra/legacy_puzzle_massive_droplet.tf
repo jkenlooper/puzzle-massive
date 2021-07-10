@@ -244,13 +244,12 @@ resource "local_file" "user_data_sh" {
       aws_secret_access_key = ${var.do_app_spaces_secret_access_key}
     AWS_CREDENTIALS_APP
     chmod 0600 /home/dev/.aws/credentials
-    chown dev:dev /home/dev/.aws/credentials
     cat <<-'AWS_CONFIG_APP' > /home/dev/.aws/config
       [default]
       region =  ${var.bucket_region}
     AWS_CONFIG_APP
     chmod 0600 /home/dev/.aws/config
-    chown dev:dev /home/dev/.aws/config
+    chown -R dev:dev /home/dev/.aws
 
     mv $EPHEMERAL_DIR/$ARTIFACT /home/dev/
 

@@ -68,7 +68,7 @@ iptables -A FORWARD -p icmp --icmp-type echo-request -m limit --limit 1/s -j ACC
 # Resizing the RAM and CPU on the droplet should still work. That is why it is
 # only being applied to some users.
 for owner in dev www-data nginx ; do
-  iptables --table filter --insert OUTPUT 1 --destination 169.254.169.254 --match owner --uid-owner $owner --jump REJECT --reject-with icmp-admin-prohibited
+  iptables --table filter --insert OUTPUT 1 --destination 169.254.169.254 --match owner --uid-owner $owner --jump REJECT --reject-with icmp-admin-prohibited || echo "ignore error if user '$owner' does not exist"
 done;
 
 
