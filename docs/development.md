@@ -40,7 +40,7 @@ Massive working on your own machine.
 
 The configuration is handled by a `.env` file that is located in the project's
 directory. It is recommended to run the
-[create_dot_env.sh](bin/create_dot_env.sh) script in order to create this file.
+[create_dot_env.sh](../bin/create_dot_env.sh) script in order to create this file.
 It will prompt for inputs and show the defaults for each item that can be
 configured. This script can be run multiple times and will default to the
 choices that you have made before.
@@ -61,7 +61,7 @@ virtual machine if it doesn't exist on the local machine.
 your local machine. This allows you to run your own version of Puzzle Massive
 locally. It is also configured to automatically compile any files changed in
 the src/ directory which will then show those changes locally after refreshing
-the web browser. The [Vagrantfile](Vagrantfile) included with the project is for
+the web browser. The [Vagrantfile](../Vagrantfile) included with the project is for
 local development only. It has a few scripts within it that help setup a local
 version of Puzzle Massive. This can all be set up by running the below
 `vagrant` commands.
