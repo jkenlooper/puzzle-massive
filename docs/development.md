@@ -45,6 +45,10 @@ It will prompt for inputs and show the defaults for each item that can be
 configured. This script can be run multiple times and will default to the
 choices that you have made before.
 
+It is not required to create a `.env` file if using the vagrant setup. A vagrant
+provision script will always be executed that creates this file on the
+virtual machine if it doesn't exist on the local machine.
+
 ```bash
 # Create or update the .env file
 ./bin/create_dot_env.sh;
@@ -97,6 +101,11 @@ should only need to be done once. It creates the initial database and then
 starts the services used for Puzzle Massive. These services should then
 automatically start up if the virtual machine is rebooted.
 
+The shell-init-dev-local provision script can be run multiple times as needed
+since it is idempotent. For example, if the `.env` file has been modified (and
+`vagrant rsync` has uploaded it to the virtual machine) then executing this
+provisioning script is necessary.
+
 ```bash
 # Vagrant virtual machine uses this port on the host to forward to the guest.
 # Pass along the forwarded port so redirects will work right.
@@ -137,13 +146,13 @@ with the `vagrant rsync-auto` command.
 
 ```bash
 # Copy the files to the virtual machine.
-vagrant rsync
+vagrant rsync legacy_puzzle_massive
 ```
 
 ```bash
 # Or continually watch files for any changes and copy them to the virtual
 # machine.
-vagrant rsync-auto
+vagrant rsync-auto legacy_puzzle_massive
 ```
 
 ### Troubleshoot Errors on the Vagrant Virtual Machine

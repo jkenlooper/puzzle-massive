@@ -37,6 +37,7 @@ manage remote servers.
 
 - Terraform deployment for a development environment. Work in progress of [issue #92](https://github.com/jkenlooper/puzzle-massive/issues/92)
 - Support for referral content in footer.
+- Default vagrant setup uses a local cdn that is backed by a local fake s3 server.
 
 ### Changed
 

@@ -199,6 +199,7 @@ AWS_CONFIG_APP
         "VAGRANT_FORWARDED_PORT_80": ENV["VAGRANT_FORWARDED_PORT_80"]
       },
       inline: <<-SHELL
+        echo "Hey! I'm walking here!" > /home/vagrant/puzzle-massive/src/.trigger-watchit
         cd /usr/local/src/puzzle-massive;
         echo "VAGRANT_FORWARDED_PORT_80=$VAGRANT_FORWARDED_PORT_80" > .vagrant-overrides
         chown dev:dev .vagrant-overrides
