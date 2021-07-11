@@ -28,12 +28,29 @@ License.
 
 [![DigitalOcean Referral Badge](https://web-platforms.sfo2.digitaloceanspaces.com/WWW/Badge%203.svg)](https://www.digitalocean.com/?refcode=686c08019031&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge)
 
-More documentation is available within the docs directory.
+## Local Install Instructions (TL;DR)
+
+Minimal setup to get it running on your local machine at
+[http://localhost:8080/](http://localhost:8080/). This will take a few minutes
+to complete.
+
+```bash
+vagrant up
+VAGRANT_FORWARDED_PORT_80=$(vagrant port --guest 80) vagrant provision --provision-with shell-init-dev-local
+vagrant provision --provision-with shell-testdata-puzzles-quick
+```
+
+---
+
+**More documentation is available within the docs directory.**
 
 - [Local development guide](docs/development.md) for getting a local version
   running on your own machine.
 - [Deployment guide](docs/deployment.md) for deploying to a live server. This
   covers both in-place deployments and blue-green deployments.
+- [Infrastructure as Code](_infra/README.md) read me documents how the project uses
+  [DigitalOcean](https://m.do.co/c/686c08019031) and [Terraform](https://www.terraform.io/)
+  for deploying to Development, Test, Acceptance, and Production environments.
 
 ## Getting Help
 
