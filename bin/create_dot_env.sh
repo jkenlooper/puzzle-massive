@@ -123,9 +123,10 @@ read -e -p "
 Bucket name for storing puzzle resources:
 " -i "${PUZZLE_RESOURCES_BUCKET}" PUZZLE_RESOURCES_BUCKET
 
-read -e -p "
-CacheControl header that will be used for all objects in the puzzle resources bucket:
-" -i "${PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL}" PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL
+# No real need to modify this setting.
+# read -e -p "
+# CacheControl header that will be used for all objects in the puzzle resources bucket:
+# " -i "${PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL}" PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL
 
 fi
 
