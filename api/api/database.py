@@ -89,6 +89,19 @@ def init_db():
             cur.execute(statement, {"application_name": application_name})
             db.commit()
 
+        ## Add fake bit authors
+        upsert_author_query = read_query_file("_insert_or_update_bit_author.sql")
+        for i in range(1, 3):
+            cur.execute(
+                upsert_author_query,
+                {
+                    "name": f"test-author{i}",
+                    "slug_name": f"testauthor{i}",
+                    "artist_document": f"testauthor{i}.md",
+                },
+            )
+        db.commit()
+
         ## Add fake bit icons
         def each(bit):
             for b in bit:
