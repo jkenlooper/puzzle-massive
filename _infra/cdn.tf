@@ -122,7 +122,7 @@ resource "digitalocean_spaces_bucket_object" "nginx_snippets_proxy_pass_cdn_conf
   bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
   key     = "snippets/proxy_pass-cdn.nginx.conf"
   acl     = "private"
-  content = "proxy_pass ${digitalocean_spaces_bucket.cdn.bucket_domain_name};"
+  content = "proxy_pass https://${digitalocean_spaces_bucket.cdn.bucket_domain_name}/resources/;"
 }
 
 resource "digitalocean_spaces_bucket_object" "cdn_nginx_conf" {

@@ -279,7 +279,7 @@ AWS_CONFIG_APP
     cdn.vm.provision "shell-install-nginx-conf", type: "shell", inline: <<-SHELL
     mkdir -p /etc/nginx/snippets
     echo "server_name localhost;" > /etc/nginx/snippets/server_name-cdn.nginx.conf
-    echo "proxy_pass http://s3fake.puzzle.massive.test:4568/chum/;" > /etc/nginx/snippets/proxy_pass-cdn.nginx.conf
+    echo "proxy_pass http://s3fake.puzzle.massive.test:4568/chum/resources/;" > /etc/nginx/snippets/proxy_pass-cdn.nginx.conf
     cp /home/vagrant/puzzle-massive/web/cdn.nginx.conf /etc/nginx/nginx.conf
 
     mkdir -p /var/lib/cdn/cache/
