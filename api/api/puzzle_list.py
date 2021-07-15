@@ -121,8 +121,6 @@ def build_select_available_puzzle_sql(query_file, status, type):
 class PuzzleListView(MethodView):
     """"""
 
-    decorators = [user_not_banned]
-
     def get(self):
         """
         /newapi/puzzle-list/?status=...&status=...&
