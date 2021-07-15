@@ -150,8 +150,9 @@ THEME_STATIC_FOLDER = "dist"
 #THEME_STATIC_PATH = "/theme/v0.0.1/"
 
 import json
-PACKAGEJSON = json.load(open('package.json'))
-VERSION = json.load(open('package.json'))['version']
+with open('package.json') as f:
+    PACKAGEJSON = json.load(f)
+    VERSION = PACKAGEJSON['version']
 THEME_STATIC_PATH = "/theme/{0}/".format(VERSION or '0')
 
 # Where the jinja2 templates for the site are located.  Will default to the app

@@ -115,8 +115,9 @@ class TestInternalTasksStartView(APITestCase):
                     json={"minimum": 2000},
                 )
                 self.assertEqual(200, rv.status_code)
+                # By default there is an admin user and anonymous user.
                 self.assertEqual(
-                    {"rowcount": 1, "msg": "Executed", "status_code": 200}, rv.json
+                    {"rowcount": 2, "msg": "Executed", "status_code": 200}, rv.json
                 )
 
     def test_update_user_name_approved_for_approved_date_due_task(self):
