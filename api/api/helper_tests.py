@@ -349,12 +349,13 @@ class PuzzleTestCase(APITestCase):
         )[0][0]
 
         # Add puzzle files to database
+        base_url = "" if self.app.config["LOCAL_PUZZLE_RESOURCES"] else "http://fake-cdn"
         cur.execute(
             read_query_file("add-puzzle-file.sql"),
             {
                 "puzzle": puzzle,
                 "name": "original",
-                "url": f"/resources/{puzzle_id}/{original_jpg}"
+                "url": f"{base_url}/resources/{puzzle_id}/{original_jpg}"
             },
         )
         cur.execute(
@@ -362,7 +363,7 @@ class PuzzleTestCase(APITestCase):
             {
                 "puzzle": puzzle,
                 "name": "preview_full",
-                "url": f"/resources/{puzzle_id}/{preview_full_jpg}",
+                "url": f"{base_url}/resources/{puzzle_id}/{preview_full_jpg}",
             },
         )
 
@@ -421,7 +422,7 @@ class PuzzleTestCase(APITestCase):
             {
                 "puzzle": puzzle,
                 "name": "pieces",
-                "url": f"/resources/{puzzle_id}/scale-100/{raster_png}"
+                "url": f"{base_url}/resources/{puzzle_id}/scale-100/{raster_png}"
             },
         )
         cur.execute(
@@ -429,7 +430,7 @@ class PuzzleTestCase(APITestCase):
             {
                 "puzzle": puzzle,
                 "name": "pzz",
-                "url": f"/resources/{puzzle_id}/scale-100/{raster_css}?ts={int(time.time())}"
+                "url": f"{base_url}/resources/{puzzle_id}/scale-100/{raster_css}?ts={int(time.time())}"
             },
         )
         self.db.commit()

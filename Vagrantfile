@@ -15,6 +15,7 @@ Vagrant.configure(2) do |config|
   config.vm.box = "bento/ubuntu-20.04"
 
   config.vm.define "legacy_puzzle_massive", primary: true do |legacy_puzzle_massive|
+    legacy_puzzle_massive.vm.hostname = "puzzle.massive.test"
     legacy_puzzle_massive.vm.network :private_network, ip: "192.168.117.24", auto_config: true, hostname: true
 
     legacy_puzzle_massive.vm.network "forwarded_port", guest: 80, host: 8080, auto_correct: true
@@ -37,57 +38,57 @@ Vagrant.configure(2) do |config|
     legacy_puzzle_massive.vm.provision "shell-auto-create-dot-env", type: "shell", run: "always", inline: <<-SHELL
       if test ! -e /home/vagrant/puzzle-massive/.env; then
         cat <<-'DEFAULT_ENV' > /home/vagrant/puzzle-massive/.env;
-          UNSPLASH_APPLICATION_ID=''
-          UNSPLASH_APPLICATION_NAME=''
-          UNSPLASH_SECRET=''
-          NEW_PUZZLE_CONTRIB='rizzo'
-          SECURE_COOKIE_SECRET='chocolate chip'
-          SUGGEST_IMAGE_LINK=''
-          SMTP_HOST='localhost'
-          SMTP_PORT='587'
-          SMTP_USER='user@localhost'
-          SMTP_PASSWORD='somepassword'
-          EMAIL_SENDER='sender@localhost'
-          EMAIL_MODERATOR='moderator@localhost'
-          AUTO_APPROVE_PUZZLES='y'
-          LOCAL_PUZZLE_RESOURCES='n'
-          CDN_BASE_URL='http://localhost:63812'
-          PUZZLE_RESOURCES_BUCKET_REGION='local'
-          PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL='http://s3fake.puzzle.massive.test:4568'
-          PUZZLE_RESOURCES_BUCKET='chum'
-          PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL='public, max-age:31536000, immutable'
-          EPHEMERAL_ARCHIVE_ENDPOINT_URL=''
-          EPHEMERAL_ARCHIVE_BUCKET=''
-          PUZZLE_RULES="all"
-          PUZZLE_FEATURES="all"
-          BLOCKEDPLAYER_EXPIRE_TIMEOUTS="30 300 3600"
-          MINIMUM_PIECE_COUNT=20
-          MAXIMUM_PIECE_COUNT=50000
-          PUZZLE_PIECE_GROUPS="100 200 400 800 1600 2200 4000 60000"
-          ACTIVE_PUZZLES_IN_PIECE_GROUPS="40  20  10  10  5    5    5    5"
-          MINIMUM_IN_QUEUE_PUZZLES_IN_PIECE_GROUPS="6   6   2   2   1    1    0    0"
-          MAX_POINT_COST_FOR_REBUILDING=1000
-          MAX_POINT_COST_FOR_DELETING=1000
-          BID_COST_PER_PUZZLE=100
-          POINT_COST_FOR_CHANGING_BIT=100
-          POINT_COST_FOR_CHANGING_NAME=100
-          NEW_USER_STARTING_POINTS=1300
-          POINTS_CAP=15000
-          BIT_ICON_EXPIRATION="
-          0:    20 minutes,
-          1:    1 day,
-          50:   3 days,
-          400:  7 days,
-          800:  14 days,
-          1600: 1 months
-          "
-          PUBLISH_WORKER_COUNT=2
-          STREAM_WORKER_COUNT=2
-          DOMAIN_NAME="puzzle.massive.xyz"
-          SITE_TITLE="Puzzle Massive"
-          HOME_PAGE_ROUTE="/chill/site/front/"
-          SOURCE_CODE_LINK="https://github.com/jkenlooper/puzzle-massive/"
-          M3=""
+UNSPLASH_APPLICATION_ID=''
+UNSPLASH_APPLICATION_NAME=''
+UNSPLASH_SECRET=''
+NEW_PUZZLE_CONTRIB='rizzo'
+SECURE_COOKIE_SECRET='chocolate chip'
+SUGGEST_IMAGE_LINK=''
+SMTP_HOST='localhost'
+SMTP_PORT='587'
+SMTP_USER='user@localhost'
+SMTP_PASSWORD='somepassword'
+EMAIL_SENDER='sender@localhost'
+EMAIL_MODERATOR='moderator@localhost'
+AUTO_APPROVE_PUZZLES='y'
+LOCAL_PUZZLE_RESOURCES='n'
+CDN_BASE_URL='http://localhost:63812'
+PUZZLE_RESOURCES_BUCKET_REGION='local'
+PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL='http://s3fake.puzzle.massive.test:4568'
+PUZZLE_RESOURCES_BUCKET='chum'
+PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL='public, max-age:31536000, immutable'
+EPHEMERAL_ARCHIVE_ENDPOINT_URL=''
+EPHEMERAL_ARCHIVE_BUCKET=''
+PUZZLE_RULES="all"
+PUZZLE_FEATURES="all"
+BLOCKEDPLAYER_EXPIRE_TIMEOUTS="30 300 3600"
+MINIMUM_PIECE_COUNT=20
+MAXIMUM_PIECE_COUNT=50000
+PUZZLE_PIECE_GROUPS="100 200 400 800 1600 2200 4000 60000"
+ACTIVE_PUZZLES_IN_PIECE_GROUPS="40  20  10  10  5    5    5    5"
+MINIMUM_IN_QUEUE_PUZZLES_IN_PIECE_GROUPS="6   6   2   2   1    1    0    0"
+MAX_POINT_COST_FOR_REBUILDING=1000
+MAX_POINT_COST_FOR_DELETING=1000
+BID_COST_PER_PUZZLE=100
+POINT_COST_FOR_CHANGING_BIT=100
+POINT_COST_FOR_CHANGING_NAME=100
+NEW_USER_STARTING_POINTS=1300
+POINTS_CAP=15000
+BIT_ICON_EXPIRATION="
+0:    20 minutes,
+1:    1 day,
+50:   3 days,
+400:  7 days,
+800:  14 days,
+1600: 1 months
+"
+PUBLISH_WORKER_COUNT=2
+STREAM_WORKER_COUNT=2
+DOMAIN_NAME="puzzle.massive.test"
+SITE_TITLE="Local Puzzle Massive"
+HOME_PAGE_ROUTE="/chill/site/front/"
+SOURCE_CODE_LINK="https://github.com/jkenlooper/puzzle-massive/"
+M3=""
 DEFAULT_ENV
       fi
     SHELL
@@ -207,6 +208,7 @@ AWS_CONFIG_APP
         ./bin/appctl.sh stop;
         su --command '
           python -m venv .;
+          rm -f site.cfg
           make;
         ' dev
         make install;
@@ -258,6 +260,7 @@ AWS_CONFIG_APP
   end
 
   config.vm.define "cdn" do |cdn|
+    cdn.vm.hostname = "cdn.puzzle.massive.test"
     cdn.vm.network :private_network, ip: "192.168.117.25", auto_config: true, hostname: true
 
     cdn.vm.network "forwarded_port", guest: 80, host: 63812, auto_correct: false
