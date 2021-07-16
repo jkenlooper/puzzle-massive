@@ -64,7 +64,15 @@ class PuzzleResource():
         if self.is_local_resource:
             local_dir = os.path.join(self.target_dir, dirs)
             os.makedirs(local_dir, exist_ok=True)
-            copy2(file_path, local_dir)
+            # Any existing file should be considered to be immutable and will
+            # NOT be replaced.
+            if os.path.exists(os.path.join(local_dir, os.path.basename(file_path))):
+                current_app.logger.warning(
+                    f"Skipping replacement of existing immutable file path: {os.path.join(local_dir, os.path.basename(file_path))}"
+                )
+                # os.remove(os.path.join(local_dir, os.path.basename(file_path)))
+            else:
+                copy2(file_path, local_dir)
             return
 
         #current_app.logger.warning("Remote PuzzleResource for 'put_file' is not fully implemented.")
@@ -172,13 +180,53 @@ class PuzzleResource():
             else:
                 raise err
         else:
-            with open(os.path.join(self.target_dir, file_path), "wb") as file:
+            tmp_file_dir = os.path.dirname(os.path.join(self.target_dir, file_path))
+            os.makedirs(tmp_file_dir, exist_ok=True)
+
+            with open(
+                os.path.join(tmp_file_dir, os.path.basename(file_path)), "wb"
+            ) as file:
                 self.s3.download_fileobj(
                     Bucket=PUZZLE_RESOURCES_BUCKET,
                     Key=f"resources/{self.puzzle_id}/{file_path}",
                     Fileobj=file
                 )
         return os.path.join(self.target_dir, file_path)
+
+    def purge_file(self, file_path):
+        if self.is_local_resource:
+            if not os.path.exists(os.path.join(self.target_dir, file_path)):
+                return
+            os.remove(os.path.join(self.target_dir, file_path))
+            return
+
+        PUZZLE_RESOURCES_BUCKET = self.config["PUZZLE_RESOURCES_BUCKET"]
+        current_app.logger.warning(
+            "Remote PuzzleResource for 'purge_file' is not fully implemented."
+        )
+
+        try:
+            response = self.s3.head_object(
+                Bucket=PUZZLE_RESOURCES_BUCKET,
+                Key=f"resources/{self.puzzle_id}/{file_path}",
+            )
+        except botocore.exceptions.ClientError as err:
+            if err.response["Error"]["Code"] == "404":
+                return
+            else:
+                raise err
+
+        # Skip deleting objects that are not owned by this domain.
+        if response["Metadata"]["owner"] != self.config["DOMAIN_NAME"]:
+            return
+
+        self.s3.delete_objects(
+            Bucket=PUZZLE_RESOURCES_BUCKET,
+            Delete={
+                "Objects": [{"Key": f"resources/{self.puzzle_id}/{file_path}"}],
+                "Quiet": True,
+            },
+        )
 
     def purge(self, exclude_regex=None):
         if self.is_local_resource:
