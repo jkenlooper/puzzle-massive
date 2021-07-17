@@ -66,6 +66,34 @@ variable "project_environment" {
   }
 }
 
+variable "is_volatile_active" {
+  type    = bool
+  default = true
+}
+variable "create_legacy_puzzle_massive_volatile" {
+  type        = bool
+  default     = true
+  description = "Used for creating a volatile legacy_puzzle_massive droplet that is not meant for Production."
+}
+variable "is_swap_a_active" {
+  type    = bool
+  default = false
+}
+variable "create_legacy_puzzle_massive_swap_a" {
+  type        = bool
+  default     = false
+  description = "Used for creating a blue/green compatible legacy_puzzle_massive droplet that will be used for Production."
+}
+variable "is_swap_b_active" {
+  type    = bool
+  default = false
+}
+variable "create_legacy_puzzle_massive_swap_b" {
+  type        = bool
+  default     = false
+  description = "Used for creating a blue/green compatible legacy_puzzle_massive droplet that will be used for Production."
+}
+
 variable "legacy_droplet_size" {
   default = "s-2vcpu-4gb"
 }

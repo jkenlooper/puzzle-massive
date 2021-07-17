@@ -1,6 +1,14 @@
-output "puzzle_massive_ip" {
-  description = "IP address of the deployed Puzzle Massive server"
-  value       = digitalocean_droplet.puzzle_massive.ipv4_address
+output "puzzle_massive_ip_volatile" {
+  description = "IP address of the deployed Legacy Puzzle Massive Volatile server"
+  value       = one(digitalocean_droplet.legacy_puzzle_massive_volatile[*].ipv4_address)
+}
+output "puzzle_massive_ip_swap_a" {
+  description = "IP address of the deployed Legacy Puzzle Massive Swap A server"
+  value       = one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address)
+}
+output "puzzle_massive_ip_swap_b" {
+  description = "IP address of the deployed Legacy Puzzle Massive Swap B server"
+  value       = one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address)
 }
 output "initial_dev_user_password" {
   description = "Initial password for dev user. This requires changing as soon as the dev user logins."

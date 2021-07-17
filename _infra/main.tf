@@ -14,13 +14,16 @@ resource "digitalocean_project" "puzzle_massive" {
   description = var.project_description
   purpose     = "Web Application"
   environment = var.project_environment
-  resources = [
-    digitalocean_droplet.puzzle_massive.urn,
-    digitalocean_spaces_bucket.cdn.urn,
+  resources = compact([
+    one(digitalocean_droplet.legacy_puzzle_massive_volatile[*].urn),
+    one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].urn),
+    one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].urn),
+    one(digitalocean_spaces_bucket.cdn[*].urn),
+    one(digitalocean_spaces_bucket.cdn_volatile[*].urn),
     digitalocean_spaces_bucket.ephemeral_artifacts.urn,
     digitalocean_spaces_bucket.ephemeral_archive.urn,
     digitalocean_droplet.cdn.urn
-  ]
+  ])
 }
 
 # The digitalocean managed certificates are only for load balancers and Spaces CDN.
@@ -140,14 +143,14 @@ resource "digitalocean_spaces_bucket_object" "iptables_setup_firewall_sh" {
   content = file("../bin/iptables-setup-firewall.sh")
 }
 
-resource "local_file" "host_inventory" {
-  filename        = "${lower(var.environment)}/host_inventory.ansible.cfg"
-  file_permission = "0400"
-  content         = <<-HOST_INVENTORY
-    [legacy_puzzle_massive]
-    ${digitalocean_droplet.puzzle_massive.ipv4_address}
-
-    [cdn]
-    ${digitalocean_droplet.cdn.ipv4_address}
-  HOST_INVENTORY
-}
+#resource "local_file" "host_inventory" {
+#  filename        = "${lower(var.environment)}/host_inventory.ansible.cfg"
+#  file_permission = "0400"
+#  content         = <<-HOST_INVENTORY
+#    [legacy_puzzle_massive]
+#    ${digitalocean_droplet.legacy_puzzle_massive[0].ipv4_address}
+#
+#    [cdn]
+#    ${digitalocean_droplet.cdn.ipv4_address}
+#  HOST_INVENTORY
+#}

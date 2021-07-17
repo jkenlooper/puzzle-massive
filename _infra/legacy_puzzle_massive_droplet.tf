@@ -1,8 +1,10 @@
-resource "digitalocean_record" "puzzle_massive" {
+# TODO: Switch to using the digitalocean floating droplet ip instead to avoid
+# delays with DNS TTL.
+resource "digitalocean_record" "legacy_puzzle_massive" {
   domain = var.domain
   type   = "A"
   name   = trimsuffix(var.sub_domain, ".")
-  value  = digitalocean_droplet.puzzle_massive.ipv4_address
+  value  = var.is_swap_a_active ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : var.is_swap_b_active ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : var.is_volatile_active ? one(digitalocean_droplet.legacy_puzzle_massive_volatile[*].ipv4_address) : null
   ttl    = 900
 }
 
@@ -78,28 +80,74 @@ resource "digitalocean_spaces_bucket_object" "artifact" {
   source = "${lower(var.environment)}/${var.artifact}"
 }
 
-resource "digitalocean_droplet" "puzzle_massive" {
-  name     = lower("puzzle-massive-${var.environment}")
+# Ansible will be used to update the droplet after deployment as needed.
+resource "digitalocean_droplet" "legacy_puzzle_massive_swap_a" {
+  count    = var.create_legacy_puzzle_massive_swap_a ? 1 : 0
+  name     = lower("puzzle-massive-${var.environment}-swap-a")
   size     = var.legacy_droplet_size
   image    = "ubuntu-20-04-x64"
   region   = var.region
   vpc_uuid = digitalocean_vpc.puzzle_massive.id
   ssh_keys = var.developer_ssh_key_fingerprints
   tags     = [digitalocean_tag.fw_web.id, digitalocean_tag.fw_developer_ssh.id]
-  depends_on = [
-    digitalocean_spaces_bucket_object.add_dev_user_sh,
-    digitalocean_spaces_bucket_object.update_sshd_config_sh,
-    digitalocean_spaces_bucket_object.set_external_puzzle_massive_in_hosts_sh,
-    digitalocean_spaces_bucket_object.install_latest_stable_nginx_sh,
-    digitalocean_spaces_bucket_object.setup_sh,
-    digitalocean_spaces_bucket_object.iptables_setup_firewall_sh,
-    digitalocean_spaces_bucket_object.infra_build__development_sh,
-    digitalocean_spaces_bucket_object.infra_build__test_sh,
-    digitalocean_spaces_bucket_object.infra_build__acceptance_sh,
-    digitalocean_spaces_bucket_object.infra_build__production_sh,
-    digitalocean_spaces_bucket_object.artifact,
-    local_file.user_data_sh,
-  ]
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      image,
+      user_data,
+    ]
+  }
+
+  # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#retrieve-user-data
+  # Debug via ssh to the droplet and tail the cloud-init logs:
+  # tail -f /var/log/cloud-init-output.log
+  # TODO: Should Development and Production be initially provisioned by Ansible?
+  #user_data = var.environment == "Test" || var.environment == "Acceptance" ? local_file.user_data_sh.sensitive_content : "echo 'provision manually'"
+  user_data = local_file.user_data_sh.sensitive_content
+}
+resource "digitalocean_droplet" "legacy_puzzle_massive_swap_b" {
+  count    = var.create_legacy_puzzle_massive_swap_b ? 1 : 0
+  name     = lower("puzzle-massive-${var.environment}-swap-b")
+  size     = var.legacy_droplet_size
+  image    = "ubuntu-20-04-x64"
+  region   = var.region
+  vpc_uuid = digitalocean_vpc.puzzle_massive.id
+  ssh_keys = var.developer_ssh_key_fingerprints
+  tags     = [digitalocean_tag.fw_web.id, digitalocean_tag.fw_developer_ssh.id]
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      # Ansible will be used to update the droplet after deployment as needed.
+      image,
+      user_data,
+    ]
+  }
+
+  # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#retrieve-user-data
+  # Debug via ssh to the droplet and tail the cloud-init logs:
+  # tail -f /var/log/cloud-init-output.log
+  # TODO: Should Development and Production be initially provisioned by Ansible?
+  #user_data = var.environment == "Test" || var.environment == "Acceptance" ? local_file.user_data_sh.sensitive_content : "echo 'provision manually'"
+  user_data = local_file.user_data_sh.sensitive_content
+}
+
+resource "digitalocean_droplet" "legacy_puzzle_massive_volatile" {
+  count    = var.create_legacy_puzzle_massive_volatile ? 1 : 0
+  name     = lower("puzzle-massive-${var.environment}-volatile")
+  size     = var.legacy_droplet_size
+  image    = "ubuntu-20-04-x64"
+  region   = var.region
+  vpc_uuid = digitalocean_vpc.puzzle_massive.id
+  ssh_keys = var.developer_ssh_key_fingerprints
+  tags     = [digitalocean_tag.fw_web.id, digitalocean_tag.fw_developer_ssh.id]
+  lifecycle {
+    prevent_destroy = false
+    ignore_changes = [
+      # Ansible will be used to update the droplet after deployment as needed.
+      image,
+      user_data,
+    ]
+  }
 
   # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#retrieve-user-data
   # Debug via ssh to the droplet and tail the cloud-init logs:
@@ -137,8 +185,21 @@ locals {
 }
 
 resource "local_file" "user_data_sh" {
-  filename          = "${lower(var.environment)}/legacy_puzzle_massive_droplet-user_data.sh"
-  file_permission   = "0400"
+  filename        = "${lower(var.environment)}/legacy_puzzle_massive_droplet-user_data.sh"
+  file_permission = "0400"
+  depends_on = [
+    digitalocean_spaces_bucket_object.add_dev_user_sh,
+    digitalocean_spaces_bucket_object.update_sshd_config_sh,
+    digitalocean_spaces_bucket_object.set_external_puzzle_massive_in_hosts_sh,
+    digitalocean_spaces_bucket_object.install_latest_stable_nginx_sh,
+    digitalocean_spaces_bucket_object.setup_sh,
+    digitalocean_spaces_bucket_object.iptables_setup_firewall_sh,
+    digitalocean_spaces_bucket_object.infra_build__development_sh,
+    digitalocean_spaces_bucket_object.infra_build__test_sh,
+    digitalocean_spaces_bucket_object.infra_build__acceptance_sh,
+    digitalocean_spaces_bucket_object.infra_build__production_sh,
+    digitalocean_spaces_bucket_object.artifact,
+  ]
   sensitive_content = <<-USER_DATA
     #!/usr/bin/env bash
     set -eu -o pipefail
@@ -161,9 +222,9 @@ resource "local_file" "user_data_sh" {
       AUTO_APPROVE_PUZZLES='${var.dot_env__AUTO_APPROVE_PUZZLES}'
       LOCAL_PUZZLE_RESOURCES='${var.dot_env__LOCAL_PUZZLE_RESOURCES}'
       CDN_BASE_URL='https://${digitalocean_record.cdn.fqdn}'
-      PUZZLE_RESOURCES_BUCKET_REGION='${digitalocean_spaces_bucket.cdn.region}'
-      PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL='https://${digitalocean_spaces_bucket.cdn.region}.digitaloceanspaces.com'
-      PUZZLE_RESOURCES_BUCKET='${digitalocean_spaces_bucket.cdn.name}'
+      PUZZLE_RESOURCES_BUCKET_REGION='${var.create_legacy_puzzle_massive_swap_a || var.create_legacy_puzzle_massive_swap_b ? one(digitalocean_spaces_bucket.cdn[*].region) : one(digitalocean_spaces_bucket.cdn_volatile[*].region)}'
+      PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL='https://${var.create_legacy_puzzle_massive_swap_a || var.create_legacy_puzzle_massive_swap_b ? one(digitalocean_spaces_bucket.cdn[*].region) : one(digitalocean_spaces_bucket.cdn_volatile[*].region)}.digitaloceanspaces.com'
+      PUZZLE_RESOURCES_BUCKET='${var.create_legacy_puzzle_massive_swap_a || var.create_legacy_puzzle_massive_swap_b ? one(digitalocean_spaces_bucket.cdn[*].name) : one(digitalocean_spaces_bucket.cdn_volatile[*].name)}'
       PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL='${var.dot_env__PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL}'
       EPHEMERAL_ARCHIVE_ENDPOINT_URL='https://${digitalocean_spaces_bucket.ephemeral_archive.region}.digitaloceanspaces.com'
       EPHEMERAL_ARCHIVE_BUCKET='${digitalocean_spaces_bucket.ephemeral_archive.name}'

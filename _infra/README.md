@@ -173,3 +173,19 @@ commands in a workspace. See the README.md for each environment.
 - [Test](/_infra/test/README.md)
 - [Acceptance](/_infra/acceptance/README.md)
 - [Production](/_infra/production/README.md)
+
+---
+
+## Ansible Usage and Guide
+
+### Maintenance Tasks
+
+- update packages and reboot
+
+- in-place update for patch versions
+
+playbook
+ansible-playbook ansible-playbooks/do-something.yaml -i development/inventory
+
+ad-hoc command
+ansible legacy_puzzle_massive -m command -a "echo 'hi'" -i development/inventory

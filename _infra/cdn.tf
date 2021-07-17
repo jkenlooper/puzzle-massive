@@ -25,6 +25,13 @@ resource "digitalocean_droplet" "cdn" {
     digitalocean_spaces_bucket_object.nginx_snippets_proxy_pass_cdn_conf,
     digitalocean_spaces_bucket_object.cdn_nginx_conf,
   ]
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      image,
+      user_data,
+    ]
+  }
 
   # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#retrieve-user-data
   user_data = <<-USER_DATA
@@ -104,9 +111,21 @@ resource "digitalocean_record" "cdn" {
 resource "random_uuid" "cdn" {
 }
 
-resource "digitalocean_spaces_bucket" "cdn" {
+resource "digitalocean_spaces_bucket" "cdn_volatile" {
+  count  = var.create_legacy_puzzle_massive_volatile ? 1 : 0
   name   = substr("puzzle-massive-cdn-${lower(var.environment)}-${random_uuid.cdn.result}", 0, 63)
   region = var.bucket_region
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+resource "digitalocean_spaces_bucket" "cdn" {
+  count  = var.create_legacy_puzzle_massive_swap_a || var.create_legacy_puzzle_massive_swap_b ? 1 : 0
+  name   = substr("puzzle-massive-cdn-${lower(var.environment)}-${random_uuid.cdn.result}", 0, 63)
+  region = var.bucket_region
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "digitalocean_spaces_bucket_object" "nginx_snippets_server_name_cdn_conf" {
@@ -122,7 +141,10 @@ resource "digitalocean_spaces_bucket_object" "nginx_snippets_proxy_pass_cdn_conf
   bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
   key     = "snippets/proxy_pass-cdn.nginx.conf"
   acl     = "private"
-  content = "proxy_pass https://${digitalocean_spaces_bucket.cdn.bucket_domain_name}/resources/;"
+  content = "proxy_pass https://${var.create_legacy_puzzle_massive_swap_a || var.create_legacy_puzzle_massive_swap_b ? one(digitalocean_spaces_bucket.cdn[*].bucket_domain_name) : one(digitalocean_spaces_bucket.cdn_volatile[*].bucket_domain_name)}/resources/;"
+
+
+
 }
 
 resource "digitalocean_spaces_bucket_object" "cdn_nginx_conf" {
