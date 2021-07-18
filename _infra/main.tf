@@ -22,7 +22,8 @@ resource "digitalocean_project" "puzzle_massive" {
     one(digitalocean_spaces_bucket.cdn_volatile[*].urn),
     digitalocean_spaces_bucket.ephemeral_artifacts.urn,
     digitalocean_spaces_bucket.ephemeral_archive.urn,
-    digitalocean_droplet.cdn.urn
+    one(digitalocean_droplet.cdn_volatile[*].urn),
+    one(digitalocean_droplet.cdn[*].urn),
   ])
 }
 
@@ -52,7 +53,7 @@ resource "digitalocean_tag" "fw_web" {
 
 resource "digitalocean_firewall" "developer_ssh" {
   name = "puzzle-massive-${lower(var.environment)}-developer-ssh"
-  tags = [digitalocean_tag.fw_developer_ssh.id]
+  tags = [digitalocean_tag.fw_developer_ssh.name]
 
   inbound_rule {
     protocol         = "tcp"
@@ -68,7 +69,7 @@ resource "digitalocean_firewall" "developer_ssh" {
 
 resource "digitalocean_firewall" "web" {
   name = "puzzle-massive-${lower(var.environment)}-web"
-  tags = [digitalocean_tag.fw_web.id]
+  tags = [digitalocean_tag.fw_web.name]
 
   inbound_rule {
     protocol         = "tcp"

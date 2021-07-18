@@ -174,6 +174,25 @@ commands in a workspace. See the README.md for each environment.
 - [Acceptance](/_infra/acceptance/README.md)
 - [Production](/_infra/production/README.md)
 
+### Production Deployments
+
+wip
+
+Steps involved to not always depend on using a DigitalOcean floating IP.
+DigitalOcean limits these to 3 per account.
+
+1. Update DNS TTL to be shorter
+2. Wait until after DNS propagates (depending on previous TTL value \* number of hops)
+3. Add DO floating IP and point to the legacy puzzle massive droplet swap_a or swap_b that is active
+4. Wait until after DNS propagates (depending on previous TTL value \* number of hops)
+5. Create the new swap for legacy puzzle massive droplet and verify
+6. Update floating IP to point to new swap
+7. Remove old swap if everything is looking good
+8. Update DNS to point to new swap instead of floating IP
+9. Wait until after DNS propagates (depending on previous TTL value \* number of hops)
+10. Remove DO floating IP
+11. Update DNS TTL to be longer
+
 ---
 
 ## Ansible Usage and Guide

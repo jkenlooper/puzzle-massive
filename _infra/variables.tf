@@ -66,6 +66,25 @@ variable "project_environment" {
   }
 }
 
+variable "dns_ttl" {
+  description = "DNS TTL to use for droplets that are not volatile. Values are in seconds and must be between 30 and 86400."
+  default = 3600
+  type = number
+  validation {
+    condition = can(var.dns_ttl >= 30 && var.dns_ttl <= 86400)
+    error_message = "Values for DigitalOcean DNS TTLs must be at least 30 seconds. It is not recommended to use a value higher the 86400 (24 hours) since the propagation for that could be multiple days when accounting for the number of hops."
+  }
+}
+variable "volatile_dns_ttl" {
+  description = "DNS TTL to use for droplets that are volatile. Values are in seconds and must be between 30 and 900."
+  default = 30
+  type = number
+  validation {
+    condition = can(var.volatile_dns_ttl >= 30 && var.volatile_dns_ttl <= 900)
+    error_message = "Values for DigitalOcean DNS TTLs must be at least 30 seconds. It is not recommended to use a value higher the 900 (15 minutes) since the propagation for that could be multiple hours when accounting for the number of hops."
+  }
+}
+
 variable "is_volatile_active" {
   type    = bool
   default = true
@@ -92,6 +111,25 @@ variable "create_legacy_puzzle_massive_swap_b" {
   type        = bool
   default     = false
   description = "Used for creating a blue/green compatible legacy_puzzle_massive droplet that will be used for Production."
+}
+
+variable "is_cdn_volatile_active" {
+  type    = bool
+  default = true
+}
+variable "create_cdn_volatile" {
+  type        = bool
+  default     = true
+  description = "Used for creating a volatile CDN droplet that is not meant for Production."
+}
+variable "is_cdn_active" {
+  type    = bool
+  default = false
+}
+variable "create_cdn" {
+  type        = bool
+  default     = false
+  description = "Used for creating a CDN droplet that is meant for Production."
 }
 
 variable "legacy_droplet_size" {
@@ -214,7 +252,7 @@ variable "dot_env__AUTO_APPROVE_PUZZLES" {
 }
 
 variable "dot_env__LOCAL_PUZZLE_RESOURCES" {
-  default     = "y"
+  default     = "n"
   description = "Use local puzzle resource files [y/n]. The cdn resource will still be created regardless of this value."
   type        = string
   validation {

@@ -5,13 +5,14 @@ resource "digitalocean_record" "legacy_puzzle_massive" {
   type   = "A"
   name   = trimsuffix(var.sub_domain, ".")
   value  = var.is_swap_a_active ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : var.is_swap_b_active ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : var.is_volatile_active ? one(digitalocean_droplet.legacy_puzzle_massive_volatile[*].ipv4_address) : null
-  ttl    = 900
+  # minimum value for TTL on digitalocean DNS is 30 seconds.
+  ttl    = var.is_volatile_active ? var.volatile_dns_ttl : var.dns_ttl
 }
 
 resource "random_uuid" "ephemeral_archive" {
 }
 resource "digitalocean_spaces_bucket" "ephemeral_archive" {
-  name   = substr("ephemeral-archive-${random_uuid.ephemeral_archive.result}", 0, 63)
+  name   = substr("ephemeral-archive-${lower(var.environment)}-${random_uuid.ephemeral_archive.result}", 0, 63)
   region = var.bucket_region
   acl    = "private"
   lifecycle_rule {
@@ -89,7 +90,7 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_swap_a" {
   region   = var.region
   vpc_uuid = digitalocean_vpc.puzzle_massive.id
   ssh_keys = var.developer_ssh_key_fingerprints
-  tags     = [digitalocean_tag.fw_web.id, digitalocean_tag.fw_developer_ssh.id]
+  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name]
   lifecycle {
     prevent_destroy = true
     ignore_changes = [
@@ -102,8 +103,8 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_swap_a" {
   # Debug via ssh to the droplet and tail the cloud-init logs:
   # tail -f /var/log/cloud-init-output.log
   # TODO: Should Development and Production be initially provisioned by Ansible?
-  #user_data = var.environment == "Test" || var.environment == "Acceptance" ? local_file.user_data_sh.sensitive_content : "echo 'provision manually'"
-  user_data = local_file.user_data_sh.sensitive_content
+  #user_data = var.environment == "Test" || var.environment == "Acceptance" ? local_file.legacy_user_data_sh.sensitive_content : "echo 'provision manually'"
+  user_data = local_file.legacy_user_data_sh.sensitive_content
 }
 resource "digitalocean_droplet" "legacy_puzzle_massive_swap_b" {
   count    = var.create_legacy_puzzle_massive_swap_b ? 1 : 0
@@ -113,7 +114,7 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_swap_b" {
   region   = var.region
   vpc_uuid = digitalocean_vpc.puzzle_massive.id
   ssh_keys = var.developer_ssh_key_fingerprints
-  tags     = [digitalocean_tag.fw_web.id, digitalocean_tag.fw_developer_ssh.id]
+  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name]
   lifecycle {
     prevent_destroy = true
     ignore_changes = [
@@ -127,8 +128,8 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_swap_b" {
   # Debug via ssh to the droplet and tail the cloud-init logs:
   # tail -f /var/log/cloud-init-output.log
   # TODO: Should Development and Production be initially provisioned by Ansible?
-  #user_data = var.environment == "Test" || var.environment == "Acceptance" ? local_file.user_data_sh.sensitive_content : "echo 'provision manually'"
-  user_data = local_file.user_data_sh.sensitive_content
+  #user_data = var.environment == "Test" || var.environment == "Acceptance" ? local_file.legacy_user_data_sh.sensitive_content : "echo 'provision manually'"
+  user_data = local_file.legacy_user_data_sh.sensitive_content
 }
 
 resource "digitalocean_droplet" "legacy_puzzle_massive_volatile" {
@@ -139,7 +140,7 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_volatile" {
   region   = var.region
   vpc_uuid = digitalocean_vpc.puzzle_massive.id
   ssh_keys = var.developer_ssh_key_fingerprints
-  tags     = [digitalocean_tag.fw_web.id, digitalocean_tag.fw_developer_ssh.id]
+  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name]
   lifecycle {
     prevent_destroy = false
     ignore_changes = [
@@ -153,8 +154,8 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_volatile" {
   # Debug via ssh to the droplet and tail the cloud-init logs:
   # tail -f /var/log/cloud-init-output.log
   # TODO: Should Development and Production be initially provisioned by Ansible?
-  #user_data = var.environment == "Test" || var.environment == "Acceptance" ? local_file.user_data_sh.sensitive_content : "echo 'provision manually'"
-  user_data = local_file.user_data_sh.sensitive_content
+  #user_data = var.environment == "Test" || var.environment == "Acceptance" ? local_file.legacy_user_data_sh.sensitive_content : "echo 'provision manually'"
+  user_data = local_file.legacy_user_data_sh.sensitive_content
 }
 
 resource "random_string" "initial_dev_user_password" {
@@ -184,7 +185,7 @@ locals {
   ]
 }
 
-resource "local_file" "user_data_sh" {
+resource "local_file" "legacy_user_data_sh" {
   filename        = "${lower(var.environment)}/legacy_puzzle_massive_droplet-user_data.sh"
   file_permission = "0400"
   depends_on = [
@@ -220,11 +221,11 @@ resource "local_file" "user_data_sh" {
       EMAIL_SENDER='${var.dot_env__EMAIL_SENDER}'
       EMAIL_MODERATOR='${var.dot_env__EMAIL_MODERATOR}'
       AUTO_APPROVE_PUZZLES='${var.dot_env__AUTO_APPROVE_PUZZLES}'
-      LOCAL_PUZZLE_RESOURCES='${var.dot_env__LOCAL_PUZZLE_RESOURCES}'
-      CDN_BASE_URL='https://${digitalocean_record.cdn.fqdn}'
-      PUZZLE_RESOURCES_BUCKET_REGION='${var.create_legacy_puzzle_massive_swap_a || var.create_legacy_puzzle_massive_swap_b ? one(digitalocean_spaces_bucket.cdn[*].region) : one(digitalocean_spaces_bucket.cdn_volatile[*].region)}'
-      PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL='https://${var.create_legacy_puzzle_massive_swap_a || var.create_legacy_puzzle_massive_swap_b ? one(digitalocean_spaces_bucket.cdn[*].region) : one(digitalocean_spaces_bucket.cdn_volatile[*].region)}.digitaloceanspaces.com'
-      PUZZLE_RESOURCES_BUCKET='${var.create_legacy_puzzle_massive_swap_a || var.create_legacy_puzzle_massive_swap_b ? one(digitalocean_spaces_bucket.cdn[*].name) : one(digitalocean_spaces_bucket.cdn_volatile[*].name)}'
+      LOCAL_PUZZLE_RESOURCES='${var.create_cdn || var.create_cdn_volatile ? var.dot_env__LOCAL_PUZZLE_RESOURCES : "y"}'
+      CDN_BASE_URL='${var.create_cdn || var.create_cdn_volatile ? "http://${one(digitalocean_record.cdn[*].fqdn)}" : ""}'
+      PUZZLE_RESOURCES_BUCKET_REGION='${var.create_cdn ? one(digitalocean_spaces_bucket.cdn[*].region) : var.create_cdn_volatile ? one(digitalocean_spaces_bucket.cdn_volatile[*].region) : ""}'
+      PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL='${var.create_cdn || var.create_cdn_volatile ? "https://${var.create_cdn ? one(digitalocean_spaces_bucket.cdn[*].region) : one(digitalocean_spaces_bucket.cdn_volatile[*].region)}.digitaloceanspaces.com" : ""}'
+      PUZZLE_RESOURCES_BUCKET='${var.create_cdn ? one(digitalocean_spaces_bucket.cdn[*].name) : var.create_cdn_volatile ? one(digitalocean_spaces_bucket.cdn_volatile[*].name) : ""}'
       PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL='${var.dot_env__PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL}'
       EPHEMERAL_ARCHIVE_ENDPOINT_URL='https://${digitalocean_spaces_bucket.ephemeral_archive.region}.digitaloceanspaces.com'
       EPHEMERAL_ARCHIVE_BUCKET='${digitalocean_spaces_bucket.ephemeral_archive.name}'

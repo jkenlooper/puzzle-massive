@@ -1,5 +1,6 @@
 locals {
   ephemeral_artifact_keys_cdn = [
+    "bin/add-dev-user.sh",
     "bin/update-sshd-config.sh",
     "bin/install-latest-stable-nginx.sh",
     "bin/iptables-setup-firewall.sh",
@@ -10,21 +11,14 @@ locals {
 }
 
 resource "digitalocean_droplet" "cdn" {
+  count    = var.create_cdn ? 1 : 0
   name     = lower("cdn-${var.environment}")
   size     = var.cdn_droplet_size
   image    = "ubuntu-20-04-x64"
   region   = var.region
   vpc_uuid = digitalocean_vpc.puzzle_massive.id
   ssh_keys = var.developer_ssh_key_fingerprints
-  tags     = [digitalocean_tag.fw_web.id, digitalocean_tag.fw_developer_ssh.id]
-  depends_on = [
-    digitalocean_spaces_bucket_object.update_sshd_config_sh,
-    digitalocean_spaces_bucket_object.install_latest_stable_nginx_sh,
-    digitalocean_spaces_bucket_object.iptables_setup_firewall_sh,
-    digitalocean_spaces_bucket_object.nginx_snippets_server_name_cdn_conf,
-    digitalocean_spaces_bucket_object.nginx_snippets_proxy_pass_cdn_conf,
-    digitalocean_spaces_bucket_object.cdn_nginx_conf,
-  ]
+  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name]
   lifecycle {
     prevent_destroy = true
     ignore_changes = [
@@ -32,9 +26,42 @@ resource "digitalocean_droplet" "cdn" {
       user_data,
     ]
   }
+  user_data = local_file.cdn_user_data_sh.sensitive_content
+}
+
+resource "digitalocean_droplet" "cdn_volatile" {
+  count    = var.create_cdn_volatile ? 1 : 0
+  name     = lower("cdn-volatile-${var.environment}")
+  size     = var.cdn_droplet_size
+  image    = "ubuntu-20-04-x64"
+  region   = var.region
+  vpc_uuid = digitalocean_vpc.puzzle_massive.id
+  ssh_keys = var.developer_ssh_key_fingerprints
+  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name]
+  lifecycle {
+    prevent_destroy = false
+    ignore_changes = [
+      image,
+    ]
+  }
+  user_data = local_file.cdn_user_data_sh.sensitive_content
+}
+
+resource "local_file" "cdn_user_data_sh" {
+  filename        = "${lower(var.environment)}/cdn_droplet-user_data.sh"
+  file_permission = "0400"
+  depends_on = [
+    digitalocean_spaces_bucket_object.add_dev_user_sh,
+    digitalocean_spaces_bucket_object.update_sshd_config_sh,
+    digitalocean_spaces_bucket_object.install_latest_stable_nginx_sh,
+    digitalocean_spaces_bucket_object.iptables_setup_firewall_sh,
+    digitalocean_spaces_bucket_object.nginx_snippets_server_name_cdn_conf[0],
+    digitalocean_spaces_bucket_object.nginx_snippets_proxy_pass_cdn_conf[0],
+    digitalocean_spaces_bucket_object.cdn_nginx_conf[0],
+  ]
 
   # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#retrieve-user-data
-  user_data = <<-USER_DATA
+  sensitive_content = <<-USER_DATA
     #!/usr/bin/env bash
     set -eu -o pipefail
     set -x
@@ -78,6 +105,7 @@ resource "digitalocean_droplet" "cdn" {
     mv $EPHEMERAL_DIR/?*.sh bin/
     chmod +x bin/?*.sh
 
+    ./bin/add-dev-user.sh ${random_string.initial_dev_user_password.result}
     ./bin/update-sshd-config.sh
     ./bin/install-latest-stable-nginx.sh
     ./bin/iptables-setup-firewall.sh
@@ -102,17 +130,20 @@ resource "digitalocean_droplet" "cdn" {
 }
 
 resource "digitalocean_record" "cdn" {
+  count = var.create_cdn || var.create_cdn_volatile ? 1 : 0
   domain = var.domain
   type   = "A"
   name   = "cdn.${trimsuffix(var.sub_domain, ".")}"
-  value  = digitalocean_droplet.cdn.ipv4_address
+  value  = var.is_cdn_volatile_active ? one(digitalocean_droplet.cdn_volatile[*].ipv4_address) : var.is_cdn_active ? one(digitalocean_droplet.cdn[*].ipv4_address) : null
+  # minimum value for TTL on digitalocean DNS is 30 seconds.
+  ttl    = var.is_volatile_active ? var.volatile_dns_ttl : var.dns_ttl
 }
 
 resource "random_uuid" "cdn" {
 }
 
 resource "digitalocean_spaces_bucket" "cdn_volatile" {
-  count  = var.create_legacy_puzzle_massive_volatile ? 1 : 0
+  count    = var.create_cdn_volatile ? 1 : 0
   name   = substr("puzzle-massive-cdn-${lower(var.environment)}-${random_uuid.cdn.result}", 0, 63)
   region = var.bucket_region
   lifecycle {
@@ -120,7 +151,7 @@ resource "digitalocean_spaces_bucket" "cdn_volatile" {
   }
 }
 resource "digitalocean_spaces_bucket" "cdn" {
-  count  = var.create_legacy_puzzle_massive_swap_a || var.create_legacy_puzzle_massive_swap_b ? 1 : 0
+  count    = var.create_cdn ? 1 : 0
   name   = substr("puzzle-massive-cdn-${lower(var.environment)}-${random_uuid.cdn.result}", 0, 63)
   region = var.bucket_region
   lifecycle {
@@ -129,6 +160,7 @@ resource "digitalocean_spaces_bucket" "cdn" {
 }
 
 resource "digitalocean_spaces_bucket_object" "nginx_snippets_server_name_cdn_conf" {
+  count    = var.create_cdn || var.create_cdn_volatile ? 1 : 0
   region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
   bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
   key     = "snippets/server_name-cdn.nginx.conf"
@@ -137,17 +169,19 @@ resource "digitalocean_spaces_bucket_object" "nginx_snippets_server_name_cdn_con
 }
 
 resource "digitalocean_spaces_bucket_object" "nginx_snippets_proxy_pass_cdn_conf" {
+  count    = var.create_cdn || var.create_cdn_volatile ? 1 : 0
   region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
   bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
   key     = "snippets/proxy_pass-cdn.nginx.conf"
   acl     = "private"
-  content = "proxy_pass https://${var.create_legacy_puzzle_massive_swap_a || var.create_legacy_puzzle_massive_swap_b ? one(digitalocean_spaces_bucket.cdn[*].bucket_domain_name) : one(digitalocean_spaces_bucket.cdn_volatile[*].bucket_domain_name)}/resources/;"
+  content = "proxy_pass https://${var.create_cdn ? one(digitalocean_spaces_bucket.cdn[*].bucket_domain_name) : one(digitalocean_spaces_bucket.cdn_volatile[*].bucket_domain_name)}/resources/;"
 
 
 
 }
 
 resource "digitalocean_spaces_bucket_object" "cdn_nginx_conf" {
+  count    = var.create_cdn || var.create_cdn_volatile ? 1 : 0
   region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
   bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
   key     = "cdn.nginx.conf"
