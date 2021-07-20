@@ -67,21 +67,21 @@ variable "project_environment" {
 }
 
 variable "dns_ttl" {
-  description = "DNS TTL to use for droplets that are not volatile. Values are in seconds and must be between 30 and 86400."
+  description = "DNS TTL to use for droplets that are not volatile. Minimum is 30 seconds. It is not recommended to use a value higher than 86400 (24 hours)."
   default = 3600
   type = number
   validation {
-    condition = can(var.dns_ttl >= 30 && var.dns_ttl <= 86400)
-    error_message = "Values for DigitalOcean DNS TTLs must be at least 30 seconds. It is not recommended to use a value higher the 86400 (24 hours) since the propagation for that could be multiple days when accounting for the number of hops."
+    condition = can(var.dns_ttl >= 30)
+    error_message = "Values for DigitalOcean DNS TTLs must be at least 30 seconds."
   }
 }
 variable "volatile_dns_ttl" {
-  description = "DNS TTL to use for droplets that are volatile. Values are in seconds and must be between 30 and 900."
-  default = 30
+  description = "DNS TTL to use for droplets that are volatile. Minimum is 30 seconds. It is not recommended to use a value higher the 900 (15 minutes)."
+  default = 300
   type = number
   validation {
     condition = can(var.volatile_dns_ttl >= 30 && var.volatile_dns_ttl <= 900)
-    error_message = "Values for DigitalOcean DNS TTLs must be at least 30 seconds. It is not recommended to use a value higher the 900 (15 minutes) since the propagation for that could be multiple hours when accounting for the number of hops."
+    error_message = "Values for DigitalOcean DNS TTLs must be at least 30 seconds."
   }
 }
 
