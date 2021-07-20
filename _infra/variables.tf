@@ -66,6 +66,11 @@ variable "project_environment" {
   }
 }
 
+variable "is_floating_ip_active" {
+  description = "Used when deploying to Production and needing to be able to swap between stateful droplets (Blue/Green deployments)."
+  default = false
+}
+
 variable "dns_ttl" {
   description = "DNS TTL to use for droplets that are not volatile. Minimum is 30 seconds. It is not recommended to use a value higher than 86400 (24 hours)."
   default = 3600

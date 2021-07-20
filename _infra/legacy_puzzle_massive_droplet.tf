@@ -4,9 +4,15 @@ resource "digitalocean_record" "legacy_puzzle_massive" {
   domain = var.domain
   type   = "A"
   name   = trimsuffix(var.sub_domain, ".")
-  value  = var.is_swap_a_active ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : var.is_swap_b_active ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : var.is_volatile_active ? one(digitalocean_droplet.legacy_puzzle_massive_volatile[*].ipv4_address) : null
+  value  = var.is_floating_ip_active ? one(digitalocean_floating_ip.legacy_puzzle_massive[*].ip_address) : var.is_swap_a_active ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : var.is_swap_b_active ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : var.is_volatile_active ? one(digitalocean_droplet.legacy_puzzle_massive_volatile[*].ipv4_address) : null
   # minimum value for TTL on digitalocean DNS is 30 seconds.
   ttl    = var.is_volatile_active ? var.volatile_dns_ttl : var.dns_ttl
+}
+
+resource "digitalocean_floating_ip" "legacy_puzzle_massive" {
+  count = var.is_floating_ip_active ? 1 : 0
+  region = var.region
+  droplet_id = var.is_swap_a_active ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].id) : var.is_swap_b_active ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].id) : var.is_volatile_active ? one(digitalocean_droplet.legacy_puzzle_massive_volatile[*].id) : null
 }
 
 resource "random_uuid" "ephemeral_archive" {

@@ -188,29 +188,13 @@ the DigitalOcean nameservers like this:
 dig @ns1.digitalocean.com puzzle.massive.xyz
 ```
 
-Set a local variable for the Fully Qualified Domain Name to what has been set
-for the Terraform variables 'sub_domain' and 'domain' for this environment. The
-ENVIRONMENT variable should be a valid environment like 'development', 'test',
-'acceptance', or 'production'.
-
-```bash
-ENVIRONMENT=development
-FQDN=$(echo 'format("${var.sub_domain}${var.domain}")' | \
-  ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1 | xargs)
-echo "The FQDN for the $ENVIRONMENT environment is $FQDN."
-```
-
-Get the current DNS TTL.
-
-```bash
-CURRENT_DNS_TTL=$(dig +nocmd @ns1.digitalocean.com $FQDN +noall +answer | cut -f2)
-echo "Current DNS TTL is $CURRENT_DNS_TTL seconds for $FQDN."
-```
+_Created an interactive script to handle deployments. Still untested and a work
+in progress._ See `_infra/deploy.sh` script.
 
 1. Update DNS TTL to be shorter
 2. Wait until after DNS propagates (depending on previous TTL value)
 3. Add DO floating IP and point to the legacy puzzle massive droplet swap_a or swap_b that is active
-4. Wait until after DNS propagates (depending on previous TTL value)
+4. Wait until after DNS propagates (depending on shorter TTL value)
 5. Create the new swap for legacy puzzle massive droplet and verify
 6. Update floating IP to point to new swap
 7. Remove old swap if everything is looking good
