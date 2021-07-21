@@ -10,7 +10,7 @@ resource "digitalocean_record" "legacy_puzzle_massive" {
 }
 
 resource "digitalocean_floating_ip" "legacy_puzzle_massive" {
-  count = var.is_floating_ip_active ? 1 : 0
+  count = var.create_floating_ip_puzzle_massive ? 1 : 0
   region = var.region
   droplet_id = var.is_swap_a_active ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].id) : var.is_swap_b_active ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].id) : var.is_volatile_active ? one(digitalocean_droplet.legacy_puzzle_massive_volatile[*].id) : null
 }
