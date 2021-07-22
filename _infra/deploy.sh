@@ -92,12 +92,22 @@ SHORTER_DNS_TTL=$(echo 'var.short_dns_ttl' | \
 CURRENT_DNS_TTL=$(dig +nocmd @ns1.digitalocean.com $FQDN +noall +answer | cut -f2)
 echo "Current DNS TTL is $CURRENT_DNS_TTL seconds for $FQDN."
 
-# 1. Update DNS TTL to be shorter
-TF_VAR_use_short_dns_ttl=true \
-./$ENVIRONMENT/terra.sh apply
+
+
+# TODO: It may be better to generate a script here of the rest of the commands
+# to run. That way it could be modified as needed for a deployment or used as
+# a guide when doing a deployment.  Otherwise if some command failed it might be
+# hard to pick up where it was left off since running all these commands again
+# are not idempotent.
 
 echo "WIP and not fully implemented.  Exiting out now."
 exit 0
+
+
+
+# 1. Update DNS TTL to be shorter
+TF_VAR_use_short_dns_ttl=true \
+./$ENVIRONMENT/terra.sh apply
 
 echo "Waiting for new shorter DNS TTL to be set."
 while [ $COUNT -le 10 ]; do

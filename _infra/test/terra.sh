@@ -2,13 +2,13 @@
 
 # Helper script for using terraform commands in a workspace.
 # Don't use this script if doing anything other then mundane main commands like
-# plan, apply, or destroy.
+# console, plan, apply, or destroy.
 
 set -o nounset
 set -o pipefail
 set -o errexit
 
-# Should be plan, apply, or destroy
+# Should be console, plan, apply, or destroy
 terraform_command=$1
 
 test $(basename $PWD) = "_infra" || (echo "Must run this script from the _infra directory." && exit 1)
@@ -17,8 +17,6 @@ test $(basename $PWD) = "_infra" || (echo "Must run this script from the _infra 
 script_dir=$(dirname $(realpath $0))
 workspace=$(basename $script_dir)
 project_dir=$(dirname $PWD)
-
-tmp_artifact_bundle=$(mktemp -d)/puzzle-massive.bundle
 
 # The test environment is based off of a git tag with test/
 test_tag="$(git tag --list 'test/*' --contains)"
@@ -29,20 +27,30 @@ echo "Terraform workspace is: $workspace"
 echo "Project description will be: '$project_description'"
 
 cd $project_dir
-git diff --quiet || (echo "Project directory is dirty. Please commit any changes first." && exit 1)
-git bundle create $tmp_artifact_bundle HEAD
-artifact_checksum=$(md5sum $tmp_artifact_bundle | cut -f1 -d ' ')
-artifact_bundle=puzzle-massive-$(jq -r '.version' package.json)-$artifact_checksum.bundle
-rm -f puzzle-massive-*.bundle
-mv $tmp_artifact_bundle $artifact_bundle
+project_version=$(jq -r '.version' package.json)
+artifact_bundle="$(echo puzzle-massive-$project_version-*.bundle)"
+
+if [ ! -e $artifact_bundle -o "${terraform_command}" != "console" ]; then
+  git diff --quiet || (echo "Project directory is dirty. Please commit any changes first." && exit 1)
+  tmp_artifact_bundle=$(mktemp -d)/puzzle-massive.bundle
+  git bundle create $tmp_artifact_bundle HEAD
+  artifact_checksum=$(md5sum $tmp_artifact_bundle | cut -f1 -d ' ')
+  artifact_bundle=puzzle-massive-$project_version-$artifact_checksum.bundle
+  rm -f puzzle-massive-*.bundle
+  mv $tmp_artifact_bundle $artifact_bundle
+fi
+
 cd -
 
 echo "Versioned artifact bundle file: '$project_dir/$artifact_bundle'"
 
 set -x
 
-rm -f $script_dir/puzzle-massive-*.bundle
-cp $project_dir/$artifact_bundle $script_dir/
+existing_artifact="$(echo $script_dir/puzzle-massive-*.bundle)"
+if [ ! -e "$existing_artifact" -o "$(md5sum $existing_artifact | cut -f1 -d ' ')" != "$(md5sum $project_dir/$artifact_bundle | cut -f1 -d ' ')" ]; then
+  rm -f $script_dir/puzzle-massive-*.bundle
+  cp $project_dir/$artifact_bundle $script_dir/
+fi
 
 terraform workspace select $workspace || \
   terraform workspace new $workspace

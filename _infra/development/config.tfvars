@@ -1,18 +1,23 @@
+# Override these variables for your own setup by creating
+# a /_infra/development/private.tfvars file.
+
 environment = "Development"
 project_environment = "Development"
 
 legacy_droplet_size = "s-1vcpu-1gb"
 cdn_droplet_size = "s-1vcpu-1gb"
 
-is_volatile_active = false
-create_legacy_puzzle_massive_volatile = false
-is_swap_a_active = true
-create_legacy_puzzle_massive_swap_a = true
+# The default setup for the Development environment is to be volatile and not
+# use a stateful swap.
+is_volatile_active = true
+create_legacy_puzzle_massive_volatile = true
+is_swap_a_active = false
+create_legacy_puzzle_massive_swap_a = false
 is_swap_b_active = false
 create_legacy_puzzle_massive_swap_b = false
 
-is_cdn_volatile_active = false
-create_cdn_volatile = false
+is_cdn_volatile_active = true
+create_cdn_volatile = true
 is_cdn_active = false
 create_cdn = false
 
