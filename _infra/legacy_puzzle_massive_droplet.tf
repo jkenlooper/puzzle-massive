@@ -6,7 +6,7 @@ resource "digitalocean_record" "legacy_puzzle_massive" {
   name   = trimsuffix(var.sub_domain, ".")
   value  = var.is_floating_ip_active ? one(digitalocean_floating_ip.legacy_puzzle_massive[*].ip_address) : var.is_swap_a_active ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : var.is_swap_b_active ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : var.is_volatile_active ? one(digitalocean_droplet.legacy_puzzle_massive_volatile[*].ipv4_address) : null
   # minimum value for TTL on digitalocean DNS is 30 seconds.
-  ttl    = var.is_volatile_active ? var.volatile_dns_ttl : var.dns_ttl
+  ttl    = var.is_volatile_active ? var.volatile_dns_ttl : var.use_short_dns_ttl ? var.short_dns_ttl : var.dns_ttl
 }
 
 resource "digitalocean_floating_ip" "legacy_puzzle_massive" {

@@ -7,15 +7,23 @@ terraform.tfstate*
 /development/puzzle-massive-*.bundle
 /development/legacy_puzzle_massive_droplet-user_data.sh
 /development/host_inventory.ansible.cfg
+/development/.deployment_step_state
+/development/.new_swap
 /test/puzzle-massive-*.bundle
 /test/legacy_puzzle_massive_droplet-user_data.sh
 /test/host_inventory.ansible.cfg
+/test/.deployment_step_state
+/test/.new_swap
 /acceptance/puzzle-massive-*.tar.gz
 /acceptance/legacy_puzzle_massive_droplet-user_data.sh
 /acceptance/host_inventory.ansible.cfg
+/acceptance/.deployment_step_state
+/acceptance/.new_swap
 /production/puzzle-massive-*.tar.gz
 /production/legacy_puzzle_massive_droplet-user_data.sh
 /production/host_inventory.ansible.cfg
+/production/.deployment_step_state
+/production/.new_swap
 
 # These can have sensitive variables in them like the do_token.
 /*.auto.tfvars
