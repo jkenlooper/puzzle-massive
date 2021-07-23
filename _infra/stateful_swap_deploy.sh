@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# TODO: Rename to stateful-swap-deploy.sh
-
 set -o errexit
 set -o pipefail
 set -o nounset
