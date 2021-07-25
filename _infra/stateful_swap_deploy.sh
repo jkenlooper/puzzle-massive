@@ -325,6 +325,7 @@ TF_VAR_is_floating_ip_active=true \
   ./$ENVIRONMENT/terra.sh apply
 
 # TODO: run Ansible playbook to wait until new swap is fully provisioned.
+ansible-playbook ansible-playbooks/finished-cloud-init.yml -i $ENVIRONMENT/host_inventory.ansible.cfg
 # TODO: rsync the puzzle resources from the old swap to the new swap.
 # TODO: run Ansible playbook to stop old swap and create backup.
 # TODO: rsync the puzzle resources again from the old swap to the new swap.

@@ -1,0 +1,13 @@
+---
+
+- name: synchronize the puzzle massive from old_swap
+  hosts: legacy_puzzle_massive_new_swap
+  user: dev
+  tasks:
+    #https://docs.ansible.com/ansible/latest/collections/ansible/posix/synchronize_module.html#ansible-collections-ansible-posix-synchronize-module
+    - name: synchronize the puzzle massive resources directory from old_swap
+      ansible.posix.synchronize:
+        mode: pull
+        src: "rsync://{{ old_swap }}/srv/puzzle-massive/resources"
+        dest: /srv/puzzle-massive/
+      delegate_to: "{{ inventory_hostname }}"

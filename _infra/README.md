@@ -207,6 +207,11 @@ in progress._ See `_infra/stateful_swap_deploy.sh` script.
 
 ## Ansible Usage and Guide
 
+```bash
+ansible-galaxy collection install community.general
+ansible-galaxy collection install ansible.posix
+```
+
 ### Maintenance Tasks
 
 - update packages and reboot

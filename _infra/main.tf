@@ -144,14 +144,25 @@ resource "digitalocean_spaces_bucket_object" "iptables_setup_firewall_sh" {
   content = file("../bin/iptables-setup-firewall.sh")
 }
 
-#resource "local_file" "host_inventory" {
-#  filename        = "${lower(var.environment)}/host_inventory.ansible.cfg"
-#  file_permission = "0400"
-#  content         = <<-HOST_INVENTORY
-#    [legacy_puzzle_massive]
-#    ${digitalocean_droplet.legacy_puzzle_massive[0].ipv4_address}
-#
-#    [cdn]
-#    ${digitalocean_droplet.cdn.ipv4_address}
-#  HOST_INVENTORY
-#}
+resource "local_file" "host_inventory" {
+  filename        = "${lower(var.environment)}/host_inventory.ansible.cfg"
+  file_permission = "0400"
+  content         = <<-HOST_INVENTORY
+    [legacy_puzzle_massive]
+    %{ for ipv4_address in compact(flatten([digitalocean_droplet.legacy_puzzle_massive_volatile[*].ipv4_address, digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address, digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address])) ~}
+    ${ipv4_address}
+    %{ endfor ~}
+
+    [legacy_puzzle_massive:vars]
+    new_swap=${ var.is_swap_a_active == true && var.is_swap_b_active == false ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : var.is_swap_a_active == false && var.is_swap_b_active == true ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : "" }
+    old_swap=${ var.is_swap_a_active == false && var.is_swap_b_active == true ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : var.is_swap_a_active == true && var.is_swap_b_active == false ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : "" }
+
+    [legacy_puzzle_massive_new_swap]
+    ${ var.is_swap_a_active == true && var.is_swap_b_active == false ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : var.is_swap_a_active == false && var.is_swap_b_active == true ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : "" }
+
+    [legacy_puzzle_massive_old_swap]
+    ${ var.is_swap_a_active == false && var.is_swap_b_active == true ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : var.is_swap_a_active == true && var.is_swap_b_active == false ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : "" }
+
+    [cdn]
+  HOST_INVENTORY
+}
