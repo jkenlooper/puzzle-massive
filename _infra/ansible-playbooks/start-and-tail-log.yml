@@ -1,0 +1,16 @@
+---
+
+- name: Start the new swap and output the log
+  hosts: legacy_puzzle_massive_new_swap
+  user: dev
+  tasks:
+
+    - name: Execute bin/appctl.sh start
+      command: ./bin/appctl.sh start
+      become: true
+      chdir: /usr/local/src/puzzle-massive/
+
+    - name: Tail the log
+      command: ./bin/log.sh
+      become: true
+      chdir: /usr/local/src/puzzle-massive/

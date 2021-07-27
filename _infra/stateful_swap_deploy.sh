@@ -324,14 +324,23 @@ TF_VAR_create_floating_ip_puzzle_massive=true \
 TF_VAR_is_floating_ip_active=true \
   ./$ENVIRONMENT/terra.sh apply
 
-# TODO: run Ansible playbook to wait until new swap is fully provisioned.
+# Run Ansible playbooks to setup newly provisioned swap with data from old swap.
 ansible-playbook ansible-playbooks/finished-cloud-init.yml -i $ENVIRONMENT/host_inventory.ansible.cfg
-# TODO: rsync the puzzle resources from the old swap to the new swap.
-# TODO: run Ansible playbook to stop old swap and create backup.
-# TODO: rsync the puzzle resources again from the old swap to the new swap.
-# TODO: run Ansible playbook to setup new swap with backup data from old swap.
+ansible-playbook ansible-playbooks/switch-data-over-to-new-swap.yml -i $ENVIRONMENT/host_inventory.ansible.cfg
+ansible-playbook ansible-playbooks/start-and-tail-log.yml -i $ENVIRONMENT/host_inventory.ansible.cfg
 
-# TODO: Include ip address to new swap in order to validate.
+# Gross way of getting new swap ip address.
+NEW_SWAP_IP=$(echo "\"$NEW_SWAP\" == \"A\"" ' ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : ' "\"$NEW_SWAP\" == \"B\"" ' ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : null' | \
+  ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1 | xargs)
+echo "The IP for the new swap '$NEW_SWAP' in $ENVIRONMENT environment is:
+$NEW_SWAP_IP
+It is recommended to temporarily update your /etc/hosts file to use this ip like so:
+
+# Swap '$NEW_SWAP'
+$NEW_SWAP_IP $FQDN
+
+"
+
 read -p "Verify that new swap '$NEW_SWAP' is working correctly. [y/n] " -n1 CONFIRM
 if [ $CONFIRM != "y" ]; then
   echo "Cancelled deployment. Old swap '$OLD_SWAP' is currently stopped still."
