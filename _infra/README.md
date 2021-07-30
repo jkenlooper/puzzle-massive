@@ -214,12 +214,41 @@ ansible-galaxy collection install ansible.posix
 
 ### Maintenance Tasks
 
-- update packages and reboot
+These Ansible playbooks should be run from the /\_infra directory and set the ENVIRONMENT variable
+as needed.
 
-- in-place update for patch versions
+Update packages and reboot
 
-playbook
-ansible-playbook ansible-playbooks/do-something.yaml -i development/inventory
+```bash
+# Using Vagrant:
+MESSAGE_FILE="../development/puzzle-massive-message.html" \
+  vagrant provision --provision-with update-packages-and-reboot
+
+# Or deployed servers:
+ENVIRONMENT=development \
+ ansible-playbook ansible-playbooks/ansible-playbooks/update-packages-and-reboot.yml \
+ -i $ENVIRONMENT/host_inventory.ansible.cfg \
+ --extra-vars "message_file=../$ENVIRONMENT/puzzle-massive-message.html"
+```
+
+TODO: in-place update for patch versions
+
+Add an admin user with a password to be able to access the admin only section.
+
+```bash
+# Using Vagrant:
+BASIC_AUTH_USER=$(read -p 'username: ' && echo $REPLY) \
+BASIC_AUTH_PASSPHRASE=$(read -sp 'passphrase: ' && echo $REPLY) \
+  vagrant provision --provision-with add-user-to-basic-auth
+
+# Or deployed servers:
+ENVIRONMENT=development \
+BASIC_AUTH_USER=$(read -p 'username: ' && echo $REPLY) \
+BASIC_AUTH_PASSPHRASE=$(read -sp 'passphrase: ' && echo $REPLY) \
+ ansible-playbook ansible-playbooks/ansible-playbooks/add-user-to-basic-auth.yml \
+ -i $ENVIRONMENT/host_inventory.ansible.cfg \
+ --extra-vars "user=$BASIC_AUTH_USER passphrase='$BASIC_AUTH_PASSPHRASE'"
+```
 
 ad-hoc command
 ansible legacy_puzzle_massive -m command -a "echo 'hi'" -i development/inventory

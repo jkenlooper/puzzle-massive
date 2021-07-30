@@ -24,6 +24,9 @@ customElements.define(
         .then((message) => {
           this.message = message;
         })
+        .catch(() => {
+          this.message = "";
+        })
         .finally(() => {
           this.render();
         });
@@ -34,9 +37,7 @@ customElements.define(
         return "";
       }
       return html`
-        <p class="pm-SiteWideMessage">
-          ${unsafeHTML(data.message)}
-        </p>
+        <p class="pm-SiteWideMessage">${unsafeHTML(data.message)}</p>
       `;
     }
 

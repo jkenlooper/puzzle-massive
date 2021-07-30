@@ -1,9 +1,4 @@
-#!/usr/bin/env bash
-
-set -euo pipefail
-
-ARTIFACT=$1
-ENV_FILE=$2
+## Embedded into the generated user_data script
 
 cd /home/dev/
 

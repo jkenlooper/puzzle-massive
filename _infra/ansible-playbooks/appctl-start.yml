@@ -1,0 +1,29 @@
+---
+
+- name: Start the legacy puzzle massive apps and output the log
+  hosts: legacy_puzzle_massive
+  user: dev
+  tasks:
+
+    - name: Remove puzzle massive message if it exists
+      become: true
+      ansible.builtin.file:
+        state: absent
+        owner: dev
+        group: dev
+        mode: "0644"
+        path: /srv/puzzle-massive/root/puzzle-massive-message.html
+    - name: Set blank puzzle massive message
+      become: true
+      ansible.builtin.file:
+        state: touch
+        owner: dev
+        group: dev
+        mode: "0644"
+        path: /srv/puzzle-massive/root/puzzle-massive-message.html
+
+    - name: Execute bin/appctl.sh start
+      become: true
+      command: ./bin/appctl.sh start
+      args:
+        chdir: /usr/local/src/puzzle-massive/

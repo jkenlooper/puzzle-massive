@@ -166,6 +166,28 @@ DEFAULT_ENV
       }
     end
 
+    legacy_puzzle_massive.vm.provision "appctl-stop", type: :ansible_local, run: "never" do |ansible|
+      ansible.playbook = "_infra/ansible-playbooks/appctl-stop.yml"
+      ansible.verbose = false
+      ansible.extra_vars = {
+        message_file: ENV["MESSAGE_FILE"] || '../../root/puzzle-massive-message.html',
+      }
+    end
+    legacy_puzzle_massive.vm.provision "appctl-start", type: :ansible_local, run: "never" do |ansible|
+      ansible.playbook = "_infra/ansible-playbooks/appctl-start.yml"
+      ansible.verbose = false
+    end
+
+
+    # This requires ansible to be on the host machine since it reboots the
+    # controlling node (can't use ansible_local here).
+    legacy_puzzle_massive.vm.provision "update-packages-and-reboot", type: :ansible, run: "never" do |ansible|
+      ansible.playbook = "_infra/ansible-playbooks/update-packages-and-reboot.yml"
+      ansible.verbose = false
+      ansible.extra_vars = {
+        message_file: ENV["MESSAGE_FILE"] || '../../root/puzzle-massive-message.html',
+      }
+    end
 
     # #example
     # legacy_puzzle_massive.vm.provision "playbook", type: :ansible_local, run: "always" do |ansible|

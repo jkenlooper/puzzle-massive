@@ -1,25 +1,25 @@
 variable "do_token" {
-  type    = string
+  type        = string
   description = "DigitalOcean access token.  Keep this secure and use best practices when using these.  It is recommended to export an environment variable for this like TF_VAR_do_token if you aren't entering it manually each time."
   sensitive   = true
 }
 variable "do_spaces_access_key_id" {
-  type    = string
+  type        = string
   description = "DigitalOcean Spaces access key ID. Keep this secure and use best practices when using these.  It is recommended to export an environment variable for this like TF_VAR_do_spaces_access_key_id if you aren't entering it manually each time."
   sensitive   = true
 }
 variable "do_spaces_secret_access_key" {
-  type    = string
+  type        = string
   description = "DigitalOcean Spaces secret access key. Keep this secure and use best practices when using these.  It is recommended to export an environment variable for this like TF_VAR_do_spaces_secret_access_key if you aren't entering it manually each time."
   sensitive   = true
 }
 variable "do_app_spaces_access_key_id" {
-  type    = string
+  type        = string
   description = "DigitalOcean Spaces access key ID for the application to use."
   sensitive   = true
 }
 variable "do_app_spaces_secret_access_key" {
-  type    = string
+  type        = string
   description = "DigitalOcean Spaces secret access key for the application to use."
   sensitive   = true
 }
@@ -33,7 +33,7 @@ variable "artifact" {
   }
 }
 variable "bucket_region" {
-  type    = string
+  type        = string
   description = "Bucket region. This will be used for CDN puzzle resources as well as artifacts."
   default     = "nyc3"
 }
@@ -57,7 +57,7 @@ variable "developer_ssh_key_fingerprints" {
 
 variable "environment" {
   description = "Used as part of the name in the project as well as in the hostname of any created droplets."
-  type    = string
+  type        = string
   default     = "Development"
   validation {
     condition     = can(regex("Development|Test|Acceptance|Production", var.environment))
@@ -67,7 +67,7 @@ variable "environment" {
 variable "project_environment" {
   description = "Used to set the environment in the DigitalOcean project."
   default     = "Development"
-  type = string
+  type        = string
   validation {
     condition     = can(regex("Development|Staging|Production", var.project_environment))
     error_message = "Must be an environment that is acceptable for DigitalOcean projects."
@@ -76,42 +76,42 @@ variable "project_environment" {
 
 variable "is_floating_ip_active" {
   description = "Used when deploying to Production and needing to be able to swap between stateful droplets (Blue/Green deployments)."
-  type = bool
-  default = false
+  type        = bool
+  default     = false
 }
 variable "create_floating_ip_puzzle_massive" {
-  type = bool
+  type    = bool
   default = false
 }
 
 variable "dns_ttl" {
   description = "DNS TTL to use for droplets that are not volatile. Minimum is 30 seconds. It is not recommended to use a value higher than 86400 (24 hours)."
-  default = 3600
-  type = number
+  default     = 3600
+  type        = number
   validation {
-    condition = can(var.dns_ttl >= 30)
+    condition     = can(var.dns_ttl >= 30)
     error_message = "Values for DigitalOcean DNS TTLs must be at least 30 seconds."
   }
 }
 variable "use_short_dns_ttl" {
-  type = bool
+  type    = bool
   default = false
 }
 variable "short_dns_ttl" {
   description = "Short DNS TTL to use for droplets that are not volatile when doing a deployment. Minimum is 30 seconds. It is not recommended to use a value higher than 86400 (24 hours)."
-  default = 300
-  type = number
+  default     = 300
+  type        = number
   validation {
-    condition = can(var.short_dns_ttl >= 30)
+    condition     = can(var.short_dns_ttl >= 30)
     error_message = "Values for DigitalOcean DNS TTLs must be at least 30 seconds."
   }
 }
 variable "volatile_dns_ttl" {
   description = "DNS TTL to use for droplets that are volatile. Minimum is 30 seconds. It is not recommended to use a value higher the 900 (15 minutes)."
-  default = 300
-  type = number
+  default     = 300
+  type        = number
   validation {
-    condition = can(var.volatile_dns_ttl >= 30 && var.volatile_dns_ttl <= 900)
+    condition     = can(var.volatile_dns_ttl >= 30 && var.volatile_dns_ttl <= 900)
     error_message = "Values for DigitalOcean DNS TTLs must be at least 30 seconds."
   }
 }
@@ -188,13 +188,13 @@ variable "vpc_ip_range" {
 }
 
 variable "project_description" {
-  type    = string
+  type        = string
   default     = "Massively Multiplayer Jigsaw Puzzle"
   description = "Sets the DigitalOcean project description. Should be set to the current version that is being used."
 }
 
 variable "project_version" {
-  type    = string
+  type        = string
   default     = ""
   description = "Appended to the end of the DigitialOcean project name."
 }
@@ -290,7 +290,7 @@ variable "dot_env__AUTO_APPROVE_PUZZLES" {
 
 variable "dot_env__LOCAL_PUZZLE_RESOURCES" {
   default     = "n"
-  description = "Use local puzzle resource files [y/n]. The cdn resource will still be created regardless of this value."
+  description = "Use local puzzle resource files [y/n]."
   type        = string
   validation {
     condition     = can(regex("y|n", var.dot_env__LOCAL_PUZZLE_RESOURCES))

@@ -325,9 +325,9 @@ TF_VAR_is_floating_ip_active=true \
   ./$ENVIRONMENT/terra.sh apply
 
 # Run Ansible playbooks to setup newly provisioned swap with data from old swap.
-ansible-playbook ansible-playbooks/finished-cloud-init.yml -i $ENVIRONMENT/host_inventory.ansible.cfg
+ansible-playbook ansible-playbooks/finished-cloud-init.yml -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
 ansible-playbook ansible-playbooks/switch-data-over-to-new-swap.yml -i $ENVIRONMENT/host_inventory.ansible.cfg
-ansible-playbook ansible-playbooks/start-and-tail-log.yml -i $ENVIRONMENT/host_inventory.ansible.cfg
+ansible-playbook ansible-playbooks/appctl-start.yml -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
 
 # Gross way of getting new swap ip address.
 NEW_SWAP_IP=$(echo "\"$NEW_SWAP\" == \"A\"" ' ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : ' "\"$NEW_SWAP\" == \"B\"" ' ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : null' | \
@@ -344,7 +344,6 @@ $NEW_SWAP_IP $FQDN
 read -p "Verify that new swap '$NEW_SWAP' is working correctly. [y/n] " -n1 CONFIRM
 if [ $CONFIRM != "y" ]; then
   echo "Cancelled deployment. Old swap '$OLD_SWAP' is currently stopped still."
-  # TODO: Prompt to run the Ansible playbook to start old swap again.
   read -p "
 Rollback to old swap '$OLD_SWAP' now? Another attempt will need to wait until
 after the longer DNS TTL when doing a rollback.

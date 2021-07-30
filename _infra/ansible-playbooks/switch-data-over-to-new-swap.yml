@@ -13,22 +13,38 @@
         dest: /srv/puzzle-massive/
       delegate_to: "{{ inventory_hostname }}"
 
+    - name: Synchronize .htpasswd file that is used for admin logins
+      ansible.posix.synchronize:
+        mode: pull
+        src: "rsync://{{ old_swap }}/srv/puzzle-massive/.htpasswd"
+        dest: /srv/puzzle-massive/
+      delegate_to: "{{ inventory_hostname }}"
+
 - name: Stop old swap and backup
   hosts: legacy_puzzle_massive_old_swap
   user: dev
   tasks:
 
-    - name: Post the message
-      # TODO: use a module to update the file instead?
-      command: "printf 'Updating...' > /srv/puzzle-massive/root/puzzle-massive-message.html"
+    - name: Show the message
+      become: true
+      ansible.builtin.template:
+        owner: dev
+        group: dev
+        mode: "0644"
+        src: "{{ message_file }}"
+        dest: /srv/puzzle-massive/root/puzzle-massive-message.html
 
     - name: Stop old swap
       become: true
       command: "/usr/local/src/puzzle-massive/bin/appctl.sh stop"
+      args:
+        chdir: /usr/local/src/puzzle-massive/
 
     - name: Clear NGINX cache
       become: true
       command: "/usr/local/src/puzzle-massive/bin/clear_nginx_cache.sh"
+      args:
+        chdir: /usr/local/src/puzzle-massive/
 
     - name: Start only api service
       become: true
@@ -38,6 +54,8 @@
 
     - name: Create backup
       command: "/usr/local/src/puzzle-massive/bin/backup.sh -c db-old_swap.dump.gz"
+      args:
+        chdir: /usr/local/src/puzzle-massive/
 
     - name: Stop api service
       become: true
@@ -56,12 +74,14 @@
 
     - name: Clear nginx cache
       command: ./bin/clear_nginx_cache.sh
-      chdir: /usr/local/src/puzzle-massive/
+      args:
+        chdir: /usr/local/src/puzzle-massive/
       become: true
 
     - name: Get the redis database number
       command: ./bin/puzzle-massive-site-cfg-echo site.cfg REDIS_DB
-      chdir: /usr/local/src/puzzle-massive/
+      args:
+        chdir: /usr/local/src/puzzle-massive/
       register: REDIS_DB
 
     - name: Use `flushdb` on the new server to remove all keys on the redis database.
@@ -82,31 +102,36 @@
       delegate_to: "{{ inventory_hostname }}"
 
     - name: Load up the sqlite db file with the db-old_swap.dump.gz
-      ansible.builtin.shell: zcat db-old_swap.dump.gz | sqlite3 /var/lib/puzzle-massive/sqlite3/db
-      chdir: /usr/local/src/puzzle-massive/
+      shell: zcat db-old_swap.dump.gz | sqlite3 /var/lib/puzzle-massive/sqlite3/db
+      args:
+        chdir: /usr/local/src/puzzle-massive/
 
     - name: Update the sqlite db file with the db.dump.sql
-      ansible.builtin.shell: cat db.dump.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
-      chdir: /usr/local/src/puzzle-massive/
+      shell: cat db.dump.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
+      args:
+        chdir: /usr/local/src/puzzle-massive/
 
     - name: Set the sqlite db to be in wal mode
-      ansible.builtin.shell: echo 'pragma journal_mode=wal' | sqlite3 /var/lib/puzzle-massive/sqlite3/db
+      shell: echo 'pragma journal_mode=wal' | sqlite3 /var/lib/puzzle-massive/sqlite3/db
 
     # TODO: Only if there are applicable migrate scripts to run.
     # This should check it's own database migrate version to see if it is behind
     # and run the migrate scripts it needs to.
     #- name: Run any migrate scripts needed for this version update if applicable
-    #  ansible.builtin.shell: api/api/jobs/migrate_from_2_x_to_x.py site.cfg
-    #  executable: /usr/local/src/puzzle-massive/bin/python
-    #  chdir: /usr/local/src/puzzle-massive/
+    #  shell: api/api/jobs/migrate_from_2_x_to_x.py site.cfg
+    #  args:
+    #    executable: /usr/local/src/puzzle-massive/bin/python
+    #    chdir: /usr/local/src/puzzle-massive/
 
     - name: Update any bit icon authors and add new bit icons
-      ansible.builtin.shell: api/api/jobs/insert-or-replace-bit-icons.py
-      executable: /usr/local/src/puzzle-massive/bin/python
-      chdir: /usr/local/src/puzzle-massive/
+      shell: api/api/jobs/insert-or-replace-bit-icons.py
+      args:
+        executable: /usr/local/src/puzzle-massive/bin/python
+        chdir: /usr/local/src/puzzle-massive/
 
     - name: Update the enabled puzzle features
-      ansible.builtin.shell: api/api/update_enabled_puzzle_features.py
-      executable: /usr/local/src/puzzle-massive/bin/python
-      chdir: /usr/local/src/puzzle-massive/
+      shell: api/api/update_enabled_puzzle_features.py
+      args:
+        executable: /usr/local/src/puzzle-massive/bin/python
+        chdir: /usr/local/src/puzzle-massive/
 

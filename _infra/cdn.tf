@@ -130,20 +130,20 @@ resource "local_file" "cdn_user_data_sh" {
 }
 
 resource "digitalocean_record" "cdn" {
-  count = var.create_cdn || var.create_cdn_volatile ? 1 : 0
+  count  = var.create_cdn || var.create_cdn_volatile ? 1 : 0
   domain = var.domain
   type   = "A"
   name   = "cdn.${trimsuffix(var.sub_domain, ".")}"
   value  = var.is_cdn_volatile_active ? one(digitalocean_droplet.cdn_volatile[*].ipv4_address) : var.is_cdn_active ? one(digitalocean_droplet.cdn[*].ipv4_address) : null
   # minimum value for TTL on digitalocean DNS is 30 seconds.
-  ttl    = var.is_volatile_active ? var.volatile_dns_ttl : var.dns_ttl
+  ttl = var.is_volatile_active ? var.volatile_dns_ttl : var.dns_ttl
 }
 
 resource "random_uuid" "cdn" {
 }
 
 resource "digitalocean_spaces_bucket" "cdn_volatile" {
-  count    = var.create_cdn_volatile ? 1 : 0
+  count  = var.create_cdn_volatile ? 1 : 0
   name   = substr("puzzle-massive-cdn-${lower(var.environment)}-${random_uuid.cdn.result}", 0, 63)
   region = var.bucket_region
   lifecycle {
@@ -151,7 +151,7 @@ resource "digitalocean_spaces_bucket" "cdn_volatile" {
   }
 }
 resource "digitalocean_spaces_bucket" "cdn" {
-  count    = var.create_cdn ? 1 : 0
+  count  = var.create_cdn ? 1 : 0
   name   = substr("puzzle-massive-cdn-${lower(var.environment)}-${random_uuid.cdn.result}", 0, 63)
   region = var.bucket_region
   lifecycle {
@@ -160,7 +160,7 @@ resource "digitalocean_spaces_bucket" "cdn" {
 }
 
 resource "digitalocean_spaces_bucket_object" "nginx_snippets_server_name_cdn_conf" {
-  count    = var.create_cdn || var.create_cdn_volatile ? 1 : 0
+  count   = var.create_cdn || var.create_cdn_volatile ? 1 : 0
   region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
   bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
   key     = "snippets/server_name-cdn.nginx.conf"
@@ -169,7 +169,7 @@ resource "digitalocean_spaces_bucket_object" "nginx_snippets_server_name_cdn_con
 }
 
 resource "digitalocean_spaces_bucket_object" "nginx_snippets_proxy_pass_cdn_conf" {
-  count    = var.create_cdn || var.create_cdn_volatile ? 1 : 0
+  count   = var.create_cdn || var.create_cdn_volatile ? 1 : 0
   region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
   bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
   key     = "snippets/proxy_pass-cdn.nginx.conf"
@@ -181,7 +181,7 @@ resource "digitalocean_spaces_bucket_object" "nginx_snippets_proxy_pass_cdn_conf
 }
 
 resource "digitalocean_spaces_bucket_object" "cdn_nginx_conf" {
-  count    = var.create_cdn || var.create_cdn_volatile ? 1 : 0
+  count   = var.create_cdn || var.create_cdn_volatile ? 1 : 0
   region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
   bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
   key     = "cdn.nginx.conf"

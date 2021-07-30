@@ -2,6 +2,9 @@
 
 - name: cloud init has provisioned the legacy_puzzle_massive server
   hosts: legacy_puzzle_massive
+  # If this is executed right after the server is provisioned then root is still
+  # able to login. Otherwise, will need to use 'dev' user.
+  user: root
   tasks:
     # https://docs.ansible.com/ansible/latest/collections/community/general/cloud_init_data_facts_module.html
     - name: Gather all facts of cloud init

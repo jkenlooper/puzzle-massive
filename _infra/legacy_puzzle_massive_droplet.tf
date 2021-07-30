@@ -1,17 +1,16 @@
-# TODO: Switch to using the digitalocean floating droplet ip instead to avoid
-# delays with DNS TTL.
 resource "digitalocean_record" "legacy_puzzle_massive" {
+  count  = anytrue([var.create_legacy_puzzle_massive_swap_a, var.create_legacy_puzzle_massive_swap_b, var.create_legacy_puzzle_massive_volatile]) ? 1 : 0
   domain = var.domain
   type   = "A"
   name   = trimsuffix(var.sub_domain, ".")
   value  = var.is_floating_ip_active ? one(digitalocean_floating_ip.legacy_puzzle_massive[*].ip_address) : var.is_swap_a_active ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : var.is_swap_b_active ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : var.is_volatile_active ? one(digitalocean_droplet.legacy_puzzle_massive_volatile[*].ipv4_address) : null
   # minimum value for TTL on digitalocean DNS is 30 seconds.
-  ttl    = var.is_volatile_active ? var.volatile_dns_ttl : var.use_short_dns_ttl ? var.short_dns_ttl : var.dns_ttl
+  ttl = var.is_volatile_active ? var.volatile_dns_ttl : var.use_short_dns_ttl ? var.short_dns_ttl : var.dns_ttl
 }
 
 resource "digitalocean_floating_ip" "legacy_puzzle_massive" {
-  count = var.create_floating_ip_puzzle_massive ? 1 : 0
-  region = var.region
+  count      = var.create_floating_ip_puzzle_massive ? 1 : 0
+  region     = var.region
   droplet_id = var.is_swap_a_active ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].id) : var.is_swap_b_active ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].id) : var.is_volatile_active ? one(digitalocean_droplet.legacy_puzzle_massive_volatile[*].id) : null
 }
 
@@ -50,34 +49,6 @@ resource "digitalocean_spaces_bucket_object" "setup_sh" {
   acl     = "private"
   content = file("../bin/setup.sh")
 }
-resource "digitalocean_spaces_bucket_object" "infra_build__development_sh" {
-  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
-  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
-  key     = "bin/infra-build--development.sh"
-  acl     = "private"
-  content = file("../bin/infra-build--development.sh")
-}
-resource "digitalocean_spaces_bucket_object" "infra_build__test_sh" {
-  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
-  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
-  key     = "bin/infra-build--test.sh"
-  acl     = "private"
-  content = file("../bin/infra-build--test.sh")
-}
-resource "digitalocean_spaces_bucket_object" "infra_build__acceptance_sh" {
-  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
-  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
-  key     = "bin/infra-build--acceptance.sh"
-  acl     = "private"
-  content = file("../bin/infra-build--acceptance.sh")
-}
-resource "digitalocean_spaces_bucket_object" "infra_build__production_sh" {
-  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
-  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
-  key     = "bin/infra-build--production.sh"
-  acl     = "private"
-  content = file("../bin/infra-build--production.sh")
-}
 
 resource "digitalocean_spaces_bucket_object" "artifact" {
   region = digitalocean_spaces_bucket.ephemeral_artifacts.region
@@ -98,7 +69,7 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_swap_a" {
   ssh_keys = var.developer_ssh_key_fingerprints
   tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name]
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
     ignore_changes = [
       image,
       user_data,
@@ -122,7 +93,7 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_swap_b" {
   ssh_keys = var.developer_ssh_key_fingerprints
   tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name]
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
     ignore_changes = [
       # Ansible will be used to update the droplet after deployment as needed.
       image,
@@ -183,10 +154,6 @@ locals {
     "bin/install-latest-stable-nginx.sh",
     "bin/setup.sh",
     "bin/iptables-setup-firewall.sh",
-    "bin/infra-build--development.sh",
-    "bin/infra-build--test.sh",
-    "bin/infra-build--acceptance.sh",
-    "bin/infra-build--production.sh",
     var.artifact
   ]
 }
@@ -201,10 +168,6 @@ resource "local_file" "legacy_user_data_sh" {
     digitalocean_spaces_bucket_object.install_latest_stable_nginx_sh,
     digitalocean_spaces_bucket_object.setup_sh,
     digitalocean_spaces_bucket_object.iptables_setup_firewall_sh,
-    digitalocean_spaces_bucket_object.infra_build__development_sh,
-    digitalocean_spaces_bucket_object.infra_build__test_sh,
-    digitalocean_spaces_bucket_object.infra_build__acceptance_sh,
-    digitalocean_spaces_bucket_object.infra_build__production_sh,
     digitalocean_spaces_bucket_object.artifact,
   ]
   sensitive_content = <<-USER_DATA
@@ -321,8 +284,9 @@ resource "local_file" "legacy_user_data_sh" {
 
     mv $EPHEMERAL_DIR/$ARTIFACT /home/dev/
 
-    ./bin/infra-build--${lower(var.environment)}.sh $ARTIFACT $(realpath .env)
-    cd -
+    ENV_FILE=$(realpath .env)
+    ${file("${lower(var.environment)}/legacy_puzzle_massive_droplet_user_data_fragment.sh")}
+
     rm -rf $EPHEMERAL_DIR $TMPDIR
     passwd --expire dev
   USER_DATA
