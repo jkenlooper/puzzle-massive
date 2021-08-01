@@ -213,11 +213,24 @@ npm run debug
 
 ### Maintenance Tasks
 
-Update packages and reboot
+#### Update packages and reboot
 
 ```bash
 # Requires ansible to be installed.
 vagrant provision --provision-with update-packages-and-reboot
+```
+
+#### Test out in-place deployment
+
+Normally there is no need to do a in-place quick deploy on the virtual machine
+since it is usually in development mode and will build as needed. The below
+Ansible playbook can be used to test out the created dist file on the virtual
+machine. Create the dist file with the `make dist` command on the local machine.
+
+```bash
+# Replace 'puzzle-massive-2.x.tar.gz' with actual dist file that was created.
+DIST_FILE=../../puzzle-massive-2.x.tar.gz \
+vagrant provision --provision-with in-place-quick-deploy
 ```
 
 ---

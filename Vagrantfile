@@ -189,26 +189,19 @@ DEFAULT_ENV
       }
     end
 
-    legacy_puzzle_massive.vm.provision "in-place-quick-deploy", type: :ansible, run: "never" do |ansible|
+    legacy_puzzle_massive.vm.provision "in-place-quick-deploy", type: :ansible_local, run: "never" do |ansible|
       ansible.playbook = "_infra/ansible-playbooks/in-place-quick-deploy.yml"
-      #ansible.verbose = "vvv"
-      ansible.verbose = false
+      ansible.verbose = "vvv"
+      #ansible.verbose = false
       ansible.extra_vars = {
-        ansible_ssh_user: "dev",
+        #ansible_shell_allow_world_readable_temp: true,
+        #ansible_shell_world_readable_temp: true,
+        #ansible_ssh_user: "dev",
         makeenvironment: 'development',
         dist_file: ENV["DIST_FILE"],
         message_file: ENV["MESSAGE_FILE"] || '../../root/puzzle-massive-message.html',
       }
     end
-
-    # #example
-    # legacy_puzzle_massive.vm.provision "playbook", type: :ansible_local, run: "always" do |ansible|
-    #   ansible.playbook = "_infra/ansible-playbooks/main.yml"
-    #   ansible.verbose = true
-    #   ansible.extra_vars = {
-    #     initial_dev_user_password: 'vagrant'
-    #   }
-    # end
 
     legacy_puzzle_massive.vm.provision "shell-set-s3fake-aws-bucket-credentials", type: "shell", inline: <<-SHELL
     mkdir -p /home/dev/.aws

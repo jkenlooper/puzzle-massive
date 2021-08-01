@@ -5,9 +5,9 @@
 - name: In-place deployment without using a stateful swap
   hosts: legacy_puzzle_massive
   remote_user: dev
+  become: true
   tasks:
     - name: Copy the dist file
-      become: true
       ansible.builtin.copy:
         owner: dev
         group: dev
@@ -16,7 +16,6 @@
       register: copied_dist_file
 
     - name: Show the message
-      become: true
       ansible.builtin.template:
         owner: dev
         group: dev
@@ -24,11 +23,7 @@
         src: "{{ message_file }}"
         dest: /srv/puzzle-massive/root/puzzle-massive-message.html
 
-
-    # TODO: Split up and do most things in Ansible
-
     - name: Execute bin/appctl.sh stop
-      become: true
       command: ./bin/appctl.sh stop
       args:
         chdir: /usr/local/src/puzzle-massive/
@@ -39,15 +34,12 @@
       register: BACKUP_TIMESTAMP
 
     - name: Backup existing
-      become: true
       command: "mv --backup=existing /usr/local/src/puzzle-massive /home/dev/puzzle-massive-{{ BACKUP_TIMESTAMP.stdout }}"
 
     - name: Extract dist file to src directory
-      become: true
       command: "tar --directory=/usr/local/src/ --extract --gunzip -f {{ copied_dist_file.dest }}"
 
     - name: Chown the src directory
-      become: true
       ansible.builtin.file:
         dest: /usr/local/src/puzzle-massive
         owner: dev
@@ -55,7 +47,6 @@
         recurse: yes
 
     - name: Copy .env
-      become: true
       ansible.builtin.copy:
         remote_src: yes
         src: "/home/dev/puzzle-massive-{{ BACKUP_TIMESTAMP.stdout }}/.env"
@@ -87,26 +78,29 @@
       args:
         chdir: /usr/local/src/puzzle-massive/
 
+    - name: Chown the src directory
+      ansible.builtin.file:
+        dest: /usr/local/src/puzzle-massive
+        owner: dev
+        group: dev
+        recurse: yes
+
     - name: "Make install"
-      become: true
       shell: "source bin/activate && make install ENVIRONMENT={{ makeenvironment }}"
       args:
         executable: /usr/bin/bash
         chdir: /usr/local/src/puzzle-massive/
 
     - name: "NGINX configuration test"
-      become: true
       command: "nginx -t"
 
     - name: Reload NGINX
-      become: true
       ansible.builtin.systemd:
         state: reloaded
         daemon_reload: yes
         name: nginx
 
     - name: Remove puzzle massive message if it exists
-      become: true
       ansible.builtin.file:
         state: absent
         owner: dev
@@ -114,7 +108,6 @@
         mode: "0644"
         path: /srv/puzzle-massive/root/puzzle-massive-message.html
     - name: Set blank puzzle massive message
-      become: true
       ansible.builtin.file:
         state: touch
         owner: dev
@@ -123,7 +116,6 @@
         path: /srv/puzzle-massive/root/puzzle-massive-message.html
 
     - name: Execute bin/appctl.sh start
-      become: true
       command: ./bin/appctl.sh start
       args:
         chdir: /usr/local/src/puzzle-massive/

@@ -211,12 +211,12 @@ application in-place instead of creating a whole new server to swap over to.
 
 Set the ENVIRONMENT and DIST_FILE variables as needed for doing an in-place
 deployment. The dist file will need to be created by running the `make dist`
-command on the developer's machine.
+command on the development machine.
 
 ```bash
 ENVIRONMENT=development \
 DIST_FILE=puzzle-massive-2.11.x.tar.gz \
- ansible-playbook ansible-playbooks/ansible-playbooks/in-place-quick-deploy.yml \
+ ansible-playbook ansible-playbooks/in-place-quick-deploy.yml \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
  --extra-vars "
  message_file=../$ENVIRONMENT/puzzle-massive-message.html
