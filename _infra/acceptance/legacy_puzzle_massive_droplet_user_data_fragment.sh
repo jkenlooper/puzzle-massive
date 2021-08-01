@@ -32,7 +32,10 @@ su --command '
 
 # Prove that the app starts without production data
 ./bin/appctl.sh start;
-./bin/appctl.sh status;
+
+# TODO: parse the is-active response to check that all services respond with
+# 'active'.
+./bin/appctl.sh is-active;
 
 # TODO: continue with a recent copy of production data
 exit 0

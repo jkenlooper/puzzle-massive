@@ -1,4 +1,4 @@
-MAKEFLAGS += --warn-undefined-variables
+#MAKEFLAGS += --warn-undefined-variables
 SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c
 .DEFAULT_GOAL := all

@@ -1,6 +1,6 @@
 ---
 
-- name: Start the legacy puzzle massive apps and output the log
+- name: Start the legacy puzzle massive apps
   hosts: legacy_puzzle_massive
   user: dev
   tasks:

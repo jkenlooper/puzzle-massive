@@ -174,7 +174,7 @@ commands in a workspace. See the README.md for each environment.
 - [Acceptance](/_infra/acceptance/README.md)
 - [Production](/_infra/production/README.md)
 
-### Production Deployments
+### Stateful Swap Production Deployment
 
 wip
 
@@ -203,13 +203,37 @@ in progress._ See `_infra/stateful_swap_deploy.sh` script.
 10. Remove DO floating IP
 11. Update DNS TTL to be longer
 
+### In-Place Production Deployment
+
+The in-place deployment requires fewer steps than the stateful swap deployment.
+This deployment can be used when the changes are minor. It will update the
+application in-place instead of creating a whole new server to swap over to.
+
+Set the ENVIRONMENT and DIST_FILE variables as needed for doing an in-place
+deployment. The dist file will need to be created by running the `make dist`
+command on the developer's machine.
+
+```bash
+ENVIRONMENT=development \
+DIST_FILE=puzzle-massive-2.11.x.tar.gz \
+ ansible-playbook ansible-playbooks/ansible-playbooks/in-place-quick-deploy.yml \
+ -i $ENVIRONMENT/host_inventory.ansible.cfg \
+ --extra-vars "
+ message_file=../$ENVIRONMENT/puzzle-massive-message.html
+ dist_file=../../$DIST_FILE
+ environment=$(test $ENVIRONMENT = 'development' && echo 'development' || echo 'production')"
+```
+
+TODO: Create a rollback Ansible playbook for a failed in-place deployment.
+
 ---
 
 ## Ansible Usage and Guide
 
+Install any Ansible requirements like collections and roles.
+
 ```bash
-ansible-galaxy collection install community.general
-ansible-galaxy collection install ansible.posix
+ansible-galaxy install -r ansible-requirements.yml
 ```
 
 ### Maintenance Tasks
@@ -220,28 +244,15 @@ as needed.
 Update packages and reboot
 
 ```bash
-# Using Vagrant:
-MESSAGE_FILE="../development/puzzle-massive-message.html" \
-  vagrant provision --provision-with update-packages-and-reboot
-
-# Or deployed servers:
 ENVIRONMENT=development \
  ansible-playbook ansible-playbooks/ansible-playbooks/update-packages-and-reboot.yml \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
  --extra-vars "message_file=../$ENVIRONMENT/puzzle-massive-message.html"
 ```
 
-TODO: in-place update for patch versions
-
 Add an admin user with a password to be able to access the admin only section.
 
 ```bash
-# Using Vagrant:
-BASIC_AUTH_USER=$(read -p 'username: ' && echo $REPLY) \
-BASIC_AUTH_PASSPHRASE=$(read -sp 'passphrase: ' && echo $REPLY) \
-  vagrant provision --provision-with add-user-to-basic-auth
-
-# Or deployed servers:
 ENVIRONMENT=development \
 BASIC_AUTH_USER=$(read -p 'username: ' && echo $REPLY) \
 BASIC_AUTH_PASSPHRASE=$(read -sp 'passphrase: ' && echo $REPLY) \

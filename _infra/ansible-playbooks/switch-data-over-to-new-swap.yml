@@ -117,6 +117,7 @@
     # TODO: Only if there are applicable migrate scripts to run.
     # This should check it's own database migrate version to see if it is behind
     # and run the migrate scripts it needs to.
+    # TODO: Also see same note about this in bin/quick-deploy.sh.
     #- name: Run any migrate scripts needed for this version update if applicable
     #  shell: api/api/jobs/migrate_from_2_x_to_x.py site.cfg
     #  args:

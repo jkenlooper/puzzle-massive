@@ -211,6 +211,15 @@ npm run debug
 
 ...WIP
 
+### Maintenance Tasks
+
+Update packages and reboot
+
+```bash
+# Requires ansible to be installed.
+vagrant provision --provision-with update-packages-and-reboot
+```
+
 ---
 
 **The below instructions are still relevant if needing to troubleshoot or are

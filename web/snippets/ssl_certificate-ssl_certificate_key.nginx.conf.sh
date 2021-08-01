@@ -56,8 +56,7 @@ cat <<-HEREENABLESSLCERTS
 HEREENABLESSLCERTS
   else
 cat <<-HERETODOSSLCERTS
-  # certs can be created from running 'bin/provision-certbot.sh ${SRVDIR}'
-  # TODO: uncomment after they exist
+  # certs can be created from running 'bin/provision-certbot.sh /srv/puzzle-massive'
   #ssl_certificate /etc/letsencrypt/live/puzzle.massive.xyz/fullchain.pem;
   #ssl_certificate_key /etc/letsencrypt/live/puzzle.massive.xyz/privkey.pem;
 HERETODOSSLCERTS

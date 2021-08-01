@@ -54,13 +54,13 @@ cd /usr/local/src/puzzle-massive/;
 
 su dev -c "printf 'Updating...' > /srv/puzzle-massive/root/puzzle-massive-message.html";
 ./bin/appctl.sh stop;
-systemctl start puzzle-massive-api;
+#systemctl start puzzle-massive-api;
 ./bin/clear_nginx_cache.sh -y;
-sleep 5
-su dev -c "./bin/backup.sh -c";
-sleep 5
-systemctl stop puzzle-massive-api;
-systemctl reload nginx;
+#sleep 5
+#su dev -c "./bin/backup.sh -c";
+#sleep 5
+#systemctl stop puzzle-massive-api;
+#systemctl reload nginx;
 
 cd /home/dev/;
 if [ -d puzzle-massive-$(date +%F) ]; then
@@ -79,7 +79,8 @@ su dev -c "cp puzzle-massive-$(date +%F)/.env /usr/local/src/puzzle-massive/";
 # Add .has-certs file if site has already been setup with bin/provision-certbot.sh
 su dev -c "cp puzzle-massive-$(date +%F)/.has-certs /usr/local/src/puzzle-massive/" || echo "No certs?";
 
-
+# TODO: Should be done automatically by querying the database for the version
+# and then running the necessary script to migrate to that version.
 cd /usr/local/src/puzzle-massive;
 if [ -n $MIGRATE_SCRIPT ]; then
   if [ ! -e $MIGRATE_SCRIPT ]; then
@@ -92,6 +93,7 @@ if [ -n $MIGRATE_SCRIPT ]; then
     fi
   fi
 fi
+
 su dev -c "python -m venv .";
 
 su dev -c "make ENVIRONMENT=production";

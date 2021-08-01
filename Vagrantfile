@@ -189,6 +189,18 @@ DEFAULT_ENV
       }
     end
 
+    legacy_puzzle_massive.vm.provision "in-place-quick-deploy", type: :ansible, run: "never" do |ansible|
+      ansible.playbook = "_infra/ansible-playbooks/in-place-quick-deploy.yml"
+      #ansible.verbose = "vvv"
+      ansible.verbose = false
+      ansible.extra_vars = {
+        ansible_ssh_user: "dev",
+        makeenvironment: 'development',
+        dist_file: ENV["DIST_FILE"],
+        message_file: ENV["MESSAGE_FILE"] || '../../root/puzzle-massive-message.html',
+      }
+    end
+
     # #example
     # legacy_puzzle_massive.vm.provision "playbook", type: :ansible_local, run: "always" do |ansible|
     #   ansible.playbook = "_infra/ansible-playbooks/main.yml"
