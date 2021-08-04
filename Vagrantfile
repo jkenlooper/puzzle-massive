@@ -194,9 +194,6 @@ DEFAULT_ENV
       ansible.verbose = "vvv"
       #ansible.verbose = false
       ansible.extra_vars = {
-        #ansible_shell_allow_world_readable_temp: true,
-        #ansible_shell_world_readable_temp: true,
-        #ansible_ssh_user: "dev",
         makeenvironment: 'development',
         dist_file: ENV["DIST_FILE"],
         message_file: ENV["MESSAGE_FILE"] || '../../root/puzzle-massive-message.html',

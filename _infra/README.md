@@ -209,6 +209,10 @@ The in-place deployment requires fewer steps than the stateful swap deployment.
 This deployment can be used when the changes are minor. It will update the
 application in-place instead of creating a whole new server to swap over to.
 
+It is recommended to test an in-place deployment by running it against the
+acceptance environment that was stood up with the same version that is in
+production. See /\_infra/acceptance/README.md
+
 Set the ENVIRONMENT and DIST_FILE variables as needed for doing an in-place
 deployment. The dist file will need to be created by running the `make dist`
 command on the development machine.

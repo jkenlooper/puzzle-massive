@@ -48,6 +48,7 @@ elif test "${COMMAND}" == 'stop'; then
     systemctl reload nginx;
 
 else
+  tmpout=$(mktemp)
   for app in puzzle-massive-chill \
     puzzle-massive-api \
     puzzle-massive-publish \
@@ -61,6 +62,13 @@ else
     echo "";
     echo "systemctl $COMMAND $app;";
     echo "----------------------------------------";
-    systemctl "$COMMAND" "$app" | cat;
+    # Collect any error codes that may occur
+    systemctl "$COMMAND" "$app" || echo "$app $?" >> $tmpout
   done;
+  if [ -s $tmpout ]; then
+    # Only output the error codes for each app if any happened.
+    cat $tmpout
+    exit 1
+  fi
+  rm -f $tmpout
 fi
