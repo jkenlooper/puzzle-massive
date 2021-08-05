@@ -112,14 +112,12 @@ resource "digitalocean_spaces_bucket" "ephemeral_artifacts" {
   name   = substr("ephemeral-artifacts-${lower(var.environment)}-${random_uuid.ephemeral_artifacts.result}", 0, 63)
   region = var.bucket_region
   acl    = "private"
-  # These are referenced in user_data, so if they are removed it might make the
-  # droplet require to be recreated?
-  #lifecycle_rule {
-  #  enabled = true
-  #  expiration {
-  #    days = 26
-  #  }
-  #}
+  lifecycle_rule {
+    enabled = true
+    expiration {
+      days = 26
+    }
+  }
 }
 
 resource "digitalocean_spaces_bucket_object" "update_sshd_config_sh" {

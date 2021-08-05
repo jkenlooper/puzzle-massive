@@ -58,6 +58,14 @@ resource "digitalocean_spaces_bucket_object" "artifact" {
   source = "${lower(var.environment)}/${var.artifact}"
 }
 
+resource "digitalocean_spaces_bucket_object" "database_dump_file" {
+  region = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key    = "db.dump.gz"
+  acl    = "private"
+  source = "${lower(var.environment)}/db.dump.gz"
+}
+
 # Ansible will be used to update the droplet after deployment as needed.
 resource "digitalocean_droplet" "legacy_puzzle_massive_swap_a" {
   count    = var.create_legacy_puzzle_massive_swap_a ? 1 : 0
@@ -154,6 +162,7 @@ locals {
     "bin/install-latest-stable-nginx.sh",
     "bin/setup.sh",
     "bin/iptables-setup-firewall.sh",
+    "db.dump.gz",
     var.artifact
   ]
 }
@@ -168,6 +177,7 @@ resource "local_file" "legacy_user_data_sh" {
     digitalocean_spaces_bucket_object.install_latest_stable_nginx_sh,
     digitalocean_spaces_bucket_object.setup_sh,
     digitalocean_spaces_bucket_object.iptables_setup_firewall_sh,
+    digitalocean_spaces_bucket_object.database_dump_file,
     digitalocean_spaces_bucket_object.artifact,
   ]
   sensitive_content = <<-USER_DATA
@@ -283,6 +293,7 @@ resource "local_file" "legacy_user_data_sh" {
     chown -R dev:dev /home/dev/.aws
 
     mv $EPHEMERAL_DIR/$ARTIFACT /home/dev/
+    mv $EPHEMERAL_DIR/db.dump.gz /home/dev/
 
     ENV_FILE=$(realpath .env)
     ${file("${lower(var.environment)}/legacy_puzzle_massive_droplet_user_data_fragment.sh")}

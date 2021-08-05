@@ -35,6 +35,10 @@ if [ ! -e $artifact_bundle -o "${terraform_command}" != "console" ]; then
   mv $tmp_artifact_bundle $artifact_bundle
 fi
 
+# Allow setting up the Development environment with any sqlite database dump
+# file or just use an empty one.
+touch $script_dir/db.dump.gz
+
 cd -
 
 echo "Versioned artifact bundle file: '$project_dir/$artifact_bundle'"

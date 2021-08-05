@@ -30,6 +30,10 @@ cd $project_dir
 project_version=$(jq -r '.version' package.json)
 artifact_bundle="$(echo puzzle-massive-$project_version-*.bundle)"
 
+# Empty db.dump.gz file for Test environment.
+touch $script_dir/db.dump.gz
+test ! -s $script_dir/db.dump.gz || (echo "The $script_dir/db.dump.gz should be an empty file in Test environment." && exit 1)
+
 if [ ! -e $artifact_bundle -o "${terraform_command}" != "console" ]; then
   git diff --quiet || (echo "Project directory is dirty. Please commit any changes first." && exit 1)
   tmp_artifact_bundle=$(mktemp -d)/puzzle-massive.bundle

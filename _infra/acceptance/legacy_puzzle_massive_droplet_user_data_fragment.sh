@@ -36,8 +36,9 @@ su --command '
 # is-active will fail with error code if any service had errors
 ./bin/appctl.sh is-active;
 
-# TODO: continue with a recent copy of production data
-exit 0
+# Continue only if database dump file is not empty.
+test -s /home/dev/$DATABASE_DUMP_FILE || (echo "The /home/dev/$DATABASE_DUMP_FILE is empty. Done setting up." && exit 0)
+# The rest of this should usually just be applicable for the Acceptance or Development environments.
 
 ./bin/appctl.sh stop -f;
 
@@ -54,7 +55,19 @@ su --command '
   redis-cli -n ${REDIS_DB} flushdb
 ' dev
 
-# TODO: get a copy of the last backup of production data from S3
-#aws s3 cp --endpoint=https://$backup_BUCKET_REGION.digitaloceanspaces.com s3://$backup_BUCKET/production_data ./
+# The rsync of puzzle resources should be done later with an Ansible playbook.
 
+DBDUMPFILE=/home/dev/$DATABASE_DUMP_FILE
+su --command '
+  zcat $DBDUMPFILE | sqlite3 /var/lib/puzzle-massive/sqlite3/db
+  cat db.dump.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
+  echo "pragma journal_mode=wal" | sqlite3 /var/lib/puzzle-massive/sqlite3/db
 
+  # TODO: run migrate scripts here?
+
+  ./bin/python api/api/jobs/insert-or-replace-bit-icons.py
+  ./bin/python api/api/update_enabled_puzzle_features.py;
+' dev
+
+./bin/appctl.sh start;
+./bin/appctl.sh is-active;
