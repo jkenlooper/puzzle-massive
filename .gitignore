@@ -56,9 +56,9 @@
 !/_infra/local/output/README.md
 
 /web/dhparam.pem
-/web/local-puzzle-massive.crt
+/web/localhost.crt
 /web/local-development.csr
-/web/local-puzzle-massive.key
+/web/localhost.key
 
 /include/
 /lib/

@@ -115,6 +115,16 @@ DEFAULT_ENV
     # Skip setting iptables for vagrant VMs
     #legacy_puzzle_massive.vm.provision "bin-iptables-setup-firewall", type: "shell", path: "bin/iptables-setup-firewall.sh"
 
+    legacy_puzzle_massive.vm.provision "bin-provision-local-ssl-certs", privileged: true, type: "shell", inline: <<-SHELL
+      cd /usr/local/src/puzzle-massive
+      test -e /home/vagrant/output/localhost-CA.key && cp /home/vagrant/output/localhost-CA.key /home/dev/
+      test -e /home/vagrant/output/localhost-CA.pem && cp /home/vagrant/output/localhost-CA.pem /home/dev/
+      su -c '
+        ./bin/provision-local-ssl-certs.sh -k /home/dev/localhost-CA.key -p /home/dev/localhost-CA.pem
+      ' dev
+      cp /home/dev/localhost-CA.key /home/dev/localhost-CA.pem /home/vagrant/output/
+    SHELL
+
     # The devsync.sh uses local-puzzle-massive when syncing files
     # Install the watchit command that is used in _infra/local/watchit.sh script.
     legacy_puzzle_massive.vm.provision "shell-watchit-support", type: "shell", inline: <<-SHELL

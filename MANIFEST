@@ -26,6 +26,7 @@ bin/init.sh
 bin/install.sh
 bin/log.sh
 bin/provision-certbot.sh
+bin/provision-local-ssl-certs.sh
 bin/purge_nginx_cache_file.sh
 bin/quick-deploy.sh
 bin/reload.sh

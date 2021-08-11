@@ -26,7 +26,7 @@ cat <<HEREBEDEVELOPMENT
   # VagrantFile).
   # external-puzzle-massive server_name is used for internal requests that need
   # to benefit from nginx cache.
-  server_name local-puzzle-massive external-puzzle-massive localhost $INTERNALIP ${DOMAIN_NAME} \$hostname;
+  server_name external-puzzle-massive localhost $INTERNALIP ${DOMAIN_NAME} \$hostname;
 HEREBEDEVELOPMENT
 else
 cat <<HEREBEPRODUCTION

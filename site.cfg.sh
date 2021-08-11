@@ -33,12 +33,11 @@ REDIS_DB=0
 DATE=$(date)
 
 if test "$ENVIRONMENT" == 'development'; then
-  HOSTNAME="'local-puzzle-massive'"
   DEBUG=True
 else
-  HOSTNAME="'${DOMAIN_NAME}'"
   DEBUG=False
 fi
+HOSTNAME="'${DOMAIN_NAME}'"
 
 cat <<HERE
 # File generated from $0
