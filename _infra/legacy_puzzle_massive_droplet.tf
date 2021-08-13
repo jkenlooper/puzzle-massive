@@ -201,7 +201,10 @@ resource "local_file" "legacy_user_data_sh" {
       EMAIL_MODERATOR='${var.dot_env__EMAIL_MODERATOR}'
       AUTO_APPROVE_PUZZLES='${var.dot_env__AUTO_APPROVE_PUZZLES}'
       LOCAL_PUZZLE_RESOURCES='${var.create_cdn || var.create_cdn_volatile ? var.dot_env__LOCAL_PUZZLE_RESOURCES : "y"}'
-      CDN_BASE_URL='${var.create_cdn || var.create_cdn_volatile ? "http://${one(digitalocean_record.cdn[*].fqdn)}" : ""}'
+
+      #TODO: This will probably break how the puzzle renderer checks to see if resources are local or not since it no longer starts with 'http'.
+      CDN_BASE_URL='${var.create_cdn || var.create_cdn_volatile ? "//${one(digitalocean_record.cdn[*].fqdn)}" : ""}'
+
       PUZZLE_RESOURCES_BUCKET_REGION='${var.create_cdn ? one(digitalocean_spaces_bucket.cdn[*].region) : var.create_cdn_volatile ? one(digitalocean_spaces_bucket.cdn_volatile[*].region) : ""}'
       PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL='${var.create_cdn || var.create_cdn_volatile ? "https://${var.create_cdn ? one(digitalocean_spaces_bucket.cdn[*].region) : one(digitalocean_spaces_bucket.cdn_volatile[*].region)}.digitaloceanspaces.com" : ""}'
       PUZZLE_RESOURCES_BUCKET='${var.create_cdn ? one(digitalocean_spaces_bucket.cdn[*].name) : var.create_cdn_volatile ? one(digitalocean_spaces_bucket.cdn_volatile[*].name) : ""}'

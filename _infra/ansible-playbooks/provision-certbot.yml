@@ -1,0 +1,102 @@
+---
+
+# Alternate solution:
+# https://www.digitalocean.com/community/tutorials/how-to-acquire-a-let-s-encrypt-certificate-using-ansible-on-ubuntu-18-04
+
+- name: Provision certbot
+  hosts: all
+  user: dev
+  become: true
+  tasks:
+
+    - name: Ensure that your version of snapd is up to date
+      community.general.snap:
+        name: core
+
+    - name: Remove any previous apt install of certbot if applicable
+      apt:
+        name: certbot
+        state: absent
+
+    - name: Install certbot
+      community.general.snap:
+        name: certbot
+        classic: yes
+
+    - name: Prepare the certbot command by adding symlink to /usr/bin/
+      ansible.builtin.file:
+        src: /snap/bin/certbot
+        dest: /usr/bin/certbot
+        state: link
+
+    - name: Get the cert and place a challenge in the /.well-known/ location from webroot.
+      ansible.builtin.expect:
+        command: "certbot certonly --webroot --webroot-path '/srv/puzzle-massive/root/' --domain {{ domain_name }}"
+        responses:
+          "Enter email address (used for urgent renewal and security notices)": "{{ tech_email }}"
+          "(Y)es/(N)o": y
+          "(Y)es/(N)o": n
+
+- name: Signal to legacy that certs exist
+  hosts: legacy_puzzle_massive
+  user: dev
+  become: true
+  tasks:
+
+    - name: Touch the .has-certs file
+      ansible.builtin.file:
+        path: /usr/local/src/puzzle-massive/.has-certs
+        state: touch
+    - name: Touch the web/snippets/ssl_certificate-ssl_certificate_key.nginx.conf.sh file
+      ansible.builtin.file:
+        path: /usr/local/src/puzzle-massive/web/snippets/ssl_certificate-ssl_certificate_key.nginx.conf.sh
+        state: touch
+
+    - name: "Make"
+      shell: "source bin/activate && make ENVIRONMENT={{ makeenvironment }}"
+      args:
+        executable: /usr/bin/bash
+        chdir: /usr/local/src/puzzle-massive/
+    - name: "Make install"
+      shell: "source bin/activate && make install ENVIRONMENT={{ makeenvironment }}"
+      args:
+        executable: /usr/bin/bash
+        chdir: /usr/local/src/puzzle-massive/
+    - name: "NGINX configuration test"
+      command: "nginx -t"
+    - name: Reload NGINX
+      ansible.builtin.systemd:
+        state: reloaded
+        daemon_reload: yes
+        name: nginx
+
+    - name: Remove temporary_fullchain.pem
+      ansible.builtin.file:
+        path: /etc/nginx/temporary_fullchain.pem
+        state: absent
+
+    - name: Remove temporary_privkey.pem
+      ansible.builtin.file:
+        path: /etc/nginx/temporary_privkey.pem
+        state: absent
+
+    - name: "NGINX configuration test after removing temporary_fullchain.pem and temporary_privkey.pem"
+      command: "nginx -t"
+
+- name: Signal to cdn that certs exist
+  hosts: cdn
+  user: dev
+  become: true
+  tasks:
+    - name: "Uncomment the lines in the snippets/ssl_certificate-ssl_certificate_key-cdn.nginx.conf file for the cdn host"
+      command: "sed --in-place 's/^\s*#\s*\(listen\b\|ssl_certificate\b\|ssl_certificate_key\b\)\(.\+;\s*$\)/\1\2/' /etc/nginx/snippets/ssl_certificate-ssl_certificate_key-cdn.nginx.conf"
+    - name: "Remove the lines in the snippets/ssl_certificate-ssl_certificate_key-cdn.nginx.conf file that were temporary"
+      command: "sed --in-place '/^\s*#\?\s*\(ssl_certificate\b\|ssl_certificate_key\b\)\s.*\(temporary_fullchain\|temporary_privkey\)\.pem;\s*$/ d' /etc/nginx/snippets/ssl_certificate-ssl_certificate_key-cdn.nginx.conf"
+
+    - name: "NGINX configuration test"
+      command: "nginx -t"
+    - name: Reload NGINX
+      ansible.builtin.systemd:
+        state: reloaded
+        daemon_reload: yes
+        name: nginx

@@ -5,6 +5,7 @@ locals {
     "bin/install-latest-stable-nginx.sh",
     "bin/iptables-setup-firewall.sh",
     "snippets/server_name-cdn.nginx.conf",
+    "snippets/ssl_certificate-ssl_certificate_key-cdn.nginx.conf",
     "snippets/proxy_pass-cdn.nginx.conf",
     "cdn.nginx.conf",
   ]
@@ -56,6 +57,7 @@ resource "local_file" "cdn_user_data_sh" {
     digitalocean_spaces_bucket_object.install_latest_stable_nginx_sh,
     digitalocean_spaces_bucket_object.iptables_setup_firewall_sh,
     digitalocean_spaces_bucket_object.nginx_snippets_server_name_cdn_conf[0],
+    digitalocean_spaces_bucket_object.nginx_snippets_ssl_certs_cdn_conf[0],
     digitalocean_spaces_bucket_object.nginx_snippets_proxy_pass_cdn_conf[0],
     digitalocean_spaces_bucket_object.cdn_nginx_conf[0],
   ]
@@ -119,8 +121,8 @@ resource "local_file" "cdn_user_data_sh" {
 
     mkdir -p /var/lib/cdn/cache/
     chown -R nginx:nginx /var/lib/cdn/cache/
-    mkdir -p /var/log/nginx/puzzle-massive-cdn/
-    chown -R nginx:nginx /var/log/nginx/puzzle-massive-cdn/
+    mkdir -p /var/log/nginx/puzzle-massive/
+    chown -R nginx:nginx /var/log/nginx/puzzle-massive/
 
     nginx -t
     systemctl start nginx
@@ -166,6 +168,23 @@ resource "digitalocean_spaces_bucket_object" "nginx_snippets_server_name_cdn_con
   key     = "snippets/server_name-cdn.nginx.conf"
   acl     = "private"
   content = "server_name cdn.${var.sub_domain}${var.domain};"
+}
+
+resource "digitalocean_spaces_bucket_object" "nginx_snippets_ssl_certs_cdn_conf" {
+  count   = var.create_cdn || var.create_cdn_volatile ? 1 : 0
+  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key     = "snippets/ssl_certificate-ssl_certificate_key-cdn.nginx.conf"
+  acl     = "private"
+  # The ssl certs will be uncommented out after certbot has been provisioned and
+  # the certs have been created.
+  content = <<-CONTENT
+  #listen 443 ssl http2;
+  #ssl_certificate /etc/letsencrypt/live/cdn.${var.sub_domain}${var.domain}/fullchain.pem;
+  #ssl_certificate_key /etc/letsencrypt/live/cdn.${var.sub_domain}${var.domain}/privkey.pem;
+  #ssl_certificate /etc/nginx/temporary_fullchain.pem;
+  #ssl_certificate_key /etc/temporary_privkey.pem;
+  CONTENT
 }
 
 resource "digitalocean_spaces_bucket_object" "nginx_snippets_proxy_pass_cdn_conf" {

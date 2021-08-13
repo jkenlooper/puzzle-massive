@@ -39,12 +39,22 @@ cat <<-HEREENABLESSLCERTS
   ssl_certificate_key /etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem;
 HEREENABLESSLCERTS
 
+  elif test -e "/etc/nginx/temporary_fullchain.pem"; then
+
+cat <<-HEREENABLETEMPSSLCERTS
+  # TLS certs copied from old swap
+  ssl_certificate /etc/nginx/temporary_fullchain.pem;
+  ssl_certificate_key /etc/nginx/temporary_privkey.pem;
+HEREENABLETEMPSSLCERTS
+
   else
 
 cat <<-HERENOCERTS
-  # No certs found at either location!
+  # No certs found at locations:
   # Production:
   #   /etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem
+  #   or
+  #   /etc/nginx/temporary_fullchain.pem
   # Development:
   #   /etc/nginx/ssl/localhost.crt
 HERENOCERTS
@@ -56,5 +66,11 @@ HERENOCERTS
 cat <<-HEREBECERTS
   listen 443 ssl http2;
 HEREBECERTS
+
+else
+
+cat <<-NOTSETUP
+  # Site is not configured for using ssl certificates.
+NOTSETUP
 
 fi

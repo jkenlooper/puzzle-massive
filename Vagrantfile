@@ -317,12 +317,17 @@ AWS_CONFIG_APP
     mkdir -p /etc/nginx/snippets
     echo "server_name localhost;" > /etc/nginx/snippets/server_name-cdn.nginx.conf
     echo "proxy_pass http://s3fake.puzzle.massive.test:4568/chum/resources/;" > /etc/nginx/snippets/proxy_pass-cdn.nginx.conf
+    cat <<-SNIPPET > /etc/nginx/snippets/ssl_certificate-ssl_certificate_key-cdn.nginx.conf
+      #listen 443 ssl http2;
+      #ssl_certificate /etc/nginx/ssl/localhost.crt;
+      #ssl_certificate_key /etc/nginx/ssl/localhost.key;
+SNIPPET
     cp /home/vagrant/puzzle-massive/web/cdn.nginx.conf /etc/nginx/nginx.conf
 
     mkdir -p /var/lib/cdn/cache/
     chown -R nginx:nginx /var/lib/cdn/cache/
-    mkdir -p /var/log/nginx/puzzle-massive-cdn/
-    chown -R nginx:nginx /var/log/nginx/puzzle-massive-cdn/
+    mkdir -p /var/log/nginx/puzzle-massive/
+    chown -R nginx:nginx /var/log/nginx/puzzle-massive/
 
     nginx -t
     systemctl start nginx

@@ -379,7 +379,6 @@ always trusted. The Firefox web browser will require importing the
 `localhost-CA.pem` certificate authority file.
 
 ```bash
-cd /usr/local/src/puzzle-massive/;
 ./bin/provision-local-ssl-certs.sh
 ```
 

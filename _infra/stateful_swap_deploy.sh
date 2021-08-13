@@ -326,8 +326,10 @@ TF_VAR_is_floating_ip_active=true \
 
 # Run Ansible playbooks to setup newly provisioned swap with data from old swap.
 ansible-playbook ansible-playbooks/finished-cloud-init.yml -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
+ansible-playbook ansible-playbooks/copy-certs-to-new-swap.yml -i $ENVIRONMENT/host_inventory.ansible.cfg
 ansible-playbook ansible-playbooks/switch-data-over-to-new-swap.yml -i $ENVIRONMENT/host_inventory.ansible.cfg
 ansible-playbook ansible-playbooks/appctl-start.yml -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
+ansible-playbook ansible-playbooks/provision-certbot.yml -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
 
 # Gross way of getting new swap ip address.
 NEW_SWAP_IP=$(echo "\"$NEW_SWAP\" == \"A\"" ' ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : ' "\"$NEW_SWAP\" == \"B\"" ' ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : null' | \

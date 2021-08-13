@@ -23,6 +23,10 @@ variable "do_app_spaces_secret_access_key" {
   description = "DigitalOcean Spaces secret access key for the application to use."
   sensitive   = true
 }
+variable "tech_email" {
+  type = string
+  description = "Contact email address to use for notifying the person in charge of fixing stuff. This is usually the person that can also break all the things. Use your cat's email address here if you have a cat in the house."
+}
 
 variable "artifact" {
   description = "The file name of the the created artifact that will be used for deploying to the acceptance or production environments. This artifact is created on the developer's machine via the `make dist` command. Development and Test environments will create a git bundle instead."
