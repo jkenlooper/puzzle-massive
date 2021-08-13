@@ -2,6 +2,6 @@
     {% if config.DEBUG %}
     <!-- Force setting favicon when in debug mode. -->
     <!-- The favicon link is not needed in production. -->
-    <link rel="shortcut icon" href="{{ '{scheme}://{hostname}'.format(scheme=config.SITE_PROTOCOL, hostname=config.HOSTNAME) }}/favicon.ico?v={{ config.VERSION }}&debug-no-cache={{ chill_now }}" />
+    <link rel="shortcut icon" href="{{ '//{hostname}'.format(hostname=config.HOSTNAME) }}/favicon.ico?v={{ config.VERSION }}&debug-no-cache={{ chill_now }}" />
     <link rel="icon" sizes="16x16 32x32 48x48" href="/favicon.ico?v={{ config.VERSION }}&debug-no-cache={{ chill_now }}">
     {% endif %}

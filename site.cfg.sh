@@ -50,7 +50,6 @@ cat <<HERE
 # Set the HOST to 0.0.0.0 for being an externally visible server.
 HOST = '$HOSTCHILL'
 HOSTNAME = $HOSTNAME
-SITE_PROTOCOL = 'http'
 PORT = $PORTCHILL
 
 HOSTCHILL = '$HOSTCHILL'
@@ -184,7 +183,7 @@ PURGEURLLIST = "${PURGEURLLIST}"
 # requiring an app to run it. This will use Frozen-Flask.
 # The path to the static/frozen website will be put.
 FREEZER_DESTINATION = "frozen"
-FREEZER_BASE_URL = "{0}://{1}/".format(SITE_PROTOCOL, HOSTNAME)
+FREEZER_BASE_URL = f"//{HOSTNAME}/"
 
 # Unsplash
 UNSPLASH_APPLICATION_ID = "${UNSPLASH_APPLICATION_ID}"

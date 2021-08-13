@@ -36,7 +36,6 @@ class APITestCase(unittest.TestCase):
         self.app = make_app(
             HOST="127.0.0.1",
             HOSTNAME="legacy_puzzle_massive",
-            SITE_PROTOCOL="http",
             PORT=6300,
             HOSTCACHE="127.0.0.1",
             HOSTORIGIN="127.0.0.1",

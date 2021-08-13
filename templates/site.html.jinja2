@@ -41,7 +41,7 @@
   {%- if _pageimage.startswith('http') %}
     {%- set _pageimage_url = _pageimage %}
   {% else %}
-    {%- set _pageimage_url = '{scheme}://{hostname}{path}'.format(scheme=config.SITE_PROTOCOL, hostname=config.HOSTNAME, path=_pageimage) -%}
+    {%- set _pageimage_url = '//{hostname}{path}'.format(hostname=config.HOSTNAME, path=_pageimage) -%}
   {% endif -%}
 {% endif -%}
 
@@ -67,7 +67,7 @@
     {#- request.path will start with a '/' -#}
     {%- set _canonical_path = '/chill{path}'.format(path=request.path) -%}
   {% endif -%}
-  {%- set _canonical_url = '{scheme}://{hostname}{path}'.format(scheme=config.SITE_PROTOCOL, hostname=config.HOSTNAME, path=_canonical_path) -%}
+  {%- set _canonical_url = '//{hostname}{path}'.format(hostname=config.HOSTNAME, path=_canonical_path) -%}
 {% endif -%}
 <!DOCTYPE html>
 <html class="no-js" lang="en">
