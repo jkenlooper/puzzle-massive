@@ -107,7 +107,7 @@ class AdminPuzzleBatchEditView(MethodView):
                 (result, col_names) = rowify(result, cur.description)
                 puzzle_details = result[0]
 
-                delete_puzzle_resources(puzzle_id, is_local_resource=not puzzle_details["url"].startswith("http"))
+                delete_puzzle_resources(puzzle_id, is_local_resource=not puzzle_details["url"].startswith("http") or not puzzle_details["url"].startswith("//"))
                 id = puzzle_details["id"]
                 # current_app.logger.info('deleting puzzle resources for id {}'.format(id))
                 cur.execute(

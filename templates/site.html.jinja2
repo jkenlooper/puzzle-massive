@@ -38,7 +38,7 @@
 {% endif -%}
 
 {%- if _pageimage %}
-  {%- if _pageimage.startswith('http') %}
+  {%- if _pageimage.startswith('http') or _pageimage.startswith('//') %}
     {%- set _pageimage_url = _pageimage %}
   {% else %}
     {%- set _pageimage_url = '//{hostname}{path}'.format(hostname=config.HOSTNAME, path=_pageimage) -%}
