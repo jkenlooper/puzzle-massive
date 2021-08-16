@@ -30,12 +30,7 @@
         state: link
 
     - name: Get the cert and place a challenge in the /.well-known/ location from webroot.
-      ansible.builtin.expect:
-        command: "certbot certonly --webroot --webroot-path '/srv/puzzle-massive/root/' --domain {{ domain_name }}"
-        responses:
-          "Enter email address (used for urgent renewal and security notices)": "{{ tech_email }}"
-          "(Y)es/(N)o": y
-          "(Y)es/(N)o": n
+      command: "certbot certonly --non-interactive --keep-until-expiring --quiet --agree-tos --email {{ tech_email }} --no-eff-email --duplicate --webroot --webroot-path '/srv/puzzle-massive/root/' --domain {{ domain_name }}"
 
 - name: Signal to legacy that certs exist
   hosts: legacy_puzzle_massive

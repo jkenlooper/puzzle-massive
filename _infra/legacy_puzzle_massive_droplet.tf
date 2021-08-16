@@ -87,8 +87,6 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_swap_a" {
   # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#retrieve-user-data
   # Debug via ssh to the droplet and tail the cloud-init logs:
   # tail -f /var/log/cloud-init-output.log
-  # TODO: Should Development and Production be initially provisioned by Ansible?
-  #user_data = var.environment == "Test" || var.environment == "Acceptance" ? local_file.legacy_user_data_sh.sensitive_content : "echo 'provision manually'"
   user_data = local_file.legacy_user_data_sh.sensitive_content
 }
 resource "digitalocean_droplet" "legacy_puzzle_massive_swap_b" {
@@ -112,8 +110,6 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_swap_b" {
   # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#retrieve-user-data
   # Debug via ssh to the droplet and tail the cloud-init logs:
   # tail -f /var/log/cloud-init-output.log
-  # TODO: Should Development and Production be initially provisioned by Ansible?
-  #user_data = var.environment == "Test" || var.environment == "Acceptance" ? local_file.legacy_user_data_sh.sensitive_content : "echo 'provision manually'"
   user_data = local_file.legacy_user_data_sh.sensitive_content
 }
 
@@ -138,8 +134,6 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_volatile" {
   # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#retrieve-user-data
   # Debug via ssh to the droplet and tail the cloud-init logs:
   # tail -f /var/log/cloud-init-output.log
-  # TODO: Should Development and Production be initially provisioned by Ansible?
-  #user_data = var.environment == "Test" || var.environment == "Acceptance" ? local_file.legacy_user_data_sh.sensitive_content : "echo 'provision manually'"
   user_data = local_file.legacy_user_data_sh.sensitive_content
 }
 

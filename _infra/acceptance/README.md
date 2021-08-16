@@ -15,6 +15,24 @@ located.
 ./acceptance/terra.sh apply
 ```
 
+## Optional Create and Destroy SSL Certificates
+
+The commands to create the SSL Certificates with the Let's Encrypt certbot can
+be tested out in the Acceptance environment. This step is optional since the
+site can be run with just http scheme. The site also uses a protocol-relative
+URL ( '//' instead of 'http://' or 'https://' ) for any URLs that need to be
+absolute. Note that the Production environment will always provision certbot and
+use SSL certs, but can also be accessed without them.
+
+```bash
+# Run the Ansible playbook to provision SSL Certificates
+ENVIRONMENT=acceptance \
+ ansible-playbook ansible-playbooks/provision-certbot.yml \
+ -i $ENVIRONMENT/host_inventory.ansible.cfg \
+ --extra-vars "
+ makeenvironment=$(test $ENVIRONMENT = 'development' && echo 'development' || echo 'production')"
+```
+
 ## Test Out In-Place Production Deployment
 
 This assumes that the version has already been tested in the Development and
@@ -50,6 +68,15 @@ DIST_FILE=puzzle-massive-$project_version.tar.gz \
 Verify that the new version works correctly in the Acceptance environment.
 
 ## Clean up
+
+First, stop the auto renewal if certbot was provisioned for the Acceptance environment.
+
+```bash
+# unregister certbot account
+ENVIRONMENT=acceptance \
+ ansible-playbook ansible-playbooks/remove-certbot.yml \
+ -i $ENVIRONMENT/host_inventory.ansible.cfg
+```
 
 ```bash
 # Destroy the project when it is no longer needed
