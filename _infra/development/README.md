@@ -8,6 +8,11 @@ be ran from the `_infra/` directory since that is where the `.tf` files are
 located.
 
 ```bash
+# Optional copy of local db data when first creating droplet
+cp ../local/db.dump.gz db.dump.gz
+```
+
+```bash
 # Show the terraform plan
 ./development/terra.sh plan
 
@@ -15,9 +20,16 @@ located.
 ./development/terra.sh apply
 ```
 
-The `_infra/development/legacy_puzzle_massive_droplet-user_data.sh` script
-should be uploaded and executed if this is an initial deployment of the
-environment. It is used to fully provision the droplet.
+## Add Data From Local
+
+```bash
+ENVIRONMENT=development \
+ ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory.yml \
+ -i $ENVIRONMENT/host_inventory.ansible.cfg \
+ --extra-vars "
+ resources_directory=../local/output/resources
+ "
+```
 
 ## Accessing the Droplet
 
