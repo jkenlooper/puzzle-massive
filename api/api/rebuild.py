@@ -128,7 +128,7 @@ class PuzzlePiecesRebuildView(MethodView):
         cur.close()
         deletePieceDataFromRedis(redis_connection, puzzle, all_pieces)
 
-        delete_puzzle_resources(puzzle_id, is_local_resource=not puzzleData["preview_full"].startswith("http") or not puzzleData["preview_full"].startswith("//"), exclude_regex=r"(original|preview_full).([^.]+\.)?jpg")
+        delete_puzzle_resources(puzzle_id, is_local_resource=not puzzleData["preview_full"].startswith("http") and not puzzleData["preview_full"].startswith("//"), exclude_regex=r"(original|preview_full).([^.]+\.)?jpg")
 
         job = current_app.createqueue.enqueue(
             "api.jobs.pieceRenderer.render",

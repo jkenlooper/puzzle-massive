@@ -72,7 +72,7 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
     raster_css_filename = ""
     raster_png_filename = ""
     pr_target = PuzzleResource(puzzle_id, current_app.config, is_local_resource=current_app.config["LOCAL_PUZZLE_RESOURCES"])
-    pr_source = PuzzleResource(source_instance_puzzle_id, current_app.config, is_local_resource=not source_puzzle_data["url"].startswith("http") or not source_puzzle_data["url"].startswith("//"))
+    pr_source = PuzzleResource(source_instance_puzzle_id, current_app.config, is_local_resource=not source_puzzle_data["url"].startswith("http") and not source_puzzle_data["url"].startswith("//"))
     listing = pr_source.list()
     for path in listing:
         filename = os.path.basename(path)

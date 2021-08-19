@@ -202,7 +202,7 @@ def render(puzzles):
         original_original_image = result[1]
         original_image_basename = os.path.basename(original_original_image)
 
-        pr_original = PuzzleResource(original_puzzle_id, current_app.config, is_local_resource=not original_original_image.startswith("http") or not original_original_image.startswith("//"))
+        pr_original = PuzzleResource(original_puzzle_id, current_app.config, is_local_resource=not original_original_image.startswith("http") and not original_original_image.startswith("//"))
         imagefile = pr_original.yank_file(original_image_basename)
 
         puzzle_id = puzzle["puzzle_id"]
