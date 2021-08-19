@@ -34,6 +34,23 @@ Vagrant.configure(2) do |config|
       See further documentation in docs/development.md
     POST_UP_MESSAGE
 
+    legacy_puzzle_massive.trigger.before [:halt, :destroy] do |trigger|
+      trigger.warn = "Stop app and create backup db to shared directory on host _infra/local/output/db.dump.gz"
+      trigger.on_error = :continue
+      trigger.run_remote = {inline: <<-SHELL
+        bash -c 'cd /usr/local/src/puzzle-massive/ && ./bin/appctl.sh start && ./bin/appctl.sh stop && rsync -av /home/dev/db-$(date --iso-8601 --utc).dump.gz /home/vagrant/output/db.dump.gz'
+      SHELL
+      }
+    end
+    legacy_puzzle_massive.trigger.before :destroy do |trigger|
+      trigger.warn = "Preserving puzzle massive resources data to shared directory on host _infra/local/output/resources"
+      trigger.on_error = :continue
+      trigger.run_remote = {inline: <<-SHELL
+        bash -c 'rsync -a /srv/puzzle-massive/resources /home/vagrant/output'
+      SHELL
+      }
+    end
+
     # In case the bin/create_dot_env.sh wasn't run on the local machine.
     legacy_puzzle_massive.vm.provision "shell-auto-create-dot-env", type: "shell", run: "always", inline: <<-SHELL
       if test ! -e /home/vagrant/puzzle-massive/.env; then
@@ -344,6 +361,23 @@ SNIPPET
     s3fake.vm.provider "virtualbox" do |vb|
       vb.memory = "1024"
       vb.cpus = 1
+    end
+
+    s3fake.trigger.before [:destroy, :halt] do |trigger|
+      trigger.warn = "Preserving s3rver files to shared directory on host _infra/local/output/s3rver"
+      trigger.on_error = :continue
+      trigger.run_remote = {inline: <<-SHELL
+        bash -c 'rsync -av /home/s3rver/files /home/vagrant/output/s3rver'
+      SHELL
+      }
+    end
+    s3fake.trigger.after :up do |trigger|
+      trigger.warn = "Syncing s3rver files from shared directory on host _infra/local/output/s3rver"
+      trigger.on_error = :continue
+      trigger.run_remote = {inline: <<-SHELL
+        bash -c 'rsync -av /home/vagrant/output/s3rver/files /home/s3rver/ && chown -R s3rver:s3rver /home/s3rver/files'
+      SHELL
+      }
     end
 
     s3fake.vm.provision "shell-install-s3rver", type: "shell", inline: <<-SHELL
