@@ -23,7 +23,6 @@ Subcommands:
     activity    - Simulate puzzle activity
 """
 
-import sys
 import os
 import time
 from uuid import uuid4
@@ -35,13 +34,12 @@ from logging.config import dictConfig
 from tempfile import NamedTemporaryFile
 
 import requests
-from rq import Queue
 from docopt import docopt
 from flask import current_app
 
 from api.app import db, redis_connection, make_app
 from api.tools import loadConfig, init_karma_key
-from api.user import generate_user_login, user_id_from_ip
+from api.user import generate_user_login
 from api.constants import (
     ACTIVE,
     CLASSIC,
@@ -49,7 +47,6 @@ from api.constants import (
     FROZEN,
     IN_QUEUE,
     IN_RENDER_QUEUE,
-    NEEDS_MODERATION,
     PUBLIC,
     REBUILD,
     RENDERING,
@@ -57,9 +54,7 @@ from api.constants import (
 )
 from api.database import (
     rowify,
-    PUZZLE_CREATE_TABLE_LIST,
     read_query_file,
-    generate_new_puzzle_id,
 )
 
 
@@ -136,8 +131,7 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
 
     cur = db.cursor()
     result = cur.execute(
-        "select ip from User where id = :user;",
-        {"user": user}
+        "select ip from User where id = :user;", {"user": user}
     ).fetchone()
     if not result:
         current_app.logger.warn("No player with that id")
@@ -162,7 +156,15 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
         w = randint(200, 1000)
         h = randint(200, 1000)
         subprocess.run(
-            ["convert", "-size", f"{w}x{h}", "-format", "png", "plasma:fractal", file_path]
+            [
+                "convert",
+                "-size",
+                f"{w}x{h}",
+                "-format",
+                "png",
+                "plasma:fractal",
+                file_path,
+            ]
         )
         subprocess.run(
             [
@@ -186,7 +188,7 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
                 file_path,
             ]
         )
-        fp = open(file_path, mode='rb')
+        fp = open(file_path, mode="rb")
 
         user_session.post_data(
             route="/puzzle-upload/",
@@ -200,13 +202,15 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
                 "description": description,
                 "link": link,
             },
-            files={
-                "upload_file": fp
-            })
+            files={"upload_file": fp},
+        )
         time.sleep(1)
         fp.close()
         os.unlink(file_path)
-        current_app.logger.info(f"{pieces} piece puzzle with size {size} and plasma:fractal {w}x{h} submitted for moderation")
+        current_app.logger.info(
+            f"{pieces} piece puzzle with size {size} and plasma:fractal {w}x{h} submitted for moderation"
+        )
+
 
 def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
 
@@ -383,6 +387,7 @@ class UserSession:
             try:
                 data = r.json()
             except ValueError as err:
+                current_app.logger.debug(err)
                 time.sleep(1)
                 current_app.logger.debug(r.text)
                 return
@@ -429,6 +434,7 @@ class UserSession:
             try:
                 data = r.json()
             except ValueError as err:
+                current_app.logger.debug(err)
                 time.sleep(1)
                 current_app.logger.debug(r.text)
                 return
@@ -486,6 +492,7 @@ class UserSession:
             try:
                 data = r.json()
             except ValueError as err:
+                current_app.logger.debug(err)
                 time.sleep(1)
                 current_app.logger.debug(r.text)
                 return
@@ -772,9 +779,7 @@ def main():
 
         elif args.get("puzzles"):
             current_app.logger.info(
-                "Creating {count} puzzles at {size} with up to {max_pieces} pieces".format(
-                    count=count, size=size, max_pieces=max_pieces, min_pieces=min_pieces
-                )
+                f"Creating {count} puzzles at {size} with up to {max_pieces} pieces"
             )
             generate_puzzles(
                 count=count, size=size, min_pieces=min_pieces, max_pieces=max_pieces
@@ -782,9 +787,7 @@ def main():
 
         elif args.get("instances"):
             current_app.logger.info(
-                "Creating {count} puzzle instances with up to {max_pieces} pieces".format(
-                    count=count, max_pieces=max_pieces, min_pieces=min_pieces
-                )
+                f"Creating {count} puzzle instances with up to {max_pieces} pieces"
             )
             generate_puzzle_instances(
                 count=count, min_pieces=min_pieces, max_pieces=max_pieces
