@@ -12,10 +12,6 @@ mv $ENV_FILE .env
 
 chown dev:dev /usr/local/src/puzzle-massive;
 
-# TODO: Install new server certs for this domain.
-# TODO: Add provisioning command to remove/unregister server certs when this is
-# destroyed.
-
 su --command '
   python -m venv .;
   make ENVIRONMENT=production;
@@ -37,7 +33,8 @@ su --command '
 ./bin/appctl.sh is-active;
 
 # Continue only if database dump file is not empty.
-test -s /home/dev/$DATABASE_DUMP_FILE || (echo "The /home/dev/$DATABASE_DUMP_FILE is empty. Done setting up." && exit 0)
+DBDUMPFILE=/home/dev/db.dump.gz
+test -s $DBDUMPFILE || (echo "The $DBDUMPFILE is empty. Done setting up." && exit 0)
 # The rest of this should usually just be applicable for the Acceptance or Development environments.
 
 ./bin/appctl.sh stop -f;
@@ -57,7 +54,6 @@ su --command '
 
 # The rsync of puzzle resources should be done later with an Ansible playbook.
 
-DBDUMPFILE=/home/dev/$DATABASE_DUMP_FILE
 su --command '
   zcat $DBDUMPFILE | sqlite3 /var/lib/puzzle-massive/sqlite3/db
   cat db.dump.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
