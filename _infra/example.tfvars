@@ -8,9 +8,15 @@
 
 
 
-#do_token                    = ""
-#do_spaces_access_key_id     = ""
-#do_spaces_secret_access_key = ""
+# Recommended to set these do_* variables as environment variables and not store
+# them on the file system. The file 'secure_tfvars.sh' below will prompt for
+# each and store it that way until you exit the terminal. Use the 'source'
+# command like this when in the _infra directory:
+# source secure_tfvars.sh
+#
+##do_token                    = ""
+##do_spaces_access_key_id     = ""
+##do_spaces_secret_access_key = ""
 
 # Get the ssh key fingerprints from your DigitalOcean account
 #developer_ssh_key_fingerprints = [""]

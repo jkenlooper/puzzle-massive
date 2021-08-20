@@ -68,17 +68,6 @@ resource "local_file" "cdn_user_data_sh" {
     set -eu -o pipefail
     set -x
 
-    cat <<-'AWS_CREDENTIALS' > aws_credentials
-    [default]
-    aws_access_key_id = ${var.do_spaces_access_key_id}
-    aws_secret_access_key = ${var.do_spaces_secret_access_key}
-    AWS_CREDENTIALS
-
-    cat <<-'AWS_CONFIG' > aws_config
-    [default]
-    region =  ${var.bucket_region}
-    AWS_CONFIG
-
     ${file("../bin/aws-cli-install.sh")}
 
     EPHEMERAL_DIR=$(mktemp -d)

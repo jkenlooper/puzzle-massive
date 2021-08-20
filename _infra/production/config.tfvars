@@ -1,6 +1,12 @@
 # Override these variables for your own setup by creating
 # a /_infra/production/private.tfvars file.
 
+# Should only set these do_* values using the command 'source secure_tfvars.sh'.
+# It is recommended to not set them in your private.tfvars file or write them to
+# your disk to be extra secure.
+##do_app_spaces_access_key_id = "see-comment"
+##do_app_spaces_secret_access_key = "see-comment"
+
 environment = "Production"
 project_environment = "Production"
 project_description = ""
@@ -18,6 +24,7 @@ create_legacy_puzzle_massive_swap_a = true
 is_swap_b_active = false
 create_legacy_puzzle_massive_swap_b = false
 
+# The CDN droplet is not volatile for the Production environment.
 is_cdn_volatile_active = false
 create_cdn_volatile = false
 is_cdn_active = true

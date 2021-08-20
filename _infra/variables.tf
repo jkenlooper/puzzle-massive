@@ -15,13 +15,15 @@ variable "do_spaces_secret_access_key" {
 }
 variable "do_app_spaces_access_key_id" {
   type        = string
-  description = "DigitalOcean Spaces access key ID for the application to use."
-  sensitive   = true
+  description = "DigitalOcean Spaces access key ID for the deployed application to use. These are stored on the droplet and used by the application to read and write to Spaces. They are only required when first creating the legacy puzzle massive droplet."
+  sensitive   = false
+  default = "only-set-this-on-new-droplet-creation"
 }
 variable "do_app_spaces_secret_access_key" {
   type        = string
-  description = "DigitalOcean Spaces secret access key for the application to use."
+  description = "DigitalOcean Spaces secret access key for the deployed application to use. These are stored on the droplet and used by the application to read and write to Spaces. They are only required when first creating the legacy puzzle massive droplet."
   sensitive   = true
+  default = "only-set-this-on-new-droplet-creation"
 }
 variable "tech_email" {
   type = string

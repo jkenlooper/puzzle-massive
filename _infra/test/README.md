@@ -15,6 +15,9 @@ be ran from the `_infra/` directory since that is where the `.tf` files are
 located.
 
 ```bash
+# Source the secure_tfvars.sh script if haven't set TF_VAR_* variables yet.
+source secure_tfvars.sh
+
 # Show the terraform plan
 ./test/terra.sh plan
 

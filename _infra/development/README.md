@@ -13,6 +13,9 @@ cp ../local/db.dump.gz db.dump.gz
 ```
 
 ```bash
+# Source the secure_tfvars.sh script if haven't set TF_VAR_* variables yet.
+source secure_tfvars.sh
+
 # Show the terraform plan
 ./development/terra.sh plan
 
