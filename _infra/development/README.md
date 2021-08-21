@@ -27,6 +27,15 @@ source secure_tfvars.sh
 
 ```bash
 ENVIRONMENT=development \
+ ansible-playbook ansible-playbooks/restore-db-on-legacy-puzzle-massive.yml \
+ -i $ENVIRONMENT/host_inventory.ansible.cfg \
+ --extra-vars "
+ db_dump_file=../local/output/db.dump.gz
+ "
+```
+
+```bash
+ENVIRONMENT=development \
  ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory.yml \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
  --extra-vars "

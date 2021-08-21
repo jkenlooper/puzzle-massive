@@ -308,6 +308,24 @@ AWS_CONFIG_APP
       ' dev
     SHELL
 
+    legacy_puzzle_massive.vm.provision "restore-db-on-legacy-puzzle-massive", type: :ansible_local, run: "never" do |ansible|
+      ansible.playbook = "_infra/ansible-playbooks/restore-db-on-legacy-puzzle-massive.yml"
+      ansible.verbose = "vvv"
+      #ansible.verbose = false
+      ansible.extra_vars = {
+        db_dump_file: ENV["DB_DUMP_FILE"] || '../local/output/db.dump.gz'
+      }
+    end
+
+    legacy_puzzle_massive.vm.provision "sync-legacy-puzzle-massive-resources-directory", type: :ansible_local, run: "never" do |ansible|
+      ansible.playbook = "_infra/ansible-playbooks/sync-legacy-puzzle-massive-resources-directory.yml"
+      ansible.verbose = "vvv"
+      #ansible.verbose = false
+      ansible.extra_vars = {
+        resources_directory: ENV["RESOURCES_DIRECTORY"] || '../local/output/resources'
+      }
+    end
+
   end
 
   config.vm.define "cdn" do |cdn|
