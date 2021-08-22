@@ -25,14 +25,9 @@ source secure_tfvars.sh
 
 ## Add Data From Local
 
-```bash
-ENVIRONMENT=development \
- ansible-playbook ansible-playbooks/restore-db-on-legacy-puzzle-massive.yml \
- -i $ENVIRONMENT/host_inventory.ansible.cfg \
- --extra-vars "
- db_dump_file=../local/output/db.dump.gz
- "
-```
+Sync a local resources directory to the development environment. The directories
+in the resources directory might be empty if the site is configured to use the
+s3 bucket to store puzzle image files.
 
 ```bash
 ENVIRONMENT=development \
@@ -40,6 +35,19 @@ ENVIRONMENT=development \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
  --extra-vars "
  resources_directory=../local/output/resources
+ "
+```
+
+A db.dump.gz file can also replace an existing database for the development
+environment. A common use case for doing this would be to match what is
+currently in production by downloading a backup db.dump.gz file.
+
+```bash
+ENVIRONMENT=development \
+ ansible-playbook ansible-playbooks/restore-db-on-legacy-puzzle-massive.yml \
+ -i $ENVIRONMENT/host_inventory.ansible.cfg \
+ --extra-vars "
+ db_dump_file=../local/output/db.dump.gz
  "
 ```
 

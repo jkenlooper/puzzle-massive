@@ -68,7 +68,7 @@
         state: absent
 
     - name: Clear nginx cache
-      command: "./bin/clear_nginx_cache.sh"
+      command: "./bin/clear_nginx_cache.sh -y"
       args:
         chdir: /usr/local/src/puzzle-massive/
 
@@ -82,18 +82,19 @@
 
     - name: zcat of db dump file
       shell: "zcat {{ copied_db_dump_file.dest }} | sqlite3 /var/lib/puzzle-massive/sqlite3/db"
-      user: dev
-      become: false
     - name: cat of db.dump.sql file
       shell: "cat db.dump.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db"
-      user: dev
-      become: false
       args:
         chdir: /usr/local/src/puzzle-massive/
     - name: reset the pragma journal_mode to wal
       shell: "echo 'pragma journal_mode=wal' | sqlite3 /var/lib/puzzle-massive/sqlite3/db"
-      user: dev
-      become: false
+    - name: Chown the puzzle massive sqlite directory
+      ansible.builtin.file:
+        path: /var/lib/puzzle-massive/sqlite3
+        state: directory
+        owner: dev
+        group: dev
+        recurse: yes
 
     - name: Update any bit icon authors and add new bit icons
       command: /usr/local/src/puzzle-massive/bin/python api/api/jobs/insert-or-replace-bit-icons.py

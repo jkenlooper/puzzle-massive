@@ -233,6 +233,34 @@ DIST_FILE=../../puzzle-massive-2.x.tar.gz \
 vagrant provision --provision-with in-place-quick-deploy
 ```
 
+#### Restore data
+
+Sync a local resources directory to the development machine. Defaults to
+`_infra/local/output/resources` if not defining the environment variable
+RESOURCES_DIRECTORY.
+
+```bash
+vagrant provision --provision-with sync-legacy-puzzle-massive-resources-directory
+```
+
+A db.dump.gz file can also replace an existing database on the development
+machine. This will default to `_infra/local/output/db.dump.gz` if not defining
+the environment variable DB_DUMP_FILE.
+
+```bash
+vagrant provision --provision-with restore-db-on-legacy-puzzle-massive
+```
+
+Note that there is a trigger set for 'vagrant halt' and 'vagrant destroy'
+commands that will create a `_infra/local/output/db.dump.gz` file of the
+existing database. It also synchronizes the `_infra/local/output/resources`
+directory. The resources directory could be empty if the site is not configured
+to use local resources.
+
+The fake s3 server running in the virtual machine will automatically save it's
+data to the `_infra/local/output/s3rver` directory when the 'vagrant up' command
+is used.
+
 ---
 
 **The below instructions are still relevant if needing to troubleshoot or are
