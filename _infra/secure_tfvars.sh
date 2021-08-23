@@ -1,6 +1,6 @@
 read -s -p "DigitalOcean API Access Token:
-" TF_VAR_do_token_TEST
-export TF_VAR_do_token_TEST
+" TF_VAR_do_token
+export TF_VAR_do_token
 
 read -s -p "DigitalOcean Spaces access key ID:
 " TF_VAR_do_spaces_access_key_id

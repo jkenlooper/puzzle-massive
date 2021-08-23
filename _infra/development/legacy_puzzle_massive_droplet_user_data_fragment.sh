@@ -42,7 +42,8 @@ su --command '
 
 # Continue only if database dump file is not empty.
 DBDUMPFILE=/home/dev/db.dump.gz
-test -s $DBDUMPFILE || (echo "The $DBDUMPFILE is empty. Done setting up." && exit 0)
+echo "Checking if the $DBDUMPFILE is empty. Will stop here if it is."
+test -s $DBDUMPFILE || exit 0
 # The rest of this should usually just be applicable for the Acceptance or Development environments.
 
 ./bin/appctl.sh stop -f;
@@ -52,7 +53,7 @@ su --command '
   rm -rf /var/lib/puzzle-massive/archive/*
   rm -rf /srv/puzzle-massive/resources/*;
 ' dev
-./bin/clear_nginx_cache.sh;
+./bin/clear_nginx_cache.sh -y;
 
 # Use `flushdb` on the new server to remove all keys on the redis database.
 su --command '

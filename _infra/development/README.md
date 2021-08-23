@@ -8,8 +8,9 @@ be ran from the `_infra/` directory since that is where the `.tf` files are
 located.
 
 ```bash
-# Optional copy of local db data when first creating droplet
-cp ../local/db.dump.gz db.dump.gz
+# Initialize with a SQLite database file to use when first creating droplet.
+# Starting with a copy of an existing db.dump.gz is optional.
+cp path-to-your-own/db.dump.gz development/db.dump.gz
 ```
 
 ```bash
@@ -30,24 +31,31 @@ in the resources directory might be empty if the site is configured to use the
 s3 bucket to store puzzle image files.
 
 ```bash
+read -p "Enter the path to puzzle massive resources directory:
+" RESOURCES_DIRECTORY
 ENVIRONMENT=development \
  ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory.yml \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
  --extra-vars "
- resources_directory=../local/output/resources
+ resources_directory=$RESOURCES_DIRECTORY
  "
 ```
 
 A db.dump.gz file can also replace an existing database for the development
 environment. A common use case for doing this would be to match what is
-currently in production by downloading a backup db.dump.gz file.
+currently in production by downloading a backup db.dump.gz file. Note that when
+first creating the development environment the `_infra/development/db.dump.gz`
+is used.
 
 ```bash
+read -p "Enter the path to a db.dump.gz to replace the current sqlite database
+with:
+" DB_DUMP_FILE
 ENVIRONMENT=development \
  ansible-playbook ansible-playbooks/restore-db-on-legacy-puzzle-massive.yml \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
  --extra-vars "
- db_dump_file=../local/output/db.dump.gz
+ db_dump_file=$DB_DUMP_FILE
  "
 ```
 

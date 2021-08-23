@@ -44,7 +44,7 @@ su --command '
   rm -rf /var/lib/puzzle-massive/archive/*
   rm -rf /srv/puzzle-massive/resources/*;
 ' dev
-./bin/clear_nginx_cache.sh;
+./bin/clear_nginx_cache.sh -y;
 
 # Use `flushdb` on the new server to remove all keys on the redis database.
 su --command '

@@ -1,7 +1,11 @@
 # Acceptance Environment and Terraform Workspace
 
 The acceptance environment is used to verify that everything looks good when
-using a recent copy of the production data.
+using a recent copy of the production data. A less than 24 hour old db.dump.gz
+will need to be added at the `_infra/acceptance/db.dump.gz` path. This should
+be taken from the production environment. A recent copy of the Puzzle Massive
+resources directory should also be available and can be synchronized after the
+acceptance environment is provivisioned.
 
 Use the helper script for running the normal terraform commands. These should
 be ran from the `_infra/` directory since that is where the `.tf` files are
@@ -34,6 +38,23 @@ ENVIRONMENT=acceptance \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
  --extra-vars "
  makeenvironment=$(test $ENVIRONMENT = 'development' && echo 'development' || echo 'production')"
+```
+
+## Synchronize Puzzle Massive Resources Directory
+
+Sync a local resources directory to the acceptance environment. The directories
+in the resources directory might be empty if the site is configured to use the
+s3 bucket to store puzzle image files.
+
+```bash
+read -p "Enter the path to puzzle massive resources directory:
+" RESOURCES_DIRECTORY
+ENVIRONMENT=acceptance \
+ ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory.yml \
+ -i $ENVIRONMENT/host_inventory.ansible.cfg \
+ --extra-vars "
+ resources_directory=$RESOURCES_DIRECTORY
+ "
 ```
 
 ## Test Out In-Place Production Deployment
