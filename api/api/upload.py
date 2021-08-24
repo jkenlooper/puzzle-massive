@@ -1,5 +1,4 @@
 from __future__ import print_function
-from builtins import bytes
 import os
 import re
 import uuid
@@ -83,6 +82,14 @@ def submit_puzzle(
 
         puzzle_id = generate_new_puzzle_id(filename)
 
+    CDN_BASE_URL = current_app.config["CDN_BASE_URL"]
+    prefix_resources_url = (
+        "" if current_app.config["LOCAL_PUZZLE_RESOURCES"] else CDN_BASE_URL
+    )
+    pr = PuzzleResource(
+        puzzle_id, current_app.config, is_local_resource=not bool(prefix_resources_url)
+    )
+
     tmp_dir = tempfile.mkdtemp()
     tmp_puzzle_dir = os.path.join(tmp_dir, puzzle_id)
     os.mkdir(tmp_puzzle_dir)
@@ -149,14 +156,12 @@ def submit_puzzle(
     )[0][0]
     puzzle = puzzle["puzzle"]
 
-    CDN_BASE_URL = current_app.config["CDN_BASE_URL"]
-    prefix_resources_url = "" if current_app.config["LOCAL_PUZZLE_RESOURCES"] else CDN_BASE_URL
     cur.execute(
         fetch_query_string("add-puzzle-file.sql"),
         {
             "puzzle": puzzle,
             "name": "original",
-            "url": f"{prefix_resources_url}/resources/{puzzle_id}/original.{original_slip}.jpg"
+            "url": f"{prefix_resources_url}/resources/{puzzle_id}/original.{original_slip}.jpg",
         },
     )
 
@@ -171,7 +176,9 @@ def submit_puzzle(
                 "url": f"{prefix_resources_url}/resources/{puzzle_id}/{preview_full_slip}",
             },
         )
-        im = Image.open(os.path.join(tmp_puzzle_dir, f"original.{original_slip}.jpg")).copy()
+        im = Image.open(
+            os.path.join(tmp_puzzle_dir, f"original.{original_slip}.jpg")
+        ).copy()
         im.thumbnail(size=(384, 384))
         im.save(os.path.join(tmp_puzzle_dir, preview_full_slip))
         im.close()
@@ -219,7 +226,6 @@ def submit_puzzle(
     db.commit()
     cur.close()
 
-    pr = PuzzleResource(puzzle_id, current_app.config, is_local_resource=not bool(prefix_resources_url))
     pr.put(tmp_puzzle_dir)
     rmtree(tmp_dir)
 
@@ -434,7 +440,7 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
 
 
 class AdminPuzzleUnsplashBatchView(MethodView):
-    ""
+    """"""
 
     def post(self):
         "Route is protected by basic auth in nginx"
