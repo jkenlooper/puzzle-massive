@@ -218,14 +218,14 @@ deployment. The dist file will need to be created by running the `make dist`
 command on the development machine.
 
 ```bash
-ENVIRONMENT=development \
-DIST_FILE=puzzle-massive-2.11.x.tar.gz \
  ansible-playbook ansible-playbooks/in-place-quick-deploy.yml \
- -i $ENVIRONMENT/host_inventory.ansible.cfg \
+ -u dev \
+ -i development/host_inventory.ansible.cfg \
+ --ask-become-pass \
  --extra-vars "
- message_file=../$ENVIRONMENT/puzzle-massive-message.html
- dist_file=../../$DIST_FILE
- environment=$(test $ENVIRONMENT = 'development' && echo 'development' || echo 'production')"
+ message_file=../development/puzzle-massive-message.html
+ dist_file=../../puzzle-massive-2.11.x.tar.gz
+ makeenvironment=development"
 ```
 
 TODO: Create a rollback Ansible playbook for a failed in-place deployment.

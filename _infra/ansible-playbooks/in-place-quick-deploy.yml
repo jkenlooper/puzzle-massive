@@ -4,7 +4,7 @@
 
 - name: In-place deployment without using a stateful swap
   hosts: legacy_puzzle_massive
-  remote_user: dev
+  #remote_user: dev
   become: true
   tasks:
     - name: Copy the dist file

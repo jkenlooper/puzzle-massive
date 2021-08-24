@@ -24,6 +24,15 @@ source secure_tfvars.sh
 ./development/terra.sh apply
 ```
 
+Check on the progress of a newly initialized legacy puzzle massive droplet.
+Depending on how quickly this playbook is executed; use either the '-u dev' or
+'-u root'.
+
+```bash
+ansible-playbook ansible-playbooks/finished-cloud-init.yml \
+ -u dev -i development/host_inventory.ansible.cfg --limit legacy_puzzle_massive
+```
+
 ## Add Data From Local
 
 Sync a local resources directory to the development environment. The directories
