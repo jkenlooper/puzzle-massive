@@ -47,12 +47,14 @@ For fixing a bug with pieces that mysteriously disappear then use
 'bugfix/bad-kitty'.
 
 Please create an issue, or comment on an existing issue, if you are actively
-working on it. You may also assign the issue to yourself so others know who is
-working on what. Please also comment if you are no longer actively working on
-that issue so others might pick up where you left off.
+working on it. I (Jake Hickenlooper) will then assign the issue to you so others
+know who is working on what. Please also comment if you are no longer actively
+working on that issue so others might pick up where you left off.
 
 Create a pull request when the feature or bugfix is ready. The pull request
-should target the `develop` git branch.
+should target the `develop` git branch on the GitHub
+[jkenlooper/puzzle-massive](https://github.com/jkenlooper/puzzle-massive)
+repository.
 
 [Vagrant Share](https://www.vagrantup.com/docs/share) can be used to expose the
 local instance remotely if using Vagrant on the local machine. I have no

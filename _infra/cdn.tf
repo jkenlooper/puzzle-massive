@@ -103,6 +103,7 @@ resource "local_file" "cdn_user_data_sh" {
 
     mkdir -p /etc/nginx/snippets
     mv $EPHEMERAL_DIR/server_name-cdn.nginx.conf /etc/nginx/snippets/
+    mv $EPHEMERAL_DIR/ssl_certificate-ssl_certificate_key-cdn.nginx.conf /etc/nginx/snippets/
     mv $EPHEMERAL_DIR/proxy_pass-cdn.nginx.conf /etc/nginx/snippets/
     mv $EPHEMERAL_DIR/cdn.nginx.conf /etc/nginx/nginx.conf
     cd -
@@ -117,6 +118,7 @@ resource "local_file" "cdn_user_data_sh" {
     systemctl start nginx
     systemctl reload nginx
 
+    passwd --expire dev
     USER_DATA
 }
 

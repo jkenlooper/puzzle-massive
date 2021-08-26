@@ -45,9 +45,9 @@ read -p "Enter the path to puzzle massive resources directory:
 ENVIRONMENT=development \
  ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory.yml \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
- --extra-vars "
- resources_directory=$RESOURCES_DIRECTORY
- "
+ -u dev \
+ --ask-become-pass \
+ --extra-vars "resources_directory=../$RESOURCES_DIRECTORY"
 ```
 
 A db.dump.gz file can also replace an existing database for the development
@@ -63,9 +63,9 @@ with:
 ENVIRONMENT=development \
  ansible-playbook ansible-playbooks/restore-db-on-legacy-puzzle-massive.yml \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
- --extra-vars "
- db_dump_file=$DB_DUMP_FILE
- "
+ -u dev \
+ --ask-become-pass \
+ --extra-vars "db_dump_file=$DB_DUMP_FILE"
 ```
 
 ## Accessing the Droplet

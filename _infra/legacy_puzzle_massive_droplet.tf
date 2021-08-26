@@ -289,10 +289,13 @@ resource "local_file" "legacy_user_data_sh" {
     mv $EPHEMERAL_DIR/$ARTIFACT /home/dev/
     mv $EPHEMERAL_DIR/db.dump.gz /home/dev/
 
-    ENV_FILE=$(realpath .env)
-    ${file("${lower(var.environment)}/legacy_puzzle_massive_droplet_user_data_fragment.sh")}
-
     rm -rf $EPHEMERAL_DIR $TMPDIR
+
+    ENV_FILE=$(realpath .env)
+    (
+    ${file("${lower(var.environment)}/legacy_puzzle_massive_droplet_user_data_fragment.sh")}
+    )
+
     passwd --expire dev
   USER_DATA
 }
