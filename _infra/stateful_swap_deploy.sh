@@ -327,6 +327,7 @@ TF_VAR_is_floating_ip_active=true \
 # Run Ansible playbooks to setup newly provisioned swap with data from old swap.
 ansible-playbook ansible-playbooks/finished-cloud-init.yml -u root -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
 ansible-playbook ansible-playbooks/copy-certs-to-new-swap.yml -i $ENVIRONMENT/host_inventory.ansible.cfg
+ansible-playbook ansible-playbooks/make-install-and-reload-nginx.yml -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
 ansible-playbook ansible-playbooks/switch-data-over-to-new-swap.yml -i $ENVIRONMENT/host_inventory.ansible.cfg
 ansible-playbook ansible-playbooks/appctl-start.yml -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
 ansible-playbook ansible-playbooks/provision-certbot.yml -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap

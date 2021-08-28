@@ -6,7 +6,7 @@
 /.eslintcache
 /.htpasswd
 /.has-certs
-/.vagrant/
+.vagrant/
 /.design-tokens-css
 /site.cfg
 /frozen.tar.gz

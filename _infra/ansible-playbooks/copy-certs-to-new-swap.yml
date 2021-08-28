@@ -20,25 +20,32 @@
         src: /etc/letsencrypt/live/puzzle.massive.xyz/privkey.pem
         dest: /home/dev/temporary_privkey.pem
 
+    - name: Store temporary fullchain on local
+      ansible.builtin.fetch:
+        src: /home/dev/temporary_fullchain.pem
+        dest: ../local/tmp/
+        flat: yes
+    - name: Store temporary privkey on local
+      ansible.builtin.fetch:
+        src: /home/dev/temporary_privkey.pem
+        dest: ../local/tmp/
+        flat: yes
+
 - name: Synchronize old swap certs to new swap
   hosts: legacy_puzzle_massive_new_swap
   user: dev
   become: true
   tasks:
 
-    - name: Synchronize temporary_fullchain.pem
-      ansible.posix.synchronize:
-        mode: pull
-        src: "rsync://{{ old_swap }}/home/dev/temporary_fullchain.pem"
+    - name: Upload temporary_fullchain.pem
+      ansible.builtin.copy:
+        src: ../local/tmp/temporary_fullchain.pem
         dest: /etc/nginx/
-      delegate_to: "{{ inventory_hostname }}"
 
-    - name: Synchronize temporary_privkey.pem
-      ansible.posix.synchronize:
-        mode: pull
-        src: "rsync://{{ old_swap }}/home/dev/temporary_privkey.pem"
+    - name: Upload temporary_privkey.pem
+      ansible.builtin.copy:
+        src: ../local/tmp/temporary_privkey.pem
         dest: /etc/nginx/
-      delegate_to: "{{ inventory_hostname }}"
 
     - name: Touch the .has-certs file
       ansible.builtin.file:
@@ -48,21 +55,3 @@
       ansible.builtin.file:
         path: /usr/local/src/puzzle-massive/web/snippets/ssl_certificate-ssl_certificate_key.nginx.conf.sh
         state: touch
-
-    - name: "Make"
-      shell: "source bin/activate && make ENVIRONMENT=production"
-      args:
-        executable: /usr/bin/bash
-        chdir: /usr/local/src/puzzle-massive/
-    - name: "Make install"
-      shell: "source bin/activate && make install ENVIRONMENT=production"
-      args:
-        executable: /usr/bin/bash
-        chdir: /usr/local/src/puzzle-massive/
-    - name: "NGINX configuration test"
-      command: "nginx -t"
-    - name: Reload NGINX
-      ansible.builtin.systemd:
-        state: reloaded
-        daemon_reload: yes
-        name: nginx
