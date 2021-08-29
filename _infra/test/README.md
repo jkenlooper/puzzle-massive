@@ -14,10 +14,13 @@ Use the helper script for running the normal terraform commands. These should
 be ran from the `_infra/` directory since that is where the `.tf` files are
 located.
 
-```bash
-# Source the secure_tfvars.sh script if haven't set TF_VAR_* variables yet.
-source secure_tfvars.sh
+This requires setting the tfvars in order to create resources on DigitalOcean.
+The command `source secure_tfvars.sh` will prompt for the required access keys.
+Alternately, the command to encrypt these access keys to disk can be used:
+`source encrypt_tfvars.sh test`. They can then be decrypted and set via
+the command `source decrypt_tfvars.sh test`.
 
+```bash
 # Show the terraform plan
 ./test/terra.sh plan
 

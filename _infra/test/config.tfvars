@@ -1,12 +1,6 @@
 # Override these variables for your own setup by creating
 # a /_infra/test/private.tfvars file.
 
-# Should only set these do_* values using the command 'source secure_tfvars.sh'.
-# It is recommended to not set them in your private.tfvars file or write them to
-# your disk to be extra secure.
-##do_app_spaces_access_key_id = "see-comment"
-##do_app_spaces_secret_access_key = "see-comment"
-
 environment = "Test"
 project_environment = "Staging"
 

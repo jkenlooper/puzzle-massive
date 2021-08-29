@@ -13,10 +13,13 @@ located.
 cp path-to-your-own/db.dump.gz development/db.dump.gz
 ```
 
-```bash
-# Source the secure_tfvars.sh script if haven't set TF_VAR_* variables yet.
-source secure_tfvars.sh
+This requires setting the tfvars in order to create resources on DigitalOcean.
+The command `source secure_tfvars.sh` will prompt for the required access keys.
+Alternately, the command to encrypt these access keys to disk can be used:
+`source encrypt_tfvars.sh development`. They can then be decrypted and set via
+the command `source decrypt_tfvars.sh development`.
 
+```bash
 # Show the terraform plan
 ./development/terra.sh plan
 

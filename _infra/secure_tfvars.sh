@@ -1,3 +1,9 @@
+# Prompt for each DigitalOcean access key and export as TF_VAR_* variables.
+# See the encrypt_tfvars.sh and decrypt_tfvars.sh if wanting to persist these to
+# disk securely.
+# Usage: Source the script.
+# source secure_tfvars.sh
+
 read -s -p "DigitalOcean API Access Token:
 " TF_VAR_do_token
 export TF_VAR_do_token

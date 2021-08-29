@@ -6,13 +6,17 @@
 # passwords and access keys. Can also set these variables via environment
 # variables if they are prepended with 'TF_VAR_'. See Terraform documentation.
 
-
-
 # Recommended to set these do_* variables as environment variables and not store
-# them on the file system. The file 'secure_tfvars.sh' below will prompt for
-# each and store it that way until you exit the terminal. Use the 'source'
-# command like this when in the _infra directory:
+# them unencrypted on the file system. The file 'secure_tfvars.sh' below will
+# prompt for each and store it that way until you exit the terminal. Use the
+# 'source' command like this when in the _infra directory:
 # source secure_tfvars.sh
+#
+# Alternately, the command to encrypt these access keys to disk can be used:
+# source encrypt_tfvars.sh development
+#
+# They can then be decrypted and set via the command:
+# source decrypt_tfvars.sh development
 #
 ##do_token                    = ""
 ##do_spaces_access_key_id     = ""
