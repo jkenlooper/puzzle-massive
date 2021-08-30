@@ -324,6 +324,9 @@ TF_VAR_create_floating_ip_puzzle_massive=true \
 TF_VAR_is_floating_ip_active=true \
   ./$ENVIRONMENT/terra.sh apply
 
+# Wait for a little before trying to connect to the newly provisioned droplet.
+sleep 20
+
 # Run Ansible playbooks to setup newly provisioned swap with data from old swap.
 ansible-playbook ansible-playbooks/finished-cloud-init.yml -u root -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
 ansible-playbook ansible-playbooks/copy-certs-to-new-swap.yml -i $ENVIRONMENT/host_inventory.ansible.cfg
