@@ -19,7 +19,8 @@ resource "digitalocean_droplet" "cdn" {
   region   = var.region
   vpc_uuid = digitalocean_vpc.puzzle_massive.id
   ssh_keys = var.developer_ssh_key_fingerprints
-  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name]
+  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name, digitalocean_tag.droplet.name]
+  monitoring = true
   lifecycle {
     prevent_destroy = true
     ignore_changes = [
@@ -38,7 +39,8 @@ resource "digitalocean_droplet" "cdn_volatile" {
   region   = var.region
   vpc_uuid = digitalocean_vpc.puzzle_massive.id
   ssh_keys = var.developer_ssh_key_fingerprints
-  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name]
+  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name, digitalocean_tag.droplet.name]
+  monitoring = true
   lifecycle {
     prevent_destroy = false
     ignore_changes = [

@@ -75,7 +75,8 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_swap_a" {
   region   = var.region
   vpc_uuid = digitalocean_vpc.puzzle_massive.id
   ssh_keys = var.developer_ssh_key_fingerprints
-  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name]
+  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name, digitalocean_tag.droplet.name]
+  monitoring = true
   lifecycle {
     prevent_destroy = false
     ignore_changes = [
@@ -97,7 +98,8 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_swap_b" {
   region   = var.region
   vpc_uuid = digitalocean_vpc.puzzle_massive.id
   ssh_keys = var.developer_ssh_key_fingerprints
-  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name]
+  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name, digitalocean_tag.droplet.name]
+  monitoring = true
   lifecycle {
     prevent_destroy = false
     ignore_changes = [
@@ -121,7 +123,8 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_volatile" {
   region   = var.region
   vpc_uuid = digitalocean_vpc.puzzle_massive.id
   ssh_keys = var.developer_ssh_key_fingerprints
-  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name]
+  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name, digitalocean_tag.droplet.name]
+  monitoring = true
   lifecycle {
     prevent_destroy = false
     ignore_changes = [

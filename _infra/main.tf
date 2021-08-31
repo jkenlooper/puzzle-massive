@@ -50,6 +50,9 @@ resource "digitalocean_tag" "fw_developer_ssh" {
 resource "digitalocean_tag" "fw_web" {
   name = "fw_puzzle_massive_${lower(var.environment)}_web"
 }
+resource "digitalocean_tag" "droplet" {
+  name = "puzzle_massive_${lower(var.environment)}_droplet"
+}
 
 resource "digitalocean_firewall" "developer_ssh" {
   name = "puzzle-massive-${lower(var.environment)}-developer-ssh"
