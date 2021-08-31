@@ -1,0 +1,18 @@
+---
+
+- name: Add host to the known_hosts file locally
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Check SSH known_hosts for {{ inventory_hostname }}
+      shell: "ssh-keygen -F {{ inventory_hostname }}"
+      delegate_to: 127.0.0.1
+      register: checkForKnownHostsEntry
+      failed_when: false
+      changed_when: false
+      ignore_errors: yes
+    - name: Append the IP address to the ~/.ssh/known_hosts file locally
+      shell: "ssh-keyscan -H {{ inventory_hostname }} >> ~/.ssh/known_hosts"
+      delegate_to: 127.0.0.1
+      when: checkForKnownHostsEntry.rc == 1
+      changed_when: checkForKnownHostsEntry.rc == 1
