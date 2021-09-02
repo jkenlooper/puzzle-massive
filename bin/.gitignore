@@ -1,8 +1,12 @@
 /black
 /blackd
 /black-primer
+/coverage*
 /pyrsa*
+/py.test
+/pytest
 /activate*
+/Activate*
 /chill
 /flask
 /easy_install*

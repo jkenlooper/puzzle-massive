@@ -73,6 +73,7 @@
 *.egg-info/
 
 /tests/
+/out/
 
 # favicon.ico is generated from source-media/favicon/
 /root/favicon.ico
