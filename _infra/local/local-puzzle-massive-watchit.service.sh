@@ -26,8 +26,11 @@ Type=exec
 User=$user
 Group=$user
 WorkingDirectory=$PROJECT_DIRECTORY
-Restart=on-success
+Restart=always
 ExecStart=$LOCAL_WATCHIT_SCRIPT $PROJECT_DIRECTORY
+StandardOutput=append:/vagrant/_infra/local/output/npm-run-debug.local-puzzle-massive-watchit.log
+StandardError=inherit
+RestartSec=10
 
 [Install]
 WantedBy=multi-user.target

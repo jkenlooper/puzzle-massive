@@ -158,7 +158,9 @@ vagrant rsync-auto legacy_puzzle_massive
 ### Troubleshoot Errors on the Vagrant Virtual Machine
 
 Errors with changing the source code and updating the development machine are
-bound to happen. At this time, the logging of errors and such are only
+bound to happen. The logging of build errors (`npm run debug`) are sent to
+a file on your local machine in the `_infra/local/output/` directory. Any other
+errors from running the app are only
 accessible if you ssh into that development machine. Vagrant has a command
 for this which is `vagrant ssh`. After logging in you'll see the
 `puzzle-massive/` directory at `/home/vagrant/`. This is where all the files
@@ -167,40 +169,62 @@ actual files that are used for the running development machine. The actual files
 that are being used for the site are in the `/usr/local/src/puzzle-massive/`
 directory and are owned by the 'dev' user. Any file changes in `/home/vagrant/puzzle-massive/` will be
 automatically copied over to `/usr/local/src/puzzle-massive/` via the
-`local-puzzle-massive-auto-devsync` service (assuming that it hasn't failed for
-some reason).
+`local-puzzle-massive-auto-devsync` service.
 
 ```bash
-# Log into the virtual machine
+# Log into the Vagrant development machine
 vagrant ssh
 ```
 
-Note that after logging into the development machine as the vagrant user that
+Note that after logging into the development machine as the vagrant user; that
 there is a 'dev' user. The 'dev' user owns the `/user/local/src/puzzle-massive/`
 directory and in order to start and stop the services, or manipulate the
 database, you'll need to login as that user. When the 'dev' user was created in
 the vagrant provisioning script it set a simple password for the 'dev' user.
-You'll be prompted to update the dev user password when logging in. For the
-vagrant virtual machine the dev user password is 'vagrant'.
+For the vagrant development machine the dev user password is 'vagrant'.
 
 ```bash
-# Switch to the dev user
+# Switch to the dev user (password is 'vagrant')
 sudo su dev
 ```
 
 #### Errors with Compiling `src/` Files
 
-Any changes to the `src/` files in `/home/vagrant/puzzle-massive/` will trigger
-the command `npm run debug` to run. To disable this you can stop the
-`local-puzzle-massive-watchit` service. Now you can manually run `npm run debug` and see any errors it might be throwing.
+Double check that changes from the local machine are being sent to the Vagrant
+development machine. Use the `vagrant rsync legacy_puzzle_massive` command to
+upload files to the development machine.
+
+Any changes to the `src/` files in `/home/vagrant/puzzle-massive/` (on the
+development machine) will trigger the command `npm run debug` to run. Since the
+`npm` command is being ran automatically via the `local-puzzle-massive-watchit`
+service the output from that is being sent to the
+`_infra/local/output/npm-run-debug.local-puzzle-massive-watchit.log` file on the
+local machine.
 
 ```bash
+# On the local machine:
+# Follow the last entries made to the log file for npm run debug.
+tail --follow=name --retry -n60 \
+  _infra/local/output/npm-run-debug.local-puzzle-massive-watchit.log
+```
+
+To disable the automatic `npm run debug` on the Vagrant development machine
+requires stopping the `local-puzzle-massive-watchit` service. Now you can
+manually run `npm run debug` and see any errors it might be throwing.
+
+```bash
+# Log into the Vagrant development machine
+vagrant ssh
+
 # Stop the service that automatically runs npm run debug
 sudo systemctl stop local-puzzle-massive-watchit
 
 # Now manually run the npm command to see any errors
 cd /home/vagrant/puzzle-massive/
 npm run debug
+
+# Start the service that automatically runs npm run debug
+sudo systemctl start local-puzzle-massive-watchit
 ```
 
 #### Errors with Python Code

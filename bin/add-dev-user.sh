@@ -2,8 +2,9 @@
 
 set -euo pipefail
 
-# Sets the dev user with the initial passphrase and marks it as expired to force
-# the dev user to change it as soon as they login.
+# Sets the dev user with the initial passphrase.
+# The command `passwd --expire dev` is typically done in a later process to
+# require the dev user to change it as soon as they login.
 
 PASSPHRASE=$1
 

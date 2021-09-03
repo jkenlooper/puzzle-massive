@@ -25,7 +25,7 @@ Type=exec
 User=vagrant
 Group=vagrant
 WorkingDirectory=$PROJECT_DIRECTORY
-Restart=on-failure
+Restart=always
 ExecStart=$PROJECT_DIRECTORY/bin/distwatch.js
 
 [Install]

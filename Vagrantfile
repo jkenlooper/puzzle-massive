@@ -133,7 +133,7 @@ DEFAULT_ENV
     #legacy_puzzle_massive.vm.provision "bin-iptables-setup-firewall", type: "shell", path: "bin/iptables-setup-firewall.sh"
 
     legacy_puzzle_massive.vm.provision "bin-provision-local-ssl-certs", privileged: true, type: "shell", inline: <<-SHELL
-      cd /usr/local/src/puzzle-massive
+      cd /home/vagrant/puzzle-massive
       test -e /home/vagrant/output/localhost-CA.key && cp /home/vagrant/output/localhost-CA.key /home/dev/
       test -e /home/vagrant/output/localhost-CA.pem && cp /home/vagrant/output/localhost-CA.pem /home/dev/
       su -c '
@@ -181,6 +181,8 @@ DEFAULT_ENV
       /home/vagrant/puzzle-massive/_infra/local/local-puzzle-massive-auto-devsync.service.sh vagrant > /etc/systemd/system/local-puzzle-massive-auto-devsync.service
       systemctl start local-puzzle-massive-auto-devsync
       systemctl enable local-puzzle-massive-auto-devsync
+
+      systemctl daemon-reload
     SHELL
 
     # BASIC_AUTH_USER=$(read -p 'username: ' && echo $REPLY) BASIC_AUTH_PASSPHRASE=$(read -sp 'passphrase: ' && echo $REPLY) vagrant provision --provision-with add-user-to-basic-auth
@@ -394,6 +396,7 @@ SNIPPET
       trigger.warn = "Syncing s3rver files from shared directory on host _infra/local/output/s3rver"
       trigger.on_error = :continue
       trigger.run_remote = {inline: <<-SHELL
+        mkdir -p /home/vagrant/output/s3rver/files
         bash -c 'rsync -av /home/vagrant/output/s3rver/files /home/s3rver/ && chown -R s3rver:s3rver /home/s3rver/files'
       SHELL
       }
@@ -467,7 +470,7 @@ SERVICE_INSTALL
   config.vm.synced_folder ".", "/vagrant", disabled: false
 
   config.vm.synced_folder ".", "/home/vagrant/puzzle-massive", type: "rsync",
-    rsync__exclude: ["/.git/", "/.vagrant/", "/.terraform/", "/terraform.tfstate.d/", ".terraform.lock.hcl", "/node_modules/", "/include/", "/lib/", "/lib64/", "/local/", "/share/", "/dist/", "/puzzle-massive-*.tar.gz", "/puzzle-massive-*.bundle"],
+    rsync__exclude: ["/.git/", "/.vagrant/", "/.terraform/", "/terraform.tfstate.d/", ".terraform.lock.hcl", "/node_modules/", "/include/", "/lib/", "/lib64/", "/local/", "/share/", "/dist/", "/_infra/local/output/", "/puzzle-massive-*.tar.gz", "/puzzle-massive-*.bundle"],
     rsync__args: ["--verbose", "--archive", "--delete", "-z", "--copy-links", "--delay-updates"]
 
   config.vm.synced_folder "./_infra/local/output", "/home/vagrant/output"
