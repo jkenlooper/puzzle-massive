@@ -32,6 +32,8 @@ USAGE
   exit 0;
 }
 
+PROVISION_CERTS=0
+
 STEP_STATE=1
 while getopts ":hs:" opt; do
   case ${opt} in
@@ -328,13 +330,29 @@ TF_VAR_is_floating_ip_active=true \
 sleep 40
 
 # Run Ansible playbooks to setup newly provisioned swap with data from old swap.
-ansible-playbook ansible-playbooks/add-host-to-known_hosts.yml -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
+# TODO: how to not ask for the become password each time?
+ansible-playbook ansible-playbooks/add-host-to-known_hosts.yml \
+  -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
+
 ansible-playbook ansible-playbooks/finished-cloud-init.yml -u root -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
-ansible-playbook ansible-playbooks/copy-certs-to-new-swap.yml -i $ENVIRONMENT/host_inventory.ansible.cfg
-ansible-playbook ansible-playbooks/make-install-and-reload-nginx.yml -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
+test $PROVISION_CERTS -eq 1 \
+  && ansible-playbook ansible-playbooks/copy-certs-to-new-swap.yml -i $ENVIRONMENT/host_inventory.ansible.cfg \
+  || echo 'no copy certs'
+
+ansible-playbook ansible-playbooks/make-install-and-reload-nginx.yml \
+  --ask-become-pass \
+  -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
+
 ansible-playbook ansible-playbooks/switch-data-over-to-new-swap.yml -i $ENVIRONMENT/host_inventory.ansible.cfg
-ansible-playbook ansible-playbooks/appctl-start.yml -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
-ansible-playbook ansible-playbooks/provision-certbot.yml -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
+
+ansible-playbook ansible-playbooks/appctl-start.yml \
+  --ask-become-pass \
+  -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
+
+test $PROVISION_CERTS -eq 1 \
+  && ansible-playbook ansible-playbooks/provision-certbot.yml \
+  -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap \
+  || echo 'no provision certs'
 
 # Gross way of getting new swap ip address.
 NEW_SWAP_IP=$(echo "\"$NEW_SWAP\" == \"A\"" ' ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : ' "\"$NEW_SWAP\" == \"B\"" ' ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : null' | \

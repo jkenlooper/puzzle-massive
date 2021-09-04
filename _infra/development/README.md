@@ -27,13 +27,24 @@ the command `source decrypt_tfvars.sh development`.
 ./development/terra.sh apply
 ```
 
+It will take a few minutes for the cloudinit to finish running the
+`_infra/development/legacy_puzzle_massive_droplet-user_data.sh` script. The output log
+for it can be tailed:
+
+```bash
+# On the droplet server
+tail -f /var/log/cloud-init-output.log
+```
+
 Check on the progress of a newly initialized legacy puzzle massive droplet.
 Depending on how quickly this playbook is executed; use either the '-u dev' or
 '-u root'.
 
 ```bash
+ENVIRONMENT=development
 ansible-playbook ansible-playbooks/finished-cloud-init.yml \
- -u dev -i development/host_inventory.ansible.cfg --limit legacy_puzzle_massive
+ -u dev \
+ -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive
 ```
 
 ## Add Data From Local
@@ -45,12 +56,18 @@ s3 bucket to store puzzle image files.
 ```bash
 read -p "Enter the path to puzzle massive resources directory:
 " RESOURCES_DIRECTORY
-ENVIRONMENT=development \
- ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory.yml \
+
+# Verify that directory exists
+RESOURCES_DIRECTORY=$(realpath $RESOURCES_DIRECTORY)
+test -d $RESOURCES_DIRECTORY || echo "no directory at $RESOURCES_DIRECTORY"
+
+ENVIRONMENT=development
+
+ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory.yml \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
  -u dev \
  --ask-become-pass \
- --extra-vars "resources_directory=../$RESOURCES_DIRECTORY"
+ --extra-vars "resources_directory=$RESOURCES_DIRECTORY"
 ```
 
 A db.dump.gz file can also replace an existing database for the development
@@ -63,8 +80,14 @@ is used.
 read -p "Enter the path to a db.dump.gz to replace the current sqlite database
 with:
 " DB_DUMP_FILE
-ENVIRONMENT=development \
- ansible-playbook ansible-playbooks/restore-db-on-legacy-puzzle-massive.yml \
+
+# Verify that file exists
+DB_DUMP_FILE=$(realpath $DB_DUMP_FILE)
+test -e $DB_DUMP_FILE || echo "no file at $DB_DUMP_FILE"
+
+ENVIRONMENT=development
+
+ansible-playbook ansible-playbooks/restore-db-on-legacy-puzzle-massive.yml \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
  -u dev \
  --ask-become-pass \

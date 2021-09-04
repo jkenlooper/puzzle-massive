@@ -1,6 +1,7 @@
 ---
 - name: Add a user and passphrase to the .htpasswd file that NGINX will use for basic auth.
   hosts: legacy_puzzle_massive
+  user: dev
   tasks:
     - name: Execute bin/add-user-to-basic-auth.sh
       become: yes

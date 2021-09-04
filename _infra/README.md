@@ -220,14 +220,20 @@ deployment. The dist file will need to be created by running the `make dist`
 command on the development machine.
 
 ```bash
- ansible-playbook ansible-playbooks/in-place-quick-deploy.yml \
+# Prompt for the dist file to use.
+DIST_FILE=$(read -p 'dist file (example: ../puzzle-massive-2.11.x.tar.gz): ' && echo $REPLY)
+DIST_FILE=$(realpath $DIST_FILE)
+test -e $DIST_FILE || echo "no file at $DIST_FILE"
+
+ENVIRONMENT=development
+
+ansible-playbook ansible-playbooks/in-place-quick-deploy.yml \
  -u dev \
- -i development/host_inventory.ansible.cfg \
+ -i $ENVIRONMENT/host_inventory.ansible.cfg \
  --ask-become-pass \
- --extra-vars "
- message_file=../development/puzzle-massive-message.html
- dist_file=../../puzzle-massive-2.11.x.tar.gz
- makeenvironment=development"
+ --extra-vars "message_file=../$ENVIRONMENT/puzzle-massive-message.html
+ dist_file=$DIST_FILE
+ makeenvironment=$(test $ENVIRONMENT = 'development' && echo 'development' || echo 'production')"
 ```
 
 TODO: Create a rollback Ansible playbook for a failed in-place deployment.
@@ -250,20 +256,29 @@ as needed.
 Update packages and reboot
 
 ```bash
-ENVIRONMENT=development \
- ansible-playbook ansible-playbooks/ansible-playbooks/update-packages-and-reboot.yml \
+ENVIRONMENT=development
+
+ansible-playbook ansible-playbooks/update-packages-and-reboot.yml \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+ --ask-become-pass \
  --extra-vars "message_file=../$ENVIRONMENT/puzzle-massive-message.html"
 ```
 
 Add an admin user with a password to be able to access the admin only section.
 
 ```bash
-ENVIRONMENT=development \
-BASIC_AUTH_USER=$(read -p 'username: ' && echo $REPLY) \
-BASIC_AUTH_PASSPHRASE=$(read -sp 'passphrase: ' && echo $REPLY) \
- ansible-playbook ansible-playbooks/ansible-playbooks/add-user-to-basic-auth.yml \
+ENVIRONMENT=development
+
+# Prompt for the username to use.
+BASIC_AUTH_USER=$(read -p 'username: ' && echo $REPLY)
+
+# Prompt for the passphrase to use.
+BASIC_AUTH_PASSPHRASE=$(read -sp 'passphrase: ' && echo $REPLY)
+
+# Apply the username and passphrase
+ansible-playbook ansible-playbooks/add-user-to-basic-auth.yml \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+ --ask-become-pass \
  --extra-vars "user=$BASIC_AUTH_USER passphrase='$BASIC_AUTH_PASSPHRASE'"
 ```
 
