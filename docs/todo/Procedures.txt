@@ -1,0 +1,61 @@
+
+Procedure For Test Plan	1
+Test Shell Script	1
+Test Latency Color Change On Value	1
+Test Piece Drop on Key Press	4
+Test GUI Update	5
+Test Puzzle Timer	6
+
+Procedure For Test Plan
+Test Shell Script
+    1. Clone the repository from forked project
+        a. https://github.com/BP4rker/puzzle-massive.git
+    2. Follow development steps on your linux machine until you get to "Create the .env and .htpasswd files" section
+        a. https://github.com/jkenlooper/puzzle-massive/blob/develop/docs/development.md
+    3. Once you get there, run './bin/create_dot_env.sh'
+    4. You will be prompted with a few questions
+    5. If you see a prompt for your favorite muppet character and doesn't throw an unbound variable error, the test is successful.
+Note: You are allowed to enter any characters and this will be created as your unique developer key. Changes you make to puzzles will be held under this name.
+
+Test Latency Color Change On Value
+    1. Clone the repository from forked project
+        a. https://github.com/BP4rker/puzzle-massive.git
+    2. Follow development steps on your linux machine and run the project on your local machine.
+    3. After loading your local instance of the project, load an incomplete puzzle.
+    4. If your internet connection is secure (300 ms or below latency), the latency amount should be the color green as shown below:
+
+    5. If your internet connection is moderate (between 301 ms and 999 ms latency inclusive), then the latency value should be orange as displayed below:
+
+    6. If your internet connection is poor (above 1000 ms latency), then the latency value should be red as displayed below:
+
+Test Piece Drop on Key Press
+    1. Once the website is hosted, you may open up an active puzzle
+    2. At this point, select a piece
+    3. Press enter and you will see the piece drop
+
+    4. Press enter again when selecting a piece and do not let go until new piece is selected
+    5. Karma will not be updated and new piece will be selected
+    6. To get Karma to show up on the screen, spam click a piece until you see it at the bottom right of the screen
+
+NOTE: This is not always perfect and needs more debugging to work 100% of the time. Occasionally there will be colliding cases and this will prevent the proper actions from taking place
+Test GUI Update
+    1. If the project is hosted using the 'friendly name' local-puzzle-massive, navigate to:
+        a. local-puzzle-massive/chill/site/new-puzzle/submit/
+
+    2. The highlighted bits were added to clarify what a puzzle instance is
+    3. Click the hyperlink 'Buy Instance Slot'
+
+    4. You will be rerouted to a buy page for the main website that will show another explanation as well as a place to purchase the instance slot
+
+
+Test Puzzle Timer
+    1. Clone the repository from forked project:
+    • https://github.com/BP4rker/puzzle-massive.git
+    2. Follow the development instructions to set up the project on your machine.
+    3. Host the website and use a supported web browser to access the homepage.
+    4. Choose a puzzle.
+    5. At the top right of the screen above the latency indicator and below the header, a label should be seen, reading “time elapsed”.
+    6. This label should be followed by a series of numbers in the format “HH:mm:ss”, where the first set of numbers represents hours, the second set represents minutes, the third representing seconds.
+
+    7. These numbers should continue to go up, acting as a timer recording the time elapsed from when the puzzle was first loaded. Once 59 seconds is reached, the seconds portion should become zero again, and the minutes section should have a 1. If this is the case, the timer is working appropriately.
+

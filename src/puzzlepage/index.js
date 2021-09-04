@@ -9,6 +9,7 @@ import "../puzzle-bits";
 import "../puzzle-karma-alert";
 import "../puzzle-alert";
 import "../puzzle-latency";
+import "../puzzle-time";
 import "../hash-color";
 import "../toggle-movable-pieces";
 import "./puzzlepage.css";

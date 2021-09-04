@@ -48,12 +48,14 @@ let lastInstanceId = 0;
 interface RenderedShadowPieces {
   [index: number]: PieceData;
 }
+
 customElements.define(
   tag,
   class PmPuzzlePieces extends HTMLElement {
     static get _instanceId(): string {
       return `${tag} ${lastInstanceId++}`;
     }
+
     private instanceId: string;
     private puzzleId: string;
     private maxPausePiecesTimeout: number;
@@ -78,6 +80,8 @@ customElements.define(
     private renderedShadowPieces: RenderedShadowPieces = {};
     private isWaitingOnMoveRequestTimeout: number | undefined;
     private removeShadowedPiecesTimeout: number | undefined;
+    private audioPuzzlePieceClick: HTMLAudioElement;
+
     //private pauseStop: number = 0;
 
     constructor() {
@@ -267,6 +271,8 @@ customElements.define(
         this.updateForegroundAndBackgroundColors.bind(this),
         this.instanceId
       );
+
+      this.audioPuzzlePieceClick = new Audio("/media/536108__eminyildirim__ui-click.wav");
     }
 
     onPuzzleStatus(status: Status) {
@@ -342,6 +348,7 @@ customElements.define(
       ev.preventDefault();
       this.slabMassiveOffsetTop = this.$slabMassive.offsetTop;
       this.slabMassiveOffsetLeft = this.$slabMassive.offsetLeft;
+
       if (typeof this.draggedPieceID === "number") {
         puzzleService.unsubscribe(
           "piece/move/rejected",
@@ -358,6 +365,25 @@ customElements.define(
         );
         this.draggedPieceID = null;
       }
+      document.addEventListener("keydown", (event) => {
+        if (event.key == "Enter") {
+          puzzleService.unSelectPiece(this.id);
+          this.$slabMassive.removeEventListener(
+            "mousemove",
+            this.pieceFollow,
+            false
+          );
+          // Stop listening for any updates to this piece
+          puzzleService.unsubscribe(
+            "piece/move/rejected",
+            `pieceFollow ${this.id} ${this.instanceId}`
+          );
+
+          // Just unselect the piece so the next on tap doesn't move it
+
+          this.onKarmaUpdated.bind(ev);
+        }
+      });
     }
 
     onTap(ev) {
@@ -424,6 +450,25 @@ customElements.define(
           );
           this.draggedPieceID = null;
         }
+        document.addEventListener("keydown", (event) => {
+          if (event.key == "Enter") {
+            puzzleService.unSelectPiece(this.id);
+            this.$slabMassive.removeEventListener(
+              "mousemove",
+              this.pieceFollow,
+              false
+            );
+            // Stop listening for any updates to this piece
+            puzzleService.unsubscribe(
+              "piece/move/rejected",
+              `pieceFollow ${this.id} ${this.instanceId}`
+            );
+
+            // Just unselect the piece so the next on tap doesn't move it
+
+            this.onKarmaUpdated.bind(ev);
+          }
+        });
       }
     }
 
@@ -454,6 +499,7 @@ customElements.define(
       if ($_piece !== null && karmaData.karmaChange) {
         if (karmaData.karmaChange > 0) {
           $_piece.classList.add("is-up");
+          this.audioPuzzlePieceClick.play();
         } else if (karmaData.karmaChange < 0 && karmaData.karma < 18) {
           // Only show is-down icon if risk of player being blocked.
           $_piece.classList.add("is-down");
@@ -663,6 +709,7 @@ customElements.define(
       //  });
       //}, 100);
     }
+
     removeShadowPieces() {
       const shadowPieces = this.$collection.querySelectorAll(".s");
       for (const sp of shadowPieces.values()) {
@@ -719,12 +766,12 @@ customElements.define(
         // let sat = hsl[1]
         let light = hsl[2];
         /*
-        let opposingHSL = [
-          hue > 180 ? hue - 180 : hue + 180,
-          100 - sat,
-          100 - light
-        ]
-        */
+              let opposingHSL = [
+                hue > 180 ? hue - 180 : hue + 180,
+                100 - sat,
+                100 - light
+              ]
+              */
         let contrast = light > 50 ? 0 : 100;
         this.$container.style.color = `hsla(0,0%,${contrast}%,1)`;
       }
@@ -754,6 +801,7 @@ customElements.define(
     static get observedAttributes() {
       return [];
     }
+
     // Fires when an attribute was added, removed, or updated.
     //attributeChangedCallback(attrName, oldVal, newVal) {}
 

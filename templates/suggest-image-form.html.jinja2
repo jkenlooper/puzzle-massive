@@ -90,7 +90,7 @@ function form() {
         <p>
           Check this box to <em>not</em> have this puzzle publicly listed on the
           site. The original puzzle can then only be completed once and not
-          rebuilt. Puzzle instances can still be made from the original puzzle.
+          rebuilt. Puzzle instances** can still be made from the original puzzle.
         </p>
         <p><em>Not all unlisted puzzles will be approved.</em></p>
       </div>
@@ -119,8 +119,14 @@ function form() {
     <div class="pm-UploadForm-row">
       <label for="description">Description</label>
       <textarea style="width:100%" id="description" name="description" x-model="description" maxlength="1000"></textarea>
-    </div>
 
+    </div>
+      <p>
+        <em>**A puzzle instance is a memory slot that you have available to store a puzzle. You will have
+          full administrative control over this puzzle. These can be gained by donating to the website.
+          Please click the link below to purchase a puzzle instance!</em>
+      </p>
+    <a href="http://puzzle.massive.xyz/d/buy-stuff/">Buy Instance Slot</a>
     <div class="u-textRight">
       <input class="Button Button--primary" type="submit" name="save" value="Suggest Image" x-bind:disabled="!isValid()"/>
     </div>

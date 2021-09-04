@@ -11,3 +11,18 @@
   line-height: 1;
   vertical-align: middle;
 }
+.pm-PuzzleLatency-value-green {
+  line-height: 1;
+  vertical-align: middle;
+  color: green;
+}
+.pm-PuzzleLatency-value-yellow {
+  line-height: 1;
+  vertical-align: middle;
+  color: orange;
+}
+.pm-PuzzleLatency-value-red {
+  line-height: 1;
+  vertical-align: middle;
+  color: #ff0000;
+}

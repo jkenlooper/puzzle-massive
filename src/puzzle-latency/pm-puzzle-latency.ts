@@ -45,12 +45,35 @@ customElements.define(
     }
 
     template(data: TemplateData) {
-      return html`
-        <div class="pm-PuzzleLatency">
-          <small class="pm-PuzzleLatency-label">latency:</small>
-          <span class="pm-PuzzleLatency-value">${data.latency}</span>
-        </div>
-      `;
+      if (data.latency <= 300) {
+        return html`
+          <div class="pm-PuzzleLatency">
+            <small class="pm-PuzzleLatency-label">latency:</small>
+            <span class="pm-PuzzleLatency-value-green">${data.latency}</span>
+          </div>
+        `;
+      } else if (data.latency >= 301 && data.latency <= 999) {
+        return html`
+          <div class="pm-PuzzleLatency">
+            <small class="pm-PuzzleLatency-label">latency:</small>
+            <span class="pm-PuzzleLatency-value-yellow">${data.latency}</span>
+          </div>
+        `;
+      } else if (data.latency >= 1000) {
+        return html`
+          <div class="pm-PuzzleLatency">
+            <small class="pm-PuzzleLatency-label">latency:</small>
+            <span class="pm-PuzzleLatency-value-red">${data.latency}</span>
+          </div>
+        `;
+      } else {
+        return html`
+          <div class="pm-PuzzleLatency">
+            <small class="pm-PuzzleLatency-label">latency:</small>
+            <span class="pm-PuzzleLatency-value">${data.latency}</span>
+          </div>
+        `;
+      }
     }
 
     get data(): TemplateData {
