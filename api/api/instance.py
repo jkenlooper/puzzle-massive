@@ -164,13 +164,6 @@ class CreatePuzzleInstanceView(MethodView):
 
         puzzle_id = generate_new_puzzle_id(source_puzzle_data["name"])
 
-        # Create puzzle dir
-        if not fork:
-            puzzle_dir = os.path.join(
-                current_app.config.get("PUZZLE_RESOURCES"), puzzle_id
-            )
-            os.mkdir(puzzle_dir)
-
         if not fork:
             d = {
                 "puzzle_id": puzzle_id,

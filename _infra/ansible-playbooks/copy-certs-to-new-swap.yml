@@ -1,0 +1,57 @@
+---
+
+- name: Copy certs to home directory on old swap
+  hosts: legacy_puzzle_massive_old_swap
+  user: dev
+  become: true
+  tasks:
+
+    - name: Copy fullchain.pem to /home/dev
+      ansible.builtin.copy:
+        remote_src: yes
+        src: /etc/letsencrypt/live/puzzle.massive.xyz/fullchain.pem
+        dest: /home/dev/temporary_fullchain.pem
+        owner: dev
+        group: dev
+
+    - name: Copy privkey.pem to /home/dev
+      ansible.builtin.copy:
+        remote_src: yes
+        src: /etc/letsencrypt/live/puzzle.massive.xyz/privkey.pem
+        dest: /home/dev/temporary_privkey.pem
+
+    - name: Store temporary fullchain on local
+      ansible.builtin.fetch:
+        src: /home/dev/temporary_fullchain.pem
+        dest: ../local/tmp/
+        flat: yes
+    - name: Store temporary privkey on local
+      ansible.builtin.fetch:
+        src: /home/dev/temporary_privkey.pem
+        dest: ../local/tmp/
+        flat: yes
+
+- name: Synchronize old swap certs to new swap
+  hosts: legacy_puzzle_massive_new_swap
+  user: dev
+  become: true
+  tasks:
+
+    - name: Upload temporary_fullchain.pem
+      ansible.builtin.copy:
+        src: ../local/tmp/temporary_fullchain.pem
+        dest: /etc/nginx/
+
+    - name: Upload temporary_privkey.pem
+      ansible.builtin.copy:
+        src: ../local/tmp/temporary_privkey.pem
+        dest: /etc/nginx/
+
+    - name: Touch the .has-certs file
+      ansible.builtin.file:
+        path: /usr/local/src/puzzle-massive/.has-certs
+        state: touch
+    - name: Touch the web/snippets/ssl_certificate-ssl_certificate_key.nginx.conf.sh file
+      ansible.builtin.file:
+        path: /usr/local/src/puzzle-massive/web/snippets/ssl_certificate-ssl_certificate_key.nginx.conf.sh
+        state: touch

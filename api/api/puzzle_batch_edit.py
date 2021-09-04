@@ -100,11 +100,15 @@ class AdminPuzzleBatchEditView(MethodView):
                 status = DELETED_REQUEST
 
             for puzzle_id in puzzle_ids:
-                delete_puzzle_resources(puzzle_id)
-                id = cur.execute(
-                    fetch_query_string("select_puzzle_id_by_puzzle_id.sql"),
+                result = cur.execute(
+                    fetch_query_string("select-puzzle-details-for-puzzle_id.sql"),
                     {"puzzle_id": puzzle_id},
-                ).fetchone()[0]
+                ).fetchall()
+                (result, col_names) = rowify(result, cur.description)
+                puzzle_details = result[0]
+
+                delete_puzzle_resources(puzzle_id, is_local_resource=not puzzle_details["url"].startswith("http") and not puzzle_details["url"].startswith("//"))
+                id = puzzle_details["id"]
                 # current_app.logger.info('deleting puzzle resources for id {}'.format(id))
                 cur.execute(
                     fetch_query_string("delete_puzzle_file_for_puzzle.sql"),

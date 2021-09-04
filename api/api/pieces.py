@@ -1,17 +1,14 @@
 from __future__ import print_function
 from __future__ import absolute_import
 from builtins import zip
-import time
 import uuid
 
 from flask import current_app, make_response, request, abort, json
-
 from flask.views import MethodView
-from werkzeug.exceptions import HTTPException
+from flask_sse import sse
 
 from .app import db, redis_connection
 from .database import fetch_query_string, rowify
-from .tools import formatPieceMovementString
 from .jobs.convertPiecesToRedis import convert
 
 from .constants import COMPLETED
@@ -25,7 +22,6 @@ class PuzzlePiecesView(MethodView):
 
     def get(self, puzzle_id):
         ""
-        timestamp_now = int(time.time())
         cur = db.cursor()
         result = cur.execute(
             fetch_query_string("select_viewable_puzzle_id.sql"),
@@ -34,7 +30,6 @@ class PuzzlePiecesView(MethodView):
         if not result:
             # 404 if puzzle or piece does not exist
             cur.close()
-            db.commit()
             abort(404)
 
         (result, col_names) = rowify(result, cur.description)
@@ -70,7 +65,7 @@ class PuzzlePiecesView(MethodView):
 
         # The 'rotate' field is not public. It is for the true orientation of the piece.
         # The 'r' field is the mutable rotation of the piece.
-        publicPieceProperties = ("x", "y", "r", "s", "g", "w", "h", "b")
+        publicPieceProperties = ("x", "y", "r", "g", "w", "h", "b")
 
         # start = time.perf_counter()
         with redis_connection.pipeline(transaction=True) as pipe:
@@ -81,6 +76,8 @@ class PuzzlePiecesView(MethodView):
                     *publicPieceProperties,
                 )
             allPublicPieceProperties = pipe.execute()
+        pcfixed = set(redis_connection.smembers(f"pcfixed:{puzzle}"))
+        pcstacked = set(redis_connection.smembers(f"pcstacked:{puzzle}"))
         # end = time.perf_counter()
         # current_app.logger.debug("PuzzlePiecesView {}".format(end - start))
 
@@ -93,6 +90,12 @@ class PuzzlePiecesView(MethodView):
         for item in all_pieces:
             piece = item.get("id")
             pieces[piece]["id"] = piece
+            if str(piece) in pcfixed:
+                pieces[piece]["s"] = "1"
+            elif str(piece) in pcstacked:
+                pieces[piece]["s"] = "2"
+            else:
+                pieces[piece]["s"] = ""
 
         stamp = redis_connection.get(f"pzstamp:{puzzle}")
         if not stamp:
@@ -136,6 +139,8 @@ class PuzzlePieceUpdatesView(MethodView):
         if not piece_cache_ttl:
             return make_response("", 204)
 
+        # pcu:{stamp} is also used in enforcer process.py
+        # TODO: piece updates should also include the status for pcstacked
         pcu_key = f"pcu:{stamp}"
         piece_updates = redis_connection.lrange(pcu_key, 0, -1)
         if len(piece_updates) == 0:
@@ -229,6 +234,58 @@ def update_puzzle_pieces(puzzle_id, piece_properties):
     }
     return msg
 
+def publish_puzzle_pieces_move_msg(puzzle_id, msg):
+    ""
+    sse.publish(
+        msg,
+        type="move",
+        channel=f"puzzle:{puzzle_id}",
+    )
+    return {"msg": "Sent", "status_code": 200}
+
+def get_immutable_piece_props(puzzle_id):
+    cur = db.cursor()
+    result = cur.execute(
+        fetch_query_string("select-internal-puzzle-details-for-puzzle_id.sql"),
+        {"puzzle_id": puzzle_id},
+    ).fetchall()
+    if not result:
+        err_msg = {"msg": "No puzzle found", "status_code": 400}
+        cur.close()
+        return err_msg
+
+    (result, col_names) = rowify(result, cur.description)
+    puzzle_data = result[0]
+    puzzle = puzzle_data["id"]
+
+    result = cur.execute(
+        fetch_query_string("select_immutable_piece_props_for_puzzle.sql"),
+        {"puzzle": puzzle},
+    ).fetchall()
+    if not result:
+        err_msg = {"msg": "No pieces found for puzzle", "status_code": 400}
+        cur.close()
+        return err_msg
+    (result, col_names) = rowify(result, cur.description)
+    immutable_piece_properties = {}
+    for piece_data in result:
+        adjacent_offsets = {}
+        for adjacent_piece_string in piece_data["adjacent"].split(" "):
+            (adjacent_piece_id, offset_string) = adjacent_piece_string.split(":")
+            offset = list(map(int, offset_string.split(",")))
+            adjacent_offsets[adjacent_piece_id] = offset
+
+        piece_data["adjacent"] = adjacent_offsets
+        immutable_piece_properties[piece_data["id"]] = piece_data
+
+    msg = {
+        "rowcount": len(immutable_piece_properties),
+        "immutable_piece_properties": immutable_piece_properties,
+        "msg": "Success",
+        "status_code": 200,
+    }
+    return msg
+
 
 def add_puzzle_pieces(puzzle_id, piece_properties):
     """
@@ -303,6 +360,10 @@ class InternalPuzzlePiecesView(MethodView):
     Internal puzzle pieces view for use by other apps. Allows modifying piece data.
     """
 
+    def get(self, puzzle_id):
+        response_msg = get_immutable_piece_props(puzzle_id)
+        return make_response(json.jsonify(response_msg), response_msg["status_code"])
+
     def post(self, puzzle_id):
         ""
         data = request.get_json(silent=True)
@@ -338,5 +399,22 @@ class InternalPuzzlePiecesView(MethodView):
         ""
         data = request.get_json(silent=True)
         response_msg = delete_puzzle_pieces(puzzle_id)
+
+        return make_response(json.jsonify(response_msg), response_msg["status_code"])
+
+
+class InternalPuzzlePublishMove(MethodView):
+    ""
+    def post(self, puzzle_id):
+        data = request.get_json(silent=True)
+        if not data:
+            err_msg = {"msg": "No JSON data sent", "status_code": 400}
+            return make_response(json.jsonify(err_msg), err_msg["status_code"])
+        if not {
+            "msg",
+        }.issuperset(data.keys()):
+            err_msg = {"msg": "Extra fields in JSON data were sent", "status_code": 400}
+            return make_response(json.jsonify(err_msg), err_msg["status_code"])
+        response_msg = publish_puzzle_pieces_move_msg(puzzle_id, data["msg"])
 
         return make_response(json.jsonify(response_msg), response_msg["status_code"])

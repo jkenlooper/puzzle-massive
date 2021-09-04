@@ -23,7 +23,6 @@ Subcommands:
     activity    - Simulate puzzle activity
 """
 
-import sys
 import os
 import time
 from uuid import uuid4
@@ -32,15 +31,15 @@ import subprocess
 from random import randint, choice, random
 import multiprocessing
 from logging.config import dictConfig
+from tempfile import NamedTemporaryFile
 
 import requests
-from rq import Queue
 from docopt import docopt
 from flask import current_app
 
 from api.app import db, redis_connection, make_app
 from api.tools import loadConfig, init_karma_key
-from api.user import generate_user_login, user_id_from_ip
+from api.user import generate_user_login
 from api.constants import (
     ACTIVE,
     CLASSIC,
@@ -48,7 +47,6 @@ from api.constants import (
     FROZEN,
     IN_QUEUE,
     IN_RENDER_QUEUE,
-    NEEDS_MODERATION,
     PUBLIC,
     REBUILD,
     RENDERING,
@@ -56,9 +54,7 @@ from api.constants import (
 )
 from api.database import (
     rowify,
-    PUZZLE_CREATE_TABLE_LIST,
     read_query_file,
-    generate_new_puzzle_id,
 )
 
 
@@ -134,6 +130,15 @@ def generate_users(count):
 def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=3):
 
     cur = db.cursor()
+    result = cur.execute(
+        "select ip from User where id = :user;", {"user": user}
+    ).fetchone()
+    if not result:
+        current_app.logger.warn("No player with that id")
+        return
+
+    user_session = UserSession(ip=result[0])
+
     for index in range(count):
         link = ""
         description = ""
@@ -143,25 +148,27 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
             pieces = randint(min_pieces, max_pieces)
         else:
             pieces = max_pieces
-        filename = "random-{}.png".format(str(uuid4()))
-        d = time.strftime("%Y_%m_%d.%H_%M_%S", time.localtime())
-        puzzle_id = "random-{}".format(
-            hashlib.sha224(bytes("%s%s" % (filename, d), "utf-8")).hexdigest()[0:30]
-        )
-
-        # Create puzzle dir
-        puzzle_dir = os.path.join(current_app.config.get("PUZZLE_RESOURCES"), puzzle_id)
-        os.mkdir(puzzle_dir)
 
         # Create random image
-        file_path = os.path.join(puzzle_dir, filename)
-        subprocess.check_call(
-            ["convert", "-size", "200x150", "plasma:fractal", file_path]
-        )
-        subprocess.check_call(
+        random_image_file = NamedTemporaryFile(suffix=".jpg", delete=False)
+        file_path = random_image_file.name
+        random_image_file.close()
+        w = randint(200, 1000)
+        h = randint(200, 1000)
+        subprocess.run(
             [
                 "convert",
+                "-size",
+                f"{w}x{h}",
+                "-format",
+                "png",
+                "plasma:fractal",
                 file_path,
+            ]
+        )
+        subprocess.run(
+            [
+                "mogrify",
                 "-paint",
                 "10",
                 "-blur",
@@ -178,87 +185,31 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
                 "85%",
                 "-format",
                 "jpg",
-                os.path.join(puzzle_dir, "original.jpg"),
+                file_path,
             ]
         )
+        fp = open(file_path, mode="rb")
+
+        user_session.post_data(
+            route="/puzzle-upload/",
+            host="api",
+            payload={
+                "features": [],
+                "contributor": current_app.config.get("NEW_PUZZLE_CONTRIB"),
+                "pieces": pieces,
+                "bg_color": bg_color,
+                "permission": permission,
+                "description": description,
+                "link": link,
+            },
+            files={"upload_file": fp},
+        )
+        time.sleep(1)
+        fp.close()
         os.unlink(file_path)
-
-        # Insert puzzle directly to render queue instead of setting status to NEEDS_MODERATION
-        d = {
-            "puzzle_id": puzzle_id,
-            "pieces": pieces,
-            "name": filename,
-            "link": link,
-            "description": description,
-            "bg_color": bg_color,
-            "owner": user,
-            "queue": QUEUE_NEW,
-            "status": IN_RENDER_QUEUE,
-            "permission": permission,
-        }
-        cur.execute(read_query_file("insert_puzzle.sql"), d)
-        db.commit()
-
-        puzzle = rowify(
-            cur.execute(
-                read_query_file("select_puzzle_id_by_puzzle_id.sql"),
-                {"puzzle_id": puzzle_id},
-            ).fetchall(),
-            cur.description,
-        )[0][0]
-        puzzle = puzzle["puzzle"]
-
-        cur.execute(
-            read_query_file("add-puzzle-file.sql"),
-            {
-                "puzzle": puzzle,
-                "name": "original",
-                "url": "/resources/{0}/original.jpg".format(
-                    puzzle_id
-                ),  # Not a public file (only on admin page)
-            },
+        current_app.logger.info(
+            f"{pieces} piece puzzle with size {size} and plasma:fractal {w}x{h} submitted for moderation"
         )
-
-        cur.execute(
-            read_query_file("add-puzzle-file.sql"),
-            {
-                "puzzle": puzzle,
-                "name": "preview_full",
-                "url": "/resources/{0}/preview_full.jpg".format(puzzle_id),
-            },
-        )
-
-        classic_variant = cur.execute(
-            read_query_file("select-puzzle-variant-id-for-slug.sql"), {"slug": CLASSIC}
-        ).fetchone()[0]
-        cur.execute(
-            read_query_file("insert-puzzle-instance.sql"),
-            {"original": puzzle, "instance": puzzle, "variant": classic_variant},
-        )
-
-        db.commit()
-        current_app.logger.info("pieces: {pieces} {puzzle_id}".format(**locals()))
-
-    puzzles = rowify(
-        cur.execute(
-            read_query_file("select-puzzles-in-render-queue.sql"),
-            {"IN_RENDER_QUEUE": IN_RENDER_QUEUE, "REBUILD": REBUILD},
-        ).fetchall(),
-        cur.description,
-    )[0]
-    current_app.logger.info("found {0} puzzles to render".format(len(puzzles)))
-
-    # push each puzzle to artist job queue
-    for puzzle in puzzles:
-        # push puzzle to artist job queue
-        job = current_app.createqueue.enqueue(
-            "api.jobs.pieceRenderer.render",
-            [puzzle],
-            result_ttl=0,
-            job_timeout="24h",
-        )
-
-    cur.close()
 
 
 def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
@@ -436,6 +387,7 @@ class UserSession:
             try:
                 data = r.json()
             except ValueError as err:
+                current_app.logger.debug(err)
                 time.sleep(1)
                 current_app.logger.debug(r.text)
                 return
@@ -482,6 +434,7 @@ class UserSession:
             try:
                 data = r.json()
             except ValueError as err:
+                current_app.logger.debug(err)
                 time.sleep(1)
                 current_app.logger.debug(r.text)
                 return
@@ -517,6 +470,57 @@ class UserSession:
                 return
         return data
 
+    def post_data(self, route, host, payload={}, headers={}, files={}):
+        if host == "api":
+            _host = self.api_host
+        elif host == "publish":
+            _host = self.publish_host
+
+        my_headers = self.headers.copy()
+        my_headers.update(headers)
+        r = requests.post(
+            "".join([_host, route]),
+            data=payload,
+            files=files,
+            cookies={"shareduser": self.shareduser_cookie},
+            headers=my_headers,
+            allow_redirects=False,
+        )
+
+        data = {}
+        if r.status_code in (429, 409):
+            try:
+                data = r.json()
+            except ValueError as err:
+                current_app.logger.debug(err)
+                time.sleep(1)
+                current_app.logger.debug(r.text)
+                return
+            # print(data.get("msg"))
+            if data.get("timeout"):
+                # time.sleep(data.get("timeout", 1))
+                raise Exception("timeout")
+            return
+        if r.status_code == 503:
+            data = r.json()
+            raise Exception("too_active")
+        if r.status_code == 204:
+            return
+        if r.status_code >= 400:
+            current_app.logger.debug(
+                "ERROR: {status_code} {url}".format(
+                    status_code=r.status_code, url=r.url
+                )
+            )
+            if r.status_code == 429:
+                timeout = data.get("timeout")
+                if timeout:
+                    current_app.logger.debug("timeout {}".format(timeout))
+                    time.sleep(timeout)
+                return
+            return
+        return data
+
 
 class PuzzlePieces:
     def __init__(self, user_sessions, puzzle, puzzle_id, table_width, table_height):
@@ -537,7 +541,7 @@ class PuzzlePieces:
         self.table_width = table_width
         self.table_height = table_height
         self.movable_pieces = [
-            x["id"] for x in self.puzzle_pieces["positions"] if x["s"] != "1"
+            x["id"] for x in self.puzzle_pieces["positions"] if x.get("s") != "1"
         ]
         # TODO: connect to the stream and update movable_pieces
 
@@ -775,9 +779,7 @@ def main():
 
         elif args.get("puzzles"):
             current_app.logger.info(
-                "Creating {count} puzzles at {size} with up to {max_pieces} pieces".format(
-                    count=count, size=size, max_pieces=max_pieces, min_pieces=min_pieces
-                )
+                f"Creating {count} puzzles at {size} with up to {max_pieces} pieces"
             )
             generate_puzzles(
                 count=count, size=size, min_pieces=min_pieces, max_pieces=max_pieces
@@ -785,9 +787,7 @@ def main():
 
         elif args.get("instances"):
             current_app.logger.info(
-                "Creating {count} puzzle instances with up to {max_pieces} pieces".format(
-                    count=count, max_pieces=max_pieces, min_pieces=min_pieces
-                )
+                f"Creating {count} puzzle instances with up to {max_pieces} pieces"
             )
             generate_puzzle_instances(
                 count=count, min_pieces=min_pieces, max_pieces=max_pieces

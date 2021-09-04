@@ -26,6 +26,7 @@ bin/init.sh
 bin/install.sh
 bin/log.sh
 bin/provision-certbot.sh
+bin/provision-local-ssl-certs.sh
 bin/purge_nginx_cache_file.sh
 bin/quick-deploy.sh
 bin/reload.sh
@@ -49,6 +50,11 @@ stream/stream
 stream/puzzle-massive-stream.service.sh
 stream/requirements.txt
 stream/setup.py
+enforcer/README.md
+enforcer/enforcer
+enforcer/puzzle-massive-enforcer.service.sh
+enforcer/requirements.txt
+enforcer/setup.py
 documents
 media
 package.json
@@ -63,7 +69,10 @@ stats/README.md
 stats/awstats-puzzle-massive-crontab.sh
 stats/awstats.puzzle.massive.xyz.conf.sh
 templates
-web/default.conf
-web/error_page.conf
-web/ssl_params.conf
-web/puzzle-massive.conf.sh
+web/snippets
+web/default.nginx.conf
+web/legacy-cache--down.nginx.conf
+web/legacy-cache--up.nginx.conf
+web/legacy-origin.nginx.conf
+web/nginx.conf
+web/old-cruft.nginx.conf

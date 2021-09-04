@@ -1,0 +1,21 @@
+---
+
+- name: Stop the legacy puzzle massive apps
+  hosts: legacy_puzzle_massive
+  user: dev
+  tasks:
+
+    - name: Show the message
+      become: true
+      ansible.builtin.template:
+        owner: dev
+        group: dev
+        mode: "0644"
+        src: "{{ message_file }}"
+        dest: /srv/puzzle-massive/root/puzzle-massive-message.html
+
+    - name: Execute bin/appctl.sh stop
+      become: true
+      command: ./bin/appctl.sh stop
+      args:
+        chdir: /usr/local/src/puzzle-massive/

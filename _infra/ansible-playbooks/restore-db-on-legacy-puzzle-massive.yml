@@ -1,0 +1,132 @@
+---
+
+- name: Restore SQLite database file to Puzzle Massive and destroy current database files
+  hosts: legacy_puzzle_massive
+  remote_user: dev
+  become: true
+  tasks:
+    - name: Copy the db.dump.gz file to the host
+      ansible.builtin.copy:
+        owner: dev
+        group: dev
+        backup: yes
+        src: "{{ db_dump_file }}"
+        dest: "/home/dev/"
+      register: copied_db_dump_file
+      # {{ copied_db_dump_file.dest }}
+
+    - name: Show the message
+      ansible.builtin.template:
+        owner: dev
+        group: dev
+        mode: "0644"
+        src: "{{ message_file }}"
+        dest: /srv/puzzle-massive/root/puzzle-massive-message.html
+
+    - name: Execute bin/appctl.sh stop
+      command: ./bin/appctl.sh stop
+      args:
+        chdir: /usr/local/src/puzzle-massive/
+      # /home/dev/db-$(date --iso-8601 --utc).dump.gz
+    - name: Get current iso date
+      command: date --iso-8601 --utc
+      register: current_iso_date
+
+    - name: Stat of current SQLite database dump
+      ansible.builtin.stat:
+        path: "/home/dev/db-{{ current_iso_date.stdout }}.dump.gz"
+      register: current_db_dump
+      ignore_errors: true
+
+    - name: Confirm to destroy previous database files
+      pause:
+        prompt: |
+          A backup dump of the current SQLite database should have been made
+          when the 'appctl.sh stop' command executed.
+
+          path {{ current_db_dump.stat.path }}
+          modified time {{ current_db_dump.stat.mtime }}
+          size in bytes {{ current_db_dump.stat.size }}
+
+          Press return to continue. Press Ctrl+c and then "a" to abort.
+
+    - name: Remove previous sqlite3 database file db
+      ansible.builtin.file:
+        path: "/var/lib/puzzle-massive/sqlite3/db"
+        state: absent
+    - name: Remove previous sqlite3 database file db-shm
+      ansible.builtin.file:
+        path: "/var/lib/puzzle-massive/sqlite3/db-shm"
+        state: absent
+    - name: Remove previous sqlite3 database file db-wal
+      ansible.builtin.file:
+        path: "/var/lib/puzzle-massive/sqlite3/db-wal"
+        state: absent
+    - name: Remove previous sqlite3 database file db-journal
+      ansible.builtin.file:
+        path: "/var/lib/puzzle-massive/sqlite3/db-journal"
+        state: absent
+
+    - name: Clear nginx cache
+      command: "./bin/clear_nginx_cache.sh -y"
+      args:
+        chdir: /usr/local/src/puzzle-massive/
+
+    - name: Get redis db number from site.cfg
+      command: "./bin/puzzle-massive-site-cfg-echo site.cfg REDIS_DB"
+      args:
+        chdir: /usr/local/src/puzzle-massive/
+      register: redis_db
+    - name: Use 'flushdb' on the server to remove all keys on the redis database.
+      command: "redis-cli -n {{ redis_db.stdout | quote }} flushdb"
+
+    - name: zcat of db dump file
+      shell: "zcat {{ copied_db_dump_file.dest }} | sqlite3 /var/lib/puzzle-massive/sqlite3/db"
+    - name: cat of db.dump.sql file
+      shell: "cat db.dump.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db"
+      args:
+        chdir: /usr/local/src/puzzle-massive/
+    - name: reset the pragma journal_mode to wal
+      shell: "echo 'pragma journal_mode=wal' | sqlite3 /var/lib/puzzle-massive/sqlite3/db"
+    - name: Chown the puzzle massive sqlite directory
+      ansible.builtin.file:
+        path: /var/lib/puzzle-massive/sqlite3
+        state: directory
+        owner: dev
+        group: dev
+        recurse: yes
+
+    - name: Update any bit icon authors and add new bit icons
+      command: /usr/local/src/puzzle-massive/bin/python api/api/jobs/insert-or-replace-bit-icons.py
+      args:
+        chdir: /usr/local/src/puzzle-massive/
+
+    - name: Update the enabled puzzle features
+      command: /usr/local/src/puzzle-massive/bin/python api/api/update_enabled_puzzle_features.py
+      args:
+        chdir: /usr/local/src/puzzle-massive/
+
+    - name: Remove puzzle massive message if it exists
+      ansible.builtin.file:
+        state: absent
+        owner: dev
+        group: dev
+        mode: "0644"
+        path: /srv/puzzle-massive/root/puzzle-massive-message.html
+    - name: Set blank puzzle massive message
+      ansible.builtin.file:
+        state: touch
+        owner: dev
+        group: dev
+        mode: "0644"
+        path: /srv/puzzle-massive/root/puzzle-massive-message.html
+
+    - name: Execute bin/appctl.sh start
+      command: ./bin/appctl.sh start
+      args:
+        chdir: /usr/local/src/puzzle-massive/
+
+    - name: Execute bin/appctl.sh is-active
+      command: ./bin/appctl.sh is-active
+      args:
+        chdir: /usr/local/src/puzzle-massive/

@@ -16,10 +16,17 @@
   transition-property: transform;
   transition-timing-function: cubic-bezier(0.96, -0.08, 0.71, -0.53);
   transition-duration: 1.2s;
+  cursor: grab;
+  /* TODO: show id on piece when debugging
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  */
 }
 .pm-PuzzlePieces.show-movable .p {
-  box-shadow: 0 0 0px 10px rgba(0, 0, 0, 0.5),
-    0 0 0 20px rgba(255, 255, 255, 0.8);
+  filter: drop-shadow(5px -5px 0px currentColor)
+    drop-shadow(-5px 5px 0px currentColor) drop-shadow(5px 5px 0px currentColor)
+    drop-shadow(-5px -5px 0px currentColor);
 }
 
 .pm-PuzzlePieces-collection.is-waitingOnMoveRequest .p {
@@ -50,6 +57,7 @@
 .is-pending.p,
 .pm-PuzzlePieces.show-movable .is-pending.p {
   z-index: 13;
+  cursor: progress;
 }
 .is-pending.p::before {
   pointer-events: none;
@@ -87,13 +95,26 @@
   opacity: 0.8;
 }
 
-.is-immovable.p {
+.is-stacked.p {
+  filter: drop-shadow(0px -3px 0px currentColor)
+    drop-shadow(-3px 0px 0px currentColor) drop-shadow(0px 3px 0px currentColor)
+    drop-shadow(3px 0px 0px currentColor) grayscale(100%);
   z-index: 9;
+}
+.pm-PuzzlePieces.show-movable .is-stacked.p {
+  filter: drop-shadow(5px -5px 0px currentColor)
+    drop-shadow(-5px 5px 0px currentColor) drop-shadow(5px 5px 0px currentColor)
+    drop-shadow(-5px -5px 0px currentColor) grayscale(100%) invert(100%);
+}
+
+.is-immovable.p {
+  z-index: 8;
   pointer-events: none;
+  cursor: none;
 }
 
 .pm-PuzzlePieces.show-movable .is-immovable.p {
-  box-shadow: none;
+  filter: none;
 }
 
 .is-up.p,
@@ -131,11 +152,18 @@
 .is-dragging.p {
   transition-duration: 0s;
   z-index: 15;
+  cursor: grabbing;
+}
+.is-dragging.is-stacked.p {
+  filter: none;
 }
 
 .pm-PuzzlePieces.show-movable .is-dragging.p {
   z-index: 15;
-  box-shadow: 0px 0px 100px 0px currentColor;
+  filter: none;
+}
+.pm-PuzzlePieces.show-movable .is-dragging.is-stacked.p {
+  filter: none;
 }
 .is-dragging.p::before {
   pointer-events: none;
@@ -197,7 +225,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 8;
+  z-index: 7;
   transition: none;
   background-repeat: no-repeat;
   pointer-events: none;
@@ -207,6 +235,18 @@
   background: var(--pm-PuzzlePieces-shadowColor);
   filter: brightness(85%) blur(5px);
 }
+
+/* TODO: show id on piece when debugging
+.p-id {
+  display: inline-block;
+  background-color: black;
+  color: white;
+  padding: 2px;
+  font-size: 12px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+*/
 
 .pm-PuzzlePieces-collection {
 }
@@ -220,6 +260,10 @@
   bottom: 0;
   left: 0;
   z-index: 2;
+  cursor: default;
+}
+.pm-Puzzlepage-main--scaled .pm-PuzzlePieces-dropZone {
+  cursor: crosshair;
 }
 
 /* The width, height, left, and top is set by puzzle CSS. */

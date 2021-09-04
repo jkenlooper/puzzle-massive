@@ -25,8 +25,8 @@ After=multi-user.target
 
 [Service]
 Type=exec
-User=www-data
-Group=www-data
+User=nginx
+Group=nginx
 WorkingDirectory=$SRCDIR
 ExecStart=${SRCDIR}bin/purge_nginx_cache_file.sh ${PURGEURLLIST} ${origin_server} ${CACHEDIR}
 

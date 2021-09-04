@@ -15,28 +15,29 @@ source "$PORTREGISTRY"
 
 source .env
 
-HOST='127.0.0.1'
+HOSTCHILL=${HOSTCHILL:-'127.0.0.1'}
+HOSTCACHE=${HOSTCACHE:-'127.0.0.1'}
+HOSTORIGIN=${HOSTORIGIN:-'127.0.0.1'}
 # The HOSTAPI should not be externally available.
 # Keep HOSTAPI as localhost (127.0.0.1)
-HOSTAPI='127.0.0.1'
+HOSTAPI=${HOSTAPI:-'127.0.0.1'}
 # The HOSTPUBLISH should not be externally available.
 # Keep HOSTPUBLISH as localhost (127.0.0.1)
-HOSTPUBLISH='127.0.0.1'
-HOSTDIVULGER='127.0.0.1'
-HOSTSTREAM='127.0.0.1'
-HOSTREDIS='127.0.0.1'
+HOSTPUBLISH=${HOSTPUBLISH:-'127.0.0.1'}
+HOSTDIVULGER=${HOSTDIVULGER:-'127.0.0.1'}
+HOSTSTREAM=${HOSTSTREAM:-'127.0.0.1'}
+HOSTREDIS=${HOSTREDIS:-'127.0.0.1'}
 # The redis db is by default 0 and the redis db used for unit tests is 1
 REDIS_DB=0
 
 DATE=$(date)
 
 if test "$ENVIRONMENT" == 'development'; then
-  HOSTNAME="'local-puzzle-massive'"
   DEBUG=True
 else
-  HOSTNAME="'${DOMAIN_NAME}'"
   DEBUG=False
 fi
+HOSTNAME="'${DOMAIN_NAME}'"
 
 cat <<HERE
 # File generated from $0
@@ -47,11 +48,13 @@ cat <<HERE
 # Chill.
 
 # Set the HOST to 0.0.0.0 for being an externally visible server.
-HOST = '127.0.0.1'
+HOST = '$HOSTCHILL'
 HOSTNAME = $HOSTNAME
-SITE_PROTOCOL = 'http'
 PORT = $PORTCHILL
 
+HOSTCHILL = '$HOSTCHILL'
+HOSTCACHE = '$HOSTCACHE'
+HOSTORIGIN = '$HOSTORIGIN'
 # The HOSTAPI should not be externally available.
 # Keep HOSTAPI as localhost (127.0.0.1)
 HOSTAPI = '$HOSTAPI'
@@ -145,8 +148,9 @@ THEME_STATIC_FOLDER = "dist"
 #THEME_STATIC_PATH = "/theme/v0.0.1/"
 
 import json
-PACKAGEJSON = json.load(open('package.json'))
-VERSION = json.load(open('package.json'))['version']
+with open('package.json') as f:
+    PACKAGEJSON = json.load(f)
+    VERSION = PACKAGEJSON['version']
 THEME_STATIC_PATH = "/theme/{0}/".format(VERSION or '0')
 
 # Where the jinja2 templates for the site are located.  Will default to the app
@@ -179,7 +183,7 @@ PURGEURLLIST = "${PURGEURLLIST}"
 # requiring an app to run it. This will use Frozen-Flask.
 # The path to the static/frozen website will be put.
 FREEZER_DESTINATION = "frozen"
-FREEZER_BASE_URL = "{0}://{1}/".format(SITE_PROTOCOL, HOSTNAME)
+FREEZER_BASE_URL = f"//{HOSTNAME}/"
 
 # Unsplash
 UNSPLASH_APPLICATION_ID = "${UNSPLASH_APPLICATION_ID}"
@@ -282,6 +286,13 @@ PLAYER_BIT_RECENT_ACTIVITY_TIMEOUT = 10
 PIECE_JOIN_TOLERANCE = 100
 
 AUTO_APPROVE_PUZZLES=True if "${AUTO_APPROVE_PUZZLES}".lower() == "y" else False
+
+LOCAL_PUZZLE_RESOURCES=True if "${LOCAL_PUZZLE_RESOURCES}".lower() == "y" else False
+CDN_BASE_URL = "${CDN_BASE_URL}"
+PUZZLE_RESOURCES_BUCKET_REGION = "${PUZZLE_RESOURCES_BUCKET_REGION}"
+PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL = "${PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL}"
+PUZZLE_RESOURCES_BUCKET = "${PUZZLE_RESOURCES_BUCKET}"
+PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL = "${PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL}"
 
 # See PUZZLE_RULES_HELP_TEXT in bin/create_dot_env.sh
 PUZZLE_RULES = set("${PUZZLE_RULES}".split())

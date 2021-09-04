@@ -1,10 +1,10 @@
 from __future__ import print_function
-from builtins import bytes
 import os
 import re
 import uuid
 import subprocess
 import tempfile
+from shutil import rmtree
 
 from PIL import Image
 from flask import current_app, redirect, request, abort
@@ -29,6 +29,7 @@ from api.constants import (
 )
 from api.user import user_id_from_ip, user_not_banned, ANONYMOUS_USER_ID
 from api.tools import check_bg_color
+from api.puzzle_resource import PuzzleResource
 
 # Not allowing anything other then jpg to protect against potential picture bombs.
 ALLOWED_EXTENSIONS = set(["jpg", "jpeg"])
@@ -52,6 +53,8 @@ def submit_puzzle(
     """
 
     puzzle_id = None
+    filename = ""
+    original_slip = uuid.uuid4().hex[:10]
     cur = db.cursor()
 
     unsplash_match = re.search(unsplash_url_regex, link)
@@ -64,10 +67,6 @@ def submit_puzzle(
         filename = unsplash_match.group(2)
         u_id = uuid.uuid4().hex[:20]
         puzzle_id = f"unsplash-mxyz-{u_id}"
-
-        # Create puzzle dir
-        puzzle_dir = os.path.join(current_app.config.get("PUZZLE_RESOURCES"), puzzle_id)
-        os.mkdir(puzzle_dir)
 
     else:
         if not upload_file:
@@ -83,10 +82,19 @@ def submit_puzzle(
 
         puzzle_id = generate_new_puzzle_id(filename)
 
-        # Create puzzle dir
-        puzzle_dir = os.path.join(current_app.config.get("PUZZLE_RESOURCES"), puzzle_id)
-        os.mkdir(puzzle_dir)
+    CDN_BASE_URL = current_app.config["CDN_BASE_URL"]
+    prefix_resources_url = (
+        "" if current_app.config["LOCAL_PUZZLE_RESOURCES"] else CDN_BASE_URL
+    )
+    pr = PuzzleResource(
+        puzzle_id, current_app.config, is_local_resource=not bool(prefix_resources_url)
+    )
 
+    tmp_dir = tempfile.mkdtemp()
+    tmp_puzzle_dir = os.path.join(tmp_dir, puzzle_id)
+    os.mkdir(tmp_puzzle_dir)
+
+    if not is_unsplash_link:
         # Convert the uploaded file to jpg
         with tempfile.NamedTemporaryFile() as temp_upload_file:
             upload_file.save(temp_upload_file)
@@ -96,11 +104,8 @@ def submit_puzzle(
                 ["identify", "-format", "%m", temp_upload_file.name], encoding="utf-8"
             )
             identify_format = identify_format.lower()
-            current_app.logger.debug(
-                f"identify_format {identify_format} in {ALLOWED_EXTENSIONS}"
-            )
             if identify_format not in ALLOWED_EXTENSIONS:
-                os.rmdir(puzzle_dir)
+                pr.delete()
                 cur.close()
                 abort(400)
 
@@ -114,11 +119,11 @@ def submit_puzzle(
                         "85%",
                         "-format",
                         "jpg",
-                        os.path.join(puzzle_dir, "original.jpg"),
+                        os.path.join(tmp_puzzle_dir, f"original.{original_slip}.jpg"),
                     ]
                 )
             except subprocess.CalledProcessError:
-                os.rmdir(puzzle_dir)
+                pr.delete()
                 cur.close()
                 abort(400)
 
@@ -156,9 +161,7 @@ def submit_puzzle(
         {
             "puzzle": puzzle,
             "name": "original",
-            "url": "/resources/{0}/original.jpg".format(
-                puzzle_id
-            ),  # Not a public file (only on admin page)
+            "url": f"{prefix_resources_url}/resources/{puzzle_id}/original.{original_slip}.jpg",
         },
     )
 
@@ -170,12 +173,14 @@ def submit_puzzle(
             {
                 "puzzle": puzzle,
                 "name": "preview_full",
-                "url": f"/resources/{puzzle_id}/{preview_full_slip}",
+                "url": f"{prefix_resources_url}/resources/{puzzle_id}/{preview_full_slip}",
             },
         )
-        im = Image.open(os.path.join(puzzle_dir, "original.jpg")).copy()
+        im = Image.open(
+            os.path.join(tmp_puzzle_dir, f"original.{original_slip}.jpg")
+        ).copy()
         im.thumbnail(size=(384, 384))
-        im.save(os.path.join(puzzle_dir, preview_full_slip))
+        im.save(os.path.join(tmp_puzzle_dir, preview_full_slip))
         im.close()
 
     classic_variant = cur.execute(
@@ -221,7 +226,11 @@ def submit_puzzle(
     db.commit()
     cur.close()
 
+    pr.put(tmp_puzzle_dir)
+    rmtree(tmp_dir)
+
     if is_unsplash_link:
+        original_filename = f"original.{original_slip}.jpg"
         # TODO: push to artist queue to enqueue_in(timedelta(seconds=10))
         # https://python-rq.org/docs/scheduling/
         # Go download the unsplash image and update the db
@@ -230,6 +239,7 @@ def submit_puzzle(
             puzzle_id,
             filename,
             description,
+            original_filename,
             result_ttl=0,
             job_timeout="24h",
         )
@@ -430,7 +440,7 @@ class AdminPuzzlePromoteSuggestedView(MethodView):
 
 
 class AdminPuzzleUnsplashBatchView(MethodView):
-    ""
+    """"""
 
     def post(self):
         "Route is protected by basic auth in nginx"

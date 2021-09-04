@@ -7,6 +7,7 @@ import re
 
 from flask import current_app
 from .app import db
+from api.puzzle_resource import PuzzleResource
 
 PUZZLE_CREATE_TABLE_LIST = (
     "create_table_puzzle.sql",
@@ -87,6 +88,19 @@ def init_db():
         for statement in read_query_file("initial_licenses.sql").split(";"):
             cur.execute(statement, {"application_name": application_name})
             db.commit()
+
+        ## Add fake bit authors
+        upsert_author_query = read_query_file("_insert_or_update_bit_author.sql")
+        for i in range(1, 3):
+            cur.execute(
+                upsert_author_query,
+                {
+                    "name": f"test-author{i}",
+                    "slug_name": f"testauthor{i}",
+                    "artist_document": f"testauthor{i}.md",
+                },
+            )
+        db.commit()
 
         ## Add fake bit icons
         def each(bit):
@@ -169,13 +183,6 @@ def generate_new_puzzle_id(name):
     return puzzle_id
 
 
-def delete_puzzle_resources(puzzle_id):
-    puzzle_dir = os.path.join(current_app.config["PUZZLE_RESOURCES"], puzzle_id)
-    if not os.path.exists(puzzle_dir):
-        return
-    for (dirpath, dirnames, filenames) in os.walk(puzzle_dir, False):
-        for filename in filenames:
-            os.unlink(os.path.join(dirpath, filename))
-        for dirname in dirnames:
-            os.rmdir(os.path.join(dirpath, dirname))
-    os.rmdir(puzzle_dir)
+def delete_puzzle_resources(puzzle_id, is_local_resource=True, exclude_regex=None):
+    pr = PuzzleResource(puzzle_id, current_app.config, is_local_resource=is_local_resource)
+    pr.purge(exclude_regex=exclude_regex)

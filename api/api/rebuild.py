@@ -1,20 +1,15 @@
 from __future__ import absolute_import
 from __future__ import division
-from past.utils import old_div
-import os
-from random import randint
 
-from flask import current_app, redirect, make_response, abort, request
+from flask import current_app, redirect, abort, request
 from flask.views import MethodView
-from PIL import Image
 
 from api.app import db, redis_connection
 
-from api.database import rowify, fetch_query_string
+from api.database import rowify, fetch_query_string, delete_puzzle_resources
 from api.constants import REBUILD, COMPLETED, QUEUE_REBUILD, PRIVATE
 
 from api.user import user_id_from_ip, user_not_banned
-from api.jobs.convertPiecesToRedis import convert
 from api.tools import deletePieceDataFromRedis, purge_route_from_nginx_cache
 
 # From pieceRenderer
@@ -87,22 +82,6 @@ class PuzzlePiecesRebuildView(MethodView):
             cur.close()
             abort(400)
 
-        original_puzzle_id = puzzleData["original_puzzle_id"]
-        # Get the adjusted piece count depending on the size of the original and
-        # the minimum piece size.
-        original_puzzle_dir = os.path.join(
-            current_app.config["PUZZLE_RESOURCES"], original_puzzle_id
-        )
-        # TODO: get path of original.jpg via the PuzzleFile query
-        # TODO: use requests.get to get original.jpg and run in another thread
-        imagefile = os.path.join(original_puzzle_dir, "original.jpg")
-        im = Image.open(imagefile)
-        (width, height) = im.size
-        im.close()
-        max_pieces_that_will_fit = int(
-            (old_div(width, MIN_PIECE_SIZE)) * (old_div(height, MIN_PIECE_SIZE))
-        )
-
         # The user points for rebuilding the puzzle is decreased by the piece
         # count for the puzzle. Use at least minimum piece count (20) points for
         # smaller puzzles.  Players that own a puzzle instance do not decrease
@@ -110,7 +89,6 @@ class PuzzlePiecesRebuildView(MethodView):
         point_cost = max(
             current_app.config["MINIMUM_PIECE_COUNT"],
             min(
-                max_pieces_that_will_fit,
                 pieces,
                 current_app.config["MAX_POINT_COST_FOR_REBUILDING"],
             ),
@@ -149,6 +127,8 @@ class PuzzlePiecesRebuildView(MethodView):
         )
         cur.close()
         deletePieceDataFromRedis(redis_connection, puzzle, all_pieces)
+
+        delete_puzzle_resources(puzzle_id, is_local_resource=not puzzleData["preview_full"].startswith("http") and not puzzleData["preview_full"].startswith("//"), exclude_regex=r"(original|preview_full).([^.]+\.)?jpg")
 
         job = current_app.createqueue.enqueue(
             "api.jobs.pieceRenderer.render",

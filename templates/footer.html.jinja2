@@ -35,18 +35,7 @@
       </a>
       </nav>
       <div class="pm-Footer-socialLinks">
-        <a href="https://discord.gg/uVhE2Kd" class="Button Button--plain">
-          <img src="{{ url_for('send_media_file', filename='discordwhite.svg') }}" width="94" height="32" alt="Discord logo">
-          <span>
-          Join the Discord chat server
-          </span>
-        </a>
-        <a href="{{ config.PACKAGEJSON.homepage }}" class="Button Button--plain">
-          <img src="{{ url_for('send_media_file', filename='GitHub-Mark-Light-120px-plus.png') }}" alt="GitHub Mark" width="32" height="32">
-          <span>
-          Fork the project on GitHub
-          </span>
-        </a>
+        {{ '[chill route /internal/footer-social-links/]'|shortcodes }}
       </div>
 
 
@@ -67,6 +56,9 @@
     </div>
     {% if page and page.description == " Massively Multiplayer Online Jigsaw Puzzles" %}{{ config.M3|safe }}{% endif %}{# reality check #}
     <div class="pm-Footer-gridC">
+      {#- The chill route shortcode is only inserted if the route exists. This allows this content to be more customized per distribution. -#}
+      {{ '[chill route /internal/referral/]'|shortcodes }}
+      {#- A 404 error HTML comment is inserted here if this route is not defined. -#}
       <p class="u-textRight">
         {#- Show a link to this site's source code in order to comply with the GNU Affero General Public License. -#}
         {% if config.SITE_TITLE != 'Puzzle Massive' or config.SOURCE_CODE_LINK != 'https://github.com/jkenlooper/puzzle-massive/' %}

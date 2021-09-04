@@ -12,7 +12,7 @@ cat <<HERE
 # https://www.freedesktop.org/software/systemd/man/systemd.service.html
 
 [Unit]
-Description=Run puzzle-massive-backup-db every 24 hours
+Description=Run puzzle-massive-backup-db every 13 hours
 Requires=puzzle-massive-backup-db.service
 
 [Timer]
@@ -23,7 +23,7 @@ HERE
 if test "${ENVIRONMENT}" == 'development'; then
 echo "OnUnitActiveSec=1hour"
 else
-echo "OnUnitActiveSec=24hours"
+echo "OnUnitActiveSec=13hours"
 fi
 cat <<HERE
 

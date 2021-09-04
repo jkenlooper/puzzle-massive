@@ -51,8 +51,8 @@ echo "Testing automatic certbot cert renewal"
 certbot renew --dry-run
 
 # Signal that the certs should now exist.
-# The web/puzzle-massive.conf.sh checks if this file exists in
+# The web/snippets/ssl_certificate-ssl_certificate_key.nginx.conf.sh checks if this file exists in
 # order to uncomment the lines in the nginx conf for ssl_certificate fields.
-touch .has-certs web/puzzle-massive.conf.sh
+touch .has-certs web/snippets/ssl_certificate-ssl_certificate_key.nginx.conf.sh
 
 echo "The certificates have now been generated.  Run make again in order to update nginx conf and make install to update.  The nginx will also need to reload."

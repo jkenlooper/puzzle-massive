@@ -1,0 +1,23 @@
+---
+
+- name: cloud init has provisioned the legacy_puzzle_massive server
+  hosts: legacy_puzzle_massive
+  # If this is executed right after the server is provisioned then root is still
+  # able to login. Otherwise, will need to use 'dev' user.
+  #remote_user: root
+  tasks:
+    # https://docs.ansible.com/ansible/latest/collections/community/general/cloud_init_data_facts_module.html
+    - name: Gather all facts of cloud init
+      community.general.cloud_init_data_facts:
+      register: result
+
+    - ansible.builtin.debug:
+        var: result
+
+    - name: Wait for cloud init to finish
+      community.general.cloud_init_data_facts:
+        filter: status
+      register: res
+      until: "res.cloud_init_data_facts.status.v1.stage is defined and not res.cloud_init_data_facts.status.v1.stage"
+      retries: 90
+      delay: 10

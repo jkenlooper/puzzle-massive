@@ -7,31 +7,18 @@ Options:
   -h --help         Show this screen.
   --config <file>   Set config file. [default: site.cfg]
 """
-import sys
-import os.path
-import math
 import time
 from docopt import docopt
-
-from flask import current_app
 
 from api.app import redis_connection, db, make_app
 from api.database import rowify
 from api.tools import (
     loadConfig,
-    formatPieceMovementString,
 )
-from api.constants import COMPLETED
 
 
 def convert(puzzle):
     cur = db.cursor()
-
-    query = """select * from Puzzle where (id = :puzzle)"""
-    (result, col_names) = rowify(
-        cur.execute(query, {"puzzle": puzzle}).fetchall(), cur.description
-    )
-    puzzle_data = result[0]
 
     query = """select * from Piece where (puzzle = :puzzle)"""
     (all_pieces, col_names) = rowify(
@@ -80,26 +67,19 @@ def convert(puzzle):
                 pipe.hset(pc_puzzle_piece_key, "g", piece["parent"])
 
             pieceStatus = piece.get("status", None)
-            if pieceStatus != None:
+            if pieceStatus is not None:
                 # print 'pieceStatus'
                 # print pieceStatus
                 # print("immovable piece: {id}".format(**piece))
                 pieceStatus = int(
                     pieceStatus
                 )  # in case it's from the actual results of the query
-                pipe.hset(pc_puzzle_piece_key, "s", pieceStatus)
                 if pieceStatus == 1:
                     # Add Piece Fixed (immovable)
                     pipe.sadd("pcfixed:{puzzle}".format(puzzle=puzzle), piece["id"])
                 elif pieceStatus == 2:
                     # Add Piece Stacked
                     pipe.sadd("pcstacked:{puzzle}".format(puzzle=puzzle), piece["id"])
-
-            # Add Piece x Set
-            pipe.zadd("pcx:{puzzle}".format(puzzle=puzzle), {piece["id"]: piece["x"]})
-
-            # Add Piece y Set
-            pipe.zadd("pcy:{puzzle}".format(puzzle=puzzle), {piece["id"]: piece["y"]})
 
         # Add to the pcupdates sorted set
         pipe.zadd("pcupdates", {puzzle: int(time.time())})

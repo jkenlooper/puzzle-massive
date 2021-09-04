@@ -3,6 +3,7 @@ import tempfile
 import logging
 import shutil
 import os
+from glob import glob
 
 import responses
 
@@ -175,17 +176,21 @@ class TestPieceForker(PuzzleTestCase):
                     self.app.config["PUZZLE_RESOURCES"], self.puzzle_id
                 )
 
+                original_jpg = glob(os.path.join(puzzle_dir, "original*.jpg"))[0]
+                preview_full_jpg = glob(os.path.join(puzzle_dir, "preview_full*.jpg"))[0]
+                raster_css = glob(os.path.join(puzzle_dir, "raster*.css"))[0]
+                raster_png = glob(os.path.join(puzzle_dir, "raster*.png"))[0]
                 self.assertTrue(
-                    os.path.exists(os.path.join(puzzle_dir, "original.jpg"))
+                    os.path.exists(os.path.join(puzzle_dir, original_jpg))
+                )
+                self.assertFalse(
+                    os.path.exists(os.path.join(puzzle_dir, preview_full_jpg))
                 )
                 self.assertTrue(
-                    os.path.exists(os.path.join(puzzle_dir, "preview_full.jpg"))
+                    os.path.exists(os.path.join(puzzle_dir, "scale-100", raster_css))
                 )
                 self.assertTrue(
-                    os.path.exists(os.path.join(puzzle_dir, "scale-100", "raster.css"))
-                )
-                self.assertTrue(
-                    os.path.exists(os.path.join(puzzle_dir, "scale-100", "raster.png"))
+                    os.path.exists(os.path.join(puzzle_dir, "scale-100", raster_png))
                 )
 
                 query_puzzle_file = (
@@ -207,9 +212,7 @@ class TestPieceForker(PuzzleTestCase):
                     {"name": "pzz", "puzzle": self.puzzle_data["id"]},
                 ).fetchone()[0]
                 self.assertEqual(
-                    "/resources/{puzzle_id}/scale-100/raster.css".format(
-                        puzzle_id=self.puzzle_id
-                    ),
+                    f"/resources/{self.puzzle_id}/scale-100/{raster_css}",
                     result[0 : result.index("?")],
                 )
 
@@ -218,9 +221,7 @@ class TestPieceForker(PuzzleTestCase):
                     {"name": "original", "puzzle": self.puzzle_data["id"]},
                 ).fetchone()[0]
                 self.assertEqual(
-                    "/resources/{puzzle_id}/original.jpg".format(
-                        puzzle_id=self.puzzle_id
-                    ),
+                    f"/resources/{self.puzzle_id}/{original_jpg}",
                     result,
                 )
 
@@ -229,9 +230,7 @@ class TestPieceForker(PuzzleTestCase):
                     {"name": "preview_full", "puzzle": self.puzzle_data["id"]},
                 ).fetchone()[0]
                 self.assertEqual(
-                    "/resources/{puzzle_id}/preview_full.jpg".format(
-                        puzzle_id=self.puzzle_id
-                    ),
+                    f"/resources/{self.puzzle_id}/{preview_full_jpg}",
                     result,
                 )
 
@@ -270,17 +269,21 @@ class TestPieceForker(PuzzleTestCase):
                     self.app.config["PUZZLE_RESOURCES"], self.puzzle_id
                 )
 
+                original_jpg = glob(os.path.join(puzzle_dir, "original*.jpg"))[0]
+                preview_full_jpg = glob(os.path.join(puzzle_dir, "preview_full*.jpg"))[0]
+                raster_css = glob(os.path.join(puzzle_dir, "raster*.css"))[0]
+                raster_png = glob(os.path.join(puzzle_dir, "raster*.png"))[0]
                 self.assertTrue(
-                    os.path.exists(os.path.join(puzzle_dir, "original.jpg"))
+                    os.path.exists(os.path.join(puzzle_dir, original_jpg))
                 )
                 self.assertFalse(
-                    os.path.exists(os.path.join(puzzle_dir, "preview_full.jpg"))
+                    os.path.exists(os.path.join(puzzle_dir, preview_full_jpg))
                 )
                 self.assertTrue(
-                    os.path.exists(os.path.join(puzzle_dir, "scale-100", "raster.css"))
+                    os.path.exists(os.path.join(puzzle_dir, "scale-100", raster_css))
                 )
                 self.assertTrue(
-                    os.path.exists(os.path.join(puzzle_dir, "scale-100", "raster.png"))
+                    os.path.exists(os.path.join(puzzle_dir, "scale-100", raster_png))
                 )
 
                 query_puzzle_file = (
@@ -302,9 +305,7 @@ class TestPieceForker(PuzzleTestCase):
                     {"name": "pzz", "puzzle": self.puzzle_data["id"]},
                 ).fetchone()[0]
                 self.assertEqual(
-                    "/resources/{puzzle_id}/scale-100/raster.css".format(
-                        puzzle_id=self.puzzle_id
-                    ),
+                    f"/resources/{self.puzzle_id}/scale-100/{raster_css}",
                     result[0 : result.index("?")],
                 )
 
@@ -313,9 +314,7 @@ class TestPieceForker(PuzzleTestCase):
                     {"name": "original", "puzzle": self.puzzle_data["id"]},
                 ).fetchone()[0]
                 self.assertEqual(
-                    "/resources/{puzzle_id}/original.jpg".format(
-                        puzzle_id=self.puzzle_id
-                    ),
+                    f"/resources/{self.puzzle_id}/{original_jpg}",
                     result,
                 )
 

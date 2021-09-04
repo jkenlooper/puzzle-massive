@@ -13,9 +13,6 @@ from __future__ import print_function
 # This job should be ran by a janitor worker.  It should find all puzzles in
 # redis that haven't had any activity in the last week or so.
 
-import sys
-import os.path
-import math
 import time
 from docopt import docopt
 
@@ -82,6 +79,8 @@ def transfer(puzzle, cleanup=True, skip_status_update=False):
 
     # Save the redis data to the db if it has changed
     changed_pieces = []
+    pcstacked = set(map(int, redis_connection.smembers(f"pcstacked:{puzzle}")))
+    pcfixed = set(map(int, redis_connection.smembers(f"pcfixed:{puzzle}")))
     for piece in all_pieces:
         has_changes = False
         pieceFromRedis = redis_connection.hgetall(
@@ -98,14 +97,20 @@ def transfer(puzzle, cleanup=True, skip_status_update=False):
             ("y", "y"),
             ("r", "r"),
             ("g", "parent"),
-            ("s", "status"),
+            ("", "status"),
         ]:
-            redis_piece_prop = pieceFromRedis.get(prop)
-            redis_piece_prop = (
-                int(redis_piece_prop)
-                if isinstance(redis_piece_prop, str)
-                else redis_piece_prop
-            )
+            if colname == "status":
+                if piece["id"] in pcstacked:
+                    redis_piece_prop = 2
+                if piece["id"] in pcfixed:
+                    redis_piece_prop = 1
+            else:
+                redis_piece_prop = pieceFromRedis.get(prop)
+                redis_piece_prop = (
+                    int(redis_piece_prop)
+                    if isinstance(redis_piece_prop, str)
+                    else redis_piece_prop
+                )
             if redis_piece_prop != piece[colname]:
                 current_app.logger.debug(
                     "{} has {} changes. {} != {}".format(

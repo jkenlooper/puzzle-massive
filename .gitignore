@@ -6,13 +6,27 @@
 /.eslintcache
 /.htpasswd
 /.has-certs
-/.vagrant/
+.vagrant/
 /.design-tokens-css
 /site.cfg
 /frozen.tar.gz
+/puzzle-massive-*.bundle
 /puzzle-massive-*.tar.gz
-/web/puzzle-massive.conf
-/web/puzzle-massive--down.conf
+/web/snippets/add_header-cache-control-newapi-puzzle-pieces.nginx.conf
+/web/snippets/limit_req-piece_move_limit.nginx.conf
+/web/snippets/limit_req-piece_token_limit_per_ip.nginx.conf
+/web/snippets/location-dist.nginx.conf
+/web/snippets/location-media.nginx.conf
+/web/snipets/ssl_certificate-ssl_certificate_key.nginx.conf
+/web/snippets/proxy_pass-origin.nginx.conf
+/web/snippets/proxy_pass-proxy_redirect-api.nginx.conf
+/web/snippets/proxy_pass-proxy_redirect-chill.nginx.conf
+/web/snippets/proxy_pass-proxy_redirect-publish.nginx.conf
+/web/snippets/proxy_pass-stream.nginx.conf
+/web/snippets/proxy_redirect-on-legacy-cache.nginx.conf
+/web/snippets/rewrite-home_page_route.nginx.conf
+/web/snippets/server_name-legacy-cache.nginx.conf
+/web/snippets/server_name-listen-set_real_ip_from-origin.nginx.conf
 /stats/awstats.puzzle.massive.xyz.conf
 /stats/awstats-puzzle-massive-crontab
 /chill/puzzle-massive-chill.service
@@ -26,6 +40,7 @@
 /api/puzzle-massive-backup-db.service
 /divulger/puzzle-massive-divulger.service
 /stream/puzzle-massive-stream.service
+/enforcer/puzzle-massive-enforcer.service
 /db
 /db.dump.sql
 /dist/
@@ -37,17 +52,22 @@
 /src/*/*.tmp.css.map
 /src/*/*.tmp.js
 /src/*/*.tmp.js.map
+/_infra/local/output/*
+!/_infra/local/output/README.md
 
 /web/dhparam.pem
-/web/local-puzzle-massive.crt
+/web/localhost.crt
 /web/local-development.csr
-/web/local-puzzle-massive.key
+/web/localhost.key
 
 /include/
 /lib/
+/lib64/
+/lib64
 /local/
 /share/
 /pysqlite2-doc/
+/pyvenv.cfg
 
 *.pyc
 *.egg-info/
@@ -78,4 +98,6 @@
 /queries/other/*
 !/queries/other/README.md
 /templates/other/*
+!/media/other/README.md
+/media/other/*
 !/templates/other/README.md

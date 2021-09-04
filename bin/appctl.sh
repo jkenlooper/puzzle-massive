@@ -11,14 +11,15 @@ fi
 
 # Simple convenience script to control the apps.
 
-# Switch out nginx puzzle-massive.conf to puzzle-massive--down.conf to
+# Switch out nginx legacy-cache--up.nginx.conf to legacy-cache--down.nginx.conf to
 # show the down page.
 if test "${COMMAND}" == 'start'; then
-    rm -f /etc/nginx/sites-enabled/puzzle-massive--down.conf;
-    ln -sf /etc/nginx/sites-available/puzzle-massive.conf /etc/nginx/sites-enabled/puzzle-massive.conf;
+    rm -f /etc/nginx/sites-enabled/legacy-cache--down.nginx.conf;
+    ln -sf /etc/nginx/sites-available/legacy-cache--up.nginx.conf /etc/nginx/sites-enabled/legacy-cache--up.nginx.conf;
     # Start the puzzle-massive-api first since other services depend on it.
     systemctl start puzzle-massive-api;
     systemctl start puzzle-massive-stream;
+    systemctl start puzzle-massive-enforcer;
     systemctl start puzzle-massive-publish;
     systemctl start puzzle-massive-scheduler;
     systemctl start puzzle-massive-chill;
@@ -28,8 +29,8 @@ if test "${COMMAND}" == 'start'; then
     systemctl reload nginx;
 
 elif test "${COMMAND}" == 'stop'; then
-    rm -f /etc/nginx/sites-enabled/puzzle-massive.conf;
-    ln -sf /etc/nginx/sites-available/puzzle-massive--down.conf /etc/nginx/sites-enabled/puzzle-massive--down.conf;
+    rm -f /etc/nginx/sites-enabled/legacy-cache--up.nginx.conf;
+    ln -sf /etc/nginx/sites-available/legacy-cache--down.nginx.conf /etc/nginx/sites-enabled/legacy-cache--down.nginx.conf;
     systemctl stop puzzle-massive-artist;
     systemctl stop puzzle-massive-chill;
     systemctl stop puzzle-massive-publish;
@@ -39,17 +40,20 @@ elif test "${COMMAND}" == 'stop'; then
     echo "Waiting for the puzzle-massive-stream connections...";
     systemctl stop puzzle-massive-stream;
     if [ "$SKIP_BACKUP" != "-f" ]; then
-      su dev -c "bin/backup.sh -d /home/dev -c"
+      su dev -c "bin/backup.sh -d /home/dev -c" || echo "Creating backup failed. Continuing to stop the other services."
     fi
     # Stop the puzzle-massive-api last since other services depend on it.
     systemctl stop puzzle-massive-api;
+    systemctl stop puzzle-massive-enforcer;
     systemctl reload nginx;
 
 else
+  tmpout=$(mktemp)
   for app in puzzle-massive-chill \
     puzzle-massive-api \
     puzzle-massive-publish \
     puzzle-massive-stream \
+    puzzle-massive-enforcer \
     puzzle-massive-artist \
     puzzle-massive-scheduler \
     puzzle-massive-backup-db.timer \
@@ -58,6 +62,13 @@ else
     echo "";
     echo "systemctl $COMMAND $app;";
     echo "----------------------------------------";
-    systemctl "$COMMAND" "$app" | cat;
+    # Collect any error codes that may occur
+    systemctl "$COMMAND" "$app" || echo "$app $?" >> $tmpout
   done;
+  if [ -s $tmpout ]; then
+    # Only output the error codes for each app if any happened.
+    cat $tmpout
+    exit 1
+  fi
+  rm -f $tmpout
 fi

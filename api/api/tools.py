@@ -1,5 +1,4 @@
 from __future__ import division
-from past.utils import old_div
 import os
 import re
 import logging
@@ -62,9 +61,9 @@ def get_redis_connection(config, decode_responses=True):
 
 
 def formatPieceMovementString(piece_id, x="", y="", r="", g="", s="", **args):
-    if s == None:
+    if s is None:
         s = ""
-    if g == None:
+    if g is None:
         g = ""
     return u":{piece_id}:{x}:{y}:{r}:{g}:{s}".format(**locals())
 
@@ -89,6 +88,8 @@ def deletePieceDataFromRedis(redis_connection, puzzle, all_pieces):
     # Bump the pzm id when preparing to mutate the puzzle.
     puzzle_mutation_id = redis_connection.incr(pzm_puzzle_key)
 
+    redis_connection.publish(f"enforcer_stop:{puzzle}", "")
+
     with redis_connection.pipeline(transaction=True) as pipe:
         # Delete all piece data
         for piece in all_pieces:
@@ -102,9 +103,11 @@ def deletePieceDataFromRedis(redis_connection, puzzle, all_pieces):
         # Delete Piece Stacked
         pipe.delete("pcstacked:{puzzle}".format(puzzle=puzzle))
 
+        # pcx is deprecated, but should still delete it if it is there.
         # Delete Piece X
         pipe.delete("pcx:{puzzle}".format(puzzle=puzzle))
 
+        # pcy is deprecated, but should still delete it if it is there.
         # Delete Piece Y
         pipe.delete("pcy:{puzzle}".format(puzzle=puzzle))
 
@@ -124,7 +127,7 @@ def check_bg_color(bg_color):
         return "#808080"
 
 
-strip_chars_regex = re.compile("\s+")
+strip_chars_regex = re.compile(r"\s+")
 
 
 def normalize_name_from_display_name(display_name):

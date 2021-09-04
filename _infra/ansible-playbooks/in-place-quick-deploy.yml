@@ -1,0 +1,121 @@
+---
+
+# TODO: use Ansible roles to make things DRY?
+
+- name: In-place deployment without using a stateful swap
+  hosts: legacy_puzzle_massive
+  #remote_user: dev
+  become: true
+  tasks:
+    - name: Copy the dist file
+      ansible.builtin.copy:
+        owner: dev
+        group: dev
+        src: "{{ dist_file }}"
+        dest: "/home/dev/puzzle-massive-in-place.tar.gz"
+      register: copied_dist_file
+
+    - name: Show the message
+      ansible.builtin.template:
+        owner: dev
+        group: dev
+        mode: "0644"
+        src: "{{ message_file }}"
+        dest: /srv/puzzle-massive/root/puzzle-massive-message.html
+
+    - name: Execute bin/appctl.sh stop
+      command: ./bin/appctl.sh stop
+      args:
+        chdir: /usr/local/src/puzzle-massive/
+
+
+    - name: Set backup timestamp
+      command: date '+%F_%H%M%S'
+      register: BACKUP_TIMESTAMP
+
+    - name: Backup existing
+      command: "mv --backup=existing /usr/local/src/puzzle-massive /home/dev/puzzle-massive-{{ BACKUP_TIMESTAMP.stdout }}"
+
+    - name: Extract dist file to src directory
+      command: "tar --directory=/usr/local/src/ --extract --gunzip -f {{ copied_dist_file.dest }}"
+
+    - name: Chown the src directory
+      ansible.builtin.file:
+        dest: /usr/local/src/puzzle-massive
+        owner: dev
+        group: dev
+        recurse: yes
+
+    - name: Copy .env
+      ansible.builtin.copy:
+        remote_src: yes
+        src: "/home/dev/puzzle-massive-{{ BACKUP_TIMESTAMP.stdout }}/.env"
+        dest: "/usr/local/src/puzzle-massive/.env"
+        owner: dev
+        group: dev
+
+    - name: Copy .has-certs
+      shell: "cp /home/dev/puzzle-massive-{{ BACKUP_TIMESTAMP.stdout }}/.has-certs /usr/local/src/puzzle-massive/ || echo 'no certs?'"
+
+    - name: Create python virtual environment
+      command: "python -m venv ."
+      args:
+        chdir: /usr/local/src/puzzle-massive/
+
+    - name: "Make"
+      shell: "source bin/activate && make ENVIRONMENT={{ makeenvironment }}"
+      args:
+        executable: /usr/bin/bash
+        chdir: /usr/local/src/puzzle-massive/
+
+    - name: Update any bit icon authors and add new bit icons
+      command: /usr/local/src/puzzle-massive/bin/python api/api/jobs/insert-or-replace-bit-icons.py
+      args:
+        chdir: /usr/local/src/puzzle-massive/
+
+    - name: Update the enabled puzzle features
+      command: /usr/local/src/puzzle-massive/bin/python api/api/update_enabled_puzzle_features.py
+      args:
+        chdir: /usr/local/src/puzzle-massive/
+
+    - name: Chown the src directory
+      ansible.builtin.file:
+        dest: /usr/local/src/puzzle-massive
+        owner: dev
+        group: dev
+        recurse: yes
+
+    - name: "Make install"
+      shell: "source bin/activate && make install ENVIRONMENT={{ makeenvironment }}"
+      args:
+        executable: /usr/bin/bash
+        chdir: /usr/local/src/puzzle-massive/
+
+    - name: "NGINX configuration test"
+      command: "nginx -t"
+
+    - name: Reload NGINX
+      ansible.builtin.systemd:
+        state: reloaded
+        daemon_reload: yes
+        name: nginx
+
+    - name: Remove puzzle massive message if it exists
+      ansible.builtin.file:
+        state: absent
+        owner: dev
+        group: dev
+        mode: "0644"
+        path: /srv/puzzle-massive/root/puzzle-massive-message.html
+    - name: Set blank puzzle massive message
+      ansible.builtin.file:
+        state: touch
+        owner: dev
+        group: dev
+        mode: "0644"
+        path: /srv/puzzle-massive/root/puzzle-massive-message.html
+
+    - name: Execute bin/appctl.sh start
+      command: ./bin/appctl.sh start
+      args:
+        chdir: /usr/local/src/puzzle-massive/

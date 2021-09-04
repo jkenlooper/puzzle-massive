@@ -82,25 +82,40 @@ fi
 
 mkdir -p "${NGINXLOGDIR}";
 
-# Run rsync checksum on nginx default.conf since other sites might also update
+# Run rsync checksum on nginx default.nginx.conf since other sites might also update
 # this file.
 mkdir -p "${NGINXDIR}sites-available"
 rsync --inplace \
   --checksum \
   --itemize-changes \
-  web/default.conf web/puzzle-massive.conf web/puzzle-massive--down.conf "${NGINXDIR}sites-available/";
-echo rsynced web/default.conf web/puzzle-massive.conf web/puzzle-massive--down.conf to "${NGINXDIR}sites-available/";
-
-mkdir -p "${NGINXDIR}sites-enabled";
-ln -sf "${NGINXDIR}sites-available/default.conf" "${NGINXDIR}sites-enabled/default.conf";
-
-rm -f "${NGINXDIR}sites-enabled/puzzle-massive--down.conf"
-ln -sf "${NGINXDIR}sites-available/puzzle-massive.conf"  "${NGINXDIR}sites-enabled/puzzle-massive.conf";
-
+  web/nginx.conf "${NGINXDIR}/";
 rsync --inplace \
   --checksum \
   --itemize-changes \
-  .htpasswd "${SRVDIR}";
+  web/default.nginx.conf web/old-cruft.nginx.conf web/legacy-cache--down.nginx.conf web/legacy-cache--up.nginx.conf web/legacy-origin.nginx.conf "${NGINXDIR}sites-available/";
+
+echo rsynced web/default.nginx.conf web/old-cruft.nginx.conf web/legacy-cache--down.nginx.conf web/legacy-cache--up.nginx.conf web/legacy-origin.nginx.conf to "${NGINXDIR}sites-available/";
+
+mkdir -p "${NGINXDIR}snippets"
+rsync --inplace \
+  --checksum \
+  --itemize-changes \
+  web/snippets/*.nginx.conf "${NGINXDIR}snippets/";
+
+mkdir -p "${NGINXDIR}sites-enabled";
+ln -sf "${NGINXDIR}sites-available/default.nginx.conf" "${NGINXDIR}sites-enabled/default.nginx.conf";
+ln -sf "${NGINXDIR}sites-available/old-cruft.nginx.conf" "${NGINXDIR}sites-enabled/old-cruft.nginx.conf";
+ln -sf "${NGINXDIR}sites-available/legacy-origin.nginx.conf"  "${NGINXDIR}sites-enabled/legacy-origin.nginx.conf";
+
+rm -f "${NGINXDIR}sites-enabled/legacy-cache--down.nginx.conf"
+ln -sf "${NGINXDIR}sites-available/legacy-cache--up.nginx.conf"  "${NGINXDIR}sites-enabled/legacy-cache--up.nginx.conf";
+
+# Make sure that the .htpasswd file exists since the nginx conf will be looking
+# for it.
+mkdir -p "${SRVDIR}"
+touch "${SRVDIR}.htpasswd"
+chown nginx:nginx "${SRVDIR}.htpasswd"
+chmod 0400 "${SRVDIR}.htpasswd"
 
 if (test -f web/dhparam.pem); then
 mkdir -p "${NGINXDIR}ssl/"
@@ -109,19 +124,19 @@ rsync --inplace \
   --itemize-changes \
   web/dhparam.pem "${NGINXDIR}ssl/dhparam.pem";
 fi
-if (test -f web/local-puzzle-massive.crt); then
+if (test -f web/localhost.crt); then
 mkdir -p "${NGINXDIR}ssl/"
 rsync --inplace \
   --checksum \
   --itemize-changes \
-  web/local-puzzle-massive.crt "${NGINXDIR}ssl/local-puzzle-massive.crt";
+  web/localhost.crt "${NGINXDIR}ssl/localhost.crt";
 fi
-if (test -f web/local-puzzle-massive.key); then
+if (test -f web/localhost.key); then
 mkdir -p "${NGINXDIR}ssl/"
 rsync --inplace \
   --checksum \
   --itemize-changes \
-  web/local-puzzle-massive.key "${NGINXDIR}ssl/local-puzzle-massive.key";
+  web/localhost.key "${NGINXDIR}ssl/localhost.key";
 fi
 
 # Create the root directory for stats. The awstats icons will be placed there.
@@ -161,11 +176,11 @@ chown -R dev:dev "${ARCHIVEDIR}"
 chmod -R 770 "${ARCHIVEDIR}"
 
 mkdir -p "${CACHEDIR}"
-chown -R www-data:www-data "${CACHEDIR}"
+chown -R nginx:nginx "${CACHEDIR}"
 chmod -R 770 "${CACHEDIR}"
 
 mkdir -p $(dirname ${PURGEURLLIST})
-chown dev:www-data -R $(dirname ${PURGEURLLIST})
+chown dev:nginx -R $(dirname ${PURGEURLLIST})
 chmod 0770 $(dirname ${PURGEURLLIST})
 touch ${PURGEURLLIST}
 
@@ -185,6 +200,10 @@ systemctl enable puzzle-massive-api || echo "can't enable service"
 cp stream/puzzle-massive-stream.service "${SYSTEMDDIR}"
 systemctl start puzzle-massive-stream || echo "can't start service"
 systemctl enable puzzle-massive-stream || echo "can't enable service"
+
+cp enforcer/puzzle-massive-enforcer.service "${SYSTEMDDIR}"
+systemctl start puzzle-massive-enforcer || echo "can't start service"
+systemctl enable puzzle-massive-enforcer || echo "can't enable service"
 
 cp api/puzzle-massive-publish.service "${SYSTEMDDIR}"
 systemctl start puzzle-massive-publish || echo "can't start service"
@@ -228,6 +247,7 @@ systemctl enable puzzle-massive-backup-db.service || echo "can't enable service"
 echo "Reloading service units and nginx"
 set -x
 systemctl daemon-reload
+systemctl start nginx;
 systemctl reload nginx;
 set +x
 echo "Checking is-active status for services"

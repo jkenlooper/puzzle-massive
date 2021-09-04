@@ -118,10 +118,36 @@ def build_select_available_puzzle_sql(query_file, status, type):
     return query
 
 
-class PuzzleListView(MethodView):
+class InternalPuzzleRenderedResourcesListView(MethodView):
     """"""
 
-    decorators = [user_not_banned]
+    def get(self):
+
+        url_match = request.args.get("url_match", "/resources/%")
+
+        cur = db.cursor()
+
+        result = cur.execute(
+            fetch_query_string("select_rendered_puzzle_files_with_url_like.sql"),
+            {"url_match": url_match},
+        ).fetchall()
+        if not result:
+            puzzle_files = []
+        else:
+            (result, col_names) = rowify(result, cur.description)
+            puzzle_files = result
+
+        response = {
+            "puzzle_files": puzzle_files,
+        }
+
+        cur.close()
+
+        return make_response(json.jsonify(response), 200)
+
+
+class PuzzleListView(MethodView):
+    """"""
 
     def get(self):
         """

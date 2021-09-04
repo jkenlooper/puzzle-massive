@@ -1,0 +1,28 @@
+---
+#https://docs.ansible.com/ansible/latest/collections/ansible/posix/synchronize_module.html#ansible-collections-ansible-posix-synchronize-module
+
+- name: Synchronize Puzzle Massive resources directory from local
+  hosts: legacy_puzzle_massive
+  remote_user: dev
+  become: true
+  tasks:
+
+    - name: Set initial permissions
+      ansible.builtin.file:
+        path: "/srv/puzzle-massive/resources"
+        owner: dev
+        group: dev
+        recurse: yes
+        state: directory
+    - name: Synchronize resources directory from local
+      become: false
+      ansible.posix.synchronize:
+        src: "{{ resources_directory }}"
+        dest: /srv/puzzle-massive/
+    - name: Update permissions
+      ansible.builtin.file:
+        path: "/srv/puzzle-massive/resources"
+        owner: dev
+        group: dev
+        recurse: yes
+        state: directory

@@ -1,0 +1,55 @@
+---
+
+- name: Update packages and reboot
+  hosts: legacy_puzzle_massive
+  user: dev
+  tasks:
+
+    - name: Show the message
+      become: true
+      ansible.builtin.template:
+        owner: dev
+        group: dev
+        mode: "0644"
+        src: "{{ message_file }}"
+        dest: /srv/puzzle-massive/root/puzzle-massive-message.html
+
+    - name: Execute bin/appctl.sh stop
+      become: true
+      command: ./bin/appctl.sh stop
+      args:
+        chdir: /usr/local/src/puzzle-massive/
+
+    - name: Update all packages to their latest version
+      become: true
+      apt:
+        update_cache: yes
+        name: "*"
+        state: latest
+
+    - name: Reboot
+      become: true
+      reboot:
+
+    - name: Remove puzzle massive message if it exists
+      become: true
+      ansible.builtin.file:
+        state: absent
+        owner: dev
+        group: dev
+        mode: "0644"
+        path: /srv/puzzle-massive/root/puzzle-massive-message.html
+    - name: Set blank puzzle massive message
+      become: true
+      ansible.builtin.file:
+        state: touch
+        owner: dev
+        group: dev
+        mode: "0644"
+        path: /srv/puzzle-massive/root/puzzle-massive-message.html
+
+    - name: Execute bin/appctl.sh start
+      become: true
+      command: ./bin/appctl.sh start
+      args:
+        chdir: /usr/local/src/puzzle-massive/

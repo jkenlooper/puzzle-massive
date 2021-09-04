@@ -1,0 +1,89 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-20.04"
+
+  config.vm.define "old_swap", primary: true do |old_swap|
+    old_swap.vm.hostname = "old.swap.test"
+    old_swap.vm.network :private_network, ip: "192.168.130.24", auto_config: true, hostname: true
+
+    old_swap.vm.provider "virtualbox" do |vb|
+      vb.memory = "1024"
+      vb.cpus = 1
+    end
+
+    # The add-dev-user.sh will need to copy the /root/.ssh/authorized_keys file to
+    # the /home/dev/.ssh/ directory.  On a vagrant virtual machine; this file
+    # doesn't exist in the /root/ directory.
+    old_swap.vm.provision "shell-prep-root", type: "shell", inline: <<-SHELL
+      cp -r /home/vagrant/.ssh /root/
+    SHELL
+
+    # For vagrant, set up the dev user
+    old_swap.vm.provision "bin-add-dev-user", type: "shell", path: "../../bin/add-dev-user.sh", args: 'vagrant'
+    old_swap.vm.provision "bin-update-sshd-config", type: "shell", path: "../../bin/update-sshd-config.sh"
+
+    old_swap.vm.provision "shell-setup", type: "shell", run: "always", inline: <<-SHELL
+    apt-get -y install rsync
+    SHELL
+    old_swap.vm.provision "shell-fixture-add-fake-certs", type: "shell", run: "always", inline: <<-SHELL
+      rm -f /home/dev/temporary_fullchain.pem
+      rm -f /home/dev/temporary_privkey.pem
+      mkdir -p /etc/letsencrypt/live/puzzle.massive.xyz/
+      echo 'fullchain' > /etc/letsencrypt/live/puzzle.massive.xyz/fullchain.pem
+      echo 'privkey' > /etc/letsencrypt/live/puzzle.massive.xyz/privkey.pem
+    SHELL
+
+    old_swap.vm.provision "copy-certs-to-new-swap", type: :ansible, run: "never" do |ansible|
+      ansible.playbook = "../../_infra/ansible-playbooks/copy-certs-to-new-swap.yml"
+      ansible.verbose = false
+      ansible.limit = "all"
+      ansible.groups = {
+        "legacy_puzzle_massive" => ["old_swap", "new_swap"],
+        "legacy_puzzle_massive_old_swap" => ["old_swap"],
+        "legacy_puzzle_massive_new_swap" => ["new_swap"],
+        "legacy_puzzle_massive:vars" => {
+          "old_swap" => "192.168.130.24",
+          "new_swap" => "192.168.130.25"
+        }
+      }
+    end
+  end
+
+  config.vm.define "new_swap", primary: true do |new_swap|
+    new_swap.vm.hostname = "new.swap.test"
+    new_swap.vm.network :private_network, ip: "192.168.130.25", auto_config: true, hostname: true
+
+    new_swap.vm.provider "virtualbox" do |vb|
+      vb.memory = "1024"
+      vb.cpus = 1
+    end
+
+    # The add-dev-user.sh will need to copy the /root/.ssh/authorized_keys file to
+    # the /home/dev/.ssh/ directory.  On a vagrant virtual machine; this file
+    # doesn't exist in the /root/ directory.
+    new_swap.vm.provision "shell-prep-root", type: "shell", inline: <<-SHELL
+      cp -r /home/vagrant/.ssh /root/
+    SHELL
+
+    # For vagrant, set up the dev user
+    new_swap.vm.provision "bin-add-dev-user", type: "shell", path: "../../bin/add-dev-user.sh", args: 'vagrant'
+    new_swap.vm.provision "bin-update-sshd-config", type: "shell", path: "../../bin/update-sshd-config.sh"
+
+    new_swap.vm.provision "shell-setup", type: "shell", run: "always", inline: <<-SHELL
+    apt-get -y install rsync
+    SHELL
+
+    new_swap.vm.provision "shell-fixture-setup", type: "shell", run: "always", inline: <<-SHELL
+      mkdir -p /etc/nginx
+      rm -f /etc/nginx/temporary_fullchain.pem
+      rm -f /etc/nginx/temporary_privkey.pem
+      mkdir -p /usr/local/src/puzzle-massive
+      mkdir -p /usr/local/src/puzzle-massive/web/snippets
+      rm -f /usr/local/src/puzzle-massive/web/snippets/ssl_certificate-ssl_certificate_key.nginx.conf.sh
+      rm -f /usr/local/src/puzzle-massive/.has-certs
+    SHELL
+  end
+
+end

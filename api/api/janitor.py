@@ -17,7 +17,7 @@ from rq import Worker, Queue, Connection
 
 from api.app import make_app
 from api.tools import loadConfig, get_redis_connection
-from api.constants import RENDERING_FAILED
+from api.constants import RENDERING_FAILED, BUGGY_UNLISTED
 
 # Preload libs
 from api.jobs import convertPiecesToDB, piece_forker, piece_reset, unsplash_image
@@ -45,6 +45,23 @@ def handle_fail(job, exception, exception_func, traceback):
         if r.status_code != 200:
             current_app.logger.warning(
                 f"Puzzle details api error. Could not set puzzle status to rendering failed. Skipping {puzzle_id}"
+            )
+    # TODO: Fix handling of errors on puzzle reset pieces
+    elif job.func_name == "api.jobs.piece_reset.reset_puzzle_pieces_and_handle_errors":
+        puzzle_id = job.args[0]
+        r = requests.patch(
+            "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
+                HOSTAPI=current_app.config["HOSTAPI"],
+                PORTAPI=current_app.config["PORTAPI"],
+                puzzle_id=puzzle_id,
+            ),
+            json={
+                "status": BUGGY_UNLISTED,
+            },
+        )
+        if r.status_code != 200:
+            current_app.logger.warning(
+                f"Puzzle details api error. Could not set puzzle status to buggy unlisted. Skipping {puzzle_id}"
             )
 
 

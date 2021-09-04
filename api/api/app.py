@@ -89,6 +89,7 @@ def make_app(config=None, database_writable=False, **kw):
         PuzzlePiecesView,
         PuzzlePieceUpdatesView,
         InternalPuzzlePiecesView,
+        InternalPuzzlePublishMove,
     )
     from api.puzzle_file import InternalPuzzleFileView
     from api.timeline import InternalPuzzleTimelineView
@@ -127,8 +128,10 @@ def make_app(config=None, database_writable=False, **kw):
         PuzzleInstanceDetailsView,
         PuzzleOriginalDetailsView,
         InternalPuzzleDetailsView,
+        InternalPuzzleDetailsByIdView,
     )
     from api.puzzle_list import (
+        InternalPuzzleRenderedResourcesListView,
         PuzzleListView,
         PlayerPuzzleListView,
         GalleryPuzzleListView,
@@ -312,13 +315,26 @@ def make_app(config=None, database_writable=False, **kw):
     # support a sqlite client/server model. For now, these are mostly for just
     # being able to write to the database since only the api has database
     # connection with write mode on.
+
+    app.add_url_rule("/internal/puzzle-rendered-resources-list/", view_func=InternalPuzzleRenderedResourcesListView.as_view("internal-puzzle-rendered-resources-list"))
+
     app.add_url_rule(
         "/internal/puzzle/<puzzle_id>/details/",
         view_func=InternalPuzzleDetailsView.as_view("internal-puzzle-details"),
     )
     app.add_url_rule(
+        "/internal/pz/<pz_id>/details/",
+        view_func=InternalPuzzleDetailsByIdView.as_view(
+            "internal-puzzle-details-by-id"
+        ),
+    )
+    app.add_url_rule(
         "/internal/puzzle/<puzzle_id>/pieces/",
         view_func=InternalPuzzlePiecesView.as_view("internal-puzzle-pieces"),
+    )
+    app.add_url_rule(
+        "/internal/puzzle/<puzzle_id>/publish_move/",
+        view_func=InternalPuzzlePublishMove.as_view("internal-puzzle-publish-move"),
     )
     app.add_url_rule(
         "/internal/puzzle/<puzzle_id>/files/<file_name>/",

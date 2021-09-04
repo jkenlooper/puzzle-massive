@@ -8,7 +8,7 @@ Usage: ${0} [-h]
 Options:
   -h            Show help
 
-Creates the .env and .htpasswd files used for Puzzle Massive development.
+Creates the .env file used for Puzzle Massive development.
 Existing files will be renamed with a .bak suffix.
 USAGE
   exit 0;
@@ -29,14 +29,23 @@ shift "$((OPTIND-1))";
 # Defaults
 SECURE_COOKIE_SECRET="chocolate chip"
 MUPPET_CHARACTER="pepethekingprawn"
+NEW_PUZZLE_CONTRIB=${NEW_PUZZLE_CONTRIB:-$MUPPET_CHARACTER}
 AUTO_APPROVE_PUZZLES="y"
+LOCAL_PUZZLE_RESOURCES="n"
+CDN_BASE_URL="http://localhost:63812"
+PUZZLE_RESOURCES_BUCKET_REGION="local"
+PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL="http://s3fake.puzzle.massive.test:4568"
+PUZZLE_RESOURCES_BUCKET="chum"
+PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL="public, max-age:31536000, immutable"
+EPHEMERAL_ARCHIVE_ENDPOINT_URL=""
+EPHEMERAL_ARCHIVE_BUCKET=""
 PUZZLE_RULES="all"
 PUZZLE_FEATURES="all"
 UNSPLASH_APPLICATION_ID=""
 UNSPLASH_APPLICATION_NAME=""
 UNSPLASH_SECRET=""
-DOMAIN_NAME='puzzle.massive.xyz'
-SITE_TITLE='Puzzle Massive'
+DOMAIN_NAME='puzzle.massive.test'
+SITE_TITLE='Local Puzzle Massive'
 SOURCE_CODE_LINK='https://github.com/jkenlooper/puzzle-massive/'
 HOME_PAGE_ROUTE='/chill/site/front/'
 SUGGEST_IMAGE_LINK='https://any-website-for-uploading/'
@@ -81,9 +90,9 @@ Enter some random text for secure cookie:
 
 " -i "${SECURE_COOKIE_SECRET}" SECURE_COOKIE_SECRET;
 
-#if [ -n "${NEW_PUZZLE_CONTRIB}" ]; then
-#    MUPPET_CHARACTER=${NEW_PUZZLE_CONTRIB}
-#fi
+if [ -n "${NEW_PUZZLE_CONTRIB}" ]; then
+    MUPPET_CHARACTER=${NEW_PUZZLE_CONTRIB}
+fi
 read -e -p "
 What is your favorite muppet character (should be one word):
 
@@ -92,6 +101,45 @@ What is your favorite muppet character (should be one word):
 read -e -p "
 Auto approve uploaded puzzles [y/n]:
 " -i "${AUTO_APPROVE_PUZZLES}" AUTO_APPROVE_PUZZLES;
+
+read -e -p "
+Use local puzzle resource files [y/n]:
+" -i "${LOCAL_PUZZLE_RESOURCES}" LOCAL_PUZZLE_RESOURCES;
+
+if [ "$LOCAL_PUZZLE_RESOURCES" != "y" ]; then
+read -e -p "
+CDN base URL to use for remote puzzle resources (Should not end in a slash):
+" -i "${CDN_BASE_URL}" CDN_BASE_URL;
+
+read -e -p "
+Puzzle resources bucket region:
+" -i "${PUZZLE_RESOURCES_BUCKET_REGION}" PUZZLE_RESOURCES_BUCKET_REGION;
+
+read -e -p "
+Puzzle resources bucket endpoint URL:
+" -i "${PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL}" PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL;
+
+read -e -p "
+Bucket name for storing puzzle resources:
+" -i "${PUZZLE_RESOURCES_BUCKET}" PUZZLE_RESOURCES_BUCKET
+
+# No real need to modify this setting.
+# read -e -p "
+# CacheControl header that will be used for all objects in the puzzle resources bucket:
+# " -i "${PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL}" PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL
+
+fi
+
+read -e -p "
+Ephemeral archive bucket endpoint URL to use for uploading backup db files.
+Example for AWS would be https://s3.us-west-2.amazonaws.com
+Skip if not needing to upload to S3:
+" -i "${EPHEMERAL_ARCHIVE_ENDPOINT_URL}" EPHEMERAL_ARCHIVE_ENDPOINT_URL;
+
+read -e -p "
+Bucket name for ephemeral archive bucket.
+Leave blank if not needing to upload to S3:
+" -i "${EPHEMERAL_ARCHIVE_BUCKET}" EPHEMERAL_ARCHIVE_BUCKET
 
 PUZZLE_RULES_HELP_TEXT="
 # Enable rules to prevent players from messing up puzzles for others. These
@@ -250,6 +298,8 @@ read -e -p "email sender:
 read -e -p "email moderator:
 " -i "${EMAIL_MODERATOR}" EMAIL_MODERATOR;
 
+
+
 PUBLISH_WORKER_COUNT_HELP_TEXT="
 # The publish worker count is the number of workers that will handle piece
 # movement requests. Set to None to be based on cpu count.
@@ -294,6 +344,14 @@ EMAIL_MODERATOR='${EMAIL_MODERATOR}'
 
 AUTO_APPROVE_PUZZLES='${AUTO_APPROVE_PUZZLES}'
 
+LOCAL_PUZZLE_RESOURCES='${LOCAL_PUZZLE_RESOURCES}'
+CDN_BASE_URL='${CDN_BASE_URL}'
+PUZZLE_RESOURCES_BUCKET_REGION='${PUZZLE_RESOURCES_BUCKET_REGION}'
+PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL='${PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL}'
+PUZZLE_RESOURCES_BUCKET='${PUZZLE_RESOURCES_BUCKET}'
+PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL='${PUZZLE_RESOURCES_BUCKET_OBJECT_CACHE_CONTROL}'
+EPHEMERAL_ARCHIVE_ENDPOINT_URL='${EPHEMERAL_ARCHIVE_ENDPOINT_URL}'
+EPHEMERAL_ARCHIVE_BUCKET='${EPHEMERAL_ARCHIVE_BUCKET}'
 ${PUZZLE_RULES_HELP_TEXT}
 PUZZLE_RULES="${PUZZLE_RULES}"
 

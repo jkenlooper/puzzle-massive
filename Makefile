@@ -1,4 +1,4 @@
-MAKEFLAGS += --warn-undefined-variables
+#MAKEFLAGS += --warn-undefined-variables
 SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c
 .DEFAULT_GOAL := all
@@ -56,14 +56,11 @@ endif
 # Use $* to get the stem
 FORCE:
 
-objects := site.cfg web/puzzle-massive.conf web/puzzle-massive--down.conf stats/awstats.puzzle.massive.xyz.conf stats/awstats-puzzle-massive-crontab
+nginx_web_snippets := $(patsubst web/snippets/%.nginx.conf.sh, web/snippets/%.nginx.conf, $(wildcard web/snippets/*.nginx.conf.sh))
+objects := site.cfg $(nginx_web_snippets) stats/awstats.puzzle.massive.xyz.conf stats/awstats-puzzle-massive-crontab
 
 
 #####
-
-# Uncomment if this is needed in the ssl setup
-#web/dhparam.pem:
-	#openssl dhparam -out $@ 2048
 
 bin/chill: chill/requirements.txt requirements.txt
 	$(PIP) install wheel
@@ -101,6 +98,10 @@ bin/puzzle-massive-stream: stream/requirements.txt requirements.txt stream/setup
 	$(PIP) install --upgrade --upgrade-strategy eager -r $<
 	touch $@;
 
+bin/puzzle-massive-enforcer: enforcer/requirements.txt requirements.txt enforcer/setup.py
+	$(PIP) install wheel
+	$(PIP) install --upgrade --upgrade-strategy eager -r $<
+	touch $@;
 
 objects += api/puzzle-massive-api.service
 api/puzzle-massive-api.service: api/puzzle-massive-api.service.sh
@@ -130,6 +131,9 @@ objects += stream/puzzle-massive-stream.service
 stream/puzzle-massive-stream.service: stream/puzzle-massive-stream.service.sh
 	./$< $(project_dir) > $@
 
+objects += enforcer/puzzle-massive-enforcer.service
+enforcer/puzzle-massive-enforcer.service: enforcer/puzzle-massive-enforcer.service.sh
+	./$< $(project_dir) > $@
 
 objects += api/puzzle-massive-cache-purge.path
 api/puzzle-massive-cache-purge.path: api/puzzle-massive-cache-purge.path.sh
@@ -140,7 +144,7 @@ api/puzzle-massive-cache-purge.service: api/puzzle-massive-cache-purge.service.s
 
 objects += api/puzzle-massive-backup-db.service
 api/puzzle-massive-backup-db.service: api/puzzle-massive-backup-db.service.sh
-	./$< $(ENVIRONMENT) $(project_dir) > $@
+	./$< $(ENVIRONMENT) $(project_dir) $(ENV_FILE) > $@
 objects += api/puzzle-massive-backup-db.timer
 api/puzzle-massive-backup-db.timer: api/puzzle-massive-backup-db.timer.sh
 	./$< $(ENVIRONMENT) > $@
@@ -148,17 +152,8 @@ api/puzzle-massive-backup-db.timer: api/puzzle-massive-backup-db.timer.sh
 site.cfg: site.cfg.sh $(PORTREGISTRY) $(ENV_FILE)
 	./$< $(ENVIRONMENT) $(DATABASEDIR) $(PORTREGISTRY) $(SRVDIR) $(ARCHIVEDIR) $(CACHEDIR) $(PURGEURLLIST) > $@
 
-web/puzzle-massive.conf: web/puzzle-massive.conf.sh $(PORTREGISTRY) web/ssl_params.conf
-	./$< $(ENVIRONMENT) $(SRVDIR) $(NGINXLOGDIR) $(NGINXDIR) $(PORTREGISTRY) $(INTERNALIP) $(CACHEDIR) up > $@
-web/puzzle-massive--down.conf: web/puzzle-massive.conf.sh $(PORTREGISTRY) web/ssl_params.conf
-	./$< $(ENVIRONMENT) $(SRVDIR) $(NGINXLOGDIR) $(NGINXDIR) $(PORTREGISTRY) $(INTERNALIP) $(CACHEDIR) down > $@
-
-# Uncomment if using dhparam.pem
-#ifeq ($(ENVIRONMENT),production)
-## Only create the dhparam.pem if needed.
-#objects += web/dhparam.pem
-#web/puzzle-massive.conf: web/dhparam.pem
-#endif
+web/snippets/%.nginx.conf: web/snippets/%.nginx.conf.sh $(PORTREGISTRY) $(ENV_FILE) site.cfg
+	./$< $(ENVIRONMENT) > $@
 
 stats/awstats.puzzle.massive.xyz.conf: stats/awstats.puzzle.massive.xyz.conf.sh
 	./$< $(NGINXLOGDIR) > $@
@@ -173,7 +168,7 @@ puzzle-massive-$(TAG).tar.gz: bin/dist.sh
 ######
 
 .PHONY: all
-all: bin/chill bin/puzzle-massive-api bin/puzzle-massive-divulger bin/puzzle-massive-stream media $(objects)
+all: bin/chill bin/puzzle-massive-api bin/puzzle-massive-divulger bin/puzzle-massive-stream bin/puzzle-massive-enforcer media $(objects)
 
 .PHONY: install
 install:
@@ -189,6 +184,7 @@ clean:
 	$(PIP) uninstall --yes -r api/requirements.txt
 	$(PIP) uninstall --yes -r divulger/requirements.txt
 	$(PIP) uninstall --yes -r stream/requirements.txt
+	$(PIP) uninstall --yes -r enforcer/requirements.txt
 	for mk in $(source_media_mk); do make -f $${mk} clean; done;
 
 # Remove files placed outside of src directory and uninstall app.

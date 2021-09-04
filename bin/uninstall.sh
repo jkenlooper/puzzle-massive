@@ -34,10 +34,10 @@ rm -rf "${SRVDIR}frozen/"
 rm -rf "${SRVDIR}dist/"
 rm -rf "${SRVDIR}media/"
 
-rm -f "${NGINXDIR}sites-enabled/puzzle-massive.conf";
-rm -f "${NGINXDIR}sites-available/puzzle-massive.conf";
-rm -f "${NGINXDIR}sites-enabled/puzzle-massive--down.conf";
-rm -f "${NGINXDIR}sites-available/puzzle-massive--down.conf";
+rm -f "${NGINXDIR}sites-{enabled,available}/old-cruft.nginx.conf";
+rm -f "${NGINXDIR}sites-{enabled,available}/legacy-cache--down.nginx.conf";
+rm -f "${NGINXDIR}sites-{enabled,available}/legacy-cache--up.nginx.conf";
+rm -f "${NGINXDIR}sites-{enabled,available}/legacy-origin.nginx.conf";
 
 rm -f "${SRVDIR}.htpasswd";
 
@@ -84,6 +84,10 @@ rm -f "${SYSTEMDDIR}puzzle-massive-janitor.service";
 systemctl stop puzzle-massive-stream
 systemctl disable puzzle-massive-stream
 rm -f "${SYSTEMDDIR}puzzle-massive-stream.service";
+
+systemctl stop puzzle-massive-enforcer
+systemctl disable puzzle-massive-enforcer
+rm -f "${SYSTEMDDIR}puzzle-massive-enforcer.service";
 
 # Skipping divulger since it is not needed at the moment.
 #systemctl stop puzzle-massive-divulger

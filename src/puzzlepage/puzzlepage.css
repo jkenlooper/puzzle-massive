@@ -34,6 +34,10 @@
   border: 1px solid black;
   background-color: white;
   width: auto;
+  cursor: grab;
+}
+.is-active.pm-Puzzlepage-previewBox {
+  cursor: grabbing;
 }
 .pm-Base--mainFocus .pm-Puzzlepage-previewBox {
   top: 100px;

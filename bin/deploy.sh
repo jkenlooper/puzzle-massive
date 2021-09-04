@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -eu -o pipefail
 
+echo "Deprecated. Do not use."
+exit 1
+
 # TODO: add usage help
 
 FROZENTMP=$(mktemp -d);

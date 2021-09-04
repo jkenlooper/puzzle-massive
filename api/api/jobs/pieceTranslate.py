@@ -1,13 +1,7 @@
 from __future__ import division
 from builtins import map
-from builtins import zip
-from builtins import str
-from past.utils import old_div
-import os.path
-import math
 import time
 import sys
-import random
 from datetime import timedelta
 
 from flask import current_app
@@ -17,11 +11,11 @@ from redis.exceptions import WatchError
 
 from api.app import redis_connection
 from api.tools import (
-    init_karma_key,
     purge_route_from_nginx_cache,
 )
 from api.constants import COMPLETED, QUEUE_END_OF_LINE, PRIVATE
 from api.piece_mutate import PieceMutateProcess, PieceMutateError
+from api.user import ANONYMOUS_USER_ID
 
 KARMA_POINTS_EXPIRE = 3600  # hour in seconds
 PIECE_GROUP_MOVE_MAX_BEFORE_PENALTY = 5
@@ -78,6 +72,7 @@ def attempt_piece_movement(ip, user, puzzleData, piece, x, y, r, karma_change, k
 
 def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
     # start = time.perf_counter()
+    now = int(time.time())
 
     def publishMessage(msg, karma_change, karma, points=0, complete=False):
         # print(topic)
@@ -93,20 +88,23 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
             channel="puzzle:{puzzle_id}".format(puzzle_id=puzzleData["puzzle_id"]),
         )
 
-        now = int(time.time())
-        points_key = "points:{user}".format(user=user)
-        recent_points = int(redis_connection.get(points_key) or 0)
-        if karma_change < 0 and karma <= 0 and recent_points > 0:
-            redis_connection.decr(points_key)
+        if user != ANONYMOUS_USER_ID:
+            points_key = "points:{user}".format(user=user)
+            recent_points = int(redis_connection.get(points_key) or 0)
+            if karma_change < 0 and karma <= 0 and recent_points > 0:
+                redis_connection.decr(points_key)
 
         redis_connection.zadd("pcupdates", {puzzle: now})
 
-        # bump the m_date for this player on the puzzle and timeline
-        redis_connection.zadd("timeline:{puzzle}".format(puzzle=puzzle), {user: now})
-        redis_connection.zadd("timeline", {user: now})
+        if user != ANONYMOUS_USER_ID:
+            # bump the m_date for this player on the puzzle and timeline
+            redis_connection.zadd(
+                "timeline:{puzzle}".format(puzzle=puzzle), {user: now}
+            )
+            redis_connection.zadd("timeline", {user: now})
 
         # Update player points
-        if points != 0 and user != None:
+        if points != 0 and user is not None and user != ANONYMOUS_USER_ID:
             redis_connection.zincrby(
                 "score:{puzzle}".format(puzzle=puzzle), amount=1, value=user
             )
@@ -198,7 +196,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
                 current_app.config.get("PURGEURLLIST"),
             )
 
-        if karma_change:
+        if karma_change and user != ANONYMOUS_USER_ID:
             sse.publish(
                 "{user}:{piece}:{karma}:{karma_change}".format(
                     user=user,
@@ -223,15 +221,15 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
     pc_puzzle_piece_key = "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece)
 
     # check if piece can be moved
-    (piece_status, has_y) = redis_connection.hmget(
+    has_y = redis_connection.hget(
         pc_puzzle_piece_key,
-        ["s", "y"],
+        "y",
     )
-    if has_y == None:
+    if has_y is None:
         err_msg = {"msg": "piece not available", "type": "missing"}
         return (err_msg, 0)
 
-    if piece_status == "1":
+    if redis_connection.sismember(f"pcfixed:{puzzle}", piece) == 1:
         # immovable
         err_msg = {
             "msg": "piece can't be moved",
@@ -253,6 +251,7 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
 
     piece_mutate_process = PieceMutateProcess(
         redis_connection,
+        user,
         puzzle,
         piece,
         x,
@@ -265,22 +264,24 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
     )
     (msg, status) = piece_mutate_process.start()
 
-    if status == "stacked":
-        # Decrease karma since stacking
-        if (
-            len(
-                {"all", "karma_stacked"}.intersection(
-                    current_app.config["PUZZLE_RULES"]
-                )
-            )
-            > 0
-        ):
-            if karma > 0:
-                karma = redis_connection.decr(karma_key)
-            karma_change -= 1
+    # TODO: The enforcer handles updating stacked status. Should karma be
+    # decreased here still?
+    # if status == "stacked":
+    #     # Decrease karma since stacking
+    #     if (
+    #         len(
+    #             {"all", "karma_stacked"}.intersection(
+    #                 current_app.config["PUZZLE_RULES"]
+    #             )
+    #         )
+    #         > 0
+    #     ):
+    #         if karma > 0:
+    #             karma = redis_connection.decr(karma_key)
+    #         karma_change -= 1
 
-        return publishMessage(msg, karma_change, karma)
-    elif status == "moved":
+    #     return publishMessage(msg, karma_change, karma)
+    if status == "moved":
         # Decrease karma since moving large group of pieces
         if (
             len(

@@ -577,6 +577,12 @@ customElements.define(
           $piece.classList.add("p");
           $piece.setAttribute("id", "p-" + pieceID);
           $piece.classList.add("pc-" + pieceID);
+          /* TODO: show id on piece when debugging
+          const $pieceID = document.createElement("span");
+          $pieceID.classList.add("p-id");
+          $pieceID.innerText = "" + pieceID;
+          $piece.appendChild($pieceID);
+           */
           // dark/light pieces not used at the moment.
           //$piece.classList.add("p--" + (piece.b === 0 ? "dark" : "light"));
           tmp.appendChild($piece);
@@ -588,18 +594,16 @@ customElements.define(
             rotate(${360 - piece.r === 360 ? 0 : 360 - piece.r}deg)`;
         }
 
-        // Piece status can be undefined which would mean the status should be
-        // reset. This is the case when a piece is no longer stacked.
-        if (piece.s === undefined) {
-          // Not showing any indication of stacked pieces on the front end,
-          // so no class to remove.
-          //
-          // Once a piece is immovable it shouldn't need to become movable
-          // again. (it's part of the border pieces group)
-        }
-        // Set immovable
+        // Set piece status
         if (piece.s === 1) {
           $piece.classList.add("is-immovable");
+          $piece.classList.remove("is-stacked");
+        } else if (piece.s === 2) {
+          $piece.classList.add("is-stacked");
+        } else if (piece.s === 0) {
+          // Piece status can be '0' which would mean the status should be
+          // reset. This is the case when a piece is no longer stacked.
+          $piece.classList.remove("is-stacked");
         }
 
         // Toggle the is-active class
@@ -719,9 +723,8 @@ customElements.define(
       // Delay removing is-shadowed so the transition can complete first
       window.clearTimeout(this.removeShadowedPiecesTimeout);
       this.removeShadowedPiecesTimeout = window.setTimeout(() => {
-        const shadowedPieces = this.$collection.querySelectorAll(
-          ".is-shadowed.p"
-        );
+        const shadowedPieces =
+          this.$collection.querySelectorAll(".is-shadowed.p");
         for (const sp of shadowedPieces.values()) {
           sp.classList.remove("is-shadowed");
         }

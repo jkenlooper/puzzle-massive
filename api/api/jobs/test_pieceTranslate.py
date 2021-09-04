@@ -76,14 +76,6 @@ class JobTestCase(unittest.TestCase):
             deleted = redisConnection.delete("pcstacked:{puzzle}".format(puzzle=puzzle))
             print("Deleted {deleted} piece stacked".format(**locals()))
 
-            # Piece X
-            deleted = redisConnection.delete("pcx:{puzzle}".format(puzzle=puzzle))
-            print("Deleted {deleted} piece x".format(**locals()))
-
-            # Piece Y
-            deleted = redisConnection.delete("pcy:{puzzle}".format(puzzle=puzzle))
-            print("Deleted {deleted} piece y".format(**locals()))
-
     def test_simple(self):
         ""
         assert True == True
@@ -229,8 +221,10 @@ class JobTestCase(unittest.TestCase):
             0, testPuzzle, piece, x, y, r, db_file=self.tmp_db.name
         )
         # Piece 0 is moved to join piece 10 which is in group 10
-        expectedMsg = ":{piece}:{x}:{y}:270::\n:{piece}:430:657:270:10:\n:10::::10:".format(
-            **locals()
+        expectedMsg = (
+            ":{piece}:{x}:{y}:270::\n:{piece}:430:657:270:10:\n:10::::10:".format(
+                **locals()
+            )
         )
         assert len(expectedMsg) == len(msg)
         for l in expectedMsg.split("\n"):
@@ -250,8 +244,10 @@ class JobTestCase(unittest.TestCase):
             0, testPuzzle, piece, x, y, r, db_file=self.tmp_db.name
         )
         # Piece 7 is moved to join piece 8 which is in group 8
-        expectedMsg = ":{piece}:{x}:{y}:180::\n:{piece}:672:527:180:8:\n:8::::8:".format(
-            **locals()
+        expectedMsg = (
+            ":{piece}:{x}:{y}:180::\n:{piece}:672:527:180:8:\n:8::::8:".format(
+                **locals()
+            )
         )
         assert len(expectedMsg) == len(msg)
         for l in expectedMsg.split("\n"):
@@ -303,8 +299,10 @@ class JobTestCase(unittest.TestCase):
             0, testPuzzle, piece, x, y, r, db_file=self.tmp_db.name
         )
         # Piece 3 and 2 are grouped, 3 is moved to join piece 7
-        expectedMsg = ":{piece}:{x}:{y}:0:3:\n:7::::3:\n:2:120:183:::\n:3:55:183:0:3:".format(
-            **locals()
+        expectedMsg = (
+            ":{piece}:{x}:{y}:0:3:\n:7::::3:\n:2:120:183:::\n:3:55:183:0:3:".format(
+                **locals()
+            )
         )
         assert len(expectedMsg) == len(msg)
         for l in expectedMsg.split("\n"):

@@ -1,6 +1,6 @@
-/aws*
 /black
 /blackd
+/black-primer
 /pyrsa*
 /activate*
 /chill
@@ -12,6 +12,7 @@
 /puzzle-massive-janitor
 /puzzle-massive-scheduler
 /puzzle-massive-stream
+/puzzle-massive-enforcer
 /puzzle-massive-testdata
 /puzzle-massive-site-cfg-echo
 /markdown_py
@@ -20,7 +21,6 @@
 /rst2*
 /rstpep2*
 /wheel
-/cairosvg
 /createfontdatachunk.py
 /enhancer.py
 /explode.py
@@ -46,3 +46,7 @@
 /pasteurize
 /chardetect
 /pybabel
+/Activate.ps1
+/jp.py
+/watchit
+/watchmedo

@@ -385,7 +385,10 @@ class PuzzleStream {
             pieceData.parent = Number(values[5]);
           }
           if (values[6] !== "") {
-            // s for stacked
+            // s for status which could be:
+            //   2 for stacked
+            //   1 for immovable
+            //   0 for reset
             pieceData.s = Number(values[6]);
           }
           if (values[2] !== "") {

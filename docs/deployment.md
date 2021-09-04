@@ -66,8 +66,8 @@ sudo ./bin/quick-deploy.sh /home/dev/puzzle-massive-2.x.x.tar.gz
 2.  Replace the current source code with the new version. Example shows the
     puzzle-massive-2.0.0.tar.gz which should be in the dev home directory. The
     current source code is moved to the home directory under a date label in
-    case it needs to revert back. The `.env` and `.htpasswd` files are copied
-    over since they are not included in the distribution. The `.has-certs` file
+    case it needs to revert back. The `.env` file is copied
+    over since it is not included in the distribution. The `.has-certs` file
     will signal if the site is setup for SSL (https://).
 
     ```bash
@@ -76,7 +76,6 @@ sudo ./bin/quick-deploy.sh /home/dev/puzzle-massive-2.x.x.tar.gz
     sudo tar --directory=/usr/local/src/ --extract --gunzip -f puzzle-massive-2.0.0.tar.gz
     sudo chown -R dev:dev /usr/local/src/puzzle-massive
     cp puzzle-massive-$(date +%F)/.env /usr/local/src/puzzle-massive/;
-    cp puzzle-massive-$(date +%F)/.htpasswd /usr/local/src/puzzle-massive/;
 
     # Add .has-certs file if site has already been setup with bin/provision-certbot.sh
     cp puzzle-massive-$(date +%F)/.has-certs /usr/local/src/puzzle-massive/ || echo "No certs?";
@@ -143,9 +142,9 @@ by the public.
     chown -R dev:dev /usr/local/src/puzzle-massive
     ```
 
-3.  SSH in as the dev user and upload or create the `.env` and `.htpasswd` files
+3.  SSH in as the dev user and upload or create the `.env` file
     in the `/usr/local/src/puzzle-massive/` directory. See the README on how to
-    create these. At this point there is no need to SSH in to the server as the
+    create it. At this point there is no need to SSH in to the server as the
     root user.
 
 4.  Copy the certificates listed on the old server (`sudo certbot certificates`)
@@ -186,6 +185,9 @@ by the public.
     # Update any bit icon authors and add new bit icons if applicable
     python api/api/jobs/insert-or-replace-bit-icons.py
 
+    # Update the enabled puzzle features
+    python api/api/update_enabled_puzzle_features.py
+
     sudo ./bin/appctl.sh start;
     ```
 
@@ -199,8 +201,9 @@ by the public.
     ```
 
 7.  Test and reload the nginx config. If this is a new server you may need to
-    remove the `/etc/nginx/sites-enabled/default` file. This site will include it's
-    own [web/default.conf]().
+    remove the `/etc/nginx/sites-enabled/default` or
+    `/etc/nginx/conf.d/default.conf` file. This site will include it's own
+    [web/default.nginx.conf]().
 
     ```bash
     sudo nginx -t;

@@ -1,0 +1,22 @@
+---
+
+- name: Remove certbot
+  hosts: all
+  user: dev
+  become: true
+  tasks:
+
+    - name: Unregister the account used for certbot
+      command: "certbot unregister --non-interactive"
+
+    - name: Remove certbot snap
+      community.general.snap:
+        name: certbot
+        classic: yes
+        state: absent
+
+    - name: Remove the certbot command by removing symlink to /usr/bin/
+      ansible.builtin.file:
+        src: /snap/bin/certbot
+        dest: /usr/bin/certbot
+        state: absent

@@ -21,6 +21,61 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
+## [Unreleased] - ...
+
+Improving support for Vagrant and Virtualbox local environments. Also trying to
+make it easier to get a working version on a local development machine without
+needing to manually build stuff. The preferred local development setup is now
+using Vagrant and VirtualBox. Terraform and Ansible will be used to deploy and
+manage remote servers.
+
+### Fixed
+
+- Preview full image from generated puzzle images
+
+### Added
+
+- Terraform deployment for a development environment. Work in progress of [issue #92](https://github.com/jkenlooper/puzzle-massive/issues/92)
+- Support for referral content in footer.
+- Default vagrant setup uses a local cdn that is backed by a local fake s3 server.
+- Script to move puzzle resources to be from s3 or back to being locally hosted.
+
+### Changed
+
+- Use latest stable version of NGINX. The install script will replace
+  /etc/nginx/nginx.conf since it assumes it is in full control of the ngnix
+  setup.
+- The .htpasswd file is no longer created locally and uploaded to the server.
+
+## [2.11.0] - 2021-06-01
+
+Did a YouTube live stream going over some of the improvements to piece rendering
+and with changes to the stacked pieces logic. Update: The stack pieces
+functionality shown is actually old and doesn't really capture the current state
+of things. I basically took a different approach then the one that was outlined
+in the video.
+[https://youtu.be/GLbO6n2JvMs](https://youtu.be/GLbO6n2JvMs)
+
+### Fixed
+
+- Restart chill app every 26 hours (temporary fix...)
+- Stacked piece logic is _should_ be fixed and not break things
+
+### Changed
+
+- Active player count is now just within last 5 minutes instead of the last 14
+  days.
+- Update to latest piecemaker
+- Update piece size and hot spot size
+- Implement more accurate hotspot tracking
+- Reject piece moves when too many pieces are stacked
+- Show different cursors when interacting with pieces on a puzzle
+
+### Added
+
+- Stacked pieces show a border and change to grayscale to hint that joining of
+  pieces are temporarily disabled
+
 ## [2.10.2] - 2021-03-20
 
 Optimize response times when moving pieces.

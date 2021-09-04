@@ -15,7 +15,6 @@ from __future__ import absolute_import
 from __future__ import division
 from builtins import str
 from builtins import map
-from past.utils import old_div
 
 from gevent import monkey
 
@@ -24,20 +23,17 @@ monkey.patch_all()
 import datetime
 import sys
 import time
-import random
-import uuid
-from subprocess import Popen
+import nanoid
+import base64
 import multiprocessing
 from docopt import docopt
 import os
 
 import gunicorn.app.base
-from flask import current_app, make_response, request, json, url_for, redirect, Flask, g
+from flask import current_app, make_response, request, json, Flask
 from flask.views import MethodView
-from werkzeug.exceptions import HTTPException
 from flask_sse import sse
-from redis.exceptions import WatchError
-from rq import Worker, Queue
+from rq import Queue
 import requests
 
 from api.flask_secure_cookie import SecureCookie
@@ -45,7 +41,6 @@ from api.app import redis_connection
 from api.jobs.pieceTranslate import attempt_piece_movement
 from api.tools import (
     loadConfig,
-    formatPieceMovementString,
     formatBitMovementString,
     init_karma_key,
     files_loader,
@@ -57,16 +52,18 @@ from api.constants import (
 )
 
 # from jobs import pieceMove
-from api.jobs import pieceTranslate
-from api.piece_mutate import PieceMutateError
-from api.user import user_id_from_ip, user_not_banned, increase_ban_time
+from api.user import (
+    user_id_from_ip,
+    user_not_banned,
+    increase_ban_time,
+    ANONYMOUS_USER_ID,
+)
 
 HOUR = 3600  # hour in seconds
 MINUTE = 60  # minute in seconds
 
 MOVES_BEFORE_PENALTY = 12
 STACK_PENALTY = 1
-HOTSPOT_EXPIRE = 30
 HOTSPOT_LIMIT = 10
 HOT_PIECE_MOVEMENT_RATE_TIMEOUT = 10
 PIECE_MOVEMENT_RATE_TIMEOUT = 100
@@ -111,14 +108,17 @@ def make_app(config=None, database_writable=False, **kw):
 
     app.queries = files_loader("queries")
 
-    # import the views and sockets
-    from api.publish import PuzzlePiecesMovePublishView, PuzzlePieceTokenView
-
     # register the views
 
     app.add_url_rule(
         "/puzzle/<puzzle_id>/piece/<int:piece>/move/",
         view_func=PuzzlePiecesMovePublishView.as_view("puzzle-pieces-move"),
+    )
+    app.add_url_rule(
+        "/internal/puzzle/<puzzle_id>/piece/<int:piece>/move/",
+        view_func=InternalPuzzlePiecesMovePublishView.as_view(
+            "internal-puzzle-pieces-move"
+        ),
     )
     app.add_url_rule(
         "/puzzle/<puzzle_id>/piece/<int:piece>/token/",
@@ -195,6 +195,7 @@ def _int_piece_properties(piece_properties):
 
 def _get_adjacent_pieces_list(piece_properties):
     "Get adjacent pieces list"
+    # The "s" property is deprecated, but still filter it out.
     return list(
         map(
             int,
@@ -205,6 +206,19 @@ def _get_adjacent_pieces_list(piece_properties):
             ],
         )
     )
+
+
+def pack_token(token, puzzle, user, piece, piece_properties):
+    x = piece_properties["x"]
+    y = piece_properties["y"]
+    p_token = bytes(f"{puzzle}:{user}:{piece}:{x}:{y}:{token}", encoding="utf8")
+    b64_token = base64.b64encode(p_token).decode(encoding="utf8")
+    return b64_token
+
+
+def unpack_token(token):
+    "(puzzle, user, piece, x, y, token)"
+    return base64.b64decode(token).decode(encoding="utf8").split(":")
 
 
 class PuzzlePieceTokenView(MethodView):
@@ -219,7 +233,7 @@ class PuzzlePieceTokenView(MethodView):
         user = current_app.secure_cookie.get("user") or user_id_from_ip(
             ip, validate_shared_user=False
         )
-        if user == None:
+        if user is None:
             err_msg = {
                 "msg": "Please reload the page.",
                 "reason": "The player login was not found.",
@@ -286,8 +300,9 @@ class PuzzlePieceTokenView(MethodView):
         piece_properties = _int_piece_properties(
             redis_connection.hgetall(pc_puzzle_piece_key)
         )
+        pcfixed = set(redis_connection.smembers(f"pcfixed:{puzzle}"))
 
-        if piece_properties.get("y") == None:
+        if piece_properties.get("y") is None:
             # 400 if puzzle does not exist or piece is not found
             # Only puzzles in ACTIVE state can be mutated
             err_msg = {
@@ -296,7 +311,7 @@ class PuzzlePieceTokenView(MethodView):
             }
             return make_response(json.jsonify(err_msg), 400)
 
-        if piece_properties.get("s") == "1":
+        if piece in pcfixed:
             # immovable
             err_msg = {
                 "msg": "piece can't be moved",
@@ -317,6 +332,14 @@ class PuzzlePieceTokenView(MethodView):
             )
             return make_response(json.jsonify(err_msg), 429)
 
+        token = pack_token(
+            nanoid.generate(size=8), puzzle, user, piece, piece_properties
+        )
+        redis_connection.publish(
+            f"enforcer_token_request:{puzzle}",
+            token,
+        )
+
         def move_bit_icon_to_piece(x, y):
             # Claim the piece by showing the bit icon next to it.
             msg = formatBitMovementString(user, x, y)
@@ -329,8 +352,7 @@ class PuzzlePieceTokenView(MethodView):
         # Snapshot of adjacent pieces at time of token request
         snapshot_id = None
         adjacent_pieces_list = _get_adjacent_pieces_list(piece_properties)
-        adjacent_piece_properties = None
-        adjacent_property_list = ["x", "y", "r", "g", "s", str(piece)]
+        adjacent_property_list = ["x", "y", "r", "g", str(piece)]
         pzq_current_key = "pzq_current:{puzzle}".format(puzzle=puzzle)
         results = []
         with redis_connection.pipeline(transaction=False) as pipe:
@@ -353,17 +375,17 @@ class PuzzlePieceTokenView(MethodView):
         snapshot = []
         for a_piece, a_props in adjacent_properties.items():
             # skip any that are immovable
-            if a_props.get("s") == "1":
+            if a_piece in pcfixed:
                 continue
             # skip any that are in the same group
-            if a_props.get("g") != None and a_props.get("g") == piece_properties.get(
+            if a_props.get("g") is not None and a_props.get(
                 "g"
-            ):
+            ) == piece_properties.get("g"):
                 continue
             # skip any that don't have offsets (adjacent edge piece)
             if not a_props.get(str(piece)):
                 continue
-            if a_props.get("g") == None:
+            if a_props.get("g") is None:
                 a_props["g"] = ""
             snapshot.append(
                 "_".join(
@@ -379,7 +401,7 @@ class PuzzlePieceTokenView(MethodView):
             )
 
         if len(snapshot):
-            snapshot_id = uuid.uuid4().hex[:8]
+            snapshot_id = nanoid.generate(size=8)
             snapshot_key = f"snap:{snapshot_id}"
             snapshot.insert(0, pzq_current)
             redis_connection.set(snapshot_key, ":".join(snapshot))
@@ -400,7 +422,7 @@ class PuzzlePieceTokenView(MethodView):
 
             move_bit_icon_to_piece(piece_properties.get("x"), piece_properties.get("y"))
             response = {
-                "token": "---",
+                "token": token,
                 "lock": now + TOKEN_LOCK_TIMEOUT,
                 "expires": now + TOKEN_EXPIRE_TIMEOUT,
             }
@@ -428,7 +450,7 @@ class PuzzlePieceTokenView(MethodView):
             pipe.expire(piece_token_queue_key, TOKEN_LOCK_TIMEOUT + 5)
             (queue_rank, _) = pipe.execute()
 
-        if queue_rank == None:
+        if queue_rank is None:
             # Append this player to a queue for getting the next token. This
             # will prevent the player with the lock from continually locking the
             # same piece.
@@ -476,7 +498,6 @@ class PuzzlePieceTokenView(MethodView):
 
         # This piece is up for grabs since it has been more then 5 seconds since
         # another player has grabbed it.
-        token = uuid.uuid4().hex[:8]
         with redis_connection.pipeline(transaction=False) as pipe:
             # Remove player from the piece token queue
             pipe.zrem(piece_token_queue_key, mark)
@@ -518,7 +539,6 @@ class PuzzlePiecesMovePublishView(MethodView):
     * Set karma
 
     * Check if piece move is within bounds
-    * Check if piece move is not to a large stacked area
 
     * Check if karma + points > 0
 
@@ -658,8 +678,6 @@ class PuzzlePiecesMovePublishView(MethodView):
                 return make_response(json.jsonify(err_msg), 400)
             user = int(user)
 
-        timestamp_now = int(time.time())
-
         pzq_key = "pzq:{puzzle_id}".format(puzzle_id=puzzle_id)
         pzq_fields = [
             "puzzle",
@@ -670,7 +688,7 @@ class PuzzlePiecesMovePublishView(MethodView):
         ]
         puzzle_data = dict(zip(pzq_fields, redis_connection.hmget(pzq_key, pzq_fields)))
         puzzle = puzzle_data.get("puzzle")
-        if puzzle == None:
+        if puzzle is None:
             req = requests.get(
                 "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/details/".format(
                     HOSTAPI=current_app.config["HOSTAPI"],
@@ -774,15 +792,14 @@ class PuzzlePiecesMovePublishView(MethodView):
             return make_response(json.jsonify(err_msg), 400)
 
         # Check again if piece can be moved and hasn't changed since getting token
-        (piece_status, has_y) = redis_connection.hmget(
-            "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece),
-            ["s", "y"],
+        has_y = redis_connection.hget(
+            "pc:{puzzle}:{piece}".format(puzzle=puzzle, piece=piece), "y"
         )
-        if has_y == None:
+        if has_y is None:
             err_msg = {"msg": "piece not available", "type": "missing"}
             return make_response(json.jsonify(err_msg), 404)
 
-        if piece_status == "1":
+        if redis_connection.sismember(f"pcfixed:{puzzle}", piece) == 1:
             # immovable
             err_msg = {
                 "msg": "piece can't be moved",
@@ -791,6 +808,12 @@ class PuzzlePiecesMovePublishView(MethodView):
                 "timeout": 5,
             }
             return make_response(json.jsonify(err_msg), 400)
+
+        (_, _, _, origin_x, origin_y, _) = unpack_token(token)
+        redis_connection.publish(
+            f"enforcer_piece_translate:{puzzle}",
+            f"{user}:{piece}:{origin_x}:{origin_y}:{x}:{y}",
+        )
 
         points_key = "points:{user}".format(user=user)
         recent_points = int(redis_connection.get(points_key) or "0")
@@ -856,15 +879,9 @@ class PuzzlePiecesMovePublishView(MethodView):
             len({"all", "hot_spot"}.intersection(current_app.config["PUZZLE_RULES"]))
             > 0
         ):
-            # Record hot spot (not exact)
-            hotspot_area_key = "hotspot:{puzzle}:{user}:{x}:{y}".format(
-                puzzle=puzzle,
-                user=user,
-                x=x - (x % 200),
-                y=y - (y % 200),
-            )
-            hotspot_count = redis_connection.incr(hotspot_area_key)
-            redis_connection.expire(hotspot_area_key, HOTSPOT_EXPIRE)
+            # Decrease the karma for the player if the piece is in a hotspot.
+            hotspot_piece_key = f"hotspot:{puzzle}:{user}:{piece}"
+            hotspot_count = int(redis_connection.get(hotspot_piece_key) or "0")
             if hotspot_count > HOTSPOT_LIMIT:
                 if karma > 0:
                     karma = redis_connection.decr(karma_key)
@@ -1073,6 +1090,96 @@ class PuzzlePiecesMovePublishView(MethodView):
 
         # end = time.perf_counter()
         # current_app.logger.debug("PuzzlePiecesMovePublishView {}".format(end - start))
+        return make_response("", 204)
+
+
+class InternalPuzzlePiecesMovePublishView(MethodView):
+    ACCEPTABLE_ARGS = set(["x", "y", "r"])
+
+    def patch(self, puzzle_id, piece):
+        """
+        args:
+        x
+        y
+        r
+        """
+        ip = "0"  # No ip is used here for karma
+        # Ignore publish of user data when anonymous user
+        user = ANONYMOUS_USER_ID
+        piece_move_timeout = current_app.config["PIECE_MOVE_TIMEOUT"]
+
+        # validate the args and headers
+        args = {}
+        xhr_data = request.get_json()
+        if xhr_data:
+            args.update(xhr_data)
+        if request.form:
+            args.update(request.form.to_dict(flat=True))
+
+        x = args.get("x")
+        y = args.get("y")
+        r = args.get("r")
+        current_app.logger.debug("Test internal piece move")
+
+        pzq_key = "pzq:{puzzle_id}".format(puzzle_id=puzzle_id)
+        pzq_fields = [
+            "puzzle",
+            "table_width",
+            "table_height",
+            "permission",
+            "pieces",
+        ]
+        puzzle_data = dict(zip(pzq_fields, redis_connection.hmget(pzq_key, pzq_fields)))
+        puzzle = puzzle_data.get("puzzle")
+        if puzzle is None:
+            err_msg = {
+                "msg": "No puzzle",
+            }
+            return make_response(json.jsonify(err_msg), 400)
+
+        puzzle_data["puzzle"] = int(puzzle_data["puzzle"])
+        puzzle_data["table_width"] = int(puzzle_data["table_width"])
+        puzzle_data["table_height"] = int(puzzle_data["table_height"])
+        puzzle_data["permission"] = int(puzzle_data["permission"])
+        puzzle_data["pieces"] = int(puzzle_data["pieces"])
+        puzzle_data["puzzle_id"] = puzzle_id
+        puzzle = puzzle_data["puzzle"]
+        puzzle = int(puzzle_data["puzzle"])
+
+        if redis_connection.sismember(f"pcfixed:{puzzle}", piece) == 1:
+            # immovable
+            err_msg = {
+                "msg": "piece can't be moved",
+            }
+            return make_response(json.jsonify(err_msg), 400)
+
+        pzq_current_key = "pzq_current:{puzzle}".format(puzzle=puzzle)
+        pzq_next_key = "pzq_next:{puzzle}".format(puzzle=puzzle)
+        # The attempt_piece_movement bumps the pzq_current by 1
+        pzq_next = redis_connection.incr(pzq_next_key, amount=1)
+        # Set the expire in case it fails to reach expire in attempt_piece_movement.
+        redis_connection.expire(pzq_current_key, piece_move_timeout + 2)
+        redis_connection.expire(pzq_next_key, piece_move_timeout + 2)
+
+        karma = 1
+        karma_change = 0
+        attempt_timestamp = time.time()
+        timeout = attempt_timestamp + piece_move_timeout
+        while attempt_timestamp < timeout:
+            pzq_current = int(redis_connection.get(pzq_current_key) or "0")
+            if pzq_current == pzq_next - 1:
+                (_, _) = attempt_piece_movement(
+                    ip,
+                    user,
+                    puzzle_data,
+                    piece,
+                    x,
+                    y,
+                    r,
+                    karma_change,
+                    karma,
+                )
+                break
         return make_response("", 204)
 
 
