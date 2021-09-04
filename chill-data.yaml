@@ -100,6 +100,13 @@ value:
   title: Credits
 
 --- !ChillNode
+name: internal_contributors_partial
+route: /internal/contributors-partial/
+template: internal-content-markdown.html.jinja2
+value:
+  content: CONTRIBUTORS.md
+
+--- !ChillNode
 name: internal_bit_icon_artists_credit
 route: /internal/bit-icon-artists-credit/
 template: bit-icon-artists-credit.html.jinja2

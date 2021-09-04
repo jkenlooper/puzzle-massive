@@ -29,16 +29,23 @@ needing to manually build stuff. The preferred local development setup is now
 using Vagrant and VirtualBox. Terraform and Ansible will be used to deploy and
 manage remote servers.
 
+Also including commits made from the first team of contributors for their
+[Senior Design Project](https://github.com/BP4rker/puzzle-massive).
+Thanks to BP4rker and JackNichols101.
+
 ### Fixed
 
 - Preview full image from generated puzzle images
 
 ### Added
 
+- Added click sound when a piece joins (BP4rker's team). Work in progress of [issue #81](https://github.com/jkenlooper/puzzle-massive/issues/81)
+- Cancel or unselect a piece (BP4rker's team). Work in progress [issue #41](https://github.com/jkenlooper/puzzle-massive/issues/41)
+- Puzzle timer (BP4rker's team). Work in progress [issue #40](https://github.com/jkenlooper/puzzle-massive/issues/40)
 - Terraform deployment for a development environment. Work in progress of [issue #92](https://github.com/jkenlooper/puzzle-massive/issues/92)
 - Support for referral content in footer.
-- Default vagrant setup uses a local cdn that is backed by a local fake s3 server.
-- Script to move puzzle resources to be from s3 or back to being locally hosted.
+- Default vagrant setup uses a local CDN that is backed by a local fake S3 server.
+- Script to move puzzle resources to be from S3 or back to being locally hosted.
 
 ### Changed
 
@@ -46,6 +53,7 @@ manage remote servers.
   /etc/nginx/nginx.conf since it assumes it is in full control of the ngnix
   setup.
 - The .htpasswd file is no longer created locally and uploaded to the server.
+- Use protocol-relative URLs
 
 ## [2.11.0] - 2021-06-01
 
