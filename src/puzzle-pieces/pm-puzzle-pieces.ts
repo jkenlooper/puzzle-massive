@@ -80,6 +80,7 @@ customElements.define(
     private renderedShadowPieces: RenderedShadowPieces = {};
     private isWaitingOnMoveRequestTimeout: number | undefined;
     private removeShadowedPiecesTimeout: number | undefined;
+    private audioPuzzlePieceClick: HTMLAudioElement;
 
     //private pauseStop: number = 0;
 
@@ -270,6 +271,8 @@ customElements.define(
         this.updateForegroundAndBackgroundColors.bind(this),
         this.instanceId
       );
+
+      this.audioPuzzlePieceClick = new Audio("/media/536108__eminyildirim__ui-click.wav");
     }
 
     onPuzzleStatus(status: Status) {
@@ -496,8 +499,7 @@ customElements.define(
       if ($_piece !== null && karmaData.karmaChange) {
         if (karmaData.karmaChange > 0) {
           $_piece.classList.add("is-up");
-          var audio = new Audio("https://www.fesliyanstudios.com/play-mp3/387");
-          audio.play();
+          this.audioPuzzlePieceClick.play();
         } else if (karmaData.karmaChange < 0 && karmaData.karma < 18) {
           // Only show is-down icon if risk of player being blocked.
           $_piece.classList.add("is-down");
