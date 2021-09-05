@@ -29,7 +29,10 @@
 
     - name: Reboot
       become: true
-      reboot:
+      ansible.builtin.reboot:
+        # Sometimes this times out? Wait 10 seconds before attempting to check
+        # if successful reboot.
+        post_reboot_delay: 10
 
     - name: Remove puzzle massive message if it exists
       become: true

@@ -21,12 +21,9 @@ Vagrant.configure("2") do |config|
     SHELL
 
     # For vagrant, set up the dev user
-    old_swap.vm.provision "bin-add-dev-user", type: "shell", path: "../../bin/add-dev-user.sh", args: 'vagrant'
-    old_swap.vm.provision "bin-update-sshd-config", type: "shell", path: "../../bin/update-sshd-config.sh"
+    old_swap.vm.provision "bin-add-dev-user", type: "shell", path: "../../../../bin/add-dev-user.sh", args: 'vagrant'
+    old_swap.vm.provision "bin-update-sshd-config", type: "shell", path: "../../../../bin/update-sshd-config.sh"
 
-    old_swap.vm.provision "shell-setup", type: "shell", run: "always", inline: <<-SHELL
-    apt-get -y install rsync
-    SHELL
     old_swap.vm.provision "shell-fixture-add-fake-certs", type: "shell", run: "always", inline: <<-SHELL
       rm -f /home/dev/temporary_fullchain.pem
       rm -f /home/dev/temporary_privkey.pem
@@ -36,7 +33,7 @@ Vagrant.configure("2") do |config|
     SHELL
 
     old_swap.vm.provision "copy-certs-to-new-swap", type: :ansible, run: "never" do |ansible|
-      ansible.playbook = "../../_infra/ansible-playbooks/copy-certs-to-new-swap.yml"
+      ansible.playbook = "../../copy-certs-to-new-swap.yml"
       ansible.verbose = false
       ansible.limit = "all"
       ansible.groups = {
@@ -68,12 +65,8 @@ Vagrant.configure("2") do |config|
     SHELL
 
     # For vagrant, set up the dev user
-    new_swap.vm.provision "bin-add-dev-user", type: "shell", path: "../../bin/add-dev-user.sh", args: 'vagrant'
-    new_swap.vm.provision "bin-update-sshd-config", type: "shell", path: "../../bin/update-sshd-config.sh"
-
-    new_swap.vm.provision "shell-setup", type: "shell", run: "always", inline: <<-SHELL
-    apt-get -y install rsync
-    SHELL
+    new_swap.vm.provision "bin-add-dev-user", type: "shell", path: "../../../../bin/add-dev-user.sh", args: 'vagrant'
+    new_swap.vm.provision "bin-update-sshd-config", type: "shell", path: "../../../../bin/update-sshd-config.sh"
 
     new_swap.vm.provision "shell-fixture-setup", type: "shell", run: "always", inline: <<-SHELL
       mkdir -p /etc/nginx

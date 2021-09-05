@@ -367,6 +367,9 @@ SNIPPET
     mkdir -p /var/log/nginx/puzzle-massive/
     chown -R nginx:nginx /var/log/nginx/puzzle-massive/
 
+    # TODO: setup service to manage blocked_ip.conf from the admin site.
+    touch /etc/nginx/blocked_ip.conf
+
     nginx -t
     systemctl start nginx
     systemctl reload nginx

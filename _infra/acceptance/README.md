@@ -25,6 +25,17 @@ the command `source decrypt_tfvars.sh acceptance`.
 ./acceptance/terra.sh apply
 ```
 
+Check on the progress of a newly initialized legacy puzzle massive droplet.
+Depending on how quickly this playbook is executed; use either the '-u dev' or
+'-u root'.
+
+```bash
+ENVIRONMENT=acceptance
+ansible-playbook ansible-playbooks/finished-cloud-init.yml \
+ -u dev \
+ -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive
+```
+
 ## Optional Create and Destroy SSL Certificates
 
 The commands to create the SSL Certificates with the Let's Encrypt certbot can
@@ -36,11 +47,11 @@ use SSL certs, but can also be accessed without them.
 
 ```bash
 # Run the Ansible playbook to provision SSL Certificates
-ENVIRONMENT=acceptance \
- ansible-playbook ansible-playbooks/provision-certbot.yml \
+ENVIRONMENT=acceptance
+ansible-playbook ansible-playbooks/provision-certbot.yml \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
- --extra-vars "
- makeenvironment=$(test $ENVIRONMENT = 'development' && echo 'development' || echo 'production')"
+ --ask-become-pass \
+ --extra-vars "makeenvironment=$(test $ENVIRONMENT = 'development' && echo 'development' || echo 'production')"
 ```
 
 ## Synchronize Puzzle Massive Resources Directory
@@ -52,12 +63,17 @@ s3 bucket to store puzzle image files.
 ```bash
 read -p "Enter the path to puzzle massive resources directory:
 " RESOURCES_DIRECTORY
-ENVIRONMENT=acceptance \
- ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory.yml \
+
+# Verify that directory exists
+RESOURCES_DIRECTORY=$(realpath $RESOURCES_DIRECTORY)
+test -d $RESOURCES_DIRECTORY || echo "no directory at $RESOURCES_DIRECTORY"
+
+ENVIRONMENT=acceptance
+ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory.yml \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
- --extra-vars "
- resources_directory=$RESOURCES_DIRECTORY
- "
+ -u dev \
+ --ask-become-pass \
+ --extra-vars "resources_directory=$RESOURCES_DIRECTORY"
 ```
 
 ## Test Out In-Place Production Deployment
@@ -82,14 +98,20 @@ git checkout release
 
 # Run the Ansible playbook for in-place deployments
 project_version=$(jq -r '.version' ../package.json)
-ENVIRONMENT=acceptance \
-DIST_FILE=puzzle-massive-$project_version.tar.gz \
- ansible-playbook ansible-playbooks/in-place-quick-deploy.yml \
+ENVIRONMENT=acceptance
+
+# Verify that the dist file has been made (make dist)
+DIST_FILE=../puzzle-massive-$project_version.tar.gz
+DIST_FILE=$(realpath $DIST_FILE)
+test -e $DIST_FILE || echo "no file at $DIST_FILE"
+
+ansible-playbook ansible-playbooks/in-place-quick-deploy.yml \
+ -u dev \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
- --extra-vars "
- message_file=../$ENVIRONMENT/puzzle-massive-message.html
- dist_file=../../$DIST_FILE
- environment=$(test $ENVIRONMENT = 'development' && echo 'development' || echo 'production')"
+ --ask-become-pass \
+ --extra-vars "message_file=../$ENVIRONMENT/puzzle-massive-message.html
+ dist_file=$DIST_FILE
+ makeenvironment=$(test $ENVIRONMENT = 'development' && echo 'development' || echo 'production')"
 ```
 
 Verify that the new version works correctly in the Acceptance environment.
@@ -100,8 +122,10 @@ First, stop the auto renewal if certbot was provisioned for the Acceptance envir
 
 ```bash
 # unregister certbot account
-ENVIRONMENT=acceptance \
- ansible-playbook ansible-playbooks/remove-certbot.yml \
+ENVIRONMENT=acceptance
+
+ansible-playbook ansible-playbooks/remove-certbot.yml \
+ --ask-become-pass \
  -i $ENVIRONMENT/host_inventory.ansible.cfg
 ```
 

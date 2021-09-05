@@ -139,6 +139,9 @@ rsync --inplace \
   web/localhost.key "${NGINXDIR}ssl/localhost.key";
 fi
 
+# TODO: setup service to manage blocked_ip.conf from the admin site.
+touch ${NGINXDIR}blocked_ip.conf
+
 # Create the root directory for stats. The awstats icons will be placed there.
 mkdir -p "${SRVDIR}stats"
 
