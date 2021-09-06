@@ -66,6 +66,29 @@ resource "digitalocean_spaces_bucket_object" "database_dump_file" {
   source = "${lower(var.environment)}/db.dump.gz"
 }
 
+resource "digitalocean_spaces_bucket_object" "allow_deny_admin_nginx_conf" {
+  region = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key    = "allow_deny_admin.nginx.conf"
+  acl    = "private"
+  source = "${lower(var.environment)}/allow_deny_admin.nginx.conf"
+  depends_on = [
+    local_file.allow_deny_admin_nginx_conf
+  ]
+}
+resource "local_file" "allow_deny_admin_nginx_conf" {
+  filename        = "${lower(var.environment)}/allow_deny_admin.nginx.conf"
+  file_permission = "0400"
+  content = <<-HERE
+    # Generated from Terraform variable admin_ips.
+    # Used by NGINX at /etc/nginx/allow_deny_admin.nginx.conf
+    %{for ip_addr in var.admin_ips~}
+      allow ${key};
+    %{endfor~}
+    deny all;
+  HERE
+}
+
 # Ansible will be used to update the droplet after deployment as needed.
 resource "digitalocean_droplet" "legacy_puzzle_massive_swap_a" {
   count    = var.create_legacy_puzzle_massive_swap_a ? 1 : 0
@@ -159,6 +182,7 @@ locals {
     "bin/install-latest-stable-nginx.sh",
     "bin/setup.sh",
     "bin/iptables-setup-firewall.sh",
+    "allow_deny_admin.nginx.conf",
     "db.dump.gz",
     var.artifact
   ]
@@ -175,6 +199,7 @@ resource "local_file" "legacy_user_data_sh" {
     digitalocean_spaces_bucket_object.setup_sh,
     digitalocean_spaces_bucket_object.iptables_setup_firewall_sh,
     digitalocean_spaces_bucket_object.database_dump_file,
+    digitalocean_spaces_bucket_object.allow_deny_admin_nginx_conf,
     digitalocean_spaces_bucket_object.artifact,
   ]
   sensitive_content = <<-USER_DATA
@@ -291,6 +316,7 @@ resource "local_file" "legacy_user_data_sh" {
 
     mv $EPHEMERAL_DIR/$ARTIFACT /home/dev/
     mv $EPHEMERAL_DIR/db.dump.gz /home/dev/
+    mv $EPHEMERAL_DIR/allow_deny_admin.nginx.conf /etc/nginx/
 
     ENV_FILE=$(realpath .env)
     (

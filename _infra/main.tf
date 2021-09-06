@@ -77,13 +77,13 @@ resource "digitalocean_firewall" "web" {
   inbound_rule {
     protocol         = "tcp"
     port_range       = "80"
-    source_addresses = concat(var.web_ips, var.developer_ips)
+    source_addresses = concat(var.web_ips, var.developer_ips, var.admin_ips)
   }
 
   inbound_rule {
     protocol         = "tcp"
     port_range       = "443"
-    source_addresses = concat(var.web_ips, var.developer_ips)
+    source_addresses = concat(var.web_ips, var.developer_ips, var.admin_ips)
   }
 
   inbound_rule {

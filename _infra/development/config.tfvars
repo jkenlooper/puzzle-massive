@@ -25,11 +25,6 @@ create_cdn = false
 
 vpc_ip_range = "192.168.127.0/24"
 
-# Requires using a SOCKS proxy in order to view.
-# Assuming that their is an entry for local-puzzle-massive that points to your
-# digitalocean droplet in /etc/hosts
-# ssh -D 7171 dev@local-puzzle-massive
-# Then setup your SOCKS v5 host to be localhost and 7171 port
-# Recommended to use FireFox web browser to set socks proxy instead of setting
-# your whole system.
+# The Development environment blocks all public access by default. Note that the
+# developer_ips and admin_ips are allowed through the firewall.
 web_ips = ["127.0.0.1"]

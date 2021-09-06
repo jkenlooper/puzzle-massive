@@ -250,10 +250,12 @@ ansible-galaxy install -r ansible-requirements.yml
 
 ### Maintenance Tasks
 
-These Ansible playbooks should be run from the /\_infra directory and set the ENVIRONMENT variable
+These Ansible playbooks should be run from the `_infra/` directory and set the ENVIRONMENT variable
 as needed.
 
-Update packages and reboot
+#### Update Packages and Reboot
+
+This will run an apt-get update and reboot the machine.
 
 ```bash
 ENVIRONMENT=development
@@ -264,23 +266,57 @@ ansible-playbook ansible-playbooks/update-packages-and-reboot.yml \
  --extra-vars "message_file=../$ENVIRONMENT/puzzle-massive-message.html"
 ```
 
-Add an admin user with a password to be able to access the admin only section.
+#### Add Admin User
 
-```bash
-ENVIRONMENT=development
+Access to the admin only section is protected via basic auth as well as only
+allowing certain IP addresses access to the admin only section of the site.
 
-# Prompt for the username to use.
-BASIC_AUTH_USER=$(read -p 'username: ' && echo $REPLY)
+Include the IP address that will be allowed for accessing the admin only section
+by adding it the Terraform variable admin_ips. The local file at
+`_infra/$ENVIRONMENT/allow_deny_admin.nginx.conf` is generated from the
+admin_ips variable. This Ansible playbook will upload that file and reload the
+NGINX service.
 
-# Prompt for the passphrase to use.
-BASIC_AUTH_PASSPHRASE=$(read -sp 'passphrase: ' && echo $REPLY)
+1. Add an admin user with a password to be able to access the admin only section
 
-# Apply the username and passphrase
-ansible-playbook ansible-playbooks/add-user-to-basic-auth.yml \
- -i $ENVIRONMENT/host_inventory.ansible.cfg \
- --ask-become-pass \
- --extra-vars "user=$BASIC_AUTH_USER passphrase='$BASIC_AUTH_PASSPHRASE'"
-```
+   ```bash
+   ENVIRONMENT=development
+
+   # Prompt for the username to use.
+   BASIC_AUTH_USER=$(read -p 'username: ' && echo $REPLY)
+
+   # Prompt for the passphrase to use.
+   BASIC_AUTH_PASSPHRASE=$(read -sp 'passphrase: ' && echo $REPLY)
+
+   # Apply the username and passphrase
+   ansible-playbook ansible-playbooks/add-user-to-basic-auth.yml \
+    -i $ENVIRONMENT/host_inventory.ansible.cfg \
+    --ask-become-pass \
+    --extra-vars "user=$BASIC_AUTH_USER passphrase='$BASIC_AUTH_PASSPHRASE'"
+   ```
+
+2. Include the IP address that will be allowed access to the Terraform variable 'admin_ips'
+
+3. Apply the changes using Terraform command (`./$ENVIRONMENT/terra.sh apply`) in order to update the `_infra/$ENVIRONMENT/allow_deny_admin.nginx.conf` file
+
+4. Upload the new file and reload NGINX
+
+   ```bash
+   ENVIRONMENT=development
+
+   # Verify that the file exists and is correct
+   ALLOW_DENY_ADMIN_NGINX_CONF=$(realpath $ENVIRONMENT/allow_deny_admin.nginx.conf)
+   test -e $ALLOW_DENY_ADMIN_NGINX_CONF || echo "no file at $ALLOW_DENY_ADMIN_NGINX_CONF"
+   cat $ALLOW_DENY_ADMIN_NGINX_CONF
+
+   # Apply the new allow_deny_admin.nginx.conf file
+   ansible-playbook ansible-playbooks/update-allow_deny_admin_nginx_conf.yml \
+    -i $ENVIRONMENT/host_inventory.ansible.cfg \
+    --ask-become-pass \
+    --extra-vars "allow_deny_admin_nginx_conf=$ALLOW_DENY_ADMIN_NGINX_CONF"
+   ```
+
+#### Others
 
 ad-hoc command
 ansible legacy_puzzle_massive -m command -a "echo 'hi'" -i development/inventory

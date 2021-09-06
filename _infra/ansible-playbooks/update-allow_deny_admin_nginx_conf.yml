@@ -1,0 +1,22 @@
+---
+
+- name: Upload local file allow_deny_admin.nginx.conf and reload NGINX
+  hosts: legacy_puzzle_massive
+  user: dev
+  become: true
+  tasks:
+
+    - name: Upload allow_deny_admin.nginx.conf from environment directory
+      ansible.builtin.copy:
+        src:  "{{ allow_deny_admin_nginx_conf }}"
+        dest: /etc/nginx/allow_deny_admin.nginx.conf
+
+    - name: "NGINX configuration test"
+      command: "nginx -t"
+
+    - name: Reload NGINX
+      ansible.builtin.systemd:
+        state: reloaded
+        daemon_reload: yes
+        name: nginx
+

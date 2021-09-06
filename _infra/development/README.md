@@ -97,21 +97,9 @@ ansible-playbook ansible-playbooks/restore-db-on-legacy-puzzle-massive.yml \
 ## Accessing the Droplet
 
 This development environment has a firewall that blocks all IP addresses from
-hitting the web server by default except localhost. It is expected to use `ssh`
-to set up a proxy with the server in order to access it with a web browser.
-
-A SOCKS proxy can be configured on your local machine in order to view.
-Assuming that there is an entry for local-puzzle-massive that points to your
-digitalocean droplet in /etc/hosts file.
-
-```bash
-# ssh to the droplet and bind the 7171 port
-ssh -D 7171 dev@THE_IP_OF_THE_DROPLET
-```
-
-Then setup your SOCKS v5 host to be localhost and 7171 port
-Recommended to use FireFox web browser to set SOCKS proxy instead of changing
-your whole system.
+hitting the web server by default except those listed in the Terraform variables
+developer_ips and admin_ips. You'll need to include your IP address in those
+variables in order to get access.
 
 ## Clean Up
 
