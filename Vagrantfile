@@ -185,6 +185,10 @@ DEFAULT_ENV
       systemctl daemon-reload
     SHELL
 
+    legacy_puzzle_massive.vm.provision "shell-setup-nginx-vagrant", type: "shell", inline: <<-SHELL
+      touch /etc/nginx/allow_deny_admin.nginx.conf
+    SHELL
+
     # BASIC_AUTH_USER=$(read -p 'username: ' && echo $REPLY) BASIC_AUTH_PASSPHRASE=$(read -sp 'passphrase: ' && echo $REPLY) vagrant provision --provision-with add-user-to-basic-auth
     legacy_puzzle_massive.vm.provision "add-user-to-basic-auth", type: :ansible_local, run: "never" do |ansible|
       ansible.playbook = "_infra/ansible-playbooks/add-user-to-basic-auth.yml"
@@ -367,7 +371,6 @@ SNIPPET
     mkdir -p /var/log/nginx/puzzle-massive/
     chown -R nginx:nginx /var/log/nginx/puzzle-massive/
 
-    touch /etc/nginx/allow_deny_admin.nginx.conf
     # TODO: setup service to manage blocked_ip.conf from the admin site.
     touch /etc/nginx/blocked_ip.conf
 

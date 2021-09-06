@@ -33,7 +33,7 @@ for it can be tailed:
 
 ```bash
 # On the droplet server
-tail -f /var/log/cloud-init-output.log
+sudo tail -f /var/log/cloud-init-output.log
 ```
 
 Check on the progress of a newly initialized legacy puzzle massive droplet.

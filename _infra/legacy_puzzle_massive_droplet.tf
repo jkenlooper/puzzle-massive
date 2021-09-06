@@ -83,7 +83,7 @@ resource "local_file" "allow_deny_admin_nginx_conf" {
     # Generated from Terraform variable admin_ips.
     # Used by NGINX at /etc/nginx/allow_deny_admin.nginx.conf
     %{for ip_addr in var.admin_ips~}
-      allow ${key};
+      allow ${ip_addr};
     %{endfor~}
     deny all;
   HERE
