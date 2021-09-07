@@ -45,10 +45,13 @@ echo "Versioned artifact bundle file: '$project_dir/$artifact_bundle'"
 
 set -x
 
-existing_artifact="$(echo $script_dir/puzzle-massive-*.bundle)"
-if [ ! -e "$existing_artifact" -o "$(md5sum $existing_artifact | cut -f1 -d ' ')" != "$(md5sum $project_dir/$artifact_bundle | cut -f1 -d ' ')" ]; then
+
+artifact_commit_id=$(git bundle list-heads $project_dir/$artifact_bundle | awk '$2=="HEAD"' | cut -f1 -d ' ')
+artifact_commit_id_bundle=${artifact_bundle%.bundle}-$artifact_commit_id.bundle
+existing_artifact=$script_dir/$artifact_commit_id_bundle
+if [ ! -e "$existing_artifact" ]; then
   rm -f $script_dir/puzzle-massive-*.bundle
-  cp $project_dir/$artifact_bundle $script_dir/
+  cp $project_dir/$artifact_bundle $existing_artifact
 fi
 
 terraform workspace select $workspace || \
@@ -58,6 +61,6 @@ test "$workspace" = "$(terraform workspace show)" || (echo "Sanity check to make
 
 terraform $terraform_command -var-file="$script_dir/config.tfvars" \
     -var-file="$script_dir/private.tfvars" \
-    -var "artifact=$artifact_bundle" \
+    -var "artifact=$artifact_commit_id_bundle" \
     -var "project_version=$project_version" \
     -var "project_description=$project_description"
