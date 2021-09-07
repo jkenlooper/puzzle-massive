@@ -61,9 +61,9 @@ resource "digitalocean_spaces_bucket_object" "artifact" {
 resource "digitalocean_spaces_bucket_object" "database_dump_file" {
   region = digitalocean_spaces_bucket.ephemeral_artifacts.region
   bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
-  key    = "db.dump.gz"
+  key    = var.database_dump_file
   acl    = "private"
-  source = "${lower(var.environment)}/db.dump.gz"
+  source = "${lower(var.environment)}/${var.database_dump_file}"
 }
 
 resource "digitalocean_spaces_bucket_object" "allow_deny_admin_nginx_conf" {
@@ -183,7 +183,7 @@ locals {
     "bin/setup.sh",
     "bin/iptables-setup-firewall.sh",
     "allow_deny_admin.nginx.conf",
-    "db.dump.gz",
+    var.database_dump_file,
     var.artifact
   ]
 }
@@ -207,6 +207,7 @@ resource "local_file" "legacy_user_data_sh" {
     set -eu -o pipefail
     set -x
     ARTIFACT=${var.artifact}
+    DATABASE_DUMP_FILE=${var.database_dump_file}
 
     cat <<-'ENV_CONTENT' > .env
       UNSPLASH_APPLICATION_ID='${var.dot_env__UNSPLASH_APPLICATION_ID}'
@@ -315,7 +316,7 @@ resource "local_file" "legacy_user_data_sh" {
     chown -R dev:dev /home/dev/.aws
 
     mv $EPHEMERAL_DIR/$ARTIFACT /home/dev/
-    mv $EPHEMERAL_DIR/db.dump.gz /home/dev/
+    mv $EPHEMERAL_DIR/$DATABASE_DUMP_FILE /home/dev/db.dump.gz
     mv $EPHEMERAL_DIR/allow_deny_admin.nginx.conf /etc/nginx/
 
     ENV_FILE=$(realpath .env)

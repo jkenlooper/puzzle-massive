@@ -37,7 +37,11 @@ fi
 
 # Allow setting up the Development environment with any sqlite database dump
 # file or just use an empty one.
+rm -f $script_dir/db-md5sum-*.dump.gz
 touch $script_dir/db.dump.gz
+db_dump_md5sum=$(md5sum $script_dir/db.dump.gz | cut -f1 -d ' ')
+database_dump_file=db-md5sum-$db_dump_md5sum.dump.gz
+cp $script_dir/db.dump.gz $script_dir/$database_dump_file
 
 cd -
 
@@ -62,5 +66,6 @@ test "$workspace" = "$(terraform workspace show)" || (echo "Sanity check to make
 terraform $terraform_command -var-file="$script_dir/config.tfvars" \
     -var-file="$script_dir/private.tfvars" \
     -var "artifact=$artifact_commit_id_bundle" \
+    -var "database_dump_file=$database_dump_file" \
     -var "project_version=$project_version" \
     -var "project_description=$project_description"

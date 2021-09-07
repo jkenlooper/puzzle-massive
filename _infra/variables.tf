@@ -38,6 +38,13 @@ variable "artifact" {
     error_message = "Must be a file that was generated from the `make dist` command. The Development and Test environments will automatically create a git bundle instead."
   }
 }
+
+variable "database_dump_file" {
+  description = "A SQLite database dump file to use when first creating the legacy puzzle massive droplet."
+  type = string
+  default = "db.dump.gz"
+}
+
 variable "bucket_region" {
   type        = string
   description = "Bucket region. This will be used for CDN puzzle resources as well as artifacts."

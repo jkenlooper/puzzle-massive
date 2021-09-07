@@ -318,5 +318,34 @@ NGINX service.
 
 #### Others
 
+Stop the app and it will create a backup db which will be uploaded to the S3
+bucket.
+
+```bash
+ENVIRONMENT=development
+
+ansible-playbook ansible-playbooks/appctl-stop.yml \
+ -i $ENVIRONMENT/host_inventory.ansible.cfg \
+ --ask-become-pass \
+ --extra-vars "message_file=../$ENVIRONMENT/puzzle-massive-message.html"
+```
+
+Download the puzzle resources directory locally.
+
+```bash
+ENVIRONMENT=development
+RESOURCES_DIRECTORY=$ENVIRONMENT/resources
+
+# Verify that directory exists
+RESOURCES_DIRECTORY=$(realpath $RESOURCES_DIRECTORY)
+test -d $RESOURCES_DIRECTORY || echo "no directory at $RESOURCES_DIRECTORY"
+
+ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory-to-local.yml \
+ -i $ENVIRONMENT/host_inventory.ansible.cfg \
+ --extra-vars "resources_directory=$RESOURCES_DIRECTORY"
+```
+
+---
+
 ad-hoc command
 ansible legacy_puzzle_massive -m command -a "echo 'hi'" -i development/inventory
