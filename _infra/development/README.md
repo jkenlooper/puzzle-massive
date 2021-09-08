@@ -54,16 +54,18 @@ in the resources directory might be empty if the site is configured to use the
 s3 bucket to store puzzle image files.
 
 ```bash
-read -p "Enter the path to puzzle massive resources directory:
-" RESOURCES_DIRECTORY
+ENVIRONMENT=development
+
+RESOURCES_DIRECTORY=$ENVIRONMENT/resources
+
+read -e -p "Enter the path to puzzle massive resources directory:
+" -i "$RESOURCES_DIRECTORY" RESOURCES_DIRECTORY
 
 # Verify that directory exists
 RESOURCES_DIRECTORY=$(realpath $RESOURCES_DIRECTORY)
 test -d $RESOURCES_DIRECTORY || echo "no directory at $RESOURCES_DIRECTORY"
 
-ENVIRONMENT=development
-
-ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory.yml \
+ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory-from-local.yml \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
  -u dev \
  --ask-become-pass \

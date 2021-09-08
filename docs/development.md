@@ -264,7 +264,7 @@ Sync a local resources directory to the development machine. Defaults to
 RESOURCES_DIRECTORY.
 
 ```bash
-vagrant provision --provision-with sync-legacy-puzzle-massive-resources-directory
+vagrant provision --provision-with sync-legacy-puzzle-massive-resources-directory-from-local
 ```
 
 A db.dump.gz file can also replace an existing database on the development

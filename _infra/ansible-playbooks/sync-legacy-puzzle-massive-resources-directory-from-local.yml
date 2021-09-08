@@ -15,7 +15,6 @@
         recurse: yes
         state: directory
     - name: Synchronize resources directory from local
-      become: false
       ansible.posix.synchronize:
         src: "{{ resources_directory }}"
         dest: /srv/puzzle-massive/

@@ -3,7 +3,7 @@
 .terraform.lock.hcl
 terraform.tfstate*
 
-# Generated from running terra.sh scripts
+# Generated from running scripts
 /development/puzzle-massive-*.bundle
 /development/db.dump.gz
 /development/db-md5sum-*.dump.gz
@@ -13,6 +13,7 @@ terraform.tfstate*
 /development/.deployment_step_state
 /development/.new_swap
 /development/allow_deny_admin.nginx.conf
+/development/resources/
 /test/puzzle-massive-*.bundle
 /test/db.dump.gz
 /test/db-md5sum-*.dump.gz
@@ -22,6 +23,7 @@ terraform.tfstate*
 /test/.deployment_step_state
 /test/.new_swap
 /test/allow_deny_admin.nginx.conf
+/test/resources/
 /acceptance/puzzle-massive-*.tar.gz
 /acceptance/db.dump.gz
 /acceptance/db-md5sum-*.dump.gz
@@ -31,6 +33,7 @@ terraform.tfstate*
 /acceptance/.deployment_step_state
 /acceptance/.new_swap
 /acceptance/allow_deny_admin.nginx.conf
+/acceptance/resources/
 /production/puzzle-massive-*.tar.gz
 /production/db.dump.gz
 /production/db-md5sum-*.dump.gz
@@ -40,6 +43,7 @@ terraform.tfstate*
 /production/.deployment_step_state
 /production/.new_swap
 /production/allow_deny_admin.nginx.conf
+/production/resources/
 
 # These can have sensitive variables in them like the do_token.
 /*.auto.tfvars

@@ -314,10 +314,18 @@ AWS_CONFIG_APP
       ' dev
     SHELL
 
-    legacy_puzzle_massive.vm.provision "sync-legacy-puzzle-massive-resources-directory", type: :ansible, run: "never" do |ansible|
-      ansible.playbook = "_infra/ansible-playbooks/sync-legacy-puzzle-massive-resources-directory.yml"
+    legacy_puzzle_massive.vm.provision "sync-legacy-puzzle-massive-resources-directory-from-local", type: :ansible, run: "never" do |ansible|
+      ansible.playbook = "_infra/ansible-playbooks/sync-legacy-puzzle-massive-resources-directory-from-local.yml"
       ansible.verbose = "vvv"
       #ansible.verbose = false
+      ansible.extra_vars = {
+        resources_directory: ENV["RESOURCES_DIRECTORY"] || '../local/output/resources'
+      }
+    end
+
+    # Syncing to local happens automatically via the Vagrant triggers for 'halt' and 'destroy'.
+    legacy_puzzle_massive.vm.provision "sync-legacy-puzzle-massive-resources-directory-to-local", type: :ansible, run: "never" do |ansible|
+      ansible.playbook = "_infra/ansible-playbooks/sync-legacy-puzzle-massive-resources-directory-to-local.yml"
       ansible.extra_vars = {
         resources_directory: ENV["RESOURCES_DIRECTORY"] || '../local/output/resources'
       }

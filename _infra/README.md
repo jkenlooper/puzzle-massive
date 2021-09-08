@@ -253,17 +253,18 @@ ansible-galaxy install -r ansible-requirements.yml
 These Ansible playbooks should be run from the `_infra/` directory and set the ENVIRONMENT variable
 as needed.
 
+```bash
+# Example of setting and exporting ENVIRONMENT variable
+ENVIRONMENT=development
+export ENVIRONMENT
+```
+
 #### Update Packages and Reboot
 
 This will run an apt-get update and reboot the machine.
 
 ```bash
-ENVIRONMENT=development
-
-ansible-playbook ansible-playbooks/update-packages-and-reboot.yml \
- -i $ENVIRONMENT/host_inventory.ansible.cfg \
- --ask-become-pass \
- --extra-vars "message_file=../$ENVIRONMENT/puzzle-massive-message.html"
+./bin/update-packages-and-reboot.sh $ENVIRONMENT
 ```
 
 #### Add Admin User
@@ -280,57 +281,64 @@ NGINX service.
 1. Add an admin user with a password to be able to access the admin only section
 
    ```bash
-   ENVIRONMENT=development
-
-   # Prompt for the username to use.
-   BASIC_AUTH_USER=$(read -p 'username: ' && echo $REPLY)
-
-   # Prompt for the passphrase to use.
-   BASIC_AUTH_PASSPHRASE=$(read -sp 'passphrase: ' && echo $REPLY)
-
-   # Apply the username and passphrase
-   ansible-playbook ansible-playbooks/add-user-to-basic-auth.yml \
-    -i $ENVIRONMENT/host_inventory.ansible.cfg \
-    --ask-become-pass \
-    --extra-vars "user=$BASIC_AUTH_USER passphrase='$BASIC_AUTH_PASSPHRASE'"
+   ./bin/add-user-to-basic-auth.sh $ENVIRONMENT
    ```
 
-2. Include the IP address that will be allowed access to the Terraform variable 'admin_ips'
+2. Include the IP address that will be allowed access to the Terraform variable 'admin_ips' (usually set in `private.auto.tfvars`)
 
-3. Apply the changes using Terraform command (`./$ENVIRONMENT/terra.sh apply`) in order to update the `_infra/$ENVIRONMENT/allow_deny_admin.nginx.conf` file
+3. Apply the changes using Terraform command in order to update the local `allow_deny_admin.nginx.conf` file and firewall
+
+   ```bash
+   ./$ENVIRONMENT/terra.sh apply
+   ```
 
 4. Upload the new file and reload NGINX
 
    ```bash
-   ENVIRONMENT=development
-
-   # Verify that the file exists and is correct
-   ALLOW_DENY_ADMIN_NGINX_CONF=$(realpath $ENVIRONMENT/allow_deny_admin.nginx.conf)
-   test -e $ALLOW_DENY_ADMIN_NGINX_CONF || echo "no file at $ALLOW_DENY_ADMIN_NGINX_CONF"
-   cat $ALLOW_DENY_ADMIN_NGINX_CONF
-
-   # Apply the new allow_deny_admin.nginx.conf file
-   ansible-playbook ansible-playbooks/update-allow_deny_admin_nginx_conf.yml \
-    -i $ENVIRONMENT/host_inventory.ansible.cfg \
-    --ask-become-pass \
-    --extra-vars "allow_deny_admin_nginx_conf=$ALLOW_DENY_ADMIN_NGINX_CONF"
+   ./bin/update-allow_deny_admin_nginx_conf.sh $ENVIRONMENT
    ```
 
-#### Others
+#### Manage Puzzle Resources and Database
 
-Stop the app and it will create a backup db which will be uploaded to the S3
-bucket.
+Stop the app and it will create a backup database dump file which will be
+uploaded to the S3 bucket.
+
+```bash
+./bin/appctl-stop.sh $ENVIRONMENT
+```
+
+Download the puzzle resources directory _to_ the local machine.
+
+```bash
+./bin/sync-legacy-puzzle-massive-resources-directory-to-local.sh $ENVIRONMENT
+```
+
+<!-- TODO: finish updating these to be more friendly for copy/paste by adding
+them to the _infra/bin/ . -->
+
+Replace the database with a local database dump file.
 
 ```bash
 ENVIRONMENT=development
+DB_DUMP_FILE=$ENVIRONMENT/db.dump.gz
 
-ansible-playbook ansible-playbooks/appctl-stop.yml \
+read -e -p "Enter the path to a db.dump.gz to replace the current sqlite database
+with:
+" -i "$DB_DUMP_FILE" DB_DUMP_FILE
+
+# Verify that file exists
+DB_DUMP_FILE=$(realpath $DB_DUMP_FILE)
+test -e $DB_DUMP_FILE || echo "no file at $DB_DUMP_FILE"
+
+
+ansible-playbook ansible-playbooks/restore-db-on-legacy-puzzle-massive.yml \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+ -u dev \
  --ask-become-pass \
- --extra-vars "message_file=../$ENVIRONMENT/puzzle-massive-message.html"
+ --extra-vars "db_dump_file=$DB_DUMP_FILE"
 ```
 
-Download the puzzle resources directory locally.
+Upload the puzzle resources directory _from_ the local machine.
 
 ```bash
 ENVIRONMENT=development
@@ -340,12 +348,21 @@ RESOURCES_DIRECTORY=$ENVIRONMENT/resources
 RESOURCES_DIRECTORY=$(realpath $RESOURCES_DIRECTORY)
 test -d $RESOURCES_DIRECTORY || echo "no directory at $RESOURCES_DIRECTORY"
 
-ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory-to-local.yml \
+ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory-from-local.yml \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+ -u dev \
+ --ask-become-pass \
  --extra-vars "resources_directory=$RESOURCES_DIRECTORY"
 ```
 
----
+### Ad-hoc Command
 
-ad-hoc command
-ansible legacy_puzzle_massive -m command -a "echo 'hi'" -i development/inventory
+```bash
+ENVIRONMENT=development
+
+ansible \
+ legacy_puzzle_massive \
+ -i $ENVIRONMENT/host_inventory.ansible.cfg \
+ -m command \
+ -a "echo 'hi'"
+```

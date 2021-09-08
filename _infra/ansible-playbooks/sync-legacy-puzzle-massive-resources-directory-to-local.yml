@@ -1,0 +1,13 @@
+---
+#https://docs.ansible.com/ansible/latest/collections/ansible/posix/synchronize_module.html#ansible-collections-ansible-posix-synchronize-module
+
+- name: Synchronize Puzzle Massive resources directory to local
+  hosts: legacy_puzzle_massive
+  remote_user: dev
+  tasks:
+
+    - name: Synchronize resources directory to local
+      ansible.posix.synchronize:
+        mode: pull
+        src: /srv/puzzle-massive/resources
+        dest: "{{ resources_directory }}"
