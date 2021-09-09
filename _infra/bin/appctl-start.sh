@@ -19,17 +19,16 @@ test -z "$ENVIRONMENT" && usage_generic_ansible_playbook
 set -o nounset
 
 echo "
-This will run an apt-get update and reboot the machine.
+Start the Legacy Puzzle Massive app.
 "
 
 check_environment_variable $ENVIRONMENT
 
 echo "
 
-Executing Ansible playbook: update-packages-and-reboot.yml
+Executing Ansible playbook: appctl-start.yml
 "
 
-ansible-playbook ansible-playbooks/update-packages-and-reboot.yml \
- -i $ENVIRONMENT/host_inventory.ansible.cfg \
- --ask-become-pass \
- --extra-vars "message_file=../$ENVIRONMENT/puzzle-massive-message.html"
+ansible-playbook ansible-playbooks/appctl-start.yml \
+  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+  --ask-become-pass

@@ -28,6 +28,8 @@ These variables should be set in a _infra/[environment]/private.tfvars file.
 There are multiple steps in this deployment script. The last successful step is
 saved locally and may be skipped to.
 
+More information for this script is in the _infra/README.md document.
+
 USAGE
   exit 0;
 }
@@ -50,9 +52,11 @@ while getopts ":hs:" opt; do
 done;
 shift "$((OPTIND-1))";
 
-ENVIRONMENT=$1
+bin_dir=$(dirname $(realpath $0))
+source $bin_dir/common-functions.sh
 
-test $(basename $PWD) = "_infra" || (echo "Must run this script from the _infra directory." && exit 1)
+ENVIRONMENT=${1-$ENVIRONMENT}
+
 test -e $ENVIRONMENT/terra.sh || (echo "No terra.sh found in _infra/$ENVIRONMENT/ directory." && exit 1)
 test -e $ENVIRONMENT/private.tfvars || (echo "No terraform private variables file found at $ENVIRONMENT/private.tfvars" && exit 1)
 

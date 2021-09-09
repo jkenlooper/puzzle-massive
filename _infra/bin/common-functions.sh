@@ -16,3 +16,20 @@ $1
   echo ""
   test $REPLY = "y" || (echo "Cancelled" && exit 1)
 }
+
+usage_generic_ansible_playbook () {
+  cat <<USAGE
+Usage: ${0} [environment]
+
+Executes the script for the environment which generally runs the Ansible
+playbook with the same name. Note that the ENVIRONMENT variable can be set and
+exported and it will use that if not specifically passed as the first argument
+when executing the script.
+
+More documentation on the ${0} script can be found in _infra/README.md document.
+Also review the related Ansible playbook:
+_infra/ansible-playbooks/$(basename ${0%.sh}.yml)
+
+USAGE
+  exit 0;
+}

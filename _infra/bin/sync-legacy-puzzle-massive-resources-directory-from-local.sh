@@ -18,18 +18,24 @@ ENVIRONMENT=${1-$ENVIRONMENT}
 test -z "$ENVIRONMENT" && usage_generic_ansible_playbook
 set -o nounset
 
+RESOURCES_DIRECTORY=$ENVIRONMENT/resources
+RESOURCES_DIRECTORY=$(realpath $RESOURCES_DIRECTORY)
+test -d $RESOURCES_DIRECTORY || echo "no directory at $RESOURCES_DIRECTORY"
+
 echo "
-This will run an apt-get update and reboot the machine.
+Upload the local puzzle resources directory: $RESOURCES_DIRECTORY
+to the '$ENVIRONMENT' environment.
 "
 
 check_environment_variable $ENVIRONMENT
 
 echo "
 
-Executing Ansible playbook: update-packages-and-reboot.yml
+Executing Ansible playbook: sync-legacy-puzzle-massive-resources-directory-to-local.yml
 "
 
-ansible-playbook ansible-playbooks/update-packages-and-reboot.yml \
+ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory-from-local.yml \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+ -u dev \
  --ask-become-pass \
- --extra-vars "message_file=../$ENVIRONMENT/puzzle-massive-message.html"
+ --extra-vars "resources_directory=$RESOURCES_DIRECTORY"

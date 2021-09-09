@@ -178,20 +178,12 @@ commands in a workspace. See the README.md for each environment.
 
 ### Stateful Swap Production Deployment
 
-wip
+The stateful swap deployment involves creating a new swap server with the new
+distribution and then removing the old swap server. This process has many steps
+involved because the application is stateful (SQLite database, Redis, and puzzle
+resource files).
 
-Steps involved to not always depend on using a DigitalOcean floating IP.
-DigitalOcean limits these to 3 per account.
-
-The `dig` command is used to find out the current DNS TTL. Use it with one of
-the DigitalOcean nameservers like this:
-
-```bash
-dig @ns1.digitalocean.com puzzle.massive.xyz
-```
-
-_Created an interactive script to handle deployments. Still untested and a work
-in progress._ See `_infra/bin/stateful_swap_deploy.sh` script.
+An overview of the steps involved are shown below:
 
 1. Update DNS TTL to be shorter
 2. Wait until after DNS propagates (depending on previous TTL value)
@@ -205,6 +197,14 @@ in progress._ See `_infra/bin/stateful_swap_deploy.sh` script.
 10. Remove DO floating IP
 11. Update DNS TTL to be longer
 
+These steps can be done via the stateful swap deploy script and involve running
+various commands including Terraform and Ansible commands. The script is
+interactive and will also allow starting at a specific step if necessary.
+
+```bash
+./bin/stateful_swap_deploy.sh $ENVIRONMENT
+```
+
 ### In-Place Production Deployment
 
 The in-place deployment requires fewer steps than the stateful swap deployment.
@@ -215,25 +215,12 @@ It is recommended to test an in-place deployment by running it against the
 acceptance environment that was stood up with the same version that is in
 production. See /\_infra/acceptance/README.md
 
-Set the ENVIRONMENT and DIST_FILE variables as needed for doing an in-place
+Set the ENVIRONMENT variable as needed for doing an in-place
 deployment. The dist file will need to be created by running the `make dist`
 command on the development machine.
 
 ```bash
-# Prompt for the dist file to use.
-DIST_FILE=$(read -p 'dist file (example: ../puzzle-massive-2.11.x.tar.gz): ' && echo $REPLY)
-DIST_FILE=$(realpath $DIST_FILE)
-test -e $DIST_FILE || echo "no file at $DIST_FILE"
-
-ENVIRONMENT=development
-
-ansible-playbook ansible-playbooks/in-place-quick-deploy.yml \
- -u dev \
- -i $ENVIRONMENT/host_inventory.ansible.cfg \
- --ask-become-pass \
- --extra-vars "message_file=../$ENVIRONMENT/puzzle-massive-message.html
- dist_file=$DIST_FILE
- makeenvironment=$(test $ENVIRONMENT = 'development' && echo 'development' || echo 'production')"
+./bin/in-place-quick-deploy.sh $ENVIRONMENT
 ```
 
 TODO: Create a rollback Ansible playbook for a failed in-place deployment.
@@ -307,52 +294,28 @@ uploaded to the S3 bucket.
 ./bin/appctl-stop.sh $ENVIRONMENT
 ```
 
+Start the app and it's services.
+
+```bash
+./bin/appctl-start.sh $ENVIRONMENT
+```
+
 Download the puzzle resources directory _to_ the local machine.
 
 ```bash
 ./bin/sync-legacy-puzzle-massive-resources-directory-to-local.sh $ENVIRONMENT
 ```
 
-<!-- TODO: finish updating these to be more friendly for copy/paste by adding
-them to the _infra/bin/ . -->
-
 Replace the database with a local database dump file.
 
 ```bash
-ENVIRONMENT=development
-DB_DUMP_FILE=$ENVIRONMENT/db.dump.gz
-
-read -e -p "Enter the path to a db.dump.gz to replace the current sqlite database
-with:
-" -i "$DB_DUMP_FILE" DB_DUMP_FILE
-
-# Verify that file exists
-DB_DUMP_FILE=$(realpath $DB_DUMP_FILE)
-test -e $DB_DUMP_FILE || echo "no file at $DB_DUMP_FILE"
-
-
-ansible-playbook ansible-playbooks/restore-db-on-legacy-puzzle-massive.yml \
- -i $ENVIRONMENT/host_inventory.ansible.cfg \
- -u dev \
- --ask-become-pass \
- --extra-vars "db_dump_file=$DB_DUMP_FILE"
+./bin/restore-db-on-legacy-puzzle-massive.sh $ENVIRONMENT
 ```
 
 Upload the puzzle resources directory _from_ the local machine.
 
 ```bash
-ENVIRONMENT=development
-RESOURCES_DIRECTORY=$ENVIRONMENT/resources
-
-# Verify that directory exists
-RESOURCES_DIRECTORY=$(realpath $RESOURCES_DIRECTORY)
-test -d $RESOURCES_DIRECTORY || echo "no directory at $RESOURCES_DIRECTORY"
-
-ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory-from-local.yml \
- -i $ENVIRONMENT/host_inventory.ansible.cfg \
- -u dev \
- --ask-become-pass \
- --extra-vars "resources_directory=$RESOURCES_DIRECTORY"
+./bin/sync-legacy-puzzle-massive-resources-directory-from-local.sh $ENVIRONMENT
 ```
 
 ### Ad-hoc Command

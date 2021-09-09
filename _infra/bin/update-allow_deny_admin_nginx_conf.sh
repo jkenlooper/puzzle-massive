@@ -1,12 +1,22 @@
 #!/usr/bin/env bash
 
 set -o errexit
-set -o nounset
-
 bin_dir=$(dirname $(realpath $0))
 source $bin_dir/common-functions.sh
-
+while getopts ":h" opt; do
+  case ${opt} in
+    h )
+      usage_generic_ansible_playbook;
+      ;;
+    \? )
+      usage_generic_ansible_playbook;
+      ;;
+  esac;
+done;
+shift "$((OPTIND-1))";
 ENVIRONMENT=${1-$ENVIRONMENT}
+test -z "$ENVIRONMENT" && usage_generic_ansible_playbook
+set -o nounset
 
 echo "Verify that the file exists and is correct"
 ALLOW_DENY_ADMIN_NGINX_CONF=$(realpath $ENVIRONMENT/allow_deny_admin.nginx.conf)
