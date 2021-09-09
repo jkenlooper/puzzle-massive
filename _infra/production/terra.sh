@@ -39,7 +39,7 @@ fi
 
 # The Production environment should be set up with an empty sqlite database dump
 # file.  Production data will be transferred to the new swap via the
-# stateful_swap_deploy.sh script.
+# _infra/bin/stateful_swap_deploy.sh script.
 empty_database_dump_file=$script_dir/db.dump.gz
 touch $empty_database_dump_file
 test ! -s $script_dir/db.dump.gz || (echo "The $script_dir/db.dump.gz should be an empty file in Production environment." && read -n1 -p "Continue anyways? [y/n] " CONTINUE && test "$CONTINUE" = 'y' || exit 1)

@@ -191,7 +191,7 @@ dig @ns1.digitalocean.com puzzle.massive.xyz
 ```
 
 _Created an interactive script to handle deployments. Still untested and a work
-in progress._ See `_infra/stateful_swap_deploy.sh` script.
+in progress._ See `_infra/bin/stateful_swap_deploy.sh` script.
 
 1. Update DNS TTL to be shorter
 2. Wait until after DNS propagates (depending on previous TTL value)
