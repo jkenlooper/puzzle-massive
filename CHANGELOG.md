@@ -31,7 +31,7 @@ manage remote servers.
 
 Also including commits made from the first team of contributors for their
 [Senior Design Project](https://github.com/BP4rker/puzzle-massive).
-Thanks to BP4rker and JackNichols101.
+Thanks to BP4rker, JackNichols101, and avmonster.
 
 ### Fixed
 

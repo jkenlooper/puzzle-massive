@@ -4,3 +4,9 @@
 # TEAM
 
     Jake Hickenlooper
+
+# CONTRIBUTORS
+
+    BP4rker
+    JackNichols101
+    avmonster
