@@ -39,15 +39,17 @@ for it can be tailed:
 tail -f /var/log/cloud-init-output.log
 ```
 
-Check on the progress of a newly initialized legacy puzzle massive droplet.
-Depending on how quickly this playbook is executed; use either the '-u dev' or
-'-u root'.
+Example of setting and exporting ENVIRONMENT variable
 
 ```bash
 ENVIRONMENT=test
-ansible-playbook ansible-playbooks/finished-cloud-init.yml \
- -u dev \
- -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive
+export ENVIRONMENT
+```
+
+Check on the progress of a newly initialized legacy puzzle massive droplet.
+
+```bash
+./bin/finished-cloud-init.sh $ENVIRONMENT
 ```
 
 ## Clean Up

@@ -264,6 +264,9 @@ resource "local_file" "legacy_user_data_sh" {
       HOSTREDIS="127.0.0.1"
     ENV_CONTENT
 
+    PASSPHRASE=${random_string.initial_dev_user_password.result}
+    ${file("../bin/add-dev-user.sh")}
+
     ${file("../bin/aws-cli-install.sh")}
 
     EPHEMERAL_DIR=$(mktemp -d)
@@ -294,7 +297,6 @@ resource "local_file" "legacy_user_data_sh" {
     mv $EPHEMERAL_DIR/?*.sh bin/
     chmod +x bin/?*.sh
 
-    ./bin/add-dev-user.sh ${random_string.initial_dev_user_password.result}
     ./bin/update-sshd-config.sh
     ./bin/set-external-puzzle-massive-in-hosts.sh
     ./bin/install-latest-stable-nginx.sh

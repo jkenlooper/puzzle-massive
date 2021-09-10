@@ -1,13 +1,13 @@
 ---
 
-- name: Remove certbot
+- name: Remove certbot and delete certificate
   hosts: all
   user: dev
   become: true
   tasks:
 
-    - name: Unregister the account used for certbot
-      command: "certbot unregister --non-interactive"
+    - name: Delete provisioned cert for domain
+      command: "certbot delete --cert-name {{ domain_name }} --non-interactive"
 
     - name: Remove certbot snap
       community.general.snap:

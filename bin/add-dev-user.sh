@@ -6,7 +6,7 @@ set -euo pipefail
 # The command `passwd --expire dev` is typically done in a later process to
 # require the dev user to change it as soon as they login.
 
-PASSPHRASE=$1
+PASSPHRASE=${1-$PASSPHRASE}
 
 # gecos option will prevent the other informational prompts
 adduser dev --disabled-login --disabled-password --gecos ""

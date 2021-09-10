@@ -338,16 +338,22 @@ sleep 40
 ansible-playbook ansible-playbooks/add-host-to-known_hosts.yml \
   -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
 
-ansible-playbook ansible-playbooks/finished-cloud-init.yml -u root -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
+ansible-playbook ansible-playbooks/finished-cloud-init.yml \
+  -u dev \
+  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+  --limit legacy_puzzle_massive_new_swap
+
 test $PROVISION_CERTS -eq 1 \
   && ansible-playbook ansible-playbooks/copy-certs-to-new-swap.yml -i $ENVIRONMENT/host_inventory.ansible.cfg \
   || echo 'no copy certs'
 
 ansible-playbook ansible-playbooks/make-install-and-reload-nginx.yml \
   --ask-become-pass \
-  -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
+  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+  --limit legacy_puzzle_massive_new_swap
 
-ansible-playbook ansible-playbooks/switch-data-over-to-new-swap.yml -i $ENVIRONMENT/host_inventory.ansible.cfg
+ansible-playbook ansible-playbooks/switch-data-over-to-new-swap.yml \
+  -i $ENVIRONMENT/host_inventory.ansible.cfg
 
 ansible-playbook ansible-playbooks/appctl-start.yml \
   --ask-become-pass \
