@@ -61,7 +61,7 @@ s3 bucket to store puzzle image files.
 ./bin/sync-legacy-puzzle-massive-resources-directory-from-local.sh $ENVIRONMENT
 ```
 
-## Test Out In-Place Production Deployment
+## Test Out In-Place Deployment
 
 This assumes that the version has already been tested in the Development and
 Test environments and a dist file for that version exists.
@@ -88,6 +88,10 @@ git checkout release
 ```
 
 Verify that the new version works correctly in the Acceptance environment.
+
+## Test Out Stateful Swap Deployment
+
+_WIP_
 
 ## Clean up
 

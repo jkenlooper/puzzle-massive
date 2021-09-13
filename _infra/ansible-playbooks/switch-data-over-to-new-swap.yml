@@ -101,6 +101,12 @@
         dest: /usr/local/src/puzzle-massive/
       delegate_to: "{{ inventory_hostname }}"
 
+    - name: Touch sqlite3 database file db
+      ansible.builtin.file:
+        state: touch
+        owner: dev
+        group: dev
+        path: "/var/lib/puzzle-massive/sqlite3/db"
     - name: Load up the sqlite db file with the db-old_swap.dump.gz
       shell: zcat db-old_swap.dump.gz | sqlite3 /var/lib/puzzle-massive/sqlite3/db
       args:

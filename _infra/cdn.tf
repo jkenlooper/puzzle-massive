@@ -1,6 +1,5 @@
 locals {
   ephemeral_artifact_keys_cdn = [
-    "bin/add-dev-user.sh",
     "bin/update-sshd-config.sh",
     "bin/install-latest-stable-nginx.sh",
     "bin/iptables-setup-firewall.sh",
@@ -54,7 +53,6 @@ resource "local_file" "cdn_user_data_sh" {
   filename        = "${lower(var.environment)}/cdn_droplet-user_data.sh"
   file_permission = "0400"
   depends_on = [
-    digitalocean_spaces_bucket_object.add_dev_user_sh,
     digitalocean_spaces_bucket_object.update_sshd_config_sh,
     digitalocean_spaces_bucket_object.install_latest_stable_nginx_sh,
     digitalocean_spaces_bucket_object.iptables_setup_firewall_sh,
@@ -69,6 +67,9 @@ resource "local_file" "cdn_user_data_sh" {
     #!/usr/bin/env bash
     set -eu -o pipefail
     set -x
+
+    PASSPHRASE=${random_string.initial_dev_user_password.result}
+    ${file("../bin/add-dev-user.sh")}
 
     ${file("../bin/aws-cli-install.sh")}
 
@@ -98,7 +99,6 @@ resource "local_file" "cdn_user_data_sh" {
     mv $EPHEMERAL_DIR/?*.sh bin/
     chmod +x bin/?*.sh
 
-    ./bin/add-dev-user.sh ${random_string.initial_dev_user_password.result}
     ./bin/update-sshd-config.sh
     ./bin/install-latest-stable-nginx.sh
     ./bin/iptables-setup-firewall.sh

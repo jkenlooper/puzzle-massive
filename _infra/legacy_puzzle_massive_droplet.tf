@@ -28,13 +28,6 @@ resource "digitalocean_spaces_bucket" "ephemeral_archive" {
   }
 }
 
-resource "digitalocean_spaces_bucket_object" "add_dev_user_sh" {
-  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
-  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
-  key     = "bin/add-dev-user.sh"
-  acl     = "private"
-  content = file("../bin/add-dev-user.sh")
-}
 resource "digitalocean_spaces_bucket_object" "set_external_puzzle_massive_in_hosts_sh" {
   region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
   bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
@@ -176,7 +169,6 @@ resource "random_string" "initial_dev_user_password" {
 
 locals {
   ephemeral_artifact_keys = [
-    "bin/add-dev-user.sh",
     "bin/update-sshd-config.sh",
     "bin/set-external-puzzle-massive-in-hosts.sh",
     "bin/install-latest-stable-nginx.sh",
@@ -192,7 +184,6 @@ resource "local_file" "legacy_user_data_sh" {
   filename        = "${lower(var.environment)}/legacy_puzzle_massive_droplet-user_data.sh"
   file_permission = "0400"
   depends_on = [
-    digitalocean_spaces_bucket_object.add_dev_user_sh,
     digitalocean_spaces_bucket_object.update_sshd_config_sh,
     digitalocean_spaces_bucket_object.set_external_puzzle_massive_in_hosts_sh,
     digitalocean_spaces_bucket_object.install_latest_stable_nginx_sh,

@@ -31,7 +31,7 @@ check_environment_variable $ENVIRONMENT
 
 echo "
 
-Executing Ansible playbook: sync-legacy-puzzle-massive-resources-directory-to-local.yml
+Executing Ansible playbook: sync-legacy-puzzle-massive-resources-directory-from-local.yml
 "
 
 ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory-from-local.yml \

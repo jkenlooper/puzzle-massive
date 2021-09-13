@@ -55,6 +55,7 @@ su --command '
 # The rsync of puzzle resources should be done later with an Ansible playbook.
 
 su --command '
+  touch /var/lib/puzzle-massive/sqlite3/db
   zcat $DBDUMPFILE | sqlite3 /var/lib/puzzle-massive/sqlite3/db
   cat db.dump.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
   echo "pragma journal_mode=wal" | sqlite3 /var/lib/puzzle-massive/sqlite3/db

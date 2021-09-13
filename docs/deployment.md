@@ -322,6 +322,7 @@ Switch over to the **new server** (puzzle-massive-green).
     rsync --archive --progress --itemize-changes \
       dev@puzzle-massive-blue:/usr/local/src/puzzle-massive/$DBDUMPFILE \
       /usr/local/src/puzzle-massive/;
+    touch /var/lib/puzzle-massive/sqlite3/db
     zcat $DBDUMPFILE | sqlite3 /var/lib/puzzle-massive/sqlite3/db
     cat db.dump.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
     echo 'pragma journal_mode=wal' | sqlite3 /var/lib/puzzle-massive/sqlite3/db

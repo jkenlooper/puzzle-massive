@@ -331,7 +331,7 @@ TF_VAR_is_floating_ip_active=true \
   ./$ENVIRONMENT/terra.sh apply
 
 # Wait for a bit before trying to connect to the newly provisioned droplet.
-sleep 40
+sleep 80
 
 # Run Ansible playbooks to setup newly provisioned swap with data from old swap.
 # TODO: how to not ask for the become password each time?
