@@ -34,7 +34,6 @@ USAGE
   exit 0;
 }
 
-PROVISION_CERTS=0
 
 STEP_STATE=1
 while getopts ":hs:" opt; do
@@ -56,6 +55,10 @@ bin_dir=$(dirname $(realpath $0))
 source $bin_dir/common-functions.sh
 
 ENVIRONMENT=${1-$ENVIRONMENT}
+
+# Only Acceptance and Production will be publicly available so provisioning
+# certs would then be done.
+PROVISION_CERTS=$(test "$ENVIRONMENT" = "acceptance" -o "$ENVIRONMENT" = "production" && echo "1" || echo "0")
 
 test -e $ENVIRONMENT/terra.sh || (echo "No terra.sh found in _infra/$ENVIRONMENT/ directory." && exit 1)
 test -e $ENVIRONMENT/private.tfvars || (echo "No terraform private variables file found at $ENVIRONMENT/private.tfvars" && exit 1)
@@ -321,7 +324,7 @@ create_legacy_puzzle_massive_swap_a = true
 create_legacy_puzzle_massive_swap_b = true
 Continue? [y/n] " -n1 CONFIRM
 if [ $CONFIRM != "y" ]; then
-  echo "Cancelled deployment."
+  echo "Canceled deployment."
   exit 0
 fi
 

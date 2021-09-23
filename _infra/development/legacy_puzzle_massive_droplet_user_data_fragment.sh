@@ -42,6 +42,7 @@ su --command '
 
 # Continue only if database dump file is not empty.
 DBDUMPFILE=/home/dev/db.dump.gz
+export DBDUMPFILE
 echo "Checking if the $DBDUMPFILE is empty. Will stop here if it is."
 test -s $DBDUMPFILE || exit 0
 # The rest of this should usually just be applicable for the Acceptance or Development environments.

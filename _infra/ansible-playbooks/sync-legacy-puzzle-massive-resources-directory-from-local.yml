@@ -17,8 +17,8 @@
     - name: Synchronize resources directory from local
       become: false
       ansible.posix.synchronize:
-        src: "{{ resources_directory }}"
-        dest: /srv/puzzle-massive/
+        src: "{{ resources_directory }}/"
+        dest: /srv/puzzle-massive/resources/
     - name: Update permissions
       ansible.builtin.file:
         path: "/srv/puzzle-massive/resources"

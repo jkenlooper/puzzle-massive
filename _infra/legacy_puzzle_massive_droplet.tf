@@ -310,6 +310,7 @@ resource "local_file" "legacy_user_data_sh" {
 
     mv $EPHEMERAL_DIR/$ARTIFACT /home/dev/
     mv $EPHEMERAL_DIR/$DATABASE_DUMP_FILE /home/dev/db.dump.gz
+    chown dev:dev /home/dev/db.dump.gz
     mv $EPHEMERAL_DIR/allow_deny_admin.nginx.conf /etc/nginx/
 
     ENV_FILE=$(realpath .env)
