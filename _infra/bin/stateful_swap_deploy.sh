@@ -333,6 +333,7 @@ TF_VAR_create_floating_ip_puzzle_massive=true \
 TF_VAR_is_floating_ip_active=true \
   ./$ENVIRONMENT/terra.sh apply
 
+echo "Waiting for 80 seconds before attempting to connect to newly provisioned droplet."
 # Wait for a bit before trying to connect to the newly provisioned droplet.
 sleep 80
 
@@ -345,6 +346,20 @@ ansible-playbook ansible-playbooks/finished-cloud-init.yml \
   -u dev \
   -i $ENVIRONMENT/host_inventory.ansible.cfg \
   --limit legacy_puzzle_massive_new_swap
+
+# Strange way of getting IP address of new swap.
+NEW_SWAP_IP=$(ansible -m debug \
+  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+  -a "gather_facts=true" \
+  -a "var=hostvars[inventory_hostname]" \
+  legacy_puzzle_massive_new_swap \
+  | sed 's#.*SUCCESS =>##' \
+  | jq -r '.["hostvars[inventory_hostname]"].inventory_hostname')
+
+echo "ssh in as dev and set the password if it has been marked to be reset.
+ssh dev@${NEW_SWAP_IP}
+"
+ssh dev@${NEW_SWAP_IP}
 
 test $PROVISION_CERTS -eq 1 \
   && ansible-playbook ansible-playbooks/copy-certs-to-new-swap.yml -i $ENVIRONMENT/host_inventory.ansible.cfg \
@@ -367,9 +382,6 @@ test $PROVISION_CERTS -eq 1 \
   -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap \
   || echo 'no provision certs'
 
-# Gross way of getting new swap ip address.
-NEW_SWAP_IP=$(echo "\"$NEW_SWAP\" == \"A\"" ' ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : ' "\"$NEW_SWAP\" == \"B\"" ' ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : null' | \
-  ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1 | xargs)
 echo "The IP for the new swap '$NEW_SWAP' in $ENVIRONMENT environment is:
 $NEW_SWAP_IP
 It is recommended to temporarily update your /etc/hosts file to use this ip like so:

@@ -18,6 +18,7 @@ resource "digitalocean_project" "puzzle_massive" {
     one(digitalocean_droplet.legacy_puzzle_massive_volatile[*].urn),
     one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].urn),
     one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].urn),
+    one(digitalocean_floating_ip.legacy_puzzle_massive[*].urn),
     one(digitalocean_spaces_bucket.cdn[*].urn),
     one(digitalocean_spaces_bucket.cdn_volatile[*].urn),
     digitalocean_spaces_bucket.ephemeral_artifacts.urn,

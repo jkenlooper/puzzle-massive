@@ -9,8 +9,8 @@
     - name: First synchronize of the puzzle massive resources directory from old_swap
       ansible.posix.synchronize:
         mode: pull
-        src: "rsync://{{ old_swap }}/srv/puzzle-massive/resources"
-        dest: /srv/puzzle-massive/
+        src: "rsync://{{ old_swap }}/srv/puzzle-massive/resources/"
+        dest: /srv/puzzle-massive/resources/
       delegate_to: "{{ inventory_hostname }}"
 
     - name: Synchronize .htpasswd file that is used for admin logins
@@ -90,8 +90,8 @@
     - name: Second synchronize of the puzzle massive resources directory from old_swap
       ansible.posix.synchronize:
         mode: pull
-        src: "rsync://{{ old_swap }}/srv/puzzle-massive/resources"
-        dest: /srv/puzzle-massive/
+        src: "rsync://{{ old_swap }}/srv/puzzle-massive/resources/"
+        dest: /srv/puzzle-massive/resources/
       delegate_to: "{{ inventory_hostname }}"
 
     - name: Copy sqlite database
