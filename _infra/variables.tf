@@ -165,6 +165,23 @@ variable "create_legacy_puzzle_massive_swap_b" {
   description = "Used for creating a blue/green compatible legacy_puzzle_massive droplet that will be used for Production."
 }
 
+variable "new_swap" {
+  type = string
+  description = "Which swap is considered the new swap; either A or B."
+  validation {
+    condition     = can(regex("A|B", var.new_swap))
+    error_message = "Must be either 'A' or 'B' value."
+  }
+}
+variable "old_swap" {
+  type = string
+  description = "Which swap is considered the old swap; either A or B."
+  validation {
+    condition     = can(regex("A|B", var.old_swap))
+    error_message = "Must be either 'A' or 'B' value."
+  }
+}
+
 variable "is_cdn_volatile_active" {
   type    = bool
   default = true
