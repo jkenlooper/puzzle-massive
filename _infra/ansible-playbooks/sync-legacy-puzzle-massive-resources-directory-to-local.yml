@@ -10,4 +10,4 @@
       ansible.posix.synchronize:
         mode: pull
         src: /srv/puzzle-massive/resources/
-        dest: "{{ resources_directory }}"
+        dest: "{{ resources_directory }}/"

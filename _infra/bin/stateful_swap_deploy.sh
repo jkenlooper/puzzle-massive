@@ -370,8 +370,16 @@ ansible-playbook ansible-playbooks/make-install-and-reload-nginx.yml \
   -i $ENVIRONMENT/host_inventory.ansible.cfg \
   --limit legacy_puzzle_massive_new_swap
 
+RESOURCES_DIRECTORY=$ENVIRONMENT/resources
+RESOURCES_DIRECTORY=$(realpath $RESOURCES_DIRECTORY)
+HTPASSWD_FILE=$(realpath $ENVIRONMENT/.htpasswd)
+OLD_SWAP_DB_BACKUP=$(realpath $ENVIRONMENT/db-old_swap.dump.gz)
 ansible-playbook ansible-playbooks/switch-data-over-to-new-swap.yml \
-  -i $ENVIRONMENT/host_inventory.ansible.cfg
+  --ask-become-pass \
+  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+  --extra-vars "htpasswd_file=$HTPASSWD_FILE
+  old_swap_db_backup=$OLD_SWAP_DB_BACKUP
+  resources_directory=$RESOURCES_DIRECTORY"
 
 ansible-playbook ansible-playbooks/appctl-start.yml \
   --ask-become-pass \
