@@ -18,6 +18,8 @@ Deployment using Terraform for the environment that was passed in as the first
 arg.  This command will wait for DNS TTL to timeout when making changes. During
 the deployment you will be prompted to edit the Terraform variables:
 
+- old_swap
+- new_swap
 - is_swap_a_active
 - is_swap_b_active
 - create_legacy_puzzle_massive_swap_a
@@ -75,11 +77,17 @@ The is_volatile_active terraform variable should be 'false' for a stateful swap 
 Try using the './$ENVIRONMENT/terra.sh apply' command if not needing to do
 a stateful swap deployment.
 " && exit 1)
+TEST_old_swap=$(echo "var.old_swap" | \
+  ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1 | xargs)
+TEST_new_swap=$(echo "var.new_swap" | \
+  ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1 | xargs)
 TEST_is_swap_a_active=$(echo "var.is_swap_a_active" | \
   ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1)
 TEST_is_swap_b_active=$(echo "var.is_swap_b_active" | \
   ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1)
 test "${TEST_is_swap_a_active}" = "true" -o "${TEST_is_swap_b_active}" = "true" || (echo "At least one is_swap_a_active or is_swap_b_active terraform variable should be 'true' for a stateful swap deployment." && exit 1)
+echo "old_swap = '${TEST_old_swap}'"
+echo "new_swap = '${TEST_new_swap}'"
 
 # Determine the old swap and new swap.
 if [ "$STEP_STATE" = "1" ]; then
@@ -100,6 +108,18 @@ echo "
 old swap is: $OLD_SWAP
 new swap is: $NEW_SWAP
 "
+if [ "$OLD_SWAP" != "$TEST_old_swap" -o "$NEW_SWAP" != "$TEST_new_swap" ]; then
+  echo "
+ERROR: The old_swap and new_swap values are not consistent with
+       is_swap_a_active and is_swap_b_active variables.
+
+Update these variables in the _infra/$ENVIRONMENT/private.tfvars file.
+Should be set like this:
+old_swap = \"$OLD_SWAP\"
+new_swap = \"$NEW_SWAP\"
+"
+  exit 1
+fi
 
 # Check to see if the terraform variables can be modified via setting TF_VAR_*
 # environment variables.
@@ -555,8 +575,29 @@ echo "
 set_step_state 12
 }
 
-step_last () {
+step_12 () {
 test "$STEP_STATE" != "12" && return
+echo "
+################################################################################
+# 12. Update old_swap and new_swap variables.
+################################################################################
+"
+
+read -p "
+Update these variables in the _infra/$ENVIRONMENT/private.tfvars file.
+Should be set like this:
+old_swap = \"$NEW_SWAP\"
+new_swap = \"$OLD_SWAP\"
+Continue? [y/n] " -n1 CONFIRM
+  if [ $CONFIRM != "y" ]; then
+    echo "Cancelled."
+    exit 0
+  fi
+set_step_state 13
+}
+
+step_last () {
+test "$STEP_STATE" != "13" && return
 echo "
 ################################################################################
 # All done.
@@ -579,4 +620,5 @@ step_8
 step_9
 step_10
 step_11
+step_12
 step_last
