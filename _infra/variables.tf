@@ -38,6 +38,13 @@ variable "artifact" {
     error_message = "Must be a file that was generated from the `make dist` command. The Development and Test environments will automatically create a git bundle instead."
   }
 }
+
+variable "database_dump_file" {
+  description = "A SQLite database dump file to use when first creating the legacy puzzle massive droplet."
+  type = string
+  default = "db.dump.gz"
+}
+
 variable "bucket_region" {
   type        = string
   description = "Bucket region. This will be used for CDN puzzle resources as well as artifacts."
@@ -156,6 +163,23 @@ variable "create_legacy_puzzle_massive_swap_b" {
   type        = bool
   default     = false
   description = "Used for creating a blue/green compatible legacy_puzzle_massive droplet that will be used for Production."
+}
+
+variable "new_swap" {
+  type = string
+  description = "Which swap is considered the new swap; either A or B."
+  validation {
+    condition     = can(regex("A|B", var.new_swap))
+    error_message = "Must be either 'A' or 'B' value."
+  }
+}
+variable "old_swap" {
+  type = string
+  description = "Which swap is considered the old swap; either A or B."
+  validation {
+    condition     = can(regex("A|B", var.old_swap))
+    error_message = "Must be either 'A' or 'B' value."
+  }
 }
 
 variable "is_cdn_volatile_active" {

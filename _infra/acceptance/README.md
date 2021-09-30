@@ -25,15 +25,17 @@ the command `source decrypt_tfvars.sh acceptance`.
 ./acceptance/terra.sh apply
 ```
 
-Check on the progress of a newly initialized legacy puzzle massive droplet.
-Depending on how quickly this playbook is executed; use either the '-u dev' or
-'-u root'.
+Example of setting and exporting ENVIRONMENT variable
 
 ```bash
 ENVIRONMENT=acceptance
-ansible-playbook ansible-playbooks/finished-cloud-init.yml \
- -u dev \
- -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive
+export ENVIRONMENT
+```
+
+Check on the progress of a newly initialized legacy puzzle massive droplet.
+
+```bash
+./bin/finished-cloud-init.sh $ENVIRONMENT
 ```
 
 ## Optional Create and Destroy SSL Certificates
@@ -46,12 +48,7 @@ absolute. Note that the Production environment will always provision certbot and
 use SSL certs, but can also be accessed without them.
 
 ```bash
-# Run the Ansible playbook to provision SSL Certificates
-ENVIRONMENT=acceptance
-ansible-playbook ansible-playbooks/provision-certbot.yml \
- -i $ENVIRONMENT/host_inventory.ansible.cfg \
- --ask-become-pass \
- --extra-vars "makeenvironment=$(test $ENVIRONMENT = 'development' && echo 'development' || echo 'production')"
+./bin/provision-certbot.sh $ENVIRONMENT
 ```
 
 ## Synchronize Puzzle Massive Resources Directory
@@ -61,22 +58,10 @@ in the resources directory might be empty if the site is configured to use the
 s3 bucket to store puzzle image files.
 
 ```bash
-read -p "Enter the path to puzzle massive resources directory:
-" RESOURCES_DIRECTORY
-
-# Verify that directory exists
-RESOURCES_DIRECTORY=$(realpath $RESOURCES_DIRECTORY)
-test -d $RESOURCES_DIRECTORY || echo "no directory at $RESOURCES_DIRECTORY"
-
-ENVIRONMENT=acceptance
-ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory.yml \
- -i $ENVIRONMENT/host_inventory.ansible.cfg \
- -u dev \
- --ask-become-pass \
- --extra-vars "resources_directory=$RESOURCES_DIRECTORY"
+./bin/sync-legacy-puzzle-massive-resources-directory-from-local.sh $ENVIRONMENT
 ```
 
-## Test Out In-Place Production Deployment
+## Test Out In-Place Deployment
 
 This assumes that the version has already been tested in the Development and
 Test environments and a dist file for that version exists.
@@ -87,6 +72,9 @@ First create a copy of the same version that is currently in production.
 # Checkout previous version that is in production and apply.
 git checkout master
 ./acceptance/terra.sh apply
+
+# Wait until it's finished and the site is up.
+./bin/finished-cloud-init.sh $ENVIRONMENT
 ```
 
 Then test the in-place quick deploy which will upgrade that version to the next
@@ -96,40 +84,27 @@ one.
 # Switch back to the 'release' branch
 git checkout release
 
-# Run the Ansible playbook for in-place deployments
-project_version=$(jq -r '.version' ../package.json)
-ENVIRONMENT=acceptance
-
-# Verify that the dist file has been made (make dist)
-DIST_FILE=../puzzle-massive-$project_version.tar.gz
-DIST_FILE=$(realpath $DIST_FILE)
-test -e $DIST_FILE || echo "no file at $DIST_FILE"
-
-ansible-playbook ansible-playbooks/in-place-quick-deploy.yml \
- -u dev \
- -i $ENVIRONMENT/host_inventory.ansible.cfg \
- --ask-become-pass \
- --extra-vars "message_file=../$ENVIRONMENT/puzzle-massive-message.html
- dist_file=$DIST_FILE
- makeenvironment=$(test $ENVIRONMENT = 'development' && echo 'development' || echo 'production')"
+./bin/in-place-quick-deploy.sh $ENVIRONMENT
 ```
 
 Verify that the new version works correctly in the Acceptance environment.
 
+## Test Out Stateful Swap Deployment
+
+_WIP_
+
 ## Clean up
 
-First, stop the auto renewal if certbot was provisioned for the Acceptance environment.
+Remove certbot auto renewal process and delete the provisioned certificate for
+the domain if the `./bin/provision-certbot.sh` script was used on the Acceptance
+environment.
 
 ```bash
-# unregister certbot account
-ENVIRONMENT=acceptance
-
-ansible-playbook ansible-playbooks/remove-certbot.yml \
- --ask-become-pass \
- -i $ENVIRONMENT/host_inventory.ansible.cfg
+./bin/remove-certbot.sh $ENVIRONMENT
 ```
 
+Destroy the project when it is no longer needed
+
 ```bash
-# Destroy the project when it is no longer needed
 ./acceptance/terra.sh destroy
 ```

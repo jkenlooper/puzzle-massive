@@ -80,6 +80,12 @@
     - name: Use 'flushdb' on the server to remove all keys on the redis database.
       command: "redis-cli -n {{ redis_db.stdout | quote }} flushdb"
 
+    - name: Touch sqlite3 database file db
+      ansible.builtin.file:
+        state: touch
+        owner: dev
+        group: dev
+        path: "/var/lib/puzzle-massive/sqlite3/db"
     - name: zcat of db dump file
       shell: "zcat {{ copied_db_dump_file.dest }} | sqlite3 /var/lib/puzzle-massive/sqlite3/db"
     - name: cat of db.dump.sql file

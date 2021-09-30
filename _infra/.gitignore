@@ -3,39 +3,47 @@
 .terraform.lock.hcl
 terraform.tfstate*
 
-# Generated from running terra.sh scripts
+# Generated from running scripts
 /development/puzzle-massive-*.bundle
 /development/db.dump.gz
+/development/db-md5sum-*.dump.gz
 /development/legacy_puzzle_massive_droplet-user_data.sh
 /development/cdn_droplet-user_data.sh
 /development/host_inventory.ansible.cfg
 /development/.deployment_step_state
 /development/.new_swap
 /development/allow_deny_admin.nginx.conf
+/development/resources/
 /test/puzzle-massive-*.bundle
 /test/db.dump.gz
+/test/db-md5sum-*.dump.gz
 /test/legacy_puzzle_massive_droplet-user_data.sh
 /test/cdn_droplet-user_data.sh
 /test/host_inventory.ansible.cfg
 /test/.deployment_step_state
 /test/.new_swap
 /test/allow_deny_admin.nginx.conf
+/test/resources/
 /acceptance/puzzle-massive-*.tar.gz
 /acceptance/db.dump.gz
+/acceptance/db-md5sum-*.dump.gz
 /acceptance/legacy_puzzle_massive_droplet-user_data.sh
 /acceptance/cdn_droplet-user_data.sh
 /acceptance/host_inventory.ansible.cfg
 /acceptance/.deployment_step_state
 /acceptance/.new_swap
 /acceptance/allow_deny_admin.nginx.conf
+/acceptance/resources/
 /production/puzzle-massive-*.tar.gz
 /production/db.dump.gz
+/production/db-md5sum-*.dump.gz
 /production/legacy_puzzle_massive_droplet-user_data.sh
 /production/cdn_droplet-user_data.sh
 /production/host_inventory.ansible.cfg
 /production/.deployment_step_state
 /production/.new_swap
 /production/allow_deny_admin.nginx.conf
+/production/resources/
 
 # These can have sensitive variables in them like the do_token.
 /*.auto.tfvars

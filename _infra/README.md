@@ -178,20 +178,12 @@ commands in a workspace. See the README.md for each environment.
 
 ### Stateful Swap Production Deployment
 
-wip
+The stateful swap deployment involves creating a new swap server with the new
+distribution and then removing the old swap server. This process has many steps
+involved because the application is stateful (SQLite database, Redis, and puzzle
+resource files).
 
-Steps involved to not always depend on using a DigitalOcean floating IP.
-DigitalOcean limits these to 3 per account.
-
-The `dig` command is used to find out the current DNS TTL. Use it with one of
-the DigitalOcean nameservers like this:
-
-```bash
-dig @ns1.digitalocean.com puzzle.massive.xyz
-```
-
-_Created an interactive script to handle deployments. Still untested and a work
-in progress._ See `_infra/stateful_swap_deploy.sh` script.
+An overview of the steps involved are shown below:
 
 1. Update DNS TTL to be shorter
 2. Wait until after DNS propagates (depending on previous TTL value)
@@ -205,6 +197,14 @@ in progress._ See `_infra/stateful_swap_deploy.sh` script.
 10. Remove DO floating IP
 11. Update DNS TTL to be longer
 
+These steps can be done via the stateful swap deploy script and involve running
+various commands including Terraform and Ansible commands. The script is
+interactive and will also allow starting at a specific step if necessary.
+
+```bash
+./bin/stateful_swap_deploy.sh $ENVIRONMENT
+```
+
 ### In-Place Production Deployment
 
 The in-place deployment requires fewer steps than the stateful swap deployment.
@@ -215,25 +215,12 @@ It is recommended to test an in-place deployment by running it against the
 acceptance environment that was stood up with the same version that is in
 production. See /\_infra/acceptance/README.md
 
-Set the ENVIRONMENT and DIST_FILE variables as needed for doing an in-place
+Set the ENVIRONMENT variable as needed for doing an in-place
 deployment. The dist file will need to be created by running the `make dist`
 command on the development machine.
 
 ```bash
-# Prompt for the dist file to use.
-DIST_FILE=$(read -p 'dist file (example: ../puzzle-massive-2.11.x.tar.gz): ' && echo $REPLY)
-DIST_FILE=$(realpath $DIST_FILE)
-test -e $DIST_FILE || echo "no file at $DIST_FILE"
-
-ENVIRONMENT=development
-
-ansible-playbook ansible-playbooks/in-place-quick-deploy.yml \
- -u dev \
- -i $ENVIRONMENT/host_inventory.ansible.cfg \
- --ask-become-pass \
- --extra-vars "message_file=../$ENVIRONMENT/puzzle-massive-message.html
- dist_file=$DIST_FILE
- makeenvironment=$(test $ENVIRONMENT = 'development' && echo 'development' || echo 'production')"
+./bin/in-place-quick-deploy.sh $ENVIRONMENT
 ```
 
 TODO: Create a rollback Ansible playbook for a failed in-place deployment.
@@ -253,17 +240,18 @@ ansible-galaxy install -r ansible-requirements.yml
 These Ansible playbooks should be run from the `_infra/` directory and set the ENVIRONMENT variable
 as needed.
 
+```bash
+# Example of setting and exporting ENVIRONMENT variable
+ENVIRONMENT=development
+export ENVIRONMENT
+```
+
 #### Update Packages and Reboot
 
 This will run an apt-get update and reboot the machine.
 
 ```bash
-ENVIRONMENT=development
-
-ansible-playbook ansible-playbooks/update-packages-and-reboot.yml \
- -i $ENVIRONMENT/host_inventory.ansible.cfg \
- --ask-become-pass \
- --extra-vars "message_file=../$ENVIRONMENT/puzzle-massive-message.html"
+./bin/update-packages-and-reboot.sh $ENVIRONMENT
 ```
 
 #### Add Admin User
@@ -280,43 +268,64 @@ NGINX service.
 1. Add an admin user with a password to be able to access the admin only section
 
    ```bash
-   ENVIRONMENT=development
-
-   # Prompt for the username to use.
-   BASIC_AUTH_USER=$(read -p 'username: ' && echo $REPLY)
-
-   # Prompt for the passphrase to use.
-   BASIC_AUTH_PASSPHRASE=$(read -sp 'passphrase: ' && echo $REPLY)
-
-   # Apply the username and passphrase
-   ansible-playbook ansible-playbooks/add-user-to-basic-auth.yml \
-    -i $ENVIRONMENT/host_inventory.ansible.cfg \
-    --ask-become-pass \
-    --extra-vars "user=$BASIC_AUTH_USER passphrase='$BASIC_AUTH_PASSPHRASE'"
+   ./bin/add-user-to-basic-auth.sh $ENVIRONMENT
    ```
 
-2. Include the IP address that will be allowed access to the Terraform variable 'admin_ips'
+2. Include the IP address that will be allowed access to the Terraform variable 'admin_ips' (usually set in `private.auto.tfvars`)
 
-3. Apply the changes using Terraform command (`./$ENVIRONMENT/terra.sh apply`) in order to update the `_infra/$ENVIRONMENT/allow_deny_admin.nginx.conf` file
+3. Apply the changes using Terraform command in order to update the local `allow_deny_admin.nginx.conf` file and firewall
+
+   ```bash
+   ./$ENVIRONMENT/terra.sh apply
+   ```
 
 4. Upload the new file and reload NGINX
 
    ```bash
-   ENVIRONMENT=development
-
-   # Verify that the file exists and is correct
-   ALLOW_DENY_ADMIN_NGINX_CONF=$(realpath $ENVIRONMENT/allow_deny_admin.nginx.conf)
-   test -e $ALLOW_DENY_ADMIN_NGINX_CONF || echo "no file at $ALLOW_DENY_ADMIN_NGINX_CONF"
-   cat $ALLOW_DENY_ADMIN_NGINX_CONF
-
-   # Apply the new allow_deny_admin.nginx.conf file
-   ansible-playbook ansible-playbooks/update-allow_deny_admin_nginx_conf.yml \
-    -i $ENVIRONMENT/host_inventory.ansible.cfg \
-    --ask-become-pass \
-    --extra-vars "allow_deny_admin_nginx_conf=$ALLOW_DENY_ADMIN_NGINX_CONF"
+   ./bin/update-allow_deny_admin_nginx_conf.sh $ENVIRONMENT
    ```
 
-#### Others
+#### Manage Puzzle Resources and Database
 
-ad-hoc command
-ansible legacy_puzzle_massive -m command -a "echo 'hi'" -i development/inventory
+Stop the app and it will create a backup database dump file which will be
+uploaded to the S3 bucket.
+
+```bash
+./bin/appctl-stop.sh $ENVIRONMENT
+```
+
+Start the app and it's services.
+
+```bash
+./bin/appctl-start.sh $ENVIRONMENT
+```
+
+Download the puzzle resources directory _to_ the local machine.
+
+```bash
+./bin/sync-legacy-puzzle-massive-resources-directory-to-local.sh $ENVIRONMENT
+```
+
+Replace the database with a local database dump file.
+
+```bash
+./bin/restore-db-on-legacy-puzzle-massive.sh $ENVIRONMENT
+```
+
+Upload the puzzle resources directory _from_ the local machine.
+
+```bash
+./bin/sync-legacy-puzzle-massive-resources-directory-from-local.sh $ENVIRONMENT
+```
+
+### Ad-hoc Command
+
+```bash
+ENVIRONMENT=development
+
+ansible \
+ legacy_puzzle_massive \
+ -i $ENVIRONMENT/host_inventory.ansible.cfg \
+ -m command \
+ -a "echo 'hi'"
+```

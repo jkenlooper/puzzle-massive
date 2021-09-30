@@ -18,6 +18,8 @@ Deployment using Terraform for the environment that was passed in as the first
 arg.  This command will wait for DNS TTL to timeout when making changes. During
 the deployment you will be prompted to edit the Terraform variables:
 
+- old_swap
+- new_swap
 - is_swap_a_active
 - is_swap_b_active
 - create_legacy_puzzle_massive_swap_a
@@ -28,11 +30,12 @@ These variables should be set in a _infra/[environment]/private.tfvars file.
 There are multiple steps in this deployment script. The last successful step is
 saved locally and may be skipped to.
 
+More information for this script is in the _infra/README.md document.
+
 USAGE
   exit 0;
 }
 
-PROVISION_CERTS=0
 
 STEP_STATE=1
 while getopts ":hs:" opt; do
@@ -50,9 +53,15 @@ while getopts ":hs:" opt; do
 done;
 shift "$((OPTIND-1))";
 
-ENVIRONMENT=$1
+bin_dir=$(dirname $(realpath $0))
+source $bin_dir/common-functions.sh
 
-test $(basename $PWD) = "_infra" || (echo "Must run this script from the _infra directory." && exit 1)
+ENVIRONMENT=${1-$ENVIRONMENT}
+
+# Only Acceptance and Production will be publicly available so provisioning
+# certs would then be done.
+PROVISION_CERTS=$(test "$ENVIRONMENT" = "acceptance" -o "$ENVIRONMENT" = "production" && echo "1" || echo "0")
+
 test -e $ENVIRONMENT/terra.sh || (echo "No terra.sh found in _infra/$ENVIRONMENT/ directory." && exit 1)
 test -e $ENVIRONMENT/private.tfvars || (echo "No terraform private variables file found at $ENVIRONMENT/private.tfvars" && exit 1)
 
@@ -68,11 +77,17 @@ The is_volatile_active terraform variable should be 'false' for a stateful swap 
 Try using the './$ENVIRONMENT/terra.sh apply' command if not needing to do
 a stateful swap deployment.
 " && exit 1)
+TEST_old_swap=$(echo "var.old_swap" | \
+  ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1 | xargs)
+TEST_new_swap=$(echo "var.new_swap" | \
+  ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1 | xargs)
 TEST_is_swap_a_active=$(echo "var.is_swap_a_active" | \
   ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1)
 TEST_is_swap_b_active=$(echo "var.is_swap_b_active" | \
   ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1)
 test "${TEST_is_swap_a_active}" = "true" -o "${TEST_is_swap_b_active}" = "true" || (echo "At least one is_swap_a_active or is_swap_b_active terraform variable should be 'true' for a stateful swap deployment." && exit 1)
+echo "old_swap = '${TEST_old_swap}'"
+echo "new_swap = '${TEST_new_swap}'"
 
 # Determine the old swap and new swap.
 if [ "$STEP_STATE" = "1" ]; then
@@ -93,6 +108,18 @@ echo "
 old swap is: $OLD_SWAP
 new swap is: $NEW_SWAP
 "
+if [ "$OLD_SWAP" != "$TEST_old_swap" -o "$NEW_SWAP" != "$TEST_new_swap" ]; then
+  echo "
+ERROR: The old_swap and new_swap values are not consistent with
+       is_swap_a_active and is_swap_b_active variables.
+
+Update these variables in the _infra/$ENVIRONMENT/private.tfvars file.
+Should be set like this:
+old_swap = \"$OLD_SWAP\"
+new_swap = \"$NEW_SWAP\"
+"
+  exit 1
+fi
 
 # Check to see if the terraform variables can be modified via setting TF_VAR_*
 # environment variables.
@@ -317,7 +344,7 @@ create_legacy_puzzle_massive_swap_a = true
 create_legacy_puzzle_massive_swap_b = true
 Continue? [y/n] " -n1 CONFIRM
 if [ $CONFIRM != "y" ]; then
-  echo "Cancelled deployment."
+  echo "Canceled deployment."
   exit 0
 fi
 
@@ -326,24 +353,53 @@ TF_VAR_create_floating_ip_puzzle_massive=true \
 TF_VAR_is_floating_ip_active=true \
   ./$ENVIRONMENT/terra.sh apply
 
+echo "Waiting for 80 seconds before attempting to connect to newly provisioned droplet."
 # Wait for a bit before trying to connect to the newly provisioned droplet.
-sleep 40
+sleep 80
 
 # Run Ansible playbooks to setup newly provisioned swap with data from old swap.
 # TODO: how to not ask for the become password each time?
 ansible-playbook ansible-playbooks/add-host-to-known_hosts.yml \
   -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
 
-ansible-playbook ansible-playbooks/finished-cloud-init.yml -u root -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
+ansible-playbook ansible-playbooks/finished-cloud-init.yml \
+  -u dev \
+  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+  --limit legacy_puzzle_massive_new_swap
+
+# Strange way of getting IP address of new swap.
+NEW_SWAP_IP=$(ansible -m debug \
+  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+  -a "gather_facts=true" \
+  -a "var=hostvars[inventory_hostname]" \
+  legacy_puzzle_massive_new_swap \
+  | sed 's#.*SUCCESS =>##' \
+  | jq -r '.["hostvars[inventory_hostname]"].inventory_hostname')
+
+echo "ssh in as dev and set the password if it has been marked to be reset.
+ssh dev@${NEW_SWAP_IP}
+"
+ssh dev@${NEW_SWAP_IP}
+
 test $PROVISION_CERTS -eq 1 \
   && ansible-playbook ansible-playbooks/copy-certs-to-new-swap.yml -i $ENVIRONMENT/host_inventory.ansible.cfg \
   || echo 'no copy certs'
 
 ansible-playbook ansible-playbooks/make-install-and-reload-nginx.yml \
   --ask-become-pass \
-  -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
+  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+  --limit legacy_puzzle_massive_new_swap
 
-ansible-playbook ansible-playbooks/switch-data-over-to-new-swap.yml -i $ENVIRONMENT/host_inventory.ansible.cfg
+RESOURCES_DIRECTORY=$ENVIRONMENT/resources
+RESOURCES_DIRECTORY=$(realpath $RESOURCES_DIRECTORY)
+HTPASSWD_FILE=$(realpath $ENVIRONMENT/.htpasswd)
+OLD_SWAP_DB_BACKUP=$(realpath $ENVIRONMENT/db-old_swap.dump.gz)
+ansible-playbook ansible-playbooks/switch-data-over-to-new-swap.yml \
+  --ask-become-pass \
+  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+  --extra-vars "htpasswd_file=$HTPASSWD_FILE
+  old_swap_db_backup=$OLD_SWAP_DB_BACKUP
+  resources_directory=$RESOURCES_DIRECTORY"
 
 ansible-playbook ansible-playbooks/appctl-start.yml \
   --ask-become-pass \
@@ -354,9 +410,6 @@ test $PROVISION_CERTS -eq 1 \
   -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap \
   || echo 'no provision certs'
 
-# Gross way of getting new swap ip address.
-NEW_SWAP_IP=$(echo "\"$NEW_SWAP\" == \"A\"" ' ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : ' "\"$NEW_SWAP\" == \"B\"" ' ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : null' | \
-  ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1 | xargs)
 echo "The IP for the new swap '$NEW_SWAP' in $ENVIRONMENT environment is:
 $NEW_SWAP_IP
 It is recommended to temporarily update your /etc/hosts file to use this ip like so:
@@ -522,8 +575,29 @@ echo "
 set_step_state 12
 }
 
-step_last () {
+step_12 () {
 test "$STEP_STATE" != "12" && return
+echo "
+################################################################################
+# 12. Update old_swap and new_swap variables.
+################################################################################
+"
+
+read -p "
+Update these variables in the _infra/$ENVIRONMENT/private.tfvars file.
+Should be set like this:
+old_swap = \"$NEW_SWAP\"
+new_swap = \"$OLD_SWAP\"
+Continue? [y/n] " -n1 CONFIRM
+  if [ $CONFIRM != "y" ]; then
+    echo "Cancelled."
+    exit 0
+  fi
+set_step_state 13
+}
+
+step_last () {
+test "$STEP_STATE" != "13" && return
 echo "
 ################################################################################
 # All done.
@@ -546,4 +620,5 @@ step_8
 step_9
 step_10
 step_11
+step_12
 step_last

@@ -179,7 +179,7 @@ install:
 .PHONY: clean
 clean:
 	rm $(objects)
-	echo $(objects) | xargs rm -f
+	printf '%s\0' $(objects) | xargs -0 rm -f
 	$(PIP) uninstall --yes -r chill/requirements.txt
 	$(PIP) uninstall --yes -r api/requirements.txt
 	$(PIP) uninstall --yes -r divulger/requirements.txt

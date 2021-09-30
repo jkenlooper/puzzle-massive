@@ -36,15 +36,17 @@ for it can be tailed:
 sudo tail -f /var/log/cloud-init-output.log
 ```
 
-Check on the progress of a newly initialized legacy puzzle massive droplet.
-Depending on how quickly this playbook is executed; use either the '-u dev' or
-'-u root'.
+Example of setting and exporting ENVIRONMENT variable
 
 ```bash
 ENVIRONMENT=development
-ansible-playbook ansible-playbooks/finished-cloud-init.yml \
- -u dev \
- -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive
+export ENVIRONMENT
+```
+
+Check on the progress of a newly initialized legacy puzzle massive droplet.
+
+```bash
+./bin/finished-cloud-init.sh $ENVIRONMENT
 ```
 
 ## Add Data From Local
@@ -54,20 +56,7 @@ in the resources directory might be empty if the site is configured to use the
 s3 bucket to store puzzle image files.
 
 ```bash
-read -p "Enter the path to puzzle massive resources directory:
-" RESOURCES_DIRECTORY
-
-# Verify that directory exists
-RESOURCES_DIRECTORY=$(realpath $RESOURCES_DIRECTORY)
-test -d $RESOURCES_DIRECTORY || echo "no directory at $RESOURCES_DIRECTORY"
-
-ENVIRONMENT=development
-
-ansible-playbook ansible-playbooks/sync-legacy-puzzle-massive-resources-directory.yml \
- -i $ENVIRONMENT/host_inventory.ansible.cfg \
- -u dev \
- --ask-become-pass \
- --extra-vars "resources_directory=$RESOURCES_DIRECTORY"
+./bin/sync-legacy-puzzle-massive-resources-directory-from-local.sh $ENVIRONMENT
 ```
 
 A db.dump.gz file can also replace an existing database for the development
@@ -77,21 +66,7 @@ first creating the development environment the `_infra/development/db.dump.gz`
 is used.
 
 ```bash
-read -p "Enter the path to a db.dump.gz to replace the current sqlite database
-with:
-" DB_DUMP_FILE
-
-# Verify that file exists
-DB_DUMP_FILE=$(realpath $DB_DUMP_FILE)
-test -e $DB_DUMP_FILE || echo "no file at $DB_DUMP_FILE"
-
-ENVIRONMENT=development
-
-ansible-playbook ansible-playbooks/restore-db-on-legacy-puzzle-massive.yml \
- -i $ENVIRONMENT/host_inventory.ansible.cfg \
- -u dev \
- --ask-become-pass \
- --extra-vars "db_dump_file=$DB_DUMP_FILE"
+./bin/restore-db-on-legacy-puzzle-massive.sh $ENVIRONMENT
 ```
 
 ## Accessing the Droplet

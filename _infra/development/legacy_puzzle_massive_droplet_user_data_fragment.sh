@@ -42,6 +42,7 @@ su --command '
 
 # Continue only if database dump file is not empty.
 DBDUMPFILE=/home/dev/db.dump.gz
+export DBDUMPFILE
 echo "Checking if the $DBDUMPFILE is empty. Will stop here if it is."
 test -s $DBDUMPFILE || exit 0
 # The rest of this should usually just be applicable for the Acceptance or Development environments.
@@ -64,6 +65,7 @@ su --command '
 # The rsync of puzzle resources should be done later with an Ansible playbook.
 
 su --command '
+  touch /var/lib/puzzle-massive/sqlite3/db
   zcat $DBDUMPFILE | sqlite3 /var/lib/puzzle-massive/sqlite3/db
   cat db.dump.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
   echo "pragma journal_mode=wal" | sqlite3 /var/lib/puzzle-massive/sqlite3/db
@@ -71,7 +73,7 @@ su --command '
   # TODO: run migrate scripts here?
 
   ./bin/python api/api/jobs/insert-or-replace-bit-icons.py
-  ./bin/python api/api/update_enabled_puzzle_features.py;
+  ./bin/python api/api/update_enabled_puzzle_features.py
 ' dev
 
 ./bin/appctl.sh start;

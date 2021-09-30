@@ -18,6 +18,7 @@ resource "digitalocean_project" "puzzle_massive" {
     one(digitalocean_droplet.legacy_puzzle_massive_volatile[*].urn),
     one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].urn),
     one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].urn),
+    one(digitalocean_floating_ip.legacy_puzzle_massive[*].urn),
     one(digitalocean_spaces_bucket.cdn[*].urn),
     one(digitalocean_spaces_bucket.cdn_volatile[*].urn),
     digitalocean_spaces_bucket.ephemeral_artifacts.urn,
@@ -158,16 +159,16 @@ resource "local_file" "host_inventory" {
   %{endfor~}
 
   [legacy_puzzle_massive:vars]
-  new_swap=${var.is_swap_a_active == true && var.is_swap_b_active == false && one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) != null ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : var.is_swap_a_active == false && var.is_swap_b_active == true && one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) != null ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : ""}
-  old_swap=${var.is_swap_a_active == false && var.is_swap_b_active == true && one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) != null ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : var.is_swap_a_active == true && var.is_swap_b_active == false && one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) != null ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : ""}
+  new_swap=${var.create_legacy_puzzle_massive_swap_a && var.new_swap == "A" ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : var.create_legacy_puzzle_massive_swap_b && var.new_swap == "B" ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : ""}
+  old_swap=${var.create_legacy_puzzle_massive_swap_a && var.old_swap == "A" ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : var.create_legacy_puzzle_massive_swap_b && var.old_swap == "B" ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : ""}
   ${fileexists("${lower(var.environment)}/puzzle-massive-message.html") ? "message_file=../${lower(var.environment)}/puzzle-massive-message.html" : "message_file=../../root/puzzle-massive-message.html"}
   domain_name=${var.sub_domain}${var.domain}
 
   [legacy_puzzle_massive_new_swap]
-  ${var.is_swap_a_active == true && var.is_swap_b_active == false && one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) != null ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : var.is_swap_a_active == false && var.is_swap_b_active == true && one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) != null ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : ""}
+  ${var.create_legacy_puzzle_massive_swap_a && var.new_swap == "A" ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : var.create_legacy_puzzle_massive_swap_b && var.new_swap == "B" ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : ""}
 
   [legacy_puzzle_massive_old_swap]
-  ${var.is_swap_a_active == false && var.is_swap_b_active == true && one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) != null ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : var.is_swap_a_active == true && var.is_swap_b_active == false && one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) != null ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : ""}
+  ${var.create_legacy_puzzle_massive_swap_a && var.old_swap == "A" ? one(digitalocean_droplet.legacy_puzzle_massive_swap_a[*].ipv4_address) : var.create_legacy_puzzle_massive_swap_b && var.old_swap == "B" ? one(digitalocean_droplet.legacy_puzzle_massive_swap_b[*].ipv4_address) : ""}
 
   [cdn]
   %{for ipv4_address in compact(flatten([digitalocean_droplet.cdn_volatile[*].ipv4_address, digitalocean_droplet.cdn[*].ipv4_address]))~}
