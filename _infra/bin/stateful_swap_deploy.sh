@@ -382,7 +382,9 @@ ssh dev@${NEW_SWAP_IP}
 ssh dev@${NEW_SWAP_IP}
 
 test $PROVISION_CERTS -eq 1 \
-  && ansible-playbook ansible-playbooks/copy-certs-to-new-swap.yml -i $ENVIRONMENT/host_inventory.ansible.cfg \
+  && ansible-playbook ansible-playbooks/copy-certs-to-new-swap.yml \
+  --ask-become-pass \
+  -i $ENVIRONMENT/host_inventory.ansible.cfg \
   || echo 'no copy certs'
 
 ansible-playbook ansible-playbooks/make-install-and-reload-nginx.yml \
@@ -408,6 +410,8 @@ ansible-playbook ansible-playbooks/appctl-start.yml \
 test $PROVISION_CERTS -eq 1 \
   && ansible-playbook ansible-playbooks/provision-certbot.yml \
   -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap \
+  --ask-become-pass \
+  --extra-vars "makeenvironment=$(test $ENVIRONMENT = 'development' && echo 'development' || echo 'production')"
   || echo 'no provision certs'
 
 echo "The IP for the new swap '$NEW_SWAP' in $ENVIRONMENT environment is:

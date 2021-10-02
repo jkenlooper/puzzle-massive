@@ -112,7 +112,7 @@ _Git tags with test/ as their prefix may be removed later to clean things up._
 _Work in Progress_
 
 Create a temporary instance for staging the release. This uses a recent backup copy of
-the production data, but is **not** used for blue/green deployments. The instance
+the production data, but is **not** used for production deployments. The instance
 is destroyed after it passes acceptance.
 
 A `hotfix/*` branch should be created off of the `production` branch when
@@ -127,7 +127,7 @@ environment is created from the hotfix branch.
 
 _Work in Progress_
 
-Either a new instance is created when following blue/green deployments or it is
+Either a new instance is created when following stateful swap deployments or it is
 updated in-place.
 
 A git tag of the version is created after successfully deploying to production.
@@ -196,6 +196,7 @@ An overview of the steps involved are shown below:
 9. Wait until after DNS propagates (depending on previous TTL value)
 10. Remove DO floating IP
 11. Update DNS TTL to be longer
+12. Update old_swap and new_swap variables
 
 These steps can be done via the stateful swap deploy script and involve running
 various commands including Terraform and Ansible commands. The script is

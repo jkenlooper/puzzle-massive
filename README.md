@@ -12,21 +12,10 @@ Bugs and feature requests can be tracked via the projects source code repository
 https://github.com/jkenlooper/puzzle-massive/issues
 or send an email to puzzle-bug@massive.xyz with a description.
 
-This project has been moved to GitHub with a fresher git commit history. The
-previous git commit history is available upon request. I've chosen to make
-Puzzle Massive an open source project under the GNU Affero General Public
-License.
-
-**[Changelog since 2.0.0](CHANGELOG.md)**
-
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
 [![code style: prettier](https://img.shields.io/badge/code%20style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 [![code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
-
-[![Chat on Discord](https://img.shields.io/badge/chat-on%20Discord-green.svg)](https://discord.gg/uVhE2Kd)
-
-[![DigitalOcean Referral Badge](https://web-platforms.sfo2.digitaloceanspaces.com/WWW/Badge%203.svg)](https://www.digitalocean.com/?refcode=686c08019031&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge)
 
 ## Local Install Instructions (TL;DR)
 
@@ -54,13 +43,31 @@ vagrant provision --provision-with shell-testdata-puzzles-quick
 
 ## Getting Help
 
-I try to monitor the chat channels on the [Discord server for Puzzle
-Massive](https://discord.gg/uVhE2Kd). This project is slightly complex with
+Ask questions on:
+
+- [Puzzle Massive Discussions](https://github.com/jkenlooper/puzzle-massive/discussions)
+- [Chat on Discord](https://discord.gg/uVhE2Kd)
+- [Slack](https://join.slack.com/t/puzzlemassive/shared_invite/zt-v2csgv8y-Ldl93sNb3Gcm~NiWt3g5UA)
+
+I try to monitor the Puzzle Massive chat channels on
+[Discord](https://discord.gg/uVhE2Kd)
+and
+[Slack](https://join.slack.com/t/puzzlemassive/shared_invite/zt-v2csgv8y-Ldl93sNb3Gcm~NiWt3g5UA)
+. This project is slightly complex with
 a few moving pieces (pun intended); that being said, there is a good chance that
 a piece or two are missing when putting the project together. If you have ran
 into a problem getting this project working on your own machine; please ask for
 help. I'm looking to improve the process where I can and am looking for more
 experience helping others in web development stuff like this.
+
+## Change Log and History
+
+This project has been moved to GitHub with a fresher git commit history. The
+previous git commit history is available upon request. I've chosen to make
+Puzzle Massive an open source project under the GNU Affero General Public
+License.
+
+**[Changelog since 2.0.0](CHANGELOG.md)**
 
 ## License
 
@@ -96,3 +103,7 @@ snippets and such for the project.
 <small>The structure of this project inherits from this
 [cookiecutter-website version 0.1.0](https://github.com/jkenlooper/cookiecutter-website)
 and is up to date with version 0.4.0 on 2020-04-21.</small>
+
+---
+
+[![DigitalOcean Referral Badge](https://web-platforms.sfo2.digitaloceanspaces.com/WWW/Badge%203.svg)](https://www.digitalocean.com/?refcode=686c08019031&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge)

@@ -5,7 +5,7 @@ using a recent copy of the production data. A less than 24 hour old db.dump.gz
 will need to be added at the `_infra/acceptance/db.dump.gz` path. This should
 be taken from the production environment. A recent copy of the Puzzle Massive
 resources directory should also be available and can be synchronized after the
-acceptance environment is provivisioned.
+acceptance environment is provisioned.
 
 Use the helper script for running the normal terraform commands. These should
 be ran from the `_infra/` directory since that is where the `.tf` files are
@@ -38,14 +38,14 @@ Check on the progress of a newly initialized legacy puzzle massive droplet.
 ./bin/finished-cloud-init.sh $ENVIRONMENT
 ```
 
-## Optional Create and Destroy SSL Certificates
+## Optional Create SSL Certificates
 
 The commands to create the SSL Certificates with the Let's Encrypt certbot can
 be tested out in the Acceptance environment. This step is optional since the
 site can be run with just http scheme. The site also uses a protocol-relative
 URL ( '//' instead of 'http://' or 'https://' ) for any URLs that need to be
-absolute. Note that the Production environment will always provision certbot and
-use SSL certs, but can also be accessed without them.
+absolute. Note that the Production environment should always provision certbot
+and use SSL certs, but can also be accessed without them.
 
 ```bash
 ./bin/provision-certbot.sh $ENVIRONMENT
@@ -91,7 +91,13 @@ Verify that the new version works correctly in the Acceptance environment.
 
 ## Test Out Stateful Swap Deployment
 
-_WIP_
+The stateful swap deployment works by creating a new Puzzle Massive instance and
+copying all the data over from the current instance before switching traffic
+over to it.
+
+```bash
+./bin/stateful_swap_deploy.sh $ENVIRONMENT
+```
 
 ## Clean up
 
@@ -103,7 +109,9 @@ environment.
 ./bin/remove-certbot.sh $ENVIRONMENT
 ```
 
-Destroy the project when it is no longer needed
+Destroy the project when it is no longer needed. Or update the
+/acceptance/private.tfvars to not create any of the droplets and then run the
+`./acceptance/terra.sh apply` command.
 
 ```bash
 ./acceptance/terra.sh destroy
