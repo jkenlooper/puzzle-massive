@@ -6,7 +6,6 @@ import tempfile
 
 import requests
 from flask import current_app
-from werkzeug.utils import escape
 
 from api.app import redis_connection
 from api.puzzle_resource import PuzzleResource
@@ -82,7 +81,7 @@ def add_photo_to_puzzle(puzzle_id, photo, description, original_filename):
         r = requests.get(download)
         with open(filename, "w+b") as f:
             f.write(r.content)
-        pr.put_file(filename, private=True)
+        pr.put_file(filename)
         rmtree(tmp_dir)
 
         r = requests.patch(
