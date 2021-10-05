@@ -32,4 +32,5 @@ Executing Ansible playbook: provision-certbot.yml
 ansible-playbook ansible-playbooks/provision-certbot.yml \
  -i $ENVIRONMENT/host_inventory.ansible.cfg \
  --ask-become-pass \
- --extra-vars "makeenvironment=$(test $ENVIRONMENT = 'development' && echo 'development' || echo 'production')"
+ --extra-vars "makeenvironment=$(test $ENVIRONMENT = 'development' && echo 'development' || echo 'production')
+ testcert=$(test $ENVIRONMENT = 'production' && echo '' || echo '--test-cert')"
