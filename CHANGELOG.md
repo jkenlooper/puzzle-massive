@@ -42,7 +42,7 @@ Thanks to BP4rker, JackNichols101, and avmonster.
 - Added click sound when a piece joins (BP4rker's team).
 - Cancel or unselect a piece (BP4rker's team). Work in progress [issue #41](https://github.com/jkenlooper/puzzle-massive/issues/41)
 - Puzzle timer (BP4rker's team). Work in progress [issue #40](https://github.com/jkenlooper/puzzle-massive/issues/40)
-- Terraform deployment for a development environment. Work in progress of [issue #92](https://github.com/jkenlooper/puzzle-massive/issues/92)
+- Terraform deployment for DTAP environments.
 - Support for referral content in footer.
 - Default vagrant setup uses a local CDN that is backed by a local fake S3 server.
 - Script to move puzzle resources to be from S3 or back to being locally hosted.
