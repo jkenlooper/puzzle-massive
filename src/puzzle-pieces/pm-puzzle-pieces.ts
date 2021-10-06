@@ -10,6 +10,7 @@
 // make things more challenging. ;)
 
 import { rgbToHsl } from "../site/utilities";
+import playerSettingsService from "../player-settings/player-settings.service";
 import hashColorService from "../hash-color/hash-color.service";
 import { puzzleService, PieceData } from "./puzzle.service";
 import { streamService, KarmaData, PieceMovementData } from "./stream.service";
@@ -272,7 +273,9 @@ customElements.define(
         this.instanceId
       );
 
-      this.audioPuzzlePieceClick = new Audio("/media/536108__eminyildirim__ui-click.wav");
+      this.audioPuzzlePieceClick = new Audio(
+        "/media/536108__eminyildirim__ui-click.wav"
+      );
     }
 
     onPuzzleStatus(status: Status) {
@@ -499,7 +502,9 @@ customElements.define(
       if ($_piece !== null && karmaData.karmaChange) {
         if (karmaData.karmaChange > 0) {
           $_piece.classList.add("is-up");
-          this.audioPuzzlePieceClick.play();
+          if (playerSettingsService.playPuzzlePieceSound) {
+            this.audioPuzzlePieceClick.play();
+          }
         } else if (karmaData.karmaChange < 0 && karmaData.karma < 18) {
           // Only show is-down icon if risk of player being blocked.
           $_piece.classList.add("is-down");

@@ -6,3 +6,4 @@ import "../player-email-register";
 import "../claim-player-by-token";
 import "../reset-login-by-token";
 import "../login-by-email";
+import "../player-settings";

@@ -39,7 +39,7 @@ Thanks to BP4rker, JackNichols101, and avmonster.
 
 ### Added
 
-- Added click sound when a piece joins (BP4rker's team). Work in progress of [issue #81](https://github.com/jkenlooper/puzzle-massive/issues/81)
+- Added click sound when a piece joins (BP4rker's team).
 - Cancel or unselect a piece (BP4rker's team). Work in progress [issue #41](https://github.com/jkenlooper/puzzle-massive/issues/41)
 - Puzzle timer (BP4rker's team). Work in progress [issue #40](https://github.com/jkenlooper/puzzle-massive/issues/40)
 - Terraform deployment for a development environment. Work in progress of [issue #92](https://github.com/jkenlooper/puzzle-massive/issues/92)
