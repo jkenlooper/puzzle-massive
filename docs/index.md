@@ -1,4 +1,43 @@
-Coming soon? Maybe?
+##Overview
+
+![Overview chart](./index-1.md.svg)
+
+<details>
+<summary>overview er diagram</summary>
+
+```mermaid
+erDiagram
+  WEB_SERVER ||--|{ STATIC_FILE_DIR : "proxies requests"
+  WEB_SERVER ||--|{ PYTHON_FLASK_APP : "proxies requests"
+  WEB_SERVER ||--|| CHILL : "proxies requests"
+  CDN_WEB_SERVER ||--|| S3_BUCKET : "proxies requests"
+  PYTHON_FLASK_APP }|--|| REDIS : ""
+  PYTHON_FLASK_APP }|--|| QUERIES_DIR : ""
+  PYTHON_FLASK_APP ||--|| SQLITE_DATABASE : "writes"
+  PYTHON_FLASK_APP }|..|| SQLITE_DATABASE : "reads"
+  PYTHON_APP }|..|| SQLITE_DATABASE : "reads"
+  PYTHON_APP }|--|| REDIS : ""
+  CHILL ||..|| SQLITE_DATABASE : "reads"
+  CHILL ||--|| QUERIES_DIR : ""
+  CHILL ||--|| TEMPLATES_DIR : "creates HTML"
+  CHILL ||--|| DOCUMENTS_DIR : "creates HTML"
+```
+
+<!-- Too much detail...
+CHILL ||..|| SQLITE_DATABASE : "reads from"
+CHILL ||..|| QUERIES_DIRECTORY : "uses"
+CHILL ||..|| TEMPLATES_DIRECTORY : "uses"
+CHILL ||..|| DOCUMENTS_DIRECTORY : "uses"
+
+NGINX_WEB_SERVER**LEGACY_CACHE ||--|| LEGACY_CACHE_NGINX_CONF : "uses configuration file"
+NGINX_WEB_SERVER**LEGACY_CACHE ||--|| CACHE_DIR : "Stores responses in a cache directory"
+NGINX_WEB_SERVER**LEGACY_CACHE ||--|| NGINX_WEB_SERVER**LEGACY_ORIGIN : "Proxies requests to"
+NGINX_WEB_SERVER**LEGACY_ORIGIN ||--|| ROUTE_NEWAPI : "Defines"
+NGINX_WEB_SERVER**LEGACY_ORIGIN ||--|| ROUTE_CHILL : "Defines"
+ROUTE_CHILL ||--|| CHILL : "Proxies requests to"
+-->
+
+</details>
 
 ## Notes on the top level directories
 

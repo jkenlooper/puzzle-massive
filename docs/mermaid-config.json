@@ -1,0 +1,8 @@
+{
+    "er": {
+        "diagramPadding": 20,
+        "layoutDirection": "LR"
+    },
+    "offtheme": "forest",
+    "themeCSS": ".node rect { fill: white; }"
+}

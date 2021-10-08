@@ -1,1 +1,2 @@
 /package-lock.json -diff
+/docs/*.md.svg -diff

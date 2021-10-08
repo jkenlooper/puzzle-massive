@@ -24,7 +24,7 @@ fi)
 nvm use;
 
 # Build
-npm ci; # clean install
+npm ci --omit=dev --ignore-scripts # clean install
 npm run build;
 
 # Create symlinks for all files in the MANIFEST.
