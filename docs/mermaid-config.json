@@ -1,8 +1,19 @@
 {
     "er": {
-        "diagramPadding": 20,
+        "diagramPadding": 0,
         "layoutDirection": "LR"
     },
-    "offtheme": "forest",
-    "themeCSS": ".node rect { fill: white; }"
+    "theme": "base",
+    "themeVariables": {
+        "background": "#dd2200",
+        "primaryColor": "#262626",
+        "primaryTextColor": "#bcc0c2",
+        "primaryBorderColor": "#3d91cc",
+        "noteBkgColor": "#7ebcde",
+        "noteTextColor": "#d5d9db",
+        "noteBorderColor": "#262626",
+        "lineColor": "#3d91cc",
+        "textColor": "#c28265"
+    },
+    "themeCSS": "text.er.relationshipLabel {font-weight: bold;} rect.er.relationshipLabelBox {opacity: 0;}"
 }
