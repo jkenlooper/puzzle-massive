@@ -5,7 +5,7 @@
 @import "../settings/custom-media.css";
 
 /* 0 Generic */
-@import "normalize.css";
+@import "../../node_modules/normalize.css/normalize.css";
 @import "0-generic-reset.css";
 
 /* 1 Elements */

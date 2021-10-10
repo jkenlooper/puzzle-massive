@@ -1,0 +1,81 @@
+/**
+ * @define utilities
+ *
+ * Spacing can be applied using either margin or padding. Both margin and
+ * padding share the same predefined scale. There are 5 available spacing sizes:
+ * Xs, Sm, Md, Lg, or Xl.
+ */
+
+:root {
+  --spaceXs: 8px;
+  --spaceSm: 16px;
+  --spaceMd: 32px;
+  --spaceLg: 64px;
+  --spaceXl: 128px;
+}
+
+/* Margin
+   ========================================================================== */
+
+.u-marginXs { margin: var(--spaceXs) !important; }
+.u-marginSm { margin: var(--spaceSm) !important; }
+.u-marginMd { margin: var(--spaceMd) !important; }
+.u-marginLg { margin: var(--spaceLg) !important; }
+.u-marginXl { margin: var(--spaceXl) !important; }
+
+.u-marginTopXs { margin-top: var(--spaceXs) !important; }
+.u-marginTopSm { margin-top: var(--spaceSm) !important; }
+.u-marginTopMd { margin-top: var(--spaceMd) !important; }
+.u-marginTopLg { margin-top: var(--spaceLg) !important; }
+.u-marginTopXl { margin-top: var(--spaceXl) !important; }
+
+.u-marginRightXs { margin-right: var(--spaceXs) !important; }
+.u-marginRightSm { margin-right: var(--spaceSm) !important; }
+.u-marginRightMd { margin-right: var(--spaceMd) !important; }
+.u-marginRightLg { margin-right: var(--spaceLg) !important; }
+.u-marginRightXl { margin-right: var(--spaceXl) !important; }
+
+.u-marginBottomXs { margin-bottom: var(--spaceXs) !important; }
+.u-marginBottomSm { margin-bottom: var(--spaceSm) !important; }
+.u-marginBottomMd { margin-bottom: var(--spaceMd) !important; }
+.u-marginBottomLg { margin-bottom: var(--spaceLg) !important; }
+.u-marginBottomXl { margin-bottom: var(--spaceXl) !important; }
+
+.u-marginLeftXs { margin-left: var(--spaceXs) !important; }
+.u-marginLeftSm { margin-left: var(--spaceSm) !important; }
+.u-marginLeftMd { margin-left: var(--spaceMd) !important; }
+.u-marginLeftLg { margin-left: var(--spaceLg) !important; }
+.u-marginLeftXl { margin-left: var(--spaceXl) !important; }
+
+/* Padding
+   ========================================================================== */
+
+.u-paddingXs { padding: var(--spaceXs) !important; }
+.u-paddingSm { padding: var(--spaceSm) !important; }
+.u-paddingMd { padding: var(--spaceMd) !important; }
+.u-paddingLg { padding: var(--spaceLg) !important; }
+.u-paddingXl { padding: var(--spaceXl) !important; }
+
+.u-paddingTopXs { padding-top: var(--spaceXs) !important; }
+.u-paddingTopSm { padding-top: var(--spaceSm) !important; }
+.u-paddingTopMd { padding-top: var(--spaceMd) !important; }
+.u-paddingTopLg { padding-top: var(--spaceLg) !important; }
+.u-paddingTopXl { padding-top: var(--spaceXl) !important; }
+
+.u-paddingRightXs { padding-right: var(--spaceXs) !important; }
+.u-paddingRightSm { padding-right: var(--spaceSm) !important; }
+.u-paddingRightMd { padding-right: var(--spaceMd) !important; }
+.u-paddingRightLg { padding-right: var(--spaceLg) !important; }
+.u-paddingRightXl { padding-right: var(--spaceXl) !important; }
+
+.u-paddingBottomXs { padding-bottom: var(--spaceXs) !important; }
+.u-paddingBottomSm { padding-bottom: var(--spaceSm) !important; }
+.u-paddingBottomMd { padding-bottom: var(--spaceMd) !important; }
+.u-paddingBottomLg { padding-bottom: var(--spaceLg) !important; }
+.u-paddingBottomXl { padding-bottom: var(--spaceXl) !important; }
+
+.u-paddingLeftXs { padding-left: var(--spaceXs) !important; }
+.u-paddingLeftSm { padding-left: var(--spaceSm) !important; }
+.u-paddingLeftMd { padding-left: var(--spaceMd) !important; }
+.u-paddingLeftLg { padding-left: var(--spaceLg) !important; }
+.u-paddingLeftXl { padding-left: var(--spaceXl) !important; }

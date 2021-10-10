@@ -1,9 +1,9 @@
-@import "suitcss-utils-text";
-@import "suitcss-utils-display";
-@import "suitcss-utils-image";
+@import "../../node_modules/suitcss-utils-text/index.css";
+@import "../../node_modules/suitcss-utils-display/index.css";
+@import "../../node_modules/suitcss-utils-image/index.css";
 
 /* .u-[margin|padding][Top|Right|Bottom|Left][Xs|Sm|Md|Lg|Xl] */
-@import "suitcss-utils-spacing";
+@import "../../node_modules/suitcss-utils-spacing/index.css";
 
 @import "./icon.css";
 

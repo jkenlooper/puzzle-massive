@@ -57,7 +57,7 @@
     "slab-massive": "^0.4.1",
     "suitcss-utils-display": "^1.0.2",
     "suitcss-utils-image": "~0.1.0",
-    "suitcss-utils-spacing": "^1.1.1",
+    "suitcss-utils-spacing": "git+https://github.com/jkenlooper/suitcss-utils-spacing.git",
     "suitcss-utils-text": "^1.0.0",
     "xstate": "^4.25.0"
   },
