@@ -207,7 +207,12 @@
   <body>
     <p class="pm-SiteWideMessage">Site wide message test.</p>
 
-    <div class="pm-Base">
+    <div
+      class="pm-Base"
+      x-data="mockups()"
+      x-init="loadHash()"
+      x-on:hashchange.window="loadHash()"
+    >
       <header class="pm-Base-header">
         <div id="header" class="pm-Header">
           <div class="pm-Header-content">
@@ -231,17 +236,19 @@
       </header>
 
       <div class="pm-Base-menu">
-        <div class="pm-Base-menuPrimary"></div>
-        <div class="pm-Base-menuSecondary"></div>
+        <div class="pm-Base-menuPrimary"><a href="/mockups">mockups</a></div>
+        <div class="pm-Base-menuSecondary">
+          <a href="#/documents/styleguide-elements.html">elements</a>
+          <a href="#/documents/styleguide-buttons.html">buttons</a>
+          <a
+            href="#/source-media/logo-puzzle-massive/puzzle-massive-logo-mosaic/"
+            >puzzle-massive-logo-mosaic</a
+          >
+        </div>
       </div>
 
       <main class="pm-Base-main" role="main">
-        <div class="pm-Doc">
-          <h1>Mockups</h1>
-          <ul>
-            <li><a href="#todo">todo</a></li>
-          </ul>
-        </div>
+        <div class="pm-Doc" x-html="data"></div>
       </main>
 
       <footer class="pm-Base-footer">
@@ -407,12 +414,38 @@
       src="/src/not-supported-browser-message.js"
     ></script>
 
-    <script type="module" src="/dist/webcomponents-loader.js"></script>
+    <script
+      type="module"
+      src="/node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"
+    ></script>
     <script type="module" src="/node_modules/hammerjs/hammer.min.js"></script>
     <script
       type="module"
       src="/node_modules/lazysizes/lazysizes.min.js"
     ></script>
     <script type="module" src="/node_modules/alpinejs/dist/alpine.js"></script>
+
+    <script type="text/javascript">
+      function mockups() {
+        return {
+          loadHash() {
+            this.data = "";
+            if (window.location.hash === "" || window.location.hash === "#") {
+              return;
+            }
+            const localURL = window.location.hash.replaceAll(
+              /[^a-zA-Z0-9._/-]*/g,
+              ""
+            );
+            let hash = "/documents/styleguide-buttons.html";
+            fetch(localURL)
+              .then((res) => res.text())
+              .then((data) => {
+                this.data = data;
+              });
+          },
+        };
+      }
+    </script>
   </body>
 </html>
