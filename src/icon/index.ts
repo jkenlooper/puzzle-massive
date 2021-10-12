@@ -1,1 +1,4 @@
-import "./pm-icon";
+import "./icons.svg";
+import "./icon.css";
+
+import "./pm-icon.js";

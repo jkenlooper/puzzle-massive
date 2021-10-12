@@ -244,12 +244,11 @@
             href="#/source-media/logo-puzzle-massive/puzzle-massive-logo-mosaic/"
             >puzzle-massive-logo-mosaic</a
           >
+          <a href="#/mockups/puzzle-front-page.html">puzzle front</a>
         </div>
       </div>
 
-      <main class="pm-Base-main" role="main">
-        <div class="pm-Doc" x-html="data"></div>
-      </main>
+      <main class="pm-Base-main" role="main" x-html="data"></main>
 
       <footer class="pm-Base-footer">
         <div class="pm-Base-kneeer"></div>
@@ -426,6 +425,11 @@
     <script type="module" src="/node_modules/alpinejs/dist/alpine.js"></script>
 
     <script type="text/javascript">
+      const THEME_STATIC_PATH_FOR_ICON_SVG = "/src/icon/";
+    </script>
+    <script type="module" src="/src/icon/pm-icon.js"></script>
+
+    <script type="text/javascript">
       function mockups() {
         return {
           loadHash() {
@@ -437,11 +441,15 @@
               /[^a-zA-Z0-9._/-]*/g,
               ""
             );
-            let hash = "/documents/styleguide-buttons.html";
+            const isFromMockups = localURL.startsWith("/mockups/");
             fetch(localURL)
               .then((res) => res.text())
               .then((data) => {
-                this.data = data;
+                if (!isFromMockups) {
+                  this.data = `<div class="pm-Doc">${data}</div>`;
+                } else {
+                  this.data = data;
+                }
               });
           },
         };
