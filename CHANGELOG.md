@@ -47,6 +47,7 @@ Thanks to BP4rker, JackNichols101, and avmonster.
 - Default vagrant setup uses a local CDN that is backed by a local fake S3 server.
 - Script to move puzzle resources to be from S3 or back to being locally hosted.
 - Show an overview entity relationship diagram on the [docs/index.md](docs/index.md)
+- Support for creating mockups of the site by editing HTML and CSS without needing to run the full site.
 
 ### Changed
 
