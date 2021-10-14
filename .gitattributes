@@ -1,5 +1,5 @@
 /package-lock.json -diff
-/docs/*.md.svg -diff
+*.md.svg -diff
 /.design-tokens-css/*/* -diff
 /node_modules/alpinejs/dist/alpine.js -diff
 /node_modules/lazysizes/lazysizes.min.js -diff

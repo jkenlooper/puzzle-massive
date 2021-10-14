@@ -27,7 +27,6 @@
     "move": "tsc --project . --outDir jssrc --preserveConstEnums --strictNullChecks --strictPropertyInitialization --module ES2020 --allowJs --noStrictGenericChecks --lib dom --target ES2020 && prettier --write jssrc",
     "jsdoc": "jsdoc -c src/_jsdoc.conf.json",
     "mmdc": "mmdc",
-    "build-charts": "mmdc --configFile docs/mermaid-config.json --input docs/index.md",
     "tsc": "tsc",
     "distfiles": "./bin/distfiles.sh",
     "rollup": "rollup",

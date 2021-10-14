@@ -1,5 +1,9 @@
 # Divulger for Puzzle Massive
 
+_No longer being used at the moment._
+
+---
+
 The puzzle-massive-divulger.service should be placed in /etc/systemd/system/ in order to function. Note that this is commonly done by the install script.
 
 ```
@@ -48,4 +52,3 @@ Reload if puzzle-massive-divulger.service file has changed.
 ```
 sudo systemctl daemon-reload
 ```
-

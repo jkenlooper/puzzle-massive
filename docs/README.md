@@ -39,71 +39,46 @@ ROUTE_CHILL ||--|| CHILL : "Proxies requests to"
 
 </details>
 
-## Notes on the top level directories
+## Top Level Directories and Files
 
 `api/` Python Flask app that the client-side app calls to get and modify data.
 
 `bin/` Contains various scripts that are used for deployment and other tasks.
 
-`certbot/` Not implemented. For setting up the site for https:// support.
+`chill/`, `chill-data/`, `chill-data.sql`, `templates`, and `documents/` are
+used by chill app to build various pages on the site.
 
-`chill/` App that is used for server-side rendered HTML and serves the static
-resources.
+`design-tokens/` settings that are used for CSS custom properties.
 
-`divulger/` Python app used for broadcasting puzzle piece movements via
-websockets.
+`divulger/` Python app that _was_ used for broadcasting puzzle piece movements via
+websocket. The Stream app has replaced this functionality.
 
-`docs/` Any helpful text files and such to help explain this project.
+`docs/` Any helpful text files and such to help explain this project. Contains
+guides on installing and developing Puzzle Massive.
 
-`documents/` The chill app uses files in here to build various pages on the
-site.
+`enforcer/` Python app that is used to enforce puzzle piece stacking rules.
 
-`media/` Holds graphic files and other binaries that are directly used for the
+`media/` and `source-media` Holds graphic files and other binaries that are directly used for the
 design of the site.
 
-`puzzle-massive/` When a `make dist` is run this directory holds symlinks of
-files and directories that will be included in a distribution.
+`mockups/` Contains mockup HTML files that show the various components that are
+used on the Puzzle Massive site.
 
 `queries/` SQL files that are used by the chill app and api app.
 
-`resources/`
+`resources/` Generic directory for files.
 
 `root/` Files that will be served at the root of the site.
 
-`src/` Client-side source files that are compiled to the `dist/` directory via
-webpack.
+`site-specific-content/` Files that are only relevant for separate distributions
+of the Puzzle Massive site. This is typically added via a git submodule and the
+contents are not part of the main puzzle-massive codebase.
 
-`stats/`
+`src/` Client-side source files that are compiled to the `dist/` directory.
 
-`templates/` The chill app uses these files when building the pages shown on the
-site.
+`stats/` AWStats (Advanced Web Statistics) setup.
 
-`web/` Nginx configuration.
+`stream/` The python app that handles sending puzzle piece movements via
+server-side events.
 
-`dist/`
-`frozen/`
-`include/`
-`lib/`
-`local/`
-`node_modules/`
-`share/`
-These directories are part of the build process and can be ignored.
-
-## Other top level files
-
-The below list of top level files are mostly explanatory.
-
-chill-data.sql
-CODE_OF_CONDUCT.md
-CONTRIBUTING.md
-db.dump.sql
-LICENSE.txt
-Makefile
-package.json
-port-registry.cfg
-README.md
-requirements.txt
-site.cfg
-site.cfg.sh
-Vagrantfile
-webpack.config.js
+`web/` NGINX web server configuration.
