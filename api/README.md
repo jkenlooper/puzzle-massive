@@ -27,6 +27,7 @@ erDiagram
   NGINX_WEB_SERVER_LEGACY_CACHE ||--|| NGINX_WEB_SERVER_LEGACY_ORIGIN : "Proxies requests to"
   NGINX_WEB_SERVER_LEGACY_ORIGIN ||--}| ROUTE_NEWAPI : "Defines"
   ROUTE_NEWAPI |{--|| API : "Proxies requests to"
+  ROUTE_NEWAPI |{--|| PUBLISH : "Proxies requests to"
 ```
 
 </details>

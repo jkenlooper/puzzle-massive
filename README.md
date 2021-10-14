@@ -31,7 +31,7 @@ vagrant provision --provision-with shell-testdata-puzzles-quick
 
 ---
 
-**More documentation is available within the docs directory.**
+**More documentation is available within the [docs directory](docs/).**
 
 - [Mockups guide](mockups/README.md) for only editing CSS and HTML or otherwise
   creating mockups of proposed changes. This doesn't require building or running
