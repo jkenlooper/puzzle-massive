@@ -33,11 +33,14 @@ vagrant provision --provision-with shell-testdata-puzzles-quick
 
 **More documentation is available within the docs directory.**
 
+- [Mockups guide](mockups/README.md) for only editing CSS and HTML or otherwise
+  creating mockups of proposed changes. This doesn't require building or running
+  the full site locally.
 - [Local development guide](docs/development.md) for getting a local version
   running on your own machine.
 - [Deployment guide](docs/deployment.md) for deploying to a live server. This
-  covers both in-place deployments and blue-green deployments.
-- [Infrastructure as Code](_infra/README.md) read me documents how the project uses
+  covers both in-place deployments and blue-green (stateful swap) deployments.
+- [Infrastructure as Code](_infra/README.md) documents how the project uses
   [DigitalOcean](https://m.do.co/c/686c08019031) and [Terraform](https://www.terraform.io/)
   for deploying to Development, Test, Acceptance, and Production environments.
 
