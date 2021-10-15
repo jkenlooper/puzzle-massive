@@ -40,7 +40,8 @@ class PuzzlePiecesView(MethodView):
         if not redis_connection.zscore("pcupdates", puzzle):
             # Check redis memory usage and create cleanup job if it's past a threshold
             memory = redis_connection.info(section="memory")
-            current_app.logger.info("used_memory: {used_memory_human}".format(**memory))
+            current_app.logger.info("used memory: {used_memory_human}".format(**memory))
+            current_app.logger.info("max memory: {maxmemory_human}".format(**memory))
             maxmemory = memory.get("maxmemory")
             if maxmemory != 0:
                 target_memory = maxmemory * 0.5
