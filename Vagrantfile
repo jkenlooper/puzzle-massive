@@ -134,12 +134,13 @@ DEFAULT_ENV
 
     legacy_puzzle_massive.vm.provision "bin-provision-local-ssl-certs", privileged: true, type: "shell", inline: <<-SHELL
       cd /home/vagrant/puzzle-massive
-      test -e /home/vagrant/output/localhost-CA.key && cp /home/vagrant/output/localhost-CA.key /home/dev/
-      test -e /home/vagrant/output/localhost-CA.pem && cp /home/vagrant/output/localhost-CA.pem /home/dev/
-      su -c '
-        ./bin/provision-local-ssl-certs.sh -k /home/dev/localhost-CA.key -p /home/dev/localhost-CA.pem
-      ' dev
-      cp /home/dev/localhost-CA.key /home/dev/localhost-CA.pem /home/vagrant/output/
+      #test -e /home/vagrant/output/localhost-CA.key && cp /home/vagrant/output/localhost-CA.key /home/dev/
+      #&& chown dev:dev /home/dev/localhost-CA.key
+      #test -e /home/vagrant/output/localhost-CA.pem && cp /home/vagrant/output/localhost-CA.pem /home/dev/
+      #&& chown dev:dev /home/dev/localhost-CA.pem
+      #touch web/localhost.key web/localhost.crt
+      #chown dev:dev web/localhost.key web/localhost.crt
+      ./bin/provision-local-ssl-certs.sh -k /home/vagrant/output/localhost-CA.key -p /home/vagrant/output/localhost-CA.pem
     SHELL
 
     # The devsync.sh uses local-puzzle-massive when syncing files
@@ -434,7 +435,7 @@ SNIPPET
     "start": "s3rver --directory /home/s3rver/files --address s3fake.puzzle.massive.test --no-vhost-buckets --configure-bucket chum"
   },
   "dependencies": {
-    "s3rver": "3.7.0"
+    "s3rver": "3.7.1"
   }
 }
 PACKAGEJSON

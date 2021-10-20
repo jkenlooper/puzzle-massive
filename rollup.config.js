@@ -21,7 +21,7 @@ export default {
     entryFileNames: "[name].bundle.js",
     dir: "dist",
     format: "module",
-    sourcemap: true,
+    sourcemap: isProduction ? false : "inline",
     globals: {
       hammerjs: "Hammer",
     },
@@ -29,7 +29,7 @@ export default {
   plugins: [
     postcss({
       to: "dist/app.bundle.css",
-      sourceMap: !isProduction,
+      sourcemap: false, // sourcemap not working correctly for CSS
       extract: true,
       minimize: isProduction,
       plugins: [
