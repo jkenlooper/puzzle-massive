@@ -16,16 +16,28 @@ export default () => {
       switch (event.key) {
         // Standard gaming style movement
         case "w":
-          scrollUp();
+          scrollUp(1);
           break;
         case "a":
-          scrollLeft();
+          scrollLeft(1);
           break;
         case "s":
-          scrollDown();
+          scrollDown(1);
           break;
         case "d":
-          scrollRight();
+          scrollRight(1);
+          break;
+        case "W":
+          scrollUp(2);
+          break;
+        case "A":
+          scrollLeft(2);
+          break;
+        case "S":
+          scrollDown(2);
+          break;
+        case "D":
+          scrollRight(2);
           break;
 
         // Back
@@ -140,20 +152,20 @@ export default () => {
     }
   }
 
-  function scrollDown() {
-    window.scrollBy(0, window.innerHeight);
+  function scrollDown(scale) {
+    window.scrollBy(0, window.innerHeight/scale);
   }
 
-  function scrollUp() {
-    window.scrollBy(0, window.innerHeight * -1);
+  function scrollUp(scale) {
+    window.scrollBy(0, window.innerHeight/scale * -1);
   }
 
-  function scrollLeft() {
-    window.scrollBy(window.innerWidth * -1, 0);
+  function scrollLeft(scale) {
+    window.scrollBy(window.innerWidth/scale * -1, 0);
   }
 
-  function scrollRight() {
-    window.scrollBy(window.innerWidth, 0);
+  function scrollRight(scale) {
+    window.scrollBy(window.innerWidth/scale, 0);
   }
 
   // No public methods for now
