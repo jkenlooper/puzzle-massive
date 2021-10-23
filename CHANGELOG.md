@@ -21,7 +21,7 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
-## [Unreleased] - ...
+## [2.12.0] - 2021-10-23
 
 Improving support for Vagrant and Virtualbox local environments. Also trying to
 make it easier to get a working version on a local development machine without
@@ -48,6 +48,8 @@ Thanks to BP4rker, JackNichols101, and avmonster.
 - Script to move puzzle resources to be from S3 or back to being locally hosted.
 - Show an overview entity relationship diagram on the [docs/index.md](docs/index.md)
 - Support for creating mockups of the site by editing HTML and CSS without needing to run the full site.
+- Support for scroll jumping half screens with shifted W, A, S, and D keys.
+  Thanks to Manuel Giorgini [issue #46](https://github.com/jkenlooper/puzzle-massive/issues/46)
 
 ### Changed
 
