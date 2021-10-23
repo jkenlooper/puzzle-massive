@@ -11,6 +11,7 @@ Options:
 
 import os.path
 from time import sleep
+import re
 
 from docopt import docopt
 from flask import current_app
@@ -48,16 +49,21 @@ def move_all_to_s3(is_destructive=False):
     for puzzle_file in response.get("puzzle_files"):
         current_app.logger.info("Moving {puzzle_id} {name} {url}".format(**puzzle_file))
         puzzle_id = puzzle_file["puzzle_id"]
-        file_path = puzzle_file["url"][len(f"/resources/{puzzle_id}/") :]
+        # Also strip out any query params that may be part of the url.
+        file_path = re.sub(r"\?.*$", "", puzzle_file["url"][len(f"/resources/{puzzle_id}/") :])
         local_pr = PuzzleResource(puzzle_id, current_app.config, is_local_resource=True)
         s3_pr = PuzzleResource(puzzle_id, current_app.config, is_local_resource=False)
 
         my_yanked_file_path = local_pr.yank_file(file_path)
 
-        s3_pr.put_file(
-            my_yanked_file_path,
-            dirs=os.path.dirname(my_yanked_file_path[len(local_pr.target_dir) + 1 :]),
-        )
+        try:
+            s3_pr.put_file(
+                my_yanked_file_path,
+                dirs=os.path.dirname(my_yanked_file_path[len(local_pr.target_dir) + 1 :]),
+            )
+        except FileNotFoundError:
+            current_app.logger.warn(f"Skipping missing file: {my_yanked_file_path}")
+            continue
 
         r = requests.patch(
             f"http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/files/{puzzle_file['name']}/",
