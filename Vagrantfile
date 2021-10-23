@@ -51,6 +51,17 @@ Vagrant.configure(2) do |config|
       }
     end
 
+    legacy_puzzle_massive.trigger.after :up do |trigger|
+      trigger.info = "Checking status of running services"
+      trigger.run_remote = {inline: <<-SHELL
+        bash -c 'nginx -t;
+        systemctl is-active nginx;
+        cd /usr/local/src/puzzle-massive;
+        ./bin/appctl.sh is-active;'
+      SHELL
+      }
+    end
+
     # In case the bin/create_dot_env.sh wasn't run on the local machine.
     legacy_puzzle_massive.vm.provision "shell-auto-create-dot-env", type: "shell", run: "always", inline: <<-SHELL
       if test ! -e /home/vagrant/puzzle-massive/.env; then
@@ -281,6 +292,7 @@ AWS_CONFIG_APP
         systemctl reload nginx;
         ./bin/appctl.sh start;
         ./bin/appctl.sh status;
+        systemctl status nginx;
       SHELL
 
     legacy_puzzle_massive.vm.provision "shell-testdata-puzzles-quick", type: "shell", run: "never", inline: <<-SHELL
