@@ -19,6 +19,7 @@
       ansible.posix.synchronize:
         src: "{{ resources_directory }}/"
         dest: /srv/puzzle-massive/resources/
+        copy_links: yes
     - name: Update permissions
       ansible.builtin.file:
         path: "/srv/puzzle-massive/resources"
