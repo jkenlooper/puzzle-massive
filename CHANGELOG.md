@@ -21,6 +21,12 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
+## [Unreleased] - ...
+
+### Fixed
+
+- Remove jagged edges on puzzle pieces.
+
 ## [2.12.0] - 2021-10-23
 
 Improving support for Vagrant and Virtualbox local environments. Also trying to
