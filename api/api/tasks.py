@@ -35,6 +35,31 @@ def update_user_points_and_m_date(player, points, score):
     return msg
 
 
+def reward_player_for_score_threshold(player):
+    cur = db.cursor()
+    try:
+        result = cur.execute(
+            fetch_query_string("reward_player_for_score_threshold--puzzle-instance-slot.sql"), {
+                "player": player,
+                "score_threshold": int(current_app.config.get("REWARD_INSTANCE_SLOT_SCORE_THRESHOLD", '0'))
+            },
+        )
+
+    except sqlite3.IntegrityError:
+        err_msg = {
+            "msg": "Database integrity error. Does the player ({}) exist?".format(
+                player
+            ),
+            "status_code": 400,
+        }
+        cur.close()
+        return err_msg
+    cur.close()
+    db.commit()
+    msg = {"rowcount": result.rowcount, "msg": "Executed", "status_code": 200}
+    return msg
+
+
 def update_bit_icon_expiration(player):
     cur = db.cursor()
     try:
@@ -147,6 +172,17 @@ class InternalTasksStartView(MethodView):
                 }
             else:
                 response_msg = update_user_name_approved_for_approved_date_due()
+
+        elif task_name == "reward_player_for_score_threshold":
+            if not data:
+                response_msg = {"msg": "No JSON data sent", "status_code": 400}
+            elif not {"player",} == data.keys():
+                response_msg = {
+                    "msg": "Extra fields in JSON data were sent",
+                    "status_code": 400,
+                }
+            else:
+                response_msg = reward_player_for_score_threshold(**data)
 
         else:
             response_msg = {
