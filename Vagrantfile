@@ -53,6 +53,7 @@ Vagrant.configure(2) do |config|
 
     legacy_puzzle_massive.trigger.after :up do |trigger|
       trigger.info = "Checking status of running services"
+      trigger.on_error = :continue
       trigger.run_remote = {inline: <<-SHELL
         bash -c 'nginx -t;
         systemctl is-active nginx;
