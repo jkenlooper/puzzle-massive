@@ -2,15 +2,6 @@
 
 set -eu -o pipefail
 
-# Defaults in case not defined in .env
-VAGRANT_FORWARDED_PORT_80=80
-
-if test -e .vagrant-overrides; then
-  # override the VAGRANT_FORWARDED_PORT_80 variable
-  # shellcheck source=/dev/null
-  source .vagrant-overrides
-fi
-
 DATE=$(date)
 
 cat <<-HERE
@@ -23,6 +14,6 @@ HERE
 
 if test -e .vagrant-overrides; then
 cat <<-HERE
-    proxy_redirect http://\$host/ http://\$host:$VAGRANT_FORWARDED_PORT_80/;
+    proxy_redirect http://\$host/ http://\$host:38682/;
 HERE
 fi

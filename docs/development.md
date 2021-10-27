@@ -107,9 +107,7 @@ since it is idempotent. For example, if the `.env` file has been modified (and
 provisioning script is necessary.
 
 ```bash
-# Vagrant virtual machine uses this port on the host to forward to the guest.
-# Pass along the forwarded port so redirects will work right.
-VAGRANT_FORWARDED_PORT_80=$(vagrant port --guest 80) vagrant provision --provision-with shell-init-dev-local
+vagrant provision --provision-with shell-init-dev-local
 ```
 
 ### Add Random Puzzles

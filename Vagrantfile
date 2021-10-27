@@ -30,8 +30,9 @@ Vagrant.configure(2) do |config|
     legacy_puzzle_massive.vm.post_up_message = <<-POST_UP_MESSAGE
       Please run the below command to initialize the instance if haven't done so yet.
 
-      VAGRANT_FORWARDED_PORT_80=$(vagrant port --guest 80) vagrant provision --provision-with shell-init-dev-local
+      vagrant provision --provision-with shell-init-dev-local
 
+      This can be run multiple times to update things as needed.
       See further documentation in docs/development.md
     POST_UP_MESSAGE
 
@@ -267,13 +268,10 @@ AWS_CONFIG_APP
     legacy_puzzle_massive.vm.provision "shell-init-dev-local",
       type: "shell",
       run: "never",
-      env: {
-        "VAGRANT_FORWARDED_PORT_80": ENV["VAGRANT_FORWARDED_PORT_80"]
-      },
       inline: <<-SHELL
         echo "Hey! I'm walking here!" > /home/vagrant/puzzle-massive/src/.trigger-watchit
         cd /usr/local/src/puzzle-massive;
-        echo "VAGRANT_FORWARDED_PORT_80=$VAGRANT_FORWARDED_PORT_80" > .vagrant-overrides
+        touch .vagrant-overrides
         chown dev:dev .vagrant-overrides
         echo "Stopping the app and creating a backup db file"
         ./bin/appctl.sh stop;

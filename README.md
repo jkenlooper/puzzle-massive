@@ -25,7 +25,7 @@ to complete.
 
 ```bash
 vagrant up
-VAGRANT_FORWARDED_PORT_80=$(vagrant port --guest 80) vagrant provision --provision-with shell-init-dev-local
+vagrant provision --provision-with shell-init-dev-local
 vagrant provision --provision-with shell-testdata-puzzles-quick
 ```
 
