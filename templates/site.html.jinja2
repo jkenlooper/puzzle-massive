@@ -110,7 +110,10 @@
 
 {% if config.DEBUG == True %}
 config.DEBUG: True; chill_now: {{ chill_now|datetime }}
+<br>
 <a class="u-textNoWrap" href="/d/styleguide/">Puzzle Massive Style Guide</a>
+| <a href="/chill{{ url_for('.page_uri', uri='new-puzzle/{}'.format(config.NEW_PUZZLE_CONTRIB)) }}">Upload Puzzle Form</a>
+| <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle') }}">Admin</a>
 {% endif %}
   </body>
 </html>
