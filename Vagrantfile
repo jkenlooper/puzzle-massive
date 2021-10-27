@@ -18,8 +18,9 @@ Vagrant.configure(2) do |config|
     legacy_puzzle_massive.vm.hostname = "puzzle.massive.test"
     legacy_puzzle_massive.vm.network :private_network, ip: "192.168.117.24", auto_config: true, hostname: true
 
-    legacy_puzzle_massive.vm.network "forwarded_port", guest: 80, host: 8080, auto_correct: true
-    legacy_puzzle_massive.vm.network "forwarded_port", guest: 443, host: 8081, auto_correct: true
+    # p + u + z + z + l + e + 38000 = 38682
+    legacy_puzzle_massive.vm.network "forwarded_port", guest: 80, host: 38682, auto_correct: false
+    legacy_puzzle_massive.vm.network "forwarded_port", guest: 443, host: 38683, auto_correct: false
 
     legacy_puzzle_massive.vm.provider "virtualbox" do |vb|
       vb.memory = "4096"
@@ -81,7 +82,7 @@ EMAIL_SENDER='sender@localhost'
 EMAIL_MODERATOR='moderator@localhost'
 AUTO_APPROVE_PUZZLES='y'
 LOCAL_PUZZLE_RESOURCES='n'
-CDN_BASE_URL='http://localhost:63812'
+CDN_BASE_URL='http://localhost:38685'
 PUZZLE_RESOURCES_BUCKET_REGION='local'
 PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL='http://s3fake.puzzle.massive.test:4568'
 PUZZLE_RESOURCES_BUCKET='chum'
@@ -363,7 +364,7 @@ AWS_CONFIG_APP
     cdn.vm.hostname = "cdn.puzzle.massive.test"
     cdn.vm.network :private_network, ip: "192.168.117.25", auto_config: true, hostname: true
 
-    cdn.vm.network "forwarded_port", guest: 80, host: 63812, auto_correct: false
+    cdn.vm.network "forwarded_port", guest: 80, host: 38685, auto_correct: false
 
     cdn.vm.provider "virtualbox" do |vb|
       vb.memory = "1024"
@@ -408,7 +409,7 @@ SNIPPET
   config.vm.define "s3fake" do |s3fake|
     s3fake.vm.hostname = "s3fake.puzzle.massive.test"
     s3fake.vm.network :private_network, ip: "192.168.117.26", auto_config: true, hostname: true
-    s3fake.vm.network "forwarded_port", guest: 4568, host: 4568, auto_correct: true
+    s3fake.vm.network "forwarded_port", guest: 4568, host: 38686, auto_correct: false
 
     s3fake.vm.provider "virtualbox" do |vb|
       vb.memory = "1024"
@@ -489,9 +490,9 @@ SERVICE_INSTALL
 
       # Example of uploading test-file and fetching it both with `aws s3 cp` and `curl`.
       echo 'testing' > test-file
-      aws s3 cp --endpoint-url=http://192.168.117.26:4568 test-file s3://chum/
-      aws s3 cp --endpoint-url=http://192.168.117.26:4568 s3://chum/test-file get-test-file
-      curl http://192.168.117.26:4568/chum/test-file
+      aws s3 cp --endpoint-url=http://192.168.117.26:38686 test-file s3://chum/
+      aws s3 cp --endpoint-url=http://192.168.117.26:38686 s3://chum/test-file get-test-file
+      curl http://192.168.117.26:38686/chum/test-file
     POST_UP_MESSAGE
 
   end

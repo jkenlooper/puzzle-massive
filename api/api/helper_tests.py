@@ -119,7 +119,7 @@ class APITestCase(unittest.TestCase):
             PIECE_JOIN_TOLERANCE=100,
             AUTO_APPROVE_PUZZLES=True,
             LOCAL_PUZZLE_RESOURCES=True,
-            CDN_BASE_URL="http://localhost:63812",
+            CDN_BASE_URL="http://localhost:38685",
             PUZZLE_RESOURCES_BUCKET_REGION="local",
             PUZZLE_RESOURCES_BUCKET_ENDPOINT_URL="http://s3fake.puzzle.massive.test:4568",
             PUZZLE_RESOURCES_BUCKET="chum",

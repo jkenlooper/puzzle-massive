@@ -22,7 +22,7 @@ Some definitions that this guide uses:
   Source files will be uploaded to it from the local machine each time they
   change. This machine is automatically created when running the `vagrant up`
   command and will have the Puzzle Massive instance running on
-  http://localhost:8080 or another port if that one has already been taken.
+  http://localhost:38682/ .
   </dd>
 </dl>
 
@@ -114,7 +114,7 @@ VAGRANT_FORWARDED_PORT_80=$(vagrant port --guest 80) vagrant provision --provisi
 
 ### Add Random Puzzles
 
-At this point the site at http://localhost:8080 should be working on your local
+At this point the site at http://localhost:38682/ should be working on your local
 machine. It won't have any puzzles or any players initially. To add some
 random puzzles to work with and test things run these optional vagrant
 provisioning scripts.
@@ -124,7 +124,7 @@ puzzle upload form works. If the site wasn't configured to automatically
 approve any submitted puzzles (see AUTO_APPROVE_PUZZLES in the `.env` file),
 then you'll need to manually approve these. Go to the admin page to view any
 puzzles that have been submitted for approval
-http://localhost:8080/chill/site/admin/puzzle/submitted/
+http://localhost:38682/chill/site/admin/puzzle/submitted/
 
 ```bash
 # Optional if needing a few initial puzzles to work with.
@@ -317,8 +317,8 @@ machine. It is recommended that access to this development machine should be
 limited so be careful if you use a development machine that is hosted in the
 cloud. The local development version of the website will be at
 http://local-puzzle-massive/ . If using vagrant for the virtual machine then
-you'll need to use the 8080 port http://local-puzzle-massive:8080/ . There are
-also some issues when using a port like 8080 on the local-puzzle-massive host
+you'll need to use the 38682 port http://local-puzzle-massive:38682/ . There are
+also some issues when using a port like 38682 on the local-puzzle-massive host
 and the website does a redirect.
 
 Append "127.0.0.1 local-puzzle-massive" to your `/etc/hosts` file on the local

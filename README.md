@@ -20,7 +20,7 @@ or send an email to puzzle-bug@massive.xyz with a description.
 ## Local Install Instructions (TL;DR)
 
 Minimal setup to get it running on your local machine at
-[http://localhost:8080/](http://localhost:8080/). This will take a few minutes
+[http://localhost:38682/](http://localhost:38682/). This will take about 10+ minutes
 to complete.
 
 ```bash

@@ -27,6 +27,10 @@ Types of changes
 
 - Remove jagged edges on puzzle pieces.
 
+### Changed
+
+- Port numbers used for local development start from 38682 to avoid collisions.
+
 ## [2.12.0] - 2021-10-23
 
 Improving support for Vagrant and Virtualbox local environments. Also trying to
