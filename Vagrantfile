@@ -305,6 +305,7 @@ AWS_CONFIG_APP
         ./bin/puzzle-massive-testdata puzzles --count=1 --pieces=100 --size=1800x1800\!;
         ./bin/puzzle-massive-testdata puzzles --count=1 --pieces=100 --size=800x1800\!;
         ./bin/puzzle-massive-testdata puzzles --count=1 --pieces=900 --size=6720x4480\!;
+        ./bin/puzzle-massive-scheduler --task UpdatePuzzleQueue;
       ' dev
     SHELL
 
@@ -325,6 +326,7 @@ AWS_CONFIG_APP
         ./bin/puzzle-massive-testdata puzzles --count=3 --min-pieces=1900 --pieces=3900 --size=4000x5000\!;
         ./bin/puzzle-massive-testdata puzzles --count=3 --min-pieces=1900 --pieces=3900 --size=5212x6741\!;
         ./bin/puzzle-massive-testdata puzzles --count=3 --min-pieces=1900 --pieces=3900 --size=6720x4480\!;
+        ./bin/puzzle-massive-scheduler --task UpdatePuzzleQueue;
       ' dev
     SHELL
 
