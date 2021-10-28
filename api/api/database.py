@@ -28,6 +28,7 @@ PUZZLE_CREATE_TABLE_LIST = (
     "create_table_puzzle_variant.sql",
     "create_table_puzzle_instance.sql",
     "create_table_user_puzzle.sql",
+    "create_user_puzzle_index.sql",
     "create_table_puzzle_feature.sql",
     "create_table_puzzle_feature_data.sql",
     "create_table_player_account.sql",
