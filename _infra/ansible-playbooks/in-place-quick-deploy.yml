@@ -68,6 +68,11 @@
         executable: /usr/bin/bash
         chdir: /usr/local/src/puzzle-massive/
 
+    - name: Migrate PuzzleMassive database_version if needed
+      command: /usr/local/src/puzzle-massive/bin/python api/api/jobs/migrate_puzzle_massive_database_version.py
+      args:
+        chdir: /usr/local/src/puzzle-massive/
+
     - name: Update any bit icon authors and add new bit icons
       command: /usr/local/src/puzzle-massive/bin/python api/api/jobs/insert-or-replace-bit-icons.py
       args:

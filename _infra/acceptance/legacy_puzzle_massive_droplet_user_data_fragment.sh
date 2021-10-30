@@ -35,7 +35,8 @@ su --command '
 # Continue only if database dump file is not empty.
 DBDUMPFILE=/home/dev/db.dump.gz
 export DBDUMPFILE
-test -s $DBDUMPFILE || (echo "The $DBDUMPFILE is empty. Done setting up." && exit 0)
+echo "Checking if the $DBDUMPFILE is empty. Will stop here if it is."
+test -s $DBDUMPFILE || exit 0
 # The rest of this should usually just be applicable for the Acceptance or Development environments.
 
 ./bin/appctl.sh stop -f;
@@ -61,8 +62,7 @@ su --command '
   cat db.dump.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
   echo "pragma journal_mode=wal" | sqlite3 /var/lib/puzzle-massive/sqlite3/db
 
-  # TODO: run migrate scripts here?
-
+  ./bin/python api/api/jobs/migrate_puzzle_massive_database_version.py
   ./bin/python api/api/jobs/insert-or-replace-bit-icons.py
   ./bin/python api/api/update_enabled_puzzle_features.py;
 ' dev

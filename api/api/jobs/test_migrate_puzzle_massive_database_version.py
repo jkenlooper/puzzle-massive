@@ -7,9 +7,9 @@ from api.helper_tests import APITestCase
 from api.jobs.migrate_puzzle_massive_database_version import (
     MigrateError,
     MigrateGapError,
-    version_number,
     get_next_migrate_script
 )
+from api.tools import version_number, get_latest_version_based_on_migrate_scripts
 
 
 class PuzzleMassiveDatabaseVersionTest(APITestCase):
@@ -34,6 +34,36 @@ class PuzzleMassiveDatabaseVersionTest(APITestCase):
         version_numbers = list(map(version_number, script_files))
 
         assert version_numbers == [21, 901, 1, 0]
+
+    def test_get_latest_version_based_on_migrate_scripts(self):
+        "Get latest version based on migrate scripts"
+        with self.app.app_context():
+            with self.app.test_client():
+                cur = db.cursor()
+                cur.execute(read_query_file("create_table_puzzle_massive.sql"))
+                db.commit()
+                script_files = [
+                    "some/path/to/migrate_puzzle_massive_database_version_021.py",
+                    "some/path/to/migrate_puzzle_massive_database_version_901.py",
+                    "some/path/to/migrate_puzzle_massive_database_version_001.py",
+                    "some/path/to/migrate_puzzle_massive_database_version_000.py",
+                    "some/path/to/migrate_puzzle_massive_database_version_002.py",
+                ]
+
+                latest_version = get_latest_version_based_on_migrate_scripts(script_files)
+
+                assert latest_version == 902
+
+    def test_get_latest_version_when_no_migrate_scripts(self):
+        "Get latest version when no migrate scripts"
+        with self.app.app_context():
+            with self.app.test_client():
+                cur = db.cursor()
+                cur.execute(read_query_file("create_table_puzzle_massive.sql"))
+                db.commit()
+                script_files = []
+
+                self.assertRaises(Exception, get_latest_version_based_on_migrate_scripts, script_files)
 
     def test_next_migrate_script_when_none_are_found(self):
         "Get next migrate script when none are found"

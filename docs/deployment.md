@@ -328,7 +328,7 @@ Switch over to the **new server** (puzzle-massive-green).
     echo 'pragma journal_mode=wal' | sqlite3 /var/lib/puzzle-massive/sqlite3/db
 
     # Run any migrate scripts needed for this version update if applicable
-    python api/api/jobs/migrate_from_2_x_to_x.py site.cfg
+    python api/api/jobs/migrate_puzzle_massive_database_version.py
 
     # Update any bit icon authors and add new bit icons
     python api/api/jobs/insert-or-replace-bit-icons.py

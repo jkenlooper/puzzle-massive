@@ -165,3 +165,19 @@ def files_loader(*args):
     for root in args:
         load_files(root)
     return d
+
+
+def version_number(script_file):
+    version = int(re.sub(r"^.*_([0-9]{3}).py$", r"\1", script_file))
+    return version
+
+
+def get_latest_version_based_on_migrate_scripts(migrate_scripts):
+    "Get latest version based on migrate scripts"
+    if len(migrate_scripts) == 0:
+        raise Exception("migrate_scripts list is empty.")
+
+    sorted_migrate_scripts = migrate_scripts.copy()
+    sorted_migrate_scripts.sort(key=version_number)
+    latest_version = version_number(sorted_migrate_scripts[-1]) + 1
+    return latest_version

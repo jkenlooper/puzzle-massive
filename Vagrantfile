@@ -285,6 +285,7 @@ AWS_CONFIG_APP
         su --command '
           ./bin/python api/api/create_database.py site.cfg \
             || echo "The api/api/create_database.py failed execution. Assuming that sqlite database tables already exists."
+          ./bin/python api/api/jobs/migrate_puzzle_massive_database_version.py
           ./bin/python api/api/jobs/insert-or-replace-bit-icons.py;
           ./bin/python api/api/update_enabled_puzzle_features.py;
         ' dev
@@ -293,6 +294,8 @@ AWS_CONFIG_APP
         ./bin/appctl.sh start;
         ./bin/appctl.sh status;
         systemctl status nginx;
+        ./bin/appctl.sh is-active;
+        systemctl is-active nginx;
       SHELL
 
     legacy_puzzle_massive.vm.provision "shell-testdata-puzzles-quick", type: "shell", run: "never", inline: <<-SHELL

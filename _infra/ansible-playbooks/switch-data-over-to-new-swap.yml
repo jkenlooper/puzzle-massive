@@ -205,15 +205,10 @@
     - name: Set the sqlite db to be in wal mode
       shell: echo 'pragma journal_mode=wal' | sqlite3 /var/lib/puzzle-massive/sqlite3/db
 
-    # TODO: Only if there are applicable migrate scripts to run.
-    # This should check it's own database migrate version to see if it is behind
-    # and run the migrate scripts it needs to.
-    # TODO: Also see same note about this in bin/quick-deploy.sh.
-    #- name: Run any migrate scripts needed for this version update if applicable
-    #  shell: api/api/jobs/migrate_from_2_x_to_x.py site.cfg
-    #  args:
-    #    executable: /usr/local/src/puzzle-massive/bin/python
-    #    chdir: /usr/local/src/puzzle-massive/
+    - name: Migrate PuzzleMassive database_version if needed
+      command: /usr/local/src/puzzle-massive/bin/python api/api/jobs/migrate_puzzle_massive_database_version.py
+      args:
+        chdir: /usr/local/src/puzzle-massive/
 
     - name: Update any bit icon authors and add new bit icons
       command: /usr/local/src/puzzle-massive/bin/python api/api/jobs/insert-or-replace-bit-icons.py

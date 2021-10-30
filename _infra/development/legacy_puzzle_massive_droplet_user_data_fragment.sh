@@ -70,8 +70,7 @@ su --command '
   cat db.dump.sql | sqlite3 /var/lib/puzzle-massive/sqlite3/db
   echo "pragma journal_mode=wal" | sqlite3 /var/lib/puzzle-massive/sqlite3/db
 
-  # TODO: run migrate scripts here?
-
+  ./bin/python api/api/jobs/migrate_puzzle_massive_database_version.py
   ./bin/python api/api/jobs/insert-or-replace-bit-icons.py
   ./bin/python api/api/update_enabled_puzzle_features.py
 ' dev

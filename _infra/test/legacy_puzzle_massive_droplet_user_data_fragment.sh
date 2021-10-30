@@ -38,3 +38,6 @@ nginx -t;
 systemctl reload nginx;
 ./bin/appctl.sh start;
 ./bin/appctl.sh status;
+
+# is-active will fail with error code if any service had errors
+./bin/appctl.sh is-active;

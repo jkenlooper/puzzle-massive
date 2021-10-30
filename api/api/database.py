@@ -1,13 +1,18 @@
 from __future__ import absolute_import
 from builtins import zip, bytes
 import os
+import sys
 import time
 import hashlib
 import re
+from glob import glob
 
 from flask import current_app
 from .app import db
 from api.puzzle_resource import PuzzleResource
+from api.tools import (
+    get_latest_version_based_on_migrate_scripts,
+)
 
 PUZZLE_CREATE_TABLE_LIST = (
     "create_table_puzzle.sql",
@@ -32,6 +37,7 @@ PUZZLE_CREATE_TABLE_LIST = (
     "create_table_puzzle_feature_data.sql",
     "create_table_player_account.sql",
     "create_table_name_register.sql",
+    "create_table_puzzle_massive.sql",
 )
 
 
@@ -72,7 +78,7 @@ def init_db():
         # db = get_db()
         cur = db.cursor()
 
-        ## Create the new tables and populate with initial data
+        # Create the new tables and populate with initial data
         query_files = list(PUZZLE_CREATE_TABLE_LIST)
         query_files.append("initial_puzzle_variant.sql")
         query_files.append("insert_initial_admin_user.sql")
@@ -84,12 +90,33 @@ def init_db():
                 db.commit()
 
         application_name = current_app.config.get("UNSPLASH_APPLICATION_NAME")
-        ## Set initial licenses
+        # Set initial licenses
         for statement in read_query_file("initial_licenses.sql").split(";"):
             cur.execute(statement, {"application_name": application_name})
             db.commit()
 
-        ## Add fake bit authors
+        # Set puzzle features that are enabled
+        puzzle_features = current_app.config.get("PUZZLE_FEATURES", set())
+        for query_file in puzzle_features_init_list(puzzle_features):
+            cur.execute(read_query_file(query_file))
+            db.commit()
+
+        latest_version = 0
+        migrate_scripts = glob(f"{os.path.dirname(sys.argv[0])}/jobs/migrate_puzzle_massive_database_version_[0-9][0-9][0-9].py")
+        if len(migrate_scripts) == 0:
+            print(f"{os.path.dirname(sys.argv[0])}/jobs/migrate_puzzle_massive_database_version_[0-9][0-9][0-9].py")
+        else:
+            latest_version = get_latest_version_based_on_migrate_scripts(migrate_scripts)
+        cur.execute(read_query_file("upsert_puzzle_massive.sql"), {
+            "key": "database_version",
+            "label": "Database Version",
+            "description": "The version that the Puzzle Massive Database is currently at.",
+            "intvalue": latest_version,
+            "textvalue": None,
+            "blobvalue": None
+        })
+
+        # Add fake bit authors
         upsert_author_query = read_query_file("_insert_or_update_bit_author.sql")
         for i in range(1, 3):
             cur.execute(
@@ -102,7 +129,7 @@ def init_db():
             )
         db.commit()
 
-        ## Add fake bit icons
+        # Add fake bit icons
         def each(bit):
             for b in bit:
                 yield b
@@ -119,12 +146,12 @@ def init_db():
         cur.close()
 
 
-def rowify(l, description):
+def rowify(results, description):
     d = []
     col_names = []
-    if l != None and description != None:
+    if results is not None and description is not None:
         col_names = [x[0] for x in description]
-        for row in l:
+        for row in results:
             d.append(dict(list(zip(col_names, row))))
     return (d, col_names)
 
