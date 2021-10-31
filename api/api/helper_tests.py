@@ -152,6 +152,7 @@ class APITestCase(unittest.TestCase):
             POINT_COST_FOR_CHANGING_NAME=100,
             NEW_USER_STARTING_POINTS=1300,
             POINTS_CAP=15000,
+            REWARD_INSTANCE_SLOT_SCORE_THRESHOLD=0,
             SECURE_COOKIE_SECRET=cookie_secret,
             cookie_secret=cookie_secret,
             database_writable=True,

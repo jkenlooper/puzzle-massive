@@ -237,6 +237,7 @@ resource "local_file" "legacy_user_data_sh" {
       POINT_COST_FOR_CHANGING_NAME=${var.dot_env__POINT_COST_FOR_CHANGING_NAME}
       NEW_USER_STARTING_POINTS=${var.dot_env__NEW_USER_STARTING_POINTS}
       POINTS_CAP=${var.dot_env__POINTS_CAP}
+      REWARD_INSTANCE_SLOT_SCORE_THRESHOLD=${var.dot_env__REWARD_INSTANCE_SLOT_SCORE_THRESHOLD}
       BIT_ICON_EXPIRATION="${join(",\n", var.dot_env__BIT_ICON_EXPIRATION)}"
       PUBLISH_WORKER_COUNT=${var.dot_env__PUBLISH_WORKER_COUNT}
       STREAM_WORKER_COUNT=${var.dot_env__STREAM_WORKER_COUNT}

@@ -70,6 +70,7 @@ POINT_COST_FOR_CHANGING_BIT=100
 POINT_COST_FOR_CHANGING_NAME=100
 NEW_USER_STARTING_POINTS=1300
 POINTS_CAP=15000
+REWARD_INSTANCE_SLOT_SCORE_THRESHOLD=0
 BIT_ICON_EXPIRATION="
 0:    20 minutes,
 1:    1 day,
@@ -230,6 +231,9 @@ read -e -p "New user starting points:
 read -e -p "Points cap:
 " -i "${POINTS_CAP}" POINTS_CAP;
 
+read -e -p "Reward puzzle instance slot score threshold:
+" -i "${REWARD_INSTANCE_SLOT_SCORE_THRESHOLD}" REWARD_INSTANCE_SLOT_SCORE_THRESHOLD;
+
 UNSPLASH_HELP_TEXT="
 # It is recommended to set up an account on [Unsplash](https://unsplash.com/). An
 # app will need to be created in order to get the application id and such. See
@@ -374,6 +378,7 @@ POINT_COST_FOR_CHANGING_BIT=${POINT_COST_FOR_CHANGING_BIT}
 POINT_COST_FOR_CHANGING_NAME=${POINT_COST_FOR_CHANGING_NAME}
 NEW_USER_STARTING_POINTS=${NEW_USER_STARTING_POINTS}
 POINTS_CAP=${POINTS_CAP}
+REWARD_INSTANCE_SLOT_SCORE_THRESHOLD=${REWARD_INSTANCE_SLOT_SCORE_THRESHOLD}
 # Bit icon expiration extends amounts by player score.
 BIT_ICON_EXPIRATION="${BIT_ICON_EXPIRATION}"
 

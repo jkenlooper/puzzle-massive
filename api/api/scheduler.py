@@ -382,6 +382,25 @@ class UpdatePlayer(Task):
                     )
                 )
 
+            if int(current_app.config.get("REWARD_INSTANCE_SLOT_SCORE_THRESHOLD", '0')):
+                sleep(API_REQUESTS_LIMIT_RATE)
+                r = requests.post(
+                    "http://{HOSTAPI}:{PORTAPI}/internal/tasks/{task_name}/start/".format(
+                        HOSTAPI=current_app.config["HOSTAPI"],
+                        PORTAPI=current_app.config["PORTAPI"],
+                        task_name="reward_player_for_score_threshold",
+                    ),
+                    json={
+                        "player": user,
+                    },
+                )
+                if r.status_code != 200:
+                    current_app.logger.warning(
+                        "Internal tasks api error. Could not run task reward_player_for_score_threshold for player {}".format(
+                            user
+                        )
+                    )
+
             user = redis_connection.spop("batchuser")
             made_change = True
 

@@ -2,8 +2,6 @@ import unittest
 
 from api.helper_tests import APITestCase
 
-from api.database import fetch_query_string, rowify
-
 
 class TestInternalTasksStartView(APITestCase):
     ""
@@ -86,6 +84,37 @@ class TestInternalTasksStartView(APITestCase):
                 self.assertEqual(200, rv.status_code)
                 self.assertEqual(
                     {"rowcount": -1, "msg": "Executed", "status_code": 200}, rv.json
+                )
+
+    def test_reward_player_for_score_threshold_task(self):
+        task_name = "reward_player_for_score_threshold"
+        with self.app.app_context():
+            with self.app.test_client() as c:
+                rv = c.post(
+                    "/internal/tasks/{task_name}/start/".format(task_name=task_name,),
+                )
+                self.assertEqual(400, rv.status_code)
+                self.assertEqual(
+                    {"msg": "No JSON data sent", "status_code": 400}, rv.json
+                )
+
+                rv = c.post(
+                    "/internal/tasks/{task_name}/start/".format(task_name=task_name,),
+                    json={"bogus": 1},
+                )
+                self.assertEqual(400, rv.status_code)
+                self.assertEqual(
+                    {"msg": "Extra fields in JSON data were sent", "status_code": 400},
+                    rv.json,
+                )
+
+                rv = c.post(
+                    "/internal/tasks/{task_name}/start/".format(task_name=task_name,),
+                    json={"player": 2},
+                )
+                self.assertEqual(200, rv.status_code)
+                self.assertEqual(
+                    {"rowcount": 0, "msg": "Executed", "status_code": 200}, rv.json
                 )
 
     def test_update_points_to_minimum_for_all_users_task(self):
