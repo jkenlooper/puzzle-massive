@@ -31,6 +31,10 @@ Types of changes
 
 - Port numbers used for local development start from 38682 to avoid collisions.
 
+### Added
+
+- Support for automatically executing python scripts to migrate the SQLite3 database.
+
 ## [2.12.0] - 2021-10-23
 
 Improving support for Vagrant and Virtualbox local environments. Also trying to
