@@ -1,19 +1,21 @@
 #!/usr/bin/env python
-"""migrate_puzzle_massive_database_version.py - Migrate to the next version for the Puzzle Massive database
+"""
+Migrate to the next version for the Puzzle Massive database by finding any
+python scripts found next to this script by globbing for
+"migrate_puzzle_massive_database_version_[0-9][0-9][0-9].py"
 
-Usage: migrate_puzzle_massive_database_version.py [--config <file>]
-       migrate_puzzle_massive_database_version.py --help
-
-Options:
-    -h --help           Show this screen.
-    --config <file>     Set config file. [default: site.cfg]
+Each script file should end with the database_version number that it migrates
+from. Migrate scripts will only be executed if the current database_version
+matches the version number in the script file name.  The database_version will
+be incremented after successfully executing each script.
 """
 
 import sys
 import logging
 from glob import glob
 import os.path
-from docopt import docopt
+import subprocess
+import datetime
 
 from api.app import db, make_app
 from api.database import read_query_file, rowify
@@ -68,9 +70,8 @@ def get_next_migrate_script(migrate_scripts):
     return migrate_script
 
 
-if __name__ == "__main__":
-    args = docopt(__doc__)
-    config_file = args["--config"]
+def main():
+    config_file = "site.cfg"
     config = loadConfig(config_file)
     cookie_secret = config.get("SECURE_COOKIE_SECRET")
     app = make_app(config=config_file, cookie_secret=cookie_secret, database_writable=True)
@@ -100,12 +101,27 @@ if __name__ == "__main__":
             logger.debug(f"sanity count {sanity_count}")
             sanity_count = sanity_count + 1
 
-            # TODO: execute the next_migrate_script
+            # Execute the next_migrate_script
+            try:
+                output = subprocess.run([sys.executable, next_migrate_script], check=True, capture_output=True)
+            except subprocess.CalledProcessError as err:
+                logger.debug(str(err))
+                logger.error(f"Failed when executing {next_migrate_script}.")
+                logger.info(f"\n{err.stdout.decode()}\n")
+                logger.error(f"\n{err.stderr.decode()}\n")
+                cur.close()
+                sys.exit(1)
+            logger.info(f"\n{output.stdout.decode()}\n")
+            logger.info(f"\n{output.stderr.decode()}\n")
 
+            # Bump the database_version assuming that the migrate script was
+            # successful.
+            now = datetime.datetime.utcnow().isoformat()
+            logger.info(f"Successfully executed {next_migrate_script} and will now update database_version to be {version + 1}.")
             cur.execute(read_query_file("upsert_puzzle_massive.sql"), {
                 "key": "database_version",
                 "label": "Database Version",
-                "description": "The version that the Puzzle Massive Database is currently at.",
+                "description": f"Puzzle Massive Database version updated on {now}. Only update this via the {script_file}",
                 "intvalue": version + 1,
                 "textvalue": None,
                 "blobvalue": None
@@ -120,3 +136,7 @@ if __name__ == "__main__":
             logger.info("PuzzleMassive database version is up to date.")
 
         cur.close()
+
+
+if __name__ == "__main__":
+    main()

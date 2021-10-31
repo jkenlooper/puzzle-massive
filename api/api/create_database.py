@@ -10,7 +10,7 @@ from api.database import (
     read_query_file,
     puzzle_features_init_list,
 )
-from api.jobs.migrate_puzzle_massive_database_version import (
+from api.tools import (
     get_latest_version_based_on_migrate_scripts,
 )
 
