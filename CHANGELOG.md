@@ -34,6 +34,8 @@ Types of changes
 ### Added
 
 - Support for automatically executing python scripts to migrate the SQLite3 database.
+- Support automatically assigning a puzzle instance slot to players that reach
+  a score threshold.
 
 ## [2.12.0] - 2021-10-23
 
