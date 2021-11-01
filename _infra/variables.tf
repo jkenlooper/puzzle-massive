@@ -473,8 +473,6 @@ variable "dot_env__POINTS_CAP" {
   type        = number
 }
 
-REWARD_INSTANCE_SLOT_SCORE_THRESHOLD
-
 variable "dot_env__REWARD_INSTANCE_SLOT_SCORE_THRESHOLD" {
   default     = 0
   description = "Reward puzzle instance slot score threshold."
