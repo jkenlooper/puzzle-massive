@@ -73,7 +73,7 @@ resource "digitalocean_spaces_bucket_object" "allow_deny_admin_nginx_conf" {
 resource "local_file" "allow_deny_admin_nginx_conf" {
   filename        = "${lower(var.environment)}/allow_deny_admin.nginx.conf"
   file_permission = "0400"
-  content = <<-HERE
+  content         = <<-HERE
     # Generated from Terraform variable admin_ips.
     # Used by NGINX at /etc/nginx/allow_deny_admin.nginx.conf
     %{for ip_addr in var.admin_ips~}
@@ -85,14 +85,14 @@ resource "local_file" "allow_deny_admin_nginx_conf" {
 
 # Ansible will be used to update the droplet after deployment as needed.
 resource "digitalocean_droplet" "legacy_puzzle_massive_swap_a" {
-  count    = var.create_legacy_puzzle_massive_swap_a ? 1 : 0
-  name     = lower("puzzle-massive-${var.environment}-swap-a")
-  size     = var.legacy_droplet_size
-  image    = "ubuntu-20-04-x64"
-  region   = var.region
-  vpc_uuid = digitalocean_vpc.puzzle_massive.id
-  ssh_keys = var.developer_ssh_key_fingerprints
-  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name, digitalocean_tag.droplet.name]
+  count      = var.create_legacy_puzzle_massive_swap_a ? 1 : 0
+  name       = lower("puzzle-massive-${var.environment}-swap-a")
+  size       = var.legacy_droplet_size
+  image      = "ubuntu-20-04-x64"
+  region     = var.region
+  vpc_uuid   = digitalocean_vpc.puzzle_massive.id
+  ssh_keys   = var.developer_ssh_key_fingerprints
+  tags       = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name, digitalocean_tag.droplet.name]
   monitoring = true
   lifecycle {
     prevent_destroy = false
@@ -108,14 +108,14 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_swap_a" {
   user_data = local_file.legacy_user_data_sh[0].sensitive_content
 }
 resource "digitalocean_droplet" "legacy_puzzle_massive_swap_b" {
-  count    = var.create_legacy_puzzle_massive_swap_b ? 1 : 0
-  name     = lower("puzzle-massive-${var.environment}-swap-b")
-  size     = var.legacy_droplet_size
-  image    = "ubuntu-20-04-x64"
-  region   = var.region
-  vpc_uuid = digitalocean_vpc.puzzle_massive.id
-  ssh_keys = var.developer_ssh_key_fingerprints
-  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name, digitalocean_tag.droplet.name]
+  count      = var.create_legacy_puzzle_massive_swap_b ? 1 : 0
+  name       = lower("puzzle-massive-${var.environment}-swap-b")
+  size       = var.legacy_droplet_size
+  image      = "ubuntu-20-04-x64"
+  region     = var.region
+  vpc_uuid   = digitalocean_vpc.puzzle_massive.id
+  ssh_keys   = var.developer_ssh_key_fingerprints
+  tags       = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name, digitalocean_tag.droplet.name]
   monitoring = true
   lifecycle {
     prevent_destroy = false
@@ -133,14 +133,14 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_swap_b" {
 }
 
 resource "digitalocean_droplet" "legacy_puzzle_massive_volatile" {
-  count    = var.create_legacy_puzzle_massive_volatile ? 1 : 0
-  name     = lower("puzzle-massive-${var.environment}-volatile")
-  size     = var.legacy_droplet_size
-  image    = "ubuntu-20-04-x64"
-  region   = var.region
-  vpc_uuid = digitalocean_vpc.puzzle_massive.id
-  ssh_keys = var.developer_ssh_key_fingerprints
-  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name, digitalocean_tag.droplet.name]
+  count      = var.create_legacy_puzzle_massive_volatile ? 1 : 0
+  name       = lower("puzzle-massive-${var.environment}-volatile")
+  size       = var.legacy_droplet_size
+  image      = "ubuntu-20-04-x64"
+  region     = var.region
+  vpc_uuid   = digitalocean_vpc.puzzle_massive.id
+  ssh_keys   = var.developer_ssh_key_fingerprints
+  tags       = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name, digitalocean_tag.droplet.name]
   monitoring = true
   lifecycle {
     prevent_destroy = false

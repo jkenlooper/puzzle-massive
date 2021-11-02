@@ -11,14 +11,14 @@ locals {
 }
 
 resource "digitalocean_droplet" "cdn" {
-  count    = var.create_cdn ? 1 : 0
-  name     = lower("cdn-${var.environment}")
-  size     = var.cdn_droplet_size
-  image    = "ubuntu-20-04-x64"
-  region   = var.region
-  vpc_uuid = digitalocean_vpc.puzzle_massive.id
-  ssh_keys = var.developer_ssh_key_fingerprints
-  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name, digitalocean_tag.droplet.name]
+  count      = var.create_cdn ? 1 : 0
+  name       = lower("cdn-${var.environment}")
+  size       = var.cdn_droplet_size
+  image      = "ubuntu-20-04-x64"
+  region     = var.region
+  vpc_uuid   = digitalocean_vpc.puzzle_massive.id
+  ssh_keys   = var.developer_ssh_key_fingerprints
+  tags       = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name, digitalocean_tag.droplet.name]
   monitoring = true
   lifecycle {
     prevent_destroy = true
@@ -31,14 +31,14 @@ resource "digitalocean_droplet" "cdn" {
 }
 
 resource "digitalocean_droplet" "cdn_volatile" {
-  count    = var.create_cdn_volatile ? 1 : 0
-  name     = lower("cdn-volatile-${var.environment}")
-  size     = var.cdn_droplet_size
-  image    = "ubuntu-20-04-x64"
-  region   = var.region
-  vpc_uuid = digitalocean_vpc.puzzle_massive.id
-  ssh_keys = var.developer_ssh_key_fingerprints
-  tags     = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name, digitalocean_tag.droplet.name]
+  count      = var.create_cdn_volatile ? 1 : 0
+  name       = lower("cdn-volatile-${var.environment}")
+  size       = var.cdn_droplet_size
+  image      = "ubuntu-20-04-x64"
+  region     = var.region
+  vpc_uuid   = digitalocean_vpc.puzzle_massive.id
+  ssh_keys   = var.developer_ssh_key_fingerprints
+  tags       = [digitalocean_tag.fw_web.name, digitalocean_tag.fw_developer_ssh.name, digitalocean_tag.droplet.name]
   monitoring = true
   lifecycle {
     prevent_destroy = false
@@ -167,11 +167,11 @@ resource "digitalocean_spaces_bucket_object" "nginx_snippets_server_name_cdn_con
 }
 
 resource "digitalocean_spaces_bucket_object" "nginx_snippets_ssl_certs_cdn_conf" {
-  count   = var.create_cdn || var.create_cdn_volatile ? 1 : 0
-  region  = digitalocean_spaces_bucket.ephemeral_artifacts.region
-  bucket  = digitalocean_spaces_bucket.ephemeral_artifacts.name
-  key     = "snippets/ssl_certificate-ssl_certificate_key-cdn.nginx.conf"
-  acl     = "private"
+  count  = var.create_cdn || var.create_cdn_volatile ? 1 : 0
+  region = digitalocean_spaces_bucket.ephemeral_artifacts.region
+  bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
+  key    = "snippets/ssl_certificate-ssl_certificate_key-cdn.nginx.conf"
+  acl    = "private"
   # The ssl certs will be uncommented out after certbot has been provisioned and
   # the certs have been created.
   content = <<-CONTENT

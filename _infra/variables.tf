@@ -17,16 +17,16 @@ variable "do_app_spaces_access_key_id" {
   type        = string
   description = "DigitalOcean Spaces access key ID for the deployed application to use. These are stored on the droplet and used by the application to read and write to Spaces. They are only required when first creating the legacy puzzle massive droplet."
   sensitive   = false
-  default = "only-set-this-on-new-droplet-creation"
+  default     = "only-set-this-on-new-droplet-creation"
 }
 variable "do_app_spaces_secret_access_key" {
   type        = string
   description = "DigitalOcean Spaces secret access key for the deployed application to use. These are stored on the droplet and used by the application to read and write to Spaces. They are only required when first creating the legacy puzzle massive droplet."
   sensitive   = true
-  default = "only-set-this-on-new-droplet-creation"
+  default     = "only-set-this-on-new-droplet-creation"
 }
 variable "tech_email" {
-  type = string
+  type        = string
   description = "Contact email address to use for notifying the person in charge of fixing stuff. This is usually the person that can also break all the things. Use your cat's email address here if you have a cat in the house."
 }
 
@@ -41,8 +41,8 @@ variable "artifact" {
 
 variable "database_dump_file" {
   description = "A SQLite database dump file to use when first creating the legacy puzzle massive droplet."
-  type = string
-  default = "db.dump.gz"
+  type        = string
+  default     = "db.dump.gz"
 }
 
 variable "bucket_region" {
@@ -166,18 +166,18 @@ variable "create_legacy_puzzle_massive_swap_b" {
 }
 
 variable "new_swap" {
-  type = string
+  type        = string
   description = "Which swap is considered the new swap; either A or B."
-  default = "B"
+  default     = "B"
   validation {
     condition     = can(regex("A|B", var.new_swap))
     error_message = "Must be either 'A' or 'B' value."
   }
 }
 variable "old_swap" {
-  type = string
+  type        = string
   description = "Which swap is considered the old swap; either A or B."
-  default = "A"
+  default     = "A"
   validation {
     condition     = can(regex("A|B", var.old_swap))
     error_message = "Must be either 'A' or 'B' value."
