@@ -301,6 +301,14 @@ Start the app and it's services.
 ./bin/appctl-start.sh $ENVIRONMENT
 ```
 
+Stop the app and it's services and also run make, make install. Useful if only
+updated the .env file or something. The app should start at the end of the make
+install.
+
+```bash
+./bin/appctl-stop-and-make-install-and-reload-nginx.sh $ENVIRONMENT
+```
+
 Download the puzzle resources directory _to_ the local machine.
 
 ```bash

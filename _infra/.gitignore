@@ -73,3 +73,5 @@ terraform.tfstate*
 /production/.do_token
 .env
 .env.bak*
+
+/crash.*.log

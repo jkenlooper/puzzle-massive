@@ -21,6 +21,8 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
+## [Unreleased] - ...
+
 ## [2.12.1] - 2021-11-01
 
 ### Fixed

@@ -52,6 +52,7 @@ resource "digitalocean_spaces_bucket_object" "artifact" {
 }
 
 resource "digitalocean_spaces_bucket_object" "database_dump_file" {
+  count  = anytrue([var.create_legacy_puzzle_massive_swap_a, var.create_legacy_puzzle_massive_swap_b, var.create_legacy_puzzle_massive_volatile]) ? 1 : 0
   region = digitalocean_spaces_bucket.ephemeral_artifacts.region
   bucket = digitalocean_spaces_bucket.ephemeral_artifacts.name
   key    = var.database_dump_file
@@ -104,7 +105,7 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_swap_a" {
   # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#retrieve-user-data
   # Debug via ssh to the droplet and tail the cloud-init logs:
   # tail -f /var/log/cloud-init-output.log
-  user_data = local_file.legacy_user_data_sh.sensitive_content
+  user_data = local_file.legacy_user_data_sh[0].sensitive_content
 }
 resource "digitalocean_droplet" "legacy_puzzle_massive_swap_b" {
   count    = var.create_legacy_puzzle_massive_swap_b ? 1 : 0
@@ -128,7 +129,7 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_swap_b" {
   # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#retrieve-user-data
   # Debug via ssh to the droplet and tail the cloud-init logs:
   # tail -f /var/log/cloud-init-output.log
-  user_data = local_file.legacy_user_data_sh.sensitive_content
+  user_data = local_file.legacy_user_data_sh[0].sensitive_content
 }
 
 resource "digitalocean_droplet" "legacy_puzzle_massive_volatile" {
@@ -153,7 +154,7 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_volatile" {
   # https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#retrieve-user-data
   # Debug via ssh to the droplet and tail the cloud-init logs:
   # tail -f /var/log/cloud-init-output.log
-  user_data = local_file.legacy_user_data_sh.sensitive_content
+  user_data = local_file.legacy_user_data_sh[0].sensitive_content
 }
 
 resource "random_string" "initial_dev_user_password" {
@@ -181,6 +182,7 @@ locals {
 }
 
 resource "local_file" "legacy_user_data_sh" {
+  count           = anytrue([var.create_legacy_puzzle_massive_swap_a, var.create_legacy_puzzle_massive_swap_b, var.create_legacy_puzzle_massive_volatile]) ? 1 : 0
   filename        = "${lower(var.environment)}/legacy_puzzle_massive_droplet-user_data.sh"
   file_permission = "0400"
   depends_on = [
@@ -189,7 +191,7 @@ resource "local_file" "legacy_user_data_sh" {
     digitalocean_spaces_bucket_object.install_latest_stable_nginx_sh,
     digitalocean_spaces_bucket_object.setup_sh,
     digitalocean_spaces_bucket_object.iptables_setup_firewall_sh,
-    digitalocean_spaces_bucket_object.database_dump_file,
+    digitalocean_spaces_bucket_object.database_dump_file[0],
     digitalocean_spaces_bucket_object.allow_deny_admin_nginx_conf,
     digitalocean_spaces_bucket_object.artifact,
   ]
