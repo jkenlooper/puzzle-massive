@@ -23,6 +23,14 @@ Types of changes
 
 ## [Unreleased] - ...
 
+### Added
+
+- Admin can delete and redo puzzles to fix issues with puzzles.
+
+### Fixed
+
+- Fixed some rendering issues on small puzzles.
+
 ## [2.12.1] - 2021-11-01
 
 ### Fixed

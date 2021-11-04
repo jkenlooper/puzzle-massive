@@ -74,7 +74,7 @@ def add_photo_to_puzzle(puzzle_id, photo, description, original_filename):
         filename = os.path.join(tmp_dir, original_filename)
         links = data.get("links")
         if not links:
-            raise Exception("Unsplash returned no links")
+            raise Exception(f"Unsplash returned no links {data}")
         download = links.get("download")
         if not download:
             raise Exception("Unsplash returned no download")

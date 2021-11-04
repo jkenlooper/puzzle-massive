@@ -259,7 +259,11 @@ class PuzzleResource:
 
         PUZZLE_RESOURCES_BUCKET = self.config["PUZZLE_RESOURCES_BUCKET"]
 
-        paths = self.list()
+        try:
+            paths = self.list()
+        except Exception as err:
+            current_app.logger.warning(f"Ignoring error from puzzle_resource.py purge() with puzzle_id {self.puzzle_id} : {err}")
+            paths = []
         paths_to_delete = []
 
         for path in paths:

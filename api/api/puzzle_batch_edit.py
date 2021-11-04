@@ -14,6 +14,7 @@ from api.constants import (
     COMPLETED,
     FROZEN,
     NEEDS_MODERATION,
+    SUGGESTED,
     FAILED_LICENSE,
     NO_ATTRIBUTION,
     IN_RENDER_QUEUE,
@@ -27,7 +28,7 @@ from api.constants import (
 )
 
 
-ACTIONS = ("approve", "rebuild", "reject", "delete", "edit", "tag")
+ACTIONS = ("approve", "rebuild", "reject", "delete", "redo", "edit", "tag")
 
 
 class AdminPuzzleBatchEditView(MethodView):
@@ -57,6 +58,10 @@ class AdminPuzzleBatchEditView(MethodView):
 
         delete = args.get("delete")
         if action == "delete" and delete not in ("license", "inapt", "old", "request"):
+            abort(400)
+
+        redo = args.get("redo")
+        if action == "redo" and redo not in ("delete_and_redo",):
             abort(400)
 
         edit = args.get("edit")
@@ -89,21 +94,31 @@ class AdminPuzzleBatchEditView(MethodView):
             elif reject == "attribution":
                 status = NO_ATTRIBUTION
 
-        if action == "delete":
-            if delete == "license":
-                status = DELETED_LICENSE
-            elif delete == "inapt":
-                status = DELETED_INAPT
-            elif delete == "old":
-                status = DELETED_OLD
-            elif delete == "request":
-                status = DELETED_REQUEST
+        if action == "delete" or action == "redo":
+            if action == "delete":
+                if delete == "license":
+                    status = DELETED_LICENSE
+                elif delete == "inapt":
+                    status = DELETED_INAPT
+                elif delete == "old":
+                    status = DELETED_OLD
+                elif delete == "request":
+                    status = DELETED_REQUEST
+            elif action == "redo":
+                if redo == "delete_and_redo":
+                    # Set it back to SUGGESTED since that way a new puzzle_id
+                    # will be created.
+                    status = SUGGESTED
 
             for puzzle_id in puzzle_ids:
                 result = cur.execute(
                     fetch_query_string("select-puzzle-details-for-puzzle_id.sql"),
                     {"puzzle_id": puzzle_id},
                 ).fetchall()
+                if not result:
+                    # Could be a puzzle that failed to render and doesn't have
+                    # any resources.
+                    continue
                 (result, col_names) = rowify(result, cur.description)
                 puzzle_details = result[0]
 
