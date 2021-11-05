@@ -278,6 +278,18 @@ variable "dot_env__SUGGEST_IMAGE_LINK" {
   type        = string
 }
 
+variable "dot_env__CLIENT_MAX_BODY_SIZE__PUZZLE_UPLOAD" {
+  default     = "40m"
+  description = "Puzzle upload size limit."
+  type        = string
+}
+
+variable "dot_env__CLIENT_MAX_BODY_SIZE__ADMIN_PUZZLE_PROMOTE_SUGGESTED" {
+  default     = "40m"
+  description = "Admin puzzle promote puzzle that was suggested size limit."
+  type        = string
+}
+
 variable "dot_env__SMTP_HOST" {
   default     = "localhost"
   description = "SMTP Host. Leave blank to disable use of transactional emails."

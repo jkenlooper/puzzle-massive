@@ -49,6 +49,8 @@ SITE_TITLE='Local Puzzle Massive'
 SOURCE_CODE_LINK='https://github.com/jkenlooper/puzzle-massive/'
 HOME_PAGE_ROUTE='/chill/site/front/'
 SUGGEST_IMAGE_LINK='https://any-website-for-uploading/'
+CLIENT_MAX_BODY_SIZE__PUZZLE_UPLOAD='100m'
+CLIENT_MAX_BODY_SIZE__ADMIN_PUZZLE_PROMOTE_SUGGESTED='200m'
 SMTP_HOST='localhost'
 SMTP_PORT='587'
 SMTP_USER='user@localhost'
@@ -283,6 +285,13 @@ read -e -p "Set the homepage route to use:
 read -e -p "Suggest image link:
 " -i "${SUGGEST_IMAGE_LINK}" SUGGEST_IMAGE_LINK;
 
+
+read -e -p "Puzzle upload size limit:
+" -i "${CLIENT_MAX_BODY_SIZE__PUZZLE_UPLOAD}" CLIENT_MAX_BODY_SIZE__PUZZLE_UPLOAD;
+
+read -e -p "Admin puzzle promote puzzle that was suggested size limit:
+" -i "${CLIENT_MAX_BODY_SIZE__ADMIN_PUZZLE_PROMOTE_SUGGESTED}" CLIENT_MAX_BODY_SIZE__ADMIN_PUZZLE_PROMOTE_SUGGESTED;
+
 EMAIL_SETTINGS_HELP_TEXT="
 # Email settings are for transactional emails and are used when a photo for
 # a puzzle is suggested.  Emails are also used for verifying a player's account
@@ -337,6 +346,8 @@ NEW_PUZZLE_CONTRIB='${MUPPET_CHARACTER}'
 SECURE_COOKIE_SECRET='${SECURE_COOKIE_SECRET}'
 
 SUGGEST_IMAGE_LINK='${SUGGEST_IMAGE_LINK}'
+CLIENT_MAX_BODY_SIZE__PUZZLE_UPLOAD='${CLIENT_MAX_BODY_SIZE__PUZZLE_UPLOAD}'
+CLIENT_MAX_BODY_SIZE__ADMIN_PUZZLE_PROMOTE_SUGGESTED='${CLIENT_MAX_BODY_SIZE__ADMIN_PUZZLE_PROMOTE_SUGGESTED}'
 
 ${EMAIL_SETTINGS_HELP_TEXT}
 SMTP_HOST='${SMTP_HOST}'

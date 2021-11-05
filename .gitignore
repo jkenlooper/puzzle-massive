@@ -26,6 +26,8 @@
 /web/snippets/rewrite-home_page_route.nginx.conf
 /web/snippets/server_name-legacy-cache.nginx.conf
 /web/snippets/server_name-listen-set_real_ip_from-origin.nginx.conf
+/web/snippets/client_max_body_size-admin-puzzle-promote-suggested.nginx.conf
+/web/snippets/client_max_body_size-puzzle-upload.nginx.conf
 /stats/awstats.puzzle.massive.xyz.conf
 /stats/awstats-puzzle-massive-crontab
 /chill/puzzle-massive-chill.service

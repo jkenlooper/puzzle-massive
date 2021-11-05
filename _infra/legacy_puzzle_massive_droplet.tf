@@ -209,6 +209,8 @@ resource "local_file" "legacy_user_data_sh" {
       NEW_PUZZLE_CONTRIB='${var.dot_env__NEW_PUZZLE_CONTRIB}'
       SECURE_COOKIE_SECRET='${var.dot_env__SECURE_COOKIE_SECRET}'
       SUGGEST_IMAGE_LINK='${var.dot_env__SUGGEST_IMAGE_LINK}'
+      CLIENT_MAX_BODY_SIZE__PUZZLE_UPLOAD='${var.dot_env__CLIENT_MAX_BODY_SIZE__PUZZLE_UPLOAD}'
+      CLIENT_MAX_BODY_SIZE__ADMIN_PUZZLE_PROMOTE_SUGGESTED='${var.dot_env__CLIENT_MAX_BODY_SIZE__ADMIN_PUZZLE_PROMOTE_SUGGESTED}'
       SMTP_HOST='${var.dot_env__SMTP_HOST}'
       SMTP_PORT='${var.dot_env__SMTP_PORT}'
       SMTP_USER='${var.dot_env__SMTP_USER}'

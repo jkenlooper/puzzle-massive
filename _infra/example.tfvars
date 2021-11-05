@@ -40,6 +40,8 @@
 #dot_env__UNSPLASH_SECRET           = ""
 
 #dot_env__SUGGEST_IMAGE_LINK = ""
+#dot_env__CLIENT_MAX_BODY_SIZE__PUZZLE_UPLOAD = "10m"
+#dot_env__CLIENT_MAX_BODY_SIZE__ADMIN_PUZZLE_PROMOTE_SUGGESTED = "100m"
 
 #dot_env__SMTP_HOST       = ""
 #dot_env__SMTP_PORT       = ""
