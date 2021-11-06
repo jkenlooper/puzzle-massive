@@ -21,7 +21,7 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
-## [Unreleased] - ...
+## [2.12.2] - 2021-11-06
 
 ### Added
 
