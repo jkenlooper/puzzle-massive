@@ -195,6 +195,15 @@
         <input type="hidden" name="redo" value="delete_and_redo">
       </div>
 
+      {% if slug in ('active', 'instances') %}
+      <div>
+        <label>
+          <input type="radio" name="action" value="buggy_unlisted" x-model="action">
+          Unlist Buggy
+        </label>
+      </div>
+      {% endif %}
+
       <div>
         <label>
           <input type="radio" name="action" value="edit" x-model="action">

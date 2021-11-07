@@ -13,6 +13,7 @@ from api.constants import (
     IN_QUEUE,
     COMPLETED,
     FROZEN,
+    BUGGY_UNLISTED,
     NEEDS_MODERATION,
     SUGGESTED,
     FAILED_LICENSE,
@@ -28,7 +29,7 @@ from api.constants import (
 )
 
 
-ACTIONS = ("approve", "rebuild", "reject", "delete", "redo", "edit", "tag")
+ACTIONS = ("approve", "rebuild", "reject", "delete", "redo", "edit", "tag", "buggy_unlisted")
 
 
 class AdminPuzzleBatchEditView(MethodView):
@@ -87,6 +88,9 @@ class AdminPuzzleBatchEditView(MethodView):
 
         if action == "rebuild":
             status = REBUILD
+
+        if action == "buggy_unlisted":
+            status = BUGGY_UNLISTED
 
         if action == "reject":
             if reject == "license":
