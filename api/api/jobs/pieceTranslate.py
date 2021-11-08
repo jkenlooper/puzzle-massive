@@ -239,6 +239,10 @@ def translate(ip, user, puzzleData, piece, x, y, r, karma_change, karma):
         }
         return (err_msg, 0)
 
+    # The piece is assumed to not be pcfixed, but no transaction is made,
+    # so it could be switched to being pcfixed from this point. The
+    # PieceMutateProcess will check again if piece is in pcfixed.
+
     # Restrict piece to within table boundaries
     if x < 0:
         x = 0

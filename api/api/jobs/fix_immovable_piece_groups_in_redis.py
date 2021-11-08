@@ -49,6 +49,7 @@ def find_puzzles_in_redis(results={}):
                 msg=test_result.get("msg", ""), puzzle=puzzle
             )
             test_result["status"] = "fail"
+            test_result["reason"] = "fail_no_top_left_piece"
             continue
 
         top_left_piece = result[0]
@@ -73,6 +74,7 @@ def find_puzzles_in_redis(results={}):
                 puzzle=puzzle,
             )
             test_result["status"] = "pass"
+            test_result["reason"] = "pass"
             continue
         else:
             # Test failed.
@@ -84,6 +86,7 @@ def find_puzzles_in_redis(results={}):
                 puzzle=puzzle,
             )
             test_result["status"] = "fail"
+            test_result["reason"] = "fail_pcfixed_outside_of_top_left"
     cur.close()
     return _results
 
@@ -138,6 +141,7 @@ def find_puzzles_in_database(results={}):
                 puzzle=puzzle,
             )
             test_result["status"] = "fail"
+            test_result["reason"] = "fail_no_immovable_piece_groups"
 
         # Fail if more than one immovable piece group
         if len(immovable_pieces) > 1:
@@ -149,6 +153,7 @@ def find_puzzles_in_database(results={}):
                 puzzle=puzzle,
             )
             test_result["status"] = "fail"
+            test_result["reason"] = "fail_multiple_immovable_piece_groups"
 
         # Pass if only one immovable piece group found
         if len(immovable_pieces) == 1:
@@ -160,14 +165,47 @@ def find_puzzles_in_database(results={}):
                 puzzle=puzzle,
             )
             test_result["status"] = "pass"
+            test_result["reason"] = "pass"
 
     return _results
 
 
-def fix_redis_piece_groups():
+def fix_redis_piece_groups(puzzles, results={}):
     ""
+    _results = results.copy()
     # TODO: implement a fix for when there are multiple immovable piece groups
     # that have a different piece group then the top left piece.
+
+    # Find each group that is not the same as the top left piece and remove
+    # those pieces from the pcfixed redis smembers
+    cur = db.cursor()
+    print(f"failed redis puzzles: {puzzles}")
+    for puzzle in puzzles:
+        (result, col_names) = rowify(
+            cur.execute(
+                read_query_file("select_puzzle_top_left_piece_for_puzzle.sql"),
+                {"id": puzzle},
+            ).fetchall(),
+            cur.description,
+        )
+        if not result or not result[0]:
+            continue
+
+        top_left_piece = result[0]
+        pcg_for_top_left = redis_connection.hget(
+            "pc:{puzzle}:{id}".format(puzzle=puzzle, id=top_left_piece["id"]), "g"
+        )
+
+        # Fix by resetting the pcfixed members back to only those for the top
+        # left piece group.
+        redis_connection.sinterstore(
+            f"pcfixed:{puzzle}", f"pcfixed:{puzzle}",
+            "pcg:{puzzle}:{group}".format(puzzle=puzzle, group=pcg_for_top_left)
+        )
+
+        _results[puzzle]["fixed"] = True
+    cur.close()
+    return _results
 
 
 def fix_db_piece_parents():
@@ -187,7 +225,16 @@ def do_it():
     )
 
     # TODO: Fix puzzles that failed the test
-    fix_redis_piece_groups()
+    failed_puzzles_in_redis_with_pcfixed_outside_of_top_left = list(
+        map(lambda x: int(x["puzzle"]),
+            filter(
+                lambda x: x["status"] == "fail" and "redis" in x["test"] and x["reason"] == "fail_pcfixed_outside_of_top_left",
+                multiple_immovable_piece_group_results.values(),
+        )
+        )
+    )
+
+    multiple_immovable_piece_group_results = fix_redis_piece_groups(failed_puzzles_in_redis_with_pcfixed_outside_of_top_left, results=multiple_immovable_piece_group_results)
     fix_db_piece_parents()
 
     # Print out the results
@@ -215,8 +262,27 @@ def do_it():
             multiple_immovable_piece_group_results.values(),
         )
     )
+    fixed_results = list(
+        filter(
+            lambda x: x.get("fixed"),
+            multiple_immovable_piece_group_results.values(),
+        )
+    )
     for result in failed_results:
         print(result["msg"])
+    for result in failed_results:
+        print(
+            "{puzzle} {puzzle_id}".format(
+                puzzle=result["puzzle"], puzzle_id=result.get("puzzle_id")
+            )
+        )
+    print("fixed:")
+    for result in fixed_results:
+        print(
+            "{puzzle} {puzzle_id}".format(
+                puzzle=result["puzzle"], puzzle_id=result.get("puzzle_id")
+            )
+        )
     print(
         """
 Total results:
@@ -224,20 +290,15 @@ Redis puzzles tested: {redis_count}
 Database puzzles tested: {database_count}
 Pass: {pass_count}
 Fail: {fail_count}
-Fixed: 0
+Fixed: {fixed_count}
 """.format(
             pass_count=len(passed_results),
             fail_count=len(failed_results),
             redis_count=len(redis_tests),
             database_count=len(database_tests),
+            fixed_count=len(fixed_results),
         )
     )
-    for result in failed_results:
-        print(
-            "{puzzle} {puzzle_id}".format(
-                puzzle=result["puzzle"], puzzle_id=result.get("puzzle_id")
-            )
-        )
 
 
 if __name__ == "__main__":

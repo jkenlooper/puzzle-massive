@@ -2,6 +2,8 @@ from flask import current_app
 
 from api.tools import formatPieceMovementString
 
+INVALID_MUTATION_ID = "-99"
+
 
 class PieceMutateError(Exception):
     """
@@ -48,11 +50,14 @@ class PieceMutateProcess:
 
         self.watched_keys = set()
 
-        self.pzm_puzzle_key = "pzm:{puzzle}".format(puzzle=puzzle)
+        self.pzm_puzzle_key = f"pzm:{puzzle}"
+        self.pcfixed_puzzle_key = f"pcfixed:{puzzle}"
+        self.pcstacked_puzzle_key = f"pcstacked:{puzzle}"
         # Bump the pzm id when preparing to mutate the puzzle.
         self.puzzle_mutation_id = self.redis_connection.incr(self.pzm_puzzle_key)
         self.redis_connection.expire(self.pzm_puzzle_key, piece_move_timeout + 2)
         self.watched_keys.add(self.pzm_puzzle_key)
+        self.watched_keys.add(self.pcfixed_puzzle_key)
 
         self.pc_puzzle_piece_key = "pc:{puzzle}:{piece}".format(
             puzzle=puzzle, piece=piece
@@ -91,7 +96,7 @@ class PieceMutateProcess:
             pipe.watch(*self.watched_keys)
 
             # Raise an error if the puzzle pieces have changed since phase 1 started.
-            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key))
+            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key) or INVALID_MUTATION_ID)
             if current_puzzle_mutation_id != self.puzzle_mutation_id:
                 raise PieceMutateError("start pzm")
 
@@ -134,7 +139,7 @@ class PieceMutateProcess:
             pipe.watch(*self.watched_keys)
 
             # Raise an error if the puzzle pieces have changed since phase 1 started.
-            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key))
+            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key) or INVALID_MUTATION_ID)
             if current_puzzle_mutation_id != self.puzzle_mutation_id:
                 raise PieceMutateError("phase 1 pzm")
 
@@ -156,9 +161,9 @@ class PieceMutateProcess:
             self._update_target_position(self.target_x, self.target_y)
 
             # pcfixed_puzzle
-            pipe.smembers("pcfixed:{puzzle}".format(puzzle=self.puzzle))
+            pipe.smembers(self.pcfixed_puzzle_key)
             # pcstacked_puzzle
-            pipe.smembers("pcstacked:{puzzle}".format(puzzle=self.puzzle))
+            pipe.smembers(self.pcstacked_puzzle_key)
             # pcg_puzzle_g
             pipe.smembers(pcg_puzzle_g_key)
 
@@ -210,6 +215,8 @@ class PieceMutateProcess:
             self.adjacent_piece_group_ids = self._get_adjacent_piece_group_ids(
                 self.adjacent_piece_properties
             )
+            if self.piece in self.pcfixed_puzzle:
+                raise PieceMutateError("piece can't be moved")
 
         ## pipeline phase 2
         # grouped pieces
@@ -218,7 +225,7 @@ class PieceMutateProcess:
             pipe.watch(*self.watched_keys)
 
             # Raise an error if the puzzle pieces have changed since phase 1 started.
-            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key))
+            current_puzzle_mutation_id = int(pipe.get(self.pzm_puzzle_key) or INVALID_MUTATION_ID)
             if current_puzzle_mutation_id != self.puzzle_mutation_id:
                 raise PieceMutateError("phase 2 pzm")
 
@@ -370,13 +377,13 @@ class PieceMutateProcess:
 
         # Set immovable status if adjacent piece is immovable
         if self.can_join_adjacent_piece in self.pcfixed_puzzle:
-            pipe.sadd("pcfixed:{puzzle}".format(puzzle=self.puzzle), self.piece)
+            pipe.sadd(self.pcfixed_puzzle_key, self.piece)
             self.pcfixed_puzzle.add(self.piece)
             lines.append(formatPieceMovementString(self.piece, s="1"))
             for grouped_piece in self.all_other_pieces_in_piece_group:
-                pipe.sadd("pcfixed:{puzzle}".format(puzzle=self.puzzle), grouped_piece)
+                pipe.sadd(self.pcfixed_puzzle_key, grouped_piece)
                 self.pcfixed_puzzle.add(grouped_piece)
-                pipe.srem("pcstacked:{puzzle}".format(puzzle=self.puzzle), grouped_piece)
+                pipe.srem(self.pcstacked_puzzle_key, grouped_piece)
                 try:
                     self.pcstacked_puzzle.remove(grouped_piece)
                 except KeyError:
@@ -475,10 +482,10 @@ class PieceMutateProcess:
                     grouped_piece,
                 )
             if status == "1":
-                pipe.sadd("pcfixed:{puzzle}".format(puzzle=self.puzzle), grouped_piece)
+                pipe.sadd(self.pcfixed_puzzle_key, grouped_piece)
                 self.pcfixed_puzzle.add(grouped_piece)
                 pipe.srem(
-                    "pcstacked:{puzzle}".format(puzzle=self.puzzle), grouped_piece
+                    self.pcstacked_puzzle_key, grouped_piece
                 )
                 try:
                     self.pcstacked_puzzle.remove(grouped_piece)
@@ -499,9 +506,9 @@ class PieceMutateProcess:
                 f"{self.user}:{grouped_piece}:{new_x}:{new_y}"
             )
         if status == "1":
-            pipe.sadd("pcfixed:{puzzle}".format(puzzle=self.puzzle), self.piece)
+            pipe.sadd(self.pcfixed_puzzle_key, self.piece)
             self.pcfixed_puzzle.add(self.piece)
-            pipe.srem("pcstacked:{puzzle}".format(puzzle=self.puzzle), self.piece)
+            pipe.srem(self.pcstacked_puzzle_key, self.piece)
             try:
                 self.pcstacked_puzzle.remove(self.piece)
             except KeyError:
