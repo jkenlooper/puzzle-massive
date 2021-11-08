@@ -23,6 +23,15 @@ Types of changes
 
 ## [Unreleased] - ...
 
+### Fixed
+
+- Fix stuck pieces that are outside of the main immovable piece group.
+
+### Added
+
+- Admin can set a puzzle as buggy which will remove it from being publicly
+    listed.
+
 ## [2.12.2] - 2021-11-06
 
 ### Added
