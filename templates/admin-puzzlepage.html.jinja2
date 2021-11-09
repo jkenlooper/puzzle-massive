@@ -223,6 +223,12 @@
             <input type="radio" name="edit" value="private">
           </label>
           {% endif %}
+          {% if slug in ('buggy', 'in_queue',) %}
+          <label>
+            Make Active
+            <input type="radio" name="edit" value="status_active">
+          </label>
+          {% endif %}
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 "Admin Puzzle Edit"
 import os
+from time import time, strftime, gmtime
 
 from flask import current_app, redirect, request, make_response, abort
 from flask.views import MethodView
@@ -7,6 +8,7 @@ from flask.views import MethodView
 from api.app import db, redis_connection
 from api.database import rowify, fetch_query_string, delete_puzzle_resources
 from api.timeline import delete_puzzle_timeline
+from api.puzzle_details import update_puzzle_details
 from api.tools import purge_route_from_nginx_cache
 from api.constants import (
     ACTIVE,
@@ -66,7 +68,7 @@ class AdminPuzzleBatchEditView(MethodView):
             abort(400)
 
         edit = args.get("edit")
-        if action == "edit" and edit not in ("private",):
+        if action == "edit" and edit not in ("private", "status_active"):
             abort(400)
 
         # abort if tag value not set
@@ -163,6 +165,19 @@ class AdminPuzzleBatchEditView(MethodView):
                     each(puzzle_ids),
                 )
                 db.commit()
+
+            elif edit == "status_active":
+                m_date_now = strftime("%Y-%m-%d %H:%M:%S", gmtime(time()))
+                for puzzle_id in puzzle_ids:
+                    data = {
+                        "status": ACTIVE, "m_date": m_date_now
+                    }
+                    response_msg = update_puzzle_details(puzzle_id, data)
+                    if (
+                        response_msg.get("rowcount")
+                        and response_msg.get("status_code") >= 300
+                    ):
+                        current_app.logger.warning(f"Failed to update puzzle details {puzzle_id} {data}")
 
         def each(puzzle_ids):
             for puzzle_id in puzzle_ids:
