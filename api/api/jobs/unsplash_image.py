@@ -38,6 +38,7 @@ def add_photo_to_puzzle(puzzle_id, photo, description, original_filename):
                 puzzle_id,
                 photo,
                 description,
+                original_filename,
                 result_ttl=0,
                 job_timeout="24h",
             )

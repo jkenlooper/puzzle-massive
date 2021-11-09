@@ -231,8 +231,6 @@ def submit_puzzle(
 
     if is_unsplash_link:
         original_filename = f"original.{original_slip}.jpg"
-        # TODO: push to artist queue to enqueue_in(timedelta(seconds=10))
-        # https://python-rq.org/docs/scheduling/
         # Go download the unsplash image and update the db
         job = current_app.unsplashqueue.enqueue(
             "api.jobs.unsplash_image.add_photo_to_puzzle",
