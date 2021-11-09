@@ -28,6 +28,7 @@
     {% set count_submitted = admin_puzzle_menu.puzzle_status_count | selectattr('status', 'equalto', 0) | sum(attribute='total') %}
 
     {% set count_suggested = admin_puzzle_menu.puzzle_status_count | selectattr('status', 'equalto', -20) | sum(attribute='total') %}
+    {% set count_buggy = admin_puzzle_menu.puzzle_status_count | selectattr('status', 'equalto', 5) | sum(attribute='total') %}
 
     {% set count_rejected = admin_puzzle_menu.puzzle_status_count | selectattr('status', 'equalto', -1) | sum(attribute='total') + admin_puzzle_menu.puzzle_status_count | selectattr('status', 'equalto', -2) | sum(attribute='total') %}
 
@@ -63,6 +64,9 @@
       </a>
       <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle/suggested') }}">
         Suggested {{count_suggested}}
+      </a>
+      <a href="/chill{{ url_for('.page_uri', uri='admin/puzzle/buggy') }}">
+        Buggy {{count_buggy}}
       </a>
       <span>
         Rejected {{count_rejected}}
@@ -251,7 +255,7 @@
         {% set puzzles = [puzzles] %}
       {%- endif %}
 
-      {% if slug in ('active', 'in_queue', 'completed', 'instances') %}
+      {% if slug in ('active', 'in_queue', 'completed', 'instances', 'buggy') %}
         {{ montage(puzzles, default_checked=False, itemwidth=128) }}
 
       {% elif slug == 'submitted' %}

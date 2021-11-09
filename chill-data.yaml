@@ -213,6 +213,15 @@ value:
     puzzle_status_count: _select-puzzle-status-count.sql
   puzzles: _select-admin-puzzles-render.sql
 --- !ChillNode
+name: admin_puzzle_page_buggy
+route: /admin/puzzle/buggy/
+template: admin-puzzlepage.html.jinja2
+value:
+  slug: buggy
+  admin_puzzle_menu:
+    puzzle_status_count: _select-puzzle-status-count.sql
+  puzzles: _select-admin-puzzles-buggy.sql
+--- !ChillNode
 name: admin_puzzle_page_suggested
 route: /admin/puzzle/suggested/
 template: admin-puzzlepage.html.jinja2
