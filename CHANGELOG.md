@@ -26,6 +26,7 @@ Types of changes
 ### Fixed
 
 - Fix stuck pieces that are outside of the main immovable piece group.
+- Less (incorrect) alerts about pieces being blocked.
 
 ### Added
 
