@@ -48,7 +48,7 @@ class PuzzlePieceView(MethodView):
         )
         pieceData = dict(list(zip(publicPieceProperties, pieceProperties)))
         piece_status = None
-        if redis_connection.sismember(f"pcfixed:{puzzle}") == 1:
+        if redis_connection.sismember(f"pcfixed:{puzzle}", piece) == 1:
             piece_status = "1"
 
         pieceData["s"] = piece_status
