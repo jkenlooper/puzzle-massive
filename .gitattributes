@@ -1,6 +1,6 @@
-/package-lock.json -diff
+package-lock.json -diff
 *.md.svg -diff
-/.design-tokens-css/*/* -diff
+/design-tokens/dist/** -diff
 /node_modules/alpinejs/dist/alpine.js -diff
 /node_modules/lazysizes/lazysizes.min.js -diff
 /node_modules/hammerjs/hammer.min.js -diff

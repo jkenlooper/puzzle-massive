@@ -66,3 +66,47 @@ https://github.com/salesforce-ux/theo
 | text-shadow         | Text Shadows           |
 | time                | Time                   |
 | media-query         | Media Queries          |
+
+
+## Building
+
+The built CSS files in dist/ have been committed to the git repository. If
+making changes; then run the `make` command for the design-tokens/ directory.
+This will create new dist/ files as well as update the package-lock.json as
+needed.
+
+```bash
+# In the design-tokens/ directory.
+make
+
+# Or
+
+docker build \
+  --target build \
+  -t puzzle-massive-design-tokens \
+  ./
+
+docker run -it --rm \
+  -p 0.0.0.0:38687:38687 \
+  --mount type=bind,src=$(pwd)/src,dst=/build/src \
+  --name puzzle-massive-design-tokens \
+  puzzle-massive-design-tokens \
+  npm run build
+```
+
+## Serving
+
+In the future, the design-tokens will serve it's built files at localhost:38687.
+Other client-side build processes can then fetch these CSS files as needed.
+
+```bash
+# In the design-tokens/ directory.
+docker build \
+  -t puzzle-massive-design-tokens \
+  ./
+
+docker run -it --rm \
+  -p 0.0.0.0:38687:38687 \
+  --name puzzle-massive-design-tokens \
+  puzzle-massive-design-tokens
+```

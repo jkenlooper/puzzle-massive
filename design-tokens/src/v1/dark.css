@@ -1,0 +1,6 @@
+/* Dark Theme */
+
+@import "../../tmp/default-theme/settings.custom-properties-selector.css";
+
+/* The dark-theme overrides values set by default-theme. */
+@import "../../tmp/dark-theme/settings.custom-properties-selector.css";

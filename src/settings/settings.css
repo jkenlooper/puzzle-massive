@@ -1,7 +1,4 @@
-@import "../../.design-tokens-css/default-theme/settings.custom-properties-selector.css";
-/*
-@import "../../.design-tokens-css/dark-theme/settings.custom-properties-selector.css" (prefers-color-scheme: dark);
-*/
+@import "../../design-tokens/dist/v1/default.css";
 
 :root {
   --color-dark: rgb(68, 71, 74);

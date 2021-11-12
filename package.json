@@ -32,14 +32,11 @@
     "rollup": "rollup",
     "typecheck": "npm run tsc -- --noEmit -p .",
     "test": "npm run typecheck && mocha --recursive 'src/**/*.spec.js'",
-    "predebug": "npm run transform-design-tokens",
     "debug": "npm run typecheck && npm run jsdoc && npm run distfiles && rollup -c",
-    "prebuild": "npm run transform-design-tokens",
     "build": "npm run typecheck && npm run jsdoc && npm run distfiles && NODE_ENV=production rollup -c",
     "postbuild": "svgo --folder=dist --recursive",
     "watch": "npm run debug -- --watch",
-    "preversion": "npm test && npm run build",
-    "transform-design-tokens": "./bin/transform-design-tokens.sh"
+    "preversion": "npm test && npm run build"
   },
   "dependencies": {
     "@types/modernizr": "^3.5.3",
@@ -83,7 +80,6 @@
     "lint-staged": "^11.2.3",
     "mocha": "^9.1.3",
     "node-fetch": "^2.6.5",
-    "optimist": "^0.6.1",
     "postcss": "^8.3.9",
     "postcss-custom-media": "^8.0.0",
     "postcss-import": "^14.0.2",
@@ -97,7 +93,6 @@
     "stylelint-config-prettier": "^8.0.1",
     "stylelint-prettier": "^1.2.0",
     "tape": "^5.3.1",
-    "theo": "^8.1.5",
     "ts-node": "^9.1.1",
     "tslib": "^2.3.1",
     "typescript": "^4.4.4",

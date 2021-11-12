@@ -1,0 +1,6 @@
+/* design-tokens v1 entry point includes both default and dark theme. */
+
+@import "../../tmp/default-theme/settings.custom-properties-selector.css";
+
+/* TODO: The dark-theme is not fully implemented. */
+@import "../../tmp/dark-theme/settings.custom-properties-selector.css" (prefers-color-scheme: dark);

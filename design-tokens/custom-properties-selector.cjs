@@ -1,4 +1,5 @@
 module.exports = (theo) => {
+
   theo.registerFormat(
     "custom-properties-selector.css",
     `{{#each props as |prop|}}
