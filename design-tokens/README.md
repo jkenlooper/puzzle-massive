@@ -26,7 +26,7 @@ Color naming convention inspired by [Naming Conventions for colors - by Kevin Ma
 
 Use of colors loosely follow [Material Design guidelines](https://www.material.io/design/color/).
 
-Color aliases are defined in [color.yaml file](./color.yaml).
+Color aliases are defined in [color.yaml file](./src/color.yaml).
 
 ### Tools
 
@@ -78,26 +78,28 @@ needed.
 ```bash
 # In the design-tokens/ directory.
 make
+```
 
-# Or
+Can also run the docker commands to build the image at the 'build' stage and
+then run the container when trying out different changes.
 
+```bash
 docker build \
   --target build \
-  -t puzzle-massive-design-tokens \
+  -t puzzle-massive-design-tokens-build \
   ./
 
+# Note that this removes the container when it exits (--rm).
 docker run -it --rm \
-  -p 0.0.0.0:38687:38687 \
   --mount type=bind,src=$(pwd)/src,dst=/build/src \
-  --name puzzle-massive-design-tokens \
-  puzzle-massive-design-tokens \
-  npm run build
+  puzzle-massive-design-tokens-build \
+  sh
 ```
 
 ## Serving
 
 In the future, the design-tokens will serve it's built files at localhost:38687.
-Other client-side build processes can then fetch these CSS files as needed.
+Other client-side apps can then fetch these CSS files as needed.
 
 ```bash
 # In the design-tokens/ directory.
@@ -107,6 +109,5 @@ docker build \
 
 docker run -it --rm \
   -p 0.0.0.0:38687:38687 \
-  --name puzzle-massive-design-tokens \
   puzzle-massive-design-tokens
 ```

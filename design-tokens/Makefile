@@ -22,23 +22,23 @@ objects := package-lock.json dist/v1/default.css
 .PHONY: all
 all: $(objects)
 
-package-lock.json: package.json
+package-lock.json: package.json Dockerfile
 	$(DOCKER) build -f $(project_dir)Dockerfile \
 		--target build \
-		-t puzzle-massive-design-tokens-package-lock \
+		-t puzzle-massive-design-tokens-build \
 		$(project_dir)
 
 	$(DOCKER) run \
-		--name puzzle-massive-design-tokens-package-lock \
-		puzzle-massive-design-tokens-package-lock \
+		--name puzzle-massive-design-tokens-build \
+		puzzle-massive-design-tokens-build \
 		npm install --ignore-scripts
 
 	$(DOCKER) cp \
-		puzzle-massive-design-tokens-package-lock:/build/package-lock.json \
+		puzzle-massive-design-tokens-build:/build/package-lock.json \
 		$(project_dir)package-lock.json
 
 	$(DOCKER) rm \
-		puzzle-massive-design-tokens-package-lock
+		puzzle-massive-design-tokens-build
 
 # For backward compatibility with legacy_puzzle_massive; copy the built CSS file
 dist/v1/default.css: package-lock.json custom-properties-selector.cjs $(shell find src/ -type f)
@@ -47,11 +47,13 @@ dist/v1/default.css: package-lock.json custom-properties-selector.cjs $(shell fi
 		-t puzzle-massive-design-tokens-build \
 		$(project_dir)
 
+	mkdir -p $$(dirname $(project_dir)$(@))
+
 	$(DOCKER) run \
 		--name puzzle-massive-design-tokens-build \
-		puzzle-massive-design-tokens-build ls -alR $(@)
+		puzzle-massive-design-tokens-build \
+		ls -alR /build/dist/
 
-	mkdir -p $(project_dir)dist/v1
 	$(DOCKER) cp \
 		puzzle-massive-design-tokens-build:/build/$(@) \
 		$(project_dir)$(@)
