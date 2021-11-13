@@ -29,8 +29,19 @@ artifact_bundle=puzzle-massive-$project_version.bundle
 
 if [ ! -e $artifact_bundle -o "${terraform_command}" != "console" ]; then
   git diff --quiet || (echo "Project directory is dirty. Please commit any changes first." && exit 1)
+  # Build client side code and include in the bundle.
+  tmp_project=$(mktemp -d)
+  cd $tmp_project
+  git clone $project_dir ./
+  cd client-side-public
+  make
+  cd -
+  git add --force client-side-public/dist
+  git commit -m 'Force add client-side-public dist'
   tmp_artifact_bundle=$(mktemp -d)/puzzle-massive.bundle
   git bundle create $tmp_artifact_bundle HEAD
+  cd $project_dir
+  rm -rf $tmp_project
   rm -f puzzle-massive-*.bundle
   mv $tmp_artifact_bundle $artifact_bundle
 fi

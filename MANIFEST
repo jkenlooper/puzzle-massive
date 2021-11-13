@@ -39,7 +39,8 @@ chill/puzzle-massive-chill.service.sh
 site-data.sql
 chill-data.yaml
 chill-data
-dist
+client-side-public/dist
+design-tokens/dist
 divulger/README.md
 divulger/divulger
 divulger/puzzle-massive-divulger.service.sh

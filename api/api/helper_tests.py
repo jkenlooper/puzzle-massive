@@ -51,7 +51,7 @@ class APITestCase(unittest.TestCase):
             DOCUMENT_FOLDER="documents",
             MEDIA_FOLDER="media",
             MEDIA_PATH="/media/",
-            THEME_STATIC_FOLDER="dist",
+            THEME_STATIC_FOLDER="client-side-public/dist",
             PACKAGEJSON={"version": "0", "author": "Beaker"},
             VERSION="0",
             THEME_STATIC_PATH="/theme/0/",

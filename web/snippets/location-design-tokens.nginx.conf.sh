@@ -20,7 +20,7 @@ cat <<-HERE
 # File generated from $0
 # on ${DATE}
 
-location /client-side-public/ {
+location /design-tokens/ {
   expires \$cache_expire;
   add_header Cache-Control "public, max-age:31536000, immutable";
   root ${root_dir};

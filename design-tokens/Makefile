@@ -35,7 +35,7 @@ package-lock.json: package.json Dockerfile
 
 	$(DOCKER) cp \
 		puzzle-massive-design-tokens-build:/build/package-lock.json \
-		$(project_dir)package-lock.json
+		$@
 
 	$(DOCKER) rm \
 		puzzle-massive-design-tokens-build

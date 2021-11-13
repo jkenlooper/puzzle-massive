@@ -24,6 +24,7 @@ Minimal setup to get it running on your local machine at
 to complete.
 
 ```bash
+cd client-side-public && make && cd -
 vagrant up
 vagrant provision --provision-with shell-init-dev-local
 vagrant provision --provision-with shell-testdata-puzzles-quick

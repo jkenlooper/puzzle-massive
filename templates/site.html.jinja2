@@ -79,6 +79,7 @@
     <link type="text/plain" rel="author" href="/humans.txt">
     {% block stylesheet %}
 
+    <link rel="stylesheet" media="all" href="/design-tokens/{{ config.VERSION }}/default.css">
     <link rel="stylesheet" media="all" href="{{ url_for('send_theme_file', filename='app.bundle.css') }}{% if config.DEBUG == True and config.CACHE_TYPE == "null" %}?debug-no-cache={{ chill_now }}{% endif %}">
     {% endblock %}
     {% include 'favicon.html.jinja2' %}

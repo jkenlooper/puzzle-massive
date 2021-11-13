@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env sh
 
 rm -rf dist
 mkdir -p dist

@@ -46,7 +46,6 @@ which rsync > /dev/null || (echo "No rsync command found. Install rsync." && exi
 # specific files and directories that don't need to be transferred.
 
 rsync --archive \
-  --delete \
   --delay-updates \
   --itemize-changes \
   --relative \

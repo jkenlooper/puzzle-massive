@@ -31,7 +31,8 @@ wp.watch(
     "site-data.sql",
   ],
   [
-    "dist",
+    "client-side-public/dist",
+    "design-tokens/dist"
     "api/api",
     "divulger/divulger",
     "documents",

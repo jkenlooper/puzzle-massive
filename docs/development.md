@@ -2,10 +2,11 @@
 
 Get a **local development** version of Puzzle Massive to run on your machine by
 following this guide. You'll need to install the below software in order to
-create a virtual machine.
+create a virtual machine and create containers.
 
 - [VirtualBox](https://www.virtualbox.org/)
 - [Vagrant](https://www.vagrantup.com/)
+- [Docker](https://www.docker.com/) or [Podman](https://podman.io/)
 
 Some definitions that this guide uses:
 
@@ -58,15 +59,16 @@ virtual machine if it doesn't exist on the local machine.
 
 [VirtualBox](https://www.virtualbox.org/) and
 [Vagrant](https://www.vagrantup.com/) are used to create a virtual machine on
-your local machine. This allows you to run your own version of Puzzle Massive
-locally. It is also configured to automatically compile any files changed in
-the src/ directory which will then show those changes locally after refreshing
-the web browser. The [Vagrantfile](../Vagrantfile) included with the project is for
+your local machine. [Docker](https://www.docker.com/) or equivalent container runtime like [Podman](https://podman.io/) will also be needed.  This allows you to run your own version of Puzzle Massive
+locally. The [Vagrantfile](../Vagrantfile) included with the project is for
 local development only. It has a few scripts within it that help setup a local
 version of Puzzle Massive. This can all be set up by running the below
 `vagrant` commands.
 
 ```bash
+# Compile the client-side theme files
+cd client-side-public && make && cd -
+
 # Bring the virtual machine up and provision it
 vagrant up
 ```
@@ -186,44 +188,9 @@ For the vagrant development machine the dev user password is 'vagrant'.
 sudo su dev
 ```
 
-#### Errors with Compiling `src/` Files
+#### Errors with Compiling `client-side-public/src/` Files
 
-Double check that changes from the local machine are being sent to the Vagrant
-development machine. Use the `vagrant rsync legacy_puzzle_massive` command to
-upload files to the development machine.
-
-Any changes to the `src/` files in `/home/vagrant/puzzle-massive/` (on the
-development machine) will trigger the command `npm run debug` to run. Since the
-`npm` command is being ran automatically via the `local-puzzle-massive-watchit`
-service the output from that is being sent to the
-`_infra/local/output/npm-run-debug.local-puzzle-massive-watchit.log` file on the
-local machine.
-
-```bash
-# On the local machine:
-# Follow the last entries made to the log file for npm run debug.
-tail --follow=name --retry -n60 \
-  _infra/local/output/npm-run-debug.local-puzzle-massive-watchit.log
-```
-
-To disable the automatic `npm run debug` on the Vagrant development machine
-requires stopping the `local-puzzle-massive-watchit` service. Now you can
-manually run `npm run debug` and see any errors it might be throwing.
-
-```bash
-# Log into the Vagrant development machine
-vagrant ssh
-
-# Stop the service that automatically runs npm run debug
-sudo systemctl stop local-puzzle-massive-watchit
-
-# Now manually run the npm command to see any errors
-cd /home/vagrant/puzzle-massive/
-npm run debug
-
-# Start the service that automatically runs npm run debug
-sudo systemctl start local-puzzle-massive-watchit
-```
+See [client-side-public/README.md](../client-side-public/README.md)
 
 #### Errors with Python Code
 

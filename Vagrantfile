@@ -161,10 +161,8 @@ DEFAULT_ENV
     SHELL
 
     # The devsync.sh uses local-puzzle-massive when syncing files
-    # Install the watchit command that is used in _infra/local/watchit.sh script.
-    legacy_puzzle_massive.vm.provision "shell-watchit-support", type: "shell", inline: <<-SHELL
+    legacy_puzzle_massive.vm.provision "shell-local-devsync-support", type: "shell", inline: <<-SHELL
       echo "127.0.0.1 local-puzzle-massive" >> /etc/hosts
-      pip install watchit
     SHELL
 
     legacy_puzzle_massive.vm.provision "shell-vagrant-local-ssh", privileged: false, type: "shell", inline: <<-SHELL
@@ -177,8 +175,7 @@ DEFAULT_ENV
 
     legacy_puzzle_massive.vm.provision "shell-vagrant-npm-install-and-build", privileged: false, type: "shell", inline: <<-SHELL
       cd /home/vagrant/puzzle-massive
-      npm install
-      npm run debug
+      npm ci --ignore-scripts
     SHELL
 
     legacy_puzzle_massive.vm.provision "shell-usr-local-src-puzzle-massive", type: "shell", inline: <<-SHELL
@@ -191,11 +188,7 @@ DEFAULT_ENV
       ./bin/devsync.sh
     SHELL
 
-    legacy_puzzle_massive.vm.provision "shell-services-watchit-devsync", type: "shell", inline: <<-SHELL
-      /home/vagrant/puzzle-massive/_infra/local/local-puzzle-massive-watchit.service.sh vagrant > /etc/systemd/system/local-puzzle-massive-watchit.service
-      systemctl start local-puzzle-massive-watchit
-      systemctl enable local-puzzle-massive-watchit
-
+    legacy_puzzle_massive.vm.provision "shell-services-devsync", type: "shell", inline: <<-SHELL
       /home/vagrant/puzzle-massive/_infra/local/local-puzzle-massive-auto-devsync.service.sh vagrant > /etc/systemd/system/local-puzzle-massive-auto-devsync.service
       systemctl start local-puzzle-massive-auto-devsync
       systemctl enable local-puzzle-massive-auto-devsync
@@ -272,7 +265,6 @@ AWS_CONFIG_APP
       type: "shell",
       run: "never",
       inline: <<-SHELL
-        echo "Hey! I'm walking here!" > /home/vagrant/puzzle-massive/src/.trigger-watchit
         cd /usr/local/src/puzzle-massive;
         touch .vagrant-overrides
         chown dev:dev .vagrant-overrides
@@ -508,7 +500,7 @@ SERVICE_INSTALL
   # The rsync arg '--delete' is not used here to prevent removing any generated
   # files from running 'make' command.
   config.vm.synced_folder ".", "/home/vagrant/puzzle-massive", type: "rsync",
-    rsync__exclude: ["/.git/", "/.vagrant/", "/.terraform/", "/terraform.tfstate.d/", ".terraform.lock.hcl", "/node_modules/", "/include/", "/lib/", "/lib64/", "/local/", "/share/", "/dist/", "/_infra/local/output/", "/_infra/development/","/_infra/test/","/_infra/acceptance/","/_infra/production/", "/puzzle-massive-*.tar.gz", "/puzzle-massive-*.bundle"],
+    rsync__exclude: ["/.git/", "/.vagrant/", "/.terraform/", "/terraform.tfstate.d/", ".terraform.lock.hcl", "/node_modules/", "/include/", "/lib/", "/lib64/", "/local/", "/share/", "/_infra/local/output/", "/_infra/development/","/_infra/test/","/_infra/acceptance/","/_infra/production/", "/puzzle-massive-*.tar.gz", "/puzzle-massive-*.bundle"],
     rsync__args: ["--verbose", "--archive", "-z", "--copy-links", "--delay-updates"]
 
   config.vm.synced_folder "./_infra/local/output", "/home/vagrant/output"

@@ -20,12 +20,9 @@ cd "$TMPDIR";
   make install
 fi)
 
-# Use the node and npm that is set in .nvmrc
-nvm use;
-
-# Build
-npm ci --omit=dev --ignore-scripts # clean install
-npm run build;
+cd client-side-public
+make
+cd -
 
 # Create symlinks for all files in the MANIFEST.
 mkdir -p puzzle-massive;

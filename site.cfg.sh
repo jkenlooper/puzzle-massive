@@ -141,7 +141,7 @@ MEDIA_PATH = "/media/"
 # The theme is where all the front end resources like css, js, graphics and
 # such that make up the theme of a website. The THEME_STATIC_FOLDER is where
 # these files are located and by default nothing is set here.
-THEME_STATIC_FOLDER = "dist"
+THEME_STATIC_FOLDER = "client-side-public/dist"
 
 # Set a THEME_STATIC_PATH for routing the theme static files with.  It's useful
 # to set a version number within this path to easily do cache-busting.  In your

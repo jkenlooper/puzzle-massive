@@ -60,7 +60,7 @@ used on the Puzzle Massive site.
 of the Puzzle Massive site. This is typically added via a git submodule and the
 contents are not part of the main puzzle-massive codebase.
 
-[src/](../src/) Client-side source files that are compiled to the `dist/` directory.
+[client-side-public/](../client-side-public/) Client-side source files (JavaScript, CSS, HTML, etc.)
 
 [stats/](../stats/) AWStats (Advanced Web Statistics) setup.
 

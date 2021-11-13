@@ -1,5 +1,3 @@
-@import "../../design-tokens/dist/v1/default.css";
-
 :root {
   --color-dark: rgb(68, 71, 74);
   --color-dark-dark: rgb(0, 0, 0);

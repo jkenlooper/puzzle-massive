@@ -62,22 +62,30 @@ chown -R dev:dev "${SRVDIR}resources/";
 #rm -rf "${FROZENTMP}";
 
 if test "${ENVIRONMENT}" != 'development'; then
-mkdir -p "${SRVDIR}dist/";
+mkdir -p "${SRVDIR}client-side-public/dist/";
 mkdir -p "${SRVDIR}media/";
-chown -R dev:dev "${SRVDIR}dist/";
+mkdir -p "${SRVDIR}design-tokens/";
+chown -R dev:dev "${SRVDIR}client-side-public/dist/";
 chown -R dev:dev "${SRVDIR}media/";
+chown -R dev:dev "${SRVDIR}design-tokens/";
 rsync --archive \
   --inplace \
   --delete \
   --itemize-changes \
-  dist/ "${SRVDIR}dist/";
-echo "rsynced files in dist to ${SRVDIR}dist/";
+  client-side-public/dist/ "${SRVDIR}client-side-public/dist/";
+echo "rsynced files in client-side-public/dist/ to ${SRVDIR}client-side-public/dist/";
 rsync --archive \
   --inplace \
   --delete \
   --itemize-changes \
   media/ "${SRVDIR}media/";
 echo "rsynced files in media to ${SRVDIR}media/";
+rsync --archive \
+  --inplace \
+  --delete \
+  --itemize-changes \
+  design-tokens/dist/ "${SRVDIR}design-tokens/";
+echo "rsynced files in design-tokens/dist/ to ${SRVDIR}design-tokens/";
 fi
 
 mkdir -p "${NGINXLOGDIR}";
