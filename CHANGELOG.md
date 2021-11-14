@@ -21,6 +21,15 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
+## [Unreleased] - ...
+
+Improving the client side build tools and process.
+
+### Changed
+
+- Switched Typescript files to JavaScript
+- Isolated the design-tokens and client side public code
+
 ## [2.12.3] - 2021-11-10
 
 ### Fixed
