@@ -1,41 +1,24 @@
 //import * as Modernizr from "modernizr";
 import { html, render } from "lit-html";
-
 import hashColorService from "./hash-color.service";
 import "./hash-color.css";
-
-interface TemplateData {
-  hasInputtypesColor: boolean;
-  backgroundColor: string;
-  handleChange: Function;
-}
-
 const tag = "pm-hash-color";
 let lastInstanceId = 0;
-
-customElements.define(
-  tag,
-  class PmHashColor extends HTMLElement {
-    static get _instanceId(): string {
-      return `${tag} ${lastInstanceId++}`;
-    }
-    private instanceId: string;
-    private defaultBackgroundColor: string;
-
+customElements.define(tag, class PmHashColor extends HTMLElement {
     constructor() {
-      super();
-      this.instanceId = PmHashColor._instanceId;
-
-      const backgroundColor = this.attributes.getNamedItem("background-color");
-      this.defaultBackgroundColor = backgroundColor
-        ? backgroundColor.value
-        : "#404";
-
-      hashColorService.subscribe(this.render.bind(this), this.instanceId);
+        super();
+        this.instanceId = PmHashColor._instanceId;
+        const backgroundColor = this.attributes.getNamedItem("background-color");
+        this.defaultBackgroundColor = backgroundColor
+            ? backgroundColor.value
+            : "#404";
+        hashColorService.subscribe(this.render.bind(this), this.instanceId);
     }
-
-    template(data: TemplateData) {
-      return html`
+    static get _instanceId() {
+        return `${tag} ${lastInstanceId++}`;
+    }
+    template(data) {
+        return html `
         <span class="pm-HashColor">
           <label for="hash-color-background-color">
             <pm-icon size="sm" class="pm-Puzzlepage-icon"
@@ -44,7 +27,7 @@ customElements.define(
           </label>
           <span class="pm-HashColor-field">
             ${data.hasInputtypesColor
-              ? html`
+            ? html `
                   <input
                     type="color"
                     class="pm-HashColor-inputColor"
@@ -53,7 +36,7 @@ customElements.define(
                     value=${data.backgroundColor}
                   />
                 `
-              : html`
+            : html `
                   <input
                     type="text"
                     class="pm-HashColor-inputText jscolor {hash:true}"
@@ -66,31 +49,23 @@ customElements.define(
         </span>
       `;
     }
-
-    handleChange(ev: any) {
-      this.dispatchEvent(
-        new CustomEvent("pm-hash-color-change", {
-          bubbles: true,
-          detail: ev.target.value.substr(1),
-        })
-      );
+    handleChange(ev) {
+        this.dispatchEvent(new CustomEvent("pm-hash-color-change", {
+            bubbles: true,
+            detail: ev.target.value.substr(1),
+        }));
     }
-
-    get data(): TemplateData {
-      return {
-        hasInputtypesColor: Modernizr.inputtypes.color,
-        backgroundColor:
-          hashColorService.backgroundColor || this.defaultBackgroundColor,
-        handleChange: this.handleChange.bind(this),
-      };
+    get data() {
+        return {
+            hasInputtypesColor: Modernizr.inputtypes.color,
+            backgroundColor: hashColorService.backgroundColor || this.defaultBackgroundColor,
+            handleChange: this.handleChange.bind(this),
+        };
     }
-
     render() {
-      render(this.template(this.data), this);
+        render(this.template(this.data), this);
     }
-
     connectedCallback() {
-      this.render();
+        this.render();
     }
-  }
-);
+});

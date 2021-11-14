@@ -1,5 +1,4 @@
 const defaultSettings = {
-  playPuzzlePieceSound: false,
+    playPuzzlePieceSound: false,
 };
-
 export default defaultSettings;

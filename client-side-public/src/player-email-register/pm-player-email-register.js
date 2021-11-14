@@ -1,73 +1,51 @@
 import { html, render } from "lit-html";
-
 import FetchService from "../site/fetch.service";
 import userDetailsService from "../site/user-details.service";
 import "./player-email-register.css";
-
-interface TemplateData {
-  email: string;
-  emailVerifed: boolean;
-  isShareduser: boolean;
-  submitEmailHandler: any; // event listener object
-  responseMessage: string;
-  responseName: string;
-}
-interface SubmitFormResponse {
-  message: string;
-  name: string;
-}
-
 const tag = "pm-player-email-register";
 let lastInstanceId = 0;
-
-customElements.define(
-  tag,
-  class PmPlayerEmailRegister extends HTMLElement {
-    static get _instanceId(): string {
-      return `${tag} ${lastInstanceId++}`;
-    }
-
-    private instanceId: string;
-    private responseMessage: string = "";
-    private responseName: string = "";
-
+customElements.define(tag, class PmPlayerEmailRegister extends HTMLElement {
     constructor() {
-      super();
-      this.instanceId = PmPlayerEmailRegister._instanceId;
-      userDetailsService.subscribe(this.render.bind(this), this.instanceId);
+        super();
+        this.responseMessage = "";
+        this.responseName = "";
+        this.instanceId = PmPlayerEmailRegister._instanceId;
+        userDetailsService.subscribe(this.render.bind(this), this.instanceId);
     }
-
-    submit(form: HTMLFormElement) {
-      const fetchService = new FetchService(form.action);
-      const data = new FormData(form);
-      if (!form.reportValidity()) {
-        this.responseMessage = "Form is not valid.";
-        this.responseName = "invalid";
-        this.render();
-      } else {
-        fetchService
-          .postForm<SubmitFormResponse>(data)
-          .then((response) => {
-            this.responseMessage = response.message;
-            this.responseName = response.name;
-          })
-          .catch((err: any) => {
-            if (err.message && err.name) {
-              this.responseMessage = err.message;
-              this.responseName = err.name;
-            }
-          })
-          .finally(() => {
-            const userDetailsChangeEvent = new Event("userDetailsChange", {
-              bubbles: true,
+    static get _instanceId() {
+        return `${tag} ${lastInstanceId++}`;
+    }
+    submit(form) {
+        const fetchService = new FetchService(form.action);
+        const data = new FormData(form);
+        if (!form.reportValidity()) {
+            this.responseMessage = "Form is not valid.";
+            this.responseName = "invalid";
+            this.render();
+        }
+        else {
+            fetchService
+                .postForm(data)
+                .then((response) => {
+                this.responseMessage = response.message;
+                this.responseName = response.name;
+            })
+                .catch((err) => {
+                if (err.message && err.name) {
+                    this.responseMessage = err.message;
+                    this.responseName = err.name;
+                }
+            })
+                .finally(() => {
+                const userDetailsChangeEvent = new Event("userDetailsChange", {
+                    bubbles: true,
+                });
+                this.dispatchEvent(userDetailsChangeEvent);
             });
-            this.dispatchEvent(userDetailsChangeEvent);
-          });
-      }
+        }
     }
-
-    template(data: TemplateData) {
-      return html`
+    template(data) {
+        return html `
         <form
           class="pm-PlayerEmailRegister"
           id="email-register-form"
@@ -75,7 +53,7 @@ customElements.define(
           action="/newapi/player-email-register/"
         >
           ${data.isShareduser
-            ? html`
+            ? html `
                 <p>
                   This player account is currently a shared user account with
                   other users on the same network. The email address for the
@@ -84,12 +62,12 @@ customElements.define(
               `
             : ""}
           ${data.email
-            ? html`
+            ? html `
                 <p>
                   The e-mail address (${data.email}) has
                   ${data.emailVerifed
-                    ? html` been verified. `
-                    : html`
+                ? html ` been verified. `
+                : html `
                         <strong>not</strong> been verified. Please check your
                         e-mail for a verification link.
                       `}
@@ -115,7 +93,7 @@ customElements.define(
           </button>
 
           ${data.responseMessage
-            ? html`
+            ? html `
                 <pm-response-message
                   name=${data.responseName}
                   message=${data.responseMessage}
@@ -125,40 +103,36 @@ customElements.define(
         </form>
       `;
     }
-
-    get data(): TemplateData {
-      return {
-        email: userDetailsService.userDetails.email,
-        emailVerifed: userDetailsService.userDetails.emailVerified,
-        isShareduser: userDetailsService.userDetails.isShareduser,
-        submitEmailHandler: {
-          handleEvent: (e) => {
-            // Prevent the form from submitting
-            e.preventDefault();
-            const formEl = <HTMLFormElement>e.currentTarget.form;
-            this.submit(formEl);
-          },
-          capture: true,
-        },
-        responseMessage: this.responseMessage,
-        responseName: this.responseName,
-      };
+    get data() {
+        return {
+            email: userDetailsService.userDetails.email,
+            emailVerifed: userDetailsService.userDetails.emailVerified,
+            isShareduser: userDetailsService.userDetails.isShareduser,
+            submitEmailHandler: {
+                handleEvent: (e) => {
+                    // Prevent the form from submitting
+                    e.preventDefault();
+                    const formEl = e.currentTarget.form;
+                    this.submit(formEl);
+                },
+                capture: true,
+            },
+            responseMessage: this.responseMessage,
+            responseName: this.responseName,
+        };
     }
-
     render() {
-      //console.log("render", this.instanceId, this.data);
-      render(this.template(this.data), this);
+        //console.log("render", this.instanceId, this.data);
+        render(this.template(this.data), this);
     }
-
     connectedCallback() {
-      //console.log("connectedCallback");
+        //console.log("connectedCallback");
     }
     disconnectedCallback() {
-      //console.log("disconnectedCallback", this.instanceId);
-      userDetailsService.unsubscribe(this.instanceId);
+        //console.log("disconnectedCallback", this.instanceId);
+        userDetailsService.unsubscribe(this.instanceId);
     }
     adoptedCallback() {
-      //console.log("adoptedCallback");
+        //console.log("adoptedCallback");
     }
-  }
-);
+});
