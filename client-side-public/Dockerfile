@@ -16,8 +16,6 @@ COPY bin ./
 COPY README.md ./
 COPY rollup-admin.config.js ./
 COPY rollup.config.js ./
-COPY tsconfig.json ./
-COPY webpack.config.js ./
 
 RUN chown -R puzzlemassive:puzzlemassive /build
 

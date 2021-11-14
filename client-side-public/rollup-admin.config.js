@@ -1,7 +1,5 @@
-import commonjs from "@rollup/plugin-commonjs";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import { terser } from "rollup-plugin-terser";
-import typescript from "@rollup/plugin-typescript";
 import url from "@rollup/plugin-url";
 import postcss from "rollup-plugin-postcss";
 import postcssImport from "postcss-import";
@@ -49,8 +47,6 @@ export default {
       limit: 0,
       fileName: "[name][extname]",
     }),
-    typescript(),
-    commonjs(),
     isProduction &&
       terser({
         compress: {

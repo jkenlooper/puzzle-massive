@@ -4,19 +4,17 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "tsc": "tsc",
     "distfiles": "./bin/distfiles.sh",
     "rollup": "rollup",
     "typecheck": "npm run tsc -- --noEmit -p .",
-    "test": "npm run typecheck && mocha --recursive 'src/**/*.spec.js'",
-    "debug": "npm run typecheck && npm run distfiles && rollup -c",
-    "build": "npm run typecheck && npm run distfiles && NODE_ENV=production rollup -c",
+    "test": "mocha --recursive 'src/**/*.spec.js'",
+    "debug": "npm run distfiles && rollup -c",
+    "build": "npm run distfiles && NODE_ENV=production rollup -c",
     "postbuild": "svgo --folder=dist --recursive",
     "watch": "npm run debug -- --watch",
     "preversion": "npm test && npm run build"
   },
   "dependencies": {
-    "@types/modernizr": "^3.5.3",
     "@webcomponents/webcomponentsjs": "^2.6.0",
     "@xstate/fsm": "^1.6.2",
     "alpinejs": "^2.8.2",
@@ -37,12 +35,7 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^19.0.2",
     "@rollup/plugin-node-resolve": "^13.0.5",
-    "@rollup/plugin-typescript": "^8.2.5",
     "@rollup/plugin-url": "^6.1.0",
-    "@types/chai": "^4.2.22",
-    "@types/hammerjs": "^2.0.40",
-    "@types/mocha": "^8.2.3",
-    "@types/tape": "^4.13.2",
     "chai": "^4.3.4",
     "fetch-mock": "^9.11.0",
     "mocha": "^9.1.3",
@@ -55,10 +48,6 @@
     "rollup-plugin-postcss": "^4.0.1",
     "rollup-plugin-terser": "^7.0.2",
     "svgo": "^1.3.2",
-    "tape": "^5.3.1",
-    "ts-node": "^9.1.1",
-    "tslib": "^2.3.1",
-    "typescript": "^4.4.4",
-    "typescript-lit-html-plugin": "^0.9.0"
+    "tape": "^5.3.1"
   }
 }
