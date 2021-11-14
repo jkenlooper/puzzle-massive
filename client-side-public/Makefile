@@ -37,7 +37,7 @@ package-lock.json: package.json Dockerfile
 	$(DOCKER) rm \
 		puzzle-massive-client-side-public
 
-.dist: package-lock.json
+.dist: package-lock.json $(shell find src/ -type f)
 	$(DOCKER) build -f $(project_dir)Dockerfile \
 		--target build \
 		-t puzzle-massive-client-side-public \

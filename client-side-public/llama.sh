@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -o errexit
-
 # Use this to run `npm install ...` commands that modify the package.json or
 # package-lock.json files.
 # Example:
