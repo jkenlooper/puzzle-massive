@@ -18,6 +18,9 @@ cp node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-ce.js \
   node_modules/@webcomponents/webcomponentsjs/bundles/webcomponents-sd.js \
   dist/bundles/
 
+mkdir -p dist/lit
+cp node_modules/lit/polyfill-support.js dist/lit/
+
 cp src/modernizr.build.min.js \
   node_modules/hammerjs/hammer.min.js \
   node_modules/hammerjs/hammer.min.js.map \

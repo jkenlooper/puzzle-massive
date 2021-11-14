@@ -1,4 +1,4 @@
-import { html, render } from "lit-html";
+import { html, render } from "lit";
 import FetchService from "../site/fetch.service";
 const tag = "pm-claim-player-by-token";
 customElements.define(tag, class PmClaimPlayerByToken extends HTMLElement {

@@ -1,5 +1,5 @@
-import { html, render } from "lit-html";
-import { repeat } from "lit-html/directives/repeat";
+import { html, render } from "lit";
+import { repeat } from "lit/directives/repeat.js";
 import { puzzleImagesService, } from "../site/puzzle-images.service";
 import "./gallery.css";
 const tag = "pm-gallery";

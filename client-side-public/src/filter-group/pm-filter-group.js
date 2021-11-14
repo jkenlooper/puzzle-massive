@@ -1,6 +1,6 @@
-import { html, render } from "lit-html";
-import { classMap } from "lit-html/directives/class-map.js";
-import { repeat } from "lit-html/directives/repeat";
+import { html, render } from "lit";
+import { classMap } from "lit/directives/class-map.js";
+import { repeat } from "lit/directives/repeat.js";
 import "./filter-group.css";
 var FilterGroupType;
 (function (FilterGroupType) {

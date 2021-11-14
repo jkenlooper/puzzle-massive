@@ -1,4 +1,4 @@
-import { html, render } from "lit-html";
+import { html, render } from "lit";
 import FetchService from "../site/fetch.service";
 const tag = "pm-login-by-email";
 customElements.define(tag, class PmLoginByEmail extends HTMLElement {

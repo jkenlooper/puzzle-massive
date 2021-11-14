@@ -1,5 +1,5 @@
-import { html, render } from "lit-html";
-import { classMap } from "lit-html/directives/class-map.js";
+import { html, render } from "lit";
+import { classMap } from "lit/directives/class-map.js";
 import { streamService } from "../puzzle-pieces/stream.service";
 import "./puzzle-karma-alert.css";
 const tag = "pm-puzzle-karma-alert";

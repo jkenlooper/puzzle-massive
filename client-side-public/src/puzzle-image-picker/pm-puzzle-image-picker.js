@@ -1,6 +1,6 @@
-import { html, render } from "lit-html";
-import { classMap } from "lit-html/directives/class-map.js";
-import { repeat } from "lit-html/directives/repeat";
+import { html, render } from "lit";
+import { classMap } from "lit/directives/class-map.js";
+import { repeat } from "lit/directives/repeat.js";
 import { puzzleImagesService, } from "../site/puzzle-images.service";
 import "./puzzle-image-picker.css";
 // Set a minimum delay to prevent getting a too many requests error (429).  The

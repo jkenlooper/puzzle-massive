@@ -1,4 +1,4 @@
-import { html, render } from "lit-html";
+import { html, render } from "lit";
 import { playerStatsService, } from "../site/player-stats.service";
 const tag = "pm-total-active-player-count";
 let lastInstanceId = 0;

@@ -1,5 +1,5 @@
 /* global HTMLElement, customElements */
-import { html, render } from "lit-html";
+import { html, render } from "lit";
 import userDetailsService from "../site/user-details.service";
 const maxPieceCount = 50000;
 const tag = "pm-rebuild-form";

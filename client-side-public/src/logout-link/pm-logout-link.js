@@ -1,4 +1,4 @@
-import { html, render } from "lit-html";
+import { html, render } from "lit";
 import userDetailsService from "../site/user-details.service";
 const tag = "pm-logout-link";
 let lastInstanceId = 0;

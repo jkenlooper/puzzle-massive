@@ -1,4 +1,4 @@
-import { html, render } from "lit-html";
+import { html, render } from "lit";
 import { streamService } from "../puzzle-pieces/stream.service";
 import "./puzzle-latency.css";
 const tag = "pm-puzzle-latency";

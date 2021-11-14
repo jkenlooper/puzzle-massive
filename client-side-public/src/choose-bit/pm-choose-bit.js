@@ -1,5 +1,5 @@
-import { html, render } from "lit-html";
-import { repeat } from "lit-html/directives/repeat";
+import { html, render } from "lit";
+import { repeat } from "lit/directives/repeat.js";
 import userDetailsService from "../site/user-details.service";
 import "./choose-bit.css";
 import { chooseBitService } from "./choose-bit.service";

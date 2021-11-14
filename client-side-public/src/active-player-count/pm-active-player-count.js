@@ -1,4 +1,4 @@
-import { html, render } from "lit-html";
+import { html, render } from "lit";
 import { puzzleStatsService, } from "../site/puzzle-stats.service";
 import "./active-player-count.css";
 const tag = "pm-active-player-count";

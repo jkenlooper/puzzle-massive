@@ -1,5 +1,5 @@
-import { html, render } from "lit-html";
-import { classMap } from "lit-html/directives/class-map.js";
+import { html, render } from "lit";
+import { classMap } from "lit/directives/class-map.js";
 import userDetailsService from "../site/user-details.service";
 import "./player-puzzle-instance-list.css";
 const tag = "pm-player-puzzle-instance-list";

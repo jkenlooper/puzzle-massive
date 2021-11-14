@@ -1,5 +1,5 @@
-import { html, render } from "lit-html";
-import { classMap } from "lit-html/directives/class-map.js";
+import { html, render } from "lit";
+import { classMap } from "lit/directives/class-map.js";
 import { puzzleStatsService, } from "../site/puzzle-stats.service";
 import "./latest-player-list.css";
 const tag = "pm-latest-player-list";

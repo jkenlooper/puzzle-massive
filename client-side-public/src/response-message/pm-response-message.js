@@ -1,4 +1,4 @@
-import { html, render } from "lit-html";
+import { html, render } from "lit";
 import "./response-message.css";
 const tag = "pm-response-message";
 customElements.define(tag, class PmResponseMessage extends HTMLElement {

@@ -1,5 +1,5 @@
-import { html, render } from "lit-html";
-//import { classMap } from "lit-html/directives/class-map.js";
+import { html, render } from "lit";
+//import { classMap } from "lit/directives/class-map.js";
 import userDetailsService from "../site/user-details.service";
 import "./puzzle-original-actions.css";
 import { puzzleDetailsService, } from "../site/puzzle-details.service";

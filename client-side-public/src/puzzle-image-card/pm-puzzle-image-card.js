@@ -1,5 +1,5 @@
-import { html, render } from "lit-html";
-import { classMap } from "lit-html/directives/class-map.js";
+import { html, render } from "lit";
+import { classMap } from "lit/directives/class-map.js";
 import { getTimePassed } from "../site/utilities";
 import { puzzleImagesService, Status, PuzzleAvailableStatuses, } from "../site/puzzle-images.service";
 import "./puzzle-image-card.css";

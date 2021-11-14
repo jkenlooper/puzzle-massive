@@ -1,4 +1,4 @@
-import { html, render } from "lit-html";
+import { html, render } from "lit";
 import FetchService from "../site/fetch.service";
 const baseUrl = `${window.location.protocol}//${window.location.host}`;
 const tag = "pm-reset-login-by-token";

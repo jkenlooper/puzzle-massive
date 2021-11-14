@@ -1,4 +1,4 @@
-import { html, render } from "lit-html";
+import { html, render } from "lit";
 import { interpret } from "@xstate/fsm";
 import { streamService } from "../puzzle-pieces/stream.service";
 import { puzzleService } from "../puzzle-pieces/puzzle.service";

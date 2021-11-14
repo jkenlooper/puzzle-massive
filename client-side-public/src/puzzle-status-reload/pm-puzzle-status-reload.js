@@ -1,4 +1,4 @@
-import { html, render } from "lit-html";
+import { html, render } from "lit";
 import { streamService } from "../puzzle-pieces/stream.service";
 import { Status } from "../site/puzzle-images.service";
 import "./puzzle-status-reload.css";

@@ -1,7 +1,7 @@
-import { html, render } from "lit-html";
-import { classMap } from "lit-html/directives/class-map.js";
-import { styleMap } from "lit-html/directives/style-map.js";
-import { unsafeHTML } from "lit-html/directives/unsafe-html.js";
+import { html, render } from "lit";
+import { classMap } from "lit/directives/class-map.js";
+import { styleMap } from "lit/directives/style-map.js";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import userDetailsService from "../site/user-details.service";
 import { colorForPlayer } from "../player-bit/player-bit-img.service";
 import "./profile-bit.css";

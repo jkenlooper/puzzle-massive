@@ -1,7 +1,7 @@
-import { html, render } from "lit-html";
-import { repeat } from "lit-html/directives/repeat";
-import { classMap } from "lit-html/directives/class-map.js";
-import { styleMap } from "lit-html/directives/style-map.js";
+import { html, render } from "lit";
+import { repeat } from "lit/directives/repeat.js";
+import { classMap } from "lit/directives/class-map.js";
+import { styleMap } from "lit/directives/style-map.js";
 import { rgbToHsl } from "../site/utilities";
 import { puzzleBitsService } from "./puzzle-bits.service";
 import hashColorService from "../hash-color/hash-color.service";

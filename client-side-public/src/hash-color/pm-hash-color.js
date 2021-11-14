@@ -1,5 +1,5 @@
 //import * as Modernizr from "modernizr";
-import { html, render } from "lit-html";
+import { html, render } from "lit";
 import hashColorService from "./hash-color.service";
 import "./hash-color.css";
 const tag = "pm-hash-color";

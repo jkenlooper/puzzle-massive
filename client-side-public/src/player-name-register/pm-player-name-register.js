@@ -1,4 +1,4 @@
-import { html, render } from "lit-html";
+import { html, render } from "lit";
 import FetchService from "../site/fetch.service";
 import userDetailsService from "../site/user-details.service";
 import "./player-name-register.css";
