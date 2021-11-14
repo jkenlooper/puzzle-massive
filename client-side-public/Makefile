@@ -50,6 +50,8 @@ package-lock.json: package.json Dockerfile
 	$(DOCKER) cp \
 		puzzle-massive-client-side-public:/build/dist \
 		./
+	$(DOCKER) rm \
+		puzzle-massive-client-side-public
 	touch $@
 
 

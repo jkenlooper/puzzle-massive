@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -o errexit
+
 # Use this to run `npm install ...` commands that modify the package.json or
 # package-lock.json files.
 # Example:
@@ -21,5 +23,9 @@ for f in package.json package-lock.json ; do
     $f
 done
 
-docker rm \
-  puzzle-massive-client-side-public
+read -e -p "Remove the container? [y/n]
+" CONFIRM
+if [ "$CONFIRM" == "y" ]; then
+  docker rm \
+    puzzle-massive-client-side-public
+fi
