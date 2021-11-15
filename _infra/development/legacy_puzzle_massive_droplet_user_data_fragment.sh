@@ -9,13 +9,6 @@ cd puzzle-massive
 cp $ENV_FILE .env
 chown -R dev:dev ../puzzle-massive
 
-# Standard build stuff
-# TODO: The build of client side code has moved to be part of the bundle
-# su --command '
-# npm install;
-# npm run debug;
-# ' dev
-
 mkdir -p /usr/local/src/puzzle-massive;
 chown dev:dev /usr/local/src/puzzle-massive;
 

@@ -49,7 +49,6 @@
 /frozen/
 /logs/
 
-/npm-debug.log
 /_infra/local/output/*
 !/_infra/local/output/README.md
 

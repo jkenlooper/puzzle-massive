@@ -1,5 +1,7 @@
 # Deployment Guide
 
+__DEPRECATED: Deployments are now done via Terraform and Ansible. See the `_infra/README.md`__
+
 There are two kinds of deployments outlined here. The first one is for in-place
 deployments where only minor changes are needed and the risk is low. The other
 type of deployment is commonly called a blue-green deployment where a new server
@@ -9,12 +11,11 @@ directed to the new server.
 ## Create a new version for the deployment
 
 Deployments should use a versioned distribution file that is uploaded to the
-server. This file can be made after a new version has been created with
-`npm version`. On the **local machine** build the versioned distribution file.
-Please follow these _super awesome instructions_ in the [Local development
-guide](development.md) in order to build a dist file.
+server. This file can be made after a new version has been set in the
+package.json. 
 
 ```bash
+cd client-side-public && make && cd -
 make dist;
 ```
 

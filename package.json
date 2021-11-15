@@ -1,6 +1,6 @@
 {
   "name": "puzzle-massive",
-  "version": "2.12.4-alpha.1",
+  "version": "2.12.4-alpha.2",
   "description": "Puzzle Massive is a Massively Multiplayer Online Jigsaw Puzzle web application. Jigsaw puzzles are made from randomly generated classic interlocking pieces and can be 5000+ pieces.  Players can collaborate on the same jigsaw puzzle in real time.  Other player's piece movements are moderated automatically in order to prevent abusive behavior.",
   "author": "Jake Hickenlooper",
   "contributors": [
@@ -12,47 +12,5 @@
     "url": "https://github.com/jkenlooper/puzzle-massive/issues",
     "email": "puzzle-bug@massive.xyz"
   },
-  "license": "AGPL-3.0-only",
-  "type": "module",
-  "scripts": {
-    "prettier": "prettier",
-    "eslint": "eslint",
-    "stylelint": "stylelint",
-    "jsdoc": "jsdoc -c client-side-public/src/_jsdoc.conf.json",
-    "mmdc": "mmdc",
-    "tsc": "tsc"
-  },
-  "dependencies": {
-  },
-  "devDependencies": {
-    "@mermaid-js/mermaid-cli": "^8.13.2",
-    "eslint": "^7.32.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-prettier": "^3.4.1",
-    "husky": "^6.0.0",
-    "jsdoc": "^3.6.7",
-    "lint-staged": "^11.2.3",
-    "prettier": "2.3.0",
-    "stylelint": "^13.13.1",
-    "stylelint-config-prettier": "^8.0.1",
-    "stylelint-prettier": "^1.2.0",
-    "tslib": "^2.3.1",
-    "typescript": "^4.4.4",
-    "watchpack": "^2.2.0"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.{js,ts,css,json,md,html}": [
-      "prettier --write"
-    ],
-    "*.py": [
-      "black"
-    ],
-    "*.js": "eslint --cache --fix",
-    "*.css": "stylelint --fix"
-  }
+  "license": "AGPL-3.0-only"
 }

@@ -1,0 +1,7 @@
+*
+!/code-formatter/*
+/code-formatter/.last-modified
+!/.editorconfig
+!/.flake8
+!/.prettierrc
+!/.stylelintrc

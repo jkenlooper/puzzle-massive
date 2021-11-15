@@ -29,6 +29,7 @@ Improving the client side build tools and process.
 
 - Switched Typescript files to JavaScript
 - Isolated the design-tokens and client side public code
+- Code formatting scripts have been isolated to the code-formatter/ directory
 
 ## [2.12.3] - 2021-11-10
 

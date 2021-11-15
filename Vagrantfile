@@ -173,9 +173,10 @@ DEFAULT_ENV
       cat /home/vagrant/.ssh/id_rsa.pub >> /home/dev/.ssh/authorized_keys
     SHELL
 
+    # bin/distwatch.js depends on watchpack
     legacy_puzzle_massive.vm.provision "shell-vagrant-npm-install-and-build", privileged: false, type: "shell", inline: <<-SHELL
       cd /home/vagrant/puzzle-massive
-      npm ci --ignore-scripts
+      npm install --ignore-scripts watchpack@2.2.0
     SHELL
 
     legacy_puzzle_massive.vm.provision "shell-usr-local-src-puzzle-massive", type: "shell", inline: <<-SHELL
@@ -432,6 +433,7 @@ SNIPPET
 
     s3fake.vm.provision "shell-install-s3rver", type: "shell", inline: <<-SHELL
     apt-get update
+#&& black && eslint --cache --fix && stylelint --fix
     apt-get install -y nodejs npm
 
     adduser s3rver --disabled-login --disabled-password --gecos "" || echo 'user exists already?'
@@ -453,7 +455,7 @@ SNIPPET
 PACKAGEJSON
 
       mkdir -p /home/s3rver/files
-      npm install --no-save 2> /dev/null
+      npm install --no-save --ignore-scripts 2> /dev/null
     ' s3rver
 
     cat <<-'SERVICE_INSTALL' > /etc/systemd/system/s3rver.service

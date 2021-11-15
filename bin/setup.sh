@@ -62,7 +62,7 @@ curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
 apt-get install -y nodejs
 
 apt-get --yes install potrace libffi-dev libxml2-dev python3-lxml python3-xcffib
-npm install -g svgo
+npm install -g --ignore-scripts svgo
 
 # Install other things needed for the svpng dependency that uses puppeteer
 # https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md

@@ -8,8 +8,6 @@ ARCHIVE=$1
 
 TMPDIR=$(mktemp --directory);
 
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-
 git clone --recurse-submodules . "$TMPDIR";
 
 (

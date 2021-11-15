@@ -20,8 +20,7 @@ or send an email to puzzle-bug@massive.xyz with a description.
 ## Local Install Instructions (TL;DR)
 
 Minimal setup to get it running on your local machine at
-[http://localhost:38682/](http://localhost:38682/). This will take about 10+ minutes
-to complete.
+[http://localhost:38682/](http://localhost:38682/).
 
 ```bash
 cd client-side-public && make && cd -
@@ -96,18 +95,5 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-
-## Compatible with `cookiecutter`
-
-The [cookiecutter](https://github.com/cookiecutter/cookiecutter) tool is commonly used to help with creating initial code
-snippets and such for the project.
-
----
-
-<small>The structure of this project inherits from this
-[cookiecutter-website version 0.1.0](https://github.com/jkenlooper/cookiecutter-website)
-and is up to date with version 0.4.0 on 2020-04-21.</small>
-
----
 
 [![DigitalOcean Referral Badge](https://web-platforms.sfo2.digitaloceanspaces.com/WWW/Badge%203.svg)](https://www.digitalocean.com/?refcode=686c08019031&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge)
