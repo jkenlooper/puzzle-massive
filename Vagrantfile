@@ -161,7 +161,10 @@ DEFAULT_ENV
     SHELL
 
     # The devsync.sh uses local-puzzle-massive when syncing files
+    # the devsync.sh depends on watchpack which will require nodejs
     legacy_puzzle_massive.vm.provision "shell-local-devsync-support", type: "shell", inline: <<-SHELL
+      curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+      apt-get install -y nodejs
       echo "127.0.0.1 local-puzzle-massive" >> /etc/hosts
     SHELL
 

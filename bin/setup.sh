@@ -58,18 +58,8 @@ apt-get --yes install libsqlite3-dev
 # Dependencies for piecemaker
 apt-get --yes install libspatialindex6
 apt-get --yes install optipng
-curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
-apt-get install -y nodejs
 
-apt-get --yes install potrace libffi-dev libxml2-dev python3-lxml python3-xcffib
-npm install -g --ignore-scripts svgo
-
-# Install other things needed for the svpng dependency that uses puppeteer
-# https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md
-apt-get --yes install ca-certificates fonts-liberation libappindicator3-1 libasound2 libatk-bridge2.0-0 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libglib2.0-0 libgtk-3-0 libnspr4 libnss3 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 lsb-release wget xdg-utils
-# Install a fork of svpng that uses node 14
-su --command "cd /home/dev && npm install jkenlooper/svpng#28554fa32d57df13ec330e3a4df152172b6080bb" dev
-ln -f -s /home/dev/node_modules/svpng/bin/svpng.js /usr/local/bin/svpng
+apt-get --yes install potrace libffi-dev libxml2-dev python3-lxml python3-xcffib librsvg2-bin
 
 apt-get --yes install redis-server
 redis-cli config set maxmemory "500mb"
@@ -77,6 +67,3 @@ redis-cli config rewrite
 
 # Remove the default nginx config
 rm -f /etc/nginx/sites-enabled/default
-
-echo "checking for missed dependencies of chrome"
-ldd /home/dev/node_modules/puppeteer/.local-chromium/linux-*/chrome-linux/chrome | grep not || echo 'no missed dependencies for chrome'
