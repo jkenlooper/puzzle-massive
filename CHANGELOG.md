@@ -24,12 +24,15 @@ Types of changes
 ## [Unreleased] - ...
 
 Improving the client side build tools and process.
+This release will require installing librsvg2-bin before doing an in-place
+deployment.
 
 ### Changed
 
 - Switched Typescript files to JavaScript
 - Isolated the design-tokens and client side public code
 - Code formatting scripts have been isolated to the code-formatter/ directory
+- Use latest piecemaker and pixsaw; should improve puzzle rendering time
 
 ## [2.12.3] - 2021-11-10
 
