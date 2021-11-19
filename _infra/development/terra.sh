@@ -35,7 +35,7 @@ if [ ! -e $artifact_bundle -o "${terraform_command}" != "console" ]; then
   git clone $project_dir ./
   cd client-side-public
   make
-  cd -
+  cd $tmp_project
   git add --force client-side-public/dist
   git commit -m 'Force add client-side-public dist'
   tmp_artifact_bundle=$(mktemp -d)/puzzle-massive.bundle
@@ -54,7 +54,7 @@ db_dump_md5sum=$(md5sum $script_dir/db.dump.gz | cut -f1 -d ' ')
 database_dump_file=db-md5sum-$db_dump_md5sum.dump.gz
 cp $script_dir/db.dump.gz $script_dir/$database_dump_file
 
-cd -
+cd $project_dir/_infra
 
 echo "Versioned artifact bundle file: '$project_dir/$artifact_bundle'"
 

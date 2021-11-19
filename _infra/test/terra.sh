@@ -28,7 +28,7 @@ echo "Project description will be: '$project_description'"
 
 cd $project_dir
 project_version=$(jq -r '.version' package.json)
-artifact_bundle="$(echo puzzle-massive-$project_version-*.bundle)"
+artifact_bundle=puzzle-massive-$project_version.bundle
 
 # Empty db.dump.gz file for Test environment.
 touch $script_dir/db.dump.gz
@@ -36,24 +36,36 @@ test ! -s $script_dir/db.dump.gz || (echo "The $script_dir/db.dump.gz should be 
 
 if [ ! -e $artifact_bundle -o "${terraform_command}" != "console" ]; then
   git diff --quiet || (echo "Project directory is dirty. Please commit any changes first." && exit 1)
+  # Build client side code and include in the bundle.
+  tmp_project=$(mktemp -d)
+  cd $tmp_project
+  git clone $project_dir ./
+  cd client-side-public
+  make
+  cd $tmp_project
+  git add --force client-side-public/dist
+  git commit -m 'Force add client-side-public dist'
   tmp_artifact_bundle=$(mktemp -d)/puzzle-massive.bundle
   git bundle create $tmp_artifact_bundle HEAD
-  artifact_checksum=$(md5sum $tmp_artifact_bundle | cut -f1 -d ' ')
-  artifact_bundle=puzzle-massive-$project_version-$artifact_checksum.bundle
+  cd $project_dir
+  rm -rf $tmp_project
   rm -f puzzle-massive-*.bundle
   mv $tmp_artifact_bundle $artifact_bundle
 fi
 
-cd -
+cd $project_dir/_infra
 
 echo "Versioned artifact bundle file: '$project_dir/$artifact_bundle'"
 
 set -x
 
-existing_artifact="$(echo $script_dir/puzzle-massive-*.bundle)"
-if [ ! -e "$existing_artifact" -o "$(md5sum $existing_artifact | cut -f1 -d ' ')" != "$(md5sum $project_dir/$artifact_bundle | cut -f1 -d ' ')" ]; then
+
+artifact_commit_id=$(git bundle list-heads $project_dir/$artifact_bundle | awk '$2=="HEAD"' | cut -f1 -d ' ')
+artifact_commit_id_bundle=${artifact_bundle%.bundle}-$artifact_commit_id.bundle
+existing_artifact=$script_dir/$artifact_commit_id_bundle
+if [ ! -e "$existing_artifact" ]; then
   rm -f $script_dir/puzzle-massive-*.bundle
-  cp $project_dir/$artifact_bundle $script_dir/
+  cp $project_dir/$artifact_bundle $existing_artifact
 fi
 
 terraform workspace select $workspace || \
@@ -63,6 +75,6 @@ test "$workspace" = "$(terraform workspace show)" || (echo "Sanity check to make
 
 terraform $terraform_command -var-file="$script_dir/config.tfvars" \
     -var-file="$script_dir/private.tfvars" \
-    -var "artifact=$artifact_bundle" \
+    -var "artifact=$artifact_commit_id_bundle" \
     -var "project_version=$test_tag" \
     -var "project_description=$project_description"
