@@ -7,7 +7,7 @@ PUZZLE_FEATURES=$(./bin/puzzle-massive-site-cfg-echo site.cfg PUZZLE_FEATURES ||
 # Create a tmpdb from `chill initdb` command and site-data.sql.
 # Create a copy of site.cfg as tmpsite.cfg to use the temporary database.
 # Also set cache to null since the cache directory may not exist yet.
-sed "/^CHILL_DATABASE_URI/ s/sqlite:\/\/\/.*db/sqlite:\/\/\/tmpdb/ ; /^CACHE_TYPE/ s/filesystem/null/" \
+sed "/^CHILL_DATABASE_URI/ s/.*/CHILL_DATABASE_URI='tmpdb'/ ; /^CACHE_TYPE/ s/filesystem/null/" \
    site.cfg > tmpsite.cfg;
 
 # Remove the tmpdb if it exists still from a previous failed attempt.

@@ -79,14 +79,9 @@ PORTREDIS = $PORTREDIS
 REDIS_DB = $REDIS_DB
 REDIS_URL = 'redis://${HOSTREDIS}:${PORTREDIS}/${REDIS_DB}/'
 
-# Valid SQLite URL forms are:
-#   sqlite:///:memory: (or, sqlite://)
-#   sqlite:///relative/path/to/file.db
-#   sqlite:////absolute/path/to/file.db
-# http://docs.sqlalchemy.org/en/latest/core/engines.html
-CHILL_DATABASE_URI = "sqlite:///${DATABASEDIR}db"
-# TODO: for now use a path instead since it uses sqlite strictly
+CHILL_DATABASE_URI = "${DATABASEDIR}db"
 SQLITE_DATABASE_URI = "${DATABASEDIR}db"
+SQLITE_JOURNAL_MODE = "wal"
 
 # Archive directory for storing puzzle timeline. Not directly accessible by the
 # public.

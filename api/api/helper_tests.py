@@ -45,7 +45,7 @@ class APITestCase(unittest.TestCase):
             PORTDIVULGER=6320,
             HOSTSTREAM="127.0.0.1",
             PORTSTREAM=6321,
-            CHILL_DATABASE_URI="sqlite:////var/lib/puzzle-massive/sqlite3/db",
+            CHILL_DATABASE_URI="/var/lib/puzzle-massive/sqlite3/db",
             PUBLIC_URL_PREFIX="/site",
             ROOT_FOLDER="root",
             DOCUMENT_FOLDER="documents",
