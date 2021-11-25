@@ -10,7 +10,7 @@ abusive behavior.
 
 Bugs and feature requests can be tracked via the projects source code repository
 https://github.com/jkenlooper/puzzle-massive/issues
-or send an email to puzzle-bug@massive.xyz with a description.
+or send an email to puzzle-massive-bug@pm.me with a description.
 
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
