@@ -179,7 +179,7 @@ resource "digitalocean_spaces_bucket_object" "nginx_snippets_ssl_certs_cdn_conf"
   #ssl_certificate /etc/letsencrypt/live/cdn.${var.sub_domain}${var.domain}/fullchain.pem;
   #ssl_certificate_key /etc/letsencrypt/live/cdn.${var.sub_domain}${var.domain}/privkey.pem;
   #ssl_certificate /etc/nginx/temporary_fullchain.pem;
-  #ssl_certificate_key /etc/temporary_privkey.pem;
+  #ssl_certificate_key /etc/nginx/temporary_privkey.pem;
   CONTENT
 }
 
