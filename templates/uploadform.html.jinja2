@@ -2,11 +2,16 @@
 x-data="form()">
 <script>
 function form() {
+  const unsplashPhotosBaseURL = "https://unsplash.com/photos/";
   return {
     isValid() {
       return this.$refs.puzzleUploadForm.checkValidity();
     },
     link: "",
+    isUnsplashLink() {
+      console.log('isUnsplashLink', this.link);
+      return this.link.trim().startsWith(unsplashPhotosBaseURL);
+    },
     description: "",
     feature_hidden_preview: false,
     secret_message: "",
@@ -86,7 +91,9 @@ function form() {
         <p>
           Check this box to <em>not</em> have this puzzle publicly listed on the
           site. The original puzzle can then only be completed once and not
-          rebuilt. Puzzle instances can still be made from the original puzzle.
+          rebuilt.
+          <a class="u-textNoWrap" href="#suggest-image-form-puzzle-instance-description">Puzzle instances**</a>
+          can still be made from the original puzzle.
         </p>
         <p><em>Not all unlisted puzzles will be approved.</em></p>
       </div>
@@ -96,10 +103,12 @@ function form() {
       <label for="link">The website that the image is found on.</label>
       <div>
         <input id="link-field" style="width:100%" type="text" name="link" value="" placeholder="https://unsplash.com/photos/4nr59MLWI9E" maxlength="1000">
+        {% if config.UNSPLASH_APPLICATION_ID %}
         <p>
         <em>If the picture is from <a href="https://unsplash.com/">Unsplash</a> add the url like this: <b class="u-block">https://unsplash.com/photos/4nr59MLWI9E</b></em>
         </p>
-        {% if not config.UNSPLASH_APPLICATION_ID %}
+        {% endif %}
+        {% if not config.UNSPLASH_APPLICATION_ID and config.DEBUG == True %}
         <p>
           <strong>This site is not set up to use the Unsplash API.</strong>
         </p>
@@ -110,20 +119,21 @@ function form() {
       <label for="description">Description</label>
       <textarea style="width:100%" id="description" name="description" maxlength="1000"></textarea>
     </div>
-    <div class="pm-UploadForm-row">
+    <div class="pm-UploadForm-row" {% if config.UNSPLASH_APPLICATION_ID %}x-show="!isUnsplashLink()"{% endif %}>
       <label for="upload_file">Select an image for the puzzle</label>
       <div>
       {# TODO: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
       show the image after the file size is checked
       #}
         <input type="file" name="upload_file" accept=".jpg,.jpeg">
-        <p>
-        <em>Only if not a picture from Unsplash</em>
-        </p>
+        <ul>
+        <li>Must be a .jpg file</li>
+        <li>Less than {{ config.CLIENT_MAX_BODY_SIZE__PUZZLE_UPLOAD }}</li>
+        </ul>
       </div>
     </div>
     <div class="u-textRight">
-      <input class="Button Button--primary" type="submit" name="save" value="Create Puzzle" />
+      <input class="Button Button--primary" type="submit" name="save" value="Create Puzzle"  x-bind:disabled="!isValid()"/>
     </div>
   </div>
 </form>

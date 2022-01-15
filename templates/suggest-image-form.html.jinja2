@@ -2,6 +2,7 @@
 x-data="form()">
 <script>
 function form() {
+  const unsplashPhotosBaseURL = "https://unsplash.com/photos/";
   return {
     isValid() {
       return (
@@ -13,6 +14,10 @@ function form() {
       );
     },
     link: "",
+    isUnsplashLink() {
+      console.log('isUnsplashLink', this.link);
+      return this.link.trim().startsWith(unsplashPhotosBaseURL);
+    },
     description: "",
     feature_hidden_preview: false,
     secret_message: "",
@@ -90,7 +95,9 @@ function form() {
         <p>
           Check this box to <em>not</em> have this puzzle publicly listed on the
           site. The original puzzle can then only be completed once and not
-          rebuilt. Puzzle instances** can still be made from the original puzzle.
+          rebuilt.
+          <a class="u-textNoWrap" href="#suggest-image-form-puzzle-instance-description">Puzzle instances**</a>
+          can still be made from the original puzzle.
         </p>
         <p><em>Not all unlisted puzzles will be approved.</em></p>
       </div>
@@ -101,9 +108,11 @@ function form() {
       <div>
         <input id="link-field" style="width:100%" type="url" name="link" x-model="link" placeholder="https://unsplash.com/photos/4nr59MLWI9E" maxlength="1000">
         <p>
+        {% if config.UNSPLASH_APPLICATION_ID %}
         <em>If the picture is from <a href="https://unsplash.com/">Unsplash</a> add the url like this: <b class="u-block">https://unsplash.com/photos/4nr59MLWI9E</b></em>
         </p>
-        {% if not config.UNSPLASH_APPLICATION_ID %}
+        {% endif %}
+        {% if not config.UNSPLASH_APPLICATION_ID and config.DEBUG == True %}
         <p>
           <strong>This site is not set up to use the Unsplash API.</strong>
         </p>
@@ -111,7 +120,7 @@ function form() {
       </div>
     </div>
     {% if config.SUGGEST_IMAGE_LINK %}
-    <div class="pm-UploadForm-row">
+    <div class="pm-UploadForm-row" {% if config.UNSPLASH_APPLICATION_ID %}x-show="!isUnsplashLink()"{% endif %}>
       <p><span class="u-block"><a target="_blank" href="{{ config.SUGGEST_IMAGE_LINK }}">Send the image using this link</a>
         if it's your own.</span> The description field in this form should match the image you send.</p>
     </div>
@@ -121,15 +130,6 @@ function form() {
       <textarea style="width:100%" id="description" name="description" x-model="description" maxlength="1000"></textarea>
 
     </div>
-      <p>
-        A puzzle instance is a memory slot that you have available to store
-        a puzzle. You will have full administrative control over this puzzle.
-        Every player can earn their first puzzle instance slot by putting
-        together puzzles and getting a certain score.  More puzzle instance
-        slots can be manually assigned to players and is up to the admin of the
-        site to handle.  On the live site (puzzle.massive.xyz) -- more are
-        awarded to players that contribute to the project in some way.
-      </p>
     <div class="u-textRight">
       <input class="Button Button--primary" type="submit" name="save" value="Suggest Image" x-bind:disabled="!isValid()"/>
     </div>
