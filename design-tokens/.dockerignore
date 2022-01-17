@@ -1,1 +1,7 @@
-/node_modules
+*
+!/custom-properties-selector.cjs
+!/package-lock.json
+!/package.json
+!/postcss.config.js
+!/src
+!/transform-design-tokens.sh

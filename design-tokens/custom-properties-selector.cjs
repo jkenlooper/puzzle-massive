@@ -1,3 +1,7 @@
+/*
+This file in the parent directory design-tokens was generated from the design-tokens directory in https://github.com/jkenlooper/cookiecutters . Any modifications needed to this file should be done on that originating file.
+*/
+
 module.exports = (theo) => {
 
   theo.registerFormat(

@@ -78,4 +78,3 @@ props:
   TextColor-errorOnSurface:
     value: "{!color-error}"
     comment: One Word Attribute
-

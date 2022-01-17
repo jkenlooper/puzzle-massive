@@ -1,4 +1,4 @@
-# Design Tokens
+# `puzzlemassive` Design Tokens
 
 Design tokens are settings that can be shared easily between systems. They are
 stored in a readable format like [YAML](https://en.wikipedia.org/wiki/YAML).
@@ -84,30 +84,30 @@ Can also run the docker commands to build the image at the 'build' stage and
 then run the container when trying out different changes.
 
 ```bash
-docker build \
+slugname=puzzlemassive
+DOCKER_BUILDKIT=1 docker build \
+  --progress=plain \
   --target build \
-  -t puzzle-massive-design-tokens-build \
+  -t $slugname-design-tokens-build \
   ./
 
 # Note that this removes the container when it exits (--rm).
 docker run -it --rm \
   --mount type=bind,src=$(pwd)/src,dst=/build/src \
-  puzzle-massive-design-tokens-build \
+  $slugname-design-tokens-build \
   sh
 ```
 
-## Serving
+## Updating Generated Files
 
-In the future, the design-tokens will serve it's built files at localhost:38687.
-Other client-side apps can then fetch these CSS files as needed.
+Run the cookiecutter command again to update any generated files with newer
+versions from the [cookiecutter design-tokens](https://github.com/jkenlooper/cookiecutters).
 
 ```bash
-# In the design-tokens/ directory.
-docker build \
-  -t puzzle-massive-design-tokens \
-  ./
-
-docker run -it --rm \
-  -p 0.0.0.0:38687:38687 \
-  puzzle-massive-design-tokens
+# From the top level of the project.
+cookiecutter --directory design-tokens \
+  --overwrite-if-exists \
+  --no-input \
+  https://github.com/jkenlooper/cookiecutters.git \
+  slugname=puzzlemassive
 ```
