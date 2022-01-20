@@ -1,5 +1,9 @@
 FROM node:16-buster
 
+# This code-formatter.dockerfile should be at the top-level of the project.
+
+# This file was generated from the code-formatter directory in https://github.com/jkenlooper/cookiecutters . Any modifications needed to this file should be done on that originating file.
+
 RUN apt-get --yes update && apt-get --yes upgrade
 RUN apt-get --yes install python3 \
   python3-dev \
@@ -27,18 +31,5 @@ COPY .stylelintrc ./
 COPY code-formatter/format.sh ./
 
 VOLUME /code/.last-modified
-
-VOLUME /code/api
-VOLUME /code/client-side-public/src
-VOLUME /code/design-tokens/src
-VOLUME /code/divulger
-VOLUME /code/docs
-VOLUME /code/documents
-VOLUME /code/enforcer
-VOLUME /code/mockups
-VOLUME /code/queries
-VOLUME /code/root
-VOLUME /code/stream
-VOLUME /code/templates
 
 CMD ["npm", "run"]

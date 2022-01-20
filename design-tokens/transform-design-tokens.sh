@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 # This file in the parent directory design-tokens was generated from the design-tokens directory in https://github.com/jkenlooper/cookiecutters . Any modifications needed to this file should be done on that originating file.
-# Version: 0.0.1
+# Version: 0.0.2-alpha.1
 
 set -eu -o pipefail
 

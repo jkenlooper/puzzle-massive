@@ -78,14 +78,14 @@
 /root/puzzle-massive-logo-600.jpg
 /root/puzzle-massive-logo-600.png
 
-# bit icons are created from source-media/bit-icons/
+# bit icons are created from source-media/src/bit-icons/
 /media/bit-icons/*
 !/media/bit-icons/README.md
 # All bit icon images should come from a separate repo. Puzzle Massive uses the
 # puzzle-massive-content repo for it's bit icons. See the 'with-content' git
 # branch.
-/source-media/bit-icons/*.png
-/source-media/bit-icons/source-*.yaml
+/source-media/src/bit-icons/*.png
+/source-media/src/bit-icons/source-*.yaml
 
 /chill-data/*
 !/chill-data/styleguide.yaml

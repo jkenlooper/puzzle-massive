@@ -1,7 +1,7 @@
 {
   "name": "puzzlemassive-design-tokens",
   "//template_file_comment": "This file in the parent directory design-tokens was generated from the design-tokens directory in https://github.com/jkenlooper/cookiecutters . Any modifications needed to this file should be done on that originating file.",
-  "version": "0.0.1",
+  "version": "0.0.2-alpha.1",
   "scripts": {
     "theo": "theo",
     "postcss": "postcss",
@@ -10,12 +10,13 @@
     "prebuild": "npm run transform-design-tokens",
     "build": "postcss src/v1/ --no-map --dir dist/v1/"
   },
-  "devDependencies": {
+  "dependencies": {
     "cssnano": "^5.0.10",
     "http-server": "^14.0.0",
     "postcss": "^8.3.11",
     "postcss-cli": "^9.0.2",
     "postcss-import": "^14.0.2",
+    "follow-redirects": ">=1.14.7",
     "theo": "git+https://github.com/salesforce-ux/theo/#c9efd76171439f3d5c0b0fb858b755555de22e75"
   }
 }
