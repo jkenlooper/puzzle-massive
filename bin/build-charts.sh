@@ -70,6 +70,8 @@ for f in $targets; do
   tmp_container_name=$(basename $tmp_dir)
   cp $f $tmp_dir/
 
+  # Create the mermaid chart svg files in the temporary directory with only the
+  # necessary files accessible to the mermaid cli.
   docker run -it \
     --rm \
     --mount type=bind,src=$mermaidconfig,dst=/tmp/mermaid-config.json,ro \
@@ -79,7 +81,19 @@ for f in $targets; do
     --configFile /tmp/mermaid-config.json \
     --input /data/$(basename $f)
 
-  cp $tmp_dir/*.svg $(dirname $f)/
+  # Only the created svg files should be copied over from the temporary
+  # directory. Marking these svg files as read only will hint that they were
+  # generated and other processes should not modify them.
+  svg_files=$(find $tmp_dir -type f -name '*.svg' -printf '%f ')
+  for svg_file in $svg_files; do
+    if [ -e $(dirname $f)/$svg_file ]; then
+      chmod u+rw $(dirname $f)/$svg_file
+    else
+      echo "Creating new read only SVG file: $(dirname $f)/$svg_file"
+    fi
+    mv $tmp_dir/$svg_file $(dirname $f)/
+    chmod a-w $(dirname $f)/$svg_file
+  done
 
   # Clean up tmp files
   rm $mermaidconfig
