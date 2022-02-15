@@ -16,7 +16,7 @@
     "postcss": "^8.3.11",
     "postcss-cli": "^9.0.2",
     "postcss-import": "^14.0.2",
-    "follow-redirects": ">=1.14.7",
+    "follow-redirects": ">=1.14.8",
     "theo": "git+https://github.com/salesforce-ux/theo/#c9efd76171439f3d5c0b0fb858b755555de22e75"
   }
 }
