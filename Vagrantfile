@@ -16,7 +16,7 @@ Vagrant.configure(2) do |config|
 
   config.vm.define "legacy_puzzle_massive", primary: true do |legacy_puzzle_massive|
     legacy_puzzle_massive.vm.hostname = "puzzle.massive.test"
-    legacy_puzzle_massive.vm.network :private_network, ip: "192.168.117.24", auto_config: true, hostname: true
+    legacy_puzzle_massive.vm.network :private_network, ip: "192.168.56.24", auto_config: true, hostname: true
 
     # p + u + z + z + l + e + 38000 = 38682
     legacy_puzzle_massive.vm.network "forwarded_port", guest: 80, host: 38682, auto_correct: false
@@ -128,7 +128,7 @@ DEFAULT_ENV
     SHELL
 
     legacy_puzzle_massive.vm.provision "shell-etc-hosts", type: "shell", inline: <<-SHELL
-      echo "192.168.117.26 s3fake.puzzle.massive.test" >> /etc/hosts
+      echo "192.168.56.26 s3fake.puzzle.massive.test" >> /etc/hosts
     SHELL
 
     # The add-dev-user.sh will need to copy the /root/.ssh/authorized_keys file to
@@ -362,7 +362,7 @@ AWS_CONFIG_APP
 
   config.vm.define "cdn" do |cdn|
     cdn.vm.hostname = "cdn.puzzle.massive.test"
-    cdn.vm.network :private_network, ip: "192.168.117.25", auto_config: true, hostname: true
+    cdn.vm.network :private_network, ip: "192.168.56.25", auto_config: true, hostname: true
 
     cdn.vm.network "forwarded_port", guest: 80, host: 38685, auto_correct: false
 
@@ -372,7 +372,7 @@ AWS_CONFIG_APP
     end
 
     cdn.vm.provision "shell-etc-hosts", type: "shell", inline: <<-SHELL
-    echo "192.168.117.26 s3fake.puzzle.massive.test" >> /etc/hosts
+    echo "192.168.56.26 s3fake.puzzle.massive.test" >> /etc/hosts
     SHELL
 
     cdn.vm.provision "bin-update-sshd-config", type: "shell", path: "bin/update-sshd-config.sh"
@@ -408,7 +408,7 @@ SNIPPET
 
   config.vm.define "s3fake" do |s3fake|
     s3fake.vm.hostname = "s3fake.puzzle.massive.test"
-    s3fake.vm.network :private_network, ip: "192.168.117.26", auto_config: true, hostname: true
+    s3fake.vm.network :private_network, ip: "192.168.56.26", auto_config: true, hostname: true
     s3fake.vm.network "forwarded_port", guest: 4568, host: 38686, auto_correct: false
 
     s3fake.vm.provider "virtualbox" do |vb|
@@ -491,9 +491,9 @@ SERVICE_INSTALL
 
       # Example of uploading test-file and fetching it both with `aws s3 cp` and `curl`.
       echo 'testing' > test-file
-      aws s3 cp --endpoint-url=http://192.168.117.26:38686 test-file s3://chum/
-      aws s3 cp --endpoint-url=http://192.168.117.26:38686 s3://chum/test-file get-test-file
-      curl http://192.168.117.26:38686/chum/test-file
+      aws s3 cp --endpoint-url=http://192.168.56.26:38686 test-file s3://chum/
+      aws s3 cp --endpoint-url=http://192.168.56.26:38686 s3://chum/test-file get-test-file
+      curl http://192.168.56.26:38686/chum/test-file
     POST_UP_MESSAGE
 
   end
