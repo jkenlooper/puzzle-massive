@@ -21,7 +21,7 @@ import logging
 
 import boto3
 import botocore
-from werkzeug.utils import escape
+from markupsafe import escape
 
 from api.app import db
 from api.database import rowify, read_query_file

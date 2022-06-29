@@ -4,7 +4,7 @@ import uuid
 import sqlite3
 from flask import current_app, redirect, request, abort
 from flask.views import MethodView
-from werkzeug.utils import escape
+from markupsafe import escape
 from werkzeug.urls import url_fix
 
 from api.app import db

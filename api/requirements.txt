@@ -11,5 +11,6 @@ git+https://github.com/jkenlooper/piecemaker.git@develop#egg=piecemaker
 requests==2.21
 responses==0.10.14
 svgwrite==1.4.2
-PyYAML
+PyYAML==6.0
+MarkupSafe==2.1.1
 -e api/

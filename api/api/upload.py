@@ -9,7 +9,8 @@ from shutil import rmtree
 from PIL import Image
 from flask import current_app, redirect, request, abort
 from flask.views import MethodView
-from werkzeug.utils import secure_filename, escape
+from werkzeug.utils import secure_filename
+from markupsafe import escape
 from werkzeug.urls import url_fix
 
 from api.app import db

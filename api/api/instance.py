@@ -3,7 +3,7 @@ import os
 
 from flask import current_app, redirect, make_response, abort, request
 from flask.views import MethodView
-from werkzeug.utils import escape
+from markupsafe import escape
 
 from api.app import db
 from api.database import rowify, fetch_query_string, generate_new_puzzle_id
