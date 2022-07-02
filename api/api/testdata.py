@@ -3,7 +3,7 @@
 Usage: puzzle-massive-testdata players [--count=<n>] [--config <file>]
        puzzle-massive-testdata puzzles [--count=<n>] [--pieces=<n>] [--min-pieces=<n>] [--size=<s>] [--config <file>]
        puzzle-massive-testdata instances [--count=<n>] [--pieces=<n>] [--min-pieces=<n>] [--config <file>]
-       puzzle-massive-testdata activity [--puzzles=<list>] [--count=<n>] [--delay=<f>] [--config <file>]
+       puzzle-massive-testdata activity [--puzzles=<list>] [--count=<n>] [--delay=<f>] [--config <file>] [--internal]
        puzzle-massive-testdata --help
 
 Options:
@@ -15,6 +15,7 @@ Options:
     --min-pieces=<n>  Piece count min [default: 0]
     --puzzles=<list>  Comma separated list of puzzle ids
     --delay=<n>       Max delay in seconds [default: 0.1]
+    --internal        Use internal piece move which don't use rules
 
 Subcommands:
     players     - Generate some random player data
@@ -347,10 +348,12 @@ class UserSession:
         self.ip = ip
         self.headers = {"X-Real-IP": ip}
 
-        self.api_host = "http://localhost:{PORTAPI}".format(
+        self.api_host = "http://{HOSTAPI}:{PORTAPI}".format(
+            HOSTAPI=current_app.config["HOSTAPI"],
             PORTAPI=current_app.config["PORTAPI"]
         )
-        self.publish_host = "http://localhost:{PORTPUBLISH}".format(
+        self.publish_host = "http://{HOSTPUBLISH}:{PORTPUBLISH}".format(
+            HOSTPUBLISH=current_app.config["HOSTPUBLISH"],
             PORTPUBLISH=current_app.config["PORTPUBLISH"]
         )
 
@@ -400,7 +403,7 @@ class UserSession:
         data = {}
         if r.status_code >= 400:
             current_app.logger.debug(
-                "ERROR: {status_code} {url}".format(
+                "ERROR get: {status_code} {url}".format(
                     status_code=r.status_code, url=r.url
                 )
             )
@@ -449,8 +452,15 @@ class UserSession:
         if r.status_code == 204:
             return
         if r.status_code >= 400:
+            current_app.logger.debug(payload)
+            try:
+                data = r.json()
+                current_app.logger.debug(data)
+            except ValueError as err:
+                current_app.logger.debug(err)
+                current_app.logger.debug(r.text)
             current_app.logger.debug(
-                "ERROR: {status_code} {url}".format(
+                "ERROR patch: {status_code} {url}".format(
                     status_code=r.status_code, url=r.url
                 )
             )
@@ -460,6 +470,8 @@ class UserSession:
                     current_app.logger.debug("timeout {}".format(timeout))
                     time.sleep(timeout)
                 return
+            if r.status_code == 400:
+                raise Exception("fail")
             return
         if r.status_code >= 200:
             try:
@@ -508,7 +520,7 @@ class UserSession:
             return
         if r.status_code >= 400:
             current_app.logger.debug(
-                "ERROR: {status_code} {url}".format(
+                "ERROR post: {status_code} {url}".format(
                     status_code=r.status_code, url=r.url
                 )
             )
@@ -545,15 +557,57 @@ class PuzzlePieces:
         ]
         # TODO: connect to the stream and update movable_pieces
 
-    def move_random_pieces_with_delay(self, delay=1, max_delay=10):
+    def move_random_pieces_with_delay(self, delay=1, max_delay=10, internal_piece_move=False):
         while True:
             random_delay = round((random() * (max_delay - delay)), 3) + delay
             for user_session in self.user_sessions:
-                self.move_random_piece(user_session)
+                if internal_piece_move:
+                    self.internal_move_random_piece(user_session)
+                else:
+                    self.move_random_piece(user_session)
                 time.sleep(random_delay / len(self.user_sessions))
+
+    def internal_move_random_piece(self, user_session):
+        piece_id = choice(self.movable_pieces)
+        if piece_id is False:
+            return
+        x = randint(0, self.table_width - 100)
+        y = randint(0, self.table_height - 100)
+        start = time.perf_counter()
+
+        try:
+            user_session.patch_data(
+                "/internal/puzzle/{puzzle_id}/piece/{piece_id}/move/".format(
+                    puzzle_id=self.puzzle_id,
+                    piece_id=piece_id
+                ),
+                "publish",
+                payload={"x": x, "y": y, "r": 0},
+            )
+        except Exception as err:
+            if str(err) == "too_active":
+                redis_connection.incr("testdata:too_active")
+                time.sleep(30)
+            elif str(err) == "fail":
+                # Stop trying to move this piece if failed for any 400 type errors
+                try:
+                    # Need to keep the same rate of piece movements so maintain
+                    # the size of the list.
+                    self.movable_pieces.remove(piece_id)
+                    self.movable_pieces.append(False)
+                except ValueError:
+                    pass
+            return
+
+        end = time.perf_counter()
+        duration = end - start
+        redis_connection.rpush("testdata:pa", duration)
+
 
     def move_random_piece(self, user_session):
         piece_id = choice(self.movable_pieces)
+        if piece_id is False:
+            return
         x = randint(0, self.table_width - 100)
         y = randint(0, self.table_height - 100)
         start = time.perf_counter()
@@ -598,6 +652,15 @@ class PuzzlePieces:
                 if str(err) == "too_active":
                     redis_connection.incr("testdata:too_active")
                     time.sleep(30)
+                elif str(err) == "fail":
+                    # Stop trying to move this piece if failed for any 400 type errors
+                    try:
+                        # Need to keep the same rate of piece movements so maintain
+                        # the size of the list.
+                        self.movable_pieces.remove(piece_id)
+                        self.movable_pieces.append(False)
+                    except ValueError:
+                        pass
                 else:
                     # current_app.logger.debug('move exception {}'.format(err))
                     # current_app.logger.debug("resetting karma for {ip}".format(ip=user_session.ip))
@@ -667,10 +730,11 @@ average latency: {avg}"""
 
 
 class PuzzleActivityJob:
-    def __init__(self, puzzle_id, ips, max_delay=0.1):
+    def __init__(self, puzzle_id, ips, max_delay=0.1, internal_piece_move=False):
         self.puzzle_id = puzzle_id
         self.ips = ips
         self.max_delay = max_delay
+        self.internal_piece_move = internal_piece_move
         self.user_sessions = list(map(lambda ip: UserSession(ip=ip), self.ips))
         cur = db.cursor()
         result = cur.execute(
@@ -690,10 +754,10 @@ class PuzzleActivityJob:
             self.puzzle_details["table_width"],
             self.puzzle_details["table_height"],
         )
-        puzzle_pieces.move_random_pieces_with_delay(delay=0.1, max_delay=self.max_delay)
+        puzzle_pieces.move_random_pieces_with_delay(delay=0.1, max_delay=self.max_delay, internal_piece_move=self.internal_piece_move)
 
 
-def simulate_puzzle_activity(puzzle_ids, count=1, max_delay=0.1):
+def simulate_puzzle_activity(puzzle_ids, count=1, max_delay=0.1, internal=False):
     """"""
     cur = db.cursor()
     result = cur.execute(
@@ -725,7 +789,7 @@ def simulate_puzzle_activity(puzzle_ids, count=1, max_delay=0.1):
     jobs.append(multiprocessing.Process(target=puzzle_activity_job_stats.run))
 
     for puzzle_id in _puzzle_ids:
-        puzzle_activity_job = PuzzleActivityJob(puzzle_id, players, max_delay=max_delay)
+        puzzle_activity_job = PuzzleActivityJob(puzzle_id, players, max_delay=max_delay, internal_piece_move=internal)
         jobs.append(multiprocessing.Process(target=puzzle_activity_job.run))
 
     for job in jobs:
@@ -749,6 +813,7 @@ def main():
     min_pieces = int(args.get("--min-pieces"))
     puzzles = args.get("--puzzles")
     delay = float(args.get("--delay"))
+    internal = args.get("--internal")
 
     dictConfig(
         {
@@ -798,7 +863,7 @@ def main():
             puzzle_ids = []
             if puzzles:
                 puzzle_ids = puzzles.split(",")
-            simulate_puzzle_activity(puzzle_ids, count=count, max_delay=delay)
+            simulate_puzzle_activity(puzzle_ids, count=count, max_delay=delay, internal=internal)
 
 
 if __name__ == "__main__":
