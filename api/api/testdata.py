@@ -427,7 +427,7 @@ class UserSession:
         my_headers.update(headers)
         r = requests.patch(
             "".join([_host, route]),
-            data=payload,
+            json=payload,
             cookies={"shareduser": self.shareduser_cookie},
             headers=my_headers,
         )
