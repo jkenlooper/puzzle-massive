@@ -313,6 +313,9 @@ value:
   players: select-players.sql
   page: route-pass-index.sql
   email: route-pass-email.sql
+  player_name: route-pass-player-name.sql
+  player_bit: route-pass-player-bit.sql
+  player_id: route-pass-player-id-with-default.sql
 
 
 --- !ChillNode

@@ -17,7 +17,10 @@
 
 
   {# /admin/player/page/<int:page>/email/<email>/ #}
-  <form method="GET" action="/chill{{ url_for('.page_uri', uri='admin/player')}}">
+  <form method="GET" action="/chill{{ url_for('.page_uri', uri='admin/player')}}" x-ref="playerFilterForm" x-data="{playerIdBase10: '{{ request.args.player_id or '' }}', playerIdBase36:''}"
+  {% if request.args.player_id %}
+  x-init="playerIdBase36 = parseInt('{{ request.args.player_id or '' }}', 10).toString(36)">
+  {% endif %}
     <label>
       page
       <input autocomplete="off" min="0" size="3" type="number" name="page" value="{{ request.args.page or '0' }}">
@@ -26,9 +29,32 @@
       e-mail
       <input autocomplete="off" type="text" name="email" placeholder="wildcards-%-and-_@example.com" value="{{ request.args.email or '' }}">
     </label>
+    <label>
+      Player Name
+      <input autocomplete="off" type="text" name="player_name" placeholder="wildcards-%-and-_" value="{{ request.args.player_name or '' }}">
+    </label>
+    <label>
+      Player Bit
+      <input autocomplete="off" type="text" name="player_bit" placeholder="wildcards-%-and-_" value="{{ request.args.player_bit or '' }}">
+    </label>
+    <label>
+      Player Id (base36)
+      <input autocomplete="off" type="text" size="5" placeholder="co"
+        x-model="playerIdBase36"
+        x-on:input="playerIdBase10 = parseInt(playerIdBase36, 36)"
+      >
+    </label>
+    <label>
+      Player Id (decimal)
+      <input autocomplete="off" size="10" type="text" name="player_id" placeholder="456" value="{{ request.args.player_id or '' }}"
+        x-model="playerIdBase10"
+        x-on:input="playerIdBase36 = parseInt(playerIdBase10, 10).toString(36)"
+      >
+    </label>
     <input type="submit" value="filter">
   </form>
 
+  {% if players %}
   <table style="width: 100%">
     <thead>
     <tr>
@@ -80,7 +106,7 @@
     {% endfor %}
     </tbody>
   </table>
-
+  {% endif %}
 
 
 </section>
