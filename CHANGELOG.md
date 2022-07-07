@@ -27,12 +27,17 @@ Improving the client side build tools and process.
 This release will require installing librsvg2-bin before doing an in-place
 deployment.
 
+### Added
+
+- Add more player filters for admin page to help with editing player details
+
 ### Changed
 
 - Switched Typescript files to JavaScript
 - Isolated the design-tokens and client side public code
 - Code formatting scripts have been isolated to the code-formatter/ directory
 - Use latest piecemaker and pixsaw; should improve puzzle rendering time
+- Use smaller droplet for cdn server
 
 ## [2.12.3] - 2021-11-10
 

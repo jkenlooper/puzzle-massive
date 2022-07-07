@@ -18,25 +18,17 @@
 
   {# /admin/player/page/<int:page>/email/<email>/ #}
   <form method="GET" action="/chill{{ url_for('.page_uri', uri='admin/player')}}" x-ref="playerFilterForm" x-data="{playerIdBase10: '{{ request.args.player_id or '' }}', playerIdBase36:''}"
-  {% if request.args.player_id %}
-  x-init="playerIdBase36 = parseInt('{{ request.args.player_id or '' }}', 10).toString(36)">
-  {% endif %}
+  {% if request.args.player_id -%}
+  x-init="playerIdBase36 = parseInt('{{ request.args.player_id or '' }}', 10).toString(36)"
+  {%- endif -%}
+  >
+    <div>
     <label>
       page
       <input autocomplete="off" min="0" size="3" type="number" name="page" value="{{ request.args.page or '0' }}">
     </label>
-    <label>
-      e-mail
-      <input autocomplete="off" type="text" name="email" placeholder="wildcards-%-and-_@example.com" value="{{ request.args.email or '' }}">
-    </label>
-    <label>
-      Player Name
-      <input autocomplete="off" type="text" name="player_name" placeholder="wildcards-%-and-_" value="{{ request.args.player_name or '' }}">
-    </label>
-    <label>
-      Player Bit
-      <input autocomplete="off" type="text" name="player_bit" placeholder="wildcards-%-and-_" value="{{ request.args.player_bit or '' }}">
-    </label>
+    </div>
+    <div>
     <label>
       Player Id (base36)
       <input autocomplete="off" type="text" size="5" placeholder="co"
@@ -51,7 +43,46 @@
         x-on:input="playerIdBase36 = parseInt(playerIdBase10, 10).toString(36)"
       >
     </label>
+    <label>
+      e-mail
+      <input autocomplete="off" type="text" name="email" placeholder="wildcards-%-and-_@example.com" value="{{ request.args.email or '' }}">
+    </label>
+    <label>
+      Player Name
+      <input autocomplete="off" type="text" name="player_name" placeholder="wildcards-%-and-_" value="{{ request.args.player_name or '' }}">
+    </label>
+    <label>
+      Player Bit
+      <input autocomplete="off" type="text" name="player_bit" placeholder="wildcards-%-and-_" value="{{ request.args.player_bit or '' }}">
+    </label>
+    {# TODO
+      The bannedusers, blockedplayers, and blocked_ip data is only in the redis
+      database. To make chill be able to use this data will require it to be
+      copied over to a table in the sqlite database.
+
+      A more ideal solution would be to have chill be able to make a http
+      request to an endpoint that would return a json response.
+    #}
+    {#
+    </div>
+    <div>
+      <label>
+        Banned Temporary
+        <input type="checkbox" name="bannedusers">
+      </label>
+      <label>
+        Blocked Temporary
+        <input type="checkbox" name="blockedplayers">
+      </label>
+      <label>
+        Blocked IP Address
+        <input type="checkbox" name="blocked_ip">
+      </label>
+    #}
+    </div>
+    <div>
     <input type="submit" value="filter">
+    </div>
   </form>
 
   {% if players %}
