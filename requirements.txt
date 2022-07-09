@@ -1,8 +1,8 @@
 Flask==2.0
 gevent==21.1.2
 greenlet==1.0.0
-#chill==0.8.1
-git+https://github.com/jkenlooper/chill.git@develop#egg=chill
+chill==0.9.0
+#git+https://github.com/jkenlooper/chill.git@develop#egg=chill
 redis == 3.5.3
 hiredis == 1.1.0
 rq==1.7.0
