@@ -1,12 +1,11 @@
 -r ../requirements.txt
 boto3==1.17.97
 Pillow==9.0.1
-#git+https://github.com/jkenlooper/glue.git@update#egg=glue
 pixsaw==0.3.3
 #git+https://github.com/jkenlooper/pixsaw.git@develop#egg=pixsaw
 docopt==0.6.2
-#piecemaker==0.4.4
-git+https://github.com/jkenlooper/piecemaker.git@develop#egg=piecemaker
+piecemaker==0.4.5
+#git+https://github.com/jkenlooper/piecemaker.git@develop#egg=piecemaker
 #pycurl==7.43.0.2
 requests==2.21
 responses==0.10.14
