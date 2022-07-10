@@ -113,6 +113,10 @@ if test -f ${IMAGEMAGICK_POLICY}.bak; then
 mv ${IMAGEMAGICK_POLICY}.bak ${IMAGEMAGICK_POLICY}
 fi
 
+rm -f /etc/cron.d/reload-nginx-for-cert-renewal-crontab
+# Stop and start in order for the crontab to be loaded (reload not supported).
+systemctl stop cron && systemctl start cron || echo "Can't reload cron service"
+
 systemctl reload nginx;
 
 exit

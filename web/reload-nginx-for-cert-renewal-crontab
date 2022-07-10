@@ -1,0 +1,3 @@
+# m h	dom mon dow user	command
+26  10  13  *   *   root    systemctl reload nginx
+# An empty line is required at the end of this file for a valid cron file.

@@ -77,3 +77,4 @@ web/legacy-cache--up.nginx.conf
 web/legacy-origin.nginx.conf
 web/nginx.conf
 web/old-cruft.nginx.conf
+web/reload-nginx-for-cert-renewal-crontab

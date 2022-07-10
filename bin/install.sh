@@ -261,5 +261,12 @@ systemctl daemon-reload
 systemctl start nginx;
 systemctl reload nginx;
 set +x
+
+# Add crontab file for reloading nginx so any newly renewed certs will be used.
+cp web/reload-nginx-for-cert-renewal-crontab /etc/cron.d/
+chmod 0644 /etc/cron.d/reload-nginx-for-cert-renewal-crontab
+# Stop and start in order for the crontab to be loaded (reload not supported).
+systemctl stop cron && systemctl start cron || echo "Can't reload cron service"
+
 echo "Checking is-active status for services"
 ./bin/appctl.sh is-active
