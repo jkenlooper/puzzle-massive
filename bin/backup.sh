@@ -98,4 +98,11 @@ if [ -n "${EPHEMERAL_ARCHIVE_ENDPOINT_URL}" -a -n "${EPHEMERAL_ARCHIVE_BUCKET}" 
     echo "Uploading ${DBDUMPFILE} to S3 bucket ${EPHEMERAL_ARCHIVE_BUCKET}";
     echo "zcat ${BACKUP_DIRECTORY}/${DBDUMPFILE} | sqlite3 $SQLITE_DATABASE_URI";
     aws s3 cp --endpoint=${EPHEMERAL_ARCHIVE_ENDPOINT_URL} "${BACKUP_DIRECTORY}/${DBDUMPFILE}" s3://${EPHEMERAL_ARCHIVE_BUCKET}/${DBDUMPFILE}
+    # Sleep after the s3 upload just in case it didn't fully finish. This is
+    # probably not needed, but it doesn't hurt anything here.
+    sleep 1
+    echo "Uploaded date stamped db backup to ${EPHEMERAL_ARCHIVE_BUCKET} s3 bucket."
+    echo "Renaming the ${DBDUMPFILE} to a weekday filename to preserve disk space."
+    weekday_backup_db_dump_file="${EPHEMERAL_ARCHIVE_BUCKET}__db-$(date --utc '+%a').dump.gz";
+    mv --verbose "${BACKUP_DIRECTORY}/${DBDUMPFILE}" "${BACKUP_DIRECTORY}/${weekday_backup_db_dump_file}"
 fi
