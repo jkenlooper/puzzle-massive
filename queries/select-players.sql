@@ -25,6 +25,7 @@ and (:email = '' or pa.email like :email)
 and (:player_name = '' or nr.name like :player_name)
 and (:player_bit = '' or b.name like :player_bit)
 and (:player_id = '' or u.id = :player_id)
+and (:score = '' or u.score >= :score)
 order by seconds_from_now asc
 limit 100 offset :page * 100
 ;

@@ -55,6 +55,12 @@
       Player Bit
       <input autocomplete="off" type="text" name="player_bit" placeholder="wildcards-%-and-_" value="{{ request.args.player_bit or '' }}">
     </label>
+    </div>
+    <div>
+      <label>
+        Score greater than or equal to
+        <input autocomplete="off" min="0" size="4" type="number" name="score" value="{{ request.args.score or '' }}">
+      </label>
     {# TODO
       The bannedusers, blockedplayers, and blocked_ip data is only in the redis
       database. To make chill be able to use this data will require it to be
@@ -64,8 +70,6 @@
       request to an endpoint that would return a json response.
     #}
     {#
-    </div>
-    <div>
       <label>
         Banned Temporary
         <input type="checkbox" name="bannedusers">
