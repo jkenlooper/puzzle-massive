@@ -33,14 +33,14 @@
       Player Id (base36)
       <input autocomplete="off" type="text" size="5" placeholder="co"
         x-model="playerIdBase36"
-        x-on:input="playerIdBase10 = parseInt(playerIdBase36, 36)"
+        x-on:input="playerIdBase36 !== '' ? playerIdBase10 = parseInt(playerIdBase36, 36) : playerIdBase10 = ''"
       >
     </label>
     <label>
       Player Id (decimal)
       <input autocomplete="off" size="10" type="text" name="player_id" placeholder="456" value="{{ request.args.player_id or '' }}"
         x-model="playerIdBase10"
-        x-on:input="playerIdBase36 = parseInt(playerIdBase10, 10).toString(36)"
+        x-on:input="playerIdBase10 !== '' ? playerIdBase36 = parseInt(playerIdBase10, 10).toString(36) : playerIdBase36 = ''"
       >
     </label>
     <label>
