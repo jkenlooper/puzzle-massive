@@ -264,6 +264,7 @@ class PuzzleListView(MethodView):
             "puzzleCount": puzzle_count,
             "pageSize": page_size,
             "currentPage": page,
+            "pageMax": page_max,
             "maxPieces": max_pieces,
         }
 

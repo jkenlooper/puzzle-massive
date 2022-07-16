@@ -775,9 +775,15 @@ def simulate_puzzle_activity(puzzle_ids, count=1, max_delay=0.1, internal=False)
 
     user_session = UserSession(ip=result[0])
 
-    gallery_puzzle_list = user_session.get_data("/gallery-puzzle-list/", "api")
+    page = 0
+    listed_puzzle_ids = []
+    puzzle_list_data = user_session.get_data(f"/puzzle-list/?status=active&pieces_min=0&pieces_max=60000&page={page}&type=original&type=instance&orderby=m_date", "api")
+    page_max = int(puzzle_list_data["pageMax"])
 
-    listed_puzzle_ids = [x["puzzle_id"] for x in gallery_puzzle_list["puzzles"]]
+    while page <= page_max:
+        puzzle_list = user_session.get_data(f"/puzzle-list/?status=active&pieces_min=0&pieces_max=60000&page={page}&type=original&type=instance&orderby=m_date", "api")
+        listed_puzzle_ids.extend([x["puzzle_id"] for x in puzzle_list["puzzles"]])
+        page = puzzle_list["currentPage"] + 1
     _puzzle_ids = puzzle_ids or listed_puzzle_ids
 
     result = cur.execute(
