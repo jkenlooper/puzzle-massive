@@ -104,7 +104,6 @@ class AutoRebuildCompletedPuzzle(Task):
         super().do_task()
         made_change = False
 
-        cur = db.cursor()
         in_queue_puzzles_in_piece_groups = current_app.config[
             "MINIMUM_IN_QUEUE_PUZZLES_IN_PIECE_GROUPS"
         ].copy()
@@ -115,11 +114,14 @@ class AutoRebuildCompletedPuzzle(Task):
         ):
             if minimum_count == 0:
                 continue
+            cur = db.cursor()
             in_queue_puzzle_count = cur.execute(
                 read_query_file("get_in_queue_puzzle_count.sql"),
                 {"low": low, "high": high},
             ).fetchone()[0]
+            cur.close()
             if in_queue_puzzle_count <= minimum_count:
+                cur = db.cursor()
                 (result, col_names) = rowify(
                     cur.execute(
                         read_query_file("select_random_puzzle_to_rebuild.sql"),
@@ -144,6 +146,7 @@ class AutoRebuildCompletedPuzzle(Task):
                         ).fetchall(),
                         cur.description,
                     )
+                cur.close()
                 if result:
                     for completed_puzzle in result:
                         puzzle = completed_puzzle["id"]
@@ -190,15 +193,17 @@ class AutoRebuildCompletedPuzzle(Task):
                         query_select_all_pieces_for_puzzle = (
                             """select * from Piece where (puzzle = :puzzle)"""
                         )
+                        cur = db.cursor()
                         (all_pieces, col_names) = rowify(
                             cur.execute(
                                 query_select_all_pieces_for_puzzle, {"puzzle": puzzle}
                             ).fetchall(),
                             cur.description,
                         )
+                        cur.close()
                         deletePieceDataFromRedis(redis_connection, puzzle, all_pieces)
 
-                        job = self.queue.enqueue(
+                        self.queue.enqueue(
                             "api.jobs.pieceRenderer.render",
                             [completed_puzzle],
                             result_ttl=0,
@@ -208,7 +213,6 @@ class AutoRebuildCompletedPuzzle(Task):
                         archive_and_clear(puzzle)
                     made_change = True
 
-        cur.close()
         if made_change:
             self.log_task()
 
@@ -253,12 +257,12 @@ class UpdateModifiedDateOnPuzzle(Task):
     def do_task(self):
         super().do_task()
 
-        cur = db.cursor()
-
         if self.first_run:
+            cur = db.cursor()
             result = cur.execute(
                 fetch_query_string("select_most_recent_puzzle_by_m_date.sql")
             ).fetchone()
+            cur.close()
             if result and len(result):
                 self.last_update = int(result[0]) - self.interval
 
@@ -273,6 +277,7 @@ class UpdateModifiedDateOnPuzzle(Task):
             m_date = strftime("%Y-%m-%d %H:%M:%S", gmtime(modified))
             current_app.logger.info("test {}".format(puzzle))
 
+            cur = db.cursor()
             (result, col_names) = rowify(
                 cur.execute(
                     fetch_query_string("select-all-from-puzzle-by-id.sql"),
@@ -280,6 +285,7 @@ class UpdateModifiedDateOnPuzzle(Task):
                 ).fetchall(),
                 cur.description,
             )
+            cur.close()
             if result:
                 puzzle_data = result[0]
                 sleep(API_REQUESTS_LIMIT_RATE)
@@ -309,7 +315,6 @@ class UpdateModifiedDateOnPuzzle(Task):
                 )
         if len(puzzles) > 0:
             self.log_task()
-        cur.close()
 
 
 class UpdatePlayer(Task):
@@ -324,7 +329,6 @@ class UpdatePlayer(Task):
         super().do_task()
         made_change = False
 
-        cur = db.cursor()
 
         user = redis_connection.spop("batchuser")
         while user:
@@ -405,9 +409,11 @@ class UpdatePlayer(Task):
             made_change = True
 
         if self.first_run:
+            cur = db.cursor()
             result = cur.execute(
                 read_query_file("select_user_score_and_timestamp.sql")
             ).fetchall()
+            cur.close()
             if result and len(result):
                 current_app.logger.info(
                     "Set rank and timeline on {0} players".format(len(result))
@@ -421,8 +427,6 @@ class UpdatePlayer(Task):
 
         if made_change:
             self.log_task()
-
-        cur.close()
 
 
 class UpdatePuzzleStats(Task):
@@ -583,6 +587,7 @@ class UpdatePuzzleQueue(Task):
         result = cur.execute(
             fetch_query_string("select-active-public-puzzles-due-for-retirement.sql")
         ).fetchall()
+        cur.close()
         if result:
             for item in result:
                 puzzle_id = item[0]
@@ -600,10 +605,7 @@ class UpdatePuzzleQueue(Task):
                 )
                 if r.status_code != 200:
                     current_app.logger.warning(
-                        "Puzzle details api error. Could not update puzzle m_date to {m_date}. Skipping {puzzle_id}".format(
-                            m_date=m_date,
-                            puzzle_id=puzzle_data["puzzle_id"],
-                        )
+                        f"Puzzle details api error. Could not update puzzle details. Skipping {puzzle_id}"
                     )
                     continue
                 made_change = True
@@ -618,11 +620,14 @@ class UpdatePuzzleQueue(Task):
             lambda x: (x[0], x[1], active_puzzles_in_piece_groups.pop()),
             current_app.config["SKILL_LEVEL_RANGES"],
         ):
+            cur = db.cursor()
             result = cur.execute(
                 read_query_file("count-active-puzzles-within-skill-range.sql"),
                 {"low": low, "high": high},
             ).fetchone()
-            if result == None or result[0] < skill_range_active_count:
+            cur.close()
+            if result is None or result[0] < skill_range_active_count:
+                cur = db.cursor()
                 result = cur.execute(
                     fetch_query_string("select-puzzle-next-in-queue-to-be-active.sql"),
                     {
@@ -631,6 +636,7 @@ class UpdatePuzzleQueue(Task):
                         "active_count": skill_range_active_count,
                     },
                 ).fetchall()
+                cur.close()
                 if result:
                     current_app.logger.debug(
                         "Bump next puzzle in queue to be active for skill level range {low}, {high}".format(
@@ -655,18 +661,13 @@ class UpdatePuzzleQueue(Task):
                         )
                         if r.status_code != 200:
                             current_app.logger.warning(
-                                "Puzzle details api error. Could not update puzzle m_date to {m_date} and status to active. Skipping {puzzle_id}".format(
-                                    m_date=m_date_now,
-                                    puzzle_id=puzzle_data["puzzle_id"],
-                                )
+                                f"Puzzle details api error. Could not update puzzle m_date to {m_date_now} and status to active. Skipping {puzzle_id}"
                             )
                             continue
                         made_change = True
 
         if made_change:
             self.log_task()
-
-        cur.close()
 
 
 class AutoApproveUserNames(Task):
@@ -714,6 +715,7 @@ class SendDigestEmailForAdmin(Task):
             self.log_task()
             names = []
             (result, col_names) = rowify(result, cur.description)
+            cur.close()
             for item in result:
                 names.append("{approved_date} - {display_name}".format(**item))
 
@@ -735,7 +737,8 @@ class SendDigestEmailForAdmin(Task):
                     )
                     pass
 
-        cur.close()
+        else:
+            cur.close()
 
 
 task_registry = [

@@ -1,7 +1,5 @@
 from builtins import str
 import os
-import sqlite3
-import time
 
 from flask import current_app, json
 import requests
@@ -41,6 +39,7 @@ def archive_and_clear(puzzle, write_archive_to_disk=False):
         cur.close()
         return
     (result, col_names) = rowify(result, cur.description)
+    cur.close()
     puzzle_data = result[0]
     puzzle_id = puzzle_data["puzzle_id"]
 
@@ -50,6 +49,7 @@ def archive_and_clear(puzzle, write_archive_to_disk=False):
         # piece movement history.  The other puzzle resources to recreate the
         # puzzle are also not saved like the raster.css and raster.png.  Would
         # also need to archive the puzzle piece data from the database.
+        cur = db.cursor()
         result = cur.execute(
             fetch_query_string("select_timeline_for_puzzle.sql"), {"puzzle": puzzle}
         ).fetchall()
@@ -59,6 +59,7 @@ def archive_and_clear(puzzle, write_archive_to_disk=False):
             return
 
         (result, col_names) = rowify(result, cur.description)
+        cur.close()
         puzzle_directory = os.path.join(
             current_app.config.get("PUZZLE_ARCHIVE"), str(puzzle)
         )
@@ -91,7 +92,4 @@ def archive_and_clear(puzzle, write_archive_to_disk=False):
                 puzzle_id=puzzle_id,
             )
         )
-        cur.close()
         return
-
-    cur.close()

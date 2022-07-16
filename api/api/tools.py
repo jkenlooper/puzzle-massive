@@ -83,10 +83,9 @@ def init_karma_key(redis_connection, puzzle, ip, app_config):
 
 
 def deletePieceDataFromRedis(redis_connection, puzzle, all_pieces):
-    groups = set()
     pzm_puzzle_key = "pzm:{puzzle}".format(puzzle=puzzle)
     # Bump the pzm id when preparing to mutate the puzzle.
-    puzzle_mutation_id = redis_connection.incr(pzm_puzzle_key)
+    redis_connection.incr(pzm_puzzle_key)
 
     redis_connection.publish(f"enforcer_stop:{puzzle}", "")
 

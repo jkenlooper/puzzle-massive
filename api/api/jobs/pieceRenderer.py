@@ -92,11 +92,11 @@ def render_all():
         print("no puzzles found in render or rebuild queues")
         return
     (result, col_names) = rowify(result, cur.description)
-    job = {"args": result}
+    cur.close()
     for puzzle in result:
         try:
             render([puzzle])
-        except:
+        except Exception:
             set_render_fail_on_puzzle(puzzle)
 
 
@@ -117,8 +117,10 @@ def list_all():
         print(
             "no puzzles found in render or rebuild queues. No puzzles rendering or have failed rendering."
         )
+        cur.close()
         return
     (result, col_names) = rowify(result, cur.description)
+    cur.close()
     puzzles_grouped_by_status = {
         IN_RENDER_QUEUE: [],
         REBUILD: [],
@@ -153,9 +155,9 @@ def render(puzzles):
     # Delete old piece properties if existing
     # Delete old PuzzleFile for name if existing
     # TODO: update preview image in PuzzleFile?
-    cur = db.cursor()
 
     for puzzle in puzzles:
+        cur = db.cursor()
         current_app.logger.info("Rendering puzzle: {puzzle_id}".format(**puzzle))
 
         result = cur.execute(
@@ -166,11 +168,13 @@ def render(puzzles):
             current_app.logger.info(
                 "Puzzle {puzzle_id} not available; skipping.".format(**puzzle)
             )
+            cur.close()
             continue
 
         puzzle_data = rowify(result, cur.description,)[
             0
         ][0]
+        cur.close()
         if puzzle_data["status"] not in (IN_RENDER_QUEUE, REBUILD):
             current_app.logger.info(
                 "Puzzle {puzzle_id} no longer in rendering status; skipping.".format(
@@ -191,10 +195,12 @@ def render(puzzles):
         if r.status_code != 200:
             raise Exception("Puzzle details api error")
 
+        cur = db.cursor()
         result = cur.execute(
             read_query_file("get_original_puzzle_id_from_puzzle_instance.sql"),
             {"puzzle": puzzle["id"], "puzzle_file_name": "original"},
         ).fetchone()
+        cur.close()
         if not result:
             print("Error with puzzle instance {puzzle_id} ; skipping.".format(**puzzle))
             continue
@@ -487,7 +493,6 @@ def render(puzzles):
                     )
                 )
 
-        cur.close()
 
 
 def cleanup_dir(path, keep_list):

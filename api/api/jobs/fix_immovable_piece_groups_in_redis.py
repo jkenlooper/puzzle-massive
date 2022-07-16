@@ -12,12 +12,9 @@ Options:
 
 from docopt import docopt
 
-from flask import current_app
-
 from api.app import redis_connection, db, make_app
 from api.database import rowify, read_query_file
-from api.tools import loadConfig, deletePieceDataFromRedis
-from api.constants import MAINTENANCE
+from api.tools import loadConfig
 
 
 def find_puzzles_in_redis(results={}):
@@ -27,10 +24,10 @@ def find_puzzles_in_redis(results={}):
     top left piece group.
     """
     _results = results.copy()
-    cur = db.cursor()
 
     puzzles_in_redis = redis_connection.zrange("pcupdates", 0, -1)
     for puzzle in puzzles_in_redis:
+        cur = db.cursor()
         test_result = _results.get(puzzle, {"puzzle": puzzle, "msg": "", "test": []})
         test_result["test"].append("redis")
         _results.update({puzzle: test_result})
@@ -41,6 +38,7 @@ def find_puzzles_in_redis(results={}):
             ).fetchall(),
             cur.description,
         )
+        cur.close()
         if not result or not result[0]:
             # Test failed.
             test_result[
@@ -87,7 +85,6 @@ def find_puzzles_in_redis(results={}):
             )
             test_result["status"] = "fail"
             test_result["reason"] = "fail_pcfixed_outside_of_top_left"
-    cur.close()
     return _results
 
 
@@ -103,6 +100,7 @@ def find_puzzles_in_database(results={}):
         ).fetchall(),
         cur.description,
     )
+    cur.close()
     if not puzzles_in_database:
         # no matching puzzles found
         return _results
@@ -121,6 +119,7 @@ def find_puzzles_in_database(results={}):
         test_result["test"].append("database")
         _results.update({puzzle: test_result})
 
+        cur = db.cursor()
         # TODO: Check piece data for this puzzle to see if pieces that are
         # immovable have the same parent as top left piece.
         (immovable_pieces, col_names) = rowify(
@@ -130,6 +129,7 @@ def find_puzzles_in_database(results={}):
             ).fetchall(),
             cur.description,
         )
+        cur.close()
 
         # Fail if no immovable piece groups
         if not immovable_pieces:
@@ -178,9 +178,9 @@ def fix_redis_piece_groups(puzzles, results={}):
 
     # Find each group that is not the same as the top left piece and remove
     # those pieces from the pcfixed redis smembers
-    cur = db.cursor()
     print(f"failed redis puzzles: {puzzles}")
     for puzzle in puzzles:
+        cur = db.cursor()
         (result, col_names) = rowify(
             cur.execute(
                 read_query_file("select_puzzle_top_left_piece_for_puzzle.sql"),
@@ -188,6 +188,7 @@ def fix_redis_piece_groups(puzzles, results={}):
             ).fetchall(),
             cur.description,
         )
+        cur.close()
         if not result or not result[0]:
             continue
 
@@ -204,7 +205,6 @@ def fix_redis_piece_groups(puzzles, results={}):
         )
 
         _results[puzzle]["fixed"] = True
-    cur.close()
     return _results
 
 

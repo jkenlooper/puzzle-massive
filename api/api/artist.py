@@ -7,8 +7,6 @@ Options:
     --config <file>     Set config file. [default: site.cfg]
 """
 from builtins import map
-import os
-import sys
 from docopt import docopt
 
 from rq import Worker, Queue, Connection

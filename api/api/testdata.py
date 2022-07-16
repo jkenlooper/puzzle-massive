@@ -69,11 +69,11 @@ def generate_users(count):
         # TODO: Use generated names from https://www.name-generator.org.uk/
         return "Random Name for " + str(user_id)
 
-    cur = db.cursor()
-
     for index in range(count):
+        cur = db.cursor()
         ip = ".".join(map(lambda x: str(randint(0, 255)), range(4)))
-        score = randint(0, 15000)
+        # The score is more likely to be 0 since most players are new
+        score = randint(0, 15000) if choice(range(0, 15)) == 0 else 0
         login = generate_user_login()
         query = """insert into User (points, score, login, m_date, ip) values
                 (:points, :score, :login, datetime('now'), :ip)"""
@@ -124,8 +124,8 @@ def generate_users(count):
                 },
             )
 
-    cur.close()
-    db.commit()
+        cur.close()
+        db.commit()
 
 
 def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=3):
@@ -134,6 +134,7 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
     result = cur.execute(
         "select ip from User where id = :user;", {"user": user}
     ).fetchone()
+    cur.close()
     if not result:
         current_app.logger.warn("No player with that id")
         return
@@ -215,7 +216,6 @@ def generate_puzzles(count=1, size="180x180!", min_pieces=0, max_pieces=9, user=
 
 def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
 
-    cur = db.cursor()
     for index in range(count):
         bg_color = "#444444"
         permission = PUBLIC
@@ -223,13 +223,16 @@ def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
             pieces = randint(min_pieces, max_pieces)
         else:
             pieces = max_pieces
+        cur = db.cursor()
         result = cur.execute(
             read_query_file("select-random-player-with-available-user-puzzle-slot.sql")
         ).fetchone()[0]
+        cur.close()
         if result:
             player = result
             # select a random original puzzle
 
+            cur = db.cursor()
             result = cur.execute(
                 read_query_file("select-random-puzzle-for-new-puzzle-instance.sql"),
                 {
@@ -245,9 +248,11 @@ def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
             ).fetchall()
             if not result:
                 current_app.logger.warn("no puzzle found")
+                cur.close()
                 continue
 
             (result, col_names) = rowify(result, cur.description)
+            cur.close()
             originalPuzzleData = result[0]
 
             filename = "random-{}.png".format(str(uuid4()))
@@ -275,6 +280,7 @@ def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
                 "status": IN_RENDER_QUEUE,
                 "permission": permission,
             }
+            cur = db.cursor()
             cur.execute(
                 """insert into Puzzle (
             puzzle_id,
@@ -307,6 +313,7 @@ def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
                 {"puzzle_id": puzzle_id},
             ).fetchall()
             if not result:
+                cur.close()
                 raise Exception("no puzzle instance")
 
             (result, col_names) = rowify(result, cur.description)
@@ -330,6 +337,7 @@ def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
                 read_query_file("fill-user-puzzle-slot.sql"),
                 {"player": player, "puzzle": puzzle},
             )
+            cur.close()
 
             db.commit()
             current_app.logger.info("pieces: {pieces} {puzzle_id}".format(**locals()))
@@ -340,7 +348,6 @@ def generate_puzzle_instances(count=1, min_pieces=0, max_pieces=9):
                 result_ttl=0,
                 job_timeout="24h",
             )
-    cur.close()
 
 
 class UserSession:
@@ -602,7 +609,6 @@ class PuzzlePieces:
         end = time.perf_counter()
         duration = end - start
         redis_connection.rpush("testdata:pa", duration)
-
 
     def move_random_piece(self, user_session):
         piece_id = choice(self.movable_pieces)
