@@ -769,6 +769,7 @@ def simulate_puzzle_activity(puzzle_ids, count=1, max_delay=0.1, internal=False)
     result = cur.execute(
         "select distinct ip from User order by random() limit 1;",
     ).fetchone()
+    cur.close()
     if not result:
         current_app.logger.warn("Add players first")
         return
@@ -786,21 +787,21 @@ def simulate_puzzle_activity(puzzle_ids, count=1, max_delay=0.1, internal=False)
         page = puzzle_list["currentPage"] + 1
     _puzzle_ids = puzzle_ids or listed_puzzle_ids
 
-    result = cur.execute(
-        "select distinct ip from User order by id desc limit :count;",
-        {"count": int(count)},
-    ).fetchall()
-    if not result:
-        current_app.logger.warning("Add players first")
-        return
-    players = [x[0] for x in result]
-    cur.close()
-
     jobs = []
     puzzle_activity_job_stats = PuzzleActivityJobStats()
     jobs.append(multiprocessing.Process(target=puzzle_activity_job_stats.run))
 
-    for puzzle_id in _puzzle_ids:
+    for i, puzzle_id in enumerate(_puzzle_ids):
+        cur = db.cursor()
+        result = cur.execute(
+            "select distinct ip from User order by id desc limit :count offset :offset_amount;",
+            {"count": int(count), "offset_amount": int(count) * i},
+        ).fetchall()
+        cur.close()
+        if not result:
+            current_app.logger.warning("Add players first")
+            continue
+        players = [x[0] for x in result]
         puzzle_activity_job = PuzzleActivityJob(puzzle_id, players, max_delay=max_delay, internal_piece_move=internal)
         jobs.append(multiprocessing.Process(target=puzzle_activity_job.run))
 
