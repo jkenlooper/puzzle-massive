@@ -99,3 +99,5 @@
 !/media/other/README.md
 /media/other/*
 !/templates/other/README.md
+
+/code-formatter/formatted-files.tar

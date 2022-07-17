@@ -8,7 +8,7 @@ The below command will run [Prettier](https://prettier.io/) and
 
 ```bash
 # Run this makefile from the top level of the project:
-make format -f ./code-formatter/code-formatter.mk
+make -f ./code-formatter/code-formatter.mk
 ```
 
 ## Updating Generated Files
