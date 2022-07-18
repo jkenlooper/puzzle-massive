@@ -47,60 +47,47 @@ BUILD_DEPENDENCIES
 
 WORKDIR /home/code_formatter/code
 
-COPY --chown=code_formatter:code_formatter code-formatter/package.json ./
+COPY --chown=code_formatter:code_formatter package.json ./
 RUN <<NPM_INSTALL
 set -o errexit
 node --version
 npm --version
 npm install --ignore-scripts
+mv package-lock.json /home/code_formatter/
 NPM_INSTALL
 
-COPY --chown=code_formatter:code_formatter code-formatter/format.sh ./
+COPY --chown=code_formatter:code_formatter format.sh ./
+
 COPY --chown=code_formatter:code_formatter .editorconfig ./
 COPY --chown=code_formatter:code_formatter .flake8 ./
 COPY --chown=code_formatter:code_formatter .prettierrc ./
 COPY --chown=code_formatter:code_formatter .stylelintrc ./
 
-COPY --chown=code_formatter:code_formatter design-tokens/src ./design-tokens/src
-COPY --chown=code_formatter:code_formatter mockups ./mockups
-COPY --chown=code_formatter:code_formatter source-media ./source-media
-COPY --chown=code_formatter:code_formatter root ./root
-COPY --chown=code_formatter:code_formatter enforcer ./enforcer
-COPY --chown=code_formatter:code_formatter queries ./queries
-COPY --chown=code_formatter:code_formatter stream ./stream
-COPY --chown=code_formatter:code_formatter client-side-public/src ./client-side-public/src
-COPY --chown=code_formatter:code_formatter docs ./docs
-COPY --chown=code_formatter:code_formatter api ./api
-COPY --chown=code_formatter:code_formatter chill ./chill
-COPY --chown=code_formatter:code_formatter chill-data ./chill-data
-COPY --chown=code_formatter:code_formatter divulger ./divulger
-COPY --chown=code_formatter:code_formatter documents ./documents
-COPY --chown=code_formatter:code_formatter templates ./templates
+COPY --chown=code_formatter:code_formatter .modified-files.tar /home/code_formatter/.modified-files.tar
+
 RUN <<FORMAT
 set -o errexit
-mkdir -p /home/code_formatter/code/.last-modified
-chown -R code_formatter:code_formatter /home/code_formatter/code/.last-modified
+tar x -f /home/code_formatter/.modified-files.tar \
+  --exclude=node_modules \
+  --exclude=package.json \
+  --exclude=format.sh
+chown -R code_formatter:code_formatter ./
+
 su code_formatter -c 'npm run format'
+
+rm -rf node_modules
+mv package.json /home/code_formatter/
+rm format.sh
+rm -f .editorconfig
+rm -f .flake8
+rm -f .prettierrc
+rm -f .stylelintrc
 FORMAT
 
 USER code_formatter
 
 FROM scratch as formatted-files
 COPY --from=build /usr/local/src/code-formatter/requirements.txt /code-formatter/requirements.txt
-COPY --from=build /home/code_formatter/code/package-lock.json /code-formatter/package-lock.json
+COPY --from=build /home/code_formatter/package-lock.json /code-formatter/package-lock.json
 
-COPY --from=build /home/code_formatter/code/design-tokens/src /design-tokens/src
-COPY --from=build /home/code_formatter/code/mockups /mockups
-COPY --from=build /home/code_formatter/code/source-media /source-media
-COPY --from=build /home/code_formatter/code/root /root
-COPY --from=build /home/code_formatter/code/enforcer /enforcer
-COPY --from=build /home/code_formatter/code/queries /queries
-COPY --from=build /home/code_formatter/code/stream /stream
-COPY --from=build /home/code_formatter/code/client-side-public/src /client-side-public/src
-COPY --from=build /home/code_formatter/code/docs /docs
-COPY --from=build /home/code_formatter/code/api /api
-COPY --from=build /home/code_formatter/code/chill /chill
-COPY --from=build /home/code_formatter/code/chill-data /chill-data
-COPY --from=build /home/code_formatter/code/divulger /divulger
-COPY --from=build /home/code_formatter/code/documents /documents
-COPY --from=build /home/code_formatter/code/templates /templates
+COPY --from=build /home/code_formatter/code/ /
