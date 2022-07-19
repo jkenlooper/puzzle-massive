@@ -45,43 +45,44 @@ apk --purge del \
   musl-dev
 BUILD_DEPENDENCIES
 
-WORKDIR /home/code_formatter/code
+WORKDIR /home/code_formatter
 
 COPY --chown=code_formatter:code_formatter package.json ./
 RUN <<NPM_INSTALL
 set -o errexit
 node --version
 npm --version
-npm install --ignore-scripts
-mv package-lock.json /home/code_formatter/
+chown -R code_formatter:code_formatter /home/code_formatter
+su code_formatter -c 'npm install --ignore-scripts'
 NPM_INSTALL
-
-COPY --chown=code_formatter:code_formatter format.sh ./
 
 COPY --chown=code_formatter:code_formatter .editorconfig ./
 COPY --chown=code_formatter:code_formatter .flake8 ./
 COPY --chown=code_formatter:code_formatter .prettierrc ./
-COPY --chown=code_formatter:code_formatter .stylelintrc ./
+COPY --chown=code_formatter:code_formatter .eslintrc.json ./
+COPY --chown=code_formatter:code_formatter .stylelintrc.json ./
 
-COPY --chown=code_formatter:code_formatter .modified-files.tar /home/code_formatter/.modified-files.tar
+COPY --chown=code_formatter:code_formatter .modified-files.tar ./
 
 RUN <<FORMAT
 set -o errexit
-tar x -f /home/code_formatter/.modified-files.tar \
-  --exclude=node_modules \
-  --exclude=package.json \
-  --exclude=format.sh
-chown -R code_formatter:code_formatter ./
+su code_formatter -c 'mkdir -p /home/code_formatter/code'
+su code_formatter -c 'tar x -f /home/code_formatter/.modified-files.tar \
+  -C /home/code_formatter/code'
 
-su code_formatter -c 'npm run format'
+su code_formatter -c 'npx eslint --fix \
+  --no-error-on-unmatched-pattern --exit-on-fatal-error \
+  --output-file eslint_errors.log --format unix \
+  code || printf "ERROR with eslint"'
+touch eslint_errors.log
+sed -i 's^/home/code_formatter/code/^^' eslint_errors.log
 
-rm -rf node_modules
-mv package.json /home/code_formatter/
-rm format.sh
-rm -f .editorconfig
-rm -f .flake8
-rm -f .prettierrc
-rm -f .stylelintrc
+su code_formatter -c 'npx stylelint --fix --formatter unix "code/**/*.css" > stylelint_errors.log || printf ""'
+
+su code_formatter -c 'npx prettier --write code || printf ""'
+
+su code_formatter -c '/usr/local/src/code-formatter/bin/black code || printf ""'
+
 FORMAT
 
 USER code_formatter
@@ -89,5 +90,7 @@ USER code_formatter
 FROM scratch as formatted-files
 COPY --from=build /usr/local/src/code-formatter/requirements.txt /code-formatter/requirements.txt
 COPY --from=build /home/code_formatter/package-lock.json /code-formatter/package-lock.json
+COPY --from=build /home/code_formatter/eslint_errors.log /
+COPY --from=build /home/code_formatter/stylelint_errors.log /
 
 COPY --from=build /home/code_formatter/code/ /

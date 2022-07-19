@@ -1,22 +1,11 @@
 {
-  "name": "puzzlemassive-code-formatter",
-  "//template_file_comment": "This file was generated from the code-formatter directory in https://github.com/jkenlooper/cookiecutters . Any modifications needed to this file should be done on that originating file.",
-  "version": "0.0.2-alpha.1",
-  "private": true,
-  "scripts": {
-    "format": "./format.sh",
-    "prettier": "prettier",
-    "eslint": "eslint",
-    "stylelint": "stylelint"
-  },
   "dependencies": {
-    "eslint": "^7.32.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-prettier": "^3.4.1",
-    "lint-staged": "^11.2.3",
-    "prettier": "2.3.0",
-    "stylelint": "^14.2.0",
-    "stylelint-config-prettier": "^9.0.3",
-    "stylelint-prettier": "^2.0.0"
+    "eslint": "8.20.0",
+    "eslint-config-prettier": "8.5.0",
+    "eslint-plugin-prettier": "4.2.1",
+    "prettier": "2.7.1",
+    "stylelint": "14.9.1",
+    "stylelint-config-standard": "26.0.0",
+    "stylelint-config-prettier": "9.0.3"
   }
 }

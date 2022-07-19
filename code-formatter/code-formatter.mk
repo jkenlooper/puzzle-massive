@@ -43,21 +43,24 @@ $(project_dir).flake8: .flake8
 $(project_dir).prettierrc: .prettierrc
 	cp $^ $@
 
-$(project_dir).stylelintrc: .stylelintrc
+$(project_dir).eslintrc.json: .eslintrc.json
 	cp $^ $@
 
-$(project_dir).formatted-files.tar: $(project_dir)package.json $(project_dir)Dockerfile $(project_dir).modified-files.tar $(project_dir).editorconfig $(project_dir).flake8 $(project_dir).prettierrc $(project_dir).stylelintrc
+$(project_dir).stylelintrc.json: .stylelintrc.json
+	cp $^ $@
+
+$(project_dir).formatted-files.tar: $(project_dir)package.json $(project_dir)Dockerfile $(project_dir).modified-files.tar $(project_dir).editorconfig $(project_dir).flake8 $(project_dir).prettierrc $(project_dir).eslintrc.json $(project_dir).stylelintrc.json
 	rm -f $@
 	$(DOCKER) image rm puzzlemassive-code-formatter-files || printf ""
 	DOCKER_BUILDKIT=1 $(DOCKER) build -f $(project_dir)Dockerfile \
 									--progress=plain \
 		--target formatted-files \
 		-t puzzlemassive-code-formatter-files \
-		--output type=tar,dest=$(project_dir).formatted-files.tar \
+		--output type=tar,dest=$@ \
 		$(project_dir)
 	# TODO overwrite files with new formatted ones
-	#-tar x -f $(project_dir).formatted-files.tar --overwrite
-	-tar t -f $(project_dir).formatted-files.tar
+	#-tar x -f $@ --overwrite
+	-tar t -f $@
 	touch $@
 
 
