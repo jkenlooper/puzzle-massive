@@ -1,14 +1,15 @@
 # `puzzlemassive` Code Formatter
 
-Reformats any code that is newer than files in
-`./code-formatter/.last-modified/`
+Reformats any file that is newer than the `./code-formatter/.modified-files.tar`
+file.
 
 The below command will run [Prettier](https://prettier.io/) and
 [Black](https://black.readthedocs.io/en/stable/) on the target directories.
 
 ```bash
-# Run this makefile from the top level of the project:
-make -f ./code-formatter/code-formatter.mk
+# Run the code formatter shell script to reformat the source code.
+# This script should be at the top level of the project:
+./code-formatter.sh
 ```
 
 ## Updating Generated Files

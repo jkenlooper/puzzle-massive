@@ -31,7 +31,10 @@ chown -R code_formatter:code_formatter /usr/local/src/code-formatter
 
 su code_formatter -c 'python -m venv /usr/local/src/code-formatter'
 su code_formatter -c '/usr/local/src/code-formatter/bin/pip install --upgrade pip wheel'
+
+# UPKEEP due: "2022-10-08" label: "black - The Uncompromising Code Formatter" interval: "+3 months"
 su code_formatter -c '/usr/local/src/code-formatter/bin/pip install --disable-pip-version-check --compile black==22.6.0'
+
 # Create a requirements.txt so the python package versions that were installed
 # can be picked up by vulnerability scans easier.
 su code_formatter -c '/usr/local/src/code-formatter/bin/pip freeze > /usr/local/src/code-formatter/requirements.txt'
@@ -47,11 +50,39 @@ BUILD_DEPENDENCIES
 
 WORKDIR /home/code_formatter
 
-COPY --chown=code_formatter:code_formatter package.json ./
 RUN <<NPM_INSTALL
 set -o errexit
 node --version
 npm --version
+
+# UPKEEP due: "2022-10-08" label: "eslint, prettier, stylelint" interval: "+3 months"
+# Review the included dependencies with static analysis tools.
+# Check each one listed on https://socket.dev/
+# https://socket.dev/npm/package/eslint/overview/8.20.0
+# https://socket.dev/npm/package/eslint-config-prettier/overview/8.5.0
+# https://socket.dev/npm/package/eslint-plugin-prettier/overview/4.2.1
+# https://socket.dev/npm/package/prettier/overview/2.7.1
+# https://socket.dev/npm/package/stylelint/overview/14.9.1
+# https://socket.dev/npm/package/stylelint-config-standard/overview/26.0.0
+# https://socket.dev/npm/package/stylelint-config-prettier/overview/9.0.3
+cat <<HERE > package.json
+{
+  "dependencies": {
+    "eslint": "8.20.0",
+    "eslint-config-prettier": "8.5.0",
+    "eslint-plugin-prettier": "4.2.1",
+    "prettier": "2.7.1",
+    "stylelint": "14.9.1",
+    "stylelint-config-standard": "26.0.0",
+    "stylelint-config-prettier": "9.0.3"
+  }
+}
+HERE
+
+# Use the specified versions set in the package.json, but opt to update the
+# package-lock.json with the actual full list of dependencies. The
+# package-lock.json can be committed to source control to further help with
+# static analysis tools as needed.
 chown -R code_formatter:code_formatter /home/code_formatter
 su code_formatter -c 'npm install --ignore-scripts'
 NPM_INSTALL

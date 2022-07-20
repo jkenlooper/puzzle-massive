@@ -1,2 +1,7 @@
-/.last-modified/*
-!/.last-modified/.gitkeep
+/.editorconfig
+/.eslintrc.json
+/.flake8
+/.formatted-files.tar
+/.modified-files.tar
+/.prettierrc
+/.stylelintrc.json

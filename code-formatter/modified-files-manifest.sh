@@ -2,47 +2,51 @@
 
 set -o errexit
 
-project_dir="$(dirname "$(dirname "$(realpath "$0")")")"
-code_formatter_dir="$(dirname "$(realpath "$0")")"
+project_dir="$1"
+code_formatter_dir="$2"
+
+test -d "$project_dir" || (echo "ERROR $0: First arg should be the project directory" && exit 1)
+test -d "$code_formatter_dir" || (echo "ERROR $0: Second arg should be the code formatter directory" && exit 1)
 
 tmp_file_list="$(mktemp)"
-tmp_file_list_dir="$(mktemp -d)"
 cleanup() {
   rm -f "$tmp_file_list"
-  rm -rf "$tmp_file_list_dir"
 }
 trap cleanup EXIT
 
-set -- design-tokens/src mockups source-media root enforcer queries stream client-side-public/src docs api chill chill-data divulger documents templates
-
-for target in "$@"; do
-
-  set -- js jsx mjs ts tsx css less scss json graphql gql markdown md mdown mkd mkdn mdx vue svelte yml yaml html php rb ruby xml
-
-  for ext in "$@" py; do
-    if [ -e "$code_formatter_dir/.formatted-files.tar" ]; then
-      set -- -newer "$code_formatter_dir/.formatted-files.tar"
-    else
-      set --
-    fi
-    tmp_name="$(echo "$target-$ext" | sed 's^/^-^g')"
-    find . \
-        "$@" \
-        -type f -readable -writable \
-        -path "./$target/*" \
-        -name "*.$ext" \
-        -nowarn \
-        -print >> "$tmp_file_list_dir/$tmp_name" &
-  done
-
+# Build up the options that will be passed to the 'find' command by replacing
+# the positional parameters in the $@ ( $1 $2 ... ). The '--' is used to prevent
+# passing an option to 'set' itself.
+set -- "("
+for target in design-tokens/src mockups source-media root enforcer queries stream client-side-public/src docs api chill chill-data divulger documents; do
+  set -- "$@" "-path" "./$target/*" "-o"
 done
+# Close out the path group with last item in targets
+set -- "$@" "-path" "./templates/*" ")"
 
-wait
+set -- "$@" "("
+for ext in js jsx mjs ts tsx css less scss json graphql gql markdown md mdown mkd mkdn mdx vue svelte yml yaml html php rb ruby xml; do
+  set -- "$@" "-name" "*.$ext" "-o"
+done
+# Include python file extension last to close out the group.
+set -- "$@" "-name" "*.py" ")"
 
-cat "$tmp_file_list_dir"/* > "$tmp_file_list"
+if [ -e "$code_formatter_dir/.formatted-files.tar" ]; then
+  set -- "$@" "-newer" "$code_formatter_dir/.formatted-files.tar"
+fi
 
-rm -f "$code_formatter_dir/.modified-files.tar"
-tar c -f "$code_formatter_dir/.modified-files.tar" \
-  -C "$project_dir" \
-  --verbatim-files-from \
-  --files-from="$tmp_file_list"
+find . \
+    -type f -readable -writable \
+    "$@" \
+    -nowarn \
+    -print > "$tmp_file_list"
+
+if [ -s "$tmp_file_list" ]; then
+  rm -f "$code_formatter_dir/.modified-files.tar"
+  tar c -f "$code_formatter_dir/.modified-files.tar" \
+    -C "$project_dir" \
+    --verbatim-files-from \
+    --files-from="$tmp_file_list"
+else
+  echo "No modified files to format that are newer."
+fi
