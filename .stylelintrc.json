@@ -1,4 +1,11 @@
 {
+    "rules": {
+       "selector-class-pattern": null,
+       "custom-property-pattern": null,
+       "keyframes-name-pattern": null,
+       "block-no-empty": null,
+       "declaration-block-no-redundant-longhand-properties": null
+    },
   "extends": [
     "stylelint-config-standard",
     "stylelint-config-prettier"

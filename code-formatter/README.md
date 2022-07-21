@@ -12,6 +12,10 @@ The below command will run [Prettier](https://prettier.io/) and
 ./code-formatter.sh
 ```
 
+* TODO: Rename code-formatter to quality-check
+* TODO: Add in static code analysis tool like https://semgrep.dev/
+* TODO: Finish integration with stylelint and eslint linting tools
+
 ## Updating Generated Files
 
 Run the cookiecutter command again to update any generated files with newer

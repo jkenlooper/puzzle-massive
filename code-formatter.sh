@@ -6,4 +6,4 @@ project_dir="$(dirname "$(realpath "$0")")"
 code_formatter_dir="$project_dir/code-formatter"
 
 "$code_formatter_dir/modified-files-manifest.sh" "$project_dir" "$code_formatter_dir"
-make -f "$code_formatter_dir/code-formatter.mk"
+make -f "$code_formatter_dir/code-formatter.mk" "$@"

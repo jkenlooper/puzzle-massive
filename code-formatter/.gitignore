@@ -2,6 +2,7 @@
 /.eslintrc.json
 /.flake8
 /.formatted-files.tar
+/.lint-fix-files.tar
 /.modified-files.tar
 /.prettierrc
 /.stylelintrc.json

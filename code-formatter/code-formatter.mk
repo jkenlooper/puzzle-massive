@@ -50,10 +50,10 @@ $(code_formatter_dir).stylelintrc.json: .stylelintrc.json
 	cp $^ $@
 
 $(code_formatter_dir).formatted-files.tar: $(code_formatter_dir)Dockerfile $(code_formatter_dir).modified-files.tar $(code_formatter_dir).editorconfig $(code_formatter_dir).flake8 $(code_formatter_dir).prettierrc $(code_formatter_dir).eslintrc.json $(code_formatter_dir).stylelintrc.json
-	rm -f $@
-	$(DOCKER) image rm puzzlemassive-code-formatter-files || printf ""
+	@rm -f $@
+	@$(DOCKER) image rm puzzlemassive-code-formatter-files 2> /dev/null || printf ""
 	DOCKER_BUILDKIT=1 $(DOCKER) build -f $(code_formatter_dir)Dockerfile \
-		--target formatted-files \
+		--target output-files \
 		-t puzzlemassive-code-formatter-files \
 		--output type=tar,dest=$@ \
 		$(code_formatter_dir)
@@ -64,6 +64,24 @@ $(code_formatter_dir).formatted-files.tar: $(code_formatter_dir)Dockerfile $(cod
 	@read -r overwrite_files_confirm && if [ "$$overwrite_files_confirm" = "y" ]; then tar x -f $@ --overwrite; fi
 	touch $@
 
+.PHONY: lint_auto_fix
+lint_auto_fix: $(code_formatter_dir).lint-fix-files.tar
+
+$(code_formatter_dir).lint-fix-files.tar: $(code_formatter_dir)Dockerfile $(code_formatter_dir).modified-files.tar $(code_formatter_dir).editorconfig $(code_formatter_dir).flake8 $(code_formatter_dir).prettierrc $(code_formatter_dir).eslintrc.json $(code_formatter_dir).stylelintrc.json
+	@rm -f $@
+	@$(DOCKER) image rm puzzlemassive-code-formatter-files 2> /dev/null || printf ""
+	DOCKER_BUILDKIT=1 $(DOCKER) build -f $(code_formatter_dir)Dockerfile \
+		--build-arg LINT_AUTO_FIX=yes \
+		--target output-files \
+		-t puzzlemassive-code-formatter-files \
+		--output type=tar,dest=$@ \
+		$(code_formatter_dir)
+	@echo ""
+	-tar t -f $@
+	@echo ""
+	@echo "Overwrite files in project directory with the changed files from $@ file? [y/n]"
+	@read -r overwrite_files_confirm && if [ "$$overwrite_files_confirm" = "y" ]; then tar x -f $@ --overwrite; fi
+	touch $@
 .PHONY: clean
 clean:
 	rm $(objects)
