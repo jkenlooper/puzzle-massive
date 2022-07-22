@@ -1,8 +1,6 @@
 # syntax=docker/dockerfile:1.4.1
 
-# This code-formatter.dockerfile should be at the top-level of the project.
-
-# This file was generated from the code-formatter directory in https://github.com/jkenlooper/cookiecutters . Any modifications needed to this file should be done on that originating file.
+# TODO This file was generated from the quality-control directory in https://github.com/jkenlooper/cookiecutters . Any modifications needed to this file should be done on that originating file.
 
 # UPKEEP due: "2022-10-08" label: "Alpine Linux base image" interval: "+3 months"
 # docker pull alpine:3.16.0
@@ -10,7 +8,7 @@
 FROM alpine:3.16.0@sha256:686d8c9dfa6f3ccfc8230bc3178d23f84eeaf7e457f36f271ab1acc53015037c as build
 
 
-WORKDIR /usr/local/src/code-formatter
+WORKDIR /usr/local/src/quality-control
 RUN <<BUILD_DEPENDENCIES
 # Install black, nodejs, and npm
 set -o errexit
@@ -26,19 +24,19 @@ apk add --no-cache \
   musl-dev
 ln -s /usr/bin/python3 /usr/bin/python
 
-addgroup -g 10044 code_formatter
-adduser -u 10044 -G code_formatter -s /bin/sh -D code_formatter
-chown -R code_formatter:code_formatter /usr/local/src/code-formatter
+addgroup -g 10044 qc
+adduser -u 10044 -G qc -s /bin/sh -D qc
+chown -R qc:qc /usr/local/src/quality-control
 
-su code_formatter -c 'python -m venv /usr/local/src/code-formatter'
-su code_formatter -c '/usr/local/src/code-formatter/bin/pip install --upgrade pip wheel'
+su qc -c 'python -m venv /usr/local/src/quality-control'
+su qc -c '/usr/local/src/quality-control/bin/pip install --upgrade pip wheel'
 
 # UPKEEP due: "2022-10-08" label: "black - The Uncompromising Code Formatter" interval: "+3 months"
-su code_formatter -c '/usr/local/src/code-formatter/bin/pip install --disable-pip-version-check --compile black==22.6.0'
+su qc -c '/usr/local/src/quality-control/bin/pip install --disable-pip-version-check --compile black==22.6.0'
 
 # Create a requirements.txt so the python package versions that were installed
 # can be picked up by vulnerability scans easier.
-su code_formatter -c '/usr/local/src/code-formatter/bin/pip freeze > /usr/local/src/code-formatter/requirements.txt'
+su qc -c '/usr/local/src/quality-control/bin/pip freeze > /usr/local/src/quality-control/requirements.txt'
 
 # Use whatever nodejs version that is available for this Alpine Linux version.
 apk add --no-cache nodejs npm
@@ -52,7 +50,7 @@ apk --purge del \
   musl-dev
 BUILD_DEPENDENCIES
 
-WORKDIR /home/code_formatter
+WORKDIR /home/qc
 
 RUN <<NPM_INSTALL
 # Install eslint, prettier, stylelint tools with npm.
@@ -86,29 +84,29 @@ HERE
 # package-lock.json with the actual full list of dependencies. The
 # package-lock.json can be committed to source control to further help with
 # static analysis tools as needed.
-chown -R code_formatter:code_formatter /home/code_formatter
-su code_formatter -c 'npm install --ignore-scripts'
+chown -R qc:qc /home/qc
+su qc -c 'npm install --ignore-scripts'
 NPM_INSTALL
 
-COPY --chown=code_formatter:code_formatter .editorconfig ./
-COPY --chown=code_formatter:code_formatter .flake8 ./
-COPY --chown=code_formatter:code_formatter .prettierrc ./
-COPY --chown=code_formatter:code_formatter .eslintrc.json ./
-COPY --chown=code_formatter:code_formatter .stylelintrc.json ./
+COPY --chown=qc:qc .editorconfig ./
+COPY --chown=qc:qc .flake8 ./
+COPY --chown=qc:qc .prettierrc ./
+COPY --chown=qc:qc .eslintrc.json ./
+COPY --chown=qc:qc .stylelintrc.json ./
 
-COPY --chown=code_formatter:code_formatter .modified-files.tar ./
+COPY --chown=qc:qc .modified-files.tar ./
 
 RUN <<FORMAT
 # Run prettier and black on modified files.
 set -o errexit
-su code_formatter -c 'mkdir -p /home/code_formatter/code'
-su code_formatter -c 'tar x -f /home/code_formatter/.modified-files.tar \
-  -C /home/code_formatter/code'
-chown -R code_formatter:code_formatter code
+su qc -c 'mkdir -p /home/qc/code'
+su qc -c 'tar x -f /home/qc/.modified-files.tar \
+  -C /home/qc/code'
+chown -R qc:qc code
 
-su code_formatter -c 'npx prettier --write code'
+su qc -c 'npx prettier --write code'
 
-su code_formatter -c '/usr/local/src/code-formatter/bin/black code'
+su qc -c '/usr/local/src/quality-control/bin/black code'
 
 FORMAT
 
@@ -121,38 +119,38 @@ if [ "$LINT_AUTO_FIX" = "yes" ]; then
 else
   set --
 fi
-su code_formatter -c 'npx eslint \
+su qc -c 'npx eslint \
   "$@" \
   --no-error-on-unmatched-pattern --exit-on-fatal-error \
   --output-file eslint_errors.log --format unix \
   code || printf "eslint errors"'
 touch eslint_errors.log
-sed -i 's^/home/code_formatter/code/^^' eslint_errors.log
+sed -i 's^/home/qc/code/^^' eslint_errors.log
 
 if [ "$LINT_AUTO_FIX" = "yes" ]; then
   set -- "--fix"
 else
   set --
 fi
-su code_formatter -c 'npx stylelint "$@" --formatter unix "code/**/*.css" > stylelint_errors.log || printf ""'
+su qc -c 'npx stylelint "$@" --formatter unix "code/**/*.css" > stylelint_errors.log || printf ""'
 touch stylelint_errors.log
-sed -i 's^/home/code_formatter/code/^^' stylelint_errors.log
+sed -i 's^/home/qc/code/^^' stylelint_errors.log
 
 LINT
 
-USER code_formatter
+USER qc
 
 # Only care about the files from the build stage that were made.
 FROM scratch as output-files
 
 # Include these for further analysis.
-COPY --from=build /usr/local/src/code-formatter/requirements.txt /code-formatter/requirements.txt
-COPY --from=build /home/code_formatter/package-lock.json /code-formatter/package-lock.json
+COPY --from=build /usr/local/src/quality-control/requirements.txt /quality-control/requirements.txt
+COPY --from=build /home/qc/package-lock.json /quality-control/package-lock.json
 
 # The log files are useful to know which files have errors or other suggested fixes.
-COPY --from=build /home/code_formatter/eslint_errors.log /
-COPY --from=build /home/code_formatter/stylelint_errors.log /
+COPY --from=build /home/qc/eslint_errors.log /
+COPY --from=build /home/qc/stylelint_errors.log /
 
 # Include all the files that were updated so the user has the option to
 # overwrite as needed.
-COPY --from=build /home/code_formatter/code/ /
+COPY --from=build /home/qc/code/ /

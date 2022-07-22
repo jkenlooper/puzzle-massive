@@ -3,10 +3,10 @@
 set -o errexit
 
 project_dir="$1"
-code_formatter_dir="$2"
+qc_dir="$2"
 
 test -d "$project_dir" || (echo "ERROR $0: First arg should be the project directory" && exit 1)
-test -d "$code_formatter_dir" || (echo "ERROR $0: Second arg should be the code formatter directory" && exit 1)
+test -d "$qc_dir" || (echo "ERROR $0: Second arg should be the quality-control directory" && exit 1)
 
 tmp_file_list="$(mktemp)"
 cleanup() {
@@ -31,8 +31,8 @@ done
 # Include python file extension last to close out the group.
 set -- "$@" "-name" "*.py" ")"
 
-if [ -e "$code_formatter_dir/.formatted-files.tar" ]; then
-  set -- "$@" "-newer" "$code_formatter_dir/.formatted-files.tar"
+if [ -e "$qc_dir/.formatted-files.tar" ]; then
+  set -- "$@" "-newer" "$qc_dir/.formatted-files.tar"
 fi
 
 find . \
@@ -42,11 +42,11 @@ find . \
     -print > "$tmp_file_list"
 
 if [ -s "$tmp_file_list" ]; then
-  rm -f "$code_formatter_dir/.modified-files.tar"
-  tar c -f "$code_formatter_dir/.modified-files.tar" \
+  rm -f "$qc_dir/.modified-files.tar"
+  tar c -f "$qc_dir/.modified-files.tar" \
     -C "$project_dir" \
     --verbatim-files-from \
     --files-from="$tmp_file_list"
 else
-  echo "No modified files to format that are newer."
+  echo "No modified files to process that are newer."
 fi
