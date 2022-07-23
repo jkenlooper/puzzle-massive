@@ -61,8 +61,8 @@ $(qc_dir).formatted-files.tar: $(qc_dir)Dockerfile $(qc_dir).modified-files.tar 
 	@read -r overwrite_files_confirm && if [ "$$overwrite_files_confirm" = "y" ]; then tar x -f $@ --overwrite; fi
 	touch $@
 
-.PHONY: lint_auto_fix
-lint_auto_fix: $(qc_dir).lint-fix-files.tar
+.PHONY: lint-auto-fix
+lint-auto-fix: $(qc_dir).lint-fix-files.tar
 
 $(qc_dir).lint-fix-files.tar: $(qc_dir)Dockerfile $(qc_dir).modified-files.tar $(qc_dir).editorconfig $(qc_dir).flake8 $(qc_dir).prettierrc $(qc_dir).eslintrc.json $(qc_dir).stylelintrc.json
 	@rm -f $@

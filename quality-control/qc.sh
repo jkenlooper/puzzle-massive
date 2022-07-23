@@ -3,12 +3,47 @@
 set -o errexit
 
 qc_dir="$(dirname "$(realpath "$0")")"
+script_name="$(basename "$0")"
+
+usage() {
+  cat <<HERE
+Quality Control script to show issues with code as well as reformat it.
+
+Uses eslint, stylelint, prettier, black.
+
+Can optionally take a target argument which will be passed to the quality
+control makefile.
+
+Usage:
+  $script_name -h
+  $script_name
+  $script_name <target>
+
+Options:
+  -h                Show this help message.
+
+Targets:
+  lint-auto-fix   - Run the linting tools with auto-fix option.
+  clean           - Removes any generated tar files that were made.
+
+HERE
+}
+
+while getopts "h" OPTION ; do
+  case "$OPTION" in
+    h) usage
+      exit 0 ;;
+    ?) usage
+      exit 1 ;;
+  esac
+done
+shift $((OPTIND - 1))
+
+args="$@"
 
 # TODO set project dir from the quality-control-rc.json file. It should be
 # a relative path from the config file.
 project_dir="$(dirname "$qc_dir")"
-
-args="$@"
 
 target_directories=". design-tokens/src mockups source-media root enforcer queries stream client-side-public/src docs api chill chill-data divulger documents templates"
 test -n "$target_directories"
