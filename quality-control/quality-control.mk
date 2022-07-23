@@ -82,4 +82,4 @@ $(qc_dir).lint-fix-files.tar: $(qc_dir)Dockerfile $(qc_dir).modified-files.tar $
 
 .PHONY: clean
 clean:
-	rm $(objects)
+	rm -f $(objects)
