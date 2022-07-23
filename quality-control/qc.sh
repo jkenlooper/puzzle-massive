@@ -2,9 +2,33 @@
 
 set -o errexit
 
+usage() {
+  cat <<HERE
+Quality Control script to show issues with code as well as reformat it.
+
+Uses eslint, stylelint, prettier, black.
+
+Can optionally take a target argument which will be passed to the quality
+control makefile.
+
+Usage:
+  $script_name -h
+  $script_name
+  $script_name <target>
+
+Options:
+  -h                Show this help message.
+
+Targets:
+  lint-auto-fix   - Run the linting tools with auto-fix option.
+  clean           - Removes any generated tar files that were made.
+
+HERE
+}
+
 qc_dir="$(dirname "$(realpath "$0")")"
 script_name="$(basename "$0")"
-rc_file_name="quality-control-rc.json"
+rc_file_name=".quality-control-rc.json"
 
 # These defaults can be overridden by the values in the rc file.
 
@@ -29,30 +53,6 @@ cleanup() {
   rm -f "$tmp_file_list"
 }
 trap cleanup EXIT
-
-usage() {
-  cat <<HERE
-Quality Control script to show issues with code as well as reformat it.
-
-Uses eslint, stylelint, prettier, black.
-
-Can optionally take a target argument which will be passed to the quality
-control makefile.
-
-Usage:
-  $script_name -h
-  $script_name
-  $script_name <target>
-
-Options:
-  -h                Show this help message.
-
-Targets:
-  lint-auto-fix   - Run the linting tools with auto-fix option.
-  clean           - Removes any generated tar files that were made.
-
-HERE
-}
 
 find_and_load_run_command_file() {
   rc_file=""
@@ -228,7 +228,7 @@ create_modified_files_tar() {
 
 run_qc_makefile() {
   set -- $args
-  make -f "$qc_dir/quality-control.mk" "$@"
+  make --directory="$project_dir" -f "$qc_dir/quality-control.mk" "$@"
 }
 
 while getopts "h" OPTION ; do
@@ -243,6 +243,9 @@ shift $((OPTIND - 1))
 
 # Preserve the args passed in so they can be sent to the makefile.
 args="$@"
+
+# Set the working directory to the project dir so the find command works.
+cd "$project_dir"
 
 find_and_load_run_command_file
 create_modified_files_tar
