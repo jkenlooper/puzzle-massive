@@ -2,20 +2,35 @@
 
 set -o errexit
 
-project_dir="$1"
-qc_dir="$2"
+qc_dir="$(dirname "$(realpath "$0")")"
 
-target_directories="design-tokens/src mockups source-media root enforcer queries stream client-side-public/src docs api chill chill-data divulger documents templates"
+# TODO set project dir from the quality-control-rc.json file. It should be
+# a relative path from the config file.
+project_dir="$(dirname "$qc_dir")"
+
+args="$@"
+
+target_directories=". design-tokens/src mockups source-media root enforcer queries stream client-side-public/src docs api chill chill-data divulger documents templates"
 test -n "$target_directories"
 
 targets=""
 first_target=""
+has_top_level="no"
+# Allow target_directories to use path expansion. Filter out any that are not
+# directories or are outside of the project directory.
 for target in $target_directories; do
   test -n "$target" || continue
+  rel_path="$(realpath --relative-base="$project_dir" --relative-to="$project_dir" --canonicalize-missing "$target")"
+  test "${rel_path##/}" = "$rel_path" || continue
+  test -d "$project_dir/$rel_path" || continue
+  if [ "$rel_path" = "." ]; then
+    has_top_level="yes"
+    continue
+  fi
   if [ -z "$first_target" ]; then
-    first_target="$target"
+    first_target="$rel_path"
   else
-    targets="$targets $target"
+    targets="$targets $rel_path"
   fi
 done
 test -n "$first_target"
@@ -79,6 +94,31 @@ find . \
     -nowarn \
     -print > "$tmp_file_list"
 
+if [ "$has_top_level" = "yes" ]; then
+  set --
+  set -- "$@" "("
+  if [ -n "$names" ]; then
+    for name in $names; do
+      set -- "$@" "-name" "$name" "-o"
+    done
+  fi
+  # Close out the name group with the first name.
+  set -- "$@" "-name" "$first_name" ")"
+
+  if [ -e "$qc_dir/.formatted-files.tar" ]; then
+    set -- "$@" "-newer" "$qc_dir/.formatted-files.tar"
+  fi
+
+  find . \
+      -depth -maxdepth 1 \
+      -type f -readable -writable \
+      "$@" \
+      -nowarn \
+      -print >> "$tmp_file_list"
+fi
+
+cat "$tmp_file_list"
+
 if [ -s "$tmp_file_list" ]; then
   rm -f "$qc_dir/.modified-files.tar"
   tar c -f "$qc_dir/.modified-files.tar" \
@@ -88,3 +128,6 @@ if [ -s "$tmp_file_list" ]; then
 else
   echo "No modified files to process that are newer."
 fi
+
+set -- $args
+make -f "$qc_dir/quality-control.mk" "$@"
