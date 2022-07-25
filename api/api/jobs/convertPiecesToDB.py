@@ -99,6 +99,7 @@ def transfer(puzzle, cleanup=True, skip_status_update=False):
             ("g", "parent"),
             ("", "status"),
         ]:
+            redis_piece_prop = None
             if colname == "status":
                 if piece["id"] in pcstacked:
                     redis_piece_prop = 2
