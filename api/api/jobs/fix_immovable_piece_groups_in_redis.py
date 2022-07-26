@@ -10,6 +10,8 @@ Options:
   --cleanup         ...
 """
 
+import os
+
 from docopt import docopt
 
 from api.app import redis_connection, db, make_app
@@ -119,8 +121,6 @@ def find_puzzles_in_database(results={}):
         _results.update({puzzle: test_result})
 
         cur = db.cursor()
-        # TODO: Check piece data for this puzzle to see if pieces that are
-        # immovable have the same parent as top left piece.
         (immovable_pieces, col_names) = rowify(
             cur.execute(
                 read_query_file("select_immovable_piece_groups_for_puzzle.sql"),
@@ -170,10 +170,9 @@ def find_puzzles_in_database(results={}):
 
 
 def fix_redis_piece_groups(puzzles, results={}):
-    """"""
+    """Fix for when there are multiple immovable piece groups that have
+    a different piece group then the top left piece."""
     _results = results.copy()
-    # TODO: implement a fix for when there are multiple immovable piece groups
-    # that have a different piece group then the top left piece.
 
     # Find each group that is not the same as the top left piece and remove
     # those pieces from the pcfixed redis smembers
@@ -208,23 +207,53 @@ def fix_redis_piece_groups(puzzles, results={}):
     return _results
 
 
-def fix_db_piece_parents():
-    """"""
-    # TODO: implement a fix for data stored in Piece table when multiple pieces
-    # have status of immovable, but do not have the same parent as top left
-    # piece.
+def fix_db_piece_parents(puzzles, results={}):
+    """
+    Fix for data stored in Piece table when multiple pieces have status of
+    immovable, but do not have the same parent as top left piece.
+    """
+    _results = results.copy()
+
+    print(f"Failed db puzzles: {puzzles}")
+    for puzzle in puzzles:
+        cur = db.cursor()
+        (result, col_names) = rowify(
+            cur.execute(
+                read_query_file("select_top_left_immovable_piece_for_puzzle.sql"),
+                {"id": puzzle},
+            ).fetchall(),
+            cur.description,
+        )
+        cur.close()
+        if not result or not result[0]:
+            continue
+        if len(result) > 1:
+            continue
+
+        top_left_piece = result[0]
+        pcg_for_top_left = top_left_piece["parent"]
+
+        cur = db.cursor()
+        cur.execute(
+            read_query_file("reset_piece_immovable_status_for_not_parent.sql"),
+            {"puzzle": puzzle, "parent": pcg_for_top_left},
+        )
+        cur.close()
+        db.commit()
+
+        _results[puzzle]["fixed"] = True
+    return _results
 
 
 def do_it():
     # Check puzzles in redis data store
     multiple_immovable_piece_group_results = find_puzzles_in_redis(results={})
 
-    # TODO: Check puzzles in SQL database
+    # Check puzzles in SQL database
     multiple_immovable_piece_group_results = find_puzzles_in_database(
         results=multiple_immovable_piece_group_results
     )
 
-    # TODO: Fix puzzles that failed the test
     failed_puzzles_in_redis_with_pcfixed_outside_of_top_left = list(
         map(
             lambda x: int(x["puzzle"]),
@@ -241,7 +270,22 @@ def do_it():
         failed_puzzles_in_redis_with_pcfixed_outside_of_top_left,
         results=multiple_immovable_piece_group_results,
     )
-    fix_db_piece_parents()
+
+    failed_puzzles_in_database_with_multiple_immovable_piece_groups = list(
+        map(
+            lambda x: int(x["puzzle"]),
+            filter(
+                lambda x: x["status"] == "fail"
+                and "database" in x["test"]
+                and x["reason"] == "fail_multiple_immovable_piece_groups",
+                multiple_immovable_piece_group_results.values(),
+            ),
+        )
+    )
+    fix_db_piece_parents(
+        failed_puzzles_in_database_with_multiple_immovable_piece_groups,
+        results=multiple_immovable_piece_group_results,
+    )
 
     # Print out the results
     failed_results = list(
@@ -312,7 +356,20 @@ if __name__ == "__main__":
     config_file = args["--config"]
     config = loadConfig(config_file)
     cookie_secret = config.get("SECURE_COOKIE_SECRET")
-    app = make_app(config=config_file, cookie_secret=cookie_secret)
+
+    confirm = input(
+        "Before running this script it is recommended to stop the application to avoid potential issues with multiple processes writing to the database.\nWARNING: This script does not automatically stop the application.\n  Continue? [y/n]"
+    )
+    if confirm != "y":
+        print("Cancelled action")
+        os.sys.exit(0)
+
+    # Database is writable so the query to find and fix the issues with the
+    # pieces are a single transaction. Otherwise would need to create a single
+    # purpose api endpoint to accomplish this.
+    app = make_app(
+        config=config_file, cookie_secret=cookie_secret, database_writable=True
+    )
 
     with app.app_context():
         do_it()

@@ -35,9 +35,14 @@ deployment.
 
 - Switched Typescript files to JavaScript
 - Isolated the design-tokens and client side public code
-- Code formatting scripts have been isolated to the code-formatter/ directory
+- Code formatting scripts have been isolated to the quality-control/ directory
 - Use latest piecemaker and pixsaw; should improve puzzle rendering time
+- Use latest chill
 - Use smaller droplet for cdn server
+
+### Fixed
+
+- Fixed an edge case when transferring puzzle piece status data from redis to the database.
 
 ## [2.12.3] - 2021-11-10
 
