@@ -59,7 +59,7 @@ virtual machine if it doesn't exist on the local machine.
 
 [VirtualBox](https://www.virtualbox.org/) and
 [Vagrant](https://www.vagrantup.com/) are used to create a virtual machine on
-your local machine. [Docker](https://www.docker.com/) or equivalent container runtime like [Podman](https://podman.io/) will also be needed.  This allows you to run your own version of Puzzle Massive
+your local machine. [Docker](https://www.docker.com/) or equivalent container runtime like [Podman](https://podman.io/) will also be needed. This allows you to run your own version of Puzzle Massive
 locally. The [Vagrantfile](../Vagrantfile) included with the project is for
 local development only. It has a few scripts within it that help setup a local
 version of Puzzle Massive. This can all be set up by running the below
@@ -182,7 +182,7 @@ directory and in order to start and stop the services, or manipulate the
 database, you'll need to login as that user.
 
 ```bash
-# Switch to the dev user 
+# Switch to the dev user
 sudo su dev
 ```
 
@@ -248,7 +248,6 @@ The fake s3 server running in the virtual machine will automatically save it's
 data to the `_infra/local/output/s3rver` directory when the 'vagrant up' command
 is used.
 
-
 ### Python Unit Tests
 
 Some unit tests exist to cover parts of the application. Some older tests
@@ -275,7 +274,6 @@ python api/api/test_puzzle_details.py
 # Run specific test case
 python api/api/test_puzzle_details.py TestInternalPuzzleDetailsView.test_missing_payload
 ```
-
 
 ## Creating a versioned dist for deployment
 

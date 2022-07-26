@@ -87,7 +87,7 @@ class DivulgeApplication(WebSocketApplication):
 
         # subscribe so
         pubsub = self.redis.pubsub(ignore_subscribe_messages=True)
-        channel = u"move:{0}".format(self.ws.handler.environ["puzzle"])
+        channel = "move:{0}".format(self.ws.handler.environ["puzzle"])
         pubsub.subscribe(channel)
 
         self.poll_messages(pubsub)

@@ -38,23 +38,28 @@ import flask
 logger = logging.getLogger("flask-secure-cookie")
 
 _UTF8_TYPES = (bytes, type(None))
-_signed_value_version_re = re.compile(br"^([1-9][0-9]*)\|(.*)$")
+_signed_value_version_re = re.compile(rb"^([1-9][0-9]*)\|(.*)$")
 
 DEFAULT_SIGNED_VALUE_VERSION = 2
 DEFAULT_SIGNED_VALUE_MIN_VERSION = 1
 
-if not isinstance(b'', type('')):
+if not isinstance(b"", type("")):
+
     def u(s):
         return s
+
     unicode_type = str
     basestring_type = str
 else:
+
     def u(s):
-        return s.decode('unicode_escape')
+        return s.decode("unicode_escape")
+
     # These names don't exist in py3, so use noqa comments to disable
     # warnings in flake8.
     unicode_type = str  # noqa
     basestring_type = basestring  # noqa
+
 
 def utf8(value):
     """Converts a string argument to a byte string.
@@ -65,11 +70,8 @@ def utf8(value):
     if isinstance(value, _UTF8_TYPES):
         return value
     if not isinstance(value, unicode_type):
-        raise TypeError(
-            "Expected bytes, unicode, or None; got %r" % type(value)
-        )
+        raise TypeError("Expected bytes, unicode, or None; got %r" % type(value))
     return value.encode("utf-8")
-
 
 
 class SecureCookie(object):
@@ -148,8 +150,7 @@ class SecureCookie(object):
             # digits from the payload to the timestamp without altering the
             # signature.  For backwards compatibility, sanity-check timestamp
             # here instead of modifying _cookie_signature.
-            logger.warning("Cookie timestamp in future; possible tampering %r",
-                            value)
+            logger.warning("Cookie timestamp in future; possible tampering %r", value)
             return None
         if parts[1].startswith(b"0"):
             logger.warning("Tampered cookie %r", value)
@@ -161,14 +162,14 @@ class SecureCookie(object):
 
     def _decode_fields_v2(self, value):
         def _consume_field(s):
-            length, _, rest = s.partition(b':')
+            length, _, rest = s.partition(b":")
             n = int(length)
             field_value = rest[:n]
             # In python 3, indexing bytes returns small integers; we must
             # use a slice to get a byte string as in python 2.
-            if rest[n:n + 1] != b'|':
+            if rest[n : n + 1] != b"|":
                 raise ValueError("malformed v2 signed value field")
-            rest = rest[n + 1:]
+            rest = rest[n + 1 :]
             return field_value, rest
 
         rest = value[2:]  # remove version number
@@ -180,10 +181,16 @@ class SecureCookie(object):
 
     def _decode_signed_value_v2(self, secret, name, value, max_age_days, clock):
         try:
-            key_version, timestamp, name_field, value_field, passed_sig = self._decode_fields_v2(value)
+            (
+                key_version,
+                timestamp,
+                name_field,
+                value_field,
+                passed_sig,
+            ) = self._decode_fields_v2(value)
         except ValueError:
             return None
-        signed_string = value[:-len(passed_sig)]
+        signed_string = value[: -len(passed_sig)]
 
         if isinstance(secret, dict):
             try:
@@ -205,8 +212,9 @@ class SecureCookie(object):
         except Exception:
             return None
 
-    def decode_signed_value(self, secret, name, value, max_age_days=31,
-                        clock=None, min_version=None):
+    def decode_signed_value(
+        self, secret, name, value, max_age_days=31, clock=None, min_version=None
+    ):
         if clock is None:
             clock = time.time
         if min_version is None:
@@ -222,16 +230,19 @@ class SecureCookie(object):
         if version < min_version:
             return None
         if version == 1:
-            return self._decode_signed_value_v1(secret, name, value,
-                                           max_age_days, clock)
+            return self._decode_signed_value_v1(
+                secret, name, value, max_age_days, clock
+            )
         elif version == 2:
-            return self._decode_signed_value_v2(secret, name, value,
-                                           max_age_days, clock)
+            return self._decode_signed_value_v2(
+                secret, name, value, max_age_days, clock
+            )
         else:
             return None
 
-    def create_signed_value(self, name, value, version=None, key_version=None,
-        clock=None):
+    def create_signed_value(
+        self, name, value, version=None, key_version=None, clock=None
+    ):
 
         if version is None:
             version = DEFAULT_SIGNED_VALUE_VERSION
@@ -262,17 +273,25 @@ class SecureCookie(object):
             # - signature (hex-encoded; no length prefix)
             def format_field(s):
                 return utf8("%d:" % len(s)) + utf8(s)
-            to_sign = b"|".join([
-                b"2",
-                format_field(str(key_version or 0)),
-                format_field(timestamp),
-                format_field(name),
-                format_field(value),
-                b''])
+
+            to_sign = b"|".join(
+                [
+                    b"2",
+                    format_field(str(key_version or 0)),
+                    format_field(timestamp),
+                    format_field(name),
+                    format_field(value),
+                    b"",
+                ]
+            )
 
             if isinstance(self.cookie_secret, dict):
-                assert key_version is not None, 'Key version must be set when sign key dict is used'
-                assert version >= 2, 'Version must be at least 2 for key version support'
+                assert (
+                    key_version is not None
+                ), "Key version must be set when sign key dict is used"
+                assert (
+                    version >= 2
+                ), "Version must be at least 2 for key version support"
                 secret = secret[key_version]
 
             signature = self._create_signature_v2(self.cookie_secret, to_sign)
@@ -286,17 +305,22 @@ class SecureCookie(object):
 
         self.cookie_secret = app.config.get(cookie_secret_field, None)
         if not self.cookie_secret:
-            raise Exception("{0} must be set in the configuration "
-                            "prior to initializing SecureCookie"
-                            .format(cookie_secret_field))
+            raise Exception(
+                "{0} must be set in the configuration "
+                "prior to initializing SecureCookie".format(cookie_secret_field)
+            )
 
     def get(self, name, value=None, max_age_days=31, min_version=None):
         if value is None:
             value = flask.request.cookies.get(name)
 
-        return self.decode_signed_value(self.cookie_secret,
-                                   name, value, max_age_days=max_age_days,
-                                   min_version=min_version)
+        return self.decode_signed_value(
+            self.cookie_secret,
+            name,
+            value,
+            max_age_days=max_age_days,
+            min_version=min_version,
+        )
 
     def set(self, name, value, response, expires_days=30, expires=None, version=None):
         cookie_value = self.create_signed_value(name, value, version=version)
@@ -305,5 +329,6 @@ class SecureCookie(object):
             max_age = expires_days * 86400
 
         response.set_cookie(name, cookie_value, max_age=max_age, expires=expires)
+
 
 __all__ = ["SecureCookie"]

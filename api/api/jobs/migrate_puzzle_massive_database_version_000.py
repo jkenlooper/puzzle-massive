@@ -33,7 +33,9 @@ def main():
     config_file = "site.cfg"
     config = loadConfig(config_file)
     cookie_secret = config.get("SECURE_COOKIE_SECRET")
-    app = make_app(config=config_file, cookie_secret=cookie_secret, database_writable=True)
+    app = make_app(
+        config=config_file, cookie_secret=cookie_secret, database_writable=True
+    )
 
     logger.setLevel(logging.DEBUG if config["DEBUG"] else logging.INFO)
 

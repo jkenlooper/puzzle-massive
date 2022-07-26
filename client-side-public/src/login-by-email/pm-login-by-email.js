@@ -1,49 +1,48 @@
 import { html, render } from "lit";
 import FetchService from "../site/fetch.service";
 const tag = "pm-login-by-email";
-customElements.define(tag, class PmLoginByEmail extends HTMLElement {
+customElements.define(
+  tag,
+  class PmLoginByEmail extends HTMLElement {
     constructor() {
-        super();
-        this.responseMessage = "";
-        this.responseName = "";
+      super();
+      this.responseMessage = "";
+      this.responseName = "";
     }
     submit(form) {
-        const fetchService = new FetchService(form.action);
-        const data = new FormData(form);
-        if (!form.reportValidity()) {
-            this.responseMessage = "Form is not valid.";
-            this.responseName = "invalid";
+      const fetchService = new FetchService(form.action);
+      const data = new FormData(form);
+      if (!form.reportValidity()) {
+        this.responseMessage = "Form is not valid.";
+        this.responseName = "invalid";
+        this.render();
+      } else {
+        fetchService
+          .postForm(data)
+          .then((response) => {
+            this.responseMessage = response.message;
+            this.responseName = response.name;
+          })
+          .catch((err) => {
+            if (err.message && err.name) {
+              this.responseMessage = err.message;
+              this.responseName = err.name;
+            }
+          })
+          .finally(() => {
             this.render();
-        }
-        else {
-            fetchService
-                .postForm(data)
-                .then((response) => {
-                this.responseMessage = response.message;
-                this.responseName = response.name;
-            })
-                .catch((err) => {
-                if (err.message && err.name) {
-                    this.responseMessage = err.message;
-                    this.responseName = err.name;
-                }
-            })
-                .finally(() => {
-                this.render();
-            });
-        }
+          });
+      }
     }
     template(data) {
-        return html `
+      return html`
         <form
           class="pm-LoginByEmail"
           id="login-by-email-form"
           method="POST"
           action="/newapi/player-email-login-reset/"
         >
-          <label for="login-by-email-input">
-            E-mail
-          </label>
+          <label for="login-by-email-input"> E-mail </label>
           <input
             id="login-by-email-input"
             type="email"
@@ -61,7 +60,7 @@ customElements.define(tag, class PmLoginByEmail extends HTMLElement {
           </button>
 
           ${data.responseMessage
-            ? html `
+            ? html`
                 <pm-response-message
                   name=${data.responseName}
                   message=${data.responseMessage}
@@ -72,32 +71,33 @@ customElements.define(tag, class PmLoginByEmail extends HTMLElement {
       `;
     }
     get data() {
-        return {
-            submitHandler: {
-                handleEvent: (e) => {
-                    // Prevent the form from submitting
-                    e.preventDefault();
-                    const formEl = e.currentTarget.form;
-                    this.submit(formEl);
-                },
-                capture: true,
-            },
-            responseMessage: this.responseMessage,
-            responseName: this.responseName,
-        };
+      return {
+        submitHandler: {
+          handleEvent: (e) => {
+            // Prevent the form from submitting
+            e.preventDefault();
+            const formEl = e.currentTarget.form;
+            this.submit(formEl);
+          },
+          capture: true,
+        },
+        responseMessage: this.responseMessage,
+        responseName: this.responseName,
+      };
     }
     render() {
-        //console.log("render", this.instanceId, this.data);
-        render(this.template(this.data), this);
+      //console.log("render", this.instanceId, this.data);
+      render(this.template(this.data), this);
     }
     connectedCallback() {
-        //console.log("connectedCallback");
-        this.render();
+      //console.log("connectedCallback");
+      this.render();
     }
     disconnectedCallback() {
-        //console.log("disconnectedCallback", this.instanceId);
+      //console.log("disconnectedCallback", this.instanceId);
     }
     adoptedCallback() {
-        //console.log("adoptedCallback");
+      //console.log("adoptedCallback");
     }
-});
+  }
+);

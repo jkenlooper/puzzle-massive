@@ -14,15 +14,14 @@ ACTIVE_PLAYER_RANGE = 5 * 60
 
 
 class PlayerRanksView(MethodView):
-    """
-    """
+    """ """
 
     decorators = [user_not_banned]
 
     def get(self):
-        ""
+        """"""
         ip = request.headers.get("X-Real-IP")
-        user = current_app.secure_cookie.get(u"user") or user_id_from_ip(ip)
+        user = current_app.secure_cookie.get("user") or user_id_from_ip(ip)
         if user != None:
             user = int(user)
         args = {}
@@ -59,7 +58,10 @@ class PlayerRanksView(MethodView):
                 user_in_ranks_index = len(ranks)
             if player in active_players or player == user:
                 ranks.append(
-                    {"id": player, "score": score,}
+                    {
+                        "id": player,
+                        "score": score,
+                    }
                 )
 
         ranks_near_user = []
@@ -82,7 +84,7 @@ class PuzzleStatsView(MethodView):
     """
 
     def get(self, puzzle_id):
-        ""
+        """"""
         cur = db.cursor()
         result = cur.execute(
             fetch_query_string("_select-puzzle-by-puzzle_id.sql"),
@@ -133,7 +135,7 @@ class PuzzleActiveCountView(MethodView):
     """
 
     def get(self, puzzle_id):
-        ""
+        """"""
         cur = db.cursor()
         result = cur.execute(
             fetch_query_string("select_viewable_puzzle_id.sql"),
@@ -162,10 +164,10 @@ class PuzzleActiveCountView(MethodView):
 
 
 class PlayerStatsView(MethodView):
-    ""
+    """"""
 
     def get(self):
-        ""
+        """"""
         now = int(time.time())
         since = now - ACTIVE_PLAYER_RANGE
         total_active_player_count = redis_connection.zcount("timeline", since, "+inf")

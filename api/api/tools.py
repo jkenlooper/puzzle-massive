@@ -65,11 +65,11 @@ def formatPieceMovementString(piece_id, x="", y="", r="", g="", s="", **args):
         s = ""
     if g is None:
         g = ""
-    return u":{piece_id}:{x}:{y}:{r}:{g}:{s}".format(**locals())
+    return ":{piece_id}:{x}:{y}:{r}:{g}:{s}".format(**locals())
 
 
 def formatBitMovementString(user_id, x="", y=""):
-    return u":{user_id}:{x}:{y}".format(**locals())
+    return ":{user_id}:{x}:{y}".format(**locals())
 
 
 def init_karma_key(redis_connection, puzzle, ip, app_config):

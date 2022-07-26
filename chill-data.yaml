@@ -12,7 +12,8 @@ value:
     info: _frontpage-page-info-for-puzzle_id.sql
   feature_hidden_preview: select-frontpage-preview-feature-hidden-preview.sql
 
---- !ChillNode
+---
+!ChillNode
 name: scorespage
 route: /high-scores/
 template: scorespage.html.jinja2
@@ -28,7 +29,8 @@ value:
       chill_template: highScores.html.jinja2
       chill_value: _select-high-scores.sql
 
---- !ChillNode
+---
+!ChillNode
 name: puzzleuploadpage
 route: /new-puzzle/<contributor>/
 template: puzzleuploadpage.html.jinja2
@@ -41,7 +43,8 @@ value:
     title: Suggest Image for a Puzzle
   route: _select-args-for-uploadpage.sql
 
---- !ChillNode
+---
+!ChillNode
 name: puzzlepage
 route: /puzzle/<puzzle_id>/scale/<int:scale>/
 template: puzzlepage.html.jinja2
@@ -58,7 +61,8 @@ value:
   puzzle: _select-puzzle-by-puzzle_id.sql
   puzzle_files: _select-puzzle-resources-by-puzzle_id.sql
 
---- !ChillNode
+---
+!ChillNode
 name: profilepage
 route: /player/
 template: profilepage.html.jinja2
@@ -70,19 +74,22 @@ value:
   content:
     description: Settings for the logged in player on the Puzzle Massive site.
 
---- !ChillNode
+---
+!ChillNode
 name: biticonspartial
 route: /bit-icons/<iconname>/
 template: bit-icons-img.html.jinja2
 value: _select-iconname-for-route.sql
 
---- !ChillNode
+---
+!ChillNode
 name: bit_icons_attribution_partial
 route: /bit-icons-attribution/<iconname>/
 template: bit-icons-attribution.html.jinja2
 value: _select-bit-icon-attribution-for-iconname.sql
 
---- !ChillNode
+---
+!ChillNode
 name: footerpages_item
 route: /credits/
 template: docs.html.jinja2
@@ -95,25 +102,28 @@ value:
     description: List of people who put this site together
     title: Credits
   content: creditspage-content.html
-  order: '50'
+  order: "50"
   slug: credits
   title: Credits
 
---- !ChillNode
+---
+!ChillNode
 name: internal_contributors_partial
 route: /internal/contributors-partial/
 template: internal-content-markdown.html.jinja2
 value:
   content: CONTRIBUTORS.md
 
---- !ChillNode
+---
+!ChillNode
 name: internal_bit_icon_artists_credit
 route: /internal/bit-icon-artists-credit/
 template: bit-icon-artists-credit.html.jinja2
 value:
   artist_list: _select-all-bit-icon-artists.sql
 
---- !ChillNode
+---
+!ChillNode
 name: bit_icons_artist
 route: /bit-icons-artist/<slug_name>/
 template: bit-icons-artist-page.html.jinja2
@@ -121,8 +131,8 @@ value:
   artist: _select-bit-icon-artist-for-slug.sql
   bit_icons: _select-bit-icons-for-artist-slug.sql
 
-
---- !ChillNode
+---
+!ChillNode
 name: homepage
 route: /front/
 template: front.html.jinja2
@@ -134,10 +144,11 @@ value:
   description_txt_file: sitewide-description.txt
   page:
     content: frontpage-content.html
-    description: ' Massively Multiplayer Online Jigsaw Puzzles'
+    description: " Massively Multiplayer Online Jigsaw Puzzles"
     title: Massively Multiplayer Online Jigsaw Puzzles
     info: _homepage-page-info-for-most-recent-active-puzzle.sql
---- !ChillNode
+---
+!ChillNode
 name: api_front_for_puzzle_id
 route: /api/front/<puzzle_id>/
 template: frontpage.html.jinja2
@@ -148,7 +159,8 @@ value:
       recent: _select-frontpage-preview.sql
       feature_hidden_preview: select-frontpage-preview-feature-hidden-preview.sql
   puzzle_id: _route-pass-puzzle_id.sql
---- !ChillNode
+---
+!ChillNode
 name: admin_puzzle_page
 route:
   method: GET
@@ -158,7 +170,8 @@ template: admin-puzzlepage.html.jinja2
 value:
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
---- !ChillNode
+---
+!ChillNode
 name: admin_puzzle_page_active
 route: /admin/puzzle/active/
 template: admin-puzzlepage.html.jinja2
@@ -167,7 +180,8 @@ value:
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
   puzzles: _select-admin-puzzles-active.sql
---- !ChillNode
+---
+!ChillNode
 name: admin_puzzle_page_in_queue
 route: /admin/puzzle/in_queue/
 template: admin-puzzlepage.html.jinja2
@@ -176,7 +190,8 @@ value:
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
   puzzles: _select-admin-puzzles-in_queue.sql
---- !ChillNode
+---
+!ChillNode
 name: admin_puzzle_page_instances
 route: /admin/puzzle/instances/
 template: admin-puzzlepage.html.jinja2
@@ -185,7 +200,8 @@ value:
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
   puzzles: _select-admin-puzzle-instances.sql
---- !ChillNode
+---
+!ChillNode
 name: admin_puzzle_page_completed
 route: /admin/puzzle/completed/
 template: admin-puzzlepage.html.jinja2
@@ -194,7 +210,8 @@ value:
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
   puzzles: _select-admin-puzzles-completed.sql
---- !ChillNode
+---
+!ChillNode
 name: admin_puzzle_page_submitted
 route: /admin/puzzle/submitted/
 template: admin-puzzlepage.html.jinja2
@@ -203,7 +220,8 @@ value:
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
   puzzles: _select-admin-puzzles-needs-moderation.sql
---- !ChillNode
+---
+!ChillNode
 name: admin_puzzle_page_renderqueue
 route: /admin/puzzle/renderqueue/
 template: admin-puzzlepage.html.jinja2
@@ -212,7 +230,8 @@ value:
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
   puzzles: _select-admin-puzzles-render.sql
---- !ChillNode
+---
+!ChillNode
 name: admin_puzzle_page_buggy
 route: /admin/puzzle/buggy/
 template: admin-puzzlepage.html.jinja2
@@ -221,7 +240,8 @@ value:
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
   puzzles: _select-admin-puzzles-buggy.sql
---- !ChillNode
+---
+!ChillNode
 name: admin_puzzle_page_suggested
 route: /admin/puzzle/suggested/
 template: admin-puzzlepage.html.jinja2
@@ -230,7 +250,8 @@ value:
   admin_puzzle_menu:
     puzzle_status_count: _select-puzzle-status-count.sql
   puzzles: _select-admin-puzzles-suggested.sql
---- !ChillNode
+---
+!ChillNode
 name: admin_puzzle_page_suggested_add
 route: /admin/puzzle/suggested/<puzzle_id>/
 template: admin-puzzle-suggested-page.html.jinja2
@@ -241,7 +262,8 @@ value:
   puzzle: _select-suggested-puzzle-by-puzzle_id.sql
   feature_hidden_preview: select-frontpage-preview-feature-hidden-preview.sql
   feature_secret_message: select-secret-message-for-puzzle_id.sql
---- !ChillNode
+---
+!ChillNode
 name: admin_puzzle_page_unsplash_batch_add
 route: /admin/puzzle/unsplash-batch/
 template: admin-puzzle-unsplash-batch-page.html.jinja2
@@ -249,7 +271,8 @@ value:
   page:
     description: Add Unsplash images for puzzles
     title: Unsplash Batch Add
---- !ChillNode
+---
+!ChillNode
 name: suggested_puzzle_thank_you_page
 route: /suggested-puzzle-thank-you/
 template: docs.html.jinja2
@@ -262,7 +285,8 @@ value:
     description: Thank you page shown after player has suggested an image for a puzzle.
     title: Thank You
   title: Thank You
---- !ChillNode
+---
+!ChillNode
 name: internal_attribution_for_id
 route: /internal/attribution/<int:attribution_id>/
 template: attribution.html.jinja2
@@ -270,7 +294,8 @@ value:
   attribution: _select_attribution_for_id.sql
   attribution_id: _route_pass_attribution_id.sql
 
---- !ChillNode
+---
+!ChillNode
 name: puzzleimagepickerpage
 route: /puzzle-list/
 template: puzzleimagepickerpage.html.jinja2
@@ -283,7 +308,8 @@ value:
     title: Available Puzzle Images
   public_image_count: select_total_puzzle_image_count.sql
 
---- !ChillNode
+---
+!ChillNode
 name: puzzleinstanceformpage
 route: /create-puzzle-instance/<puzzle_id>/
 template: puzzleinstancepage.html.jinja2
@@ -297,7 +323,8 @@ value:
   puzzle: _select-frontpage-preview.sql
   feature_hidden_preview: select-frontpage-preview-feature-hidden-preview.sql
   route: _route-pass-puzzle_id.sql
---- !ChillNode
+---
+!ChillNode
 name: internal_player_bit_for_id
 route: /internal/player-bit/<int:player_id>/
 template: player-bit.html.jinja2
@@ -305,7 +332,8 @@ value:
   bit: select-bit-icon-for-player-id.sql
   player_id: route-pass-player-id.sql
 
---- !ChillNode
+---
+!ChillNode
 name: admin_player_page
 route: /admin/player/
 template: admin-playerpage.html.jinja2
@@ -318,7 +346,8 @@ value:
   player_id: route-pass-player-id-with-default.sql
   score: route-pass-score.sql
 
---- !ChillNode
+---
+!ChillNode
 name: admin_player_details_page
 route: /admin/player/details/<int:player_id>/
 template: admin-playerdetailspage.html.jinja2
@@ -326,7 +355,8 @@ value:
   player: select-admin-player-details-for-player-id.sql
   player_id: route-pass-player-id.sql
 
---- !ChillNode
+---
+!ChillNode
 name: playerpuzzlelistpage
 route: /player-puzzle-list/
 template: playerpuzzlelistpage.html.jinja2
@@ -338,7 +368,8 @@ value:
     description: Puzzle instances that are owned by the current player
     title: Player Puzzle List
 
---- !ChillNode
+---
+!ChillNode
 name: newplayerpage
 route: /new-player/
 template: newplayerpage.html.jinja2
@@ -353,14 +384,16 @@ value:
 
   next: route-pass-new-player-next.sql
 
---- !ChillNode
+---
+!ChillNode
 name: admin_name_register_review_page
 route: /admin/name-register-review/
 template: admin-name_register-review-page.html.jinja2
 value:
   unapproved_names: select-name-on-name-register-to-review.sql
 
---- !ChillNode
+---
+!ChillNode
 name: claim_player_by_token_page
 route: /claim-player/<token>/
 template: claim-player-by-token.html.jinja2
@@ -370,7 +403,8 @@ value:
     description: For players following a claim player by token link in their e-mail.  This is used for switching a player from a shareduser to a user account.  It is also for verifying an e-mail address for that player.
   email_verify_token: _select-email-verify-token-for-route.sql
 
---- !ChillNode
+---
+!ChillNode
 name: reset_login_by_token_page
 route: /reset-login/<token>/
 template: reset-login-by-token.html.jinja2
@@ -379,4 +413,3 @@ value:
     pagetitle: Reset Login
     description: For players following a reset login by token link in their e-mail.
   reset_login_token: _select-reset-login-token-for-route.sql
-

@@ -103,19 +103,28 @@ def init_db():
             db.commit()
 
         latest_version = 0
-        migrate_scripts = glob(f"{os.path.dirname(sys.argv[0])}/jobs/migrate_puzzle_massive_database_version_[0-9][0-9][0-9].py")
+        migrate_scripts = glob(
+            f"{os.path.dirname(sys.argv[0])}/jobs/migrate_puzzle_massive_database_version_[0-9][0-9][0-9].py"
+        )
         if len(migrate_scripts) == 0:
-            print(f"{os.path.dirname(sys.argv[0])}/jobs/migrate_puzzle_massive_database_version_[0-9][0-9][0-9].py")
+            print(
+                f"{os.path.dirname(sys.argv[0])}/jobs/migrate_puzzle_massive_database_version_[0-9][0-9][0-9].py"
+            )
         else:
-            latest_version = get_latest_version_based_on_migrate_scripts(migrate_scripts)
-        cur.execute(read_query_file("upsert_puzzle_massive.sql"), {
-            "key": "database_version",
-            "label": "Database Version",
-            "description": "The version that the Puzzle Massive Database is currently at.",
-            "intvalue": latest_version,
-            "textvalue": None,
-            "blobvalue": None
-        })
+            latest_version = get_latest_version_based_on_migrate_scripts(
+                migrate_scripts
+            )
+        cur.execute(
+            read_query_file("upsert_puzzle_massive.sql"),
+            {
+                "key": "database_version",
+                "label": "Database Version",
+                "description": "The version that the Puzzle Massive Database is currently at.",
+                "intvalue": latest_version,
+                "textvalue": None,
+                "blobvalue": None,
+            },
+        )
 
         # Add fake bit authors
         upsert_author_query = read_query_file("_insert_or_update_bit_author.sql")
@@ -212,5 +221,7 @@ def generate_new_puzzle_id(name):
 
 
 def delete_puzzle_resources(puzzle_id, is_local_resource=True, exclude_regex=None):
-    pr = PuzzleResource(puzzle_id, current_app.config, is_local_resource=is_local_resource)
+    pr = PuzzleResource(
+        puzzle_id, current_app.config, is_local_resource=is_local_resource
+    )
     pr.purge(exclude_regex=exclude_regex)

@@ -25,7 +25,7 @@ from api.tools import loadConfig
 
 
 def main():
-    ""
+    """"""
     args = docopt(__doc__, version="0.0")
     config_file = args["--config"]
 
@@ -67,7 +67,7 @@ def serve(config_file, cookie_secret):
     host = app.config.get("HOSTAPI")
     port = app.config.get("PORTAPI")
 
-    print(u"serving on {host}:{port}".format(**locals()))
+    print("serving on {host}:{port}".format(**locals()))
     server = pywsgi.WSGIServer((host, port), app)
 
     def shutdown():

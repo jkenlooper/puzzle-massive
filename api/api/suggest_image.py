@@ -48,7 +48,7 @@ class SuggestImageView(MethodView):
         bg_color = check_bg_color(args.get("bg_color", "#808080")[:50])
 
         user = int(
-            current_app.secure_cookie.get(u"user")
+            current_app.secure_cookie.get("user")
             or user_id_from_ip(request.headers.get("X-Real-IP"))
         )
 

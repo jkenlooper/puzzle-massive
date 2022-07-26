@@ -4,7 +4,7 @@ from api.helper_tests import APITestCase
 
 
 class TestInternalTasksStartView(APITestCase):
-    ""
+    """"""
 
     def setUp(self):
         super().setUp()
@@ -16,7 +16,9 @@ class TestInternalTasksStartView(APITestCase):
         with self.app.app_context():
             with self.app.test_client() as c:
                 rv = c.post(
-                    "/internal/tasks/{task_name}/start/".format(task_name="abc",),
+                    "/internal/tasks/{task_name}/start/".format(
+                        task_name="abc",
+                    ),
                     json={"player": 2},
                 )
                 self.assertEqual(404, rv.status_code)
@@ -29,7 +31,9 @@ class TestInternalTasksStartView(APITestCase):
         with self.app.app_context():
             with self.app.test_client() as c:
                 rv = c.post(
-                    "/internal/tasks/{task_name}/start/".format(task_name=task_name,),
+                    "/internal/tasks/{task_name}/start/".format(
+                        task_name=task_name,
+                    ),
                 )
                 self.assertEqual(400, rv.status_code)
                 self.assertEqual(
@@ -37,7 +41,9 @@ class TestInternalTasksStartView(APITestCase):
                 )
 
                 rv = c.post(
-                    "/internal/tasks/{task_name}/start/".format(task_name=task_name,),
+                    "/internal/tasks/{task_name}/start/".format(
+                        task_name=task_name,
+                    ),
                     json={"bogus": 1},
                 )
                 self.assertEqual(400, rv.status_code)
@@ -47,7 +53,9 @@ class TestInternalTasksStartView(APITestCase):
                 )
 
                 rv = c.post(
-                    "/internal/tasks/{task_name}/start/".format(task_name=task_name,),
+                    "/internal/tasks/{task_name}/start/".format(
+                        task_name=task_name,
+                    ),
                     json={"player": 2, "points": 20, "score": 2},
                 )
                 self.assertEqual(200, rv.status_code)
@@ -60,7 +68,9 @@ class TestInternalTasksStartView(APITestCase):
         with self.app.app_context():
             with self.app.test_client() as c:
                 rv = c.post(
-                    "/internal/tasks/{task_name}/start/".format(task_name=task_name,),
+                    "/internal/tasks/{task_name}/start/".format(
+                        task_name=task_name,
+                    ),
                 )
                 self.assertEqual(400, rv.status_code)
                 self.assertEqual(
@@ -68,7 +78,9 @@ class TestInternalTasksStartView(APITestCase):
                 )
 
                 rv = c.post(
-                    "/internal/tasks/{task_name}/start/".format(task_name=task_name,),
+                    "/internal/tasks/{task_name}/start/".format(
+                        task_name=task_name,
+                    ),
                     json={"bogus": 1},
                 )
                 self.assertEqual(400, rv.status_code)
@@ -78,7 +90,9 @@ class TestInternalTasksStartView(APITestCase):
                 )
 
                 rv = c.post(
-                    "/internal/tasks/{task_name}/start/".format(task_name=task_name,),
+                    "/internal/tasks/{task_name}/start/".format(
+                        task_name=task_name,
+                    ),
                     json={"player": 2},
                 )
                 self.assertEqual(200, rv.status_code)
@@ -91,7 +105,9 @@ class TestInternalTasksStartView(APITestCase):
         with self.app.app_context():
             with self.app.test_client() as c:
                 rv = c.post(
-                    "/internal/tasks/{task_name}/start/".format(task_name=task_name,),
+                    "/internal/tasks/{task_name}/start/".format(
+                        task_name=task_name,
+                    ),
                 )
                 self.assertEqual(400, rv.status_code)
                 self.assertEqual(
@@ -99,7 +115,9 @@ class TestInternalTasksStartView(APITestCase):
                 )
 
                 rv = c.post(
-                    "/internal/tasks/{task_name}/start/".format(task_name=task_name,),
+                    "/internal/tasks/{task_name}/start/".format(
+                        task_name=task_name,
+                    ),
                     json={"bogus": 1},
                 )
                 self.assertEqual(400, rv.status_code)
@@ -109,7 +127,9 @@ class TestInternalTasksStartView(APITestCase):
                 )
 
                 rv = c.post(
-                    "/internal/tasks/{task_name}/start/".format(task_name=task_name,),
+                    "/internal/tasks/{task_name}/start/".format(
+                        task_name=task_name,
+                    ),
                     json={"player": 2},
                 )
                 self.assertEqual(200, rv.status_code)
@@ -122,7 +142,9 @@ class TestInternalTasksStartView(APITestCase):
         with self.app.app_context():
             with self.app.test_client() as c:
                 rv = c.post(
-                    "/internal/tasks/{task_name}/start/".format(task_name=task_name,),
+                    "/internal/tasks/{task_name}/start/".format(
+                        task_name=task_name,
+                    ),
                 )
                 self.assertEqual(400, rv.status_code)
                 self.assertEqual(
@@ -130,7 +152,9 @@ class TestInternalTasksStartView(APITestCase):
                 )
 
                 rv = c.post(
-                    "/internal/tasks/{task_name}/start/".format(task_name=task_name,),
+                    "/internal/tasks/{task_name}/start/".format(
+                        task_name=task_name,
+                    ),
                     json={"bogus": 1},
                 )
                 self.assertEqual(400, rv.status_code)
@@ -140,7 +164,9 @@ class TestInternalTasksStartView(APITestCase):
                 )
 
                 rv = c.post(
-                    "/internal/tasks/{task_name}/start/".format(task_name=task_name,),
+                    "/internal/tasks/{task_name}/start/".format(
+                        task_name=task_name,
+                    ),
                     json={"minimum": 2000},
                 )
                 self.assertEqual(200, rv.status_code)
@@ -154,16 +180,21 @@ class TestInternalTasksStartView(APITestCase):
         with self.app.app_context():
             with self.app.test_client() as c:
                 rv = c.post(
-                    "/internal/tasks/{task_name}/start/".format(task_name=task_name,),
+                    "/internal/tasks/{task_name}/start/".format(
+                        task_name=task_name,
+                    ),
                     json={"bogus": 1},
                 )
                 self.assertEqual(400, rv.status_code)
                 self.assertEqual(
-                    {"msg": "No JSON data should be sent", "status_code": 400}, rv.json,
+                    {"msg": "No JSON data should be sent", "status_code": 400},
+                    rv.json,
                 )
 
                 rv = c.post(
-                    "/internal/tasks/{task_name}/start/".format(task_name=task_name,),
+                    "/internal/tasks/{task_name}/start/".format(
+                        task_name=task_name,
+                    ),
                 )
                 self.assertEqual(200, rv.status_code)
                 self.assertEqual(

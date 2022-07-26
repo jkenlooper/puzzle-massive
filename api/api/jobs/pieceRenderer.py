@@ -78,7 +78,7 @@ def set_render_fail_on_puzzle(puzzle):
 
 
 def render_all():
-    ""
+    """"""
     cur = db.cursor()
 
     result = cur.execute(
@@ -101,7 +101,7 @@ def render_all():
 
 
 def list_all():
-    ""
+    """"""
     cur = db.cursor()
 
     result = cur.execute(
@@ -208,7 +208,12 @@ def render(puzzles):
         original_original_image = result[1]
         original_image_basename = os.path.basename(original_original_image)
 
-        pr_original = PuzzleResource(original_puzzle_id, current_app.config, is_local_resource=not original_original_image.startswith("http") and not original_original_image.startswith("//"))
+        pr_original = PuzzleResource(
+            original_puzzle_id,
+            current_app.config,
+            is_local_resource=not original_original_image.startswith("http")
+            and not original_original_image.startswith("//"),
+        )
         imagefile = pr_original.yank_file(original_image_basename)
 
         puzzle_id = puzzle["puzzle_id"]
@@ -235,7 +240,9 @@ def render(puzzles):
             ],
             check=True,
         )
-        with open(os.path.join(tmp_puzzle_dir, "index.json"), "r") as piecemaker_index_json:
+        with open(
+            os.path.join(tmp_puzzle_dir, "index.json"), "r"
+        ) as piecemaker_index_json:
             piecemaker_index = json.load(piecemaker_index_json)
         full_size = piecemaker_index["full_size"]
 
@@ -250,10 +257,16 @@ def render(puzzles):
             os.path.join(tmp_puzzle_dir, "scale-100", "sprite_raster.css"), "r"
         ) as css:
             sprite_raster = css.read()
-        with open(os.path.join(tmp_puzzle_dir, "scale-100", "sprite_p.css"), "r") as css:
+        with open(
+            os.path.join(tmp_puzzle_dir, "scale-100", "sprite_p.css"), "r"
+        ) as css:
             sprite_p = css.read()
-        with open(os.path.join(tmp_puzzle_dir, "scale-100", f"raster.{slip}.css"), "w") as css:
-            css.write(sprite_p.replace("sprite_without_padding.png", f"raster.{slip}.png"))
+        with open(
+            os.path.join(tmp_puzzle_dir, "scale-100", f"raster.{slip}.css"), "w"
+        ) as css:
+            css.write(
+                sprite_p.replace("sprite_without_padding.png", f"raster.{slip}.png")
+            )
             css.write(sprite_raster)
         move(
             os.path.join(tmp_puzzle_dir, "scale-100", "sprite_without_padding.png"),
@@ -366,7 +379,11 @@ def render(puzzles):
             f"raster.{slip}.png",
         ]
         cleanup_dir(tmp_puzzle_dir, keep_list)
-        pr = PuzzleResource(puzzle_id, current_app.config, is_local_resource=current_app.config["LOCAL_PUZZLE_RESOURCES"])
+        pr = PuzzleResource(
+            puzzle_id,
+            current_app.config,
+            is_local_resource=current_app.config["LOCAL_PUZZLE_RESOURCES"],
+        )
         pr.put(tmp_puzzle_dir)
 
         # Create adjacent offsets for the scale
@@ -464,7 +481,9 @@ def render(puzzles):
             )
 
         CDN_BASE_URL = current_app.config["CDN_BASE_URL"]
-        prefix_resources_url = "" if current_app.config["LOCAL_PUZZLE_RESOURCES"] else CDN_BASE_URL
+        prefix_resources_url = (
+            "" if current_app.config["LOCAL_PUZZLE_RESOURCES"] else CDN_BASE_URL
+        )
         for (name, url) in [
             (
                 "pieces",
@@ -472,7 +491,7 @@ def render(puzzles):
             ),
             (
                 "pzz",
-                f"{prefix_resources_url}/resources/{puzzle_id}/scale-100/raster.{slip}.css"
+                f"{prefix_resources_url}/resources/{puzzle_id}/scale-100/raster.{slip}.css",
             ),
         ]:
             r = requests.post(
@@ -492,7 +511,6 @@ def render(puzzles):
                         name
                     )
                 )
-
 
 
 def cleanup_dir(path, keep_list):

@@ -121,7 +121,7 @@ def update_puzzle_file(puzzle_id, file_name, url, attribution=None):
 
 
 def delete_puzzle_file(puzzle_id, file_name):
-    ""
+    """"""
 
     cur = db.cursor()
     result = cur.execute(
@@ -200,7 +200,13 @@ class InternalPuzzleFileView(MethodView):
                 return make_response(json.jsonify(err_msg), err_msg["status_code"])
             if (
                 not isinstance(data["attribution"], dict)
-                or {"title", "author_link", "author_name", "source", "license_name",}
+                or {
+                    "title",
+                    "author_link",
+                    "author_name",
+                    "source",
+                    "license_name",
+                }
                 != data["attribution"].keys()
             ):
 
@@ -240,7 +246,13 @@ class InternalPuzzleFileView(MethodView):
                 return make_response(json.jsonify(err_msg), err_msg["status_code"])
             if (
                 not isinstance(data["attribution"], dict)
-                or {"title", "author_link", "author_name", "source", "license_name",}
+                or {
+                    "title",
+                    "author_link",
+                    "author_name",
+                    "source",
+                    "license_name",
+                }
                 != data["attribution"].keys()
             ):
                 err_msg = {

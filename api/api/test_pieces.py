@@ -5,7 +5,7 @@ from api.database import fetch_query_string, rowify
 
 
 class TestInternalPiecesView(PuzzleTestCase):
-    ""
+    """"""
 
     def setUp(self):
         super().setUp()
@@ -117,7 +117,8 @@ class TestInternalPiecesView(PuzzleTestCase):
                 )
                 self.assertEqual(400, rv.status_code)
                 self.assertEqual(
-                    {"msg": "has extra piece property", "status_code": 400}, rv.json,
+                    {"msg": "has extra piece property", "status_code": 400},
+                    rv.json,
                 )
 
     def test_acceptable_fields_in_payload_for_patch(self):
@@ -161,7 +162,8 @@ class TestInternalPiecesView(PuzzleTestCase):
                 )
                 self.assertEqual(400, rv.status_code)
                 self.assertEqual(
-                    {"msg": "has extra piece property", "status_code": 400}, rv.json,
+                    {"msg": "has extra piece property", "status_code": 400},
+                    rv.json,
                 )
 
     def test_add_puzzle_piece_properties(self):
@@ -196,7 +198,12 @@ class TestInternalPiecesView(PuzzleTestCase):
                 )
                 self.assertEqual(200, rv.status_code)
                 self.assertEqual(
-                    {"rowcount": 0, "msg": "Updated", "status_code": 200,}, rv.json,
+                    {
+                        "rowcount": 0,
+                        "msg": "Updated",
+                        "status_code": 200,
+                    },
+                    rv.json,
                 )
 
     def test_update_puzzle_piece_properties_when_some_changes(self):
@@ -213,7 +220,12 @@ class TestInternalPiecesView(PuzzleTestCase):
                 )
                 self.assertEqual(200, rv.status_code)
                 self.assertEqual(
-                    {"rowcount": 1, "msg": "Updated", "status_code": 200,}, rv.json,
+                    {
+                        "rowcount": 1,
+                        "msg": "Updated",
+                        "status_code": 200,
+                    },
+                    rv.json,
                 )
 
     def test_delete_puzzle_pieces(self):
@@ -227,7 +239,12 @@ class TestInternalPiecesView(PuzzleTestCase):
                 )
                 self.assertEqual(200, rv.status_code)
                 self.assertEqual(
-                    {"rowcount": 16, "msg": "Deleted", "status_code": 200,}, rv.json,
+                    {
+                        "rowcount": 16,
+                        "msg": "Deleted",
+                        "status_code": 200,
+                    },
+                    rv.json,
                 )
 
 

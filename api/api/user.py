@@ -575,7 +575,7 @@ class ClaimUserByTokenView(MethodView):
     decorators = [user_not_banned]
 
     def post(self):
-        ""
+        """"""
         data = {}
 
         # Prevent creating a new user if no support for cookies. Player should

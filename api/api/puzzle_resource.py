@@ -262,7 +262,9 @@ class PuzzleResource:
         try:
             paths = self.list()
         except Exception as err:
-            current_app.logger.warning(f"Ignoring error from puzzle_resource.py purge() with puzzle_id {self.puzzle_id} : {err}")
+            current_app.logger.warning(
+                f"Ignoring error from puzzle_resource.py purge() with puzzle_id {self.puzzle_id} : {err}"
+            )
             paths = []
         paths_to_delete = []
 
@@ -303,5 +305,5 @@ class PuzzleResource:
             )
 
     def delete(self):
-        ""
+        """"""
         os.rmdir(self.target_dir)

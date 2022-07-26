@@ -3,43 +3,46 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import FetchService from "../site/fetch.service";
 import "./site-wide-message.css";
 const tag = "pm-site-wide-message";
-customElements.define(tag, class PmSiteWideMessage extends HTMLElement {
+customElements.define(
+  tag,
+  class PmSiteWideMessage extends HTMLElement {
     constructor() {
-        super();
-        this.message = "";
-        const messageService = new FetchService("/newapi/message/");
-        messageService
-            .getText()
-            .then((message) => {
-            this.message = message;
+      super();
+      this.message = "";
+      const messageService = new FetchService("/newapi/message/");
+      messageService
+        .getText()
+        .then((message) => {
+          this.message = message;
         })
-            .catch(() => {
-            this.message = "";
+        .catch(() => {
+          this.message = "";
         })
-            .finally(() => {
-            this.render();
+        .finally(() => {
+          this.render();
         });
     }
     template(data) {
-        if (!data.hasMessage) {
-            return "";
-        }
-        return html `
+      if (!data.hasMessage) {
+        return "";
+      }
+      return html`
         <p class="pm-SiteWideMessage">${unsafeHTML(data.message)}</p>
       `;
     }
     get data() {
-        return {
-            hasMessage: !!this.message,
-            message: this.message,
-        };
+      return {
+        hasMessage: !!this.message,
+        message: this.message,
+      };
     }
     render() {
-        render(this.template(this.data), this);
+      render(this.template(this.data), this);
     }
     connectedCallback() {
-        this.render();
+      this.render();
     }
-    disconnectedCallback() { }
-    adoptedCallback() { }
-});
+    disconnectedCallback() {}
+    adoptedCallback() {}
+  }
+);

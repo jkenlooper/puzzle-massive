@@ -27,7 +27,7 @@ import api.jobs.piece_reset as pr
 
 
 class TestPieceReset(PuzzleTestCase):
-    ""
+    """"""
 
     def setUp(self):
         super().setUp()

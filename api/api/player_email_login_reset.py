@@ -20,10 +20,10 @@ class PlayerEmailLoginResetView(MethodView):
     decorators = [user_not_banned]
 
     def post(self):
-        ""
+        """"""
         response = {"message": "", "name": "error"}
 
-        user = current_app.secure_cookie.get(u"user")
+        user = current_app.secure_cookie.get("user")
         if user:
             response[
                 "message"

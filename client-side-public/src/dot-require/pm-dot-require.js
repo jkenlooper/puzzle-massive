@@ -13,37 +13,47 @@ const INFO = "info";
 const NONE = "none";
 const dotRequireTypes = [HIDDEN, BLUR, INFO, NONE];
 let lastInstanceId = 0;
-customElements.define(tag, class PmDotRequire extends HTMLElement {
+customElements.define(
+  tag,
+  class PmDotRequire extends HTMLElement {
     constructor() {
-        super();
-        this.instanceId = PmDotRequire._instanceId;
-        const dotsRequired = this.attributes.getNamedItem("min");
-        this.dotsRequired = dotsRequired ? parseInt(dotsRequired.value) : -1;
-        const typeAttr = this.attributes.getNamedItem("type");
-        const typeAttrValue = typeAttr ? typeAttr.value : NONE;
-        const _type = dotRequireTypes.indexOf(typeAttrValue) != -1 ? typeAttrValue : NONE;
-        // Wrap contents with styled div
-        this.wrapperEl = document.createElement("div");
-        if (this.hasChildNodes()) {
-            while (this.firstChild) {
-                this.wrapperEl.appendChild(this.removeChild(this.firstChild));
-            }
+      super();
+      this.instanceId = PmDotRequire._instanceId;
+      const dotsRequired = this.attributes.getNamedItem("min");
+      this.dotsRequired = dotsRequired ? parseInt(dotsRequired.value) : -1;
+      const typeAttr = this.attributes.getNamedItem("type");
+      const typeAttrValue = typeAttr ? typeAttr.value : NONE;
+      const _type =
+        dotRequireTypes.indexOf(typeAttrValue) != -1 ? typeAttrValue : NONE;
+      // Wrap contents with styled div
+      this.wrapperEl = document.createElement("div");
+      if (this.hasChildNodes()) {
+        while (this.firstChild) {
+          this.wrapperEl.appendChild(this.removeChild(this.firstChild));
         }
-        this.wrapperEl.classList.add(`pm-DotRequire--${_type}`);
-        this.wrapperEl.classList.add("pm-DotRequire");
-        switch (_type) {
-            case HIDDEN:
-            case NONE:
-                this.wrapperEl.classList.add("is-dotted");
-                break;
-        }
-        this.appendChild(this.wrapperEl);
-        userDetailsService.subscribe(this.updateIsDottedClass.bind(this), this.instanceId);
+      }
+      this.wrapperEl.classList.add(`pm-DotRequire--${_type}`);
+      this.wrapperEl.classList.add("pm-DotRequire");
+      switch (_type) {
+        case HIDDEN:
+        case NONE:
+          this.wrapperEl.classList.add("is-dotted");
+          break;
+      }
+      this.appendChild(this.wrapperEl);
+      userDetailsService.subscribe(
+        this.updateIsDottedClass.bind(this),
+        this.instanceId
+      );
     }
     static get _instanceId() {
-        return `${tag} ${lastInstanceId++}`;
+      return `${tag} ${lastInstanceId++}`;
     }
     updateIsDottedClass() {
-        this.wrapperEl.classList.toggle("is-dotted", userDetailsService.userDetails.dots < this.dotsRequired);
+      this.wrapperEl.classList.toggle(
+        "is-dotted",
+        userDetailsService.userDetails.dots < this.dotsRequired
+      );
     }
-});
+  }
+);

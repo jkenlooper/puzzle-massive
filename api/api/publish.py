@@ -184,7 +184,7 @@ def get_puzzle_piece_token_queue_key(puzzle, piece):
 
 
 def _int_piece_properties(piece_properties):
-    ""
+    """"""
     int_props = ("x", "y", "r", "w", "h", "rotate", "g")
     for (k, v) in piece_properties.items():
         if k in int_props:
@@ -1236,7 +1236,7 @@ def serve(config_file, cookie_secret):
 
 
 def main():
-    ""
+    """"""
     args = docopt(__doc__, version="0.0")
     config_file = args["--config"]
 

@@ -29,8 +29,12 @@ def migrate(config):
     logger.debug("Example debug message.")
     logger.info(f"Hello, this is an example log message for the {sys.argv[0]} script.")
     logger.warning("Uhh... warning message.")
-    logger.error("Oh no! Something didn't work! The script should run sys.exit('Abandon ship!') or something.")
-    sys.exit("\nERROR: Example script should be copied and modified to correctly run.\n")  # Remove this
+    logger.error(
+        "Oh no! Something didn't work! The script should run sys.exit('Abandon ship!') or something."
+    )
+    sys.exit(
+        "\nERROR: Example script should be copied and modified to correctly run.\n"
+    )  # Remove this
 
     # Execute the sql found in these files in the queries directory.
     for filename in [
@@ -59,7 +63,9 @@ def main():
     config_file = "site.cfg"
     config = loadConfig(config_file)
     cookie_secret = config.get("SECURE_COOKIE_SECRET")
-    app = make_app(config=config_file, cookie_secret=cookie_secret, database_writable=True)
+    app = make_app(
+        config=config_file, cookie_secret=cookie_secret, database_writable=True
+    )
 
     logger.setLevel(logging.DEBUG if config["DEBUG"] else logging.INFO)
 

@@ -329,7 +329,6 @@ class UpdatePlayer(Task):
         super().do_task()
         made_change = False
 
-
         user = redis_connection.spop("batchuser")
         while user:
             user = int(user)
@@ -386,7 +385,7 @@ class UpdatePlayer(Task):
                     )
                 )
 
-            if int(current_app.config.get("REWARD_INSTANCE_SLOT_SCORE_THRESHOLD", '0')):
+            if int(current_app.config.get("REWARD_INSTANCE_SLOT_SCORE_THRESHOLD", "0")):
                 sleep(API_REQUESTS_LIMIT_RATE)
                 r = requests.post(
                     "http://{HOSTAPI}:{PORTAPI}/internal/tasks/{task_name}/start/".format(
@@ -802,7 +801,7 @@ def all_tasks():
 
 
 def main():
-    ""
+    """"""
     args = docopt(__doc__)
     config_file = args["--config"]
     task_name = args.get("--task")

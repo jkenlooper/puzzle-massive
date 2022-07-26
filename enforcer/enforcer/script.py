@@ -23,7 +23,7 @@ from enforcer.app import make_app
 
 
 def main():
-    ""
+    """"""
     args = docopt(__doc__, version="0.0")
     config_file = args["--config"]
     config_file = (

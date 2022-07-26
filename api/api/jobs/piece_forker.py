@@ -29,8 +29,7 @@ class DataError(Error):
 
 
 def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
-    """
-    """
+    """ """
     cur = db.cursor()
     source_instance_puzzle_id = source_puzzle_data["instance_puzzle_id"]
     puzzle_id = puzzle_data["puzzle_id"]
@@ -45,7 +44,8 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
         raise DataError("Source puzzle not in acceptable status")
 
     result = cur.execute(
-        "select * from Puzzle where id = :id", {"id": puzzle_data["id"]},
+        "select * from Puzzle where id = :id",
+        {"id": puzzle_data["id"]},
     ).fetchall()
     if not result:
         raise DataError(
@@ -71,12 +71,26 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
     # Copy the puzzle resources to the new target puzzle resource location
     raster_css_filename = ""
     raster_png_filename = ""
-    pr_target = PuzzleResource(puzzle_id, current_app.config, is_local_resource=current_app.config["LOCAL_PUZZLE_RESOURCES"])
-    pr_source = PuzzleResource(source_instance_puzzle_id, current_app.config, is_local_resource=not source_puzzle_data["url"].startswith("http") and not source_puzzle_data["url"].startswith("//"))
+    pr_target = PuzzleResource(
+        puzzle_id,
+        current_app.config,
+        is_local_resource=current_app.config["LOCAL_PUZZLE_RESOURCES"],
+    )
+    pr_source = PuzzleResource(
+        source_instance_puzzle_id,
+        current_app.config,
+        is_local_resource=not source_puzzle_data["url"].startswith("http")
+        and not source_puzzle_data["url"].startswith("//"),
+    )
     listing = pr_source.list()
     for path in listing:
         filename = os.path.basename(path)
-        if re.match(r"(original|preview_full|resized-original)\.([^.]+\.)?jpg", filename) is not None:
+        if (
+            re.match(
+                r"(original|preview_full|resized-original)\.([^.]+\.)?jpg", filename
+            )
+            is not None
+        ):
             # When forking a puzzle, the original and preview_full images will
             # remain with the original puzzle that this instance is being made
             # from.
@@ -148,7 +162,9 @@ def fork_puzzle_pieces(source_puzzle_data, puzzle_data):
             break
 
     CDN_BASE_URL = current_app.config["CDN_BASE_URL"]
-    prefix_resources_url = "" if current_app.config["LOCAL_PUZZLE_RESOURCES"] else CDN_BASE_URL
+    prefix_resources_url = (
+        "" if current_app.config["LOCAL_PUZZLE_RESOURCES"] else CDN_BASE_URL
+    )
     r = requests.post(
         "http://{HOSTAPI}:{PORTAPI}/internal/puzzle/{puzzle_id}/files/{file_name}/".format(
             HOSTAPI=current_app.config["HOSTAPI"],

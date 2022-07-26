@@ -89,8 +89,7 @@ def find_puzzles_in_redis(results={}):
 
 
 def find_puzzles_in_database(results={}):
-    """
-    """
+    """ """
     _results = results.copy()
     cur = db.cursor()
 
@@ -171,7 +170,7 @@ def find_puzzles_in_database(results={}):
 
 
 def fix_redis_piece_groups(puzzles, results={}):
-    ""
+    """"""
     _results = results.copy()
     # TODO: implement a fix for when there are multiple immovable piece groups
     # that have a different piece group then the top left piece.
@@ -200,8 +199,9 @@ def fix_redis_piece_groups(puzzles, results={}):
         # Fix by resetting the pcfixed members back to only those for the top
         # left piece group.
         redis_connection.sinterstore(
-            f"pcfixed:{puzzle}", f"pcfixed:{puzzle}",
-            "pcg:{puzzle}:{group}".format(puzzle=puzzle, group=pcg_for_top_left)
+            f"pcfixed:{puzzle}",
+            f"pcfixed:{puzzle}",
+            "pcg:{puzzle}:{group}".format(puzzle=puzzle, group=pcg_for_top_left),
         )
 
         _results[puzzle]["fixed"] = True
@@ -209,7 +209,7 @@ def fix_redis_piece_groups(puzzles, results={}):
 
 
 def fix_db_piece_parents():
-    ""
+    """"""
     # TODO: implement a fix for data stored in Piece table when multiple pieces
     # have status of immovable, but do not have the same parent as top left
     # piece.
@@ -226,15 +226,21 @@ def do_it():
 
     # TODO: Fix puzzles that failed the test
     failed_puzzles_in_redis_with_pcfixed_outside_of_top_left = list(
-        map(lambda x: int(x["puzzle"]),
+        map(
+            lambda x: int(x["puzzle"]),
             filter(
-                lambda x: x["status"] == "fail" and "redis" in x["test"] and x["reason"] == "fail_pcfixed_outside_of_top_left",
+                lambda x: x["status"] == "fail"
+                and "redis" in x["test"]
+                and x["reason"] == "fail_pcfixed_outside_of_top_left",
                 multiple_immovable_piece_group_results.values(),
-        )
+            ),
         )
     )
 
-    multiple_immovable_piece_group_results = fix_redis_piece_groups(failed_puzzles_in_redis_with_pcfixed_outside_of_top_left, results=multiple_immovable_piece_group_results)
+    multiple_immovable_piece_group_results = fix_redis_piece_groups(
+        failed_puzzles_in_redis_with_pcfixed_outside_of_top_left,
+        results=multiple_immovable_piece_group_results,
+    )
     fix_db_piece_parents()
 
     # Print out the results

@@ -31,7 +31,16 @@ from api.constants import (
 )
 
 
-ACTIONS = ("approve", "rebuild", "reject", "delete", "redo", "edit", "tag", "buggy_unlisted")
+ACTIONS = (
+    "approve",
+    "rebuild",
+    "reject",
+    "delete",
+    "redo",
+    "edit",
+    "tag",
+    "buggy_unlisted",
+)
 
 
 class AdminPuzzleBatchEditView(MethodView):
@@ -128,7 +137,11 @@ class AdminPuzzleBatchEditView(MethodView):
                 (result, col_names) = rowify(result, cur.description)
                 puzzle_details = result[0]
 
-                delete_puzzle_resources(puzzle_id, is_local_resource=not puzzle_details["url"].startswith("http") and not puzzle_details["url"].startswith("//"))
+                delete_puzzle_resources(
+                    puzzle_id,
+                    is_local_resource=not puzzle_details["url"].startswith("http")
+                    and not puzzle_details["url"].startswith("//"),
+                )
                 id = puzzle_details["id"]
                 # current_app.logger.info('deleting puzzle resources for id {}'.format(id))
                 cur.execute(
@@ -169,15 +182,15 @@ class AdminPuzzleBatchEditView(MethodView):
             elif edit == "status_active":
                 m_date_now = strftime("%Y-%m-%d %H:%M:%S", gmtime(time()))
                 for puzzle_id in puzzle_ids:
-                    data = {
-                        "status": ACTIVE, "m_date": m_date_now
-                    }
+                    data = {"status": ACTIVE, "m_date": m_date_now}
                     response_msg = update_puzzle_details(puzzle_id, data)
                     if (
                         response_msg.get("rowcount")
                         and response_msg.get("status_code") >= 300
                     ):
-                        current_app.logger.warning(f"Failed to update puzzle details {puzzle_id} {data}")
+                        current_app.logger.warning(
+                            f"Failed to update puzzle details {puzzle_id} {data}"
+                        )
 
         def each(puzzle_ids):
             for puzzle_id in puzzle_ids:

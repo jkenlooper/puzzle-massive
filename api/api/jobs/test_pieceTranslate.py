@@ -77,7 +77,7 @@ class JobTestCase(unittest.TestCase):
             print("Deleted {deleted} piece stacked".format(**locals()))
 
     def test_simple(self):
-        ""
+        """"""
         assert True == True
 
     def test_proximity(self):

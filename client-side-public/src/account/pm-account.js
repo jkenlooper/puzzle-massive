@@ -4,44 +4,47 @@ import { hasUserCookie } from "../site/cookies";
 const baseUrl = `${window.location.protocol}//${window.location.host}`;
 const tag = "pm-account";
 let lastInstanceId = 0;
-customElements.define(tag, class PmAccount extends HTMLElement {
+customElements.define(
+  tag,
+  class PmAccount extends HTMLElement {
     constructor() {
-        super();
-        this.bitLink = "";
-        this.isGeneratingLoginLink = false;
-        this.hasEmailConfigured = false;
-        this.instanceId = PmAccount._instanceId;
-        this.hasEmailConfigured = !!this.attributes.getNamedItem("email-configured");
-        userDetailsService.subscribe(this.render.bind(this), this.instanceId);
-        this.render();
+      super();
+      this.bitLink = "";
+      this.isGeneratingLoginLink = false;
+      this.hasEmailConfigured = false;
+      this.instanceId = PmAccount._instanceId;
+      this.hasEmailConfigured =
+        !!this.attributes.getNamedItem("email-configured");
+      userDetailsService.subscribe(this.render.bind(this), this.instanceId);
+      this.render();
     }
     static get _instanceId() {
-        return `${tag} ${lastInstanceId++}`;
+      return `${tag} ${lastInstanceId++}`;
     }
     generateBitLink() {
-        this.isGeneratingLoginLink = true;
-        this.render();
-        userDetailsService
-            .generateAnonymousLogin()
-            .then((data) => {
-            this.bitLink = data.bit;
-            userDetailsService.storeAnonymousLogin(data.bit);
+      this.isGeneratingLoginLink = true;
+      this.render();
+      userDetailsService
+        .generateAnonymousLogin()
+        .then((data) => {
+          this.bitLink = data.bit;
+          userDetailsService.storeAnonymousLogin(data.bit);
         })
-            .catch(() => {
-            // ignore errors
+        .catch(() => {
+          // ignore errors
         })
-            .finally(() => {
-            this.isGeneratingLoginLink = false;
-            this.render();
+        .finally(() => {
+          this.isGeneratingLoginLink = false;
+          this.render();
         });
     }
     template(data) {
-        return html `
+      return html`
         <div class="pm-account">
           ${hasUserCookie()
-            ? html `
+            ? html`
                 ${data.hasBitLink
-                ? html `
+                  ? html`
                       <p>
                         <strong class="u-textNoWrap">
                           Anonymous Login Link:
@@ -52,7 +55,7 @@ customElements.define(tag, class PmAccount extends HTMLElement {
                         <small>Copy the link or bookmark it.</small>
                       </p>
                     `
-                : html `
+                  : html`
                       <button
                         class="Button"
                         @click=${data.generateBitLink}
@@ -70,7 +73,7 @@ customElements.define(tag, class PmAccount extends HTMLElement {
                 <pm-logout-link></pm-logout-link>
               `
             : data.hasEmailConfigured
-                ? html `
+            ? html`
                 <p>
                   Existing players can reset their login link by e-mail:
                   <pm-login-by-email></pm-login-by-email>
@@ -80,20 +83,21 @@ customElements.define(tag, class PmAccount extends HTMLElement {
                   >
                 </p>
               `
-                : ""}
+            : ""}
         </div>
       `;
     }
     get data() {
-        return {
-            anonymousLoginLink: `${baseUrl}${this.bitLink}/`,
-            hasBitLink: !!this.bitLink,
-            generateBitLink: this.generateBitLink.bind(this),
-            isGeneratingLoginLink: this.isGeneratingLoginLink,
-            hasEmailConfigured: this.hasEmailConfigured,
-        };
+      return {
+        anonymousLoginLink: `${baseUrl}${this.bitLink}/`,
+        hasBitLink: !!this.bitLink,
+        generateBitLink: this.generateBitLink.bind(this),
+        isGeneratingLoginLink: this.isGeneratingLoginLink,
+        hasEmailConfigured: this.hasEmailConfigured,
+      };
     }
     render() {
-        render(this.template(this.data), this);
+      render(this.template(this.data), this);
     }
-});
+  }
+);

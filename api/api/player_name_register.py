@@ -75,11 +75,11 @@ class PlayerNameRegisterView(MethodView):
     decorators = [user_not_banned]
 
     def post(self):
-        ""
+        """"""
         response = {"message": "", "name": "error"}
 
         user = int(
-            current_app.secure_cookie.get(u"user")
+            current_app.secure_cookie.get("user")
             or user_id_from_ip(request.headers.get("X-Real-IP"))
         )
         if user == None:

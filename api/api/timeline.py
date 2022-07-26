@@ -12,7 +12,7 @@ from api.database import rowify, fetch_query_string
 
 
 def add_to_timeline(puzzle_id, player, points=0, timestamp=None, message=""):
-    ""
+    """"""
 
     if timestamp is None:
         _timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
@@ -67,7 +67,7 @@ def add_to_timeline(puzzle_id, player, points=0, timestamp=None, message=""):
 
 
 def delete_puzzle_timeline(puzzle_id):
-    ""
+    """"""
     cur = db.cursor()
     result = cur.execute(
         fetch_query_string("select-internal-puzzle-details-for-puzzle_id.sql"),

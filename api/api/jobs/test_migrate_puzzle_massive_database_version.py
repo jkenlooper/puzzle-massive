@@ -7,7 +7,7 @@ from api.helper_tests import APITestCase
 from api.jobs.migrate_puzzle_massive_database_version import (
     MigrateError,
     MigrateGapError,
-    get_next_migrate_script
+    get_next_migrate_script,
 )
 from api.tools import version_number, get_latest_version_based_on_migrate_scripts
 
@@ -50,7 +50,9 @@ class PuzzleMassiveDatabaseVersionTest(APITestCase):
                     "some/path/to/migrate_puzzle_massive_database_version_002.py",
                 ]
 
-                latest_version = get_latest_version_based_on_migrate_scripts(script_files)
+                latest_version = get_latest_version_based_on_migrate_scripts(
+                    script_files
+                )
 
                 assert latest_version == 902
 
@@ -63,7 +65,9 @@ class PuzzleMassiveDatabaseVersionTest(APITestCase):
                 db.commit()
                 script_files = []
 
-                self.assertRaises(Exception, get_latest_version_based_on_migrate_scripts, script_files)
+                self.assertRaises(
+                    Exception, get_latest_version_based_on_migrate_scripts, script_files
+                )
 
     def test_next_migrate_script_when_none_are_found(self):
         "Get next migrate script when none are found"
@@ -94,7 +98,10 @@ class PuzzleMassiveDatabaseVersionTest(APITestCase):
                 migrate_script = get_next_migrate_script(script_files)
 
                 # The initial one should be migrate_puzzle_massive_database_version_000.py
-                assert migrate_script == "some/path/to/migrate_puzzle_massive_database_version_000.py"
+                assert (
+                    migrate_script
+                    == "some/path/to/migrate_puzzle_massive_database_version_000.py"
+                )
 
     def test_next_migrate_script(self):
         "Get next migrate script to run"
@@ -102,14 +109,17 @@ class PuzzleMassiveDatabaseVersionTest(APITestCase):
             with self.app.test_client():
                 cur = db.cursor()
                 cur.execute(read_query_file("create_table_puzzle_massive.sql"))
-                cur.execute(read_query_file("upsert_puzzle_massive.sql"), {
-                    "key": "database_version",
-                    "label": "Database Version",
-                    "description": "something",
-                    "intvalue": 1,
-                    "textvalue": None,
-                    "blobvalue": None
-                })
+                cur.execute(
+                    read_query_file("upsert_puzzle_massive.sql"),
+                    {
+                        "key": "database_version",
+                        "label": "Database Version",
+                        "description": "something",
+                        "intvalue": 1,
+                        "textvalue": None,
+                        "blobvalue": None,
+                    },
+                )
                 db.commit()
                 script_files = [
                     "some/path/to/migrate_puzzle_massive_database_version_021.py",
@@ -122,7 +132,10 @@ class PuzzleMassiveDatabaseVersionTest(APITestCase):
                 migrate_script = get_next_migrate_script(script_files)
 
                 # The initial one should be migrate_puzzle_massive_database_version_000.py
-                assert migrate_script == "some/path/to/migrate_puzzle_massive_database_version_002.py"
+                assert (
+                    migrate_script
+                    == "some/path/to/migrate_puzzle_massive_database_version_002.py"
+                )
 
     def test_next_migrate_script_when_at_latest(self):
         "Get next migrate script to run when at latest version"
@@ -130,14 +143,17 @@ class PuzzleMassiveDatabaseVersionTest(APITestCase):
             with self.app.test_client():
                 cur = db.cursor()
                 cur.execute(read_query_file("create_table_puzzle_massive.sql"))
-                cur.execute(read_query_file("upsert_puzzle_massive.sql"), {
-                    "key": "database_version",
-                    "label": "Database Version",
-                    "description": "something",
-                    "intvalue": 901,
-                    "textvalue": None,
-                    "blobvalue": None
-                })
+                cur.execute(
+                    read_query_file("upsert_puzzle_massive.sql"),
+                    {
+                        "key": "database_version",
+                        "label": "Database Version",
+                        "description": "something",
+                        "intvalue": 901,
+                        "textvalue": None,
+                        "blobvalue": None,
+                    },
+                )
                 db.commit()
                 script_files = [
                     "some/path/to/migrate_puzzle_massive_database_version_021.py",
@@ -157,14 +173,17 @@ class PuzzleMassiveDatabaseVersionTest(APITestCase):
             with self.app.test_client():
                 cur = db.cursor()
                 cur.execute(read_query_file("create_table_puzzle_massive.sql"))
-                cur.execute(read_query_file("upsert_puzzle_massive.sql"), {
-                    "key": "database_version",
-                    "label": "Database Version",
-                    "description": "something",
-                    "intvalue": 21,
-                    "textvalue": None,
-                    "blobvalue": None
-                })
+                cur.execute(
+                    read_query_file("upsert_puzzle_massive.sql"),
+                    {
+                        "key": "database_version",
+                        "label": "Database Version",
+                        "description": "something",
+                        "intvalue": 21,
+                        "textvalue": None,
+                        "blobvalue": None,
+                    },
+                )
                 db.commit()
                 script_files = [
                     "some/path/to/migrate_puzzle_massive_database_version_021.py",
@@ -174,7 +193,9 @@ class PuzzleMassiveDatabaseVersionTest(APITestCase):
                     "some/path/to/migrate_puzzle_massive_database_version_002.py",
                 ]
 
-                self.assertRaises(MigrateGapError, get_next_migrate_script, script_files)
+                self.assertRaises(
+                    MigrateGapError, get_next_migrate_script, script_files
+                )
 
 
 if __name__ == "__main__":

@@ -41,7 +41,7 @@ def start(config, puzzle):
 
 
 class Process(greenlet):
-    ""
+    """"""
 
     def __init__(self, config, puzzle):
         super().__init__()
@@ -72,9 +72,13 @@ class Process(greenlet):
         logger.info(f"Puzzle {puzzle} init now: {self.now}")
         # setup puzzle bbox index
         # create pixelated piece mask if needed
-        (puzzle_data, piece_properties, hotspot_idx, proximity_idx, origin_bboxes) = create_index(
-            self.config, self.redis_connection, puzzle
-        )
+        (
+            puzzle_data,
+            piece_properties,
+            hotspot_idx,
+            proximity_idx,
+            origin_bboxes,
+        ) = create_index(self.config, self.redis_connection, puzzle)
         self.hotspot = enforcer.hotspot.HotSpot(
             self.redis_connection,
             hotspot_idx,
@@ -134,14 +138,14 @@ class Process(greenlet):
         self.proximity.batch_process(puzzle, pieces)
 
     def handle_stop(self, message):
-        ""
+        """"""
         if message.get("type") != "message":
             return
         logger.info(f"Stopping enforcer process for puzzle {self.puzzle}")
         self.halt = True
 
     def run(self):
-        ""
+        """"""
 
         logger.debug(f"Puzzle {self.puzzle} run")
         self.pubsub.subscribe(
@@ -165,7 +169,7 @@ class Process(greenlet):
         return "DONE"
 
     def close(self):
-        ""
+        """"""
         self.pubsub.unsubscribe(f"enforcer_piece_group_translate:{self.puzzle}")
         self.pubsub.unsubscribe(f"enforcer_piece_translate:{self.puzzle}")
         self.pubsub.unsubscribe(f"enforcer_token_request:{self.puzzle}")
@@ -200,7 +204,7 @@ def piece_positions_from_line(line):
 
 
 def create_index(config, redis_connection, puzzle):
-    ""
+    """"""
     # TODO: create a hotspot index which will have a grid of bboxes
     # TODO: create other rtree indexes for tracking pieces as needed for
     # proximity and stacking.
@@ -277,6 +281,7 @@ def create_index(config, redis_connection, puzzle):
         piece_properties[pc_id] = piece
 
     origin_bboxes = {}
+
     def piecebboxes():
         for piece in piece_properties.values():
             x = piece["x"]

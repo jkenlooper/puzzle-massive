@@ -39,9 +39,14 @@ def reward_player_for_score_threshold(player):
     cur = db.cursor()
     try:
         result = cur.execute(
-            fetch_query_string("reward_player_for_score_threshold--puzzle-instance-slot.sql"), {
+            fetch_query_string(
+                "reward_player_for_score_threshold--puzzle-instance-slot.sql"
+            ),
+            {
                 "player": player,
-                "score_threshold": int(current_app.config.get("REWARD_INSTANCE_SLOT_SCORE_THRESHOLD", '0'))
+                "score_threshold": int(
+                    current_app.config.get("REWARD_INSTANCE_SLOT_SCORE_THRESHOLD", "0")
+                ),
             },
         )
 
@@ -64,7 +69,8 @@ def update_bit_icon_expiration(player):
     cur = db.cursor()
     try:
         result = cur.execute(
-            fetch_query_string("update_bit_icon_expiration.sql"), {"user": player},
+            fetch_query_string("update_bit_icon_expiration.sql"),
+            {"user": player},
         )
     except sqlite3.IntegrityError:
         err_msg = {
@@ -145,7 +151,12 @@ class InternalTasksStartView(MethodView):
         elif task_name == "update_bit_icon_expiration":
             if not data:
                 response_msg = {"msg": "No JSON data sent", "status_code": 400}
-            elif not {"player",} == data.keys():
+            elif (
+                not {
+                    "player",
+                }
+                == data.keys()
+            ):
                 response_msg = {
                     "msg": "Extra fields in JSON data were sent",
                     "status_code": 400,
@@ -156,7 +167,12 @@ class InternalTasksStartView(MethodView):
         elif task_name == "update_points_to_minimum_for_all_users":
             if not data:
                 response_msg = {"msg": "No JSON data sent", "status_code": 400}
-            elif not {"minimum",} == data.keys():
+            elif (
+                not {
+                    "minimum",
+                }
+                == data.keys()
+            ):
                 response_msg = {
                     "msg": "Extra fields in JSON data were sent",
                     "status_code": 400,
@@ -176,7 +192,12 @@ class InternalTasksStartView(MethodView):
         elif task_name == "reward_player_for_score_threshold":
             if not data:
                 response_msg = {"msg": "No JSON data sent", "status_code": 400}
-            elif not {"player",} == data.keys():
+            elif (
+                not {
+                    "player",
+                }
+                == data.keys()
+            ):
                 response_msg = {
                     "msg": "Extra fields in JSON data were sent",
                     "status_code": 400,

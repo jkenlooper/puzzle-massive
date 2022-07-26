@@ -290,7 +290,7 @@ class PlayerPuzzleListView(MethodView):
         """
 
         ip = request.headers.get("X-Real-IP")
-        user = int(current_app.secure_cookie.get(u"user") or user_id_from_ip(ip))
+        user = int(current_app.secure_cookie.get("user") or user_id_from_ip(ip))
 
         cur = db.cursor()
 

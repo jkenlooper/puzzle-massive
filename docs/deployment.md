@@ -1,6 +1,6 @@
 # Deployment Guide
 
-__DEPRECATED: Deployments are now done via Terraform and Ansible. See the `_infra/README.md`__
+**DEPRECATED: Deployments are now done via Terraform and Ansible. See the `_infra/README.md`**
 
 There are two kinds of deployments outlined here. The first one is for in-place
 deployments where only minor changes are needed and the risk is low. The other
@@ -12,7 +12,7 @@ directed to the new server.
 
 Deployments should use a versioned distribution file that is uploaded to the
 server. This file can be made after a new version has been set in the
-package.json. 
+package.json.
 
 ```bash
 cd client-side-public && make && cd -

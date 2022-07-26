@@ -46,7 +46,8 @@ def reset_puzzle_pieces(puzzle):
 
     cur = db.cursor()
     result = cur.execute(
-        fetch_query_string("select_all_from_puzzle_for_id.sql"), {"id": puzzle},
+        fetch_query_string("select_all_from_puzzle_for_id.sql"),
+        {"id": puzzle},
     ).fetchall()
     if not result:
         cur.close()
@@ -77,7 +78,10 @@ def reset_puzzle_pieces(puzzle):
     # timeline ui should only show when the puzzle is in 'complete' status.
     archive_and_clear(puzzle)
 
-    (table_width, table_height) = (puzzle_data["table_width"], puzzle_data["table_height"])
+    (table_width, table_height) = (
+        puzzle_data["table_width"],
+        puzzle_data["table_height"],
+    )
     width = round(table_width / 2.5)
     height = round(table_height / 2.5)
     outline_offset_x = int((table_width - width) * 0.5)
@@ -122,9 +126,14 @@ def reset_puzzle_pieces(puzzle):
 
     pieces_distribution = random_outside(
         table_bbox=[0, 0, table_width, table_height],
-        outline_bbox=[outline_offset_x, outline_offset_y, outline_offset_x + width, outline_offset_y + height],
+        outline_bbox=[
+            outline_offset_x,
+            outline_offset_y,
+            outline_offset_x + width,
+            outline_offset_y + height,
+        ],
         piece_bboxes=piece_bboxes,
-        regions=("left_side", "top_middle", "bottom_middle")
+        regions=("left_side", "top_middle", "bottom_middle"),
     )
     new_piece_properties = []
     for piece in allPiecesExceptTopLeft:
@@ -168,7 +177,8 @@ def reset_puzzle_pieces(puzzle):
 def reset_puzzle_pieces_and_handle_errors(puzzle):
     cur = db.cursor()
     result = cur.execute(
-        fetch_query_string("select_all_from_puzzle_for_id.sql"), {"id": puzzle},
+        fetch_query_string("select_all_from_puzzle_for_id.sql"),
+        {"id": puzzle},
     ).fetchall()
     if not result:
         cur.close()

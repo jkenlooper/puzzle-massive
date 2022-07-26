@@ -26,12 +26,11 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
 class MigrateError(Exception):
-    ""
+    """"""
 
 
 class MigrateGapError(MigrateError):
-    ""
-
+    """"""
 
 
 def get_next_migrate_script(migrate_scripts):
@@ -44,7 +43,9 @@ def get_next_migrate_script(migrate_scripts):
     sorted_migrate_scripts.sort(key=version_number)
 
     cur = db.cursor()
-    result = cur.execute(read_query_file("select_puzzle_massive_key.sql"), {"key": "database_version"}).fetchall()
+    result = cur.execute(
+        read_query_file("select_puzzle_massive_key.sql"), {"key": "database_version"}
+    ).fetchall()
     if result:
         (result, _) = rowify(result, cur.description)
         database_version = result[0]["intvalue"]
@@ -54,18 +55,28 @@ def get_next_migrate_script(migrate_scripts):
 
     # First time check
     if database_version == 0:
-        if os.path.basename(sorted_migrate_scripts[0]) == f"migrate_puzzle_massive_database_version_{database_version:03}.py":
+        if (
+            os.path.basename(sorted_migrate_scripts[0])
+            == f"migrate_puzzle_massive_database_version_{database_version:03}.py"
+        ):
             return sorted_migrate_scripts[0]
         else:
-            raise MigrateError(f"The database version was missing or set to 0, but the migrate_puzzle_massive_database_version_{database_version:03}.py was not included in the migrate scripts to run.")
+            raise MigrateError(
+                f"The database version was missing or set to 0, but the migrate_puzzle_massive_database_version_{database_version:03}.py was not included in the migrate scripts to run."
+            )
 
     next_database_version = database_version + 1
     for item in sorted_migrate_scripts:
-        if os.path.basename(item) == f"migrate_puzzle_massive_database_version_{next_database_version:03}.py":
+        if (
+            os.path.basename(item)
+            == f"migrate_puzzle_massive_database_version_{next_database_version:03}.py"
+        ):
             migrate_script = item
             break
         if version_number(item) > next_database_version:
-            raise MigrateGapError(f"Missing migrate_puzzle_massive_database_version_{next_database_version:03}.py")
+            raise MigrateGapError(
+                f"Missing migrate_puzzle_massive_database_version_{next_database_version:03}.py"
+            )
 
     return migrate_script
 
@@ -74,7 +85,9 @@ def main():
     config_file = "site.cfg"
     config = loadConfig(config_file)
     cookie_secret = config.get("SECURE_COOKIE_SECRET")
-    app = make_app(config=config_file, cookie_secret=cookie_secret, database_writable=True)
+    app = make_app(
+        config=config_file, cookie_secret=cookie_secret, database_writable=True
+    )
 
     logger.setLevel(logging.DEBUG if config["DEBUG"] else logging.INFO)
 
@@ -87,9 +100,13 @@ def main():
 
         script_file = sys.argv[0]
 
-        migrate_scripts = glob(f"{os.path.dirname(script_file)}/migrate_puzzle_massive_database_version_[0-9][0-9][0-9].py")
+        migrate_scripts = glob(
+            f"{os.path.dirname(script_file)}/migrate_puzzle_massive_database_version_[0-9][0-9][0-9].py"
+        )
         if len(migrate_scripts) == 0:
-            logger.warning(f"No migrate scripts found for glob: '{os.path.dirname(script_file)}/migrate_puzzle_massive_database_version_[0-9][0-9][0-9].py'")
+            logger.warning(
+                f"No migrate scripts found for glob: '{os.path.dirname(script_file)}/migrate_puzzle_massive_database_version_[0-9][0-9][0-9].py'"
+            )
             cur.close()
             sys.exit(0)
 
@@ -97,13 +114,19 @@ def main():
         sanity_count = 0
         while next_migrate_script:
             version = version_number(next_migrate_script)
-            logger.info(f"Executing {next_migrate_script} to migrate from PuzzleMassive database version {version}.")
+            logger.info(
+                f"Executing {next_migrate_script} to migrate from PuzzleMassive database version {version}."
+            )
             logger.debug(f"sanity count {sanity_count}")
             sanity_count = sanity_count + 1
 
             # Execute the next_migrate_script
             try:
-                output = subprocess.run([sys.executable, next_migrate_script], check=True, capture_output=True)
+                output = subprocess.run(
+                    [sys.executable, next_migrate_script],
+                    check=True,
+                    capture_output=True,
+                )
             except subprocess.CalledProcessError as err:
                 logger.debug(str(err))
                 logger.error(f"Failed when executing {next_migrate_script}.")
@@ -117,20 +140,27 @@ def main():
             # Bump the database_version assuming that the migrate script was
             # successful.
             now = datetime.datetime.utcnow().isoformat()
-            logger.info(f"Successfully executed {next_migrate_script} and will now update database_version to be {version + 1}.")
-            cur.execute(read_query_file("upsert_puzzle_massive.sql"), {
-                "key": "database_version",
-                "label": "Database Version",
-                "description": f"Puzzle Massive Database version updated on {now}. Only update this via the {script_file}",
-                "intvalue": version + 1,
-                "textvalue": None,
-                "blobvalue": None
-            })
+            logger.info(
+                f"Successfully executed {next_migrate_script} and will now update database_version to be {version + 1}."
+            )
+            cur.execute(
+                read_query_file("upsert_puzzle_massive.sql"),
+                {
+                    "key": "database_version",
+                    "label": "Database Version",
+                    "description": f"Puzzle Massive Database version updated on {now}. Only update this via the {script_file}",
+                    "intvalue": version + 1,
+                    "textvalue": None,
+                    "blobvalue": None,
+                },
+            )
             db.commit()
 
             next_migrate_script = get_next_migrate_script(migrate_scripts)
             if sanity_count > len(migrate_scripts):
-                logger.error("Exiting out of while loop for checking next migrate scripts.")
+                logger.error(
+                    "Exiting out of while loop for checking next migrate scripts."
+                )
                 break
         else:
             logger.info("PuzzleMassive database version is up to date.")

@@ -17,7 +17,7 @@ class TestInternalPuzzleRenderedResourcesListView(PuzzleTestCase):
         super().tearDown()
 
     def test_fetch_list_for_local_puzzles(self):
-        ""
+        """"""
         with self.app.app_context():
 
             current_app.config["LOCAL_PUZZLE_RESOURCES"] = True
@@ -34,7 +34,7 @@ class TestInternalPuzzleRenderedResourcesListView(PuzzleTestCase):
                 self.assertEqual(4, len(rv.json["puzzle_files"]))
 
     def test_fetch_list_for_non_local_puzzles(self):
-        ""
+        """"""
         with self.app.app_context():
 
             current_app.config["LOCAL_PUZZLE_RESOURCES"] = False

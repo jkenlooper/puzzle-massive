@@ -157,7 +157,11 @@ class PuzzleInstanceDetailsView(MethodView):
                     {"user": user, "points": delete_penalty},
                 )
 
-            delete_puzzle_resources(puzzle_id, is_local_resource=not puzzleData["url"].startswith("http") and not puzzleData["url"].startswith("//"))
+            delete_puzzle_resources(
+                puzzle_id,
+                is_local_resource=not puzzleData["url"].startswith("http")
+                and not puzzleData["url"].startswith("//"),
+            )
             cur.execute(
                 fetch_query_string("delete_puzzle_file_for_puzzle.sql"),
                 {"puzzle": puzzleData["id"]},
@@ -540,7 +544,7 @@ class InternalPuzzleDetailsByIdView(MethodView):
 
 
 def get_puzzle_details(puzzle_id):
-    ""
+    """"""
     cur = db.cursor()
     # validate the puzzle_id
     result = cur.execute(
@@ -560,7 +564,7 @@ def get_puzzle_details(puzzle_id):
 
 
 def get_puzzle_details_by_id(pz_id):
-    ""
+    """"""
     cur = db.cursor()
     # validate the puzzle_id
     result = cur.execute(
@@ -580,7 +584,7 @@ def get_puzzle_details_by_id(pz_id):
 
 
 def update_puzzle_details(puzzle_id, data):
-    ""
+    """"""
     fields = {
         "pieces",
         "rows",

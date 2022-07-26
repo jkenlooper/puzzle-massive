@@ -4,21 +4,23 @@ import hashColorService from "./hash-color.service";
 import "./hash-color.css";
 const tag = "pm-hash-color";
 let lastInstanceId = 0;
-customElements.define(tag, class PmHashColor extends HTMLElement {
+customElements.define(
+  tag,
+  class PmHashColor extends HTMLElement {
     constructor() {
-        super();
-        this.instanceId = PmHashColor._instanceId;
-        const backgroundColor = this.attributes.getNamedItem("background-color");
-        this.defaultBackgroundColor = backgroundColor
-            ? backgroundColor.value
-            : "#404";
-        hashColorService.subscribe(this.render.bind(this), this.instanceId);
+      super();
+      this.instanceId = PmHashColor._instanceId;
+      const backgroundColor = this.attributes.getNamedItem("background-color");
+      this.defaultBackgroundColor = backgroundColor
+        ? backgroundColor.value
+        : "#404";
+      hashColorService.subscribe(this.render.bind(this), this.instanceId);
     }
     static get _instanceId() {
-        return `${tag} ${lastInstanceId++}`;
+      return `${tag} ${lastInstanceId++}`;
     }
     template(data) {
-        return html `
+      return html`
         <span class="pm-HashColor">
           <label for="hash-color-background-color">
             <pm-icon size="sm" class="pm-Puzzlepage-icon"
@@ -27,7 +29,7 @@ customElements.define(tag, class PmHashColor extends HTMLElement {
           </label>
           <span class="pm-HashColor-field">
             ${data.hasInputtypesColor
-            ? html `
+              ? html`
                   <input
                     type="color"
                     class="pm-HashColor-inputColor"
@@ -36,7 +38,7 @@ customElements.define(tag, class PmHashColor extends HTMLElement {
                     value=${data.backgroundColor}
                   />
                 `
-            : html `
+              : html`
                   <input
                     type="text"
                     class="pm-HashColor-inputText jscolor {hash:true}"
@@ -50,22 +52,26 @@ customElements.define(tag, class PmHashColor extends HTMLElement {
       `;
     }
     handleChange(ev) {
-        this.dispatchEvent(new CustomEvent("pm-hash-color-change", {
-            bubbles: true,
-            detail: ev.target.value.substr(1),
-        }));
+      this.dispatchEvent(
+        new CustomEvent("pm-hash-color-change", {
+          bubbles: true,
+          detail: ev.target.value.substr(1),
+        })
+      );
     }
     get data() {
-        return {
-            hasInputtypesColor: Modernizr.inputtypes.color,
-            backgroundColor: hashColorService.backgroundColor || this.defaultBackgroundColor,
-            handleChange: this.handleChange.bind(this),
-        };
+      return {
+        hasInputtypesColor: Modernizr.inputtypes.color,
+        backgroundColor:
+          hashColorService.backgroundColor || this.defaultBackgroundColor,
+        handleChange: this.handleChange.bind(this),
+      };
     }
     render() {
-        render(this.template(this.data), this);
+      render(this.template(this.data), this);
     }
     connectedCallback() {
-        this.render();
+      this.render();
     }
-});
+  }
+);

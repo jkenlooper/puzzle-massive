@@ -8,7 +8,7 @@ from api.database import fetch_query_string, rowify
 
 
 class TestInternalPuzzleDetailsView(PuzzleTestCase):
-    ""
+    """"""
 
     def setUp(self):
         super().setUp()
@@ -114,7 +114,9 @@ class TestInternalPuzzleDetailsView(PuzzleTestCase):
                     fetch_query_string(
                         "select-internal-puzzle-details-for-puzzle_id.sql"
                     ),
-                    {"puzzle_id": self.puzzle_id,},
+                    {
+                        "puzzle_id": self.puzzle_id,
+                    },
                 ).fetchall()
                 (result, col_names) = rowify(result, cur.description)
                 self.assertEqual(result[0], self.puzzle_data)
@@ -136,7 +138,9 @@ class TestInternalPuzzleDetailsView(PuzzleTestCase):
                     fetch_query_string(
                         "select-internal-puzzle-details-for-puzzle_id.sql"
                     ),
-                    {"puzzle_id": self.puzzle_id,},
+                    {
+                        "puzzle_id": self.puzzle_id,
+                    },
                 ).fetchall()
                 (result, col_names) = rowify(result, cur.description)
                 self.assertEqual(result[0], self.puzzle_data)

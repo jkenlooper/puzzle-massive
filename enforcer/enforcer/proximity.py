@@ -28,7 +28,13 @@ class Proximity:
     """
 
     def __init__(
-        self, redis_connection, proximity_idx, origin_bboxes, puzzle_data, piece_properties, config
+        self,
+        redis_connection,
+        proximity_idx,
+        origin_bboxes,
+        puzzle_data,
+        piece_properties,
+        config,
     ):
         self.config = config
         logger.setLevel(logging.DEBUG if config["DEBUG"] else logging.INFO)
@@ -61,9 +67,7 @@ class Proximity:
             x + w,
             y + h,
         )
-        pcfixed = set(
-            map(int, self.redis_connection.smembers(f"pcfixed:{puzzle}"))
-        )
+        pcfixed = set(map(int, self.redis_connection.smembers(f"pcfixed:{puzzle}")))
 
         # Reassess stacked pieces that were intersecting with the piece origin
         reset_stacked_ids.add(piece)
@@ -174,9 +178,7 @@ class Proximity:
         "Update the piece bboxes for all pieces that moved in a group"
         stacked_piece_ids = set()
         reset_stacked_ids = set()
-        pcfixed = set(
-            map(int, self.redis_connection.smembers(f"pcfixed:{puzzle}"))
-        )
+        pcfixed = set(map(int, self.redis_connection.smembers(f"pcfixed:{puzzle}")))
         for pc in pieces:
             (user, piece, x, y) = pc
             w = self.piece_properties[piece]["w"]
@@ -193,13 +195,14 @@ class Proximity:
             reset_stacked_ids.add(piece)
             origin_piece_bbox = self.internal_origin_bboxes[piece]
             self.move_piece(piece, piece_bbox)
-            origin_stack_counts = self.get_stack_counts(origin_piece_bbox, pcfixed=pcfixed)
+            origin_stack_counts = self.get_stack_counts(
+                origin_piece_bbox, pcfixed=pcfixed
+            )
             for piece_id, stack_count in origin_stack_counts.items():
                 if piece_id == piece:
                     reset_stacked_ids.add(piece_id)
                 elif stack_count <= GROUP_STACK_THRESHOLD:
                     reset_stacked_ids.add(piece_id)
-
 
             # Reassess stacked pieces that are now intersecting with the piece after
             # it moved.
@@ -255,7 +258,7 @@ class Proximity:
                     min(item.bbox[3], intersecting_item.bbox[3]),
                 )
                 intersecting_coverage = get_bbox_area(intersecting_bbox)
-                percent_of_item_is_covered_by_bbox = (intersecting_coverage / coverage)
+                percent_of_item_is_covered_by_bbox = intersecting_coverage / coverage
 
                 if percent_of_item_is_covered_by_bbox >= OVERLAP_THRESHOLD:
                     # stack_count = stack_count + 1

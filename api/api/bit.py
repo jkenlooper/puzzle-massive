@@ -25,7 +25,7 @@ class ChooseBitView(MethodView):
         "Show a batch of available bit icon names"
 
         save_cookie = False
-        offset_seconds = current_app.secure_cookie.get(u"ot")
+        offset_seconds = current_app.secure_cookie.get("ot")
         if not offset_seconds:
             save_cookie = True
             offset_seconds = str(randint(1, 900))
@@ -53,7 +53,7 @@ class ChooseBitView(MethodView):
         response = make_response(json.jsonify({"data": bits}), 200)
         if save_cookie:
             current_app.secure_cookie.set(
-                u"ot", str(offset_seconds), response, expires_days=1
+                "ot", str(offset_seconds), response, expires_days=1
             )
 
         cur.close()
@@ -79,7 +79,7 @@ class ClaimBitView(MethodView):
 
         # Prevent creating a new user if no support for cookies. Player should
         # have 'ot' already set by viewing the page.
-        uses_cookies = current_app.secure_cookie.get(u"ot")
+        uses_cookies = current_app.secure_cookie.get("ot")
         if not uses_cookies:
             data["message"] = "No ot cookie present"
             data["name"] = "error"
@@ -98,7 +98,7 @@ class ClaimBitView(MethodView):
             data["name"] = "error"
             return make_response(json.jsonify(data), 400)
 
-        user = current_app.secure_cookie.get(u"user")
+        user = current_app.secure_cookie.get("user")
         if not user:
             user = user_id_from_ip(request.headers.get("X-Real-IP"))
             if user == None:
@@ -174,7 +174,7 @@ class ClaimUserView(MethodView):
 
         # Prevent creating a new user if no support for cookies. Player should
         # have 'ot' already set by viewing the page.
-        uses_cookies = current_app.secure_cookie.get(u"ot")
+        uses_cookies = current_app.secure_cookie.get("ot")
         if not uses_cookies:
             abort(400)
 
@@ -199,12 +199,10 @@ class ClaimUserView(MethodView):
         if result:
             self.register_new_user(user)
             # Save as a cookie
-            current_app.secure_cookie.set(
-                u"user", str(user), response, expires_days=365
-            )
+            current_app.secure_cookie.set("user", str(user), response, expires_days=365)
             # Remove shareduser
             expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
-            current_app.secure_cookie.set(u"shareduser", "", response, expires=expires)
+            current_app.secure_cookie.set("shareduser", "", response, expires=expires)
 
             cur.execute(
                 fetch_query_string("decrease-user-points.sql"),

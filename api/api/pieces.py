@@ -21,7 +21,7 @@ class PuzzlePiecesView(MethodView):
     """
 
     def get(self, puzzle_id):
-        ""
+        """"""
         cur = db.cursor()
         result = cur.execute(
             fetch_query_string("select_viewable_puzzle_id.sql"),
@@ -135,7 +135,7 @@ class PuzzlePieceUpdatesView(MethodView):
     """"""
 
     def get(self, stamp):
-        ""
+        """"""
         piece_cache_ttl = current_app.config.get("PUZZLE_PIECES_CACHE_TTL")
         if not piece_cache_ttl:
             return make_response("", 204)
@@ -235,14 +235,16 @@ def update_puzzle_pieces(puzzle_id, piece_properties):
     }
     return msg
 
+
 def publish_puzzle_pieces_move_msg(puzzle_id, msg):
-    ""
+    """"""
     sse.publish(
         msg,
         type="move",
         channel=f"puzzle:{puzzle_id}",
     )
     return {"msg": "Sent", "status_code": 200}
+
 
 def get_immutable_piece_props(puzzle_id):
     cur = db.cursor()
@@ -366,7 +368,7 @@ class InternalPuzzlePiecesView(MethodView):
         return make_response(json.jsonify(response_msg), response_msg["status_code"])
 
     def post(self, puzzle_id):
-        ""
+        """"""
         data = request.get_json(silent=True)
         if not data:
             err_msg = {"msg": "No JSON data sent", "status_code": 400}
@@ -381,7 +383,7 @@ class InternalPuzzlePiecesView(MethodView):
         return make_response(json.jsonify(response_msg), response_msg["status_code"])
 
     def patch(self, puzzle_id):
-        ""
+        """"""
         data = request.get_json(silent=True)
 
         if not data:
@@ -397,7 +399,7 @@ class InternalPuzzlePiecesView(MethodView):
         return make_response(json.jsonify(response_msg), response_msg["status_code"])
 
     def delete(self, puzzle_id):
-        ""
+        """"""
         data = request.get_json(silent=True)
         response_msg = delete_puzzle_pieces(puzzle_id)
 
@@ -405,7 +407,8 @@ class InternalPuzzlePiecesView(MethodView):
 
 
 class InternalPuzzlePublishMove(MethodView):
-    ""
+    """"""
+
     def post(self, puzzle_id):
         data = request.get_json(silent=True)
         if not data:

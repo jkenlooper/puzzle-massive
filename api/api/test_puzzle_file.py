@@ -5,7 +5,7 @@ from api.database import fetch_query_string, rowify
 
 
 class TestInternalPuzzleFileView(PuzzleTestCase):
-    ""
+    """"""
 
     def setUp(self):
         super().setUp()
@@ -267,7 +267,11 @@ class TestInternalPuzzleFileView(PuzzleTestCase):
                     )
                     self.assertEqual(200, rv.status_code)
                     self.assertEqual(
-                        {"rowcount": 1, "msg": "Inserted", "status_code": 200,},
+                        {
+                            "rowcount": 1,
+                            "msg": "Inserted",
+                            "status_code": 200,
+                        },
                         rv.json,
                     )
 
@@ -282,11 +286,18 @@ class TestInternalPuzzleFileView(PuzzleTestCase):
                         "/internal/puzzle/{puzzle_id}/files/{file_name}/".format(
                             puzzle_id=self.puzzle_id, file_name=name
                         ),
-                        json={"url": url, "attribution": None,},
+                        json={
+                            "url": url,
+                            "attribution": None,
+                        },
                     )
                     self.assertEqual(200, rv.status_code)
                     self.assertEqual(
-                        {"rowcount": 1, "msg": "Inserted", "status_code": 200,},
+                        {
+                            "rowcount": 1,
+                            "msg": "Inserted",
+                            "status_code": 200,
+                        },
                         rv.json,
                     )
 
@@ -334,7 +345,12 @@ class TestInternalPuzzleFileView(PuzzleTestCase):
                     )
                     self.assertEqual(200, rv.status_code)
                     self.assertEqual(
-                        {"rowcount": 1, "msg": "Updated", "status_code": 200,}, rv.json,
+                        {
+                            "rowcount": 1,
+                            "msg": "Updated",
+                            "status_code": 200,
+                        },
+                        rv.json,
                     )
 
     def test_add_puzzle_file(self):
@@ -353,7 +369,11 @@ class TestInternalPuzzleFileView(PuzzleTestCase):
                     )
                     self.assertEqual(200, rv.status_code)
                     self.assertEqual(
-                        {"rowcount": 1, "msg": "Inserted", "status_code": 200,},
+                        {
+                            "rowcount": 1,
+                            "msg": "Inserted",
+                            "status_code": 200,
+                        },
                         rv.json,
                     )
 
@@ -384,7 +404,12 @@ class TestInternalPuzzleFileView(PuzzleTestCase):
                     )
                     self.assertEqual(200, rv.status_code)
                     self.assertEqual(
-                        {"rowcount": 1, "msg": "Updated", "status_code": 200,}, rv.json,
+                        {
+                            "rowcount": 1,
+                            "msg": "Updated",
+                            "status_code": 200,
+                        },
+                        rv.json,
                     )
 
     def test_delete_puzzle_file_that_is_not_supported(self):
@@ -423,7 +448,12 @@ class TestInternalPuzzleFileView(PuzzleTestCase):
                     )
                     self.assertEqual(200, rv.status_code)
                     self.assertEqual(
-                        {"rowcount": 1, "msg": "Deleted", "status_code": 200,}, rv.json,
+                        {
+                            "rowcount": 1,
+                            "msg": "Deleted",
+                            "status_code": 200,
+                        },
+                        rv.json,
                     )
 
 

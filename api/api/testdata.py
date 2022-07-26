@@ -356,12 +356,11 @@ class UserSession:
         self.headers = {"X-Real-IP": ip}
 
         self.api_host = "http://{HOSTAPI}:{PORTAPI}".format(
-            HOSTAPI=current_app.config["HOSTAPI"],
-            PORTAPI=current_app.config["PORTAPI"]
+            HOSTAPI=current_app.config["HOSTAPI"], PORTAPI=current_app.config["PORTAPI"]
         )
         self.publish_host = "http://{HOSTPUBLISH}:{PORTPUBLISH}".format(
             HOSTPUBLISH=current_app.config["HOSTPUBLISH"],
-            PORTPUBLISH=current_app.config["PORTPUBLISH"]
+            PORTPUBLISH=current_app.config["PORTPUBLISH"],
         )
 
         cur = db.cursor()
@@ -564,7 +563,9 @@ class PuzzlePieces:
         ]
         # TODO: connect to the stream and update movable_pieces
 
-    def move_random_pieces_with_delay(self, delay=1, max_delay=10, internal_piece_move=False):
+    def move_random_pieces_with_delay(
+        self, delay=1, max_delay=10, internal_piece_move=False
+    ):
         while True:
             random_delay = round((random() * (max_delay - delay)), 3) + delay
             for user_session in self.user_sessions:
@@ -585,8 +586,7 @@ class PuzzlePieces:
         try:
             user_session.patch_data(
                 "/internal/puzzle/{puzzle_id}/piece/{piece_id}/move/".format(
-                    puzzle_id=self.puzzle_id,
-                    piece_id=piece_id
+                    puzzle_id=self.puzzle_id, piece_id=piece_id
                 ),
                 "publish",
                 payload={"x": x, "y": y, "r": 0},
@@ -760,7 +760,11 @@ class PuzzleActivityJob:
             self.puzzle_details["table_width"],
             self.puzzle_details["table_height"],
         )
-        puzzle_pieces.move_random_pieces_with_delay(delay=0.1, max_delay=self.max_delay, internal_piece_move=self.internal_piece_move)
+        puzzle_pieces.move_random_pieces_with_delay(
+            delay=0.1,
+            max_delay=self.max_delay,
+            internal_piece_move=self.internal_piece_move,
+        )
 
 
 def simulate_puzzle_activity(puzzle_ids, count=1, max_delay=0.1, internal=False):
@@ -778,11 +782,17 @@ def simulate_puzzle_activity(puzzle_ids, count=1, max_delay=0.1, internal=False)
 
     page = 0
     listed_puzzle_ids = []
-    puzzle_list_data = user_session.get_data(f"/puzzle-list/?status=active&pieces_min=0&pieces_max=60000&page={page}&type=original&type=instance&orderby=m_date", "api")
+    puzzle_list_data = user_session.get_data(
+        f"/puzzle-list/?status=active&pieces_min=0&pieces_max=60000&page={page}&type=original&type=instance&orderby=m_date",
+        "api",
+    )
     page_max = int(puzzle_list_data["pageMax"])
 
     while page <= page_max:
-        puzzle_list = user_session.get_data(f"/puzzle-list/?status=active&pieces_min=0&pieces_max=60000&page={page}&type=original&type=instance&orderby=m_date", "api")
+        puzzle_list = user_session.get_data(
+            f"/puzzle-list/?status=active&pieces_min=0&pieces_max=60000&page={page}&type=original&type=instance&orderby=m_date",
+            "api",
+        )
         listed_puzzle_ids.extend([x["puzzle_id"] for x in puzzle_list["puzzles"]])
         page = puzzle_list["currentPage"] + 1
     _puzzle_ids = puzzle_ids or listed_puzzle_ids
@@ -802,7 +812,9 @@ def simulate_puzzle_activity(puzzle_ids, count=1, max_delay=0.1, internal=False)
             current_app.logger.warning("Add players first")
             continue
         players = [x[0] for x in result]
-        puzzle_activity_job = PuzzleActivityJob(puzzle_id, players, max_delay=max_delay, internal_piece_move=internal)
+        puzzle_activity_job = PuzzleActivityJob(
+            puzzle_id, players, max_delay=max_delay, internal_piece_move=internal
+        )
         jobs.append(multiprocessing.Process(target=puzzle_activity_job.run))
 
     for job in jobs:
@@ -876,7 +888,9 @@ def main():
             puzzle_ids = []
             if puzzles:
                 puzzle_ids = puzzles.split(",")
-            simulate_puzzle_activity(puzzle_ids, count=count, max_delay=delay, internal=internal)
+            simulate_puzzle_activity(
+                puzzle_ids, count=count, max_delay=delay, internal=internal
+            )
 
 
 if __name__ == "__main__":

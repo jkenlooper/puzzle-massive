@@ -23,7 +23,7 @@ from api.puzzle_resource import PuzzleResource
 
 
 def move_all_to_s3(is_destructive=False):
-    ""
+    """"""
 
     HOSTAPI = current_app.config["HOSTAPI"]
     PORTAPI = current_app.config["PORTAPI"]
@@ -50,7 +50,9 @@ def move_all_to_s3(is_destructive=False):
         current_app.logger.info("Moving {puzzle_id} {name} {url}".format(**puzzle_file))
         puzzle_id = puzzle_file["puzzle_id"]
         # Also strip out any query params that may be part of the url.
-        file_path = re.sub(r"\?.*$", "", puzzle_file["url"][len(f"/resources/{puzzle_id}/") :])
+        file_path = re.sub(
+            r"\?.*$", "", puzzle_file["url"][len(f"/resources/{puzzle_id}/") :]
+        )
         local_pr = PuzzleResource(puzzle_id, current_app.config, is_local_resource=True)
         s3_pr = PuzzleResource(puzzle_id, current_app.config, is_local_resource=False)
 
@@ -59,7 +61,9 @@ def move_all_to_s3(is_destructive=False):
         try:
             s3_pr.put_file(
                 my_yanked_file_path,
-                dirs=os.path.dirname(my_yanked_file_path[len(local_pr.target_dir) + 1 :]),
+                dirs=os.path.dirname(
+                    my_yanked_file_path[len(local_pr.target_dir) + 1 :]
+                ),
             )
         except FileNotFoundError:
             current_app.logger.warn(f"Skipping missing file: {my_yanked_file_path}")
@@ -81,7 +85,7 @@ def move_all_to_s3(is_destructive=False):
 
 
 def move_all_from_s3(is_destructive=False):
-    ""
+    """"""
     HOSTAPI = current_app.config["HOSTAPI"]
     PORTAPI = current_app.config["PORTAPI"]
     CDN_BASE_URL = current_app.config["CDN_BASE_URL"]

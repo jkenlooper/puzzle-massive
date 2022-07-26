@@ -17,15 +17,21 @@ config = loadConfig(config_file)
 
 
 def main():
-    ""
+    """"""
     host = config.get("HOSTDIVULGER")
     port = config.get("PORTDIVULGER")
 
-    print(u"serving on {host}:{port}".format(**locals()))
+    print("serving on {host}:{port}".format(**locals()))
 
     server = WebSocketServer(
         (host, port),
-        Resource(OrderedDict({"^/divulge/.+/": DivulgeApplication,})),
+        Resource(
+            OrderedDict(
+                {
+                    "^/divulge/.+/": DivulgeApplication,
+                }
+            )
+        ),
         debug=False,
     )
     server.serve_forever()

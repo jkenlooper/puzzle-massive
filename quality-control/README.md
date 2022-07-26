@@ -21,6 +21,7 @@ without checking which are newer than the last time it was run.
 * TODO: Add in static code analysis tool like https://semgrep.dev/
 * TODO: Finish integration with stylelint and eslint linting tools
 * TODO: Add shellcheck?
+* TODO: Show anything that is overdue on UPKEEP
 
 
 ## Updating Generated Files

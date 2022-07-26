@@ -1,4 +1,5 @@
---- !ChillNode
+---
+!ChillNode
 name: styleguide-index
 route: /styleguide/
 template: doc-styleguide.html.jinja2
@@ -10,7 +11,8 @@ value:
   title: Style Guide
   content: styleguide-index.html
 
---- !ChillNode
+---
+!ChillNode
 name: styleguide-base-header
 route: /styleguide/base-header/
 template: styleguide-base-header.html.jinja2
@@ -21,7 +23,8 @@ value:
   pageimagemedia_height: 630
   title: Style Guide Base Header Content
 
---- !ChillNode
+---
+!ChillNode
 name: styleguide-elements
 route: /styleguide/elements/
 template: doc-styleguide.html.jinja2
@@ -33,7 +36,8 @@ value:
   title: Style Guide Elements
   content: styleguide-elements.html
 
---- !ChillNode
+---
+!ChillNode
 name: styleguide-buttons
 route: /styleguide/buttons/
 template: doc-styleguide.html.jinja2

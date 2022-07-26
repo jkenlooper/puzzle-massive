@@ -34,7 +34,7 @@ class StreamGunicornBase(gunicorn.app.base.BaseApplication):
 
 
 def main():
-    ""
+    """"""
     # Get the args
     config_file = sys.argv[1]
     app = make_app(config=config_file)
@@ -44,8 +44,8 @@ def main():
 
     debug = app.config.get("DEBUG")
 
-    app.logger.info(u"Serving on {host}:{port}".format(**locals()))
-    app.logger.info(u"Debug mode is {debug}".format(**locals()))
+    app.logger.info("Serving on {host}:{port}".format(**locals()))
+    app.logger.info("Debug mode is {debug}".format(**locals()))
 
     options = {
         "loglevel": "info" if not debug else "debug",

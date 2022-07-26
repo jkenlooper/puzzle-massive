@@ -13,8 +13,10 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
-    install_requires=["future",],
+    install_requires=[
+        "future",
+    ],
     entry_points={"console_scripts": ["puzzle-massive-stream = stream.script:main"]},
 )
 
-#lol
+# lol

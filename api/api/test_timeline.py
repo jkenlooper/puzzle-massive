@@ -5,7 +5,7 @@ from api.database import fetch_query_string, rowify
 
 
 class TestInternalPuzzleTimelineView(PuzzleTestCase):
-    ""
+    """"""
 
     def setUp(self):
         super().setUp()
@@ -23,7 +23,9 @@ class TestInternalPuzzleTimelineView(PuzzleTestCase):
         with self.app.app_context():
             with self.app.test_client() as c:
                 rv = c.post(
-                    "/internal/puzzle/{puzzle_id}/timeline/".format(puzzle_id="abc",),
+                    "/internal/puzzle/{puzzle_id}/timeline/".format(
+                        puzzle_id="abc",
+                    ),
                     json={"player": 2},
                 )
                 self.assertEqual(400, rv.status_code)
@@ -32,7 +34,9 @@ class TestInternalPuzzleTimelineView(PuzzleTestCase):
                 )
 
                 rv = c.delete(
-                    "/internal/puzzle/{puzzle_id}/timeline/".format(puzzle_id="abc",),
+                    "/internal/puzzle/{puzzle_id}/timeline/".format(
+                        puzzle_id="abc",
+                    ),
                 )
                 self.assertEqual(400, rv.status_code)
                 self.assertEqual(
@@ -121,7 +125,12 @@ class TestInternalPuzzleTimelineView(PuzzleTestCase):
                 )
                 self.assertEqual(200, rv.status_code)
                 self.assertEqual(
-                    {"rowcount": 1, "msg": "Inserted", "status_code": 200,}, rv.json,
+                    {
+                        "rowcount": 1,
+                        "msg": "Inserted",
+                        "status_code": 200,
+                    },
+                    rv.json,
                 )
 
     def test_delete_timeline(self):
@@ -141,7 +150,12 @@ class TestInternalPuzzleTimelineView(PuzzleTestCase):
                 )
                 self.assertEqual(200, rv.status_code)
                 self.assertEqual(
-                    {"rowcount": 1, "msg": "Deleted", "status_code": 200,}, rv.json,
+                    {
+                        "rowcount": 1,
+                        "msg": "Deleted",
+                        "status_code": 200,
+                    },
+                    rv.json,
                 )
 
 

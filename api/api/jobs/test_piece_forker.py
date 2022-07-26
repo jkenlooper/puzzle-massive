@@ -31,7 +31,7 @@ import api.jobs.piece_forker as pf
 
 
 class TestPieceForker(PuzzleTestCase):
-    ""
+    """"""
 
     def setUp(self):
         super().setUp()
@@ -79,7 +79,8 @@ class TestPieceForker(PuzzleTestCase):
                 "permission": PRIVATE,
             }
             cur.execute(
-                fetch_query_string("insert_puzzle.sql"), d,
+                fetch_query_string("insert_puzzle.sql"),
+                d,
             )
             db.commit()
 
@@ -177,12 +178,12 @@ class TestPieceForker(PuzzleTestCase):
                 )
 
                 original_jpg = glob(os.path.join(puzzle_dir, "original*.jpg"))[0]
-                preview_full_jpg = glob(os.path.join(puzzle_dir, "preview_full*.jpg"))[0]
+                preview_full_jpg = glob(os.path.join(puzzle_dir, "preview_full*.jpg"))[
+                    0
+                ]
                 raster_css = glob(os.path.join(puzzle_dir, "raster*.css"))[0]
                 raster_png = glob(os.path.join(puzzle_dir, "raster*.png"))[0]
-                self.assertTrue(
-                    os.path.exists(os.path.join(puzzle_dir, original_jpg))
-                )
+                self.assertTrue(os.path.exists(os.path.join(puzzle_dir, original_jpg)))
                 self.assertFalse(
                     os.path.exists(os.path.join(puzzle_dir, preview_full_jpg))
                 )
@@ -270,12 +271,12 @@ class TestPieceForker(PuzzleTestCase):
                 )
 
                 original_jpg = glob(os.path.join(puzzle_dir, "original*.jpg"))[0]
-                preview_full_jpg = glob(os.path.join(puzzle_dir, "preview_full*.jpg"))[0]
+                preview_full_jpg = glob(os.path.join(puzzle_dir, "preview_full*.jpg"))[
+                    0
+                ]
                 raster_css = glob(os.path.join(puzzle_dir, "raster*.css"))[0]
                 raster_png = glob(os.path.join(puzzle_dir, "raster*.png"))[0]
-                self.assertTrue(
-                    os.path.exists(os.path.join(puzzle_dir, original_jpg))
-                )
+                self.assertTrue(os.path.exists(os.path.join(puzzle_dir, original_jpg)))
                 self.assertFalse(
                     os.path.exists(os.path.join(puzzle_dir, preview_full_jpg))
                 )
@@ -323,7 +324,8 @@ class TestPieceForker(PuzzleTestCase):
                     {"name": "preview_full", "puzzle": self.puzzle_data["id"]},
                 ).fetchone()[0]
                 self.assertEqual(
-                    "https://images.example.com/cat.jpg", result,
+                    "https://images.example.com/cat.jpg",
+                    result,
                 )
 
                 cur.close()

@@ -316,7 +316,12 @@ def make_app(config=None, database_writable=False, **kw):
     # being able to write to the database since only the api has database
     # connection with write mode on.
 
-    app.add_url_rule("/internal/puzzle-rendered-resources-list/", view_func=InternalPuzzleRenderedResourcesListView.as_view("internal-puzzle-rendered-resources-list"))
+    app.add_url_rule(
+        "/internal/puzzle-rendered-resources-list/",
+        view_func=InternalPuzzleRenderedResourcesListView.as_view(
+            "internal-puzzle-rendered-resources-list"
+        ),
+    )
 
     app.add_url_rule(
         "/internal/puzzle/<puzzle_id>/details/",

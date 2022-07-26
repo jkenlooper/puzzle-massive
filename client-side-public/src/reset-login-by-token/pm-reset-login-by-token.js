@@ -2,45 +2,46 @@ import { html, render } from "lit";
 import FetchService from "../site/fetch.service";
 const baseUrl = `${window.location.protocol}//${window.location.host}`;
 const tag = "pm-reset-login-by-token";
-customElements.define(tag, class PmResetLoginByToken extends HTMLElement {
+customElements.define(
+  tag,
+  class PmResetLoginByToken extends HTMLElement {
     constructor() {
-        super();
-        this.responseLink = "";
-        this.responseMessage = "";
-        this.responseName = "";
-        const tokenAttr = this.attributes.getNamedItem("token");
-        this.token = tokenAttr ? tokenAttr.value : "";
+      super();
+      this.responseLink = "";
+      this.responseMessage = "";
+      this.responseName = "";
+      const tokenAttr = this.attributes.getNamedItem("token");
+      this.token = tokenAttr ? tokenAttr.value : "";
     }
     submit(form) {
-        const fetchService = new FetchService(form.action);
-        const data = new FormData(form);
-        this.responseLink = "";
-        if (!form.reportValidity()) {
-            this.responseMessage = "Form is not valid.";
-            this.responseName = "invalid";
+      const fetchService = new FetchService(form.action);
+      const data = new FormData(form);
+      this.responseLink = "";
+      if (!form.reportValidity()) {
+        this.responseMessage = "Form is not valid.";
+        this.responseName = "invalid";
+        this.render();
+      } else {
+        fetchService
+          .postForm(data)
+          .then((response) => {
+            this.responseLink = response.link;
+            this.responseMessage = response.message;
+            this.responseName = response.name;
+          })
+          .catch((err) => {
+            if (err.message && err.name) {
+              this.responseMessage = err.message;
+              this.responseName = err.name;
+            }
+          })
+          .finally(() => {
             this.render();
-        }
-        else {
-            fetchService
-                .postForm(data)
-                .then((response) => {
-                this.responseLink = response.link;
-                this.responseMessage = response.message;
-                this.responseName = response.name;
-            })
-                .catch((err) => {
-                if (err.message && err.name) {
-                    this.responseMessage = err.message;
-                    this.responseName = err.name;
-                }
-            })
-                .finally(() => {
-                this.render();
-            });
-        }
+          });
+      }
     }
     template(data) {
-        return html `
+      return html`
         <form
           class="pm-ResetLoginByToken"
           id="reset-login-by-token-form"
@@ -48,7 +49,7 @@ customElements.define(tag, class PmResetLoginByToken extends HTMLElement {
           action="/newapi/generate-anonymous-login-by-token/"
         >
           ${!data.showResponseLink
-            ? html `
+            ? html`
                 <p>
                   Click the button below to reset your login link.
                   <span class="u-block">
@@ -65,7 +66,7 @@ customElements.define(tag, class PmResetLoginByToken extends HTMLElement {
               `
             : ""}
           ${data.responseMessage
-            ? html `
+            ? html`
                 <pm-response-message
                   name=${data.responseName}
                   link=${data.showResponseLink ? data.anonymousLoginLink : ""}
@@ -77,35 +78,36 @@ customElements.define(tag, class PmResetLoginByToken extends HTMLElement {
       `;
     }
     get data() {
-        return {
-            token: this.token,
-            submitHandler: {
-                handleEvent: (e) => {
-                    // Prevent the form from submitting
-                    e.preventDefault();
-                    const formEl = e.currentTarget.form;
-                    this.submit(formEl);
-                },
-                capture: true,
-            },
-            showResponseLink: !!this.responseLink,
-            anonymousLoginLink: `${baseUrl}${this.responseLink}/`,
-            responseMessage: this.responseMessage,
-            responseName: this.responseName,
-        };
+      return {
+        token: this.token,
+        submitHandler: {
+          handleEvent: (e) => {
+            // Prevent the form from submitting
+            e.preventDefault();
+            const formEl = e.currentTarget.form;
+            this.submit(formEl);
+          },
+          capture: true,
+        },
+        showResponseLink: !!this.responseLink,
+        anonymousLoginLink: `${baseUrl}${this.responseLink}/`,
+        responseMessage: this.responseMessage,
+        responseName: this.responseName,
+      };
     }
     render() {
-        //console.log("render", this.instanceId, this.data);
-        render(this.template(this.data), this);
+      //console.log("render", this.instanceId, this.data);
+      render(this.template(this.data), this);
     }
     connectedCallback() {
-        //console.log("connectedCallback");
-        this.render();
+      //console.log("connectedCallback");
+      this.render();
     }
     disconnectedCallback() {
-        //console.log("disconnectedCallback", this.instanceId);
+      //console.log("disconnectedCallback", this.instanceId);
     }
     adoptedCallback() {
-        //console.log("adoptedCallback");
+      //console.log("adoptedCallback");
     }
-});
+  }
+);

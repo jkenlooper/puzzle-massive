@@ -21,7 +21,7 @@ listen = ["puzzle_create"]
 
 
 def main():
-    ""
+    """"""
     args = docopt(__doc__)
     config_file = args["--config"]
     config = loadConfig(config_file)

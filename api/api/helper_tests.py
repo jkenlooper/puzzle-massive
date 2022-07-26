@@ -27,7 +27,9 @@ class APITestCase(unittest.TestCase):
     debug = False
 
     def setUp(self):
-        PUZZLE_PIECE_GROUPS = list(map(int, "100 200 400 800 1600 2200 4000 60000".split()))
+        PUZZLE_PIECE_GROUPS = list(
+            map(int, "100 200 400 800 1600 2200 4000 60000".split())
+        )
         self.tmp_db = tempfile.NamedTemporaryFile()
         self.tmp_purge_list = tempfile.NamedTemporaryFile()
         self.tmp_puzzle_resources = tempfile.mkdtemp()
@@ -283,10 +285,10 @@ class PuzzleTestCase(APITestCase):
 
         # These would normally have a short uuid in the name (SLIP), but to make
         # testing easier they are all static.
-        preview_full_jpg = "preview_full.jpg" # preview_full.SLIP.jpg
-        original_jpg = "original.jpg" # original.SLIP.jpg
-        raster_css = "raster.css" # raster.SLIP.css
-        raster_png = "raster.png" # raster.SLIP.png
+        preview_full_jpg = "preview_full.jpg"  # preview_full.SLIP.jpg
+        original_jpg = "original.jpg"  # original.SLIP.jpg
+        raster_css = "raster.css"  # raster.SLIP.css
+        raster_png = "raster.png"  # raster.SLIP.png
 
         fake_puzzle = {
             "puzzle_id": puzzle_id,
@@ -349,13 +351,15 @@ class PuzzleTestCase(APITestCase):
         )[0][0]
 
         # Add puzzle files to database
-        base_url = "" if self.app.config["LOCAL_PUZZLE_RESOURCES"] else "http://fake-cdn"
+        base_url = (
+            "" if self.app.config["LOCAL_PUZZLE_RESOURCES"] else "http://fake-cdn"
+        )
         cur.execute(
             read_query_file("add-puzzle-file.sql"),
             {
                 "puzzle": puzzle,
                 "name": "original",
-                "url": f"{base_url}/resources/{puzzle_id}/{original_jpg}"
+                "url": f"{base_url}/resources/{puzzle_id}/{original_jpg}",
             },
         )
         cur.execute(
@@ -422,7 +426,7 @@ class PuzzleTestCase(APITestCase):
             {
                 "puzzle": puzzle,
                 "name": "pieces",
-                "url": f"{base_url}/resources/{puzzle_id}/scale-100/{raster_png}"
+                "url": f"{base_url}/resources/{puzzle_id}/scale-100/{raster_png}",
             },
         )
         cur.execute(
@@ -430,7 +434,7 @@ class PuzzleTestCase(APITestCase):
             {
                 "puzzle": puzzle,
                 "name": "pzz",
-                "url": f"{base_url}/resources/{puzzle_id}/scale-100/{raster_css}?ts={int(time.time())}"
+                "url": f"{base_url}/resources/{puzzle_id}/scale-100/{raster_css}?ts={int(time.time())}",
             },
         )
         self.db.commit()

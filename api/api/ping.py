@@ -47,7 +47,7 @@ class PingPuzzleView(MethodView):
         now_ms = int(time.time() * 1000)
         response = {"message": "", "name": ""}
 
-        user = current_app.secure_cookie.get(u"user") or user_id_from_ip(
+        user = current_app.secure_cookie.get("user") or user_id_from_ip(
             request.headers.get("X-Real-IP"),
             skip_generate=True,
             validate_shared_user=False,
@@ -134,7 +134,7 @@ class PingPuzzleView(MethodView):
             response["name"] = "error"
             return make_response(json.jsonify(response), 400)
 
-        user = current_app.secure_cookie.get(u"user") or user_id_from_ip(
+        user = current_app.secure_cookie.get("user") or user_id_from_ip(
             request.headers.get("X-Real-IP"),
             skip_generate=True,
             validate_shared_user=False,

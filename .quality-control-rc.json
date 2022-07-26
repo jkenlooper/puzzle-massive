@@ -18,10 +18,7 @@
     "documents",
     "templates"
   ],
-  "exclude_paths": [
-    "./*node_modules/*",
-    "./*.git/*"
-  ],
+  "exclude_paths": ["./*node_modules/*", "./*.git/*"],
   "file_names": [
     "*.js",
     "*.mjs",

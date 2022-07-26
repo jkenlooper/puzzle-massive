@@ -15,11 +15,11 @@ UNSPLASH_RATELIMIT_LIMIT_DEMO = 50
 
 
 def add_photo_to_puzzle(puzzle_id, photo, description, original_filename):
-    ""
+    """"""
 
     with current_app.app_context():
         application_id = (current_app.config.get("UNSPLASH_APPLICATION_ID"),)
-        #puzzle_resources = current_app.config.get("PUZZLE_RESOURCES")
+        # puzzle_resources = current_app.config.get("PUZZLE_RESOURCES")
         application_name = current_app.config.get("UNSPLASH_APPLICATION_NAME")
 
         # Prevent going past the Unsplash rate limit by storing the current
@@ -69,7 +69,11 @@ def add_photo_to_puzzle(puzzle_id, photo, description, original_filename):
         #     description if description else escape(data.get("description", None))
         # )
 
-        pr = PuzzleResource(puzzle_id, current_app.config, is_local_resource=current_app.config["LOCAL_PUZZLE_RESOURCES"])
+        pr = PuzzleResource(
+            puzzle_id,
+            current_app.config,
+            is_local_resource=current_app.config["LOCAL_PUZZLE_RESOURCES"],
+        )
 
         tmp_dir = tempfile.mkdtemp()
         filename = os.path.join(tmp_dir, original_filename)

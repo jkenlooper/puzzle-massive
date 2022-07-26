@@ -49,7 +49,7 @@ deployment.
 ### Added
 
 - Admin can set a puzzle as buggy which will remove it from being publicly
-    listed.
+  listed.
 - Admin can make puzzles active if they have status of buggy or in queue.
 
 ## [2.12.2] - 2021-11-06

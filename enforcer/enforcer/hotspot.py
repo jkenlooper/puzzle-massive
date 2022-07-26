@@ -8,7 +8,7 @@ HOTSPOT_EXPIRE = 30
 
 
 class HotSpot:
-    ""
+    """"""
 
     def __init__(self, redis_connection, hotspot_idx, piece_properties, config):
         self.config = config

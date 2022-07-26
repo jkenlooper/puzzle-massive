@@ -13,17 +13,16 @@ from api.notify import send_message
 
 
 class PlayerEmailRegisterView(MethodView):
-    """
-    """
+    """ """
 
     decorators = [user_not_banned]
 
     def post(self):
-        ""
+        """"""
         response = {"message": "", "name": "error"}
 
         is_shareduser = False
-        user = current_app.secure_cookie.get(u"user")
+        user = current_app.secure_cookie.get("user")
         if not user:
             user = user_id_from_ip(request.headers.get("X-Real-IP"))
             is_shareduser = True
@@ -123,7 +122,10 @@ class PlayerEmailRegisterView(MethodView):
                 )
                 cur.execute(
                     fetch_query_string("update-player-account-email-verified.sql"),
-                    {"player_id": user, "email_verified": 0,},
+                    {
+                        "player_id": user,
+                        "email_verified": 0,
+                    },
                 )
 
                 # Send verification email (silent fail if not configured)

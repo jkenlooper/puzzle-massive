@@ -1,4 +1,3 @@
-
 ---
 
 **The below instructions are still relevant if needing to troubleshoot or are
@@ -309,7 +308,6 @@ puzzle-massive-testdata puzzles --count=1 --pieces=2000 --size=3800x3500\!;
 
 ---
 
-
 ### Building the `dist/` files
 
 The javascript and CSS files in the `dist/` directory are built from the source
@@ -340,10 +338,7 @@ npm run watch;
 pkill --full -u $(whoami) "\./bin/distwatch\.js";
 ```
 
-
-
 ---
-
 
 ## Regenerating with cookiecutter
 

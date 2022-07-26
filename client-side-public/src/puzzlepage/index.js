@@ -15,9 +15,9 @@ import "./puzzlepage.css";
 const previewButton = document.getElementById("puzzle-preview-button");
 const previewBox = document.getElementById("puzzle-preview-box");
 if (previewButton && previewBox) {
-    PuzzlePreviewBox(previewButton, previewBox);
+  PuzzlePreviewBox(previewButton, previewBox);
 }
 const scrollJumpElement = document.querySelector("[scroll-jump]");
 if (scrollJumpElement) {
-    ScrollJump();
+  ScrollJump();
 }
