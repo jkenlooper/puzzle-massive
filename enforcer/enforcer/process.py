@@ -65,6 +65,14 @@ class Process(greenlet):
                 )
             )
         )
+        # 'hot_spot' to limit moving pieces to the same area within 30 seconds
+        self.enable_hotspot = bool(
+            len(
+                {"all", "hot_spot"}.intersection(
+                    self.config["PUZZLE_RULES"]
+                )
+            )
+        )
 
         if not self.enable_proximity:
             self.redis_connection.delete(f"pcstacked:{puzzle}")
@@ -79,12 +87,13 @@ class Process(greenlet):
             proximity_idx,
             origin_bboxes,
         ) = create_index(self.config, self.redis_connection, puzzle)
-        self.hotspot = enforcer.hotspot.HotSpot(
-            self.redis_connection,
-            hotspot_idx,
-            piece_properties,
-            self.config,
-        )
+        if self.enable_hotspot:
+            self.hotspot = enforcer.hotspot.HotSpot(
+                self.redis_connection,
+                hotspot_idx,
+                piece_properties,
+                self.config,
+            )
         if self.enable_proximity:
             self.proximity = enforcer.proximity.Proximity(
                 self.redis_connection,
@@ -115,7 +124,8 @@ class Process(greenlet):
         (user, piece, origin_x, origin_y, x, y) = map(int, data.split(":"))
         puzzle = int(channel.split(":")[1])
 
-        self.hotspot.process(user, puzzle, piece, x, y)
+        if self.enable_hotspot:
+            self.hotspot.process(user, puzzle, piece, x, y)
         if self.enable_proximity:
             self.proximity.process(user, puzzle, piece, origin_x, origin_y, x, y)
 
