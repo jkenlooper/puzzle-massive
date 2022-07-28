@@ -99,7 +99,7 @@
   filter: drop-shadow(0px -3px 0px currentColor)
     drop-shadow(-3px 0px 0px currentColor) drop-shadow(0px 3px 0px currentColor)
     drop-shadow(3px 0px 0px currentColor) grayscale(100%);
-  z-index: 9;
+  z-index: 12;
 }
 .pm-PuzzlePieces.show-movable .is-stacked.p {
   filter: drop-shadow(5px -5px 0px currentColor)

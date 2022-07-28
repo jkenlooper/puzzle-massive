@@ -43,6 +43,7 @@ deployment.
 ### Fixed
 
 - Fixed an edge case when transferring puzzle piece status data from redis to the database.
+- Fixed the incorrect stack piece status when moving joined pieces.
 
 ## [2.12.3] - 2021-11-10
 

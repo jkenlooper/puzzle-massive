@@ -69,10 +69,14 @@ class Proximity:
         )
         pcfixed = set(map(int, self.redis_connection.smembers(f"pcfixed:{puzzle}")))
 
+        piece_group = int(self.redis_connection.hget(f"pc:{puzzle}:{piece}", "g") or piece)
+        pcg = set(map(int, self.redis_connection.smembers(f"pcg:{puzzle}:{piece_group}")))
+        ignore_piece_ids = pcfixed.union(pcg)
+
         # Reassess stacked pieces that were intersecting with the piece origin
         reset_stacked_ids.add(piece)
         self.move_piece(piece, piece_bbox)
-        origin_stack_counts = self.get_stack_counts(origin_piece_bbox, pcfixed=pcfixed)
+        origin_stack_counts = self.get_stack_counts(origin_piece_bbox, ignore_piece_ids=pcfixed)
         for piece_id, stack_count in origin_stack_counts.items():
             if piece_id == piece:
                 reset_stacked_ids.add(piece_id)
@@ -111,12 +115,12 @@ class Proximity:
         # it moved.
         piece_move_rejected = False
         past_stack_cost_threshold = False
-        target_stack_counts = self.get_stack_counts(piece_bbox, pcfixed=pcfixed)
+        target_stack_counts = self.get_stack_counts(piece_bbox, ignore_piece_ids=ignore_piece_ids)
         for piece_id, stack_count in target_stack_counts.items():
             if stack_count > STACK_LIMIT:
                 piece_move_rejected = reject_piece_move()
                 break
-            if piece_id in pcfixed:
+            if piece_id in ignore_piece_ids:
                 continue
             if stack_count > SINGLE_STACK_THRESHOLD:
                 stacked_piece_ids.add(piece_id)
@@ -179,6 +183,10 @@ class Proximity:
         stacked_piece_ids = set()
         reset_stacked_ids = set()
         pcfixed = set(map(int, self.redis_connection.smembers(f"pcfixed:{puzzle}")))
+        (_, first_piece_id, _, _) = pieces[0]
+        piece_group = int(self.redis_connection.hget(f"pc:{puzzle}:{first_piece_id}", "g") or first_piece_id)
+        pcg = set(map(int, self.redis_connection.smembers(f"pcg:{puzzle}:{piece_group}")))
+
         for pc in pieces:
             (user, piece, x, y) = pc
             w = self.piece_properties[piece]["w"]
@@ -196,7 +204,7 @@ class Proximity:
             origin_piece_bbox = self.internal_origin_bboxes[piece]
             self.move_piece(piece, piece_bbox)
             origin_stack_counts = self.get_stack_counts(
-                origin_piece_bbox, pcfixed=pcfixed
+                origin_piece_bbox, ignore_piece_ids=pcfixed
             )
             for piece_id, stack_count in origin_stack_counts.items():
                 if piece_id == piece:
@@ -206,9 +214,9 @@ class Proximity:
 
             # Reassess stacked pieces that are now intersecting with the piece after
             # it moved.
-            target_stack_counts = self.get_stack_counts(piece_bbox, pcfixed=pcfixed)
+            target_stack_counts = self.get_stack_counts(piece_bbox, ignore_piece_ids=pcfixed)
             for piece_id, stack_count in target_stack_counts.items():
-                if piece_id in pcfixed:
+                if piece_id in pcg:
                     continue
                 if stack_count > GROUP_STACK_THRESHOLD:
                     stacked_piece_ids.add(piece_id)
@@ -236,7 +244,7 @@ class Proximity:
         self.proximity_idx.insert(piece, piece_bbox)
         self.internal_origin_bboxes[piece] = piece_bbox
 
-    def get_stack_counts(self, bbox, pcfixed={}):
+    def get_stack_counts(self, bbox, ignore_piece_ids={}):
         "With each intersecting bbox; reassess the stack count of other bboxes that intersect it."
         result = {}
         hits = list(self.proximity_idx.intersection(bbox, objects=True))
@@ -249,7 +257,7 @@ class Proximity:
             for intersecting_item in intersecting_hits:
                 if intersecting_item.id in adjacent_piece_ids:
                     continue
-                if intersecting_item.id in pcfixed:
+                if intersecting_item.id in ignore_piece_ids:
                     continue
                 intersecting_bbox = (
                     max(item.bbox[0], intersecting_item.bbox[0]),
