@@ -408,11 +408,11 @@ class UserSession:
             return
         data = {}
         if r.status_code >= 400:
-            current_app.logger.debug(
-                "ERROR get: {status_code} {url}".format(
-                    status_code=r.status_code, url=r.url
-                )
-            )
+            # current_app.logger.debug(
+            #     "ERROR get: {status_code} {url}".format(
+            #         status_code=r.status_code, url=r.url
+            #     )
+            # )
             return
         if r.status_code >= 200:
             try:
@@ -859,7 +859,7 @@ def main():
         }
     )
     app = make_app(
-        config=config_file, cookie_secret=cookie_secret, database_writable=True
+        config=config_file, cookie_secret=cookie_secret, database_writable=True, DEBUG=False
     )
 
     with app.app_context():

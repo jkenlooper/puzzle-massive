@@ -45,6 +45,8 @@ class Proximity:
         self.proximity_init_time = time.time()
         self.internal_origin_bboxes = origin_bboxes
 
+        self.reassess_all()
+
     def process(self, user, puzzle, piece, origin_x, origin_y, x, y):
         # rotate is not implemented yet; leaving origin_r as 0 for now.
         stacked_piece_ids = set()
@@ -177,6 +179,42 @@ class Proximity:
             logger.warning(
                 "Internal puzzle api error. Could not publish pieces move to update stack status on pieces"
             )
+
+    def reassess_all(self):
+        "Update the stack status for all pieces"
+        puzzle = self.puzzle_data["id"]
+        stacked_piece_ids = set()
+        reset_stacked_ids = set()
+        pcfixed = set(map(int, self.redis_connection.smembers(f"pcfixed:{puzzle}")))
+
+        for piece, piece_property in self.piece_properties.items():
+            x = piece_property["x"]
+            y = piece_property["y"]
+            w = piece_property["w"]
+            h = piece_property["h"]
+            piece_bbox = (
+                x,
+                y,
+                x + w,
+                y + h,
+            )
+            piece_group = int(self.redis_connection.hget(f"pc:{puzzle}:{piece}", "g") or piece)
+            pcg = set(map(int, self.redis_connection.smembers(f"pcg:{puzzle}:{piece_group}")))
+
+            # Reassess stacked pieces that are now intersecting with the piece after
+            # it moved.
+            reset_stacked_ids.add(piece)
+            target_stack_counts = self.get_stack_counts(piece_bbox, ignore_piece_ids=pcfixed)
+            for piece_id, stack_count in target_stack_counts.items():
+                if piece_id in pcg:
+                    continue
+                if stack_count > GROUP_STACK_THRESHOLD:
+                    stacked_piece_ids.add(piece_id)
+
+        reset_stacked_ids.difference_update(stacked_piece_ids)
+        self.update_stack_status(puzzle, reset_stacked_ids, stacked=False)
+        self.update_stack_status(puzzle, stacked_piece_ids, stacked=True)
+        self.publish_piece_status_update(reset_stacked_ids, stacked_piece_ids)
 
     def batch_process(self, puzzle, pieces):
         "Update the piece bboxes for all pieces that moved in a group"

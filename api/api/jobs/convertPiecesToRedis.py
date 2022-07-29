@@ -57,7 +57,7 @@ def convert(puzzle):
 
             # Add Piece Group
             pieceParent = piece.get("parent", None)
-            if pieceParent != None:
+            if pieceParent is not None:
                 pipe.sadd(
                     "pcg:{puzzle}:{parent}".format(
                         puzzle=puzzle, parent=piece["parent"]
@@ -77,6 +77,7 @@ def convert(puzzle):
                 if pieceStatus == 1:
                     # Add Piece Fixed (immovable)
                     pipe.sadd("pcfixed:{puzzle}".format(puzzle=puzzle), piece["id"])
+                # Enforcer will reasses the stacked piece status (pcstacked) if that rule has been enabled.
                 elif pieceStatus == 2:
                     # Add Piece Stacked
                     pipe.sadd("pcstacked:{puzzle}".format(puzzle=puzzle), piece["id"])
