@@ -1,4 +1,5 @@
 import { html, render } from "lit";
+import { classMap } from "lit/directives/class-map.js";
 import { streamService } from "../puzzle-pieces/stream.service";
 import "./puzzle-latency.css";
 const tag = "pm-puzzle-latency";
@@ -9,6 +10,7 @@ customElements.define(
     constructor() {
       super();
       this.latency = "--";
+      this.status = "";
       this.instanceId = PmPuzzleLatency._instanceId;
       const puzzleId = this.attributes.getNamedItem("puzzle-id");
       this.puzzleId = puzzleId ? puzzleId.value : "";
@@ -28,40 +30,39 @@ customElements.define(
     static get _instanceId() {
       return `${tag} ${lastInstanceId++}`;
     }
-    template(data) {
-      if (data.latency <= 300) {
-        return html`
-          <div class="pm-PuzzleLatency">
-            <small class="pm-PuzzleLatency-label">latency:</small>
-            <span class="pm-PuzzleLatency-value-green">${data.latency}</span>
-          </div>
-        `;
-      } else if (data.latency >= 301 && data.latency <= 999) {
-        return html`
-          <div class="pm-PuzzleLatency">
-            <small class="pm-PuzzleLatency-label">latency:</small>
-            <span class="pm-PuzzleLatency-value-yellow">${data.latency}</span>
-          </div>
-        `;
-      } else if (data.latency >= 1000) {
-        return html`
-          <div class="pm-PuzzleLatency">
-            <small class="pm-PuzzleLatency-label">latency:</small>
-            <span class="pm-PuzzleLatency-value-red">${data.latency}</span>
-          </div>
-        `;
+
+    getStatus(latency) {
+      if (latency <= 300) {
+        return "good";
+      } else if (latency >= 301 && latency <= 999) {
+        return "okay";
+      } else if (latency >= 1000) {
+        return "bad";
       } else {
-        return html`
-          <div class="pm-PuzzleLatency">
-            <small class="pm-PuzzleLatency-label">latency:</small>
-            <span class="pm-PuzzleLatency-value">${data.latency}</span>
-          </div>
-        `;
+        return "";
       }
+    }
+
+    template(data) {
+      return html`
+        <div class="pm-PuzzleLatency">
+          <small class="pm-PuzzleLatency-label">latency:</small>
+          <span
+            class=${classMap({
+              "pm-PuzzleLatency-value": true,
+              "is-good": data.status == "good",
+              "is-okay": data.status == "okay",
+              "is-bad": data.status == "bad",
+            })}
+            >${data.latency}</span
+          >
+        </div>
+      `;
     }
     get data() {
       return {
         latency: this.latency,
+        status: this.status,
       };
     }
     render() {
@@ -69,10 +70,12 @@ customElements.define(
     }
     onPuzzlePing(latency) {
       this.latency = latency;
+      this.status = this.getStatus(latency);
       this.render();
     }
     onPuzzlePingError() {
       this.latency = "--";
+      this.status = "";
     }
     disconnectedCallback() {
       const topics = ["puzzle/ping", "puzzle/ping/error"];

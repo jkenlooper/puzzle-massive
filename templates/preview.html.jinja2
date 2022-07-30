@@ -109,7 +109,9 @@
 
           {{ puzzle_view(scale_variant=scale_variant) }}
 
-          <div class="pm-Preview-activePlayerCount">
+
+          <div class="pm-Preview-puzzleViewFooter">
+            <pm-puzzle-latency puzzle-id="{{ recent.puzzle_id }}"></pm-puzzle-latency>
             <pm-active-player-count
               puzzle-id="{{ recent.puzzle_id }}"></pm-active-player-count>
               <span class="Button Button--text on-dark">

@@ -73,3 +73,17 @@ aliases:
   color-error-dark: "#9E211F"
   color-error-light: "#D75057"
   color-error-accent: "#EB4048"
+
+  # Good Status
+  # green
+  color-good: "green"
+  color-good-light: "#03ef03"
+
+  # Okay Status
+  # orange
+  color-okay: "orange"
+  color-okay-light: "orange"
+
+  # Bad Status
+  color-bad: "red"
+  color-bad-light: "red"

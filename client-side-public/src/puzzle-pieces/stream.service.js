@@ -8,8 +8,9 @@ import {
 } from "./puzzle-stream-machine";
 import userDetailsService from "../site/user-details.service";
 import { Status } from "../site/puzzle-images.service";
-// Set ping interval to be one less minute than 5.
-const PING_INTERVAL = 4 * 60 * 1000;
+// Ping interval should be at least one less minute than 5 to keep the
+// connection.
+const PING_INTERVAL = 0.5 * 60 * 1000;
 // event types that the stream service will send
 var EventType;
 (function (EventType) {

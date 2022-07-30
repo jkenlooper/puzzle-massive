@@ -138,8 +138,16 @@
   background-color: var(--designtoken-BackgroundColor-dark);
   padding: 2px;
 }
-.pm-Preview-activePlayerCount {
+.pm-Preview-puzzleViewFooter {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 30px;
   text-align: right;
+}
+.pm-Preview-puzzleViewFooter > *:first-child {
+  flex: 1 0 auto;
+  text-align: left;
 }
 
 .pm-Preview-source {

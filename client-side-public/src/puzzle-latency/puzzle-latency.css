@@ -1,5 +1,4 @@
 .pm-PuzzleLatency {
-  text-align: right;
   white-space: nowrap;
 }
 
@@ -10,19 +9,29 @@
 .pm-PuzzleLatency-value {
   line-height: 1;
   vertical-align: middle;
+  border-radius: 5px;
+  background-color: var(--designtoken-BackgroundColor-light);
+  padding: 4px;
 }
-.pm-PuzzleLatency-value-green {
-  line-height: 1;
-  vertical-align: middle;
-  color: green;
+.pm-PuzzleLatency-value.is-good {
+  color: var(--designtoken-TextColor-goodOnLight);
 }
-.pm-PuzzleLatency-value-yellow {
-  line-height: 1;
-  vertical-align: middle;
-  color: orange;
+.pm-PuzzleLatency-value.is-okay {
+  color: var(--designtoken-TextColor-okayOnLight);
 }
-.pm-PuzzleLatency-value-red {
-  line-height: 1;
-  vertical-align: middle;
-  color: #ff0000;
+.pm-PuzzleLatency-value.is-bad {
+  color: var(--designtoken-TextColor-badOnLight);
+}
+
+.pm-Preview-puzzleView .pm-PuzzleLatency-value {
+  background-color: inherit;
+}
+.pm-Preview-puzzleView .pm-PuzzleLatency-value.is-good {
+  color: var(--designtoken-TextColor-goodOnDark);
+}
+.pm-Preview-puzzleView .pm-PuzzleLatency-value.is-okay {
+  color: var(--designtoken-TextColor-okayOnDark);
+}
+.pm-Preview-puzzleView .pm-PuzzleLatency-value.is-bad {
+  color: var(--designtoken-TextColor-badOnDark);
 }

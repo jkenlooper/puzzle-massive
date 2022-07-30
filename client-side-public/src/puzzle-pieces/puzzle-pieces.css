@@ -130,7 +130,7 @@
   justify-content: space-around;
   transform: translate(-1em, -1em);
   border: 3px solid currentColor;
-  background-color: black;
+  background-color: var(--designtoken-BackgroundColor-dark--dark);
   width: 0.8em;
   height: 0.8em;
   font-size: 32px;
@@ -139,13 +139,13 @@
 
 .is-up.p::before {
   border-radius: 50%;
-  color: green;
+  color: var(--designtoken-TextColor-goodOnDark);
   content: "+";
 }
 
 .is-down.p::before {
   border-radius: 5%;
-  color: red;
+  color: var(--designtoken-TextColor-badOnDark);
   content: "-";
 }
 

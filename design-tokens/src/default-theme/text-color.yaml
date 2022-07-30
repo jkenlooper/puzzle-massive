@@ -78,3 +78,24 @@ props:
   TextColor-errorOnSurface:
     value: "{!color-error}"
     comment: One Word Attribute
+
+  TextColor-goodOnSurface:
+    value: "{!color-good}"
+  TextColor-goodOnLight:
+    value: "{!color-good}"
+  TextColor-goodOnDark:
+    value: "{!color-good-light}"
+
+  TextColor-okayOnSurface:
+    value: "{!color-okay}"
+  TextColor-okayOnLight:
+    value: "{!color-okay}"
+  TextColor-okayOnDark:
+    value: "{!color-okay}"
+
+  TextColor-badOnSurface:
+    value: "{!color-bad}"
+  TextColor-badOnLight:
+    value: "{!color-bad}"
+  TextColor-badOnDark:
+    value: "{!color-bad-light}"
