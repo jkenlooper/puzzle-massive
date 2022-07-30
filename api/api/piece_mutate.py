@@ -1,4 +1,4 @@
-from flask import current_app
+# from flask import current_app
 
 from api.tools import formatPieceMovementString
 
@@ -137,7 +137,7 @@ class PieceMutateProcess:
         """
         self.watched_keys.add(self.pc_puzzle_piece_key)
 
-        ## pipeline phase 1
+        # pipeline phase 1
         with self.redis_connection.pipeline(transaction=True) as pipe:
             pipe.watch(*self.watched_keys)
 
@@ -223,7 +223,7 @@ class PieceMutateProcess:
             if self.piece in self.pcfixed_puzzle:
                 raise PieceMutateError("piece can't be moved")
 
-        ## pipeline phase 2
+        # pipeline phase 2
         # grouped pieces
         self.watched_keys.add(pcg_puzzle_g_key)
         with self.redis_connection.pipeline(transaction=True) as pipe:

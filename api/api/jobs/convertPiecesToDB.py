@@ -113,11 +113,11 @@ def transfer(puzzle, cleanup=True, skip_status_update=False):
                     else redis_piece_prop
                 )
             if redis_piece_prop != piece[colname]:
-                current_app.logger.debug(
-                    "{} has {} changes. {} != {}".format(
-                        piece["id"], colname, redis_piece_prop, piece[colname]
-                    )
-                )
+                # current_app.logger.debug(
+                #     "{} has {} changes. {} != {}".format(
+                #         piece["id"], colname, redis_piece_prop, piece[colname]
+                #     )
+                # )
                 piece[colname] = redis_piece_prop
                 has_changes = True
 

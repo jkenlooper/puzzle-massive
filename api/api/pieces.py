@@ -47,7 +47,7 @@ class PuzzlePiecesView(MethodView):
                 target_memory = maxmemory * 0.5
                 if memory.get("used_memory") > target_memory:
                     # push to queue for further processing
-                    job = current_app.cleanupqueue.enqueue(
+                    current_app.cleanupqueue.enqueue(
                         "api.jobs.convertPiecesToDB.transferOldest",
                         target_memory,
                         result_ttl=0,
@@ -111,7 +111,7 @@ class PuzzlePiecesView(MethodView):
         if status == COMPLETED:
             # transfer completed puzzles back out
             current_app.logger.info("transfer {0}".format(puzzle))
-            job = current_app.cleanupqueue.enqueue(
+            current_app.cleanupqueue.enqueue(
                 "api.jobs.convertPiecesToDB.transfer",
                 puzzle,
                 cleanup=True,
@@ -314,10 +314,6 @@ def add_puzzle_pieces(puzzle_id, piece_properties):
         cur.close()
         return err_msg
 
-    (result, col_names) = rowify(result, cur.description)
-    puzzle_data = result[0]
-    puzzle = puzzle_data["id"]
-
     cur.executemany(
         """
         insert or ignore into Piece (id, x, y, r, w, h, b, adjacent, rotate, row, col, status, parent, puzzle) values (
@@ -400,7 +396,6 @@ class InternalPuzzlePiecesView(MethodView):
 
     def delete(self, puzzle_id):
         """"""
-        data = request.get_json(silent=True)
         response_msg = delete_puzzle_pieces(puzzle_id)
 
         return make_response(json.jsonify(response_msg), response_msg["status_code"])

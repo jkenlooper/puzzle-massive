@@ -71,14 +71,20 @@ class Proximity:
         )
         pcfixed = set(map(int, self.redis_connection.smembers(f"pcfixed:{puzzle}")))
 
-        piece_group = int(self.redis_connection.hget(f"pc:{puzzle}:{piece}", "g") or piece)
-        pcg = set(map(int, self.redis_connection.smembers(f"pcg:{puzzle}:{piece_group}")))
+        piece_group = int(
+            self.redis_connection.hget(f"pc:{puzzle}:{piece}", "g") or piece
+        )
+        pcg = set(
+            map(int, self.redis_connection.smembers(f"pcg:{puzzle}:{piece_group}"))
+        )
         ignore_piece_ids = pcfixed.union(pcg)
 
         # Reassess stacked pieces that were intersecting with the piece origin
         reset_stacked_ids.add(piece)
         self.move_piece(piece, piece_bbox)
-        origin_stack_counts = self.get_stack_counts(origin_piece_bbox, ignore_piece_ids=pcfixed)
+        origin_stack_counts = self.get_stack_counts(
+            origin_piece_bbox, ignore_piece_ids=pcfixed
+        )
         for piece_id, stack_count in origin_stack_counts.items():
             if piece_id == piece:
                 reset_stacked_ids.add(piece_id)
@@ -117,7 +123,9 @@ class Proximity:
         # it moved.
         piece_move_rejected = False
         past_stack_cost_threshold = False
-        target_stack_counts = self.get_stack_counts(piece_bbox, ignore_piece_ids=ignore_piece_ids)
+        target_stack_counts = self.get_stack_counts(
+            piece_bbox, ignore_piece_ids=ignore_piece_ids
+        )
         for piece_id, stack_count in target_stack_counts.items():
             if stack_count > STACK_LIMIT:
                 piece_move_rejected = reject_piece_move()
@@ -198,13 +206,19 @@ class Proximity:
                 x + w,
                 y + h,
             )
-            piece_group = int(self.redis_connection.hget(f"pc:{puzzle}:{piece}", "g") or piece)
-            pcg = set(map(int, self.redis_connection.smembers(f"pcg:{puzzle}:{piece_group}")))
+            piece_group = int(
+                self.redis_connection.hget(f"pc:{puzzle}:{piece}", "g") or piece
+            )
+            pcg = set(
+                map(int, self.redis_connection.smembers(f"pcg:{puzzle}:{piece_group}"))
+            )
 
             # Reassess stacked pieces that are now intersecting with the piece after
             # it moved.
             reset_stacked_ids.add(piece)
-            target_stack_counts = self.get_stack_counts(piece_bbox, ignore_piece_ids=pcfixed)
+            target_stack_counts = self.get_stack_counts(
+                piece_bbox, ignore_piece_ids=pcfixed
+            )
             for piece_id, stack_count in target_stack_counts.items():
                 if piece_id in pcg:
                     continue
@@ -222,8 +236,13 @@ class Proximity:
         reset_stacked_ids = set()
         pcfixed = set(map(int, self.redis_connection.smembers(f"pcfixed:{puzzle}")))
         (_, first_piece_id, _, _) = pieces[0]
-        piece_group = int(self.redis_connection.hget(f"pc:{puzzle}:{first_piece_id}", "g") or first_piece_id)
-        pcg = set(map(int, self.redis_connection.smembers(f"pcg:{puzzle}:{piece_group}")))
+        piece_group = int(
+            self.redis_connection.hget(f"pc:{puzzle}:{first_piece_id}", "g")
+            or first_piece_id
+        )
+        pcg = set(
+            map(int, self.redis_connection.smembers(f"pcg:{puzzle}:{piece_group}"))
+        )
 
         for pc in pieces:
             (user, piece, x, y) = pc
@@ -252,7 +271,9 @@ class Proximity:
 
             # Reassess stacked pieces that are now intersecting with the piece after
             # it moved.
-            target_stack_counts = self.get_stack_counts(piece_bbox, ignore_piece_ids=pcfixed)
+            target_stack_counts = self.get_stack_counts(
+                piece_bbox, ignore_piece_ids=pcfixed
+            )
             for piece_id, stack_count in target_stack_counts.items():
                 if piece_id in pcg:
                     continue

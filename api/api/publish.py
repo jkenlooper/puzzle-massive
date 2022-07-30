@@ -188,7 +188,7 @@ def _int_piece_properties(piece_properties):
     int_props = ("x", "y", "r", "w", "h", "rotate", "g")
     for (k, v) in piece_properties.items():
         if k in int_props:
-            if v != None:
+            if v is not None:
                 piece_properties[k] = int(v)
     return piece_properties
 
@@ -282,6 +282,7 @@ class PuzzlePieceTokenView(MethodView):
             try:
                 result = r.json()
             except ValueError as err:
+                current_app.logger.error(err)
                 err_msg = {
                     "msg": "puzzle is not ready at this time. Please reload the page.",
                     "type": "puzzleimmutable",
@@ -702,6 +703,7 @@ class PuzzlePiecesMovePublishView(MethodView):
             try:
                 result = req.json()
             except ValueError as err:
+                current_app.logger.error(err)
                 err_msg = {"msg": "puzzle not available", "type": "missing"}
                 return make_response(json.jsonify(err_msg), 500)
             if result.get("status") not in (ACTIVE, BUGGY_UNLISTED):

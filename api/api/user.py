@@ -127,7 +127,7 @@ def user_not_banned(f):
         user = current_app.secure_cookie.get("user") or user_id_from_ip(
             ip, validate_shared_user=False
         )
-        current_app.logger.debug(f"user_not_banned")
+        current_app.logger.debug("user_not_banned")
         # start = time.perf_counter()
         if user is not None:
             user = int(user)

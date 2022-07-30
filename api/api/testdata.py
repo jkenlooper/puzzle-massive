@@ -859,7 +859,10 @@ def main():
         }
     )
     app = make_app(
-        config=config_file, cookie_secret=cookie_secret, database_writable=True, DEBUG=False
+        config=config_file,
+        cookie_secret=cookie_secret,
+        database_writable=True,
+        DEBUG=False,
     )
 
     with app.app_context():

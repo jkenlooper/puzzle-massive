@@ -27,7 +27,7 @@ def convert(puzzle):
 
     pzm_puzzle_key = "pzm:{puzzle}".format(puzzle=puzzle)
     # Bump the pzm id when preparing to mutate the puzzle.
-    puzzle_mutation_id = redis_connection.incr(pzm_puzzle_key)
+    redis_connection.incr(pzm_puzzle_key)
 
     # Create a pipe for buffering commands to load up piece data
     with redis_connection.pipeline(transaction=True) as pipe:

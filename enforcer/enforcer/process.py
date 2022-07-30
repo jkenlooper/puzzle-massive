@@ -67,11 +67,7 @@ class Process(greenlet):
         )
         # 'hot_spot' to limit moving pieces to the same area within 30 seconds
         self.enable_hotspot = bool(
-            len(
-                {"all", "hot_spot"}.intersection(
-                    self.config["PUZZLE_RULES"]
-                )
-            )
+            len({"all", "hot_spot"}.intersection(self.config["PUZZLE_RULES"]))
         )
 
         if not self.enable_proximity:
