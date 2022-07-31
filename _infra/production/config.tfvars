@@ -6,7 +6,7 @@ project_environment = "Production"
 project_description = ""
 
 legacy_droplet_size = "s-2vcpu-4gb"
-cdn_droplet_size = "s-1vcpu-1gb"
+cdn_droplet_size = "s-1vcpu-512mb-10gb"
 
 # The default setup for the Production environment is to use stateful swaps.
 is_volatile_active = false

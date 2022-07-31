@@ -6,7 +6,7 @@ project_environment = "Development"
 
 # Use the smallest size of droplets in Development.
 legacy_droplet_size = "s-1vcpu-1gb"
-cdn_droplet_size = "s-1vcpu-1gb"
+cdn_droplet_size = "s-1vcpu-512mb-10gb"
 
 # The default setup for the Development environment is to be volatile and not
 # use a stateful swap for the legacy puzzle massive droplet.
