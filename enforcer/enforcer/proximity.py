@@ -45,7 +45,9 @@ class Proximity:
         self.proximity_init_time = time.time()
         self.internal_origin_bboxes = origin_bboxes
 
-        self.reassess_all()
+        # Skip updating all pieces initially as it is not optimal for larger
+        # puzzles.
+        # self.reassess_all()
 
     def process(self, user, puzzle, piece, origin_x, origin_y, x, y):
         # rotate is not implemented yet; leaving origin_r as 0 for now.
@@ -190,6 +192,7 @@ class Proximity:
 
     def reassess_all(self):
         "Update the stack status for all pieces"
+        # TODO This is not optimal for larger puzzles.
         puzzle = self.puzzle_data["id"]
         stacked_piece_ids = set()
         reset_stacked_ids = set()
