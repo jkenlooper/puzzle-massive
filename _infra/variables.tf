@@ -203,7 +203,15 @@ variable "create_cdn" {
   description = "Used for creating a CDN droplet that is meant for Production."
 }
 
-variable "legacy_droplet_size" {
+variable "legacy_puzzle_massive_volatile_droplet_size" {
+  type    = string
+  default = "s-2vcpu-4gb"
+}
+variable "legacy_puzzle_massive_swap_a_droplet_size" {
+  type    = string
+  default = "s-2vcpu-4gb"
+}
+variable "legacy_puzzle_massive_swap_b_droplet_size" {
   type    = string
   default = "s-2vcpu-4gb"
 }

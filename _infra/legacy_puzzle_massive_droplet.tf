@@ -87,7 +87,8 @@ resource "local_file" "allow_deny_admin_nginx_conf" {
 resource "digitalocean_droplet" "legacy_puzzle_massive_swap_a" {
   count      = var.create_legacy_puzzle_massive_swap_a ? 1 : 0
   name       = lower("puzzle-massive-${var.environment}-swap-a")
-  size       = var.legacy_droplet_size
+  size       = var.legacy_puzzle_massive_swap_a_droplet_size
+  resize_disk= false
   image      = "ubuntu-20-04-x64"
   region     = var.region
   vpc_uuid   = digitalocean_vpc.puzzle_massive.id
@@ -110,7 +111,8 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_swap_a" {
 resource "digitalocean_droplet" "legacy_puzzle_massive_swap_b" {
   count      = var.create_legacy_puzzle_massive_swap_b ? 1 : 0
   name       = lower("puzzle-massive-${var.environment}-swap-b")
-  size       = var.legacy_droplet_size
+  size       = var.legacy_puzzle_massive_swap_b_droplet_size
+  resize_disk= false
   image      = "ubuntu-20-04-x64"
   region     = var.region
   vpc_uuid   = digitalocean_vpc.puzzle_massive.id
@@ -135,7 +137,7 @@ resource "digitalocean_droplet" "legacy_puzzle_massive_swap_b" {
 resource "digitalocean_droplet" "legacy_puzzle_massive_volatile" {
   count      = var.create_legacy_puzzle_massive_volatile ? 1 : 0
   name       = lower("puzzle-massive-${var.environment}-volatile")
-  size       = var.legacy_droplet_size
+  size       = var.legacy_puzzle_massive_volatile_droplet_size
   image      = "ubuntu-20-04-x64"
   region     = var.region
   vpc_uuid   = digitalocean_vpc.puzzle_massive.id

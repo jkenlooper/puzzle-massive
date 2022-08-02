@@ -5,7 +5,9 @@ environment = "Acceptance"
 project_environment = "Staging"
 
 # Use the same size of droplets in Acceptance that Production uses.
-legacy_droplet_size = "s-2vcpu-4gb"
+legacy_puzzle_massive_swap_a_droplet_size = "s-2vcpu-4gb"
+legacy_puzzle_massive_swap_b_droplet_size = "s-2vcpu-4gb"
+legacy_puzzle_massive_volatile_droplet_size = "s-2vcpu-4gb"
 cdn_droplet_size = "s-1vcpu-512mb-10gb"
 
 # The default setup for the Acceptance environment is to be volatile and not

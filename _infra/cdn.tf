@@ -14,6 +14,7 @@ resource "digitalocean_droplet" "cdn" {
   count      = var.create_cdn ? 1 : 0
   name       = lower("cdn-${var.environment}")
   size       = var.cdn_droplet_size
+  resize_disk= false
   image      = "ubuntu-20-04-x64"
   region     = var.region
   vpc_uuid   = digitalocean_vpc.puzzle_massive.id

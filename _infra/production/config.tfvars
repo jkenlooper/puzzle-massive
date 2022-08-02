@@ -5,7 +5,9 @@ environment = "Production"
 project_environment = "Production"
 project_description = ""
 
-legacy_droplet_size = "s-2vcpu-4gb"
+legacy_puzzle_massive_swap_a_droplet_size = "s-2vcpu-4gb"
+legacy_puzzle_massive_swap_b_droplet_size = "s-2vcpu-4gb"
+legacy_puzzle_massive_volatile_droplet_size = "s-2vcpu-4gb"
 cdn_droplet_size = "s-1vcpu-512mb-10gb"
 
 # The default setup for the Production environment is to use stateful swaps.
