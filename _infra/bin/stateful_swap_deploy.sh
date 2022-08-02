@@ -400,6 +400,7 @@ ansible-playbook ansible-playbooks/switch-data-over-to-new-swap.yml \
   --ask-become-pass \
   -i $ENVIRONMENT/host_inventory.ansible.cfg \
   --extra-vars "htpasswd_file=$HTPASSWD_FILE
+  message_file=../$ENVIRONMENT/puzzle-massive-message.html
   old_swap_db_backup=$OLD_SWAP_DB_BACKUP
   resources_directory=$RESOURCES_DIRECTORY"
 
