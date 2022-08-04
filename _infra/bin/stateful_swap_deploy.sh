@@ -53,62 +53,78 @@ while getopts ":hs:" opt; do
 done;
 shift "$((OPTIND-1))";
 
-bin_dir=$(dirname $(realpath $0))
-source $bin_dir/common-functions.sh
+bin_dir="$(dirname "$(realpath "$0")")"
+# shellcheck source=/dev/null
+source "$bin_dir/common-functions.sh"
 
 ENVIRONMENT=${1-$ENVIRONMENT}
 
 # Only Acceptance and Production will be publicly available so provisioning
 # certs would then be done.
-PROVISION_CERTS=$(test "$ENVIRONMENT" = "acceptance" -o "$ENVIRONMENT" = "production" && echo "1" || echo "0")
+PROVISION_CERTS="$(test "$ENVIRONMENT" = "acceptance" -o "$ENVIRONMENT" = "production" && echo "1" || echo "0")"
 
-test -e $ENVIRONMENT/terra.sh || (echo "No terra.sh found in _infra/$ENVIRONMENT/ directory." && exit 1)
-test -e $ENVIRONMENT/private.tfvars || (echo "No terraform private variables file found at $ENVIRONMENT/private.tfvars" && exit 1)
+test -e "$ENVIRONMENT/terra.sh" || (echo "No terra.sh found in _infra/$ENVIRONMENT/ directory." && exit 1)
+test -e "$ENVIRONMENT/private.tfvars" || (echo "No terraform private variables file found at $ENVIRONMENT/private.tfvars" && exit 1)
 
 # Dry run to see if terra.sh can execute without error. This will show any
 # errors that might occur if no dist file has been made for instance.
-echo "" | ./$ENVIRONMENT/terra.sh console
+echo "" | "./$ENVIRONMENT/terra.sh" console
 
 # Check if terraform variables are setup for a stateful swap deployment.
-TEST_is_volatile_active=$(echo "var.is_volatile_active" | \
-  ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1)
+TEST_is_volatile_active="$(echo "var.is_volatile_active" | \
+  "./$ENVIRONMENT/terra.sh" console 2> /dev/null | tail -n1)"
 test "${TEST_is_volatile_active}" = "false" || (echo "
 The is_volatile_active terraform variable should be 'false' for a stateful swap deployment.
 Try using the './$ENVIRONMENT/terra.sh apply' command if not needing to do
 a stateful swap deployment.
 " && exit 1)
-TEST_old_swap=$(echo "var.old_swap" | \
-  ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1 | xargs)
-TEST_new_swap=$(echo "var.new_swap" | \
-  ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1 | xargs)
-TEST_is_swap_a_active=$(echo "var.is_swap_a_active" | \
-  ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1)
-TEST_is_swap_b_active=$(echo "var.is_swap_b_active" | \
-  ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1)
+TEST_old_swap="$(echo "var.old_swap" | \
+  "./$ENVIRONMENT/terra.sh" console 2> /dev/null | tail -n1 | xargs)"
+TEST_new_swap="$(echo "var.new_swap" | \
+  "./$ENVIRONMENT/terra.sh" console 2> /dev/null | tail -n1 | xargs)"
+TEST_is_swap_a_active="$(echo "var.is_swap_a_active" | \
+  "./$ENVIRONMENT/terra.sh" console 2> /dev/null | tail -n1)"
+TEST_is_swap_b_active="$(echo "var.is_swap_b_active" | \
+  "./$ENVIRONMENT/terra.sh" console 2> /dev/null | tail -n1)"
 test "${TEST_is_swap_a_active}" = "true" -o "${TEST_is_swap_b_active}" = "true" || (echo "At least one is_swap_a_active or is_swap_b_active terraform variable should be 'true' for a stateful swap deployment." && exit 1)
 echo "old_swap = '${TEST_old_swap}'"
 echo "new_swap = '${TEST_new_swap}'"
 
 # Determine the old swap and new swap.
 if [ "$STEP_STATE" = "1" ]; then
-  NEW_SWAP=$(test "$TEST_is_swap_a_active" = "false" -a "$TEST_is_swap_b_active" = "true" && echo "A" || (test "$TEST_is_swap_a_active" = "true" -a "$TEST_is_swap_b_active" = "false" && echo "B" || (echo "Both swaps are inactive or both are active. Only one should be active when on step 1.")))
+  NEW_SWAP=
+  if [ "$TEST_is_swap_a_active" = "false" ] && [ "$TEST_is_swap_b_active" = "true" ]; then
+    NEW_SWAP="A"
+  elif [ "$TEST_is_swap_a_active" = "true" ] && [ "$TEST_is_swap_b_active" = "false" ]; then
+    NEW_SWAP="B"
+  else
+    echo "Both swaps are inactive or both are active. Only one should be active when on step 1."
+  fi
 else
-  if [ -e $ENVIRONMENT/.new_swap ]; then
-    NEW_SWAP=$(cat $ENVIRONMENT/.new_swap)
+  if [ -e "$ENVIRONMENT/.new_swap" ]; then
+    NEW_SWAP="$(cat $ENVIRONMENT/.new_swap)"
   else
     read -p "Unable to determine which will be the new swap. Is it A or B? " NEW_SWAP
     # Uppercase the response.
     NEW_SWAP="${NEW_SWAP^}"
-    test "$NEW_SWAP" = "A" -o "$NEW_SWAP" = "B" || (echo "Invalid response. Must enter 'A' or 'B'." && exit 1)
-    echo "$NEW_SWAP" > $ENVIRONMENT/.new_swap
+    if [ "$NEW_SWAP" != "A" ] && [ "$NEW_SWAP" != "B" ]; then
+      echo "Invalid response. Must enter 'A' or 'B'."
+      exit 1
+    fi
+    echo "$NEW_SWAP" > "$ENVIRONMENT/.new_swap"
   fi
 fi
-OLD_SWAP=$(test "$NEW_SWAP" = "A" && echo "B" || echo "A")
+OLD_SWAP=
+if [ "$NEW_SWAP" = "A" ]; then
+  OLD_SWAP="B"
+else
+  OLD_SWAP="A"
+fi
 echo "
 old swap is: $OLD_SWAP
 new swap is: $NEW_SWAP
 "
-if [ "$OLD_SWAP" != "$TEST_old_swap" -o "$NEW_SWAP" != "$TEST_new_swap" ]; then
+if [ "$OLD_SWAP" != "$TEST_old_swap" ] || [ "$NEW_SWAP" != "$TEST_new_swap" ]; then
   echo "
 ERROR: The old_swap and new_swap values are not consistent with
        is_swap_a_active and is_swap_b_active variables.
@@ -132,51 +148,56 @@ script temporarily changes.
 
 for modifiable_variable in is_floating_ip_active create_floating_ip_puzzle_massive use_short_dns_ttl ; do
   echo $modifiable_variable
-  TEST_var=$(echo "var.$modifiable_variable" | \
-    ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1)
-  test "${TEST_var}" = "false" || (echo "Incompatible state of $modifiable_variable terraform variable. $TERRAFORM_VARIABLE_NOT_MODIFIABLE_MESSAGE" && exit 1)
-  TEST_var=$(echo "var.$modifiable_variable" | \
+  TEST_var="$(echo "var.$modifiable_variable" | \
+    "./$ENVIRONMENT/terra.sh" console 2> /dev/null | tail -n1)"
+  if [ "${TEST_var}" != "false" ]; then
+    echo "Incompatible state of $modifiable_variable terraform variable. $TERRAFORM_VARIABLE_NOT_MODIFIABLE_MESSAGE"
+    exit 1
+  fi
+  TEST_var="$(echo "var.$modifiable_variable" | \
     TF_VAR_is_floating_ip_active=true \
     TF_VAR_create_floating_ip_puzzle_massive=true \
     TF_VAR_use_short_dns_ttl=true \
-    ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1)
-  test "$TEST_var" = "true" || (echo "Incompatible state of $modifiable_variable terraform variable. $TERRAFORM_VARIABLE_NOT_MODIFIABLE_MESSAGE" && exit 1)
+    ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1)"
+  if [ "$TEST_var" != "true" ]; then
+    echo "Incompatible state of $modifiable_variable terraform variable. $TERRAFORM_VARIABLE_NOT_MODIFIABLE_MESSAGE"
+    exit 1
+  fi
 done
-
 
 # Set a local variable for the Fully Qualified Domain Name to what has been set
 # for the Terraform variables 'sub_domain' and 'domain' for this environment. The
 # ENVIRONMENT variable should be a valid environment like 'development', 'test',
 # 'acceptance', or 'production'.
 
-FQDN=$(echo 'format("${var.sub_domain}${var.domain}")' | \
-  ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1 | xargs)
+FQDN="$(echo 'format("${var.sub_domain}${var.domain}")' | \
+  "./$ENVIRONMENT/terra.sh" console 2> /dev/null | tail -n1 | xargs)"
 echo "The FQDN for the $ENVIRONMENT environment is $FQDN."
 
-SHORTER_DNS_TTL=$(echo 'var.short_dns_ttl' | \
-  ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1)
+SHORTER_DNS_TTL="$(echo 'var.short_dns_ttl' | \
+  "./$ENVIRONMENT/terra.sh" console 2> /dev/null | tail -n1)"
 
 # Get the current DNS TTL.
 
-CURRENT_DNS_TTL=$(dig +nocmd @ns1.digitalocean.com $FQDN +noall +answer | cut -f2)
+CURRENT_DNS_TTL="$(dig +nocmd @ns1.digitalocean.com "$FQDN" +noall +answer | cut -d" " -f2)"
 echo "Current DNS TTL is $CURRENT_DNS_TTL seconds for $FQDN."
 
 
 # Default to Step 1. Allow skipping to a step if it is passed as an arg. Check if
 # a previous in-progress deployment exists and skip to that step after confirmation.
-if [ $STEP_STATE = '1' -a -e $ENVIRONMENT/.deployment_step_state ]; then
-  PREVIOUS_STEP=$(cat $ENVIRONMENT/.deployment_step_state)
+if [ "$STEP_STATE" = '1' ] && [ -e "$ENVIRONMENT/.deployment_step_state" ]; then
+  PREVIOUS_STEP="$(cat $ENVIRONMENT/.deployment_step_state)"
   read -p "Found previous in-progress deployment state. Do you want to skip to step '$PREVIOUS_STEP'? [y/n]
   " CONFIRM
   if [ "$CONFIRM" = "y" ]; then
     STEP_STATE=$PREVIOUS_STEP
   fi
 fi
-if [ $STEP_STATE != '1' ]; then
+if [ "$STEP_STATE" != '1' ]; then
   echo "Skipping to step '$STEP_STATE'."
 fi
 
-CURRENT_DNS_TTL=$(dig +nocmd @ns1.digitalocean.com $FQDN +noall +answer | cut -f2)
+CURRENT_DNS_TTL="$(dig +nocmd @ns1.digitalocean.com "$FQDN" +noall +answer | cut -d" " -f2)"
 
 wait_until_dns_ttl_timeout () {
   echo "Waiting $1 seconds for DNS TTL to timeout."
@@ -214,7 +235,7 @@ Continue? [y/n] " -n1 CONFIRM
   echo "
 Updating to the active swap. Also wait for DNS TTL to timeout just in case
 floating IP wasn't active."
-  ROLLBACK_DNS_TTL=$(dig +nocmd @ns1.digitalocean.com $FQDN +noall +answer | cut -f2)
+  ROLLBACK_DNS_TTL=$(dig +nocmd @ns1.digitalocean.com $FQDN +noall +answer | cut -d" " -f2)
   TF_VAR_use_short_dns_ttl=true \
   TF_VAR_create_floating_ip_puzzle_massive=true \
   TF_VAR_is_floating_ip_active=true \
@@ -268,7 +289,7 @@ TF_VAR_use_short_dns_ttl=true \
 echo "Waiting for new shorter DNS TTL to be set."
 COUNT=1
 while [ $COUNT -le 10 ]; do
-  if [ $(dig +nocmd @ns1.digitalocean.com $FQDN +noall +answer | cut -f2) -ne $SHORTER_DNS_TTL ]; then
+  if [ $(dig +nocmd @ns1.digitalocean.com $FQDN +noall +answer | cut -d" " -f2) -ne $SHORTER_DNS_TTL ]; then
     COUNT=$(($COUNT+1));
     sleep 10
     printf "."
@@ -413,7 +434,7 @@ test $PROVISION_CERTS -eq 1 \
   -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap \
   --ask-become-pass \
   --extra-vars "makeenvironment=$(test $ENVIRONMENT = 'development' && echo 'development' || echo 'production')
-  testcert=$(test $ENVIRONMENT = 'production' && echo '' || echo '--test-cert')"
+  testcert=$(test $ENVIRONMENT = 'production' && echo '' || echo '--test-cert')" \
   || echo 'no provision certs'
 
 echo "The IP for the new swap '$NEW_SWAP' in $ENVIRONMENT environment is:
