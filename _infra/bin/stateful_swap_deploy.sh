@@ -226,7 +226,7 @@ Update these variables in the _infra/$ENVIRONMENT/private.tfvars file.
 Should be set like this:
 is_swap_a_active = $(test "$OLD_SWAP" = "A" && echo "true" || echo "false")
 is_swap_b_active = $(test "$OLD_SWAP" = "B" && echo "true" || echo "false")
-Continue? [y/n] " -n1 CONFIRM
+Continue? [y/n] " CONFIRM
   if [ $CONFIRM != "y" ]; then
     echo "Cancelled rollback."
     exit 0
@@ -259,13 +259,13 @@ Update these variables in the _infra/$ENVIRONMENT/private.tfvars file.
 Should be set like this:
 create_legacy_puzzle_massive_swap_a = $(test "$OLD_SWAP" = "A" && echo "true" || echo "false")
 create_legacy_puzzle_massive_swap_b = $(test "$OLD_SWAP" = "B" && echo "true" || echo "false")
-Continue? [y/n] " -n1 CONFIRM
+Continue? [y/n] " CONFIRM
   if [ $CONFIRM != "y" ]; then
     echo "Cancelled rollback."
     exit 0
   fi
 
-  echo"
+  echo "
 Set it back to a longer DNS TTL and remove the new swap that is no longer
 active."
   ./$ENVIRONMENT/terra.sh apply
@@ -363,7 +363,7 @@ Update these variables in the _infra/$ENVIRONMENT/private.tfvars file.
 Should be set like this:
 create_legacy_puzzle_massive_swap_a = true
 create_legacy_puzzle_massive_swap_b = true
-Continue? [y/n] " -n1 CONFIRM
+Continue? [y/n] " CONFIRM
 if [ $CONFIRM != "y" ]; then
   echo "Canceled deployment."
   exit 0
@@ -446,13 +446,13 @@ $NEW_SWAP_IP $FQDN
 
 "
 
-read -p "Verify that new swap '$NEW_SWAP' is working correctly. [y/n] " -n1 CONFIRM
+read -p "Verify that new swap '$NEW_SWAP' is working correctly. [y/n] " CONFIRM
 if [ $CONFIRM != "y" ]; then
   echo "Cancelled deployment. Old swap '$OLD_SWAP' is currently stopped still."
   read -p "
 Rollback to old swap '$OLD_SWAP' now? Another attempt will need to wait until
 after the longer DNS TTL when doing a rollback.
-Rollback? [y/n] " -n1 CONFIRM
+Rollback? [y/n] " CONFIRM
   if [ $CONFIRM != "y" ]; then
     rollback
   else
@@ -465,13 +465,13 @@ Update these variables in the _infra/$ENVIRONMENT/private.tfvars file.
 Should be set like this:
 is_swap_a_active = $(test "$NEW_SWAP" = "A" && echo "true" || echo "false")
 is_swap_b_active = $(test "$NEW_SWAP" = "B" && echo "true" || echo "false")
-Continue? [y/n] " -n1 CONFIRM
+Continue? [y/n] " CONFIRM
 if [ $CONFIRM != "y" ]; then
   echo "Cancelled deployment. Old swap '$OLD_SWAP' is currently stopped still."
   read -p "
 Rollback to old swap '$OLD_SWAP' now? Another attempt will need to wait until
 after the longer DNS TTL when doing a rollback.
-Rollback? [y/n] " -n1 CONFIRM
+Rollback? [y/n] " CONFIRM
   if [ $CONFIRM != "y" ]; then
     rollback
   else
@@ -495,7 +495,7 @@ TF_VAR_create_floating_ip_puzzle_massive=true \
 TF_VAR_is_floating_ip_active=true \
   ./$ENVIRONMENT/terra.sh apply
 
-read -p "New swap '$NEW_SWAP' is now active. Continue with cleaning up old swap '$OLD_SWAP'? [y/n] " -n1 CONFIRM
+read -p "New swap '$NEW_SWAP' is now active. Continue with cleaning up old swap '$OLD_SWAP'? [y/n] " CONFIRM
 if [ $CONFIRM != "y" ]; then
   echo "Cancelled deployment. Old swap '$OLD_SWAP' is currently stopped and not active."
   read -p "
@@ -507,7 +507,7 @@ Warning! The new swap '$NEW_SWAP' is active and rolling back to old swap '$OLD_S
 will cause a potential loss of data.
 ################################################################################
 
-Rollback? [y/n] " -n1 CONFIRM
+Rollback? [y/n] " CONFIRM
   if [ $CONFIRM != "y" ]; then
     rollback
   else
@@ -531,7 +531,7 @@ Update these variables in the _infra/$ENVIRONMENT/private.tfvars file.
 Should be set like this:
 create_legacy_puzzle_massive_swap_a = $(test "$NEW_SWAP" = "A" && echo "true" || echo "false")
 create_legacy_puzzle_massive_swap_b = $(test "$NEW_SWAP" = "B" && echo "true" || echo "false")
-Continue? [y/n] " -n1 CONFIRM
+Continue? [y/n] " CONFIRM
 if [ $CONFIRM != "y" ]; then
   echo "Cancelled deployment. Old swap '$OLD_SWAP' is currently stopped and not active."
   exit 0
@@ -613,9 +613,9 @@ echo "
 read -p "
 Update these variables in the _infra/$ENVIRONMENT/private.tfvars file.
 Should be set like this:
-old_swap = \"$NEW_SWAP\"
-new_swap = \"$OLD_SWAP\"
-Continue? [y/n] " -n1 CONFIRM
+old_swap = \"$OLD_SWAP\"
+new_swap = \"$NEW_SWAP\"
+Continue? [y/n] " CONFIRM
   if [ $CONFIRM != "y" ]; then
     echo "Cancelled."
     exit 0
