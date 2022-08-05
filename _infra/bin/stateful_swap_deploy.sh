@@ -102,9 +102,9 @@ if [ "$STEP_STATE" = "1" ]; then
   fi
 else
   if [ -e "$ENVIRONMENT/.new_swap" ]; then
-    NEW_SWAP="$(cat $ENVIRONMENT/.new_swap)"
+    NEW_SWAP="$(cat "$ENVIRONMENT/.new_swap")"
   else
-    read -p "Unable to determine which will be the new swap. Is it A or B? " NEW_SWAP
+    read -r -p "Unable to determine which will be the new swap. Is it A or B? " NEW_SWAP
     # Uppercase the response.
     NEW_SWAP="${NEW_SWAP^}"
     if [ "$NEW_SWAP" != "A" ] && [ "$NEW_SWAP" != "B" ]; then
@@ -139,12 +139,12 @@ fi
 
 # Check to see if the terraform variables can be modified via setting TF_VAR_*
 # environment variables.
-TERRAFORM_VARIABLE_NOT_MODIFIABLE_MESSAGE='
+TERRAFORM_VARIABLE_NOT_MODIFIABLE_MESSAGE="
 The $0 script relies on being able to temporarily set some terraform environment
 variables.  These variables should not be set in your .tfvars files as they
 would not be able to be overridden by the TF_VAR_* environment variable that this
 script temporarily changes.
-'
+"
 
 for modifiable_variable in is_floating_ip_active create_floating_ip_puzzle_massive use_short_dns_ttl ; do
   echo $modifiable_variable
@@ -158,7 +158,7 @@ for modifiable_variable in is_floating_ip_active create_floating_ip_puzzle_massi
     TF_VAR_is_floating_ip_active=true \
     TF_VAR_create_floating_ip_puzzle_massive=true \
     TF_VAR_use_short_dns_ttl=true \
-    ./$ENVIRONMENT/terra.sh console 2> /dev/null | tail -n1)"
+    "./$ENVIRONMENT/terra.sh" console 2> /dev/null | tail -n1)"
   if [ "$TEST_var" != "true" ]; then
     echo "Incompatible state of $modifiable_variable terraform variable. $TERRAFORM_VARIABLE_NOT_MODIFIABLE_MESSAGE"
     exit 1
@@ -170,6 +170,7 @@ done
 # ENVIRONMENT variable should be a valid environment like 'development', 'test',
 # 'acceptance', or 'production'.
 
+# shellcheck disable=SC2016
 FQDN="$(echo 'format("${var.sub_domain}${var.domain}")' | \
   "./$ENVIRONMENT/terra.sh" console 2> /dev/null | tail -n1 | xargs)"
 echo "The FQDN for the $ENVIRONMENT environment is $FQDN."
@@ -186,8 +187,8 @@ echo "Current DNS TTL is $CURRENT_DNS_TTL seconds for $FQDN."
 # Default to Step 1. Allow skipping to a step if it is passed as an arg. Check if
 # a previous in-progress deployment exists and skip to that step after confirmation.
 if [ "$STEP_STATE" = '1' ] && [ -e "$ENVIRONMENT/.deployment_step_state" ]; then
-  PREVIOUS_STEP="$(cat $ENVIRONMENT/.deployment_step_state)"
-  read -p "Found previous in-progress deployment state. Do you want to skip to step '$PREVIOUS_STEP'? [y/n]
+  PREVIOUS_STEP="$(cat "$ENVIRONMENT/.deployment_step_state")"
+  read -r -p "Found previous in-progress deployment state. Do you want to skip to step '$PREVIOUS_STEP'? [y/n]
   " CONFIRM
   if [ "$CONFIRM" = "y" ]; then
     STEP_STATE=$PREVIOUS_STEP
@@ -201,7 +202,7 @@ CURRENT_DNS_TTL="$(dig +nocmd @ns1.digitalocean.com "$FQDN" +noall +answer | cut
 
 wait_until_dns_ttl_timeout () {
   echo "Waiting $1 seconds for DNS TTL to timeout."
-  sleep $1
+  sleep "$1"
   # 64 is the max number of hops a linux system will typically have before it drops the packet.
   echo "Waiting another 64 more seconds to ensure DNS has been fully propagated."
   sleep 64
@@ -210,24 +211,24 @@ wait_until_dns_ttl_timeout () {
 set_step_state () {
   STEP_STATE="$1"
   if [ "$STEP_STATE" = "1" ]; then
-    rm -f $ENVIRONMENT/.deployment_step_state
-    rm -f $ENVIRONMENT/.new_swap
+    rm -f "$ENVIRONMENT/.deployment_step_state"
+    rm -f "$ENVIRONMENT/.new_swap"
   elif [ "$STEP_STATE" = "2" ]; then
-    echo "$NEW_SWAP" > $ENVIRONMENT/.new_swap
+    echo "$NEW_SWAP" > "$ENVIRONMENT/.new_swap"
   else
-    echo "$STEP_STATE" > $ENVIRONMENT/.deployment_step_state
+    echo "$STEP_STATE" > "$ENVIRONMENT/.deployment_step_state"
   fi
 }
 
 rollback () {
   echo "Initiating a rollback to old swap $OLD_SWAP"
-  read -p "
+  read -r -p "
 Update these variables in the _infra/$ENVIRONMENT/private.tfvars file.
 Should be set like this:
 is_swap_a_active = $(test "$OLD_SWAP" = "A" && echo "true" || echo "false")
 is_swap_b_active = $(test "$OLD_SWAP" = "B" && echo "true" || echo "false")
 Continue? [y/n] " CONFIRM
-  if [ $CONFIRM != "y" ]; then
+  if [ "$CONFIRM" != "y" ]; then
     echo "Cancelled rollback."
     exit 0
   fi
@@ -235,32 +236,32 @@ Continue? [y/n] " CONFIRM
   echo "
 Updating to the active swap. Also wait for DNS TTL to timeout just in case
 floating IP wasn't active."
-  ROLLBACK_DNS_TTL=$(dig +nocmd @ns1.digitalocean.com $FQDN +noall +answer | cut -d" " -f2)
+  ROLLBACK_DNS_TTL="$(dig +nocmd @ns1.digitalocean.com "$FQDN" +noall +answer | cut -d" " -f2)"
   TF_VAR_use_short_dns_ttl=true \
   TF_VAR_create_floating_ip_puzzle_massive=true \
   TF_VAR_is_floating_ip_active=true \
-    ./$ENVIRONMENT/terra.sh apply
-  wait_until_dns_ttl_timeout $ROLLBACK_DNS_TTL
+    "./$ENVIRONMENT/terra.sh" apply
+  wait_until_dns_ttl_timeout "$ROLLBACK_DNS_TTL"
 
   echo "Updating DNS to point directly to the active swap."
   TF_VAR_use_short_dns_ttl=true \
   TF_VAR_create_floating_ip_puzzle_massive=true \
   TF_VAR_is_floating_ip_active=false \
-    ./$ENVIRONMENT/terra.sh apply
-  wait_until_dns_ttl_timeout $SHORTER_DNS_TTL
+    "./$ENVIRONMENT/terra.sh" apply
+  wait_until_dns_ttl_timeout "$SHORTER_DNS_TTL"
 
   echo "Remove DO floating IP since it is no longer active."
   TF_VAR_use_short_dns_ttl=true \
   TF_VAR_create_floating_ip_puzzle_massive=false \
-    ./$ENVIRONMENT/terra.sh apply
+    "./$ENVIRONMENT/terra.sh" apply
 
-  read -p "
+  read -r -p "
 Update these variables in the _infra/$ENVIRONMENT/private.tfvars file.
 Should be set like this:
 create_legacy_puzzle_massive_swap_a = $(test "$OLD_SWAP" = "A" && echo "true" || echo "false")
 create_legacy_puzzle_massive_swap_b = $(test "$OLD_SWAP" = "B" && echo "true" || echo "false")
 Continue? [y/n] " CONFIRM
-  if [ $CONFIRM != "y" ]; then
+  if [ "$CONFIRM" != "y" ]; then
     echo "Cancelled rollback."
     exit 0
   fi
@@ -268,7 +269,7 @@ Continue? [y/n] " CONFIRM
   echo "
 Set it back to a longer DNS TTL and remove the new swap that is no longer
 active."
-  ./$ENVIRONMENT/terra.sh apply
+  "./$ENVIRONMENT/terra.sh" apply
 
   # Reset to step '1'.
   set_step_state 1
@@ -284,13 +285,13 @@ echo "
 "
 
 TF_VAR_use_short_dns_ttl=true \
-  ./$ENVIRONMENT/terra.sh apply
+  "./$ENVIRONMENT/terra.sh" apply
 
 echo "Waiting for new shorter DNS TTL to be set."
 COUNT=1
-while [ $COUNT -le 10 ]; do
-  if [ $(dig +nocmd @ns1.digitalocean.com $FQDN +noall +answer | cut -d" " -f2) -ne $SHORTER_DNS_TTL ]; then
-    COUNT=$(($COUNT+1));
+while [ "$COUNT" -le 10 ]; do
+  if [ "$(dig +nocmd @ns1.digitalocean.com "$FQDN" +noall +answer | cut -d" " -f2)" -ne "$SHORTER_DNS_TTL" ]; then
+    COUNT=$((COUNT+1));
     sleep 10
     printf "."
   else
@@ -310,7 +311,7 @@ echo "
 ################################################################################
 "
 
-wait_until_dns_ttl_timeout $CURRENT_DNS_TTL
+wait_until_dns_ttl_timeout "$CURRENT_DNS_TTL"
 
 set_step_state 3
 }
@@ -328,7 +329,7 @@ echo "
 TF_VAR_use_short_dns_ttl=true \
 TF_VAR_create_floating_ip_puzzle_massive=true \
 TF_VAR_is_floating_ip_active=true \
-  ./$ENVIRONMENT/terra.sh apply
+  "./$ENVIRONMENT/terra.sh" apply
 
 set_step_state 4
 }
@@ -342,7 +343,7 @@ echo "
 ################################################################################
 "
 
-wait_until_dns_ttl_timeout $SHORTER_DNS_TTL
+wait_until_dns_ttl_timeout "$SHORTER_DNS_TTL"
 
 set_step_state 5
 }
@@ -358,13 +359,13 @@ Create both swaps here. Only the active swap will be getting traffic since the
 floating ip will be pointing to it.
 "
 
-read -p "
+read -r -p "
 Update these variables in the _infra/$ENVIRONMENT/private.tfvars file.
 Should be set like this:
 create_legacy_puzzle_massive_swap_a = true
 create_legacy_puzzle_massive_swap_b = true
 Continue? [y/n] " CONFIRM
-if [ $CONFIRM != "y" ]; then
+if [ "$CONFIRM" != "y" ]; then
   echo "Canceled deployment."
   exit 0
 fi
@@ -372,7 +373,7 @@ fi
 TF_VAR_use_short_dns_ttl=true \
 TF_VAR_create_floating_ip_puzzle_massive=true \
 TF_VAR_is_floating_ip_active=true \
-  ./$ENVIRONMENT/terra.sh apply
+  "./$ENVIRONMENT/terra.sh" apply
 
 echo "Waiting for 80 seconds before attempting to connect to newly provisioned droplet."
 # Wait for a bit before trying to connect to the newly provisioned droplet.
@@ -381,45 +382,45 @@ sleep 80
 # Run Ansible playbooks to setup newly provisioned swap with data from old swap.
 # TODO: how to not ask for the become password each time?
 ansible-playbook ansible-playbooks/add-host-to-known_hosts.yml \
-  -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
+  -i "$ENVIRONMENT/host_inventory.ansible.cfg" --limit legacy_puzzle_massive_new_swap
 
 ansible-playbook ansible-playbooks/finished-cloud-init.yml \
   -u dev \
-  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+  -i "$ENVIRONMENT/host_inventory.ansible.cfg" \
   --limit legacy_puzzle_massive_new_swap
 
 # Strange way of getting IP address of new swap.
-NEW_SWAP_IP=$(ansible -m debug \
-  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+NEW_SWAP_IP="$(ansible -m debug \
+  -i "$ENVIRONMENT/host_inventory.ansible.cfg" \
   -a "gather_facts=true" \
   -a "var=hostvars[inventory_hostname]" \
   legacy_puzzle_massive_new_swap \
   | sed 's#.*SUCCESS =>##' \
-  | jq -r '.["hostvars[inventory_hostname]"].inventory_hostname')
+  | jq -r '.["hostvars[inventory_hostname]"].inventory_hostname')"
 
 echo "ssh in as dev and set the password if it has been marked to be reset.
 ssh dev@${NEW_SWAP_IP}
 "
-ssh dev@${NEW_SWAP_IP}
+ssh "dev@${NEW_SWAP_IP}"
 
-test $PROVISION_CERTS -eq 1 \
-  && ansible-playbook ansible-playbooks/copy-certs-to-new-swap.yml \
-  --ask-become-pass \
-  -i $ENVIRONMENT/host_inventory.ansible.cfg \
-  || echo 'no copy certs'
+#test $PROVISION_CERTS -eq 1 \
+#  && ansible-playbook ansible-playbooks/copy-certs-to-new-swap.yml \
+#  --ask-become-pass \
+#  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+#  || echo 'no copy certs'
 
 ansible-playbook ansible-playbooks/make-install-and-reload-nginx.yml \
   --ask-become-pass \
-  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+  -i "$ENVIRONMENT/host_inventory.ansible.cfg" \
   --limit legacy_puzzle_massive_new_swap
 
-RESOURCES_DIRECTORY=$ENVIRONMENT/resources
-RESOURCES_DIRECTORY=$(realpath $RESOURCES_DIRECTORY)
-HTPASSWD_FILE=$(realpath $ENVIRONMENT/.htpasswd)
-OLD_SWAP_DB_BACKUP=$(realpath $ENVIRONMENT/db-old_swap.dump.gz)
+RESOURCES_DIRECTORY="$ENVIRONMENT/resources"
+RESOURCES_DIRECTORY="$(realpath "$RESOURCES_DIRECTORY")"
+HTPASSWD_FILE="$(realpath "$ENVIRONMENT/.htpasswd")"
+OLD_SWAP_DB_BACKUP="$(realpath "$ENVIRONMENT/db-old_swap.dump.gz")"
 ansible-playbook ansible-playbooks/switch-data-over-to-new-swap.yml \
   --ask-become-pass \
-  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+  -i "$ENVIRONMENT/host_inventory.ansible.cfg" \
   --extra-vars "htpasswd_file=$HTPASSWD_FILE
   message_file=../$ENVIRONMENT/puzzle-massive-message.html
   old_swap_db_backup=$OLD_SWAP_DB_BACKUP
@@ -427,14 +428,14 @@ ansible-playbook ansible-playbooks/switch-data-over-to-new-swap.yml \
 
 ansible-playbook ansible-playbooks/appctl-start.yml \
   --ask-become-pass \
-  -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap
+  -i "$ENVIRONMENT/host_inventory.ansible.cfg" --limit legacy_puzzle_massive_new_swap
 
-test $PROVISION_CERTS -eq 1 \
+test "$PROVISION_CERTS" -eq 1 \
   && ansible-playbook ansible-playbooks/provision-certbot.yml \
-  -i $ENVIRONMENT/host_inventory.ansible.cfg --limit legacy_puzzle_massive_new_swap \
+  -i "$ENVIRONMENT/host_inventory.ansible.cfg" --limit legacy_puzzle_massive_new_swap \
   --ask-become-pass \
-  --extra-vars "makeenvironment=$(test $ENVIRONMENT = 'development' && echo 'development' || echo 'production')
-  testcert=$(test $ENVIRONMENT = 'production' && echo '' || echo '--test-cert')" \
+  --extra-vars "makeenvironment=$(test "$ENVIRONMENT" = 'development' && echo 'development' || echo 'production')
+  testcert=$(test "$ENVIRONMENT" = 'production' && echo '' || echo '--test-cert')" \
   || echo 'no provision certs'
 
 echo "The IP for the new swap '$NEW_SWAP' in $ENVIRONMENT environment is:
@@ -446,33 +447,33 @@ $NEW_SWAP_IP $FQDN
 
 "
 
-read -p "Verify that new swap '$NEW_SWAP' is working correctly. [y/n] " CONFIRM
-if [ $CONFIRM != "y" ]; then
+read -r -p "Verify that new swap '$NEW_SWAP' is working correctly. [y/n] " CONFIRM
+if [ "$CONFIRM" != "y" ]; then
   echo "Cancelled deployment. Old swap '$OLD_SWAP' is currently stopped still."
-  read -p "
+  read -r -p "
 Rollback to old swap '$OLD_SWAP' now? Another attempt will need to wait until
 after the longer DNS TTL when doing a rollback.
 Rollback? [y/n] " CONFIRM
-  if [ $CONFIRM != "y" ]; then
+  if [ "$CONFIRM" != "y" ]; then
     rollback
   else
     exit 0
   fi
 fi
 
-read -p "
+read -r -p "
 Update these variables in the _infra/$ENVIRONMENT/private.tfvars file.
 Should be set like this:
 is_swap_a_active = $(test "$NEW_SWAP" = "A" && echo "true" || echo "false")
 is_swap_b_active = $(test "$NEW_SWAP" = "B" && echo "true" || echo "false")
 Continue? [y/n] " CONFIRM
-if [ $CONFIRM != "y" ]; then
+if [ "$CONFIRM" != "y" ]; then
   echo "Cancelled deployment. Old swap '$OLD_SWAP' is currently stopped still."
-  read -p "
+  read -r -p "
 Rollback to old swap '$OLD_SWAP' now? Another attempt will need to wait until
 after the longer DNS TTL when doing a rollback.
 Rollback? [y/n] " CONFIRM
-  if [ $CONFIRM != "y" ]; then
+  if [ "$CONFIRM" != "y" ]; then
     rollback
   else
     exit 0
@@ -493,12 +494,12 @@ echo "
 TF_VAR_use_short_dns_ttl=true \
 TF_VAR_create_floating_ip_puzzle_massive=true \
 TF_VAR_is_floating_ip_active=true \
-  ./$ENVIRONMENT/terra.sh apply
+  "./$ENVIRONMENT/terra.sh" apply
 
-read -p "New swap '$NEW_SWAP' is now active. Continue with cleaning up old swap '$OLD_SWAP'? [y/n] " CONFIRM
-if [ $CONFIRM != "y" ]; then
+read -r -p "New swap '$NEW_SWAP' is now active. Continue with cleaning up old swap '$OLD_SWAP'? [y/n] " CONFIRM
+if [ "$CONFIRM" != "y" ]; then
   echo "Cancelled deployment. Old swap '$OLD_SWAP' is currently stopped and not active."
-  read -p "
+  read -r -p "
  Rollback to old swap '$OLD_SWAP' and make it active now? Another deployment
  attempt will need to wait until after the longer DNS TTL when doing a rollback.
 
@@ -508,7 +509,7 @@ will cause a potential loss of data.
 ################################################################################
 
 Rollback? [y/n] " CONFIRM
-  if [ $CONFIRM != "y" ]; then
+  if [ "$CONFIRM" != "y" ]; then
     rollback
   else
     exit 0
@@ -526,13 +527,13 @@ echo "
 ################################################################################
 "
 
-read -p "
+read -r -p "
 Update these variables in the _infra/$ENVIRONMENT/private.tfvars file.
 Should be set like this:
 create_legacy_puzzle_massive_swap_a = $(test "$NEW_SWAP" = "A" && echo "true" || echo "false")
 create_legacy_puzzle_massive_swap_b = $(test "$NEW_SWAP" = "B" && echo "true" || echo "false")
 Continue? [y/n] " CONFIRM
-if [ $CONFIRM != "y" ]; then
+if [ "$CONFIRM" != "y" ]; then
   echo "Cancelled deployment. Old swap '$OLD_SWAP' is currently stopped and not active."
   exit 0
 fi
@@ -540,7 +541,7 @@ fi
 TF_VAR_use_short_dns_ttl=true \
 TF_VAR_create_floating_ip_puzzle_massive=true \
 TF_VAR_is_floating_ip_active=true \
-  ./$ENVIRONMENT/terra.sh apply
+  "./$ENVIRONMENT/terra.sh" apply
 
 set_step_state 8
 }
@@ -556,7 +557,7 @@ echo "
 TF_VAR_use_short_dns_ttl=true \
 TF_VAR_create_floating_ip_puzzle_massive=true \
 TF_VAR_is_floating_ip_active=false \
-  ./$ENVIRONMENT/terra.sh apply
+  "./$ENVIRONMENT/terra.sh" apply
 
 set_step_state 9
 }
@@ -569,7 +570,7 @@ echo "
 ################################################################################
 "
 
-wait_until_dns_ttl_timeout $SHORTER_DNS_TTL
+wait_until_dns_ttl_timeout "$SHORTER_DNS_TTL"
 
 set_step_state 10
 }
@@ -584,7 +585,7 @@ echo "
 
 TF_VAR_use_short_dns_ttl=true \
 TF_VAR_create_floating_ip_puzzle_massive=false \
-  ./$ENVIRONMENT/terra.sh apply
+  "./$ENVIRONMENT/terra.sh" apply
 
 set_step_state 11
 }
@@ -597,7 +598,7 @@ echo "
 ################################################################################
 "
 
-./$ENVIRONMENT/terra.sh apply
+"./$ENVIRONMENT/terra.sh" apply
 
 set_step_state 12
 }
@@ -610,13 +611,13 @@ echo "
 ################################################################################
 "
 
-read -p "
+read -r -p "
 Update these variables in the _infra/$ENVIRONMENT/private.tfvars file.
 Should be set like this:
 old_swap = \"$OLD_SWAP\"
 new_swap = \"$NEW_SWAP\"
 Continue? [y/n] " CONFIRM
-  if [ $CONFIRM != "y" ]; then
+  if [ "$CONFIRM" != "y" ]; then
     echo "Cancelled."
     exit 0
   fi
