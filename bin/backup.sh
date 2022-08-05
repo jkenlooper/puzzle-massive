@@ -69,8 +69,10 @@ echo "Running one-off scheduler tasks to clean up any batched data";
 ./bin/puzzle-massive-scheduler --task UpdateModifiedDateOnPuzzle || exit 1;
 
 # Allow passing in a file path of where to save the db dump file
+has_named_db_dump_file="no"
 if [ -n "${1-}" ]; then
 DBDUMPFILE="$1";
+has_named_db_dump_file="yes"
 else
   if [ -n "${WEEKDAY_BACKUP-}" ]; then
     DBDUMPFILE="db-$(date --utc '+%a').dump.gz";
@@ -102,7 +104,10 @@ if [ -n "${EPHEMERAL_ARCHIVE_ENDPOINT_URL}" -a -n "${EPHEMERAL_ARCHIVE_BUCKET}" 
     # probably not needed, but it doesn't hurt anything here.
     sleep 1
     echo "Uploaded date stamped db backup to ${EPHEMERAL_ARCHIVE_BUCKET} s3 bucket."
-    echo "Renaming the ${DBDUMPFILE} to a weekday filename to preserve disk space."
-    weekday_backup_db_dump_file="${EPHEMERAL_ARCHIVE_BUCKET}__db-$(date --utc '+%a').dump.gz";
-    mv --verbose "${BACKUP_DIRECTORY}/${DBDUMPFILE}" "${BACKUP_DIRECTORY}/${weekday_backup_db_dump_file}"
+
+    if [ "$has_named_db_dump_file" = "no" ]; then
+      echo "Renaming the ${DBDUMPFILE} to a weekday filename to preserve disk space."
+      weekday_backup_db_dump_file="${EPHEMERAL_ARCHIVE_BUCKET}__db-$(date --utc '+%a').dump.gz";
+      mv --verbose "${BACKUP_DIRECTORY}/${DBDUMPFILE}" "${BACKUP_DIRECTORY}/${weekday_backup_db_dump_file}"
+    fi
 fi
