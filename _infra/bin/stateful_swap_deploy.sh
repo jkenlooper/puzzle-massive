@@ -180,7 +180,8 @@ SHORTER_DNS_TTL="$(echo 'var.short_dns_ttl' | \
 
 # Get the current DNS TTL.
 
-CURRENT_DNS_TTL="$(dig +nocmd @ns1.digitalocean.com "$FQDN" +noall +answer | cut -d" " -f2)"
+dig +nocmd @ns1.digitalocean.com "$FQDN" +noall +answer
+read -r -p "What is the current DNS TTL? " CURRENT_DNS_TTL
 echo "Current DNS TTL is $CURRENT_DNS_TTL seconds for $FQDN."
 
 
@@ -198,7 +199,8 @@ if [ "$STEP_STATE" != '1' ]; then
   echo "Skipping to step '$STEP_STATE'."
 fi
 
-CURRENT_DNS_TTL="$(dig +nocmd @ns1.digitalocean.com "$FQDN" +noall +answer | cut -d" " -f2)"
+dig +nocmd @ns1.digitalocean.com "$FQDN" +noall +answer
+read -r -p "What is the current DNS TTL? " CURRENT_DNS_TTL
 
 wait_until_dns_ttl_timeout () {
   echo "Waiting $1 seconds for DNS TTL to timeout."
@@ -236,7 +238,8 @@ Continue? [y/n] " CONFIRM
   echo "
 Updating to the active swap. Also wait for DNS TTL to timeout just in case
 floating IP wasn't active."
-  ROLLBACK_DNS_TTL="$(dig +nocmd @ns1.digitalocean.com "$FQDN" +noall +answer | cut -d" " -f2)"
+  dig +nocmd @ns1.digitalocean.com "$FQDN" +noall +answer
+  read -r -p "What is the current DNS TTL? " ROLLBACK_DNS_TTL
   TF_VAR_use_short_dns_ttl=true \
   TF_VAR_create_floating_ip_puzzle_massive=true \
   TF_VAR_is_floating_ip_active=true \
@@ -290,7 +293,9 @@ TF_VAR_use_short_dns_ttl=true \
 echo "Waiting for new shorter DNS TTL to be set."
 COUNT=1
 while [ "$COUNT" -le 10 ]; do
-  if [ "$(dig +nocmd @ns1.digitalocean.com "$FQDN" +noall +answer | cut -d" " -f2)" -ne "$SHORTER_DNS_TTL" ]; then
+  dig +nocmd @ns1.digitalocean.com "$FQDN" +noall +answer
+  read -r -p "Check again? y/n " RECHECK
+  if [ "$RECHECK" = "y" ]; then
     COUNT=$((COUNT+1));
     sleep 10
     printf "."
@@ -403,11 +408,11 @@ ssh dev@${NEW_SWAP_IP}
 "
 ssh "dev@${NEW_SWAP_IP}"
 
-#test $PROVISION_CERTS -eq 1 \
-#  && ansible-playbook ansible-playbooks/copy-certs-to-new-swap.yml \
-#  --ask-become-pass \
-#  -i $ENVIRONMENT/host_inventory.ansible.cfg \
-#  || echo 'no copy certs'
+test $PROVISION_CERTS -eq 1 \
+  && ansible-playbook ansible-playbooks/copy-certs-to-new-swap.yml \
+  --ask-become-pass \
+  -i $ENVIRONMENT/host_inventory.ansible.cfg \
+  || echo 'no copy certs'
 
 ansible-playbook ansible-playbooks/make-install-and-reload-nginx.yml \
   --ask-become-pass \
