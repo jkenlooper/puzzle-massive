@@ -21,7 +21,7 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
-## [Unreleased] - ...
+## [2.12.4] - 2022-08-05
 
 Improving the client side build tools and process.
 This release will require installing librsvg2-bin before doing an in-place
