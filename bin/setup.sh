@@ -56,10 +56,11 @@ apt-get --yes install python3-pil
 apt-get --yes install libsqlite3-dev
 
 # Dependencies for piecemaker
-apt-get --yes install libspatialindex6
 apt-get --yes install optipng
-
 apt-get --yes install potrace libffi-dev libxml2-dev python3-lxml python3-xcffib librsvg2-bin
+
+# Dependencies for enforcer (Rtree)
+apt-get --yes install libspatialindex6
 
 apt-get --yes install redis-server
 redis-cli config set maxmemory "500mb"

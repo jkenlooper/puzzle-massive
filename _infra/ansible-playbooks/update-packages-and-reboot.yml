@@ -1,6 +1,6 @@
 ---
 
-- name: Update packages and reboot
+- name: Stop puzzle massive services
   hosts: legacy_puzzle_massive
   user: dev
   tasks:
@@ -20,6 +20,11 @@
       args:
         chdir: /usr/local/src/puzzle-massive/
 
+- name: Update packages and reboot
+  hosts: all
+  user: dev
+  tasks:
+
     - name: Update all packages to their latest version
       become: true
       apt:
@@ -33,6 +38,11 @@
         # Sometimes this times out? Wait 10 seconds before attempting to check
         # if successful reboot.
         post_reboot_delay: 10
+
+- name: Start puzzle massive services
+  hosts: legacy_puzzle_massive
+  user: dev
+  tasks:
 
     - name: Remove puzzle massive message if it exists
       become: true

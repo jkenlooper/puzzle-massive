@@ -7,6 +7,9 @@ export DEBIAN_FRONTEND=noninteractive
 # More documentation on iptables
 # https://www.netfilter.org/documentation/
 # https://www.digitalocean.com/community/tutorials/iptables-essentials-common-firewall-rules-and-commands
+#
+# TODO Translate to nftables?
+# https://wiki.nftables.org/wiki-nftables/index.php/Moving_from_iptables_to_nftables
 
 set -x
 
