@@ -75,7 +75,7 @@ License.
 ## License
 
 Puzzle Massive. An online multiplayer jigsaw puzzle.
-Copyright (C) 2021 Jake Hickenlooper
+Copyright (C) Jake Hickenlooper
 
 Only the source code that is used for Puzzle Massive is licensed under the
 [GNU Affero General Public License](https://choosealicense.com/licenses/agpl-3.0/).

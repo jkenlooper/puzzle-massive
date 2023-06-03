@@ -25,4 +25,4 @@ mkdir -p /etc/nginx/sites-{available,enabled}
 rm -f /etc/nginx/conf.d/default.conf
 
 # Verify that the latest stable version of nginx has been installed.
-nginx -v 2>&1 | grep --silent '1.22.[0-9]\+' || (echo "Expected stable version nginx 1.22.x" && exit 1)
+nginx -v 2>&1 | grep --silent '1.24.[0-9]\+' || (echo "Expected stable version nginx 1.24.x" && exit 1)
