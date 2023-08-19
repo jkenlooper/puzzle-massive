@@ -132,7 +132,6 @@ def make_app(config=None, database_writable=False, **kw):
     )
     from api.puzzle_list import (
         InternalPuzzleRenderedResourcesListView,
-        PuzzleListView,
         PlayerPuzzleListView,
         GalleryPuzzleListView,
     )
@@ -239,7 +238,6 @@ def make_app(config=None, database_writable=False, **kw):
         "/puzzle-original-details/<puzzle_id>/",
         view_func=PuzzleOriginalDetailsView.as_view("puzzle-original-details"),
     )
-    app.add_url_rule("/puzzle-list/", view_func=PuzzleListView.as_view("puzzle-list"))
     app.add_url_rule(
         "/player-puzzle-list/",
         view_func=PlayerPuzzleListView.as_view("player-puzzle-list"),

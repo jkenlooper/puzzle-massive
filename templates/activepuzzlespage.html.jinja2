@@ -1,0 +1,18 @@
+{% extends 'base.html.jinja2' %}
+
+{% block main %}
+<div class="pm-PuzzleListPage">
+
+  <section>
+    <h1>Active Jigsaw Puzzles</h1>
+
+    <div class="pm-PuzzleListPage-listing">
+      <pm-gallery variant="card" front-fragment-href="/chill{{ url_for('.page_uri', uri='front') }}" puzzle-piece-groups="{{ config.PUZZLE_PIECE_GROUPS|join(' ') }}"></pm-gallery>
+    </div>
+
+  </section>
+
+</div>
+
+{% endblock %}
+

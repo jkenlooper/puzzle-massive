@@ -296,17 +296,16 @@ value:
 
 ---
 !ChillNode
-name: puzzleimagepickerpage
-route: /puzzle-list/
-template: puzzleimagepickerpage.html.jinja2
+name: activepuzzlespage
+route: /active-puzzles/
+template: activepuzzlespage.html.jinja2
 value:
   pageimagemedia: puzzle-massive-logo-primary-on-white--1200x630.jpg
   pageimagemedia_width: 1200
   pageimagemedia_height: 630
   page:
-    description: Find a jigsaw puzzle by searching through all existing puzzles on the Puzzle Massive site.
-    title: Available Puzzle Images
-  public_image_count: select_total_puzzle_image_count.sql
+    description: Active jigsaw puzzles on the Puzzle Massive site.
+    title: Active Jigsaw Puzzles
 
 ---
 !ChillNode

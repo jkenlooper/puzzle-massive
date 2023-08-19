@@ -19,7 +19,7 @@ customElements.define(
       this.skillLevelRanges = [];
       // Set the attribute values
       const frontFragmentHref = this.attributes.getNamedItem(
-        "front-fragment-href"
+        "front-fragment-href",
       );
       if (!frontFragmentHref || !frontFragmentHref.value) {
         this.hasError = true;
@@ -28,7 +28,7 @@ customElements.define(
         this.frontFragmentHref = frontFragmentHref.value;
       }
       const puzzlePieceGroupsAttr = this.attributes.getNamedItem(
-        "puzzle-piece-groups"
+        "puzzle-piece-groups",
       );
       if (!puzzlePieceGroupsAttr || !puzzlePieceGroupsAttr.value) {
         this.hasError = true;
@@ -45,7 +45,7 @@ customElements.define(
             acc.push([v]);
             return acc;
           },
-          [[0]]
+          [[0]],
         );
         this.skillLevelRanges.pop();
       }
@@ -67,26 +67,14 @@ customElements.define(
         .then((puzzleList) => {
           // Filter out the skip puzzle and then select one puzzle from each
           // skill level range.
-          const selected_range = Array(this.skillLevelRanges.length);
           this.puzzles = puzzleList.puzzles
             .filter((puzzle) => {
               return puzzle.puzzle_id !== this.skipPuzzleId;
-            })
-            .filter((puzzle) => {
-              const levelIndex = this.skillLevelRanges.findIndex((range) => {
-                return range[0] >= puzzle.pieces && puzzle.pieces < range[1];
-              });
-              if (selected_range[levelIndex]) {
-                return false;
-              } else {
-                selected_range[levelIndex] = true;
-                return true;
-              }
             });
           this.puzzlesOrderedByPieceCount = puzzleList.puzzles.filter(
             (puzzle) => {
               return puzzle.puzzle_id !== this.skipPuzzleId;
-            }
+            },
           );
           this.puzzlesOrderedByPieceCount.sort((puzzleA, puzzleB) => {
             return puzzleA.pieces - puzzleB.pieces;
@@ -109,48 +97,55 @@ customElements.define(
       if (data.variant === "card") {
         return html`
           <div class="pm-Gallery">
-            ${data.isLoadingPuzzles
-              ? html` Loading puzzles&hellip; `
-              : html`
-                  ${data.puzzles && data.puzzles.length
-                    ? html`
+            ${
+          data.isLoadingPuzzles ? html` Loading puzzles&hellip; ` : html`
+                  ${
+            data.puzzles && data.puzzles.length
+              ? html`
                         <div
                           class="pm-PuzzleList pm-PuzzleList--card"
                           role="list"
                         >
-                          ${repeat(
-                            data.puzzles,
-                            (puzzle) => puzzle.puzzle_id,
-                            (puzzle) => html`
+                          ${
+                repeat(
+                  data.puzzles,
+                  (puzzle) => puzzle.puzzle_id,
+                  (puzzle) =>
+                    html`
                               <pm-puzzle-image-card
                                 variant=${data.variant}
                                 .puzzle=${puzzle}
                                 front-fragment-href=${data.frontFragmentHref}
                               ></pm-puzzle-image-card>
-                            `
-                          )}
+                            `,
+                )
+              }
                         </div>
                       `
-                    : html` <p>No puzzles.</p> `}
-                `}
+              : html` <p>No puzzles.</p> `
+          }
+                `
+        }
           </div>
         `;
       } else if (data.variant === "inline") {
         return html`
           <div class="pm-Gallery">
-            ${data.isLoadingPuzzles
-              ? html` &hellip; `
-              : html`
-                  ${data.puzzlesOrderedByPieceCount &&
-                  data.puzzlesOrderedByPieceCount.length
-                    ? html`
+            ${
+          data.isLoadingPuzzles ? html` &hellip; ` : html`
+                  ${
+            data.puzzlesOrderedByPieceCount &&
+              data.puzzlesOrderedByPieceCount.length
+              ? html`
                         <span class="u-block u-textRight">
                           Active Jigsaw Puzzles from
                           <strong class="u-textNoWrap">
                             ${data.puzzlesOrderedByPieceCount[0].pieces} to
-                            ${data.puzzlesOrderedByPieceCount[
-                              data.puzzlesOrderedByPieceCount.length - 1
-                            ].pieces}
+                            ${
+                data.puzzlesOrderedByPieceCount[
+                  data.puzzlesOrderedByPieceCount.length - 1
+                ].pieces
+              }
                           </strong>
                           Pieces
                         </span>
@@ -158,21 +153,26 @@ customElements.define(
                           class="pm-PuzzleList pm-PuzzleList--inline"
                           role="list"
                         >
-                          ${repeat(
-                            data.puzzlesOrderedByPieceCount,
-                            (puzzle) => puzzle.puzzle_id,
-                            (puzzle) => html`
+                          ${
+                repeat(
+                  data.puzzlesOrderedByPieceCount,
+                  (puzzle) => puzzle.puzzle_id,
+                  (puzzle) =>
+                    html`
                               <pm-puzzle-image-card
                                 variant=${data.variant}
                                 .puzzle=${puzzle}
                                 front-fragment-href=${data.frontFragmentHref}
                               ></pm-puzzle-image-card>
-                            `
-                          )}
+                            `,
+                )
+              }
                         </div>
                       `
-                    : html` <p>No puzzles.</p> `}
-                `}
+              : html` <p>No puzzles.</p> `
+          }
+                `
+        }
           </div>
         `;
       } else {
@@ -199,5 +199,5 @@ customElements.define(
     }
     disconnectedCallback() {}
     adoptedCallback() {}
-  }
+  },
 );
