@@ -98,13 +98,6 @@
 
 {% block header %}
 {{ super() }}
-{% if page.description.startswith(' ') %}
-    <p class="pm-HomeIntro">
-    {{ page.content | readfile }}
-    </p>
-{% endif %}
-{% endblock %}
-
 {% endblock %}
 
 {% block main %}
