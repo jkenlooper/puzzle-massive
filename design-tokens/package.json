@@ -1,12 +1,12 @@
 {
   "name": "puzzlemassive-design-tokens",
   "//template_file_comment": "This file in the parent directory design-tokens was generated from the design-tokens directory in https://github.com/jkenlooper/cookiecutters . Any modifications needed to this file should be done on that originating file.",
-  "version": "0.0.2-alpha.1",
+  "version": "0.0.2-alpha.5",
   "scripts": {
     "theo": "theo",
     "postcss": "postcss",
     "transform-design-tokens": "./transform-design-tokens.sh",
-    "dev": "npm run build && http-server dist/ --port 8080 -c-1",
+    "dev": "npm run build && http-server dist/ --port $DESIGN_TOKENS_PORT -c-1",
     "prebuild": "npm run transform-design-tokens",
     "build": "postcss src/v1/ --no-map --dir dist/v1/"
   },

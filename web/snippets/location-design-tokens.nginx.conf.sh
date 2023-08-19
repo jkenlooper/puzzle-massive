@@ -12,10 +12,6 @@ DATE=$(date)
 
 if test "${ENVIRONMENT}" != 'development'; then
   root_dir=${SRVDIR}
-else
-  root_dir=${PWD}
-fi
-
 cat <<-HERE
 # File generated from $0
 # on ${DATE}
@@ -27,3 +23,16 @@ location /design-tokens/ {
   try_files \$uri =404;
 }
 HERE
+
+else
+  root_dir=${PWD}/design-tokens/dist/
+cat <<-HERE
+# File generated from $0
+# on ${DATE}
+
+location /design-tokens/ {
+  alias ${root_dir};
+  try_files \$uri =404;
+}
+HERE
+fi
