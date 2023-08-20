@@ -185,9 +185,11 @@ def make_app(config=None, database_writable=False, **kw):
     app.add_url_rule(
         "/puzzle-upload/", view_func=PuzzleUploadView.as_view("puzzle-upload")
     )
-    app.add_url_rule(
-        "/suggest-image/", view_func=SuggestImageView.as_view("suggest-image")
-    )
+
+    # No longer supporting the suggest image form.
+    #app.add_url_rule(
+    #    "/suggest-image/", view_func=SuggestImageView.as_view("suggest-image")
+    #)
 
     app.add_url_rule(
         "/current-user-id/", view_func=CurrentUserIDView.as_view("current-user-id")

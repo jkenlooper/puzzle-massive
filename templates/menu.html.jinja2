@@ -7,7 +7,6 @@
     {{ nav_link('/', 'Home', icon='solution') }}
     {{ nav_link("/chill" + url_for('.page_uri', uri='active-puzzles'), 'Puzzles', icon='search-images') }}
     {{ nav_link("/chill" + url_for('.page_uri', uri='high-scores'), 'High Scores', icon='competition') }}
-    {{ nav_link("/chill" + url_for('.page_uri', uri='new-puzzle/submit'), 'Suggest Puzzle', label_aux='', icon='new-image') }}
 
     {#- Insert site specific menu links. -#}
     {{ '[chill route /internal/extra-menu-items/]'|shortcodes }}

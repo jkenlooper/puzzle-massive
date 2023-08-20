@@ -1,3 +1,11 @@
+<p>
+Suggest puzzle form has been removed.
+</p>
+
+{#
+
+<!-- No longer supporting suggest image form. -->
+
 <form enctype="multipart/form-data" x-ref="suggestImageForm" id="suggest-image-form" method="post" action="/newapi/suggest-image/"
 x-data="form()">
 <script>
@@ -64,27 +72,6 @@ function form() {
     </div>
     {% endif %}
 
-    {# TODO: Secret message not fully implemented.
-    {% if 'secret-message' in config.PUZZLE_FEATURES or 'all' in config.PUZZLE_FEATURES %}
-    <div class="pm-UploadForm-row">
-      <label for="feature-secret-message">
-        Secret Message
-      </label>
-      <div>
-        <input id="feature-secret-message" type="checkbox" name="features" value="secret-message" x-model="feature_secret_message">
-        <div style="width: 100%" x-show="feature_secret_message">
-        <p>
-          <label for="secret-message">
-          Add a message to show to players when they complete the puzzle.
-          </label>
-        </p>
-        <textarea maxlength="1000" id="secret-message" name="secret_message" x-model="secret_message" x-on:input.debounce="checkSecretMessage"></textarea>
-        </div>
-      </div>
-    </div>
-    {% endif %}
-    #}
-
     <div class="pm-UploadForm-row">
       <label for="permission">
         Unlisted
@@ -134,3 +121,5 @@ function form() {
     </div>
   </div>
 </form>
+
+#}

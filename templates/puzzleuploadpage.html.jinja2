@@ -5,45 +5,12 @@
 
 <div class="pm-Puzzleuploadpage">
   <section class="pm-Puzzleuploadpage-form">
-    <h1>Suggest Image for a Puzzle</h1>
-    <p>
-    Fill out this form to submit a picture that you would like to be created
-    into a jigsaw puzzle.  Only appropriate pictures will be used for puzzles.
-    </p>
     {% if route.contributor == config.NEW_PUZZLE_CONTRIB %}
       {% include 'uploadform.html.jinja2' %}
     {% else %}
       {% include 'suggest-image-form.html.jinja2' %}
     {% endif %}
   </section>
-
-  <section class="pm-Puzzleuploadpage-content">
-    <h1>Creating Puzzles</h1>
-    <p>
-    This is a short guide on how to choose the right images to use for a puzzle.  There are some restrictions on images that can be used.  Most images found online are copyrighted and may or may not allow being used on another web site like this one.  Also, images that have questionable content will not be permitted.
-    </p>
-
-    <p>
-    If using an image that you found on a different website, then make sure to copy the link to a page that has the copyright information. &#160;This is usually required,  in fact it's the only way I'll know that the image can be used.  If it's an image that you made and don't have a link to it, then just make sure you state that in the description and send the image using the other image upload link provided.
-    </p>
-
-    <p><strong>It is recommended to use
-        <a href="https://unsplash.com/">Unsplash</a>
-        to find photos for puzzle images as they have high resolution and have a copyright that allows use on this website.
-        </strong>
-    </p>
-  </section>
-
-<p id="suggest-image-form-puzzle-instance-description">
-  <span class="u-block">**</span>
-  A puzzle instance is a memory slot that you have available to store
-  a puzzle. You will have full administrative control over this puzzle.
-  Every player can earn their first puzzle instance slot by putting
-  together puzzles and getting a certain score.  More puzzle instance
-  slots can be manually assigned to players and is up to the admin of the
-  site to handle.  On the live site (puzzle.massive.xyz) -- more are
-  awarded to players that contribute to the project in some way.
-</p>
 </div>
 
 {% endblock %}
