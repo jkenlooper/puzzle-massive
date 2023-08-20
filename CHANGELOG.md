@@ -21,6 +21,21 @@ Types of changes
 ## [Unreleased] - ...
 -->
 
+## [Unreleased] - ...
+
+Clean up site and simplify the project codebase. Preparing to move to
+Codeberg.org and archiving the project on GitHub.
+
+### Changed
+
+- Landing page for puzzles no longer show other active puzzles.
+
+### Removed
+
+- Suggest image form has been removed, upload puzzle form is still available.
+- Search puzzles page replaced with listing of only active puzzles.
+
+
 ## [2.12.4] - 2022-08-05
 
 Improving the client side build tools and process.
