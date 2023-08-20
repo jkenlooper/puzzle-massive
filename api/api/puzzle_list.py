@@ -153,7 +153,7 @@ class GalleryPuzzleListView(MethodView):
         for low, high in current_app.config["SKILL_LEVEL_RANGES"]:
             result = cur.execute(
                 fetch_query_string("select_available_puzzle_images--gallery.sql"),
-                {"pieces_min": low, "pieces_max": high, "count": 20},
+                {"pieces_min": low, "pieces_max": high},
             ).fetchall()
             if result:
                 (result, col_names) = rowify(result, cur.description)

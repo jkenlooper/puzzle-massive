@@ -48,11 +48,11 @@ AND p.puzzle_id in (
     and p.pieces < :pieces_max
     group by p.puzzle_id
     order by count(t1.timestamp) desc, p.m_date desc
-    limit :count
+    --limit :count
 )
 
 order by p.m_date desc
 
-limit :count
+--limit :count
 ;
 
