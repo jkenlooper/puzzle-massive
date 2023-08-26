@@ -8,8 +8,8 @@ SHELL := bash
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_dir := $(dir $(mkfile_path))
 
-PYTHON := $(project_dir)bin/python
-PIP := $(project_dir)bin/pip
+PYTHON := python
+PIP := $(PYTHON) -m pip
 
 # Local pip is used by creating a python virtual environment and running `source ./bin/activate`
 
@@ -44,12 +44,12 @@ TAG := $(shell cat package.json | $(PYTHON) -c 'import sys, json; print(json.loa
 inspect.%:
 	@echo $($*)
 
-ifeq ($(shell ls bin/activate),)
-$(error No bin/activate found. Run "'virtualenv . -p python3' or 'python3 -m venv .' to create a python virtual environment")
-endif
-#ifneq ($(shell which python),$(project_dir)bin/python)
-#$(warning run "source bin/activate" to activate the python virtual environment. Using $(shell which python). Ignore this warning if using sudo make install.)
+#ifeq ($(shell ls bin/activate),)
+#$(error No bin/activate found. Run "'virtualenv . -p python3' or 'python3 -m venv .' to create a python virtual environment")
 #endif
+##ifneq ($(shell which python),$(project_dir)bin/python)
+##$(warning run "source bin/activate" to activate the python virtual environment. Using $(shell which python). Ignore this warning if using sudo make install.)
+##endif
 
 
 # Always run.  Useful when target is like targetname.% .
