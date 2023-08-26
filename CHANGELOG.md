@@ -36,6 +36,7 @@ Codeberg.org and archiving the project on GitHub.
 - Search puzzles page replaced with listing of only active puzzles.
 - Mockups
 - Quality Control scripts (code formatters)
+- Design tokens build scripts
 
 
 ## [2.12.4] - 2022-08-05
