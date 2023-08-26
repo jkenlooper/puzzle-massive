@@ -3,7 +3,6 @@
   "target_directories": [
     ".",
     "design-tokens/src",
-    "mockups",
     "source-media",
     "root",
     "enforcer",

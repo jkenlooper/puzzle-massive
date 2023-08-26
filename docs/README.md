@@ -47,9 +47,6 @@ guides on installing and developing Puzzle Massive.
 `media/` and [source-media/](../source-media/) Holds graphic files and other binaries that are directly used for the
 design of the site.
 
-[mockups/](../mockups/) Contains mockup HTML files that show the various components that are
-used on the Puzzle Massive site.
-
 [queries/](../queries/) SQL files that are used by the chill app and api app.
 
 `resources/` Generic directory for files.

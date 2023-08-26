@@ -27,21 +27,18 @@
       <a href="/chill{{ url_for('.page_uri', uri='high-scores') }}">
         High Scores
       </a>
-      <a href="/chill{{ url_for('.page_uri', uri='player') }}">
-        Your Player Profile
-      </a>
       </nav>
       <div class="pm-Footer-socialLinks">
         {{ '[chill route /internal/footer-social-links/]'|shortcodes }}
       </div>
-
 
       {#
       The site isn't using Google Analytics and other third party tracking code.
       Otherwise would need to show a message to the visitor stating that in
       order to comply with GDPR requirements (as far as I understand them).
       -#}
-      <p>This site uses cookies for player logins.  Your information is not shared with third parties.</p>
+      <p>This site uses cookies for player logins. No personal data is shared.</p>
+
       <p><small>
       Multiplayer jigsaw puzzles that anyone can play for free with no ads. Puzzle
       piece movements from other players are seen in real time. Easy to hard 5000+
