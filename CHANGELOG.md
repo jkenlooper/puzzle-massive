@@ -35,6 +35,7 @@ Codeberg.org and archiving the project on GitHub.
 - Suggest image form has been removed, upload puzzle form is still available.
 - Search puzzles page replaced with listing of only active puzzles.
 - Mockups
+- Quality Control scripts (code formatters)
 
 
 ## [2.12.4] - 2022-08-05

@@ -1,3 +1,2 @@
 default_context:
   slugname: "puzzlemassive"
-  targets: "design-tokens/src source-media root enforcer queries stream client-side-public/src docs api chill chill-data divulger documents templates"
