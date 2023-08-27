@@ -12,7 +12,7 @@ Vagrant.configure(2) do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
-  config.vm.box = "bento/ubuntu-20.04"
+  config.vm.box = "bento/ubuntu-22.04"
 
   config.vm.define "legacy_puzzle_massive", primary: true do |legacy_puzzle_massive|
     legacy_puzzle_massive.vm.hostname = "puzzle.massive.test"
@@ -142,7 +142,8 @@ DEFAULT_ENV
     # /usr/local/src/puzzle-massive directory.
     # To do db stuff as dev use `sudo su dev`.
     legacy_puzzle_massive.vm.provision "bin-add-dev-user", type: "shell", path: "bin/add-dev-user.sh", args: 'vagrant'
-    legacy_puzzle_massive.vm.provision "bin-update-sshd-config", type: "shell", path: "bin/update-sshd-config.sh"
+    # Don't update sshd config for a vagrant box.
+    #legacy_puzzle_massive.vm.provision "bin-update-sshd-config", type: "shell", path: "bin/update-sshd-config.sh"
     legacy_puzzle_massive.vm.provision "bin-set-external-puzzle-massive-in-hosts", type: "shell", path: "bin/set-external-puzzle-massive-in-hosts.sh"
     legacy_puzzle_massive.vm.provision "bin-install-latest-stable-nginx", type: "shell", path: "bin/install-latest-stable-nginx.sh"
     legacy_puzzle_massive.vm.provision "bin-setup", type: "shell", path: "bin/setup.sh"
@@ -163,8 +164,8 @@ DEFAULT_ENV
     # The devsync.sh uses local-puzzle-massive when syncing files
     # the devsync.sh depends on watchpack which will require nodejs
     legacy_puzzle_massive.vm.provision "shell-local-devsync-support", type: "shell", inline: <<-SHELL
-      curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
-      apt-get install -y nodejs
+      #curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+      apt-get install -y nodejs npm
       echo "127.0.0.1 local-puzzle-massive" >> /etc/hosts
     SHELL
 

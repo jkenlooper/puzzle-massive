@@ -1,14 +1,14 @@
 -r ../requirements.txt
-boto3==1.17.97
-Pillow==9.0.1
-pixsaw==0.3.3
+boto3
+Pillow==9.5.0
+pixsaw==0.3.4
 #git+https://github.com/jkenlooper/pixsaw.git@develop#egg=pixsaw
 docopt==0.6.2
-piecemaker==0.4.5
+piecemaker==0.4.6
 #git+https://github.com/jkenlooper/piecemaker.git@develop#egg=piecemaker
 #pycurl==7.43.0.2
-requests==2.21
-responses==0.10.14
+requests
+responses
 svgwrite==1.4.2
 PyYAML==6.0
 MarkupSafe==2.1.1

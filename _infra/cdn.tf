@@ -15,7 +15,7 @@ resource "digitalocean_droplet" "cdn" {
   name       = lower("cdn-${var.environment}")
   size       = var.cdn_droplet_size
   resize_disk= false
-  image      = "ubuntu-20-04-x64"
+  image      = "ubuntu-22-04-x64"
   region     = var.region
   vpc_uuid   = digitalocean_vpc.puzzle_massive.id
   ssh_keys   = var.developer_ssh_key_fingerprints
@@ -35,7 +35,7 @@ resource "digitalocean_droplet" "cdn_volatile" {
   count      = var.create_cdn_volatile ? 1 : 0
   name       = lower("cdn-volatile-${var.environment}")
   size       = var.cdn_droplet_size
-  image      = "ubuntu-20-04-x64"
+  image      = "ubuntu-22-04-x64"
   region     = var.region
   vpc_uuid   = digitalocean_vpc.puzzle_massive.id
   ssh_keys   = var.developer_ssh_key_fingerprints
