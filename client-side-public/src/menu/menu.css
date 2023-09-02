@@ -57,6 +57,9 @@
   box-shadow: 0px 2px 5px var(--color-dark);
   */
 }
+.pm-Menu-navLink > * + * {
+  padding-left: 0.5rem;
+}
 
 .pm-Menu-characterIcon {
   font-size: 5rem;

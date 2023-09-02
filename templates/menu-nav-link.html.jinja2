@@ -7,10 +7,12 @@
         <pm-icon>{{ icon }}</pm-icon>
       {%- endif -%}
     {%- endif -%}
+    <span>
     {{ label }}
     {%- if label_aux -%}
     <span class="pm-Menu-labelAux"> {{ label_aux }}</span>
     {%- endif -%}
+    </span>
   </a>
 {%- endmacro %}
 
