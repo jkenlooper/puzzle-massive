@@ -8,9 +8,26 @@ abusive behavior.
 
 **A live version is hosted at [puzzle.massive.xyz](http://puzzle.massive.xyz).**
 
-Bugs and feature requests can be tracked via the projects source code repository
-https://github.com/jkenlooper/puzzle-massive/issues
-or send an email to puzzle-massive-bug@pm.me with a description.
+After 2023-09-09, version 2 of Puzzle Massive will no longer be running at
+[puzzle.massive.xyz](http://puzzle.massive.xyz) and will be shutdown. Details
+for the shutdown are here: <https://jkenlooper.github.io/puzzle-massive/>.
+
+## Version 3 _the rewrite_
+
+Further development of Puzzle Massive version 3 is at
+<https://git.sr.ht/~jkenlooper/puzzle-massive>. There are no plans of keeping
+the version 3 codebase backwards compatible with version 2. Version 3 may be
+reusing code from version 2 but will have a clean git history.
+
+## Version 2
+
+While this version _does work_ and doesn't have too many issues, I am no longer
+going to actively run a website that is using the version 2 codebase.
+
+Issues for version 2 can be tracked via the projects source code repository
+<https://github.com/jkenlooper/puzzle-massive/issues>.
+
+---
 
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
