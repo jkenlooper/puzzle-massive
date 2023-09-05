@@ -64,12 +64,9 @@ Ask questions on:
 
 - [Puzzle Massive Discussions](https://github.com/jkenlooper/puzzle-massive/discussions)
 - [Chat on Discord](https://discord.gg/uVhE2Kd)
-- [Slack](https://join.slack.com/t/puzzlemassive/shared_invite/zt-v2csgv8y-Ldl93sNb3Gcm~NiWt3g5UA)
 
-I try to monitor the Puzzle Massive chat channels on
+I try to monitor the Puzzle Massive chat channel on
 [Discord](https://discord.gg/uVhE2Kd)
-and
-[Slack](https://join.slack.com/t/puzzlemassive/shared_invite/zt-v2csgv8y-Ldl93sNb3Gcm~NiWt3g5UA)
 . This project is slightly complex with
 a few moving pieces (pun intended); that being said, there is a good chance that
 a piece or two are missing when putting the project together. If you have ran
