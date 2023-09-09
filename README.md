@@ -6,12 +6,6 @@ puzzles are made from randomly generated classic interlocking pieces and can be
 Other player's piece movements are moderated automatically in order to prevent
 abusive behavior.
 
-**A live version is hosted at [puzzle.massive.xyz](http://puzzle.massive.xyz).**
-
-After 2023-09-09, version 2 of Puzzle Massive will no longer be running at
-[puzzle.massive.xyz](http://puzzle.massive.xyz) and will be shutdown. Details
-for the shutdown are here: <https://jkenlooper.github.io/puzzle-massive/>.
-
 ## Version 3 _the rewrite_
 
 Further development of Puzzle Massive version 3 is at
