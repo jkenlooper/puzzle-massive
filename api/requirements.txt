@@ -1,6 +1,6 @@
 -r ../requirements.txt
 boto3
-Pillow==9.5.0
+Pillow==10.0.1
 pixsaw==0.3.4
 #git+https://github.com/jkenlooper/pixsaw.git@develop#egg=pixsaw
 docopt==0.6.2
